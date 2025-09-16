@@ -81,6 +81,49 @@ export interface IInsertTLS52050Request {
   MAM_Day?: number;
   details: IInsertTLS52050Detail[];
 }
+// 新增: 更新明細資料介面
+export interface IUpdateTLS52050Detail extends IInsertTLS52050Detail {
+  ID: number;
+}
+
+// 新增: 更新主檔請求介面
+export interface IUpdateTLS52050Request extends IInsertTLS52050Request {
+  ID: number;
+  MAM_No: string;
+  details: IUpdateTLS52050Detail[];
+}
+
+// 新增: 查詢明細請求介面
+export interface IQueryTLS52050DetailRequest {
+  LOGO_No?: string;
+  VEN_No?: string;
+  PLU_MagNo?: string;
+  PLU_Name?: string;
+  CAT_LNo?: string;
+  CAT_MNo?: string;
+  CAT_SNo?: string;
+
+  PageSize?: number;
+  PageIndex?: number;
+  SortBy?: SortMeta[];
+}
+
+// 新增: 查詢明細響應資料介面
+export interface IQueryTLS52050DetailData {
+  id: string;
+  PLU_MagNo: string;
+  PLU_Name: string;
+  CAT_LNo: string;
+  CAT_LName: string;
+  CAT_MNo: string;
+  CAT_MName: string;
+  CAT_SNo: string;
+  CAT_SName: string;
+  PLU_OrderPrcRate: string;
+  PLU_OrderPrc: string;
+  PLU_SalePrc: string;
+  [key: string]: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -107,9 +150,28 @@ export class Tls52050Service {
   insertTLS52050(data: IInsertTLS52050Request): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS52050`, data);
   }
+  /**
+    * 更新 POS2008M (商品促銷主檔) 資料表
+    * @param data 更新資料 (IUpdateTLS52050Request)
+    * @returns 包含操作結果的 API 響應
+    */
+  updateTLS52050(data: IUpdateTLS52050Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateTLS52050`, data);
+  }
+
+  /**
+   * 查詢 POS2008D (商品促銷明細檔) 資料表
+   * @param params 查詢條件 (IQueryTLS52050DetailRequest)
+   * @returns 包含 IQueryTLS52050DetailData 陣列的 API 響應
+   */
+  queryTLS52050Detail(params: IQueryTLS52050DetailRequest): Observable<ApiResponse<IQueryTLS52050DetailData[]>> {
+    return this.http.post<ApiResponse<IQueryTLS52050DetailData[]>>(`${this.apiUrl}/queryTLS52050Detail`, params);
+  }
+
   updateStatusTLS52050(data: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52050`, data);
   }
+
   // 取得標籤檔資料
   getLabelTLS52050(params: { MAM_No: string }): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52050`, params);

@@ -33,18 +33,55 @@
     </div>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
-    <tr>
-      <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
-      <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
-      </th>
-      <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" class="w-1rem text-center">
-        <p-tableHeaderCheckbox [disabled]="disabled" />
-      </th>
-      <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
-        {{ col.header }}
-        <span *ngIf="isRequired(col)" class="required">*</span>
-      </th>
-    </tr>
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+      <tr>
+        <th *ngIf="data.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
+        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
+          class="w-1rem text-center">序號
+        </th>
+        <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" rowspan="2" class="w-1rem text-center">
+          <p-tableHeaderCheckbox [disabled]="disabled" />
+        </th>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <!-- 如果是第一次出現這個群組 -->
+          <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
+            <th [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
+              class="group-header" pReorderableColumn pResizableColumn>
+              {{ getGroupHeader(col.groupField!) }}
+            </th>
+          </ng-container>
+          <!-- 如果是沒群組的欄位 -->
+          <ng-container *ngIf="!col.groupField">
+            <th *ngIf="!col.hidden" rowspan="2" class="text-center" pResizableColumn>
+              {{ col.header }}
+            </th>
+          </ng-container>
+        </ng-container>
+      </tr>
+      <!-- 第二層：實際欄位標題 -->
+      <tr>
+        <ng-container *ngFor="let col of columns">
+          <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn>
+            {{ col.header }}
+          </th>
+        </ng-container>
+      </tr>
+    </ng-container>
+    <!-- 非群組表頭 -->
+    <ng-container *ngIf="!columnGroup?.length">
+      <tr>
+        <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
+        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
+        </th>
+        <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" class="w-1rem text-center">
+          <p-tableHeaderCheckbox [disabled]="disabled" />
+        </th>
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
+          {{ col.header }}
+          <span *ngIf="isRequired(col)" class="required">*</span>
+        </th>
+      </tr>
+    </ng-container>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
