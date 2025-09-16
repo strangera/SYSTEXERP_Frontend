@@ -1,5 +1,5 @@
 // table-validation.service.ts
-// 🎯 表格驗證服務，處理所有驗證邏輯
+// 表格驗證服務，處理所有驗證邏輯
 
 import { Injectable } from '@angular/core';
 import { ColumnDef } from './expandable-edit-table.component';
@@ -14,14 +14,14 @@ export class TableValidationService {
   private validationErrors: Map<string, string[]> = new Map();
 
   /**
-   * 🎯 檢查欄位是否為必填
+   * 檢查欄位是否為必填
    */
   isFieldRequired(column: ColumnDef): boolean {
     return column.required === true;
   }
 
   /**
-   * 🎯 驗證單一欄位
+   * 驗證單一欄位
    */
   validateField(rowData: any, column: ColumnDef, value: any, dataKey = 'id'): string | null {
     let errorMessage: string | null = null;
@@ -58,7 +58,7 @@ export class TableValidationService {
   }
 
   /**
-   * 🎯 驗證整列資料（在按下確認時呼叫）
+   * 驗證整列資料（在按下確認時呼叫）
    */
   validateRow(rowData: any, columns: ColumnDef[], dataKey: string = 'id'): ValidationResult {
     const errors: string[] = [];
@@ -89,7 +89,7 @@ export class TableValidationService {
   }
 
   /**
-   * 🎯 取得列的驗證錯誤訊息
+   * 取得列的驗證錯誤訊息
    */
   getRowValidationErrors(rowData: any, dataKey = 'id'): string[] {
     const rowKey = rowData[dataKey];
@@ -97,14 +97,14 @@ export class TableValidationService {
   }
 
   /**
-   * 🎯 檢查列是否有驗證錯誤
+   * 檢查列是否有驗證錯誤
    */
   hasRowValidationErrors(rowData: any, dataKey = 'id'): boolean {
     return this.getRowValidationErrors(rowData, dataKey).length > 0;
   }
 
   /**
-   * 🎯 清除列的驗證錯誤
+   * 清除列的驗證錯誤
    */
   clearRowValidationErrors(rowData: any, dataKey: string = 'id'): void {
     const rowKey = rowData[dataKey];
@@ -112,14 +112,14 @@ export class TableValidationService {
   }
 
   /**
-   * 🎯 清除所有驗證錯誤
+   * 清除所有驗證錯誤
    */
   clearAllValidationErrors(): void {
     this.validationErrors.clear();
   }
 
   /**
-   * 🎯 格式化驗證錯誤訊息
+   * 格式化驗證錯誤訊息
    */
   formatValidationErrors(errors: string[]): string {
     console.log('🔍 formatValidationErrors 被呼叫:', errors);
@@ -129,13 +129,13 @@ export class TableValidationService {
       return errors[0];
     }
 
-    // 🎯 優化多個錯誤的顯示格式
+    // 優化多個錯誤的顯示格式
     const errorList = errors.map((error, index) => `${index + 1}. ${error}`).join('\n');
     return `請修正以下問題：\n\n${errorList}`;
   }
 
   /**
-   * 🎯 檢查值是否為空
+   * 檢查值是否為空
    */
   private isEmpty(value: any): boolean {
     return value === null ||
@@ -145,7 +145,7 @@ export class TableValidationService {
   }
 
   /**
-   * 🎯 批量驗證多列資料
+   * 批量驗證多列資料
    */
   validateMultipleRows(dataList: any[], columns: ColumnDef[], dataKey = 'id'): { isValid: boolean; invalidCount: number; totalErrors: string[] } {
     let invalidCount = 0;
@@ -167,7 +167,7 @@ export class TableValidationService {
   }
 
   /**
-   * 🎯 重置驗證狀態
+   * 重置驗證狀態
    */
   reset(): void {
     this.validationErrors.clear();

@@ -34,7 +34,7 @@
 
   <!-- 主要內容 -->
   <div *ngIf="!loading">
-    <!-- 🎯 專櫃契約書資訊 -->
+    <!-- 專櫃契約書資訊 -->
     <p-accordion *ngIf="contractInfoData">
       <p-accordionTab
         header="專櫃契約書資訊"
@@ -67,7 +67,7 @@
           [selected]="true"
           class="line-height-3 m-0"
         >
-          <!-- 🎯 修改：直接顯示表格，無論是否有資料 -->
+          <!-- 修改：直接顯示表格，無論是否有資料 -->
           <div *ngIf="dataLoaded">
             <app-expandable-edit-table
               [data]="visibleCommissionData"
@@ -105,7 +105,7 @@
             ></app-expandable-edit-table>
           </div>
 
-          <!-- 🎯 保留：資料載入中的提示 -->
+          <!-- 保留：資料載入中的提示 -->
           <div *ngIf="!dataLoaded" class="text-center p-5">
             <p-progressSpinner></p-progressSpinner>
             <p class="mt-2 text-gray-600">正在載入抽成設定資料...</p>

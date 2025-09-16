@@ -220,7 +220,7 @@ export class EventHandlerManager {
 
     const newItem = createItemFn();
 
-    // 🎯 確保新增項目有正確的狀態
+    // 確保新增項目有正確的狀態
     newItem._status = 'new';
     newItem._isNew = true;
 

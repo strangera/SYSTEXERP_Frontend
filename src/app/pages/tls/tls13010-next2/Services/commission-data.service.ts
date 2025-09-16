@@ -39,7 +39,7 @@ export interface CommissionDataLoadOptions {
   discountOptions: any[];
 }
 
-// 🎯 新增：單純的抽成設定 API 回應介面
+// 新增：單純的抽成設定 API 回應介面
 export interface ChargeApiResponse {
   Status: string;
   Data: {
@@ -92,7 +92,7 @@ export class CommissionDataService {
    */
   async loadDiscountOptions(): Promise<any[]> {
     try {
-      // 🎯 使用 firstValueFrom 替代 toPromise
+      // 使用 firstValueFrom 替代 toPromise
       const options = await firstValueFrom(
         this.locationOptionsService.getPaperTypeOptions('T102').pipe(
           catchError(error => {
@@ -196,7 +196,7 @@ export class CommissionDataService {
   }
 
   /**
-   * 🎯 修改：使用單純的抽成設定 API
+   * 修改：使用單純的抽成設定 API
    */
   private async loadFromChargeAPI(options: CommissionDataLoadOptions): Promise<CommissionDataLoadResult> {
     // 檢查是否有抽成類別
@@ -208,7 +208,7 @@ export class CommissionDataService {
     console.log('🔗 呼叫單純抽成設定 API:', options.talentId);
 
     try {
-      // 🎯 使用 firstValueFrom 替代 toPromise
+      // 使用 firstValueFrom 替代 toPromise
       const response = await firstValueFrom(
         this.tls13010Service.queryTLS13010Charge(options.talentId).pipe(
           catchError(error => {
@@ -233,7 +233,7 @@ export class CommissionDataService {
   }
 
   /**
-   * 🎯 新增：處理單純抽成設定 API 回應
+   * 新增：處理單純抽成設定 API 回應
    */
   private processChargeAPIResponse(response: ChargeApiResponse, options: CommissionDataLoadOptions): CommissionDataLoadResult {
     console.log('📄 處理抽成設定 API 回應');
@@ -251,7 +251,7 @@ export class CommissionDataService {
       commissionData = this.convertChargeAPIData(response.Data, options);
     }
 
-    // 🎯 注意：這裡不再儲存統一回應，因為是單純的抽成設定 API
+    // 注意：這裡不再儲存統一回應，因為是單純的抽成設定 API
     // this.contractFlowService.setUnifiedCommissionData(data); // 移除這行
 
     return {
@@ -264,7 +264,7 @@ export class CommissionDataService {
   }
 
   /**
-   * 🎯 修改：轉換單純抽成設定 API 資料格式
+   * 修改：轉換單純抽成設定 API 資料格式
    */
   private convertChargeAPIData(apiData: any, options: CommissionDataLoadOptions): CommissionItem[] {
     const result: CommissionItem[] = [];
@@ -278,7 +278,7 @@ export class CommissionDataService {
         id: chargeSetting.id || (index + 1),
         tlt_id: chargeSetting.tlt_id || '',
         tlt_id_desc: chargeSetting.tlt_id_desc || `抽成類別${index + 1}`,
-        cag_taxtype: chargeSetting.cag_taxtype === '1' ? 1 : 0,
+        cag_taxtype: chargeSetting.cag_taxtype === '1' ? '1' : '0',
         discountSummary: this.generateDiscountSummary(chargeSetting),
         sst_amount: chargeSetting.sst_amount || 0,
         sst_rate: chargeSetting.sst_rate || 0,
@@ -333,7 +333,7 @@ export class CommissionDataService {
     const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
     const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
 
-    // 🎯 新增：檢查是否為新合約且沒有既有資料
+    // 新增：檢查是否為新合約且沒有既有資料
     const isNewContractWithoutData = existingDetails.length === 0;
 
     options.discountOptions?.forEach((option, index) => {
@@ -353,14 +353,14 @@ export class CommissionDataService {
           is_enabled: existingItem.is_enabled || true
         });
       } else {
-        // 🎯 關鍵修改：未設定的項目，如果是新合約且是第一個選項（000-正品），預設勾選
+        // 關鍵修改：未設定的項目，如果是新合約且是第一個選項（000-正品），預設勾選
         const isFirstOption = index === 0;
         const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
           (option.value === '000' || option.label?.includes('正品'));
 
         result.push({
           id: this.generateTempId(),
-          selected: shouldSelectByDefault, // 🎯 根據條件決定是否預設勾選
+          selected: shouldSelectByDefault, // 根據條件決定是否預設勾選
           cag_barcode: option.value,
           tlt_bdate: contractStartDate,
           tlt_edate: contractEndDate,
@@ -394,7 +394,7 @@ export class CommissionDataService {
    * 轉換層級抽成項目
    */
   private convertLevelItems(levelDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
-    // 🎯 如果有折扣選項，使用新的建立方法
+    // 如果有折扣選項，使用新的建立方法
     if (options.discountOptions?.length > 0) {
       return this.buildCompleteLevelItems(levelDetails, options);
     } else {
@@ -416,7 +416,7 @@ export class CommissionDataService {
   private buildCompleteLevelItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
     const result: DiscountLevelItem[] = [];
 
-    // 🎯 新增：檢查是否為新合約且沒有既有資料
+    // 新增：檢查是否為新合約且沒有既有資料
     const isNewContractWithoutData = existingDetails.length === 0;
 
     options.discountOptions?.forEach((option, index) => {
@@ -435,14 +435,14 @@ export class CommissionDataService {
           is_enabled: true
         });
       } else {
-        // 🎯 關鍵修改：對於 level 項目也套用相同邏輯
+        // 關鍵修改：對於 level 項目也套用相同邏輯
         const isFirstOption = index === 0;
         const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
           (option.value === '000' || option.label?.includes('正品'));
 
         result.push({
           id: this.generateTempId(),
-          selected: shouldSelectByDefault, // 🎯 根據條件決定是否預設勾選
+          selected: shouldSelectByDefault, // 根據條件決定是否預設勾選
           cag_barcode: option.value,
           level_bmount: 0,
           level_eamount: 0,
@@ -526,7 +526,7 @@ export class CommissionDataService {
   }
 
   /**
-   * 🎯 使用 substring 替代 substr (已廢棄)
+   * 使用 substring 替代 substr (已廢棄)
    */
   private generateTempId(): string {
     return 'temp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);

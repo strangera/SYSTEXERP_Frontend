@@ -52,7 +52,7 @@ interface DetailItem {
   discount: number;
 }
 
-// 🎯 語義化的日期格式類型
+// 語義化的日期格式類型
 export type DateFormatType =
   | 'year-month'           // 年月格式 YYYY/MM
   | 'full-date'            // 完整日期 YYYY/MM/DD
@@ -61,7 +61,7 @@ export type DateFormatType =
   | 'year-month-dash'      // 年月橫線格式 YYYY-MM
   | 'full-date-dash';      // 完整日期橫線格式 YYYY-MM-DD
 
-// 🎯 日期格式配置映射
+// 日期格式配置映射
 export const DATE_FORMAT_CONFIG = {
   'year-month': {
     format: 'YYYY/MM',
@@ -196,6 +196,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
   @Input() forceEditMode = false; // 強制編輯模式
   @Input() showActionColumn = true;  // 新增控制操作欄的屬性
+  @Input() showDetailActionColumn = true;  // 控制詳細資料表格的操作欄
   @Input() title: string = '';
   @Input() mainColumns: ColumnDef[] = [];
   @Input() detailColumns: ColumnDef[] = [];
@@ -224,6 +225,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   //新增：自動編輯相關屬性
   @Input() autoEditOnAdd: boolean = true; // 新增項目時是否自動進入編輯狀態
+  @Input() autoAddDetailRowOnTab: boolean = false;
+  @Input() autoAddRowOnTab: boolean = false; // 控制是否啟用 Tab 自動新增行功能
 
   detailSelectedTabs: { [key: string]: string } = {};
   detailSelectedItems: { [mainRowKey: string]: any[] } = {};
@@ -254,6 +257,15 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     fieldName: string,
     newValue: any,
     rowData: any
+  }>();
+
+  @Output() detailFieldChange = new EventEmitter<{
+    fieldName: string,
+    newValue: any,
+    detailData: any,
+    parentData: any,
+    rowIndex: number,
+    detailIndex: number
   }>();
 
   @Output() buttonClick = new EventEmitter<{
@@ -347,14 +359,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
 
-  // 🎯 核心功能：純粹的日期格式化，不修改原始資料
+  // 核心功能：純粹的日期格式化，不修改原始資料
   private formatDateForDisplay(rawValue: any, formatType: DateFormatType): string {
     if (!rawValue) return '';
 
     try {
       let dateObj: Date;
 
-      // 🎯 統一日期對象創建邏輯
+      // 統一日期對象創建邏輯
       if (rawValue instanceof Date) {
         dateObj = rawValue;
       } else if (typeof rawValue === 'string') {
@@ -393,7 +405,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         return '';
       }
 
-      // 🎯 檢查日期有效性和合理性
+      // 檢查日期有效性和合理性
       if (isNaN(dateObj.getTime())) {
         console.warn('無效的日期值:', rawValue);
         return '';
@@ -404,7 +416,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         return '';
       }
 
-      // 🎯 根據格式類型格式化
+      // 根據格式類型格式化
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
@@ -431,7 +443,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // 🎯 詳細資料文字輸入處理
+  // 詳細資料文字輸入處理
   onDetailTextInputChange(detailData: any, column: ColumnDef, inputValue: string, rowIndex: number, detailIndex: number): void {
     let processedValue = inputValue;
 
@@ -440,17 +452,20 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       processedValue = inputValue.substring(0, column.maxLength);
     }
 
+    const oldValue = detailData[column.field];
     detailData[column.field] = processedValue;
+
+    // 新增：觸發詳細資料欄位變更事件
+    this.triggerDetailFieldChangeEvent(column.field, processedValue, detailData, rowIndex, detailIndex, oldValue);
 
     // 如果是直接編輯模式，觸發儲存
     if (column.directEdit) {
-      // 需要找到父資料
       const parentData = this.data[rowIndex];
       this.onDetailDirectEditChange(detailData, parentData, column.field, processedValue, rowIndex, detailIndex);
     }
   }
 
-  // 🎯 對外接口：取得格式化的日期顯示值
+  // 對外接口：取得格式化的日期顯示值
   getDateDisplayValue(rowData: any, column: ColumnDef): string {
     const field = column.field;
     const rawValue = rowData[field];
@@ -463,7 +478,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   onDateInputChange(rowData: any, column: ColumnDef, inputValue: string, isDetail: boolean = false, detailIndex?: number): void {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
 
-    // 🎯 只暫存用戶輸入，不做任何解析或格式化
+    // 只暫存用戶輸入，不做任何解析或格式化
     this.userInputValues.set(fieldKey, inputValue);
 
     console.log(`📝 日期輸入暫存: ${column.field} = "${inputValue}"`);
@@ -505,14 +520,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   getDateInputValue(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): string {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
 
-    // 🎯 優先顯示用戶正在輸入的值
+    // 優先顯示用戶正在輸入的值
     const userInput = this.userInputValues.get(fieldKey);
     if (userInput !== undefined) {
       console.log(`📝 顯示用戶輸入: "${userInput}"`);
       return userInput;
     }
 
-    // 🎯 否則顯示格式化的值
+    // 否則顯示格式化的值
     const displayValue = this.getDateDisplayValue(rowData, column);
     // console.log(`📅 顯示格式化值: "${displayValue}"`);
     return displayValue;
@@ -548,7 +563,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   /**
-   * 🎯 清理輸入狀態（在行編輯結束時呼叫）
+   * 清理輸入狀態（在行編輯結束時呼叫）
    */
   private cleanupDateInputStates(rowData: any): void {
     const rowKey = rowData[this.dataKey];
@@ -570,7 +585,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const userInput = this.userInputValues.get(fieldKey);
     const formatType = column.dateFormat || 'full-date';
 
-    console.log(`🎯 日期 Blur 處理開始: ${column.field}`, {
+    console.log(` 日期 Blur 處理開始: ${column.field}`, {
       userInput,
       currentValue: rowData[column.field],
       formatType
@@ -592,7 +607,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       return;
     }
 
-    // 🎯 核心：統一日期解析邏輯
+    // 核心：統一日期解析邏輯
     const parsedDate = this.parseUserDateInput(userInput.trim(), formatType);
 
     if (parsedDate && this.isValidDateRange(parsedDate)) {
@@ -622,11 +637,11 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (!inputValue) return null;
 
     try {
-      // 🎯 年月格式處理
+      // 年月格式處理
       if (formatType.includes('year-month')) {
         return this.parseYearMonthInput(inputValue);
       }
-      // 🎯 完整日期格式處理
+      // 完整日期格式處理
       else {
         return this.parseFullDateInput(inputValue);
       }
@@ -668,18 +683,18 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   /**
-   * 🎯 智慧日期解析 - 支援多種輸入格式
+   * 智慧日期解析 - 支援多種輸入格式
    */
   private parseSmartDateInput(inputValue: string, formatType: DateFormatType): Date | null {
     if (!inputValue) return null;
 
     try {
-      // 🎯 年月格式處理
+      // 年月格式處理
       if (formatType.includes('year-month')) {
         return this.parseYearMonthInput(inputValue);
       }
 
-      // 🎯 完整日期格式處理
+      // 完整日期格式處理
       else {
         return this.parseFullDateInput(inputValue);
       }
@@ -690,7 +705,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   /**
-   * 🎯 解析年月輸入 (202508, 2025/08, 2025-08 -> 2025/08)
+   * 解析年月輸入 (202508, 2025/08, 2025-08 -> 2025/08)
    */
   private parseYearMonthInput(input: string): Date | null {
     let year: number, month: number;
@@ -725,7 +740,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   /**
-  * 🎯 解析完整日期輸入 (20250815, 2025/08/15, 2025-08-15 -> 2025/08/15)
+  * 解析完整日期輸入 (20250815, 2025/08/15, 2025-08-15 -> 2025/08/15)
   */
   private parseFullDateInput(input: string): Date | null {
     let year: number, month: number, day: number;
@@ -769,7 +784,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
 
-  // 🎯 對外接口：取得欄位的 placeholder
+  // 對外接口：取得欄位的 placeholder
   getDatePlaceholder(column: ColumnDef): string {
     // if (column.placeholder) {
     //   return column.placeholder;
@@ -797,7 +812,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return "";
   }
 
-  // 🎯 輔助方法：日期有效性檢查
+  // 輔助方法：日期有效性檢查
   private isValidDate(year: number, month: number, day: number): boolean {
     if (year < 1900 || year > 2100) return false;
     if (month < 0 || month > 11) return false;
@@ -824,7 +839,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     // 🚀 直接新增，不檢查編輯狀態
     this.addMainItem.emit();
 
-    // 🎯 如果啟用自動編輯，在新增後自動進入編輯狀態
+    // 如果啟用自動編輯，在新增後自動進入編輯狀態
     if (this.autoEditOnAdd) {
       setTimeout(() => {
         const lastIndex = this.data.length - 1;
@@ -917,7 +932,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
           const defaultValue = column.defaultValueFunction();
           if (defaultValue !== null && defaultValue !== undefined) {
             rowData[column.field] = defaultValue;
-            console.log(`🎯 編輯模式套用動態預設值 ${column.field}: ${defaultValue}`);
+            console.log(` 編輯模式套用動態預設值 ${column.field}: ${defaultValue}`);
           }
         } catch (error) {
           console.error(`❌ 動態預設值函數執行失敗 ${column.field}:`, error);
@@ -927,7 +942,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       // 如果欄位沒有值且有靜態預設值
       else if ((currentValue === undefined || currentValue === null || currentValue === '') && column.defaultValue !== undefined) {
         rowData[column.field] = column.defaultValue;
-        console.log(`🎯 編輯模式套用靜態預設值 ${column.field}: ${column.defaultValue}`);
+        console.log(` 編輯模式套用靜態預設值 ${column.field}: ${column.defaultValue}`);
       }
     });
 
@@ -942,7 +957,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onRowEditSave(rowData: any) {
     try {
-      // 🎯 新增：保存前最後一次驗證所有日期欄位
+      // 新增：保存前最後一次驗證所有日期欄位
       this.validateAllDateFieldsBeforeSave(rowData);
 
       // 驗證
@@ -972,7 +987,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       delete this.clonedItems[rowData[this.dataKey]];
       this.editingRow = null;
 
-      // 🎯 清理日期輸入狀態
+      // 清理日期輸入狀態
       this.cleanupDateInputStates(rowData);
       this.validationService.clearRowValidationErrors(rowData, this.dataKey);
 
@@ -985,7 +1000,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   /**
- * 🎯 新增：保存前驗證所有日期欄位
+ * 新增：保存前驗證所有日期欄位
  */
   private validateAllDateFieldsBeforeSave(rowData: any): void {
     const rowKey = rowData[this.dataKey];
@@ -1018,7 +1033,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onRowEditCancel(rowData: any, rowIndex: number) {
     try {
-      // 🎯 關鍵：完整還原包括詳細資料
+      // 關鍵：完整還原包括詳細資料
       const originalData = this.clonedItems[rowData[this.dataKey]];
 
       // 還原主資料
@@ -1028,7 +1043,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         }
       });
 
-      // 🎯 重要：還原詳細資料
+      // 重要：還原詳細資料
       if (originalData[this.detailKey]) {
         rowData[this.detailKey] = JSON.parse(JSON.stringify(originalData[this.detailKey]));
       }
@@ -1228,7 +1243,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     // 🚀 直接新增明細，不檢查編輯狀態
     this.addDetailItem.emit(parentData);
 
-    // 🎯 如果啟用自動編輯，在新增後自動進入編輯狀態
+    // 如果啟用自動編輯，在新增後自動進入編輯狀態
     if (this.autoEditOnAdd) {
       setTimeout(() => {
         const detailArray = parentData[this.detailKey];
@@ -1474,7 +1489,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return this.captionRight?.nativeElement?.children.length > 0;
   }
 
-  // 🎯 主表格表頭操作欄位樣式
+  // 主表格表頭操作欄位樣式
   getActionHeaderStyle(): any {
     return {
       position: 'sticky',
@@ -1487,7 +1502,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     };
   }
 
-  // 🎯 主表格表身操作欄位樣式
+  // 主表格表身操作欄位樣式
   getActionBodyStyle(): any {
     return {
       position: 'sticky',
@@ -1500,7 +1515,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     };
   }
 
-  // 🎯 詳細資料表格表頭操作欄位樣式
+  // 詳細資料表格表頭操作欄位樣式
   getDetailActionHeaderStyle(): any {
     return {
       position: 'sticky',
@@ -1514,7 +1529,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     };
   }
 
-  // 🎯 詳細資料表格表身操作欄位樣式
+  // 詳細資料表格表身操作欄位樣式
   getDetailActionBodyStyle(): any {
     return {
       position: 'sticky',
@@ -1531,7 +1546,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   getNumberInputConfig(col: ColumnDef): any {
     const baseConfig = {
       mode: 'decimal',
-      useGrouping: true,  // 🎯 這是關鍵！確保千分位顯示
+      useGrouping: true,  // 這是關鍵！確保千分位顯示
       min: 0
     };
 
@@ -1631,21 +1646,21 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     console.log(`✅ 直接編輯變更: ${field} = ${newValue} (第${(rowIndex || 0) + 1}行)`);
 
-    // 🎯 觸發和編輯保存一樣的事件，讓外部組件知道資料已更新
+    // 觸發和編輯保存一樣的事件，讓外部組件知道資料已更新
     this.save.emit({
       oldData: { ...rowData, [field]: oldValue },
       newData: { ...rowData }
     });
   }
 
-  // 🎯 新增：處理詳細資料直接編輯欄位的變更事件
+  // 新增：處理詳細資料直接編輯欄位的變更事件
   onDetailDirectEditChange(detailData: any, parentData: any, field: string, newValue: any, rowIndex?: number, detailIndex?: number): void {
     const oldValue = detailData[field];
     detailData[field] = newValue;
 
     console.log(`✅ 詳細資料直接編輯變更: ${field} = ${newValue} (主行${(rowIndex || 0) + 1}, 詳細行${(detailIndex || 0) + 1})`);
 
-    // 🎯 觸發詳細資料保存事件
+    // 觸發詳細資料保存事件
     this.detailSave.emit({
       oldDetail: { ...detailData, [field]: oldValue },
       newDetail: { ...detailData },
@@ -1733,7 +1748,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       const control = new FormControl(rowData[fieldName] || '');
       this.selectorControls.set(key, control);
 
-      // 🎯 注意：不要在這裡監聽 valueChanges
+      // 注意：不要在這裡監聽 valueChanges
       // 因為 selector-panel 的事件會直接處理值的更新
       // 避免重複觸發 onDirectEditChange
     }
@@ -1741,13 +1756,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return this.selectorControls.get(key)!;
   }
 
-  // 🎯 新增：取得 selector 建議項目
+  // 新增：取得 selector 建議項目
   getSelectorSuggestions(rowData: any, fieldName: string): any[] {
     const key = `${rowData[this.dataKey]}_${fieldName}`;
     return this.selectorSuggestions.get(key) || [];
   }
 
-  // 🎯 新增：處理 selector 搜尋輸入變更
+  // 新增：處理 selector 搜尋輸入變更
   onSelectorSearchInputChanged(searchParams: any, rowData: any, column: ColumnDef): void {
     const key = `${rowData[this.dataKey]}_${column.field}`;
 
@@ -1758,8 +1773,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // 🎯 新增：處理 selector 搜尋表單變更
-  // 🎯 把原來的方法完全替換為：
+  // 新增：處理 selector 搜尋表單變更
+  // 把原來的方法完全替換為：
   onSelectorSearchFormChanged(formValue: any, rowData: any, column: ColumnDef): void {
     console.log('🚨 表格收到搜尋表單變更:', formValue);
     console.log('🔍 表單值詳細:', JSON.stringify(formValue, null, 2));
@@ -1774,7 +1789,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
           if (column.selectorConfig) {
             column.selectorConfig.panelDataSource = results;
 
-            // 🎯 關鍵：從 LocationService 的特殊物件中取得分頁資訊
+            // 關鍵：從 LocationService 的特殊物件中取得分頁資訊
             const paginationInfo = (results as any).__paginationInfo;
 
             if (paginationInfo) {
@@ -1805,12 +1820,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // 🎯 新增：更新總筆數的方法（在 ExpandableEditTable 中加入）
+  // 新增：更新總筆數的方法（在 ExpandableEditTable 中加入）
   private updateTotalCount(selectorConfig: any, results: any[], searchParams: any): void {
     const pageSize = searchParams.pageSize || 10;
     const pageIndex = searchParams.pageIndex || 0;
 
-    // 🎯 簡化邏輯：如果回傳的資料少於 pageSize，表示是最後一頁
+    // 簡化邏輯：如果回傳的資料少於 pageSize，表示是最後一頁
     if (results.length < pageSize) {
       // 最後一頁：計算總筆數
       selectorConfig.totalDataCount = pageIndex * pageSize + results.length;
@@ -1822,7 +1837,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // 🎯 新增：取得 selector 搜尋表單
+  // 新增：取得 selector 搜尋表單
   getSelectorSearchForm(rowData: any, column: ColumnDef): FormGroup {
     const key = `${rowData[this.dataKey]}_${column.field}`;
 
@@ -1834,7 +1849,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return this.selectorSearchForms.get(key)!;
   }
 
-  // 🎯 新增：建立 selector 搜尋表單
+  // 新增：建立 selector 搜尋表單
   private createSelectorSearchForm(column: ColumnDef): FormGroup {
     const formConfig: { [key: string]: any } = {};
 
@@ -1844,7 +1859,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       });
     }
 
-    // 🎯 修正：統一使用大寫 SortBy
+    // 修正：統一使用大寫 SortBy
     formConfig['pageSize'] = [10];
     formConfig['pageIndex'] = [1];
     formConfig['SortBy'] = [[]];  // 用大寫，預設空陣列
@@ -1852,7 +1867,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return this.fb.group(formConfig);
   }
 
-  // 🎯 新增：清理 selector 相關資源
+  // 新增：清理 selector 相關資源
   private cleanupSelectorResources(): void {
     this.selectorControls.clear();
     this.selectorSuggestions.clear();
@@ -1861,13 +1876,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   //===============處理table發出的事件=============================
   // 在 expandable-edit-table.component.ts 中新增以下方法
-  // 🎯 在 cleanupSelectorResources() 方法之後新增：
+  // 在 cleanupSelectorResources() 方法之後新增：
 
   /**
-   * 🎯 處理 selector-panel 的 itemSelected 事件
+   * 處理 selector-panel 的 itemSelected 事件
    */
   onSelectorItemSelected(selectedItem: any, rowData: any, column: ColumnDef): void {
-    console.log('🎯 表格收到 selector item selected:', {
+    console.log(' 表格收到 selector item selected:', {
       selectedItem,
       rowDataId: rowData.id || rowData[this.dataKey],
       field: column.field
@@ -1876,10 +1891,10 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const oldValue = rowData[column.field];
     const newValue = selectedItem[column.selectorConfig?.valuePropertyName || 'value'];
 
-    // 🎯 更新 rowData
+    // 更新 rowData
     rowData[column.field] = newValue;
 
-    // 🎯 更新對應的 FormControl
+    // 更新對應的 FormControl
     const control = this.getSelectorControl(rowData, column.field);
     if (control) {
       control.setValue(newValue, { emitEvent: false }); // 不觸發 valueChanges
@@ -1891,14 +1906,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       field: column.field,
       newValue,
       oldValue,
-      selectedOption: selectedItem // 🎯 這裡傳遞完整的選擇項目資料
+      selectedOption: selectedItem // 這裡傳遞完整的選擇項目資料
     });
 
     console.log('✅ 表格發出 dropdownChange 事件，包含 selectedOption');
   }
 
   /**
-   * 🎯 處理 selector-panel 的 valueChanged 事件
+   * 處理 selector-panel 的 valueChanged 事件
    */
   onSelectorValueChanged(event: { oldValue: any, newValue: any, selectedItem: any }, rowData: any, column: ColumnDef): void {
     console.log('🔄 表格收到 selector value changed:', {
@@ -1907,46 +1922,46 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       field: column.field
     });
 
-    // 🎯 更新 rowData
+    // 更新 rowData
     rowData[column.field] = event.newValue;
 
-    // 🎯 發出 dropdownChange 事件
+    // 發出 dropdownChange 事件
     this.dropdownChange.emit({
       rowData,
       field: column.field,
       newValue: event.newValue,
       oldValue: event.oldValue,
-      selectedOption: event.selectedItem // 🎯 傳遞完整的選擇項目資料
+      selectedOption: event.selectedItem // 傳遞完整的選擇項目資料
     });
   }
 
   /**
-   * 🎯 處理 selector-panel 的 selectionChanged 事件
+   * 處理 selector-panel 的 selectionChanged 事件
    */
   onSelectorSelectionChanged(selectedItem: any, rowData: any, column: ColumnDef): void {
-    console.log('🎯 表格收到 selector selection changed:', selectedItem);
+    console.log(' 表格收到 selector selection changed:', selectedItem);
 
-    // 🎯 與 itemSelected 使用相同的處理邏輯
+    // 與 itemSelected 使用相同的處理邏輯
     this.onSelectorItemSelected(selectedItem, rowData, column);
   }
 
   //=================欄位必填用===================
   /**
-  * 🎯 檢查欄位是否為必填
+  * 檢查欄位是否為必填
   */
   isFieldRequired(column: ColumnDef): boolean {
     return this.validationService.isFieldRequired(column);
   }
 
   /**
-   * 🎯 取得列的驗證錯誤訊息
+   * 取得列的驗證錯誤訊息
    */
   getRowValidationErrors(rowData: any): string[] {
     return this.validationService.getRowValidationErrors(rowData, this.dataKey);
   }
 
   /**
-  * 🎯 檢查列是否有驗證錯誤
+  * 檢查列是否有驗證錯誤
   */
   hasRowValidationErrors(rowData: any): boolean {
     return this.validationService.hasRowValidationErrors(rowData, this.dataKey);
@@ -1959,19 +1974,78 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     rowIndex: number,
     detailIndex: number
   ): void {
-    console.log('🔄 詳細資料 ngModelChange:', {
+    console.log('詳細資料數字變更:', {
       fieldName,
       newValue,
       rowIndex,
       detailIndex
     });
 
-    // 複用主要方法，但標記為詳細資料
-    this.onNumberModelChange(newValue, fieldName, detailData, true);
+    // 數值處理邏輯...
+    let numericValue: number;
+    if (newValue === null || newValue === undefined || newValue === '') {
+      numericValue = 0;
+    } else if (typeof newValue === 'number') {
+      numericValue = newValue;
+    } else if (typeof newValue === 'string') {
+      const cleanValue = newValue.replace(/,/g, '');
+      numericValue = parseFloat(cleanValue) || 0;
+    } else {
+      numericValue = 0;
+    }
+
+    // 自動限制到最大值和最小值
+    const column = this.findColumnByField(fieldName);
+    if (column) {
+      if (column.maxValue !== undefined && numericValue > column.maxValue) {
+        numericValue = column.maxValue;
+      }
+      if (column.minValue !== undefined && numericValue < column.minValue) {
+        numericValue = column.minValue;
+      }
+    }
+
+    const oldValue = detailData[fieldName];
+    detailData[fieldName] = numericValue;
+
+    //觸發詳細資料欄位變更事件
+    this.triggerDetailFieldChangeEvent(fieldName, numericValue, detailData, rowIndex, detailIndex, oldValue);
+
+    // 強制變更檢測
+    this.cdr.detectChanges();
+
+    // 處理直接編輯
+    this.handleDirectEditForNumber(fieldName, numericValue, detailData, true);
+  }
+
+  onDetailDropdownChange(detailData: any, field: string, newValue: any, rowIndex: number, detailIndex: number): void {
+    const oldValue = detailData[field];
+    detailData[field] = newValue;
+
+    //  新增：觸發詳細資料欄位變更事件
+    this.triggerDetailFieldChangeEvent(field, newValue, detailData, rowIndex, detailIndex, oldValue);
+
+    // 立即觸發 fieldChange 事件
+    this.fieldChange.emit({
+      fieldName: field,
+      newValue,
+      rowData: detailData
+    });
+
+    // 強制變更檢測
+    this.cdr.detectChanges();
+
+    // 原有邏輯...
+    this.dropdownChange.emit({
+      rowData: detailData,
+      field,
+      newValue,
+      oldValue
+    });
   }
 
   onNumberFieldBlur(event: any, fieldName: string, rowData: any): void {
-    console.log('🎯 數字欄位 Blur:', {
+    console.log(' 數字欄位 Blur:', {
       fieldName,
       eventValue: event.value,
       eventTarget: event.target?.value,
@@ -2020,7 +2094,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       return currentValue;
     }
 
-    // 🎯 新增：檢查是否有動態預設值函數
+    // 新增：檢查是否有動態預設值函數
     if (column.defaultValueFunction && typeof column.defaultValueFunction === 'function') {
       return column.defaultValueFunction();
     }
@@ -2029,7 +2103,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return column.defaultValue || '';
   }
 
-  // 🎯 設定新增項目的預設值
+  // 設定新增項目的預設值
   private applyDefaultValues(newItem: any, columns: ColumnDef[]): void {
     columns.forEach(column => {
       if (column.defaultValue !== undefined && (newItem[column.field] === undefined || newItem[column.field] === null || newItem[column.field] === '')) {
@@ -2089,7 +2163,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   /**
- * 🎯 輔助方法：根據欄位名稱查找欄位定義
+ * 輔助方法：根據欄位名稱查找欄位定義
  */
   private findColumnByField(fieldName: string): ColumnDef | undefined {
     // 先從主要欄位找
@@ -2334,7 +2408,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // 🎯 專門處理取消勾選的方法
+  // 專門處理取消勾選的方法
   private async handleUnselectWithCancel(rowData: any, rowIndex: number, field: string, newValue: any): Promise<void> {
     try {
       // 步驟1：執行取消編輯
@@ -2356,7 +2430,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // 🎯 等待編輯取消完成的輔助方法
+  // 等待編輯取消完成的輔助方法
   private waitForEditCancel(): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -2399,9 +2473,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   onDetailCheckboxChange(detailData: any, field: string, newValue: any, rowIndex: number, detailIndex: number, column: ColumnDef): void {
     console.log(`內層 Checkbox 變更: ${field} = ${newValue} (主行${rowIndex + 1}, 詳細行${detailIndex + 1})`);
 
+    const oldValue = detailData[field];
+
     // 勾選時：立即更新 + 進入編輯模式
     if (newValue === true) {
       detailData[field] = newValue;
+
+      //  新增：觸發詳細資料欄位變更事件
+      this.triggerDetailFieldChangeEvent(field, newValue, detailData, rowIndex, detailIndex, oldValue);
 
       if (column.autoEditOnSelect && !this.isDetailEditing(rowIndex, detailIndex)) {
         console.log(`勾選，自動進入詳細編輯模式`);
@@ -2412,16 +2491,17 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         }, 150);
       }
     }
-
     // 取消勾選時：特殊處理
     else if (newValue === false) {
       if (column.autoSaveOnUnselect && this.isDetailEditing(rowIndex, detailIndex)) {
         console.log(`取消勾選，自動儲存並退出詳細編輯模式`);
-        // 這裡需要處理詳細資料的自動儲存退出
         const parentData = this.data[rowIndex];
         this.onDetailEditSave(detailData, parentData);
       } else {
         detailData[field] = newValue;
+
+        //  新增：觸發詳細資料欄位變更事件
+        this.triggerDetailFieldChangeEvent(field, newValue, detailData, rowIndex, detailIndex, oldValue);
       }
     }
 
@@ -2437,10 +2517,117 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         rowData: detailData,
         field,
         newValue,
-        oldValue: !newValue,
+        oldValue: oldValue,
         parentData
       });
     }
+  }
+
+  onDetailDateInputChange(detailData: any, column: ColumnDef, inputValue: string, rowIndex: number, detailIndex: number): void {
+    const fieldKey = this.getFieldKey(detailData, column.field, true, detailIndex);
+
+    // 暫存用戶輸入
+    this.userInputValues.set(fieldKey, inputValue);
+
+    console.log(`詳細資料日期輸入暫存: ${column.field} = "${inputValue}"`);
+
+    // 如果是空值，立即清空
+    if (!inputValue || inputValue.trim() === '') {
+      const oldValue = detailData[column.field];
+      detailData[column.field] = null;
+      this.userInputValues.delete(fieldKey);
+
+      //  新增：觸發詳細資料欄位變更事件
+      this.triggerDetailFieldChangeEvent(column.field, null, detailData, rowIndex, detailIndex, oldValue);
+    }
+  }
+
+  onDetailDateInputBlur(detailData: any, column: ColumnDef, rowIndex: number, detailIndex: number): void {
+    const fieldKey = this.getFieldKey(detailData, column.field, true, detailIndex);
+    const userInput = this.userInputValues.get(fieldKey);
+    const formatType = column.dateFormat || 'full-date';
+
+    console.log(`詳細資料日期 Blur 處理: ${column.field}`, {
+      userInput,
+      currentValue: detailData[column.field],
+      formatType
+    });
+
+    // 如果沒有用戶輸入，表示沒有修改，直接跳過
+    if (userInput === undefined) {
+      return;
+    }
+
+    // 空值處理
+    if (!userInput || userInput.trim() === '') {
+      const oldValue = detailData[column.field];
+      detailData[column.field] = null;
+      this.userInputValues.delete(fieldKey);
+
+      //  新增：觸發詳細資料欄位變更事件
+      this.triggerDetailFieldChangeEvent(column.field, null, detailData, rowIndex, detailIndex, oldValue);
+      return;
+    }
+
+    // 統一日期解析邏輯
+    const parsedDate = this.parseUserDateInput(userInput.trim(), formatType);
+
+    if (parsedDate && this.isValidDateRange(parsedDate)) {
+      const oldValue = detailData[column.field];
+      detailData[column.field] = parsedDate;
+      this.userInputValues.delete(fieldKey);
+
+      console.log(`詳細資料日期解析成功: "${userInput}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
+
+      //  新增：觸發詳細資料欄位變更事件
+      this.triggerDetailFieldChangeEvent(column.field, parsedDate, detailData, rowIndex, detailIndex, oldValue);
+
+      this.triggerSaveIfNeeded(detailData, column, parsedDate, true, detailIndex);
+    } else {
+      this.userInputValues.delete(fieldKey);
+      this.showDateFormatHint(userInput, formatType);
+      console.warn(`詳細資料日期格式錯誤，保持原值: "${userInput}"`);
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  /**
+  *  新增：觸發詳細資料欄位變更事件的統一方法
+  */
+  private triggerDetailFieldChangeEvent(
+    fieldName: string,
+    newValue: any,
+    detailData: any,
+    rowIndex: number,
+    detailIndex: number,
+    oldValue?: any
+  ): void {
+    console.log(`🔥 觸發詳細資料欄位變更事件: ${fieldName}`, {
+      新值: newValue,
+      舊值: oldValue,
+      detailId: detailData.id,
+      主行: rowIndex + 1,
+      詳細行: detailIndex + 1,
+      timestamp: new Date().toISOString()
+    });
+
+    //  發出詳細資料專用的 fieldChange 事件
+    this.detailFieldChange.emit({
+      fieldName,
+      newValue,
+      detailData,
+      parentData: this.data[rowIndex],
+      rowIndex,
+      detailIndex
+    });
+
+    //  也發出通用的 fieldChange 事件（向後兼容）
+    this.fieldChange.emit({
+      fieldName,
+      newValue,
+      rowData: detailData
+    });
   }
 
   handleDateInput(event: Event, rowData: any, column: ColumnDef): void {
@@ -2465,5 +2652,82 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         }
       });
     });
+  }
+
+  // 檢查是否為最後一個可編輯欄位
+  private isLastEditableField(currentColumn: ColumnDef, rowData: any): boolean {
+    const editableColumns = this.mainColumns.filter(col =>
+      !col.hidden &&
+      col.editable !== false &&
+      this.shouldShowInputControl(col, true, rowData)
+    );
+
+    const currentIndex = editableColumns.findIndex(col => col.field === currentColumn.field);
+    return currentIndex === editableColumns.length - 1;
+  }
+
+  // 檢查是否為最後一行
+  private isLastRow(rowIndex: number): boolean {
+    return rowIndex === this.data.length - 1;
+  }
+
+  // 修改原有的 Tab 鍵處理，加入詳細資料的判斷
+  onFieldKeyDown(event: KeyboardEvent, rowData: any, column: ColumnDef, rowIndex: number, isDetail: boolean = false, detailIndex?: number): void {
+    // 主表格的處理
+    if (!isDetail) {
+      // 修正：只檢查 autoAddRowOnTab，移除 forceEditMode 的限制
+      if (!this.autoAddRowOnTab) {
+        return;
+      }
+
+      if (event.key === 'Tab' && !event.shiftKey) {
+        const isLastField = this.isLastEditableField(column, rowData);
+        const isLastRow = this.isLastRow(rowIndex);
+
+        if (isLastField && isLastRow) {
+          event.preventDefault();
+          setTimeout(() => {
+            this.onAddMainItem();
+          }, 100);
+        }
+      }
+    }
+    // 詳細資料表格的處理
+    else {
+      // 修正：只檢查 autoAddDetailRowOnTab，移除 forceEditMode 的限制
+      if (!this.autoAddDetailRowOnTab) {
+        return;
+      }
+
+      if (event.key === 'Tab' && !event.shiftKey && detailIndex !== undefined) {
+        const isLastDetailField = this.isLastEditableDetailField(column, rowData, rowData);
+        const isLastDetailRow = this.isLastDetailRow(rowData, detailIndex);
+
+        if (isLastDetailField && isLastDetailRow) {
+          event.preventDefault();
+          setTimeout(() => {
+            this.onAddDetailItem(rowData, rowIndex);
+          }, 100);
+        }
+      }
+    }
+  }
+
+  private isLastEditableDetailField(currentColumn: ColumnDef, detailData: any, rowData: any): boolean {
+    const detailColumns = this.getDetailColumnsForTab(rowData);
+    const editableDetailColumns = detailColumns.filter(col =>
+      !col.hidden &&
+      col.editable !== false &&
+      this.shouldShowInputControl(col, true, detailData)
+    );
+
+    const currentIndex = editableDetailColumns.findIndex(col => col.field === currentColumn.field);
+    return currentIndex === editableDetailColumns.length - 1;
+  }
+
+  // 檢查是否為詳細資料的最後一行
+  private isLastDetailRow(rowData: any, detailIndex: number): boolean {
+    const detailArray = rowData[this.detailKey] || [];
+    return detailIndex === detailArray.length - 1;
   }
 }

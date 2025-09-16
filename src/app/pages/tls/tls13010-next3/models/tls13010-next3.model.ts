@@ -17,6 +17,7 @@ export interface TableConfiguration {
   showBatchDelete?: boolean;
   showCheckBox?: boolean;
   showActionColumn?: boolean;
+  autoAddRowOnTab?: boolean;
 }
 
 // 在 component 中使用的完整配置
@@ -99,7 +100,8 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showAddButton: true,
     showBatchDelete: true,
     showCheckBox: true,
-    showActionColumn: false
+    showActionColumn: false,
+    autoAddRowOnTab: true,
   },
   {
     commissionType: '6',
@@ -119,6 +121,7 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showAddButton: true,
     showBatchDelete: true,
     showCheckBox: true,
-    showActionColumn: false
+    showActionColumn: false,
+    autoAddRowOnTab: true,
   }
 ];

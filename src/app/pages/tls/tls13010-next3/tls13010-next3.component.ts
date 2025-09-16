@@ -332,7 +332,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     console.log('🔗 開始載入現有條件資料，抽成類型:', commissionType);
 
     try {
-      // 🎯 使用新的 Commission API
+      // 使用新的 Commission API
       const request = {
         TalentId: this.currentTalentId,
         CurrentTltTermType: commissionType
@@ -352,7 +352,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       if (response?.Status === '0000' && response?.Data?.ExistingData) {
         console.log('✅ Commission API 回應成功:', response.Data);
 
-        // 🎯 修正：使用正確的資料路徑 ExistingData 而不是 RentSettingData
+        // 修正：使用正確的資料路徑 ExistingData 而不是 RentSettingData
         this.allConditionItems = this.conditionDataManager.mapBackendDataToFrontend(
           response.Data.ExistingData,
           commissionType
@@ -828,7 +828,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       return;
     }
 
-    // 🎯 提交前最後一次強制保存
+    // 提交前最後一次強制保存
     this.forceSyncAllData();
 
     // 驗證數據
@@ -1202,7 +1202,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     console.log('📋 當前 rowData:', event.rowData);
 
     try {
-      // 🎯 關鍵修正：確保正確更新狀態
+      // 關鍵修正：確保正確更新狀態
       const modifiedData = this.updateDataStatus(event.rowData);
 
       // 立即更新到對應的資料陣列

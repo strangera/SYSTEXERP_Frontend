@@ -1,10 +1,10 @@
 // table-validation.interface.ts
-// 🎯 表格驗證相關的接口定義
+// 表格驗證相關的接口定義
 
 import { ValidatorFn } from '@angular/forms';
 
 /**
- * 🎯 驗證結果接口
+ * 驗證結果接口
  */
 export interface ValidationResult {
   isValid: boolean;
@@ -12,7 +12,7 @@ export interface ValidationResult {
 }
 
 /**
- * 🎯 欄位驗證配置接口
+ * 欄位驗證配置接口
  */
 export interface FieldValidationConfig {
   required?: boolean;                    // 是否為必填欄位
@@ -23,7 +23,7 @@ export interface FieldValidationConfig {
 }
 
 /**
- * 🎯 驗證器工廠類別
+ * 驗證器工廠類別
  */
 export class TableValidators {
 

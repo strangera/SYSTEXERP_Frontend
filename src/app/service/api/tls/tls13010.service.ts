@@ -92,7 +92,7 @@ export class TLS13010Service {
     );
   }
 
-  // 🎯 提交最終契約資料（清理後格式）
+  // 提交最終契約資料（清理後格式）
   /**
    * 提交清理後的契約資料到後端
    * @param cleanData 清理後的提交資料
@@ -109,7 +109,7 @@ export class TLS13010Service {
       totalOperations: cleanData.metadata.totalOperations
     });
 
-    // 🎯 對應後端 CleanContractRequest 的完整結構
+    // 對應後端 CleanContractRequest 的完整結構
     const requestPayload = {
       contractInfo: cleanData.contractInfo,
       deductions: cleanData.deductions,
@@ -135,7 +135,7 @@ export class TLS13010Service {
         }
       }),
       map((response: any) => {
-        // 🎯 統一回應格式處理
+        // 統一回應格式處理
         if (response.Status === '0000') {
           return {
             success: true,

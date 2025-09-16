@@ -806,21 +806,21 @@
 
 :host ::ng-deep {
   .p-datatable {
-    // 🎯 確保固定操作欄位在偶數行也有正確背景色
+    // 確保固定操作欄位在偶數行也有正確背景色
     .p-datatable-tbody > tr:nth-child(even) {
       td[style*="sticky"] {
         // 移除固定的背景色，讓它繼承父行的樣式
       }
     }
 
-    // 🎯 確保固定操作欄位在懸停時有正確背景色
+    // 確保固定操作欄位在懸停時有正確背景色
     .p-datatable-tbody > tr:hover {
       td[style*="sticky"] {
         background-color: #d5edff !important;
       }
     }
 
-    // 🎯 確保固定操作欄位在選中行有正確背景色
+    // 確保固定操作欄位在選中行有正確背景色
     .p-datatable-tbody > tr.p-highlight {
       td[style*="sticky"] {
         background-color: #38a8ff !important;

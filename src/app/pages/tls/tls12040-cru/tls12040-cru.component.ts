@@ -60,7 +60,7 @@ export class TLS12040CRUComponent implements OnInit {
     {
       field: 'location_no',
       header: '位置編號',
-      type: 'selector-panel',  // 🎯 改用 selector-panel
+      type: 'selector-panel',  // 改用 selector-panel
       editable: true,
       style: 'min-width: 200px',
       selectorConfig: {
@@ -87,7 +87,7 @@ export class TLS12040CRUComponent implements OnInit {
             label: '館別',
             type: 'dropdown',
             colClass: 'col-4',
-            options: [], // 🎯 會在 updateSelectorPanelOptions 中更新
+            options: [], // 會在 updateSelectorPanelOptions 中更新
             placeholder: '選擇館別',
           },
           {
@@ -331,7 +331,7 @@ export class TLS12040CRUComponent implements OnInit {
 
     // 如果之前有資料，確保不被覆蓋
     if (existingData && Object.keys(existingData).length > 0) {
-      // 🎯 修正：先載入基本下拉選項，然後再載入緩存資料
+      // 修正：先載入基本下拉選項，然後再載入緩存資料
       this.loadCachedDataWithClassifications(existingData);
     }
   }
@@ -354,7 +354,7 @@ export class TLS12040CRUComponent implements OnInit {
       this.updateDisplayLocationData();
     }
 
-    // 🎯 關鍵修正：確保分類按正確順序載入
+    // 關鍵修正：確保分類按正確順序載入
     if (cruData.bus_type) {
       this.loadClassificationChain(cruData);
     } else {
@@ -850,7 +850,7 @@ export class TLS12040CRUComponent implements OnInit {
         // 在所有選項載入完成後更新 selector 面板選項
         this.updateSelectorPanelOptions();
 
-        // 🎯 關鍵：檢查是否需要處理緩存的分類資料
+        // 關鍵：檢查是否需要處理緩存的分類資料
         const existingData = this.flowService.getCruData() as any;
         if (existingData && existingData.bus_type && !this.busClassOptions.length) {
           console.log('🔄 API 載入完成後處理分類資料');
@@ -912,7 +912,7 @@ export class TLS12040CRUComponent implements OnInit {
       if (confirm('是否要儲存目前的編輯內容？')) {
         const completeData = {
           ...this.dataForm.value,
-          locationData: this.locationData  // 🎯 包含位置資料
+          locationData: this.locationData  // 包含位置資料
         };
         this.flowService.setCruData(completeData);
       }
@@ -929,7 +929,7 @@ export class TLS12040CRUComponent implements OnInit {
       return;
     }
 
-    // 🎯 合併表單資料和位置資料
+    // 合併表單資料和位置資料
     const completeData = {
       ...frm.value,
       locationData: this.locationData  // 加入位置資料
@@ -947,7 +947,7 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   onSubmitNext(): void {
-    // 🎯 直接保存並導航到下一步，包含位置資料
+    // 直接保存並導航到下一步，包含位置資料
     const completeData = {
       ...this.dataForm.value,
       locationData: this.locationData  // 加入位置資料
@@ -1036,7 +1036,7 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   canCopyAddress(): boolean {
-    // 🎯 只要有公司登記地址且不是檢視模式就可以複製
+    // 只要有公司登記地址且不是檢視模式就可以複製
     const hasAddress = !!this.getCompanyAddress();
     const canEdit = this.crudstatus !== CRUDStatus.Read;
     return hasAddress && canEdit;
@@ -1101,11 +1101,11 @@ export class TLS12040CRUComponent implements OnInit {
   searchLocationOptions(searchParams: any): Observable<any[]> {
     console.log('🔍 CRU 收到搜尋參數:', searchParams);
 
-    // 🎯 轉換 SortBy 的欄位名稱
+    // 轉換 SortBy 的欄位名稱
     if (searchParams.SortBy && Array.isArray(searchParams.SortBy)) {
       searchParams.SortBy = searchParams.SortBy.map((sort: any) => ({
-        field: sort.field === 'value' ? 'location_no' : sort.field,  // 🎯 轉換欄位名
-        order: 1  // 🎯 固定為升序，或保持原值 sort.order
+        field: sort.field === 'value' ? 'location_no' : sort.field,  // 轉換欄位名
+        order: 1  // 固定為升序，或保持原值 sort.order
       }));
     }
 
@@ -1260,7 +1260,7 @@ export class TLS12040CRUComponent implements OnInit {
       新狀態: newData._status
     });
 
-    // 🎯 重點：檢查位置編號是否重複
+    // 重點：檢查位置編號是否重複
     if (newData.location_no && newData.location_no.trim() !== '') {
       const isDuplicate = this.checkLocationDuplicate(newData);
 
@@ -1270,14 +1270,14 @@ export class TLS12040CRUComponent implements OnInit {
         // 顯示錯誤訊息
         this.messageService.errorBubble(`位置編號 ${newData.location_no} 重複！`);
 
-        // 🎯 直接從陣列中移除這筆資料
+        // 直接從陣列中移除這筆資料
         this.removeLocationItem(String(newData.id));
 
         return; // 不繼續後續處理
       }
     }
 
-    // 🎯 沒有重複，正常處理儲存邏輯
+    // 沒有重複，正常處理儲存邏輯
     this.updateDisplayLocationData();
 
     // 詳細的狀態判斷邏輯
@@ -1334,7 +1334,7 @@ export class TLS12040CRUComponent implements OnInit {
     field: string;
     newValue: string;
     oldValue: string;
-    selectedOption?: any; // 🎯 關鍵：selector-panel 應該提供這個
+    selectedOption?: any; // 關鍵：selector-panel 應該提供這個
   }): void {
     const { rowData, field, newValue, oldValue, selectedOption } = event;
 
@@ -1347,7 +1347,7 @@ export class TLS12040CRUComponent implements OnInit {
     });
 
     if (field === 'location_no' && newValue) {
-      // 🎯 優先使用 selectedOption（來自 selector-panel）
+      // 優先使用 selectedOption（來自 selector-panel）
       if (selectedOption) {
         console.log('📋 使用 selector-panel 提供的完整資料:', selectedOption);
         this.handleLocationSelectionFromSelectorPanel(rowData, selectedOption);
@@ -1364,7 +1364,7 @@ export class TLS12040CRUComponent implements OnInit {
       return;
     }
 
-    // 🎯 從 selectedOption 取得所有需要的資料
+    // 從 selectedOption 取得所有需要的資料
     const locationData = {
       location_no: selectedOption.value || selectedOption.location_no || '',
       tlt_building: selectedOption.tlt_building || '',
@@ -1378,7 +1378,7 @@ export class TLS12040CRUComponent implements OnInit {
 
     console.log('📋 從 selector-panel 取得的位置資料:', locationData);
 
-    // 🎯 更新資料
+    // 更新資料
     const currentStatus = this.locationData[targetIndex]._status;
     const newStatus = currentStatus === 'new' ? 'new' : 'modified';
 
@@ -1388,10 +1388,10 @@ export class TLS12040CRUComponent implements OnInit {
       _status: newStatus
     };
 
-    // 🎯 同步更新 rowData（讓表格立即顯示）
+    // 同步更新 rowData（讓表格立即顯示）
     Object.assign(rowData, this.locationData[targetIndex]);
 
-    // 🎯 觸發變更檢測
+    // 觸發變更檢測
     this.locationData = [...this.locationData];
     this.updateDisplayLocationData();
 
@@ -1414,10 +1414,10 @@ export class TLS12040CRUComponent implements OnInit {
       是否成功: beforeLength > afterLength
     });
 
-    // 🎯 更新顯示資料
+    // 更新顯示資料
     this.updateDisplayLocationData();
 
-    // 🎯 強制觸發變更檢測
+    // 強制觸發變更檢測
     this.locationData = [...this.locationData];
 
     // 儲存到工作流程

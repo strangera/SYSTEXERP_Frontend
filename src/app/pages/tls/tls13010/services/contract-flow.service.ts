@@ -12,7 +12,7 @@ import {
   UnifiedCommissionResponse,
   WorkflowStatus,
   WorkflowStep,
-  // 🎯 新增：導入清理後的資料模型
+  // 新增：導入清理後的資料模型
   CleanSubmitData,
   DataCleaner,
   DataClearOperations,
@@ -271,7 +271,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：格式化日期給後端使用
+   * 新增：格式化日期給後端使用
    */
   private formatDateForBackend(date: any): string {
     if (!date) return '';
@@ -305,7 +305,7 @@ export class ContractFlowService {
     }
   }
   /**
-   * 🎯 計算總操作數量
+   * 計算總操作數量
    */
   private calculateTotalOperations(step2Data?: any[], step3Data?: any[], step4Data?: any[]): number {
     let totalOps = 1; // Step 1 合約基本資料
@@ -334,7 +334,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 驗證清理後的資料
+   * 驗證清理後的資料
    */
   validateCleanSubmitData(cleanData: CleanSubmitData): { isValid: boolean; errors: string[]; warnings: string[] } {
     const errors: string[] = [];
@@ -417,7 +417,7 @@ export class ContractFlowService {
       console.log('📝 初始化編輯工作流程');
       this.initializeEditContractWorkflow(queryRowData);
     }
-    // 🎯 工作流程啟動後恢復檢視模式狀態
+    // 工作流程啟動後恢復檢視模式狀態
     setTimeout(() => {
       this.restoreViewMode();
     }, 100);
@@ -426,7 +426,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：初始化新增模式工作流程
+   * 新增：初始化新增模式工作流程
    */
   private initializeNewContractWorkflow(queryRowData: any): void {
     const contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -472,7 +472,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：初始化編輯模式工作流程
+   * 新增：初始化編輯模式工作流程
    */
   private initializeEditContractWorkflow(queryRowData: any): void {
     const contractId = queryRowData.talent_id || queryRowData.apply_no || Date.now().toString();
@@ -540,7 +540,7 @@ export class ContractFlowService {
 
 
   /**
-   * 🎯 新增：開始檢視工作流程
+   * 新增：開始檢視工作流程
    */
   startViewWorkflow(queryRowData: any): void {
     console.log('🔍 開始檢視工作流程:', queryRowData);
@@ -564,7 +564,7 @@ export class ContractFlowService {
   }
 
   /**
- * 🎯 新增：從 router state 初始化工作流程
+ * 新增：從 router state 初始化工作流程
  */
   async initializeFromRouterState(routerState: any): Promise<boolean> {
     try {
@@ -597,18 +597,18 @@ export class ContractFlowService {
     }
   }
   /**
-   * 🎯 新增：清除檢視模式
+   * 新增：清除檢視模式
    */
   clearViewMode(): void {
     this.isViewModeSubject.next(false);
 
-    // 🎯 清除持久化資料
+    // 清除持久化資料
     this.clearPersistedViewMode();
     console.log('🗑️ 已清除檢視模式');
   }
 
   /**
-  * 🎯 新增：清除持久化的檢視模式資料
+  * 新增：清除持久化的檢視模式資料
   */
   private clearPersistedViewMode(): void {
     try {
@@ -624,13 +624,13 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：從 API 載入合約資料
+   * 新增：從 API 載入合約資料
    */
   private async loadContractFromAPI(talentId: string, mode: string): Promise<boolean> {
     try {
       console.log('🔄 從 API 載入合約資料:', { talentId, mode });
 
-      // 🎯 使用現有的查詢 API （您需要注入 TLS13010Service）
+      // 使用現有的查詢 API （您需要注入 TLS13010Service）
       const response = await this.tls13010Service.queryTLS13010({
         talent_id: talentId
         // 其他必要參數...
@@ -701,7 +701,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 修正：儲存第1步資料
+   * 修正：儲存第1步資料
    */
   saveStep1Data(formData: ContractInfo): void {
     if (this.isViewMode()) {
@@ -765,7 +765,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 修正：儲存第2步資料（代扣款）
+   * 修正：儲存第2步資料（代扣款）
    */
   saveStep2Data(data: FareItem[]): void {
     if (this.isViewMode()) {
@@ -782,7 +782,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 修正：儲存第3步資料（抽成設定）
+   * 修正：儲存第3步資料（抽成設定）
    */
   saveStep3Data(data: CommissionItem[]): void {
     if (this.isViewMode()) {
@@ -831,10 +831,11 @@ export class ContractFlowService {
         isConsistent: (verification?.length || 0) === (data?.length || 0)
       });
 
-    } else {
-      console.error('❌ 無 contractId，無法儲存 Step4 資料');
-      throw new Error('無法儲存 Step4 資料：缺少 contractId');
     }
+    // else {
+    //   console.error('❌ 無 contractId，無法儲存 Step4 資料');
+    //   throw new Error('無法儲存 Step4 資料：缺少 contractId');
+    // }
   }
 
   /**
@@ -861,7 +862,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 修正：儲存統一抽成設定資料
+   * 修正：儲存統一抽成設定資料
    */
   setUnifiedCommissionData(data: UnifiedCommissionResponse): void {
     this.contractData.unifiedCommissionData = data;
@@ -870,14 +871,14 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 取得統一抽成設定資料
+   * 取得統一抽成設定資料
    */
   getUnifiedCommissionData(): UnifiedCommissionResponse | null {
     return this.contractData.unifiedCommissionData;
   }
 
   /**
-   * 🎯 取得 Next3 用的條件設定資料
+   * 取得 Next3 用的條件設定資料
    */
   getRentSettingDataForNext3(): any {
     const unifiedData = this.getUnifiedCommissionData();
@@ -885,7 +886,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 檢查是否有要刪除的舊資料
+   * 檢查是否有要刪除的舊資料
    */
   hasDataToDelete(): boolean {
     const unifiedData = this.getUnifiedCommissionData();
@@ -893,7 +894,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 取得要刪除的舊資料（統一處理）
+   * 取得要刪除的舊資料（統一處理）
    */
   getDataToDelete(): any {
     const unifiedData = this.getUnifiedCommissionData();
@@ -906,7 +907,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 檢查抽成別是否有變更
+   * 檢查抽成別是否有變更
    */
   isCommissionTypeChanged(): boolean {
     const unifiedData = this.getUnifiedCommissionData();
@@ -914,7 +915,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 取得抽成別變更警告訊息
+   * 取得抽成別變更警告訊息
    */
   getCommissionChangeWarning(): any {
     const unifiedData = this.getUnifiedCommissionData();
@@ -922,7 +923,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 清除統一抽成設定資料
+   * 清除統一抽成設定資料
    */
   clearUnifiedCommissionData(): void {
     this.contractData.unifiedCommissionData = null;
@@ -1059,7 +1060,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：檢查當前合約的檢視模式狀態
+   * 新增：檢查當前合約的檢視模式狀態
    */
   checkContractViewMode(contractId: string): boolean {
     try {
@@ -1078,7 +1079,7 @@ export class ContractFlowService {
   }
 
   /**
-  * 🎯 新增：強制設定為檢視模式（用於外部程式跳轉）
+  * 新增：強制設定為檢視模式（用於外部程式跳轉）
   */
   forceViewMode(contractId: string): void {
     console.log('🔒 強制設定為檢視模式:', contractId);
@@ -1099,7 +1100,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 保留舊的方法（向後相容，但建議使用新的 generateCleanSubmitData）
+   * 保留舊的方法（向後相容，但建議使用新的 generateCleanSubmitData）
    */
   generateSubmitData(): any {
     console.warn('⚠️ generateSubmitData() 已過時，建議使用 generateCleanSubmitData()');
@@ -1181,7 +1182,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 修正：套用載入的資料（包含版本號）
+   * 修正：套用載入的資料（包含版本號）
    */
   private applyLoadedData(data: any): void {
     try {
@@ -1283,7 +1284,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 修正：取得第3步資料（抽成設定）
+   * 修正：取得第3步資料（抽成設定）
    */
   getStep3Data(): CommissionItem[] {
     console.log('🔍 取得 Step3 資料...');
@@ -1376,7 +1377,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：統一的模式資訊獲取
+   * 新增：統一的模式資訊獲取
    */
   getWorkflowModeInfo(): {
     isNewMode: boolean;
@@ -1397,7 +1398,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：完全清空並重新開始（新增模式專用）
+   * 新增：完全清空並重新開始（新增模式專用）
    */
   clearAndStartNew(): void {
     console.log('🆕 清空所有資料並開始新增模式');
@@ -1418,7 +1419,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：檢查是否為新增模式
+   * 新增：檢查是否為新增模式
    */
   isNewContractMode(): boolean {
     const currentData = this.getCurrentData();
@@ -1480,10 +1481,10 @@ export class ContractFlowService {
     };
   }
 
-  // ========== 🎯 新增：除錯工具方法 ==========
+  // ========== 新增：除錯工具方法 ==========
 
   /**
-   * 🎯 新增：取得工作流程狀態摘要（除錯用）
+   * 新增：取得工作流程狀態摘要（除錯用）
    */
   getWorkflowStatusSummary(): any {
     const modeInfo = this.getWorkflowModeInfo();
@@ -1506,7 +1507,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：重置為新增模式（清空並重新開始）
+   * 新增：重置為新增模式（清空並重新開始）
    */
   resetToNewMode(): void {
     console.log('🔄 重置為新增模式');
@@ -1525,10 +1526,10 @@ export class ContractFlowService {
     console.log('✅ 已重置為新增模式');
   }
 
-  // ========== 🎯 新增：最終提交相關方法 ==========
+  // ========== 新增：最終提交相關方法 ==========
 
   /**
-   * 🎯 新增：預覽提交資料（不實際送出）
+   * 新增：預覽提交資料（不實際送出）
    */
   previewSubmitData(): { cleanData: CleanSubmitData; validation: any } {
     const cleanData = this.generateCleanSubmitData();
@@ -1538,7 +1539,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：提交資料到後端（模擬）
+   * 新增：提交資料到後端（模擬）
    */
   submitToBackend(apiEndpoint: string = '/api/contracts/submit'): Observable<any> {
     const cleanData = this.generateCleanSubmitData();
@@ -1550,10 +1551,10 @@ export class ContractFlowService {
 
     console.log('📤 提交清理後的資料到後端:', cleanData);
 
-    // 🎯 TODO: 實際的 HTTP 請求
+    // TODO: 實際的 HTTP 請求
     // return this.http.post(apiEndpoint, cleanData);
 
-    // 🎯 暫時模擬 API 回應
+    // 暫時模擬 API 回應
     return new Observable(observer => {
       setTimeout(() => {
         observer.next({
@@ -1567,7 +1568,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：提交成功後的清理
+   * 新增：提交成功後的清理
    */
   onSubmitSuccess(): void {
     console.log('✅ 提交成功，清理暫存資料');
@@ -1575,7 +1576,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：取得提交資料大小（除錯用）
+   * 新增：取得提交資料大小（除錯用）
    */
   getSubmitDataSize(): { original: number; clean: number; reduction: string } {
     try {
@@ -1598,7 +1599,7 @@ export class ContractFlowService {
   }
 
   /**
-  * 🎯 新增：檢測抽成別是否有變更
+  * 新增：檢測抽成別是否有變更
   */
   detectCommissionTypeChange(): CommissionTypeChangeInfo | null {
     try {
@@ -1641,7 +1642,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：根據原抽成別生成清除操作
+   * 新增：根據原抽成別生成清除操作
    */
   private generateClearOperations(originalTermType: string): DataClearOperations {
     const clearOps: DataClearOperations = {
@@ -1684,7 +1685,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 簡單的檢視模式判定（暫時都回傳 false，讓使用者選擇）
+   * 簡單的檢視模式判定（暫時都回傳 false，讓使用者選擇）
    */
   shouldBeViewMode(rowData: any): boolean {
     // 暫時先都回傳 false，表示都可以編輯
@@ -1693,7 +1694,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 智慧啟動（自動判定模式）
+   * 智慧啟動（自動判定模式）
    */
   startSmartWorkflow(rowData: any): void {
     const isViewMode = this.shouldBeViewMode(rowData);
@@ -1709,7 +1710,7 @@ export class ContractFlowService {
   }
 
   /**
-  * 🎯 新增：持久化檢視模式狀態
+  * 新增：持久化檢視模式狀態
   */
   private persistViewMode(isViewMode: boolean): void {
     try {
@@ -1729,7 +1730,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 新增：從持久化儲存中恢復檢視模式
+   * 新增：從持久化儲存中恢復檢視模式
    */
   private restoreViewMode(): void {
     try {

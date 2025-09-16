@@ -342,7 +342,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   /**
-    * 🎯 覆寫父類的 onCreate 方法，實作新增功能
+    * 覆寫父類的 onCreate 方法，實作新增功能
     */
   override onCreate(): void {
     console.log('🆕 開始新增流程，清空所有暫存資料');
@@ -426,10 +426,10 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 詳細檢視功能
    */
   override onDetail(rowData: ContractItem): void {
-    // 🎯 使用 startViewWorkflow 會自動持久化檢視模式
+    // 使用 startViewWorkflow 會自動持久化檢視模式
     this.contractFlowService.startViewWorkflow(rowData);
 
-    // 🎯 不帶任何 URL 參數，依賴持久化狀態
+    // 不帶任何 URL 參數，依賴持久化狀態
     this.router.navigate(['account/tls/tls13010cru']);
 
     this.messageService.infoBubble('進入檢視模式');

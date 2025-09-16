@@ -85,7 +85,7 @@ export class ConditionDataManager {
         break;
     }
 
-    // 🎯 確保所有從後端映射的資料都有 original 狀態
+    // 確保所有從後端映射的資料都有 original 狀態
     conditions.forEach(condition => {
       if (!(condition as any)._status) {
         (condition as any)._status = 'original';
@@ -123,7 +123,7 @@ export class ConditionDataManager {
     };
 
     items.forEach(item => {
-      // 🎯 確保狀態信息在分類過程中被保留
+      // 確保狀態信息在分類過程中被保留
       const enhancedItem = {
         ...item,
         _status: (item as any)._status || 'original',

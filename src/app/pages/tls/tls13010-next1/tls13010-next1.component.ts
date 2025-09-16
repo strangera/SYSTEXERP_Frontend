@@ -677,7 +677,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  // 🎯 B類型計算優化
+  // B類型計算優化
   private handleTypeBCalculation(fieldName: string, newValue: any, rowData: any): void {
 
     if (fieldName === 'tpy_type' && newValue === '01') {
@@ -699,11 +699,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 C類型計算優化 - 最重要的優化
+  // C類型計算優化 - 最重要的優化
   private handleTypeCCalculation(fieldName: string, newValue: any, rowData: any): void {
     // console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
 
-    // 🎯 日期變更時重新計算期數
+    // 日期變更時重新計算期數
     if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
       // console.log('📅 日期欄位變更，重新計算期數');
 
@@ -724,7 +724,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       }, 10);
     }
 
-    // 🎯 金額相關欄位變更時的計算
+    // 金額相關欄位變更時的計算
     const calculationFields = ['tpy_totalamt', 'period_nos', 'tpy_amount', 'down_payment'];
     if (calculationFields.includes(fieldName)) {
       this.fareCalculationService.autoCalculateAmount(rowData, 'C', fieldName);
@@ -739,7 +739,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 D/E類型計算優化
+  // D/E類型計算優化
   private handleTypeDCalculation(fieldName: string, newValue: any, rowData: any): void {
     if (fieldName === 'tpy_rate') {
       this.fareCalculationService.autoCalculateAmount(rowData, 'D', fieldName);
@@ -763,7 +763,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       let startDate: Date;
       let endDate: Date;
 
-      // 🎯 智能日期解析
+      // 智能日期解析
       try {
         if (rowData.tpy_bdate instanceof Date) {
           startDate = rowData.tpy_bdate;
@@ -792,7 +792,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
           // console.log(`✅ 期數更新: ${oldPeriods} → ${calculatedPeriods}`);
 
-          // 🎯 如果期數變化，觸發C類型重新計算
+          // 如果期數變化，觸發C類型重新計算
           if (oldPeriods !== calculatedPeriods) {
             console.log('🔄 期數變化，觸發C類型重新計算');
             this.fareCalculationService.autoCalculateAmount(rowData, 'C', 'period_nos');
@@ -828,7 +828,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const endYear = endDate.getFullYear();
     const endMonth = endDate.getMonth(); // 0-based
 
-    // 🎯 正確的月份差計算公式
+    // 正確的月份差計算公式
     const months = (endYear - startYear) * 12 + (endMonth - startMonth);
 
     console.log('🧮 期數計算詳情:', {
@@ -883,7 +883,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     const { newData } = event;
 
-    // 🎯 根據類型執行最終計算
+    // 根據類型執行最終計算
     switch (capType) {
       case 'A':
         this.fareCalculationService.autoCalculateAmount(newData, 'A');
@@ -1196,7 +1196,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log(`🔘 按鈕點擊: ${field}`, rowData);
 
-    // 🎯 直接根據 field 判斷要做什麼
+    // 直接根據 field 判斷要做什麼
     if (field === 'auto_calc') {
       this.doAutoCalculate(rowData, capType);
     } else if (field === 'copy_button') {
@@ -1205,7 +1205,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-   * 🎯 您的自動計算邏輯 - 完全自由發揮！
+   * 您的自動計算邏輯 - 完全自由發揮！
    */
   private doAutoCalculate(rowData: any, capType: string): void {
     console.log('🧮 開始自動計算');
@@ -1221,7 +1221,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const monthlyAmount = Math.round(totalAmount / periods);
     const downPayment = totalAmount - (monthlyAmount * (periods - 1));
 
-    // 🎯 設定對話框資料並顯示
+    // 設定對話框資料並顯示
     this.calculationResult = {
       totalAmount,
       periods,
@@ -1293,7 +1293,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         }
       });
 
-      // 🎯 新的日期處理邏輯
+      // 新的日期處理邏輯
       this.handleCopiedItemDates(copiedItem, originalItem);
 
       // 其他欄位處理...
@@ -1336,7 +1336,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 新增專門處理複製項目日期的方法
+  // 新增專門處理複製項目日期的方法
   // 修正後的處理複製項目日期方法
   private handleCopiedItemDates(copiedItem: any, originalItem: any): void {
     try {

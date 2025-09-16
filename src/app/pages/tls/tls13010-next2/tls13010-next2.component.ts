@@ -43,8 +43,17 @@ import { TLS13010Next2EventHandlersService } from './Services/tls13010-next2-eve
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, ButtonDirective]
 })
 export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> implements OnInit, OnDestroy {
-  @ViewChild('expandedContent') expandedContentTemplate!: TemplateRef<any>;
+  // @ViewChild('expandedContent') expandedContentTemplate!: TemplateRef<any>;
   //檢視頁面參數
+
+  // 移除複雜的編輯狀態管理
+  private autoSaveDebounce: any;
+  private readonly AUTO_SAVE_DELAY = 300; // 300ms 防抖延遲
+
+  // 簡化的狀態追蹤
+  private hasUnsavedChanges = false;
+
+
   isViewMode = false;
   private viewModeSubscription?: Subscription;
 
@@ -101,10 +110,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   commissionData: CommissionItem[] = [];
 
   // 下拉選項
-  taxTypeOptions: any[] = [
-    { label: '應稅', value: 1 },
-    { label: '免稅', value: 2 }
-  ];
+  // taxTypeOptions: any[] = [
+  //   { label: '應稅', value: 1 },
+  //   { label: '免稅', value: 2 }
+  // ];
 
   private discountOptions: any[] = [];
 
@@ -138,10 +147,125 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.updateDiscountColumnOptions();
 
       await this.loadWorkflowData();
-      this.setupAutoSave();
+      // this.setupAutoSave();
     } catch (error) {
       console.error('初始化失敗:', error);
       this.notificationService.errorBubble('頁面初始化失敗');
+    }
+  }
+
+  /**
+    * 核心方法：處理欄位變更事件（由表格觸發）
+    */
+  onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
+    console.log('🔥 Next2 收到欄位變更:', {
+      fieldName: event.fieldName,
+      newValue: event.newValue,
+      rowId: event.rowData?.id,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      // 關鍵：立即更新資料狀態
+      const modifiedData = this.updateItemStatus(event.rowData);
+
+      // 更新到對應的陣列
+      this.updateCommissionDataArray(modifiedData);
+
+      // 標記有未儲存的變更
+      this.hasUnsavedChanges = true;
+
+      // 防抖儲存
+      this.debouncedSave();
+
+      console.log('✅ 欄位變更已處理:', {
+        itemId: modifiedData.id,
+        newStatus: modifiedData._status,
+        fieldName: event.fieldName
+      });
+
+    } catch (error) {
+      console.error('❌ 處理欄位變更時發生錯誤:', error);
+      this.notificationService.errorBubble('資料更新失敗');
+    }
+  }
+
+  private debouncedSave(): void {
+    // 清除之前的計時器
+    if (this.autoSaveDebounce) {
+      clearTimeout(this.autoSaveDebounce);
+    }
+
+    // 設定新的計時器
+    this.autoSaveDebounce = setTimeout(() => {
+      this.saveToWorkflowImmediate();
+      this.hasUnsavedChanges = false;
+      console.log('⚡ 防抖儲存完成');
+    }, this.AUTO_SAVE_DELAY);
+
+    console.log('⏱️ 設定防抖儲存計時器');
+  }
+
+  private updateItemStatus(itemData: any): any {
+    const modifiedData = { ...itemData };
+
+    // 如果是新增的資料，保持 new 狀態
+    if (modifiedData._status === 'new') {
+      console.log('🆕 保持新增狀態:', modifiedData.id);
+      return modifiedData;
+    }
+
+    // 如果是原始資料，標記為已修改
+    if (modifiedData._status === 'original' || !modifiedData._status) {
+      modifiedData._status = 'modified';
+      console.log('📝 標記為已修改:', modifiedData.id);
+    }
+
+    return modifiedData;
+  }
+
+  private updateCommissionDataArray(modifiedData: any): void {
+    const itemId = modifiedData.id;
+    const index = this.commissionData.findIndex(item => item.id === itemId);
+
+    if (index > -1) {
+      // 關鍵：完全替換而不是合併，確保狀態正確更新
+      this.commissionData[index] = { ...modifiedData };
+      console.log(`✅ 已更新 commission data index ${index}:`, {
+        id: modifiedData.id,
+        _status: modifiedData._status
+      });
+    } else {
+      console.warn(`⚠️ 找不到 ID: ${itemId} 的項目`);
+    }
+  }
+
+  /**
+ * 立即儲存到工作流程（不依賴原有的 saveToWorkflow）
+ */
+  private saveToWorkflowImmediate(): void {
+    console.log('💾 立即儲存到工作流程...');
+
+    try {
+      // 確保所有資料都有正確的狀態標記
+      const processedData = this.prepareCommissionDataForSubmit();
+
+      // 儲存到工作流程服務
+      this.contractFlowService.saveStep3Data(processedData);
+
+      console.log('✅ 工作流程儲存成功，項目數量:', processedData.length);
+
+      // 驗證儲存結果
+      const savedData = this.contractFlowService.getStep3Data();
+      if (Array.isArray(savedData) && savedData.length === processedData.length) {
+        console.log('✅ 儲存驗證通過');
+      } else {
+        console.warn('⚠️ 儲存數量不一致');
+      }
+
+    } catch (error) {
+      console.error('❌ 工作流程儲存失敗:', error);
+      this.notificationService.errorBubble('暫存失敗，請重試');
     }
   }
 
@@ -153,8 +277,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+    console.log('🧹 Next2 組件銷毀前最終儲存...');
 
+    //  銷毀前強制儲存所有變更
+    this.forceSyncAllPendingChanges();
+
+    // 清理計時器
+    if (this.autoSaveDebounce) {
+      clearTimeout(this.autoSaveDebounce);
+    }
+
+    // 原有的清理邏輯
+    this.subscriptions.forEach(sub => sub.unsubscribe());
     if (this.viewModeSubscription) {
       this.viewModeSubscription.unsubscribe();
     }
@@ -178,22 +312,22 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   /**
-  * 🎯 新增：設定檢視模式 UI
+  * 新增：設定檢視模式 UI
   */
   private setupViewModeUI(): void {
     console.log('🔧 Next2 設定檢視模式 UI 監聽');
 
-    // 🎯 先檢查當前狀態
+    // 先檢查當前狀態
     const currentViewMode = this.contractFlowService.isViewMode();
     console.log('📋 Next2 當前檢視模式狀態:', currentViewMode);
 
-    // 🎯 如果已經是檢視模式，立即設定
+    // 如果已經是檢視模式，立即設定
     if (currentViewMode) {
       this.isViewMode = true;
       this.applyViewModeSettings(true);
     }
 
-    // 🎯 訂閱後續變更
+    // 訂閱後續變更
     this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       console.log('🔍 Next2 檢視模式變更:', isViewMode);
       this.isViewMode = isViewMode;
@@ -211,42 +345,37 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       console.log('🔓 Next2 停用檢視模式 - 表格將恢復可編輯');
     }
 
-    // 🎯 不需要手動更新欄位，readonly 屬性會自動處理所有事情
+    // 不需要手動更新欄位，readonly 屬性會自動處理所有事情
   }
 
 
   private saveToWorkflow(): void {
-    if (this.isViewMode) {
-      console.log('🔍 Next2 檢視模式，跳過資料儲存');
-      return;
-    }
-    if (this.hasCommissionChanges()) {
-      Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
-      const processedData = this.prepareCommissionDataForSubmit();
-      this.contractFlowService.saveStep3Data(processedData);
-      console.log('✅ 已暫存抽成資料到工作流程:', processedData);
-    }
+    this.debouncedSave();
   }
 
-  private hasCommissionChanges(): boolean {
-    return this.validationService.hasCommissionChanges(this.commissionData);
+  /**
+   *  強制立即儲存（用於特殊情況）
+   */
+  forceSaveImmediate(): void {
+    console.log('🚨 強制立即儲存');
+    this.forceSyncAllPendingChanges();
   }
 
-  // private hasDetailItemChanges(commissionItem: CommissionItem): boolean {
-  //   const hasDiscountChanges = commissionItem.discountSettingItems.some(item =>
-  //     item._status === 'new' || item._status === 'modified' || item._status === 'deleted'
-  //   );
+  /**
+   *  獲取當前資料狀態摘要
+   */
+  getDataStatusSummary(): any {
+    const summary = {
+      totalItems: this.commissionData.length,
+      newItems: this.commissionData.filter(item => item._status === 'new').length,
+      modifiedItems: this.commissionData.filter(item => item._status === 'modified').length,
+      originalItems: this.commissionData.filter(item => item._status === 'original' || !item._status).length,
+      hasUnsavedChanges: this.hasUnsavedChanges
+    };
 
-  //   const hasAnnualChanges = commissionItem.annualPerformanceItems.some(item =>
-  //     item._status === 'new' || item._status === 'modified' || item._status === 'deleted'
-  //   );
-
-  //   const hasLevelChanges = commissionItem.discountLevelItems.some(item =>
-  //     item._status === 'new' || item._status === 'modified' || item._status === 'deleted'
-  //   );
-
-  //   return hasDiscountChanges || hasAnnualChanges || hasLevelChanges;
-  // }
+    console.log('📊 資料狀態摘要:', summary);
+    return summary;
+  }
 
   private prepareCommissionDataForSubmit(): CommissionItem[] {
     console.log('🔄 準備抽成資料供提交，原始資料:', this.commissionData);
@@ -417,11 +546,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private prepareContractInfoDisplay(): void {
     console.log('📊 準備合約資訊顯示...');
 
-    // 🎯 優先使用 CRU 頁面編輯後的資料
+    // 優先使用 CRU 頁面編輯後的資料
     const step1Data = this.contractFlowService.getStep1Data();
     console.log('📝 Step1 編輯資料:', step1Data);
 
-    // 🎯 準備合約資訊
+    // 準備合約資訊
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
       tlt_no: step1Data?.tlt_no || this.currentContractData?.tlt_no || '',
@@ -441,7 +570,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('📊 準備顯示的合約資訊:', contractInfo);
 
     this.contractInfoData = [{
-      id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
+      id: contractInfo.talent_id || 'new', // 新增模式顯示 'new'
       ...contractInfo
     }];
 
@@ -530,7 +659,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('💾 Next2 儲存抽成資料到工作流程...');
 
     try {
-      // 🎯 確保所有資料都有正確的狀態標記
+      // 確保所有資料都有正確的狀態標記
       const processedData = this.commissionData.map(item => ({
         ...item,
         _status: item._status || 'original',
@@ -874,13 +1003,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       to: tabId
     });
 
-    // 🎯 先保存當前標籤的資料
+    // 先保存當前標籤的資料
     this.saveItemTabDataBeforeSwitch(rowData);
 
-    // 🎯 設定新的標籤
+    // 設定新的標籤
     rowData.currentTab = tabId;
 
-    // 🎯 只更新這個項目的顯示
+    // 只更新這個項目的顯示
     this.refreshSingleItemDetailDisplay(rowData);
 
     console.log('✅ 內層標籤切換完成');
@@ -995,17 +1124,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     return '3';
   }
 
-  // 🎯 判斷是否為一般抽成（簡潔版本）
+  // 判斷是否為一般抽成（簡潔版本）
   get isGeneralCommissionMode(): boolean {
     return this.currentCommissionType === '3';
   }
 
-  // 🎯 取得按鈕類型（簡潔版本）
+  // 取得按鈕類型（簡潔版本）
   getNextButtonType(): "submit" | "create" {
     return this.isGeneralCommissionMode ? 'submit' : 'create';
   }
 
-  // 🎯 取得按鈕標籤（簡潔版本）
+  // 取得按鈕標籤（簡潔版本）
   getNextButtonLabel(): string {
     return this.isGeneralCommissionMode ? '確認' : '下一步(租金設定)';
   }
@@ -1021,21 +1150,53 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
   // 導航方法
   onSubmitNext(): void {
+    console.log('🚀 準備提交，執行最終同步...');
+
+    // 步驟1：強制執行所有pending的防抖儲存
+    this.forceSyncAllPendingChanges();
+
+    // 步驟2：等待同步完成後再執行原有邏輯
+    setTimeout(() => {
+      this.executeOriginalSubmitLogic();
+    }, 100);
+  }
+
+  /**
+  * 強制同步所有未儲存的變更
+  */
+  private forceSyncAllPendingChanges(): void {
+    console.log('🔄 強制同步所有未儲存的變更...');
+
+    // 立即執行防抖儲存
+    if (this.autoSaveDebounce) {
+      clearTimeout(this.autoSaveDebounce);
+      this.autoSaveDebounce = null;
+    }
+
+    // 如果有未儲存的變更，立即儲存
+    if (this.hasUnsavedChanges) {
+      this.saveToWorkflowImmediate();
+      this.hasUnsavedChanges = false;
+    }
+
+    console.log('✅ 所有變更已強制同步');
+  }
+
+  /**
+   * 執行原有的提交邏輯
+   */
+  private executeOriginalSubmitLogic(): void {
     if (this.isViewMode) {
       if (this.isGeneralCommissionMode) {
-        // 一般抽成檢視：回到列表
         this.router.navigate(['account/tls/tls13010']);
         return;
       } else {
-        // 其他抽成檢視：到 Next3
         this.router.navigate(['account/tls/tls13010next3']);
         return;
       }
     }
 
-    // 編輯模式：原有邏輯
-    this.saveCommissionDataToWorkflow();
-
+    // 編輯模式：檢查資料完整性
     const hasCommissionItems = this.commissionData.length > 0;
     if (!hasCommissionItems) {
       this.notificationService.warnBubble('請至少設定一個抽成項目');
@@ -1067,7 +1228,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   override onCancel(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回上一步，不帶參數
+      // 檢視模式：返回上一步，不帶參數
       this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
@@ -1124,7 +1285,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.notificationService.blockUi();
 
     try {
-      // 🎯 使用新的清理資料方法
+      // 使用新的清理資料方法
       const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
 
       console.log('🚀 Next2: 最終送出的完整 JSON:');
@@ -1141,7 +1302,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         }
       }
 
-      // 🎯 驗證資料
+      // 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
 
       if (!validation.isValid) {
@@ -1152,7 +1313,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         return;
       }
 
-      // 🎯 顯示警告（如果有）
+      // 顯示警告（如果有）
       if (validation.warnings.length > 0) {
         console.warn('⚠️ Next2: 提交警告:', validation.warnings);
         validation.warnings.forEach(warning => {
@@ -1160,7 +1321,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         });
       }
 
-      // 🎯 調用真實的 API
+      // 調用真實的 API
       this.callCleanSubmitAPI(cleanSubmitData);
 
     } catch (error) {
@@ -1174,7 +1335,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private callCleanSubmitAPI(cleanData: CleanSubmitData): void {
     console.log('📤 Next2: 調用真實 API 提交契約資料...');
 
-    // 🎯 調用真實的 API
+    // 調用真實的 API
     this.tls13010Service.submitFinalTLS13010(cleanData).subscribe({
       next: (response) => {
         console.log('✅ Next2: 契約提交成功:', response);
@@ -1193,7 +1354,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     console.log('🎉 Next2: 處理提交成功回應:', response);
 
-    // 🎯 顯示成功訊息
+    // 顯示成功訊息
     let successMessage = '契約資料提交成功！';
     if (response.talentId) {
       successMessage += `\n專櫃編號: ${response.talentId}`;
@@ -1207,17 +1368,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     this.notificationService.successBubble(successMessage);
 
-    // 🎯 顯示警告（如果有）
+    // 顯示警告（如果有）
     if (response.warnings && response.warnings.length > 0) {
       response.warnings.forEach((warning: string) => {
         this.notificationService.warnBubble(warning);
       });
     }
 
-    // 🎯 提交成功後清理暫存並導航
+    // 提交成功後清理暫存並導航
     this.contractFlowService.onSubmitSuccess();
 
-    // 🎯 延遲導航，讓使用者看到成功訊息
+    // 延遲導航，讓使用者看到成功訊息
     setTimeout(() => {
       this.router.navigate(['account/tls/tls13010']);
     }, 2000);
@@ -1231,7 +1392,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     let errorMessage = '契約資料提交失敗';
 
-    // 🎯 解析錯誤訊息
+    // 解析錯誤訊息
     if (error?.error?.Message) {
       errorMessage += `: ${error.error.Message}`;
     } else if (error?.message) {
@@ -1240,7 +1401,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       errorMessage += `: ${error}`;
     }
 
-    // 🎯 特殊錯誤處理
+    // 特殊錯誤處理
     if (error?.status === 400) {
       errorMessage = '資料格式錯誤，請檢查輸入內容';
     } else if (error?.status === 500) {
@@ -1251,7 +1412,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     this.notificationService.errorBubble(errorMessage);
 
-    // 🎯 記錄詳細錯誤資訊供除錯
+    // 記錄詳細錯誤資訊供除錯
     console.group('❌ Next2: 詳細錯誤資訊');
     console.log('Status:', error?.status);
     console.log('StatusText:', error?.statusText);
@@ -1283,7 +1444,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (step1Data?.tlt_bdate) {
       console.log('📅 從 Step1 取得起始日:', step1Data.tlt_bdate);
 
-      // 🎯 關鍵修正：統一處理日期格式，避免時區問題
+      // 關鍵修正：統一處理日期格式，避免時區問題
       const dateStr = this.extractDateStringFromInput(step1Data.tlt_bdate);
       console.log('📅 處理後的起始日:', dateStr);
       return dateStr;
@@ -1301,7 +1462,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (step1Data?.tlt_edate) {
       console.log('📅 從 Step1 取得結束日:', step1Data.tlt_edate);
 
-      // 🎯 關鍵修正：統一處理日期格式，避免時區問題
+      // 關鍵修正：統一處理日期格式，避免時區問題
       const dateStr = this.extractDateStringFromInput(step1Data.tlt_edate);
       console.log('📅 處理後的結束日:', dateStr);
       return dateStr;
@@ -1324,7 +1485,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (typeof dateInput === 'string') {
       // 檢查是否為 ISO 字符串格式 (包含 T 和時間部分)
       if (dateInput.includes('T')) {
-        // 🎯 關鍵：從 ISO 字符串中提取日期部分，忽略時間和時區
+        // 關鍵：從 ISO 字符串中提取日期部分，忽略時間和時區
         return dateInput.split('T')[0];
       }
       // 如果是純日期字符串，直接使用
@@ -1345,7 +1506,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     try {
       const parsedDate = new Date(dateInput);
       if (!isNaN(parsedDate.getTime())) {
-        // 🎯 重要：使用 UTC 方法避免時區轉換
+        // 重要：使用 UTC 方法避免時區轉換
         const year = parsedDate.getUTCFullYear();
         const month = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
         const day = String(parsedDate.getUTCDate()).padStart(2, '0');
@@ -1390,55 +1551,23 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onItemSave(event: { oldData: any, newData: any }): void {
-    this.eventHandlersService.handleItemSave(event, this.commissionData, this.selectedSettingTab);
-    this.updateDetailItemsForDisplay();
-    this.saveToWorkflow();
+    // 直接編輯模式下這個事件可能不會觸發，因為是透過 fieldChange 處理
+    console.log('📝 表格儲存事件 (direct edit mode):', event);
+
+    // 確保資料狀態正確
+    const modifiedData = this.updateItemStatus(event.newData);
+    this.updateCommissionDataArray(modifiedData);
+    this.debouncedSave();
   }
 
   onDetailSave(event: { oldDetail: any, newDetail: any, parentData: any }): void {
-    const { newDetail, parentData } = event;
+    // 類似處理明細資料的變更
+    console.log('📝 明細儲存事件 (direct edit mode):', event);
 
-    // 🎯 統一的日期驗證邏輯（所有詳細資料類型都檢查）
-    if (newDetail.tlt_bdate && newDetail.tlt_edate) {
-      const startDate = new Date(newDetail.tlt_bdate);
-      const endDate = new Date(newDetail.tlt_edate);
-
-      // 基本日期有效性檢查
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        this.notificationService.errorBubble('日期格式錯誤，請重新輸入');
-        return; // ⚠️ 這裡要確保真的停止執行
-      }
-
-      // 起始日期必須早於或等於結束日期
-      if (startDate > endDate) {
-        this.notificationService.errorBubble('起始日期必須早於或等於結束日期');
-        return; // ⚠️ 這裡要確保真的停止執行
-      }
-    }
-
-    // 🎯 年度業績項目的特殊驗證（檢查與其他項目的日期重疊）
-    if (newDetail._originalType === 'annual') {
-      console.log('🔍 檢查年度業績項目重疊...', newDetail);
-
-      const validation = this.validationService.validateSingleAnnualItemOverlap(
-        newDetail,
-        parentData.annualPerformanceItems,
-        newDetail.id // 排除自己
-      );
-
-      console.log('📋 驗證結果:', validation);
-
-      if (!validation.isValid) {
-        console.log('❌ 驗證失敗，阻止儲存');
-        this.notificationService.errorBubble(validation.errors[0]);
-        return; // ⚠️ 關鍵：這裡必須停止執行，不能繼續儲存
-      }
-    }
-
-    // 如果所有驗證都通過，才繼續原有的儲存邏輯
-    console.log('✅ 驗證通過，繼續儲存');
-    this.eventHandlersService.handleDetailSave(event, this.commissionData);
-    this.saveToWorkflow();
+    // 確保父項目狀態正確
+    const modifiedParent = this.updateItemStatus(event.parentData);
+    this.updateCommissionDataArray(modifiedParent);
+    this.debouncedSave();
   }
 
   onBeforeDetailSave(event: { data: any, preventDefault: () => void }): void {
@@ -1454,14 +1583,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         console.log('❌ 日期格式錯誤，阻止儲存');
         this.notificationService.errorBubble('日期格式錯誤，請重新輸入');
         event.preventDefault();
-        return; // 🎯 確保這裡真的停止執行
+        return; // 確保這裡真的停止執行
       }
 
       if (startDate > endDate) {
         console.log('❌ 起始日期不能晚於結束日期');
         this.notificationService.errorBubble('起始日期必須早於結束日期');
         event.preventDefault();
-        return; // 🎯 確保這裡真的停止執行
+        return; // 確保這裡真的停止執行
       }
     }
 
@@ -1482,7 +1611,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           console.log('❌ 年度業績重疊，阻止儲存');
           this.notificationService.errorBubble(validation.errors[0]);
           event.preventDefault();
-          return; // 🎯 確保這裡真的停止執行
+          return; // 確保這裡真的停止執行
         }
       }
     }
@@ -1619,5 +1748,153 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     console.log('📋 複製完成的項目:', copiedItem);
     return copiedItem;
+  }
+
+  /**
+   * 處理詳細資料欄位變更事件
+   */
+  onDetailFieldChange(event: {
+    fieldName: string,
+    newValue: any,
+    detailData: any,
+    parentData: any,
+    rowIndex: number,
+    detailIndex: number
+  }): void {
+    console.log('詳細資料欄位變更:', {
+      fieldName: event.fieldName,
+      newValue: event.newValue,
+      detailId: event.detailData?.id,
+      parentId: event.parentData?.id,
+      rowIndex: event.rowIndex,
+      detailIndex: event.detailIndex,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      // 更新詳細資料狀態
+      const modifiedDetail = this.updateDetailItemStatus(event.detailData);
+
+      // 更新父項目狀態
+      const modifiedParent = this.updateItemStatus(event.parentData);
+
+      // 同步詳細資料到對應的陣列
+      this.syncDetailToParentArray(modifiedDetail, modifiedParent, event.fieldName);
+
+      // 更新主要 commission data 陣列
+      this.updateCommissionDataArray(modifiedParent);
+
+      // 標記有未儲存的變更
+      this.hasUnsavedChanges = true;
+
+      // 防抖儲存
+      this.debouncedSave();
+
+      console.log('詳細資料欄位變更已處理:', {
+        detailId: modifiedDetail.id,
+        detailStatus: modifiedDetail._status,
+        parentId: modifiedParent.id,
+        parentStatus: modifiedParent._status,
+        fieldName: event.fieldName
+      });
+
+    } catch (error) {
+      console.error('處理詳細資料欄位變更時發生錯誤:', error);
+      this.notificationService.errorBubble('詳細資料更新失敗');
+    }
+  }
+
+  /**
+   * 更新詳細資料項目狀態
+   */
+  private updateDetailItemStatus(detailData: any): any {
+    const modifiedDetail = { ...detailData };
+
+    // 如果是新增的資料，保持 new 狀態
+    if (modifiedDetail._status === 'new') {
+      console.log('保持詳細資料新增狀態:', modifiedDetail.id);
+      return modifiedDetail;
+    }
+
+    // 如果是原始資料，標記為已修改
+    if (modifiedDetail._status === 'original' || !modifiedDetail._status) {
+      modifiedDetail._status = 'modified';
+      console.log('標記詳細資料為已修改:', modifiedDetail.id);
+    }
+
+    return modifiedDetail;
+  }
+
+  /**
+   * 同步詳細資料到父項目的對應陣列
+   */
+  private syncDetailToParentArray(modifiedDetail: any, parentData: any, fieldName: string): void {
+    const detailId = modifiedDetail.id;
+
+    // 根據當前分頁決定要更新哪個陣列
+    const currentTab = parentData.currentTab || 'discount';
+
+    switch (currentTab) {
+      case 'discount':
+        this.updateDetailInArray(parentData.discountSettingItems, detailId, modifiedDetail);
+        break;
+      case 'annual':
+        this.updateDetailInArray(parentData.annualPerformanceItems, detailId, modifiedDetail);
+        break;
+      case 'level':
+        this.updateDetailInArray(parentData.discountLevelItems, detailId, modifiedDetail);
+        break;
+    }
+
+    // 同時更新 detailItems 陣列（用於顯示）
+    this.updateDetailInArray(parentData.detailItems, detailId, modifiedDetail);
+
+    console.log(`已同步詳細資料到 ${currentTab} 陣列:`, {
+      detailId,
+      fieldName,
+      currentTab
+    });
+  }
+
+  /**
+   * 更新陣列中的指定詳細資料項目
+   */
+  private updateDetailInArray(array: any[], itemId: string, newDetailData: any): void {
+    if (!Array.isArray(array)) {
+      console.warn('目標陣列不存在，跳過更新');
+      return;
+    }
+
+    const index = array.findIndex(item => item.id === itemId);
+    if (index > -1) {
+      // 完全替換而不是合併，確保狀態正確更新
+      array[index] = { ...newDetailData };
+      console.log(`已更新詳細資料陣列 index ${index}:`, {
+        id: newDetailData.id,
+        _status: newDetailData._status
+      });
+    } else {
+      console.warn(`找不到詳細資料 ID: ${itemId}`);
+    }
+  }
+
+  /**
+   * 獲取詳細資料狀態摘要
+   */
+  getDetailDataStatusSummary(): any {
+    const summary = {
+      totalParentItems: this.commissionData.length,
+      detailItemCounts: this.commissionData.map(parent => ({
+        parentId: parent.id,
+        currentTab: parent.currentTab || 'discount',
+        discountItems: parent.discountSettingItems?.length || 0,
+        annualItems: parent.annualPerformanceItems?.length || 0,
+        levelItems: parent.discountLevelItems?.length || 0,
+        displayItems: parent.detailItems?.length || 0
+      }))
+    };
+
+    console.log('詳細資料狀態摘要:', summary);
+    return summary;
   }
 }

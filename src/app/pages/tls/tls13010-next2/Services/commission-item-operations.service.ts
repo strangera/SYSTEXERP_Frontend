@@ -48,7 +48,7 @@ export class CommissionItemOperationsService {
       id: this.generateTempId(),
       tlt_id,
       tlt_id_desc,
-      cag_taxtype: 1,
+      cag_taxtype: '1',
       discountSummary: '尚未設定',
       sst_amount: 0,
       sst_rate: 0,
@@ -354,7 +354,7 @@ export class CommissionItemOperationsService {
 
     // 如果是字符串，特別處理避免時區問題
     if (typeof dateInput === 'string') {
-      // 🎯 關鍵修正：如果是 ISO 字符串，先提取日期部分
+      // 關鍵修正：如果是 ISO 字符串，先提取日期部分
       if (dateInput.includes('T')) {
         const datePart = dateInput.split('T')[0];
         console.log('🔧 從 ISO 字符串提取日期部分:', datePart);
@@ -366,7 +366,7 @@ export class CommissionItemOperationsService {
         return result;
       }
 
-      // 🎯 如果是純日期字符串 YYYY-MM-DD，直接用構造函數創建本地時間
+      // 如果是純日期字符串 YYYY-MM-DD，直接用構造函數創建本地時間
       if (dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateInput.split('-').map(Number);
         const result = new Date(year, month - 1, day); // month 是 0-based
@@ -549,7 +549,7 @@ export class CommissionItemOperationsService {
     }
 
     return discountOptions.map((option, index) => {
-      // 🎯 關鍵修改：預設勾選第一個選項且是 "000-正品"
+      // 關鍵修改：預設勾選第一個選項且是 "000-正品"
       const isFirstOption = index === 0;
       const is000Option = option.value === '000' || option.label?.includes('正品');
       const shouldSelectByDefault = isFirstOption && is000Option;
@@ -580,7 +580,7 @@ export class CommissionItemOperationsService {
     }
 
     return discountOptions.map((option, index) => {
-      // 🎯 關鍵修改：預設勾選第一個選項且是 "000-正品"
+      // 關鍵修改：預設勾選第一個選項且是 "000-正品"
       const isFirstOption = index === 0;
       const is000Option = option.value === '000' || option.label?.includes('正品');
       const shouldSelectByDefault = isFirstOption && is000Option;

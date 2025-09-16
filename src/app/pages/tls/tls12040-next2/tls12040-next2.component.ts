@@ -479,7 +479,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-   * 🎯 新增：建立初始折扣項目
+   * 新增：建立初始折扣項目
    */
   private createInitialDiscountItems(): any[] {
     return this.discountOptions.map((option, index) => {
@@ -505,7 +505,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-   * 🎯 新增：建立初始層級項目
+   * 新增：建立初始層級項目
    */
   private createInitialLevelItems(): any[] {
     return this.discountOptions.map((option, index) => {

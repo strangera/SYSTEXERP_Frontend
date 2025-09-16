@@ -184,7 +184,7 @@ export class Tls12040FareCalculationService {
   }
 
   /**
- * 🎯 新增：專門用於期數計算的方法
+ * 新增：專門用於期數計算的方法
  */
   calculatePeriodsBetweenDates(startDate: Date, endDate: Date): number {
     if (!startDate || !endDate || startDate > endDate) {

@@ -21,10 +21,10 @@ export interface WorkflowStatus {
   isNewContract?: boolean;
 }
 
-// ========== 2. 🎯 修正：配合後端的清理後提交模型 ==========
+// ========== 2. 修正：配合後端的清理後提交模型 ==========
 
 /**
- * 🎯 修正：配合後端 CleanContractRequest
+ * 修正：配合後端 CleanContractRequest
  */
 export interface CleanSubmitData {
   contractInfo: CleanContractInfo;
@@ -37,7 +37,7 @@ export interface CleanSubmitData {
 }
 
 /**
- * 🎯 修正：配合後端 CleanContractInfo
+ * 修正：配合後端 CleanContractInfo
  */
 export interface CleanContractInfo {
   operation: 'INSERT' | 'UPDATE';
@@ -45,7 +45,7 @@ export interface CleanContractInfo {
 }
 
 /**
- * 🎯 修正：配合後端 CleanContractData（補齊所有欄位）
+ * 修正：配合後端 CleanContractData（補齊所有欄位）
  */
 export interface CleanContractData {
   // 基本資料
@@ -81,7 +81,7 @@ export interface CleanContractData {
   contact_USR_No?: string;
   contact_USR_Name?: string;
 
-  // 🎯 重要：補齊後端期望的所有欄位
+  // 重要：補齊後端期望的所有欄位
   deco_type?: string;
   money_type?: string;
   check_typeList?: string[];
@@ -148,7 +148,7 @@ export interface CleanContractData {
 }
 
 /**
- * 🎯 修正：配合後端 CleanLocationInfo
+ * 修正：配合後端 CleanLocationInfo
  */
 export interface CleanLocationInfo {
   id?: number;
@@ -161,7 +161,7 @@ export interface CleanLocationInfo {
 }
 
 /**
- * 🎯 修正：配合後端 CleanDeductions
+ * 修正：配合後端 CleanDeductions
  */
 export interface CleanDeductions {
   toInsert: CleanFareItem[];
@@ -170,7 +170,7 @@ export interface CleanDeductions {
 }
 
 /**
- * 🎯 修正：配合後端 CleanFareItem
+ * 修正：配合後端 CleanFareItem
  */
 export interface CleanFareItem {
   id?: number;
@@ -195,7 +195,7 @@ export interface CleanFareItem {
 }
 
 /**
- * 🎯 修正：配合後端 CleanCommissions
+ * 修正：配合後端 CleanCommissions
  */
 export interface CleanCommissions {
   masters: CleanCommissionMasters;
@@ -205,7 +205,7 @@ export interface CleanCommissions {
 }
 
 /**
- * 🎯 修正：配合後端 CleanCommissionMasters
+ * 修正：配合後端 CleanCommissionMasters
  */
 export interface CleanCommissionMasters {
   toInsert: CleanCommissionMaster[];
@@ -214,7 +214,7 @@ export interface CleanCommissionMasters {
 }
 
 /**
- * 🎯 修正：配合後端 CleanCommissionDetails
+ * 修正：配合後端 CleanCommissionDetails
  */
 export interface CleanCommissionDetails {
   toInsert: any[];
@@ -223,7 +223,7 @@ export interface CleanCommissionDetails {
 }
 
 /**
- * 🎯 修正：配合後端 CleanCommissionMaster
+ * 修正：配合後端 CleanCommissionMaster
  */
 export interface CleanCommissionMaster {
   id?: number;
@@ -239,7 +239,7 @@ export interface CleanCommissionMaster {
 }
 
 /**
- * 🎯 修正：配合後端 CleanConditions
+ * 修正：配合後端 CleanConditions
  */
 export interface CleanConditions {
   // rents: CleanConditionOperations;
@@ -253,7 +253,7 @@ export interface CleanConditions {
 }
 
 /**
- * 🎯 修正：配合後端 CleanConditionOperations
+ * 修正：配合後端 CleanConditionOperations
  */
 export interface CleanConditionOperations {
   toInsert: any[];
@@ -262,7 +262,7 @@ export interface CleanConditionOperations {
 }
 
 /**
- * 🎯 修正：配合後端 CleanMetadata
+ * 修正：配合後端 CleanMetadata
  */
 export interface CleanMetadata {
   talentId: string;
@@ -324,7 +324,7 @@ export interface ContractInfo {
   tlt_term_type?: string;
   _isNewContract?: boolean;
 
-  // 🎯 根據 FormBuilder 補充的欄位
+  // 根據 FormBuilder 補充的欄位
   approve_status?: string;        // FormBuilder 有但介面缺少
   ven_no?: string;               // FormBuilder 有但介面缺少
   contract_no?: string;          // FormBuilder 有但介面缺少
@@ -450,7 +450,7 @@ export interface CommissionItem {
   id: number | string;
   tlt_id: string;
   tlt_id_desc: string;
-  cag_taxtype: number;
+  cag_taxtype: number | string;
   discountSummary: string;
   sst_amount: number;
   sst_rate: number;
@@ -574,15 +574,15 @@ export type ConditionItem =
   | GraduatedCommissionCondition
   | BaseTierCondition;
 
-// ========== 4. 🎯 重寫 DataCleaner 以配合後端結構 ==========
+// ========== 4. 重寫 DataCleaner 以配合後端結構 ==========
 
 export class DataCleaner {
 
   /**
-   * 🎯 修正：清理合約基本資料以配合後端
+   * 修正：清理合約基本資料以配合後端
    */
   /**
-   * 🎯 修正：清理合約基本資料（確保日期為字串格式）
+   * 修正：清理合約基本資料（確保日期為字串格式）
    */
   static cleanContractInfo(rawData: any): CleanContractData {
     console.log('🎯 開始清理合約基本資料的日期欄位...');
@@ -598,7 +598,7 @@ export class DataCleaner {
       VEN_Name: rawData.VEN_Name || '',
       contract_subno: rawData.contract_subno,
 
-      // 🎯 重要：確保日期欄位為字串格式
+      // 重要：確保日期欄位為字串格式
       tlt_bdate: this.formatDate(rawData.tlt_bdate),
       tlt_edate: this.formatDate(rawData.tlt_edate),
       tlt_contract_bdate: this.formatDate(rawData.tlt_contract_bdate),
@@ -695,7 +695,7 @@ export class DataCleaner {
   }
 
   /**
-   * 🎯 修正：清理位置資訊以配合後端
+   * 修正：清理位置資訊以配合後端
    */
   static cleanLocationInfo(rawLocations: any[]): CleanLocationInfo[] {
     return rawLocations
@@ -711,7 +711,7 @@ export class DataCleaner {
   }
 
   /**
-   * 🎯 修正：清理代扣款資料以配合後端
+   * 修正：清理代扣款資料以配合後端
    */
   static cleanDeductionItems(rawItems: any[]): CleanDeductions {
     const toInsert: CleanFareItem[] = [];
@@ -735,7 +735,7 @@ export class DataCleaner {
         cap_type: item.cap_type || '',
         cap_item: item.cap_item || '',
 
-        // 🎯 關鍵修正：代扣款日期使用緊湊格式
+        // 關鍵修正：代扣款日期使用緊湊格式
         tpy_bdate: this.formatCompactDate(item.tpy_bdate),
         tpy_edate: this.formatCompactDate(item.tpy_edate),
 
@@ -807,7 +807,7 @@ export class DataCleaner {
         return '';
       }
 
-      // 🎯 格式化為緊湊年月格式 YYYYMM (只要年月，不要日期)
+      // 格式化為緊湊年月格式 YYYYMM (只要年月，不要日期)
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
 
@@ -820,7 +820,7 @@ export class DataCleaner {
   }
 
   /**
- * 🎯 新增：根據扣款類型決定日期格式
+ * 新增：根據扣款類型決定日期格式
  */
   private static formatDateForBackend(date: any, capType?: string): string {
     if (!date) return '';
@@ -855,7 +855,7 @@ export class DataCleaner {
         return '';
       }
 
-      // 🎯 統一格式化為 YYYY-MM-DD
+      // 統一格式化為 YYYY-MM-DD
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
@@ -869,7 +869,7 @@ export class DataCleaner {
   }
 
   /**
-   * 🎯 修正：清理抽成設定資料以配合後端
+   * 修正：清理抽成設定資料以配合後端
    */
   static cleanCommissionData(
     rawCommissions: any[],
@@ -881,7 +881,7 @@ export class DataCleaner {
     const annualSettings: CleanCommissionDetails = { toInsert: [], toUpdate: [], toDelete: [] };
     const levelSettings: CleanCommissionDetails = { toInsert: [], toUpdate: [], toDelete: [] };
 
-    // 🎯 設定預設日期（如果沒有提供合約日期）
+    // 設定預設日期（如果沒有提供合約日期）
     const defaultStartDate = contractStartDate || new Date().toISOString().split('T')[0];
     const defaultEndDate = contractEndDate || (() => {
       const nextYear = new Date();
@@ -897,11 +897,11 @@ export class DataCleaner {
         return;
       }
 
-      // 🎯 關鍵修正：使用合約日期作為 Commission Master 的日期
+      // 關鍵修正：使用合約日期作為 Commission Master 的日期
       const masterStartDate = commission.mainStartDate || commission.cag_bdate || defaultStartDate;
       const masterEndDate = commission.mainEndDate || commission.cag_edate || defaultEndDate;
 
-      // 🎯 驗證和格式化日期
+      // 驗證和格式化日期
       const validStartDate = this.formatDate(masterStartDate);
       const validEndDate = this.formatDate(masterEndDate);
 
@@ -929,7 +929,7 @@ export class DataCleaner {
         cap_saletype1: commission.cap_saletype1 ? 'Y' : 'N',
         cap_saletype2: commission.cap_saletype2 ? 'Y' : 'N',
 
-        // 🎯 關鍵修正：確保使用有效的合約日期
+        // 關鍵修正：確保使用有效的合約日期
         cag_bdate: validStartDate || defaultStartDate,
         cag_edate: validEndDate || defaultEndDate
       };
@@ -1052,7 +1052,7 @@ export class DataCleaner {
   }
 
   /**
-   * 🎯 修正：清理條件設定資料以配合後端
+   * 修正：清理條件設定資料以配合後端
    */
   static cleanConditionData(rawConditions: any[], commissionType: string): CleanConditions {
     const result: CleanConditions = {
@@ -1216,7 +1216,7 @@ export class DataCleaner {
       Number(id) > 0;
   }
 
-  // 🎯 只要改這一個方法就夠了！
+  // 只要改這一個方法就夠了！
   private static formatDate(date: any): string {
     if (!date) return '';
     try {
@@ -1271,7 +1271,7 @@ export class DataCleaner {
         return '';
       }
 
-      // 🎯 格式化為 YYYYMM 緊湊字串
+      // 格式化為 YYYYMM 緊湊字串
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
 

@@ -214,6 +214,7 @@
                 type="text"
                 [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onTextInputChange(rowData, col, $event)"
+                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
                 [maxlength]="col.maxLength ?? null"
                 [placeholder]="col.placeholder || ''"
                 class="text-input"
@@ -228,6 +229,7 @@
                 (ngModelChange)="
                   onNumberModelChange($event, col.field, rowData, false)
                 "
+                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
                 [minFractionDigits]="
                   getNumberInputConfig(col).minFractionDigits
                 "
@@ -244,6 +246,7 @@
                 [options]="getFieldOptions(rowData, col.field)"
                 [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onDropdownChange(rowData, col.field, $event)"
+                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
                 [style]="{ width: '100%' }"
                 appendTo="body"
                 [showClear]="true"
@@ -253,7 +256,7 @@
                 filterMatchMode="contains"
               ></p-dropdown>
 
-              <!-- 🎯 日期選擇 - 使用新的方法 -->
+              <!-- 日期選擇  -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
                 <input
                   pInputText
@@ -261,6 +264,7 @@
                   [ngModel]="getDateInputValue(rowData, col)"
                   (input)="handleDateInput($event, rowData, col)"
                   (blur)="onDateInputBlur(rowData, col, false)"
+                  (keydown)="onFieldKeyDown($event, rowData, col, ri)"
                   [placeholder]="getDatePlaceholder(col)"
                   [maxlength]="
                     col.maxLength ||
@@ -318,7 +322,7 @@
             *ngIf="shouldShowDisplayOnly(col, isRowEditing(ri), rowData)"
           >
             <ng-container [ngSwitch]="col.type">
-              <!-- 🎯 日期顯示 - 使用新的方法 -->
+              <!-- 日期顯示 - 使用新的方法 -->
               <span *ngSwitchCase="'date'">
                 {{ getDateDisplayValue(rowData, col) }}
               </span>
@@ -513,7 +517,10 @@
                   >
                     {{ col.header }}
                   </th>
-                  <th *ngIf="!readonly" [ngStyle]="getActionHeaderStyle()">
+                  <th
+                    *ngIf="!readonly && showDetailActionColumn"
+                    [ngStyle]="getActionHeaderStyle()"
+                  >
                     操作
                   </th>
                 </tr>
@@ -573,6 +580,16 @@
                               di
                             )
                           "
+                          (keydown)="
+                            onFieldKeyDown(
+                              $event,
+                              detailData,
+                              col,
+                              ri,
+                              true,
+                              di
+                            )
+                          "
                           [maxlength]="col.maxLength ?? null"
                           [placeholder]="col.placeholder || ''"
                           class="text-input"
@@ -590,6 +607,16 @@
                               col.field,
                               detailData,
                               true
+                            )
+                          "
+                          (keydown)="
+                            onFieldKeyDown(
+                              $event,
+                              detailData,
+                              col,
+                              ri,
+                              true,
+                              di
                             )
                           "
                           (onInput)="
@@ -613,6 +640,16 @@
                           (ngModelChange)="
                             onDropdownChange(detailData, col.field, $event)
                           "
+                          (keydown)="
+                            onFieldKeyDown(
+                              $event,
+                              detailData,
+                              col,
+                              ri,
+                              true,
+                              di
+                            )
+                          "
                           [style]="{ width: '100%' }"
                           appendTo="body"
                           [showClear]="true"
@@ -622,7 +659,7 @@
                           filterMatchMode="contains"
                         ></p-dropdown>
 
-                        <!-- 🎯 日期選擇 - 使用新的方法 -->
+                        <!-- 日期選擇 - 使用新的方法 -->
                         <div
                           *ngSwitchCase="'date'"
                           class="date-selector-wrapper"
@@ -635,6 +672,16 @@
                             "
                             (input)="handleDateInput($event, detailData, col)"
                             (blur)="onDateInputBlur(detailData, col, false)"
+                            (keydown)="
+                              onFieldKeyDown(
+                                $event,
+                                detailData,
+                                col,
+                                ri,
+                                true,
+                                di
+                              )
+                            "
                             [placeholder]="getDatePlaceholder(col)"
                             [maxlength]="
                               col.maxLength ||
@@ -703,7 +750,7 @@
                       "
                     >
                       <ng-container [ngSwitch]="col.type">
-                        <!-- 🎯 日期顯示 - 使用新的方法 -->
+                        <!-- 日期顯示 - 使用新的方法 -->
                         <span *ngSwitchCase="'date'">
                           {{ getDateDisplayValue(detailData, col) }}
                         </span>
@@ -767,7 +814,10 @@
                   </td>
 
                   <!-- 詳細資料操作按鈕 -->
-                  <td *ngIf="!readonly" [ngStyle]="getDetailActionBodyStyle()">
+                  <td
+                    *ngIf="!readonly && showDetailActionColumn"
+                    [ngStyle]="getDetailActionBodyStyle()"
+                  >
                     <div
                       class="detail-edit-buttons flex justify-content-center gap-2"
                     >

@@ -27,22 +27,22 @@ export interface DisplayFieldConfig {
   imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent]
 })
 export class SelectorPanelComponent extends BasicKitComponent implements OnInit, OnDestroy {
-  // 🎯 表單控制相關
+  // 表單控制相關
   @Input() valueControl = new FormControl();           // 主要值控制器
   @Input() isSubmitted = false;                        // 表單提交狀態
 
-  // 🎯 自動完成建議相關
+  // 自動完成建議相關
   @Input() autoCompleteItems: any[] = [];             // 自動完成的建議項目
   @Input() valuePropertyName = '';                     // 用於取值的屬性名稱
   @Input() labelPropertyName = '';                     // 用於顯示的屬性名稱
   @Input() displayFieldsConfig: DisplayFieldConfig[] = []; // 顯示欄位的配置
   @Output() searchInputChanged = new EventEmitter<Record<string, string>>(); // 搜尋輸入變更事件
 
-  @Output() itemSelected = new EventEmitter<any>();    // 🎯 項目選擇事件
-  @Output() valueChanged = new EventEmitter<{ oldValue: any, newValue: any, selectedItem: any }>(); // 🎯 值變更事件
-  @Output() selectionChanged = new EventEmitter<any>(); // 🎯 選擇變更事件
+  @Output() itemSelected = new EventEmitter<any>();    // 項目選擇事件
+  @Output() valueChanged = new EventEmitter<{ oldValue: any, newValue: any, selectedItem: any }>(); // 值變更事件
+  @Output() selectionChanged = new EventEmitter<any>(); // 選擇變更事件
 
-  // 🎯 覆蓋面板相關
+  // 覆蓋面板相關
   @ViewChild('selectorOverlay') selectorOverlay: OverlayPanel | undefined;
   private unsubscribe$ = new Subject<void>();
   @Input() searchForm!: FormGroup;                     // 搜尋表單
@@ -75,7 +75,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
     this.unsubscribe$.complete();
   }
 
-  // 🎯 處理自動完成輸入變更
+  // 處理自動完成輸入變更
   onAutoCompleteInputChange() {
     if (this.valueControl.value === null || this.valueControl.value === undefined || this.valueControl.value === '') {
       this.autoCompleteItems = [];
@@ -84,7 +84,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
     this.searchInputChanged.emit({ [this.valuePropertyName]: this.valueControl.value });
   }
 
-  // 🎯 根據設定取得欄位顯示值
+  // 根據設定取得欄位顯示值
   getDisplayFieldValue(fieldConfig: DisplayFieldConfig): string {
     let currentSelectedValue: string;
 
@@ -112,7 +112,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
     return '';
   }
 
-  // 🎯 處理表格行選擇事件
+  // 處理表格行選擇事件
   onTableRowSelected(event: TableRowSelectEvent) {
     console.log('🎯 Selector panel - 表格行被選擇:', event.data);
 
@@ -120,10 +120,10 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
     const selectedItem = event.data;
     const newValue = this.valuePropertyName ? selectedItem[this.valuePropertyName] : selectedItem;
 
-    // 🎯 更新控制器值
+    // 更新控制器值
     this.valueControl.setValue(newValue);
 
-    // 🎯 更新內部狀態
+    // 更新內部狀態
     this.selectedRecord = selectedItem;
     this.autoCompleteItems = [...this.panelDataSource];
 
@@ -133,7 +133,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
     this.valueChanged.emit({
       oldValue: oldValue,
       newValue: newValue,
-      selectedItem: selectedItem  // 🎯 這個很重要！
+      selectedItem: selectedItem  // 這個很重要！
     });
 
     this.selectionChanged.emit(selectedItem);
@@ -143,26 +143,26 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
       valueChanged: { oldValue, newValue, selectedItem }
     });
 
-    // 🎯 清理並關閉面板
+    // 清理並關閉面板
     this.selectorOverlay?.hide();
     this.panelDataSource = [];
     this.selectedRecord = [];
     this.searchForm.reset();
   }
 
-  // 🎯 處理分頁載入事件
+  // 處理分頁載入事件
   onPaginationLoad(event: LazyLoadEvent, searchFormGroup: FormGroup) {
     console.log('📄 SelectorPanel 收到分頁事件:', event);
     console.log('🚨 DEBUG - event:', event);
     console.log('🚨 DEBUG - 當前表單值:', searchFormGroup.value);
 
-    // 🎯 修正：將 1-based 轉為 0-based，並正確處理 SortBy
+    // 修正：將 1-based 轉為 0-based，並正確處理 SortBy
     const pageIndex = Math.max(0, (event.pageIndex || 1) - 1);
 
     searchFormGroup.patchValue({
       pageSize: event.pageSize || 10,
       pageIndex: pageIndex,
-      SortBy: event.SortBy || []  // 🎯 用大寫的 SortBy，傳陣列
+      SortBy: event.SortBy || []  // 用大寫的 SortBy，傳陣列
     }, { emitEvent: false });
 
     console.log('📋 更新後的表單值:', searchFormGroup.value);
@@ -170,7 +170,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
     this.triggerSearch(searchFormGroup);
   }
 
-  // 🎯 新增：triggerSearch 方法（在 SelectorPanel 中加入）
+  // 新增：triggerSearch 方法（在 SelectorPanel 中加入）
   private triggerSearch(searchFormGroup: FormGroup): void {
     const formValue = searchFormGroup.value;
 
@@ -200,12 +200,12 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
     }
   }
 
-  // 🎯 打開選擇器面板
+  // 打開選擇器面板
   // 在 selector-panel.component.ts 中修改：
   openSelectorPanel(event: Event) {
     this.selectorOverlay?.toggle(event);
 
-    // 🎯 加入這段：確保表單有分頁參數
+    // 加入這段：確保表單有分頁參數
     if (this.searchForm) {
       const currentValue = this.searchForm.value;
 
@@ -224,7 +224,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
       }
     }
   }
-  // 🎯 關閉選擇器面板
+  // 關閉選擇器面板
   closeSelectorPanel() {
     this.selectorOverlay?.hide();
   }
