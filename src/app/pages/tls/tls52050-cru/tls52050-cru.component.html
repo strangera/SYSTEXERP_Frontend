@@ -49,7 +49,7 @@
       <app-table-edit class="col-12" tableKey="TLS52040Detail" [columns]="editColumns" [columnGroup]="columnGroup"
         [data]="data" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         errorMessage="請至少選擇一個驗收項目！" (dataChange)="data = $event" [tableRequired]="true" [disabled]="isFormReadable"
-        (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.MAM_Status === '1'"
+        (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.MAM_Status === '0'"
         [canInsert]="false"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

@@ -119,7 +119,7 @@
             <input *ngSwitchCase="'input'" pInputText class="min-w-max" [placeholder]="'請輸入' + col.header"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
               [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
-              (ngModelChange)="onValueChange(rowData,$event, col, index)"
+              (ngModelChange)="onValueChange(rowData,$event, col, index)" [maxlength]="col.maxLength"
               [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               (blur)="onValueChange(rowData,rowData[col.field], col, index)"

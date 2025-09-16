@@ -1,5 +1,5 @@
 import { ValidationService } from '@shared/service/validation.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { IInsertTLS52050Detail, IQueryTLS52050DetailData, IQueryTLS52050DetailRequest, ITLS52050Data, IUpdateTLS52050Detail, Tls52050Service } from '../../../service/api/tls/tls52050.service';
@@ -107,6 +107,9 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     // 監聽 MAM_Method 是否為永久變價
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      if (!this.isFormCreateable) {
+        return;
+      }
       const MAM_EndDate = this.dataForm.controls.MAM_EndDate;
       MAM_EndDate.setValue(null);
       if (value === '1') {
@@ -115,6 +118,24 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         MAM_EndDate.enable();
       }
     });
+    if (!this.isFormCreateable) {
+      if (this.rowdata?.MAM_Status === '0') {
+        this.dataForm.controls.VEN_No.disable();
+        this.dataForm.controls.LOGO_No.disable();
+        this.dataForm.controls.MAM_Method.disable();
+        this.dataForm.controls.MAM_BegDate.disable();
+        this.dataForm.controls.MAM_EndDate.disable();
+      }
+      if (this.rowdata?.MAM_Method === '1') {
+        this.dataForm.controls.MAM_EndDate.disable();
+      }
+      const MAM_No = this.rowdata?.MAM_No;
+      if (MAM_No) {
+        this.tls52050Service.queryTLS52050UpdateDetail(MAM_No).pipe(untilDestroyed(this)).subscribe(response => {
+          this.data = response.Data.map(item => ({ ...item, id: Number(item.id) }));
+        });
+      }
+    }
     this.setupFormLogic();
     this.setupDialogLogic();
   }
@@ -286,7 +307,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       MAM_OrderPrc: 0,
       PLU_SalePrc: Number(item.PLU_SalePrc),
       MAM_UnitPrc: 0,
-      CRN_Remark: ''
+      MAD_Remark: ''
     }))];
     this.selectedItemsDialog = [];
     this.selectedItems = [];
@@ -341,25 +362,39 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       this.opLoading = false;
     });
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   // onShowDialog
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
       const body = {
         ...frm.getRawValue(),
-        MAM_EndDate: frm.getRawValue().MAM_EndDate ?? '',
+        ID: this.isFormCreateable ? undefined : Number(this.rowdata?.Id),
+        MAM_No: this.isFormCreateable ? undefined : this.rowdata?.MAM_No,
         details: this.data.map(item => ({
+          ID: Number(item.id) || 0,
           PLU_MagNo: item.PLU_MagNo,
           PLU_OrderPrcRate: item.PLU_OrderPrcRate,
           PLU_OrderPrc: item.PLU_OrderPrc,
           MAM_OrderPrc: item.MAM_OrderPrc,
           PLU_SalePrc: item.PLU_SalePrc,
-          MAM_UnitPrc: item.MAM_UnitPrc
+          MAM_UnitPrc: item.MAM_UnitPrc,
+          MAD_Remark: item.MAD_Remark
         }))
       }
-      this.tls52050Service.insertTLS52050(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      const $request = this.isFormCreateable ? this.tls52050Service.insertTLS52050(body) : this.tls52050Service.updateTLS52050(body);
+      $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.messageService.successBubble(response.Message);
-        this.dataForm.reset();
-        this.data = [];
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+          this.data = [];
+        } else {
+          this.onCancel();
+        }
       })
     });
   }
