@@ -333,38 +333,40 @@ export class CommissionDataService {
     const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
     const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
 
-    // 新增：檢查是否為新合約且沒有既有資料
     const isNewContractWithoutData = existingDetails.length === 0;
 
     options.discountOptions?.forEach((option, index) => {
-      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
+      // 修改：使用 filter 而不是 find，處理同一折扣別的多筆資料
+      const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
 
-      if (existingItem) {
-        // 已設定的項目
-        result.push({
-          id: existingItem.id || this.generateTempId(),
-          selected: true,
-          cag_barcode: existingItem.cag_barcode,
-          tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
-          tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
-          cag_charge_rate: existingItem.cag_charge_rate || 0,
-          _status: 'original',
-          is_configured: existingItem.is_configured || true,
-          is_enabled: existingItem.is_enabled || true
+      if (existingItems.length > 0) {
+        // 為每個既有項目創建一筆記錄
+        existingItems.forEach(existingItem => {
+          result.push({
+            id: existingItem.id || this.generateTempId(),
+            selected: true,
+            cag_barcode: existingItem.cag_barcode,
+            tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
+            tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
+            cag_charge_rate: existingItem.cag_charge_rate || 0,
+            _status: 'original',
+            is_configured: existingItem.is_configured || true,
+            is_enabled: existingItem.is_enabled || true
+          });
         });
       } else {
-        // 關鍵修改：未設定的項目，如果是新合約且是第一個選項（000-正品），預設勾選
+        // 未設定的項目處理邏輯保持不變
         const isFirstOption = index === 0;
         const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
           (option.value === '000' || option.label?.includes('正品'));
 
         result.push({
           id: this.generateTempId(),
-          selected: shouldSelectByDefault, // 根據條件決定是否預設勾選
+          selected: shouldSelectByDefault,
           cag_barcode: option.value,
           tlt_bdate: contractStartDate,
           tlt_edate: contractEndDate,
-          cag_charge_rate: shouldSelectByDefault ? 0 : 0, // 可以設定預設抽成率
+          cag_charge_rate: shouldSelectByDefault ? 0 : 0,
           _status: shouldSelectByDefault ? 'new' : 'new',
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault
@@ -415,38 +417,41 @@ export class CommissionDataService {
 
   private buildCompleteLevelItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
     const result: DiscountLevelItem[] = [];
+    const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
+    const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
 
-    // 新增：檢查是否為新合約且沒有既有資料
     const isNewContractWithoutData = existingDetails.length === 0;
 
     options.discountOptions?.forEach((option, index) => {
-      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
+      // Use filter to handle multiple existing items for the same cag_barcode
+      const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
 
-      if (existingItem) {
-        result.push({
-          id: existingItem.id || this.generateTempId(),
-          selected: true,
-          cag_barcode: existingItem.cag_barcode,
-          level_bmount: existingItem.level_bmount || 0,
-          level_eamount: existingItem.level_eamount || 0,
-          level_charge_rate: existingItem.level_charge_rate || 0,
-          _status: 'original',
-          is_configured: true,
-          is_enabled: true
+      if (existingItems.length > 0) {
+        existingItems.forEach(existingItem => {
+          result.push({
+            id: existingItem.id || this.generateTempId(),
+            selected: true,
+            cag_barcode: existingItem.cag_barcode,
+            level_bmount: existingItem.level_bmount || 0,
+            level_eamount: existingItem.level_eamount || 0,
+            level_charge_rate: existingItem.level_charge_rate || 0,
+            _status: 'original',
+            is_configured: existingItem.is_configured ?? true,
+            is_enabled: existingItem.is_enabled ?? true
+          });
         });
       } else {
-        // 關鍵修改：對於 level 項目也套用相同邏輯
         const isFirstOption = index === 0;
         const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
           (option.value === '000' || option.label?.includes('正品'));
 
         result.push({
           id: this.generateTempId(),
-          selected: shouldSelectByDefault, // 根據條件決定是否預設勾選
+          selected: shouldSelectByDefault,
           cag_barcode: option.value,
           level_bmount: 0,
           level_eamount: 0,
-          level_charge_rate: shouldSelectByDefault ? 0 : 0, // 可以設定預設抽成率
+          level_charge_rate: shouldSelectByDefault ? 0 : 0,
           _status: shouldSelectByDefault ? 'new' : 'new',
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault
@@ -456,6 +461,7 @@ export class CommissionDataService {
 
     return result;
   }
+
 
   // ============ 工具方法 ============
 
