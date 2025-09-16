@@ -30,14 +30,14 @@ export interface TLS31060DetailRequest {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
   tlt_building: string[]
-  tlt_floor: string // 這裡只有一個樓層(應該會是組織，等待調整)
+  tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
   bus_class: string[]
   bus_sclass: string[]
   tlt_kind: string
   tlt_term_type: string[]
-  org_id: string[]
+  org_id: string; // 單組織
   TaxType: string
   IsRece_Yn: string
 }
