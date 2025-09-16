@@ -19,9 +19,9 @@ import { SystemOption } from '@shared/models/sys/sys1000.model';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { ButtonModule } from 'primeng/button';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { Column } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { GalleriaModule } from 'primeng/galleria';
-import { finalize, forkJoin, tap } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { ImageQueryRequest, ImageService } from '@service/utility/image.service';
 import { environment } from 'src/environments/environment';
 
@@ -84,7 +84,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
   data: Tls43010Detail[] = [];
   selectedItems: Tls43010Detail[] = [];
   // 如果機台群組編號有值那其他要disable，反之亦然
-  columns: Column[] = [
+  columns: EditColumn[] = [
     { field: 'NOT_SeqNo', header: '通告序號', format: (value, index, rowData) => rowData.status === 'new' ? '自動給號' : value, disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
     { field: 'ECR_No', header: '收銀機號', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
     { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },

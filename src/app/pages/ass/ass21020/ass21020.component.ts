@@ -45,12 +45,12 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
 
   public readonly queryForm = this.formBuilder.group({
     ENG_Type: new FormControl<EngType[]>([]),
-    ENG_MeterNo: new FormControl<string | undefined>(void 0),
-    TLT_No: new FormControl<string | undefined>(void 0),
+    ENG_MeterNo: new FormControl<string | void>(void 0),
+    TLT_No: new FormControl<string | void>(void 0),
     Location_No: new FormControl<string>(''),
     TLT_Name: new FormControl<string>(''),
-    NET_SPACE: new FormControl<string | undefined>(void 0),
-    ENG_Rate: new FormControl<number | undefined>(void 0),
+    NET_SPACE: new FormControl<string | void>(void 0),
+    ENG_Rate: new FormControl<number | void>(void 0),
     ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -167,16 +167,21 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public onSubmit(): void {
     this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.user]);
     this.handleSubmit(this.queryForm, () => {
+      const { SortBy, pageSize, pageIndex, ...field } = this.queryForm.getRawValue();
       this.service.loadASS21020({
         EngTypes: this.qf().ENG_Type.value!.join(),
         ENG_Rate: this.qf().ENG_Rate.value!,
         ENG_MeterNo: this.qf().ENG_MeterNo.value!,
-        // Location_No: this.qf().Location_No.value!,
+        Location_No: this.qf().Location_No.value || void 0,
         SYS_StoreNo: this.user?.SYS_StoreNo!,
         Mid: Number(this.user?.mid)!,
+        SortBy: SortBy || void 0,
+        PageSize: pageSize || void 0,
+        PageIndex: pageIndex || void 0,
       });
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.submitted = !0;
       this.loading = !1;
     });
   }
@@ -193,11 +198,6 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
         .subscribe(res => {
           deletedCount++;
 
-          if (res.IsUpdateSuccess) {
-            this.messageService.successBubble('刪除成功');
-          } else {
-            this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
-          }
           if (deletedCount === totalItems) {
             const formValues = this.queryForm.getRawValue();
             this.service.loadASS21020({

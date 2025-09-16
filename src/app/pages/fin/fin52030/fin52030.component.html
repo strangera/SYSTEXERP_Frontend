@@ -1,78 +1,76 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="create"
+                (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab [header]="'query-conditions' | translate"
+                    [selected]="true"
+                    class="line-height-3 m-0"
+                    [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="常用型態代號"
-              controlName="typecode"
-              [control]="queryForm.controls.typecode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="常用型態名稱"
-              controlName="typename"
-              [control]="queryForm.controls.typename"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票種類"
-              controlName="Subpoenatype"
-              [options]="SubpoenatypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenatype"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="常用傳票代號"
+                          controlName="typeCode"
+                          [control]="qf().typeCode"
+                          [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="常用傳票名稱"
+                          controlName="subpoenaName"
+                          [control]="qf().subpoenaName"
+                          [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="傳票種類"
+                        controlName="subpoenaType"
+                        [options]="service.subpoenaTypes()"
+                        optionLabel="Name"
+                        optionValue="No"
+                        [control]="qf().subpoenaType"
+                        [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="建立者"
+                        controlName="creator"
+                        [options]="service.creators()"
+                        optionLabel="Name"
+                        optionValue="No"
+                        [control]="qf().creator"
+                        [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="修改者"
+                        controlName="modifier"
+                        [options]="service.modifiers()"
+                        optionLabel="Name"
+                        optionValue="No"
+                        [control]="qf().modifier"
+                        [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"
+                      [form]="queryForm"></app-button>
+          <app-button btnType="query"
+                      [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
+
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table [data]="filteredData()"
+               [columns]="columns"
+               [totalRecords]="totalRecords()"
+               (edit)="onEdit($event)"
+               (detail)="onDetail($event)"
+               [loading]="service.tableLoading"
+               [dataKey]="'id'"
+               [tableKey]="'FIN52030'"></app-table>
   </div>
 </div>

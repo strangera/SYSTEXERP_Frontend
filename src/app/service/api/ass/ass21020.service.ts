@@ -5,7 +5,8 @@ import { ASS21020Data, ASS21020Delete, ASS21020Query, ASS21020Update, ASS21020Up
 import { EngType } from '@service/api/ass/ass21010.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { NGXLogger } from 'ngx-logger';
+import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -44,7 +45,7 @@ export class ASS21020Service implements OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService,
+    private logger: NGXLogger,
   ) { }
 
   public loadEngType(): void {
@@ -65,10 +66,9 @@ export class ASS21020Service implements OnDestroy {
         this.engMeterNoSignal.set(Data);
         for (const item of Data) this.engMeterNoMap.set(item.ENG_MeterNo, item);
       }),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.engMeterNoLoading = !1;
-        console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
+        this.logger.debug('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
       })
     ).subscribe();
   };
@@ -81,10 +81,9 @@ export class ASS21020Service implements OnDestroy {
       take(1),
       takeUntil(this.tableCancel$),
       tap(({ Data }) => this.ASS21020Data.set(Data.map((item, index) => ({ ...item, Id: index + 1 })))),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
-        console.log('查詢ASS21020結果:', [this.ASS21020Data()]);
+        this.logger.debug('查詢ASS21020結果:', [this.ASS21020Data()]);
       })
     ).subscribe();
   };
@@ -99,10 +98,9 @@ export class ASS21020Service implements OnDestroy {
         this.tltNoSignal.set(Data);
         for (const item of Data) this.tltByFlagMap.set(item.TLT_No, item);
       }),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.queryTltByFlagLoading = !1;
-        console.log('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltNoSignal()]);
+        this.logger.debug('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltNoSignal()]);
       })
     ).subscribe();
   }
@@ -111,7 +109,6 @@ export class ASS21020Service implements OnDestroy {
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21020`, { UpdateASS21020Datas: payload }).pipe(
       take(1),
       map(({ Data }) => Data),
-      catchError(error => this.errorHandler.handleError(error)),
     );
   }
 
@@ -119,7 +116,6 @@ export class ASS21020Service implements OnDestroy {
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21020`, payload).pipe(
       take(1),
       map(({ Data }) => Data),
-      catchError(error => this.errorHandler.handleError(error)),
     );
   }
 

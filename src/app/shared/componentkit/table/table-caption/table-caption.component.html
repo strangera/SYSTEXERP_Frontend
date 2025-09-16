@@ -26,10 +26,6 @@
     <ng-content select="header"></ng-content>
   </div>
   <div *ngIf="IsPrint" class="flex gap-2 py-2">
-    <div *ngIf="showExpandCollapse && expansionColumns.length > 0 && IsPrint" class="flex align-items-center">
-      <p-button [icon]="expression ? 'pi pi-angle-up' : 'pi pi-angle-down'" (onClick)="toggleExpandCollapse()"
-        [label]="expression ? '收合' : '展開'" text />
-    </div>
     <div *ngIf="showExcel" class="flex gap-2 align-items-center">
       <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
               exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" (click)="onExportExcel()" />
@@ -39,7 +35,7 @@
       <p-button *ngIf="showCustomExcelImport" severity="info" label="Excel匯入" [icon]="'pi pi-file-import'"
         (click)="onImportExcel()" />
     </div>
-    <p-dropdown *ngIf="showPage && IsPrint && data.length > 0" [options]="pages" [ngModel]="selectedPage"
+    <p-dropdown *ngIf="showPage && IsPrint && data && data.length" [options]="pages" [ngModel]="selectedPage"
       optionValue="value" (onChange)="pageChange.emit($event.value)" appendTo="body" [virtualScroll]="true"
       [virtualScrollItemSize]="40" [filter]="true" />
   </div>

@@ -87,10 +87,10 @@ export class TLS41020Component
     { field: 'ECR_TLT_Name', header: '機台所屬櫃位名稱', visible: true },
     { field: 'ECR_LocNo', header: '機台所屬地點代號', visible: true },
     { field: 'LOCATION_Name', header: '機台所屬地點名稱', visible: true },
-    { field: 'EDC_IP1', header: '第一台信用卡刷卡機IP', visible: true },
-     { field: 'EDC_TmID1', header: '第一台信用卡刷卡機端末機代碼', visible: true },
-     { field: 'EDC_IP12', header: '第二台信用卡刷卡機IP', visible: true },
-     { field: 'EDC_TmID2', header: '第二台信用卡刷卡機端末機代碼', visible: true },
+    { field: 'EDC_IP1', header: '中信刷卡機IP', visible: true },
+     { field: 'EDC_TmID1', header: '中信刷卡機端末機代碼', visible: true },
+     { field: 'EDC_IP12', header: '聯信刷卡機IP', visible: true },
+     { field: 'EDC_TmID2', header: '聯信刷卡機端末機代碼', visible: true },
     //  { field: 'EDC_IP3', header: '第三台信用卡刷卡機IP', visible: true },
     //  { field: 'EDC_TmID3', header: '第三台信用卡刷卡機端末機代碼', visible: true },
   ];
@@ -200,6 +200,6 @@ export class TLS41020Component
     if (!value) return '';
     const date = new Date(value);
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
   }
 }

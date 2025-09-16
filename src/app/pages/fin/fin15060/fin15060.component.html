@@ -9,10 +9,10 @@
         <div class="grid p-fluid">
           <!-- 申報年月 -->
           <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
-            [control]="queryForm.controls.DeclareMonth" [submitted]="submitted"></app-calendar>
+            [control]="queryForm.controls.INV_YM" [submitted]="submitted"></app-calendar>
           <!-- 稅籍編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="稅籍編號" controlName="TaxCode"
-            [control]="queryForm.controls.TaxCode" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="稅籍編號" controlName="STO_TaxNo"
+            [control]="queryForm.controls.STO_TaxNo" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -24,9 +24,14 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="FIN15050" dataKey="InvoiceNumber" [data]="data" [columns]="columns"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
+  <div class="flex justify-content-end gap-2" style="margin-bottom: -42px">
+    <p-button [style]="{'z-index': '999'}" label="列印報表" severity="info" icon="pi pi-print" (click)="onExportPdf()"
+      [disabled]="!canPerformAction('60') || queryForm.invalid" [loading]="pdfBtnLoding" />
+  </div>
+  <app-table tableKey="FIN15060" dataKey="INV_GUINo" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{ field: 'INV_GUIDate', order: -1 }]"
     (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false">
+    [showManage]="false" [showDelete]="false" [showReportMode]="false">
   </app-table>
 </div>

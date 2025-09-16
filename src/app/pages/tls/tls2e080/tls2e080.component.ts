@@ -1,17 +1,22 @@
-import { FloorService } from './../../../service/basic/floor.service';
-import { CounterCodeService } from './../../../service/basic/counter-code.service';
-import { SettlementMethodService } from './../../../service/basic/settlement-method.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { IQueryData, IQueryRequest, TLS2E080Service } from '@service/api/tls/tls2e080.service';
+import { Column } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { AsyncPipe } from '@angular/common';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ButtonModule } from 'primeng/button';
 
 // 2.2.14.8 專櫃對帳單
 @Component({
@@ -24,76 +29,102 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     CalendarComponent,
     TranslateModule,
-    TableComponent
+    MultiSelectComponent,
+    AsyncPipe,
+    InputTextComponent,
+    TableReportComponent,
+    ButtonModule
   ]
 })
-export class TLS2E080Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> implements OnInit {
   queryForm = this.formBuilder.group({
-    counterName: [], // 專櫃編號
-    commissionMethod: [], // 抽成方式
-    floor: [], // 樓層
-    onedatemm: [, [Validators.required]], // 查詢年月
-    checkout: [], // 結帳方式/帳次
-    branch: [], // 館別
-    settlementMethod: [], // 對帳方式
-    UID: [], // 統一編號
+    tlt_noList: [null], // 專櫃編號
+    tlt_term_typeList: [null], // 抽成方式
+    tlt_floorList: [null], // 樓層
+    sam_yyymm: [null, [Validators.required]], // 查詢年月
+    money_typeList: [null], //結帳方式
+    sam_termnoList: [null], // 帳次
+    tlt_buildingList: [null], // 館別
+    check_typeList: [null], // 對帳方式
+    ven_uniform: [null, [Validators.minLength(8), Validators.maxLength(8)]], // 統一編號
   });
+  historyRequestBody?: IQueryRequest;
+  tlt_noListOption = this.dropdown.queryTltTalent();
+  tlt_term_typeListOption = getSYS1000Options('tlt_term_type');
+  tlt_floorListOption = this.dropdown.querySys3900();
+  money_typeListOption = getSYS1000Options('money_type');
+  sam_termnoListOption = [
+    { value: '1', label: '1' },
+    { value: '2', label: '2' },
+    { value: '3', label: '3' },
+  ]
+  tlt_buildingListOption = this.dropdown.querySys3800();
+  check_typeListOption = getSYS1000Options('check_type');
   totalRecords = 0;
-  data: any[] = [];
-  columns: any[] = [
-    { field: 'contactPerson', header: '洽談者', visible: true },
-    { field: 'contactDate', header: '洽談日', visible: true },
-    { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '大分類', visible: true },
-    { field: 'category', header: '類型', visible: true },
-    { field: 'version', header: '版本', visible: true },
-    { field: 'rentNumber', header: '位置租賃數', visible: true },
-    { field: 'progress', header: '進度', visible: true },
+  data: IQueryData[] = [];
+  selectedItems: IQueryData[] = [];
+  columns: Column[] = [
+    { field: 'sam_yyymm', header: '結算年月', visible: true },
+    { field: 'money_type', header: '結帳方式', visible: true }, // !!!
+    { field: 'sam_termno', header: '帳次', visible: true },// !!!
+    { field: 'tlt_term_type', header: '抽成方式', visible: true },// !!!
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'contract_no', header: '契約編號', visible: true },
+    { field: 'contract_subno', header: '版次', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
-  checkoutOptions: any[] = [];
-  counterNameOptions: any[] = [];
-  commissionMethodOptions: any[] = [];
-  floorOptions: any[] = [];
-  // 1=網路對帳  2=AUTOFAX   3=AUTOMAIL  0=空白
-  settlementMethodOptions: any[] = [
-    { label: '網路對帳', value: '1' },
-    { label: 'AUTOFAX', value: '2' },
-    { label: 'AUTOMAIL', value: '3' }
-  ];
-
+  btnLoading = false;
+  ngOnInit(): void {
+    this.initializePage('TLS2E080', 'tls/tls2e080', this.queryForm, (form) => this.onSubmit(form));
+  }
   constructor(
-    private settlementMethodService: SettlementMethodService,
-    private counterCodeService: CounterCodeService,
-    private commissionTypeService: CommissionTypeService,
-    private floorService: FloorService,
+    public readonly tls2e080Service: TLS2E080Service,
+    public readonly dropdown: DropdownApiService,
   ) {
     super();
   }
-
-  ngOnInit(): void {
-    this.initializePage('TLS2E080', 'tls/tls2e080', this.queryForm, (form) => this.onSubmit(form));
-    this.settlementMethodService.getSettlementMethods().subscribe(data => {
-      this.checkoutOptions = data;
-    });
-    //
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterNameOptions = data;
-    });
-    //
-    this.commissionTypeService.getCommissionTypes().subscribe(data => {
-      this.commissionMethodOptions = data;
-    });
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-  }
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
+    const formValue = frm.value;
 
+    // 確保 sam_yyymm 有值且為 Date 物件或有效字串
+    let sam_yyymm_string = '';
+    if (formValue.sam_yyymm) {
+      const date = new Date(formValue.sam_yyymm);
+      // 格式化為 yyyy-MM
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      sam_yyymm_string = `${year}${month}`;
+    }
+    const body = {
+      ...formValue,
+      sam_yyymm: sam_yyymm_string,
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: [{ field: 'tlt_no', order: 1 }],
+    }
+    this.handleSubmit(frm, () => {
+      this.tls2e080Service.queryTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data
+        this.historyRequestBody = body;
+        this.totalRecords = res.TotalCount || 0;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      })
     })
+  }
+
+  autoReport(status: string) {
+    // this.loading = true;
+    // const body = {
+    //   ...this.historyRequestBody,
+    //   pageIndex: 1,
+    //   pageSize: 30,
+    //   SortBy: [{ field: 'tlt_no', order: 1 }],
+    // }
+    // this.tls2e080Service.queryTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+    //   this.data = res.Data
+    //   this.totalRecords = res.TotalCount || 0;
+    // })
   }
 }

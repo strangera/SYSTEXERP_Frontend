@@ -44,75 +44,31 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly ratePtn = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENG_Type: new FormControl<EngType | undefined>(void 0, [Validators.required]),
-    ENG_MeterNo: new FormControl<string | undefined>(void 0, [Validators.required]),
-    Location_No: new FormControl<string | undefined>(void 0),
-    floor_no: new FormControl<string | undefined>(void 0),
-    floor_name: new FormControl<string | undefined>(void 0),
-    Building_No: new FormControl<string | undefined>(void 0),
-    Building_Name: new FormControl<string | undefined>(void 0),
-    x_coord: new FormControl<string | undefined>(void 0),
-    y_coord: new FormControl<string | undefined>(void 0),
+    ENG_Type: new FormControl<EngType | void>(void 0, [Validators.required]),
+    ENG_MeterNo: new FormControl<string | void>(void 0, [Validators.required]),
+    Location_No: new FormControl<string | void>(void 0),
+    floor_no: new FormControl<string | void>(void 0),
+    floor_name: new FormControl<string | void>(void 0),
+    Building_No: new FormControl<string | void>(void 0),
+    Building_Name: new FormControl<string | void>(void 0),
+    x_coord: new FormControl<string | void>(void 0),
+    y_coord: new FormControl<string | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
-  public readonly totalRecords = computed(() => this.tableDataSignal().length);
+  public readonly totalRecords = computed(() => this.filteredData().length);
 
   private readonly tltByFlagMap = computed(() => this.service.tltByFlagMap);
 
   private readonly payload = computed((): ASS21020Query | null => {
-    const type = this.engTypeSignal();
+    const type = this.engTypeSignal() as string;
     const mtrNo = this.meterNoSignal();
     this.logger.debug(`payload:`, [type, mtrNo]);
     return {
-      EngTypes: type ?? void 0,
+      EngTypes: this.service.engTypeMap.get(type) ?? void 0,
       ENG_MeterNo: mtrNo ?? void 0,
       Mid: Number(this.user.mid),
       SYS_StoreNo: this.user.SYS_StoreNo,
     };
-  });
-
-  /* 驗證 ENG_Rate 跟 TLT_No */
-  private readonly validationResult = computed(() => {
-    const { event, currentData } = this.currentEditingSignal();
-
-    if (!event || !currentData.length) return { valid: !0, errors: [] };
-
-    const errorMessages: string[] = [];
-
-    // 驗證 TLT_No 不重複
-    const tltNoToCheck = event.field === 'TLT_No' ? event.value : event.rowData.TLT_No;
-    if (tltNoToCheck && currentData.some(item => item.TLT_No === tltNoToCheck && item !== event.rowData)) {
-      errorMessages.push('專櫃編號不可重複');
-    }
-
-    // 驗證 ENG_Rate 格式（0-100之間）
-    const rateToCheck = event.field === 'ENG_Rate' ? event.value : event.rowData.ENG_Rate;
-
-    if (typeof rateToCheck === 'number') {
-      if (rateToCheck < 0 || rateToCheck > 100) {
-        errorMessages.push('比率格式不正確（須為0-100之間的數字）');
-      }
-    } else if (rateToCheck !== null && rateToCheck !== void 0 && rateToCheck !== '') {
-      errorMessages.push('比率格式不正確（須為0-100之間的數字）');
-    }
-
-    // 驗證總比率不超過100%
-    const total = currentData.reduce((sum, item) => {
-      let rate = 0;
-      if (item === event.rowData) {
-        rate = event.field === 'ENG_Rate' ? (event.value ?? 0) : (item.ENG_Rate ?? 0);
-      } else {
-        rate = item.ENG_Rate ?? 0;
-      }
-      return sum + rate;
-    }, 0);
-
-    if (total > 100) {
-      errorMessages.push(`總比率不能超過 100%（目前：${total}%）`);
-    }
-
-    // 只有當所有驗證都通過時，才算有效
-    return { valid: errorMessages.length === 0, errors: errorMessages };
   });
 
   /** 根據工程類型篩選的電錶編號清單 */
@@ -134,13 +90,18 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   });
 
   public readonly filteredData = computed<ASS21020Detail[]>(() => {
-    const rows = this.tableDataSignal();
-    return !rows.length ? [] : rows.map(d => {
+    const rows = this.tableDataSignal().length > 0
+      ? this.tableDataSignal()
+      : this.rowdata?.Details || [];
+    if (!rows.length) return [];
+
+    this.logger.debug(`filteredData:`, [rows, this.tltByFlagMap()]);
+    return rows.map(d => {
       const mapData = this.tltByFlagMap().get(d.TLT_No);
       return {
         ...d,
-        Location_No: mapData?.Location_No ?? '',
-        NET_SPACE: mapData?.NET_SPACE ?? 0,
+        Location_No: mapData?.Location_No ?? d.Location_No ?? '',
+        NET_SPACE: mapData?.NET_SPACE ?? d.NET_SPACE ?? 0,
       };
     });
   });
@@ -148,24 +109,49 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges, { initialValue: void 0 });
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges, { initialValue: void 0 });
   private readonly tableDataSignal = signal<ASS21020Detail[]>([]);
-  private readonly currentEditingSignal = signal<{ event: FieldChangeEvent | null; currentData: any[]; }>({ event: null, currentData: [] });
+  private readonly currentEditingSignal = signal<{ event: FieldChangeEvent<ASS21020Detail> | null; currentData: ASS21020Detail[]; }>({ event: null, currentData: [] });
   public readonly rowEditValidSignal = signal(!0);
 
   private editingRow: TLTByFlag | undefined;
   private lastQueriedMeterNo: string | undefined;
-  private lastLoadedKey: string | undefined;
 
+  /* 驗證 ENG_Rate 跟 TLT_No */
   public readonly validationEffect = effect(() => {
-    const validation = this.validationResult();
-    const { event } = this.currentEditingSignal();
-    if (!event) return;
+    const { event, currentData } = this.currentEditingSignal();
+    if (!event || !currentData.length) return void this.rowEditValidSignal.set(!0);
 
-    if (!validation.valid && validation.errors.length > 0) {
-      this.messageService.errorBubble(validation.errors.join('；'), '輸入有誤');
-      this.rowEditValidSignal.set(!1);
-    } else {
-      this.rowEditValidSignal.set(!0);
-    }
+    const tltNoToCheck = <string | undefined>(event.field === 'TLT_No' ? event.value : event.rowData.TLT_No);
+    const rateToCheck = <number | undefined>(event.field === 'ENG_Rate' ? event.value : event.rowData.ENG_Rate);
+
+    //  TLT_No 不重複
+    const isDuplicateTltNo = tltNoToCheck && currentData.some(item =>
+      item.TLT_No === tltNoToCheck && item !== event.rowData
+    );
+
+    // 所有 ENG_Rate 欄位都已填入
+    const hasEmptyRates = currentData.some(item => {
+      const rate = item === event.rowData
+        ? (event.field === 'ENG_Rate' ? event.value : item.ENG_Rate)
+        : item.ENG_Rate;
+      return rate === null || rate === void 0 || rate === '';
+    });
+
+    // ENG_Rate 格式正確（0-100之間或空值）
+    const isInvalidRate = typeof rateToCheck === 'number'
+      ? (rateToCheck < 0 || rateToCheck > 100)
+      : (rateToCheck !== null && rateToCheck !== void 0 && rateToCheck !== '');
+
+    // 總比率不超過100%
+    const totalRate = currentData.reduce((sum, item) => {
+      const rate = item === event.rowData
+        ? (event.field === 'ENG_Rate' ? (event.value ?? 0) : (item.ENG_Rate ?? 0))
+        : (item.ENG_Rate ?? 0);
+      const numericRate = Number(rate);
+      return sum + (isNaN(numericRate) ? 0 : numericRate);
+    }, 0);
+
+    const isValid = !isDuplicateTltNo && !hasEmptyRates && !isInvalidRate && totalRate <= 100;
+    this.rowEditValidSignal.set(isValid);
   }, { allowSignalWrites: !0 });
 
   /* 根據表單載入相關資料 */
@@ -173,16 +159,16 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     const payload = this.payload();
     const types = this.service.engTypeSignal();
     const meters = this.service.engMeterNoSignal();
-    this.logger.debug(`dataForm:`, [payload, types, meters, this.tb()?.dt.value]);
-    this.tb()!.rowEditing = !1;
     const dtVal = this.tb()!.dt.value ?? [];
+    this.tb()!.rowEditing = !1;
+    this.logger.debug(`dataForm:`, [payload, types, meters, dtVal]);
 
-    if (dtVal.length) this.tableDataSignal.set(dtVal.filter((i: any) => !i.Apply_No?.startsWith('temp')));
+    if (dtVal.length) this.tableDataSignal.set(dtVal.filter(i => !i.Apply_No?.startsWith('temp')));
     if (!payload?.EngTypes) this.df().ENG_Type.patchValue(types.find(t =>
       meters.find(m => m.ENG_Type === t.Name))?.No as EngType);
     if (!payload?.ENG_MeterNo) return;
 
-    const meterData = this.service.engMeterNoSignal().find(item => item.ENG_MeterNo === payload.ENG_MeterNo);
+    const meterData = meters.find(item => item.ENG_MeterNo === payload.ENG_MeterNo);
 
     if (payload.ENG_MeterNo && this.lastQueriedMeterNo !== payload.ENG_MeterNo) {
       this.lastQueriedMeterNo = payload.ENG_MeterNo;
@@ -190,11 +176,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     }
 
     if (payload.EngTypes && meterData) queueMicrotask(() => {
-      const key = `${payload.EngTypes}|${payload.ENG_MeterNo}|${this.user.mid}|${this.user.SYS_StoreNo}`;
-      if (this.crudstatus !== CRUDStatus.Create && this.lastLoadedKey !== key) {
-        this.lastLoadedKey = key;
-        this.service.loadASS21020(payload);
-      }
+      if (this.crudstatus !== CRUDStatus.Create) this.service.loadASS21020(payload);
 
       this.dataForm.patchValue({
         Location_No: meterData.Location_No,
@@ -211,26 +193,37 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   /* 初始化 */
   public readonly initEffect = effect(() => {
-    if (this.isFormCreateable) {
-      this.tableDataSignal.set([]);
-      return void this.initEffect.destroy();
-    }
+    if (this.isFormCreateable) return void this.initEffect.destroy();
+
     const rowData = this.rowdata;
+    const data = this.service.ASS21020Data();
     const engTypes = this.service.engTypeSignal();
     const meterNos = this.service.engMeterNoSignal();
-    this.logger.debug(`initEffect 1:`, [engTypes, meterNos, rowData]);
     if (!engTypes?.length || !meterNos?.length || !rowData) return;
 
     const fixedType = engTypes.find(t => t.Name === rowData.ENG_Type);
     const meterData = meterNos.find(item => item.ENG_MeterNo === rowData.ENG_MeterNo);
-
-    this.df().ENG_Type.setValue(fixedType ? fixedType.No as EngType : void 0);
-    this.df().ENG_MeterNo.setValue(meterData ? rowData.ENG_MeterNo : void 0);
-
-    const data = this.service.ASS21020Data();
     const target = data.find(v => v.ENG_MeterNo === rowData.ENG_MeterNo);
-    if (!target) return;
 
+    if (meterData && fixedType) this.dataForm.patchValue({
+      ENG_Type: fixedType.No as EngType || void 0,
+      ENG_MeterNo: rowData.ENG_MeterNo ?? void 0,
+      Location_No: meterData.Location_No ?? void 0,
+      floor_no: meterData.Floor_No ?? void 0,
+      floor_name: meterData.Floor_Desc ?? void 0,
+      Building_No: meterData.building_No ?? void 0,
+      Building_Name: meterData.building_DESC ?? void 0,
+      x_coord: meterData.Draw_X ?? void 0,
+      y_coord: meterData.Draw_Y ?? void 0,
+    }, { emitEvent: !1 });
+
+    if (rowData.ENG_MeterNo && this.lastQueriedMeterNo !== rowData.ENG_MeterNo) {
+      this.lastQueriedMeterNo = rowData.ENG_MeterNo;
+      this.service.queryTltByFlag(rowData.ENG_MeterNo);
+    }
+
+    this.logger.debug(`initEffect 1:`, [rowData, data, engTypes, meterNos, fixedType, meterData, target]);
+    if (!target) return;
     this.tableDataSignal.set(target.Details ?? []);
     this.logger.debug(`initEffect 2:`, [meterData, target]);
     this.initEffect.destroy();
@@ -244,6 +237,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       options: () => this.service.tltNoSignal().map(({ TLT_No, TLT_Name }) => ({ No: TLT_No, Name: `${TLT_No}-${TLT_Name}` })),
       optionLabel: 'Name',
       optionValue: 'No',
+      disabled: () => this.isFormReadable,
       required: !0
     },
     {
@@ -255,16 +249,18 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       field: 'NET_SPACE',
       header: '營業面積',
       format: (v: number) => v ?? this.editingRow?.NET_SPACE ?? 0,
+      disabled: () => this.isFormReadable,
     },
     {
       field: 'ENG_Rate',
       header: '比率',
       type: 'inputNumber',
       format: (v: number) => (v ?? this.editingRow?.ENG_Rate ?? 0) + '%',
+      disabled: () => this.isFormReadable,
       validate: [this.validateEngRate.bind(this)],
       required: !0
     },
-    { field: 'ENG_Remark', header: '備註', type: 'input' },
+    { field: 'ENG_Remark', header: '備註', type: 'input', disabled: () => this.isFormReadable, },
   ];
 
   constructor(
@@ -277,12 +273,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public ngOnInit(): void {
     this.initializePage('ASS21020', this.dataForm);
-
-    if (this.isFormCreateable) {
-      this.service.ASS21020Data.set([]);
-      this.service.engTypeSignal.set([]);
-      this.service.engMeterNoSignal.set([]);
-    }
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
@@ -305,15 +295,14 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
       this.tb()!.dt.value = cleanedData;
 
-      if (total > 100) {
-        this.messageService.errorBubble('總比率不能大於100%', '提交失敗');
-        this.loading = !1;
-        return;
-      }
+      if (total > 100) return void (this.loading = !1);
 
       this.service.updateASS21020(payload).pipe(
         finalize(() => this.loading = !1),
-        tap(this.handleSubmitResponse)
+        tap(() => {
+          this.onCancel();
+          this.service.loadASS21020({ ENG_MeterNo: this.df().ENG_MeterNo.value! });
+        })
       ).subscribe();
     });
   }
@@ -406,17 +395,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.tb()!.dt.value = filteredData;
     queueMicrotask(() => this.tableDataSignal.set(filteredData));
   }
-
-  private readonly handleSubmitResponse = (res: any) => {
-    const action = this.crudstatus === CRUDStatus.Create ? '新增' : '更新';
-    if (!res.IsUpdateSuccess) {
-      this.messageService.errorBubble(res.ErrorMsg, `${action}失敗`);
-      return;
-    }
-    this.onCancel();
-    this.messageService.successBubble(`${action}成功`);
-    this.service.loadASS21020({ ENG_MeterNo: this.df().ENG_MeterNo.value! });
-  };
 
   private validateEngRate(v: string): { isValid: boolean; errorMessage: string[]; } {
     return { isValid: !v || this.ratePtn.test(v), errorMessage: ['比率格式不正確'] };

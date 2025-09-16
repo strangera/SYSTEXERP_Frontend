@@ -4,10 +4,9 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
@@ -19,9 +18,10 @@ import {
   Tls57090Service
 } from '@service/api/tls/tls57090.service';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls57090',
@@ -36,9 +36,10 @@ import { HttpResponse } from '@angular/common/http';
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
-    ButtonModule
+    ButtonModule,
+    TableReportComponent,
+    NgIf
   ],
   providers: [DatePipe]
 })
@@ -54,7 +55,6 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     ODM_Type: [null],
     Status: [null],
     DisplayMode: [1, [Validators.required]],
-    ...createPaginationConfig([{ field: 'HOS_NAME', order: 1 }]),
   });
   totalRecords = 0;
   documentTypeOptions = [
@@ -81,12 +81,12 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls57090Service: Tls57090Service,
+    public readonly tls57090Service: Tls57090Service,
     private datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS57090', 'tls/tls57090cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS57090', 'tls/tls57090cru');
 
     this.queryForm.controls.DisplayMode.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
       this.updateTableColumns(mode);
@@ -161,23 +161,16 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         APRV_Date_End: formValue.APRV_Date_End ? this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd') ?? undefined : undefined,
         ODM_Type: formValue.ODM_Type,
         Status: formValue.Status,
-        pageIndex: frm.value.pageIndex,
-        pageSize: frm.value.pageSize,
-        SortBy: frm.value.SortBy,
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: [{ field: 'HOS_NAME', order: 1 }],
       };
 
-      this.tls57090Service.queryTLS57090(requestBody).pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      ).subscribe(response => {
+      this.tls57090Service.queryTLS57090(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
           this.totalRecords = response.TotalCount || 0;
           this.historyRequestBody = requestBody;
-          if (requestBody.ReportType === '明細') {
-            this.data = response.Data.DetailData || [];
-          } else {
-            this.data = response.Data.SummaryData || [];
-          }
+          this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
           this.data = [];

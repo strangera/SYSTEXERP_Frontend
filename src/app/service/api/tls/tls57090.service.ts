@@ -1,6 +1,6 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../system/auth.service'; // 假設 ApiResponse 在這個路徑
 import { LazyLoadEvent } from '@shared/componentkit/table/table.model'; // 您的 LazyLoadEvent 路徑
@@ -96,12 +96,16 @@ export class Tls57090Service {
    * @param body 統一的查詢請求物件 (QueryTLS57090Request)
    * @returns 包含 QueryTLS57090ApiResponse 結構的 API 回傳結果
    */
-  queryTLS57090(
-    body: QueryTLS57090Request // 統一的請求參數
-  ): Observable<ApiResponse<QueryTLS57090ApiResponse>> { // 統一的回傳類型
-    return this.http.post<ApiResponse<QueryTLS57090ApiResponse>>(
-      `${this.apiUrl}/queryTLS57090`,
-      body
+  queryTLS57090(body: QueryTLS57090Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS57090`, body).pipe(
+      map(res => {
+        const data = body.ReportType === '明細' ? res.Data.DetailData : res.Data.SummaryData;
+        return {
+          Data: data,
+          TotalCount: res.TotalCount,
+          Message: res.Message
+        };
+      })
     );
   }
 

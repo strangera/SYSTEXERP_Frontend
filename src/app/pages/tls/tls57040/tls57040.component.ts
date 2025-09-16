@@ -7,7 +7,6 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TranslateModule } from '@ngx-translate/core';
@@ -17,8 +16,8 @@ import { InputTextareaComponent } from "@shared/componentkit/input-textarea/inpu
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { debounceTime, finalize } from 'rxjs';
-import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { QueryPLUResponse, QueryTLS57040Request, QueryTLS57040Response, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls57040',
@@ -27,12 +26,12 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
   imports: [
     MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextComponent, DropdownTableComponent, DropdownComponent,
-    TableComponent, TooltipModule, TranslateModule,
+    TooltipModule, TranslateModule,
     ButtonComponent, CheckboxModule,
-    InputTextareaComponent, InputNumberComponent
+    InputTextareaComponent, TableReportComponent
   ]
 })
-export class TLS57040Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Response> implements OnInit {
   queryForm = this.formBuilder.group({
     LOGO_No: [''], // 品牌代碼 (下拉式選單)
     PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號 (下拉式表格選單)
@@ -45,13 +44,10 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
     ShowCurrentQty: [false], // 顯示庫存為零 (核取方塊)
     ShowOrderPrc: [false], // 顯示標準進價
     ShowImage: [false], // 顯示圖片
-    ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-    pageSize: [100, [Validators.min(1), Validators.max(500)]], // 顯示行數 (文字輸入，這裡應該是分頁參數 `pageSize`)
   });
   totalRecords = 0;
-  rowsPerPageOptions?: any[];
-  rows = 0;
-  data: any[] = [];
+  historyRequestBody?: QueryTLS57040Request;
+  data: QueryTLS57040Response[] = [];
   columns: Column[] = [
     { field: 'PLU_Image', header: '圖片', visible: false, type: 'image' },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
@@ -95,7 +91,7 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls57040Service: Tls57040Service
+    public readonly tls57040Service: Tls57040Service
   ) {
     super();
   }
@@ -156,10 +152,15 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
         }
         return col;
       });
-      this.tls57040Service.queryTLS57040(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.rowsPerPageOptions = [response.Data.length];
-        this.rows = response.Data.length;
+      const body = {
+        ...frm.value,
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
+      }
+      this.tls57040Service.queryTLS57040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data;
+        this.historyRequestBody = body;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

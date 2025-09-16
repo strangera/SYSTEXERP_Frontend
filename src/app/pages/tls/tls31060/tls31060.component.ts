@@ -7,7 +7,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup, createPaginationConfig, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { yesterday } from '@shared/models/system/query-form.model';
@@ -57,10 +57,10 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
     tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
     org_id: [[]],  // 組織
-    TaxType: ["1"],  // 銷售金額是否含稅(1:是 0:否 預設含稅)
-    IsRece_Yn: ["Y"],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
+    TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
+    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
 
-    // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
+    ...createPaginationConfig([{ field: 'org_id', order: 1 }])
   });
   totalRecords = 0;
   data: TLS31060Response[] = [];
@@ -109,8 +109,8 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
     { value: "6", label: "包底加階梯" },
   ]
   TaxType_Option = [
-    { value: "1", label: "是" },
-    { value: "0", label: "否" },
+    { value: "0", label: "是" },
+    { value: "1", label: "否" },
   ]
   tlt_building_Option: IDropdownItem[] = []; // 館別
   tlt_floor_Option: IDropdownItem[] = []; // 樓層

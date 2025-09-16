@@ -1,327 +1,149 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MargintypeService } from '../../../service/basic/margintype.service';
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { NgIf } from '@angular/common';
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN52030Service } from '@service/api/fin/fin52030.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { NGXLogger } from 'ngx-logger';
 import { CheckboxModule } from 'primeng/checkbox';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
 
 @Component({
-    selector: 'app-fin52030-cru',
-    templateUrl: './fin52030-cru.component.html',
-    styleUrl: './fin52030-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        CalendarComponent,
-        CheckboxModule,
-        NgFor,
-        ButtonDynamicallydeleteComponent,
-        ButtonDynamicallyaddComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-fin52030-cru',
+  templateUrl: './fin52030-cru.component.html',
+  styleUrl: './fin52030-cru.component.scss',
+  standalone: !0,
+  imports: [
+    NgIf,
+    CheckboxModule,
+    FormsModule,
+    PanelModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    CalendarComponent,
+    DropdownComponent,
+    InputTextComponent,
+    MenubarComponent,
+    TableComponent,
+  ],
 })
-export class FIN52030CRUComponent
-  extends BasicCrupageComponent
-  implements OnInit {
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '150009';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.margintypeService.getOptions().subscribe((data) => {
-      this.margintypeOptions = data;
-    });
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
 
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
-      });
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      remark: [], // Input Text
-      startdate: [],
-      enddate: [],
-      SMarginserialnumber: [],
-      EMarginserialnumber: [],
-      vendorCode: [],
-      Flippingstate: [1, Validators.required],
-      Checknumber: [],
-      margintype: [],
-      borrowloan: [],
-      type: [],
-      Accountcode: [],
-      vendorCodeOptions: [],
-      name: [],
-      organizationCodeOptions: [],
-    });
-  }
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    systemYear: [], // 系統年結年度
-    accountingStartMonth: [], // 系統開帳年月
-    accountingEndMonth: [], // 系統關帳年月
-    defaultVoucherDate: [], // 傳票日期預設
-    defaultOrganization: [, Validators.required], // 預設組織
-    accumulatedProfitLossAccount: [], // 累積盈虧科目
-    currentProfitLossAccount: [], // 本期損益科目
-    cashAccount: [], // 現金科目
-    accountsReceivableAccount: [], // 應收帳款科目
-    accountsPayableAccount: [], // 應付帳款科目
-    inputTaxAccount: [], // 進項稅額科目
-    outputTaxAccount: [], // 銷項稅額科目
-    postAndTelecomFeeAccount: [], // 郵電費科目
-    discountRate: [], // 貼現日利率
-    discountFeeRevenueAccount: [], // 貼現手續費收入科目
-    discountOutputTaxAccount: [], // 貼現銷項稅額科目
-    startdate: [], // 貼現銷項稅額科目起始日
-    enddate: [], // 貼現銷項稅額科目結束日
-    bankTransferFeeAccount: [], // 銀行匯款手續費科目
-    advanceExpenseAccount: [], // 預支費用科目
-    billTransferCondition: [], // 應付票據是否需領用才拋轉傳票
-    typecode: [],
-    typename: [],
-    Subpoenatype: [],
-    usagec: [],
-    name: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
+  public readonly dataForm = this.formBuilder.nonNullable.group({
+    typeCode: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(8)]),
+    subpoenaName: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(40)]),
+    subpoenaType: new FormControl<string | void>(void 0, [Validators.required]),
+    creator: new FormControl<string | void>(void 0),
+    createDate: new FormControl<Date | void>(void 0),
+    modifier: new FormControl<string | void>(void 0),
+    modifyDate: new FormControl<Date | void>(void 0),
   });
-  // Dropdown options
+  public readonly df = signal(this.dataForm.controls);
 
-  departmentOptions: any[] = [];
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  Accountcode: any[] = [
-    { value: 1, label: '110101' },
-    { value: 2, label: '110102' },
-    { value: 3, label: '110103' },
-    { value: 4, label: '110111' },
-    { value: 5, label: '110112' },
-    { value: 6, label: '110199' },
-    { value: 7, label: '110200' },
-    { value: 8, label: '110201' },
-    { value: 9, label: '110210' },
-    { value: 10, label: '110220' },
+  private tableData = signal<Record<string, any>[]>([]);
+
+  public readonly filteredData = computed(() => {
+    const data = !this.isFormCreateable
+      ? this.service.test ? this.tableData() : this.service.FIN52030DetailData()
+      : [];
+
+    return data.filter(item => ({
+      ...(this.df().typeCode.value ? { typeCode: this.df().typeCode.value } : {}),
+      ...(this.df().subpoenaName.value ? { subpoenaName: this.df().subpoenaName.value } : {}),
+      ...(this.df().subpoenaType.value ? { subpoenaType: this.df().subpoenaType.value } : {}),
+    }));
+  });
+
+  public readonly totalRecords = computed(() => this.filteredData().length);
+
+  public readonly columns: Column[] = [
+    { field: 'subjectCode', header: '科目代號', type: 'dropdown', options: this.service.FIN52030xxxxData(), optionLabel: 'xxxxName', optionValue: 'xxxxId' },
+    { field: 'vendorEmployeeCode', header: '廠商/員工代號', type: 'input' },
+    { field: 'vendorEmployeeName', header: '廠商/員工名稱', type: 'input' },
+    { field: 'summary', header: '摘要', type: 'input' },
+    { field: 'debitAmount', header: '借方金額', type: 'inputNumber', format: formatAmount, isTotal: true },
+    { field: 'creditAmount', header: '貸方金額', type: 'inputNumber', format: formatAmount, isTotal: true },
+    { field: 'organizationCode', header: '組織代號', type: 'input' },
+    { field: 'objectCode', header: '對象別編號', type: 'input' },
+    { field: 'reconciliationKey', header: '對帳KEY值', type: 'input' },
   ];
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-  organizationCodeOptions: any[] = [
-    { value: 1, label: '100000' },
-    { value: 2, label: '100100' },
-    { value: 3, label: '101000' },
-    { value: 4, label: '101100' },
-    { value: 5, label: '101200' },
-    { value: 6, label: '101300' },
-    { value: 7, label: '101400' },
-    { value: 8, label: '101500' },
-    { value: 9, label: '101600' },
-    { value: 10, label: '101700' },
-  ];
-  margintypeOptions: any[] = [];
-  vendorCodeOptions: any[] = [
-    { value: 1, label: '00000000-1' },
-    { value: 2, label: '00000000-2' },
-    { value: 3, label: '00000000-4' },
-    { value: 4, label: '00000000-5' },
-    { value: 5, label: '00000000-7' },
-    { value: 6, label: '00000000-8' },
-    { value: 7, label: '00852492-1' },
-    { value: 8, label: '01052878-1' },
-    { value: 9, label: '01508949-1' },
-    { value: 10, label: '01515462-1' },
-  ];
-  borrowloanOptions: any[] = [
-    { value: 1, label: '借' },
-    { value: 2, label: '貸' },
-  ];
-  typeOptions: any[] = [
-    { value: 1, label: '存入保證金' },
-    { value: 2, label: '存出保證金' },
-  ];
-  // ----------------------------------------------------------------
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private margintypeService: MargintypeService,
-    private translate: TranslateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService
+    public service: FIN52030Service,
+    private logger: NGXLogger,
   ) {
-    super(); // 呼叫父類建構子
+    super();
+    this.authService.getUserInfo() && (this.user = this.authService.getUserInfo()!);
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
+  ngOnInit(): void {
+    this.initializePage('FIN52030', this.dataForm);
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
+    if (this.isFormCreateable) {
+      this.df().creator.setValue(this.user.user_Name);
+      this.df().createDate.setValue(new Date());
+    }
+    else {
+      this.service.getSubpoenaTypes();
 
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
+      this.tableData.set(dummyData);
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.logger.debug(`init:`, [this.rowdata, dummyData]);
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  } //CRU
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
 
-  onCancel() {
-    this.router.navigate(['FIN5000/FIN52030']);
+      this.submitted = !0;
+      this.loading = !1;
+    });
+  }
+
+  public onFieldChange(event: FieldChangeEvent<unknown>): void {
+    this.logger.debug(`onFieldChange:`, [event]);
+  }
+
+  public onRowEditInit(event: RowEditSaveEvent): void {
+    this.logger.debug(`onRowEditInit:`, [event]);
+  }
+
+  public onRowEditSave(event: RowEditSaveEvent): void {
+    this.logger.debug(`onRowEditSave:`, [event]);
+  }
+
+  public onRowEditCancel(event: RowEditSaveEvent): void {
+    this.logger.debug(`onRowEditCancel:`, [event]);
+  }
+
+  public onDelete(event: any): void {
+    this.logger.debug(`onDelete:`, [event]);
+  }
+
+  public onInsert(event: any): void {
+    this.logger.debug(`onInsert:`, [event]);
   }
 }
+
+
+
+const dummyData = Array.from({ length: 100 }, (_, i) => ({
+  id: (i + 1) * 10,
+  subjectCode: `00${i + 3}`,
+  vendorEmployeeCode: `V00${i + 3}`,
+  vendorEmployeeName: `Vendor ${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+  summary: `Generated summary ${i + 3}`,
+  debitAmount: Math.floor(Math.random() * 1e6) + 1e4,
+  creditAmount: Math.floor(Math.random() * 1e6) + 1e4,
+  organizationCode: `ORG00${i + 3}`,
+  objectCode: `OBJ00${i + 3}`,
+  reconciliationKey: `KEY00${i + 3}`,
+}));

@@ -50,8 +50,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     TXN_Date_E: [null],                                         // 退出/折讓日期訖 (date picker)
     Credit_Type: [null],                                        // 區別 (dropdown)
     INV_YM: [null, [Validators.required]],                      // 申報年月 (必填, date picker)
-    INV_Data_YM_S: [null],                                      // 資料所屬年月起 (date picker)
-    INV_Data_YM_E: [null],                                      // 資料所屬年月訖 (date picker)
+    INV_Data_YM_S: [null, [Validators.required]],                                      // 資料所屬年月起 (date picker)
+    INV_Data_YM_E: [null, [Validators.required]],                                      // 資料所屬年月訖 (date picker)
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起 (string(16))
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖 (string(16))
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票編號起 (string(16))
@@ -186,7 +186,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
 
   private openDownloadWindow(printUrl: string): void {
     const downloadUrl = `${environment.ApiUrl}${printUrl}`;
-    window.open(downloadUrl, '_blank');
+    window.open(downloadUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
   }
 
   private loadDropdownOptions(): void {

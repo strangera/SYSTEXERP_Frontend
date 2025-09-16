@@ -32,8 +32,7 @@
       [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows" [first]="first"
       (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
       (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)"
-      [showExpandCollapse]="showExpandCollapse">
+      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
@@ -41,15 +40,10 @@
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
         <th *ngIf="!showSubTotal && !showTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"
-          rowspan="2">
-        </th>
+          rowspan="2"></th>
         <th class="w-1rem" rowspan="2">序號</th>
-        <th class="w-1rem group-header" rowspan="2" *ngIf="
-            IsPrint &&
-            showCheckBox &&
-            !rowEditing &&
-            selectionMode === 'multiple'
-          ">
+        <th class="w-1rem group-header" rowspan="2"
+          *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox />
         </th>
         <th class="w-1rem group-header" rowspan="2" *ngIf="expansionColumns.length && IsPrint">
@@ -105,7 +99,12 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="!showSubTotal && !showTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"></th>
+        <th *ngIf="
+            !showSubTotal &&
+            !showTotal &&
+            data.length &&
+            (showReorder || showRowEdit)
+          " class="w-1rem"></th>
         <th class="w-1rem">序號</th>
         <th class="w-1rem" *ngIf="
             IsPrint &&
@@ -115,12 +114,16 @@
           ">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
-        <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
-        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
-          [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center wrap-header"
-          pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
-          {{col.header}}
+        <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">
+          收合/展開
+        </th>
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn [pSortableColumn]="
+            showSort && !rowEditing ? col.sortField ?? col.field : undefined
+          " [pSortableColumnDisabled]="
+            !showSort || rowEditing || col.showSort === false
+          " class="text-center wrap-header" pFrozenColumn [frozen]="IsPrint && col.frozen"
+          [alignFrozen]="col.alignFrozen || 'right'">
+          {{ col.header }}
           <span *ngIf="col.required" class="required">*</span>
           <p-sortIcon *ngIf="
               showSort && !rowEditing && col.showSort !== false && data.length
@@ -161,8 +164,13 @@
       [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData" [pSelectableRow]="rowData"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <ng-container *ngIf="!loading; else loadingTemplate">
-        <td *ngIf="!showSubTotal && !showTotal && data.length && (showReorder || showRowEdit)"><span class="pi pi-bars"
-            pReorderableRowHandle></span>
+        <td *ngIf="
+            !showSubTotal &&
+            !showTotal &&
+            data.length &&
+            (showReorder || showRowEdit)
+          ">
+          <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td class="text-center">{{ rowIndex + 1 }}</td>
         <td *ngIf="
@@ -208,9 +216,18 @@
             </ng-template>
             <ng-template pTemplate="output">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit"
-                (fieldChange)="onFieldChange(rowData,$event.field,$event.value,$event.rowIndex  )"
-                [disabled]="disabled? true: (col.disabled && col.disabled(rowData)) || !alwaysEdit"
-                (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
+                (fieldChange)="
+                  onFieldChange(
+                    rowData,
+                    $event.field,
+                    $event.value,
+                    $event.rowIndex
+                  )
+                " [disabled]="
+                  disabled
+                    ? true
+                    : (col.disabled && col.disabled(rowData)) || !alwaysEdit
+                " (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
                 (filterChange)="filterOptions($event)"></app-table-input>
             </ng-template>
           </p-cellEditor>
@@ -224,13 +241,19 @@
           <ng-container *ngIf="col.type === 'html'">
             <div [innerHTML]="sanitizeHtml(rowData[col.field])" class="html-cell"></div>
           </ng-container>
-          <span *ngIf="!col.type">
+          <span *ngIf="!col.type && !col.htmlFormat">
             {{
             col.format
             ? col.format(rowData[col.field], rowIndex, rowData)
             : rowData[col.field]
             }}
           </span>
+
+          <span *ngIf="col.htmlFormat" [innerHTML]="
+              col.format
+                ? col.format(rowData[col.field], rowIndex, rowData)
+                : rowData[col.field]
+            "></span>
         </td>
         <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage" [ngClass]="{
             'flex justify-content-center gap-2': IsPrint && showManage,

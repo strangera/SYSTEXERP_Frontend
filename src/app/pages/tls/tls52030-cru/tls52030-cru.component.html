@@ -33,12 +33,12 @@
         <app-input-textarea class="col-12" label="進貨驗收單說明" controlName="ODM_Remark"
           [control]="dataForm.controls.ODM_Remark" [submitted]="submitted" />
       </div>
-      <app-table dataKey="id" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
-        (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false" [showInsert]="true"
-        (insert)="onShowDialog()" [showRowEdit]="true" (delete)="onDelete($event)" (rowEditSave)="onRowEditSave($event)"
-        [showCaption]="isFormCreateable" [showReportMode]="false" [showManage]="!isFormReadable"
-        [multiSortMeta]="[{ field: 'PO_No', order: 1 }]" [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value &&
-        dataForm.controls.HOS_No.value ? false : true" [showDelete]="false" [showCheckBox]="false" />
+      <app-table-edit class="col-12" tableKey="TLS52030Detail" [columns]="editColumns" [data]="data"
+        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" errorMessage="請至少選擇一個驗收項目！"
+        (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [disabled]="isFormReadable"
+        (insert)="onShowDialog()" [showInsert]="isFormCreateable || rowdata?.ODM_Status === '1'" [canInsert]="false"
+        [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value &&
+        dataForm.controls.HOS_No.value ? false : true" [multiSortMeta]="[{ field: 'PO_No', order: 1 }]" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit" [loading]="loading" />

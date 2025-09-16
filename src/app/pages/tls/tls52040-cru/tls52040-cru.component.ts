@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -21,6 +21,9 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { NgIf } from '@angular/common';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { getSYS1000 } from '@service/system/sys1000.service';
 @Component({
   selector: 'app-tls52040-cru',
   templateUrl: './tls52040-cru.component.html',
@@ -40,21 +43,22 @@ import { TranslateModule } from '@ngx-translate/core';
     NgIf,
     DialogComponent,
     TranslateModule,
+    TableEditComponent
   ],
 })
 export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     RJM_No: [{ value: '系統自動產生', disabled: true }], // 退貨驗收單號
-    VEN_No: ['', [Validators.required]], // 廠商編號
-    LOGO_No: ['', [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
-    HOS_No: ['' as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
+    VEN_No: [null as string | null, [Validators.required]], // 廠商編號
+    LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
+    HOS_No: [null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     RJM_TotalBuyNet: [{ value: 0, disabled: true }], // 進貨驗收金額
     RJM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
     RJM_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
     RJM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
     APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期
-    RJM_Remark: ['', [Validators.maxLength(200)]],// 進貨驗收單說明
+    RJM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
   vendorOptions: IDropdownItem[] = []; // 廠商下拉選單選項
@@ -63,23 +67,52 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
   data: ITLS52040Detail[] = [];
   selectedItems: ITLS52040Detail[] = [];
-  columns: Column[] = [
+  editColumns: EditColumn[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'CRN_SubQty', header: '可退回數量', format: formatAmount },
-    { field: 'RJD_ConfirmQty', header: '退回數量', type: 'inputNumber', validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)] },
+    {
+      field: 'RJD_ConfirmQty',
+      header: '退回數量',
+      type: 'inputNumber',
+      validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)],
+      width: '100px',
+      // 將所有計算邏輯放在這裡
+      calculate: (row) => {
+        const confirmQty = Number(row.RJD_ConfirmQty ?? 0);
+        const buyPrice = Number(row.RJD_BuyPrc ?? 0);
+        const salePrice = Number(row.RJD_SalePrc ?? 0);
+        const stockTaxType = row.PLU_StockTaxType;
+        const saleTaxType = row.PLU_TaxType;
+
+        const buyNet = Math.round(buyPrice * confirmQty); // 未稅金額
+        const buyTax = stockTaxType === '1' ? Math.round(buyNet * 0.05) : 0; // 稅額
+        const buyAmt = buyNet + buyTax; // 進價小計
+        const saleTax = saleTaxType === '1' ? Math.round((salePrice * confirmQty) / 21) : 0; // 售價稅額
+        const saleAmt = Math.round(salePrice * confirmQty); // 售價小計
+
+        // 回傳一個包含所有計算結果的物件
+        return {
+          'RJD_BuyNet': buyNet,
+          'RJD_BuyTax': buyTax,
+          'RJD_BuyAmt': buyAmt,
+          'RJD_SaleTax': saleTax,
+          'RJD_SaleAmt': saleAmt,
+        };
+      }
+    },
     { field: 'RJD_ConfirmQty_Finished', header: '已驗退回數量' },
     { field: 'UNIT_NAME', header: '商品單位' },
     { field: 'RJD_BuyPrc', header: '單價', format: formatAmount },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
-    { field: 'RJD_BuyNet', header: '未稅金額', format: formatAmount }, //RJM_BuyPrc * RJM_ConfirmQty驗收數量，四捨五入取整數
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
+    { field: 'RJD_BuyNet', header: '未稅金額', format: formatAmount },
     { field: 'RJD_BuyTax', header: '稅額', format: formatAmount },
     { field: 'RJD_SalePrc', header: '售價', format: formatAmount },
-    { field: 'RJD_SaleAmt', header: '售價小計', format: formatAmount }, // RJM_SalePrc * RJM_ConfirmQty驗收數量
+    { field: 'RJD_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'CRN_No', header: '退貨單編號' },
-    { field: 'RJD_Remark', header: '單項備註', type: 'input' },
-  ]
+    { field: 'RJD_Remark', header: '單項備註', type: 'input', width: '150px' },
+  ];
   constructor(
     private tls52040Service: Tls52040Service,
     private dropDownListService: DropDownListService,
@@ -134,10 +167,13 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
     });
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      if (!this.data || this.data.length === 0) {
-        return this.messageService.errorBubble('請至少選擇一個驗收項目！');
+      const valid = this.tableEditComponent.validateAndShowErrors()
+      if (!valid) {
+        this.loading = false
+        return;
       }
       const formData = frm.getRawValue();
       console.log(this.data);
@@ -222,7 +258,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   onShowDialog() {
     this.dialogVisible = true
     this.dialogLoading = true;
-    this.tls52040Service.GetPOS2031P(this.dataForm.value).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52040Service.GetPOS2031P(this.dataForm.getRawValue()).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data.Data;
       this.totalRecords = response.Data.TotalCount;
     })
@@ -243,7 +279,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         ...this.data,
         ...response.Data.Data.map((item: ITLS52040Detail) => ({
           ...item,
-          RJD_ConfirmQty: 0,
+          RJD_ConfirmQty: 1,
           RJD_BuyPrc: item.RJD_BuyNet,
           RJD_BuyNet: 0,
         }))
@@ -261,28 +297,8 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   isRowSelectable(event: ITLS52040Detail): boolean {
     return !this.data || !this.data.some((item: ITLS52040Detail) => item.CRN_No === event.CRN_No);
   }
-
-  onRowEditSave(event: RowEditSaveEvent): void {
-    const newData = event.newData;
-    const index = event.ri;
-    const confirmQty = Number(newData.RJD_ConfirmQty ?? 0);
-    const buyPrice = Number(newData.RJD_BuyPrc ?? 0);
-    const salePrice = Number(newData.RJD_SalePrc ?? 0);
-    const stockTaxType = newData.PLU_StockTaxType;
-    const saleTaxType = newData.PLU_TaxType;
-    const buyNet = Math.round(buyPrice * confirmQty);// 未稅金額 = 驗收數量 * 單價
-    const buyTax = stockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;// 稅額 (若應稅 stockTaxType === '1')
-    const buyAmt = buyNet + buyTax;// 進價小計 = 未稅 + 稅額
-    const saleTax = saleTaxType === '1' ? Math.round((salePrice * confirmQty) / 21) : 0;// 售價稅額 (應稅 → (售價 * 數量) / 21，否則 0)
-    const saleAmt = Math.round(salePrice * confirmQty); // 售價小計
-    // 更新明細資料
-    this.data[index] = { ...newData, RJD_BuyNet: buyNet, RJD_BuyTax: buyTax, RJD_BuyAmt: buyAmt, RJD_SaleTax: saleTax, RJD_SaleAmt: saleAmt };
-    this.data = [...this.data];
-    this.calculateTotals();
-  }
-
   // 總計計算邏輯
-  private calculateTotals(): void {
+  calculateTotals(): void {
     let totalBuyNet = 0; // 進貨驗收金額：加總驗收明細的RJM_BuyNet 進價未稅小計
     let totalBuyTax = 0; // 稅額：單據稅別 RJM_TaxType=1應稅，則RJM_TotalBuyNet * 0.05，四捨五入取整數，若免稅，稅額0
     let totalSaleAmt = 0; // 售價總計：加總驗收明細的RJM_SaleAmt

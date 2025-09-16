@@ -63,7 +63,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table
+    <app-customFooter-table
       tableKey="TLS22010"
       [data]="data"
       [columns]="selectedColumns"
@@ -76,6 +76,8 @@
       [showManage]="false"
       [showDelete]="false"
       [showReportMode]="false"
+      [showTotal]="true"
+       [footerData]="footerData"
     >
       <header>
         <p-button
@@ -90,6 +92,6 @@
           (click)="exportReport()"
         />
       </header>
-    </app-table>
+    </app-customFooter-table>
   </div>
 </div>

@@ -32,6 +32,8 @@ export interface response10260 {
   "rent_space": number,
   "approve_desc": string,
   "crt_date": Date,
+  "tlt_no": string,
+  "location": string
 }
 
 export interface POS2013 {
@@ -101,17 +103,18 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
 
   data: response10260[] = [];
   columns: Column[] = [
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃', visible: true },
     { field: 'contact_person', header: '洽談者', visible: true },
     { field: 'contact_date', header: '洽談日', visible: true, format: formatDate },
     { field: 'vendor_name', header: '統編/廠商', visible: true },
     { field: 'bus_type', header: '大分類', visible: true },
+    { field: 'location', header: '位置編號', visible: true },
     { field: 'contract_type', header: '合約種類', visible: true },
-
     { field: 'contract_subno', header: '版本', visible: true },
     { field: 'rent_space', header: '位置租賃數', visible: true },
     { field: 'approve_desc', header: '合約狀態', visible: true },
-    { field: 'crt_date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'crt_date', header: '建立日期', visible: true, format: formatDateTime }
   ];
 
   selectedItems: response10260[] = [];// 多選項目
@@ -133,6 +136,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.tls12060Service.queryTLS12060(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            //將
             this.data = response.Data || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;

@@ -8,37 +8,35 @@ import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
-import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
-import { UserInfo } from '../../models/system/userInfo';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { FormLabelService } from '@shared/service/form-label.service';
 import { ValidationService } from '@shared/service/validation.service';
+import { UserInfo } from '@shared/models/system/userInfo';
 @UntilDestroy()
 export abstract class BasicCruPageComponent<T> {
-  // Page No
+  // constructor
+  authService = inject(AuthService);
+  router = inject(Router);
+  messageService = inject(NotificationService);
+  formBuilder = inject(FormBuilder);
+  currentPageService = inject(CurrentPageService);
+  confirmationService = inject(ConfirmationService);
+  activatedRoute = inject(ActivatedRoute);
+  formLabelService = inject(FormLabelService);
+  private valid = inject(ValidationService);
+  // 權限
   ProgNo = '';
   funInfo?: FunsrightInfo;
   rowdata: T | null = null;
-  // 權限
-  // ----------------------------------------------------------------
-  user!: UserInfo;
-  addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
-  // ----------------------------------------------------------------
+  user: UserInfo = this.authService.currentUserValue!;
+  // CRU----------------------------------------------------------------
   crudstatus: CRUDStatus = CRUDStatus.Read;
   formTitle = '';
+  // 狀態 ----------------------------------------------------------------
   loading = false;  // 是否loading
   submitted = false;
-  language = navigator.language;
-  router = inject(Router);
-  authService = inject(AuthService);
-  messageService = inject(NotificationService);
-  formBuilder = inject(FormBuilder);
-  currentPageService: CurrentPageService = inject(CurrentPageService);
-  confirmationService: ConfirmationService = inject(ConfirmationService);
-  activatedRoute = inject(ActivatedRoute);
   previousRoute: string | null = null; // 新增用於儲存前一個路由的屬性
-  formLabelService = inject(FormLabelService);
-  private valid = inject(ValidationService);
+  language = navigator.language;
   // 判斷目前頁面是新增、修改、明細--------------------------------
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Edit && this.canEdit());
@@ -62,15 +60,15 @@ export abstract class BasicCruPageComponent<T> {
   }
   initializePage(progNo: string, form?: FormGroup) {
     this.formLabelService.clearLabels();
-    if (this.authService.currentUserValue) {
-      this.user = this.authService.currentUserValue;
-    }
+
     this.ProgNo = progNo;
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
     this.rowdata = state?.['rowdata'];
+    console.log(state?.['rowdata'])
     switch (state?.['crudstatus']) {
       case CRUDStatus.Create:
         this.formTitle = '新增資訊';

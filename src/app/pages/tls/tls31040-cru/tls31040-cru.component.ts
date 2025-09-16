@@ -42,8 +42,8 @@ import { TLS31040DetailRequest, TLS31040DetailResponse, TLS31040PrintDetailReque
 })
 export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response> implements OnInit{
   dataForm = this.formBuilder.nonNullable.group({
-    bus_type: [''],//大分類
-    bus_type_name: [''],//大分類名稱
+    tlt_kind: [''],//櫃別
+    tlt_kind_name: [''],//櫃別名稱
     
     budget: [''],//營業目標
     AVN_TotSaleAmt: [''],//營業實績
@@ -143,7 +143,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
 
     // 重新讀取類別資料
     if (this.queryConditions) {
-      this.queryTLS31030Detail(); // 查詢單大分類之資料
+      this.queryTLS31040Detail(); // 查詢單大分類之資料
     } else {
       this.messageService.errorBubble('請返回查詢頁重新操作');
     }
@@ -174,7 +174,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
       });
   }
 
-  queryTLS31030Detail() {
+  queryTLS31040Detail() {
     // 把 bus_type 從 string[] 轉成 string
     const request: TLS31040DetailRequest = {
       ...this.queryConditions,
@@ -187,7 +187,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
     this.tls31040Service.queryTLS31040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單櫃別之營業報表response', res.Data);
       this.data = res.Data;
-      // this.totalRecords = res.TotalCount;
+      this.totalRecords = res.TotalCount;
     })
   }
 }

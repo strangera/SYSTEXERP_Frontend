@@ -4,20 +4,20 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { QueryTLS57100DetailResponse, QueryTLS57100Request, QueryTLS57100SummaryResponse, Tls57100Service } from '@service/api/tls/tls57100.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls57100',
@@ -32,10 +32,11 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     ButtonModule,
-    InputTextComponent
+    InputTextComponent,
+    TableReportComponent,
+    NgIf
   ],
   providers: [DatePipe]
 })
@@ -52,12 +53,11 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
     Status: [null],
     ODM_No: ['', Validators.maxLength(16)],
     DisplayMode: [1, [Validators.required]],
-    ...createPaginationConfig([{ field: 'ODM_Date', order: 1 }]), // 根據後端預設排序欄位調整
   });
   totalRecords = 0;
   documentTypeOptions = [
-    { value: 1, label: '驗收單' },
-    { value: 2, label: '驗退單' }
+    { value: 1, label: '進貨單' },
+    { value: 2, label: '退貨單' }
   ];
   documentStatusOptions = [
     { value: '1', label: '已申請' },
@@ -79,12 +79,12 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls57100Service: Tls57100Service,
+    public readonly tls57100Service: Tls57100Service,
     private datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS57100', 'tls/tls57100cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS57100', 'tls/tls57100cru');
 
     this.queryForm.controls.DisplayMode.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
       this.updateTableColumns(mode);
@@ -156,21 +156,15 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         ODM_Type: formValue.ODM_Type,
         Status: formValue.Status,
         ODM_No: formValue.ODM_No,
-        pageIndex: frm.value.pageIndex,
-        pageSize: frm.value.pageSize,
-        SortBy: frm.value.SortBy,
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: [{ field: 'ODM_Date', order: 1 }],
       };
-
-      this.loading = true;
       this.tls57100Service.queryTLS57100(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response: any) => {
         if (response.Data) {
-          this.totalRecords = response.TotalCount || 0;
+          this.totalRecords = response.TotalCount;
           this.historyRequestBody = requestBody;
-          if (requestBody.ReportType === '明細') {
-            this.data = response.Data.DetailData || [];
-          } else {
-            this.data = response.Data.SummaryData || [];
-          }
+          this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
           this.data = [];

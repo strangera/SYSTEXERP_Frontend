@@ -380,8 +380,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2e060cru', loadComponent: () => import('./tls2e060-cru/tls2e060-cru.component').then(m => m.TLS2E060CRUComponent) },
   // 專櫃帳款結算作業 CRU
   { path: 'tls2e070cru', loadComponent: () => import('./tls2e070-cru/tls2e070-cru.component').then(m => m.TLS2E070CRUComponent) },
-  // 專櫃對帳單 CRU
-  { path: 'tls2e080cru', loadComponent: () => import('./tls2e080-cru/tls2e080-cru.component').then(m => m.TLS2E080CRUComponent) },
   // 專櫃帳款結算彙總表 CRU
   { path: 'tls2e090cru', loadComponent: () => import('./tls2e090-cru/tls2e090-cru.component').then(m => m.TLS2E090CRUComponent) },
   // 年度對帳單 CRU
@@ -444,6 +442,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls31050', loadComponent: () => import('./tls31050/tls31050.component').then(m => m.TLS31050Component) },
   // 各組織之營業報表
   { path: 'tls31060', loadComponent: () => import('./tls31060/tls31060.component').then(m => m.TLS31060Component) },
+  // 各組織之營業報表 CRU
+  { path: 'tls31060cru', loadComponent: () => import('./tls31060-cru/tls31060-cru.component').then(m => m.Tls31060CRUComponent) },
   // 各營業型態之營業報表
   { path: 'tls31070', loadComponent: () => import('./tls31070/tls31070.component').then(m => m.TLS31070Component) },
   // 各營業型態之營業報表 CRU
@@ -500,6 +500,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls46010', loadComponent: () => import('./tls46010/tls46010.component').then(m => m.TLS46010Component) },
   // POS環境變數維護作業
   { path: 'tls46020', loadComponent: () => import('./tls46020/tls46020.component').then(m => m.TLS46020Component) },
+  { path: 'tls46030', loadComponent: () => import('./tls46030/tls46030.component').then(m => m.TLS46030Component) },
   // 設定檔群組維護
   { path: 'tls46040', loadComponent: () => import('./tls46040/tls46040.component').then(m => m.TLS46040Component) },
   // TM監控報表
@@ -540,6 +541,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls46010cru', loadComponent: () => import('./tls46010-cru/tls46010-cru.component').then(m => m.TLS46010CRUComponent) },
   // POS環境變數維護作業 CRU
   { path: 'tls46020cru', loadComponent: () => import('./tls46020-cru/tls46020-cru.component').then(m => m.TLS46020CRUComponent) },
+  { path: 'tls46030cru', loadComponent: () => import('./tls46030-cru/tls46030-cru.component').then(m => m.TLS46030CRUComponent) },
   // 設定檔群組維護 CRU
   { path: 'tls46040cru', loadComponent: () => import('./tls46040-cru/tls46040-cru.component').then(m => m.TLS46040CRUComponent) },
   // TM監控報表 CRU

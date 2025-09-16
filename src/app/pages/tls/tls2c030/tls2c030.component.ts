@@ -1,157 +1,119 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TLS2C030Data, TLS2C030Service } from '@service/api/tls/tls2-c030.service';
+import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
 
 @Component({
-    selector: 'app-tls2c030',
-    templateUrl: './tls2c030.component.html',
-    styleUrl: './tls2c030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2c030',
+  templateUrl: './tls2c030.component.html',
+  styleUrl: './tls2c030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, TableComponent]
 })
-export class TLS2C030Component {
-  ProgNo: string = '220060';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    onedatedd: [, [Validators.required]], // 單選日限制 (datetime yyyy/mm/dd)
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    onedatedd: ['', Validators.required], // 結帳日期
+    ...createPaginationConfig([{ field: 'cls_date', order: -1 }]) // 分頁和排序參數
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+
+  closeDate = ''; // 最近關帳日期
+
+  data: TLS2C030Data[] = [];
+  selectedItems: TLS2C030Data[] = [];
+  totalRecords = 0;
+
+  columns: Column[] = [
+    { field: 'id', header: 'ID', hidden: true },
+    { field: 'mid', header: 'MID', hidden: true },
+    { field: 'cls_date', header: '關帳日期', visible: true, format: formatDate },
+    { field: 'day_lock_date', header: '日關帳鎖定日期', visible: true, format: formatDateTime },
+    { field: 'day_USR_No', header: '日關帳鎖定人員', visible: true },
+    { field: 'day_USR_Name', header: '日關帳鎖定人員姓名', visible: true },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '關帳日期', visible: true },
-    { field: 'contactDate', header: '關帳者', visible: true },
-    { field: 'UID', header: '執行日期', visible: true },
-    { field: 'industryType', header: '執行時間', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  cahserTypeOptions: any[] = [];
-  areaCodeOptions: any[] = [];
-  floorOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private datePipe: DatePipe,
+    private tls2c030Service: TLS2C030Service,
+    private tls2c010Service: TLS2C010Service,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-  }
+    this.initializePage('TLS2C030', 'tls/tls2c030cru', this.queryForm, (form) => this.onSubmit(form));
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    // 取得最近關帳日期
+    this.tls2c010Service.getTLS2C010Date()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.closeDate = response.Data.CLS_DATE || '';
+        // cls_date 為 closeDate - 1 天
+        const nextDate = new Date(this.closeDate);
+        nextDate.setDate(nextDate.getDate() - 1);
+        this.queryForm.patchValue({ onedatedd: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
+      });
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      this.tls2c030Service.queryTLS2C030(
+        {
+          ...frm.getRawValue(),
+          onedatedd: this.datePipe.transform(frm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || ''
+        })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  defineDateCheckout() {
+    if (this.queryForm.invalid) {
+      this.submitted = true;
+      return;
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    // 呼叫 definedatecheckoutTLS2C030
+    this.tls2c030Service.definedatecheckoutTLS2C030(this.params)
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        // 處理回應
+        this.messageService.successBubble(response.Message);
+        this.onSubmit(this.queryForm); // 重新查詢資料
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2C030CRU'], extras);
+  undefineDateCheckout() {
+    if (this.queryForm.invalid) {
+      this.submitted = true;
+      return;
     }
+    // 進行反日結的邏輯
+    this.tls2c030Service.undefinedatecheckoutTLS2C030(this.params)
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        // 處理回應
+        this.messageService.successBubble(response.Message);
+        this.onSubmit(this.queryForm); // 重新查詢資料
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2C030CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
+  get params() {
+    return {
+      onedatedd: this.datePipe.transform(this.queryForm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || ''
     };
-
-    this.router.navigate(['/TLS2000/TLS2C030CRU'], extras);
   }
-
 }

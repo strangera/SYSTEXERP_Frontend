@@ -60,6 +60,29 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
         this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
           if (response.Data.IsClearingSuccess) {
             this.messageService.successBubble('結算成功');
+          } else {
+            this.messageService.errorBubble(response.Data.ErrorMsg);
+          }
+        });
+      });
+    }
+  }
+  onCancelClearing(frm: FormGroup) {
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const mid = this.authService.currentUserValue?.mid;
+    if (storeNo && mid) {
+      const body = {
+        SYS_StoreNo: storeNo,
+        Mid: Number(mid),
+        EngTypes: frm.value.ENG_Type,
+        ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
+      };
+      this.handleSubmit(frm, () => {
+        this.aSS21040Service.CancelClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+          if (response.Data.IsCancelClearingSuccess) {
+            this.messageService.successBubble('取消結算成功');
+          } else {
+            this.messageService.errorBubble(response.Data.ErrorMsg);
           }
         });
       });

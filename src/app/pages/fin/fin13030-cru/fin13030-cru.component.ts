@@ -15,6 +15,7 @@ import { DatePipe, NgIf } from '@angular/common';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-fin13030-cru',
@@ -58,9 +59,15 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
 
   zeroTaxGUIData!: FIN13030GetZeroTaxGUIResponse;
 
-  exportMethodOptions: DropdownOption[] = [];
-  exportTypeOptions: DropdownOption[] = [];
-  invPassTypeOptions: DropdownOption[] = [];
+  // 外銷方式選項
+  exportMethodOptions = getSYS1000Options('ExportMethod');
+  // 出口報單類別選項
+  exportTypeOptions = getSYS1000Options('INV_ExportType');
+  // 通關方式註記選項
+  invPassTypeOptions = [
+    { label: '1.適用零稅率非經海關出口應附證明文件之銷項', value: '1' },
+    { label: '2.適用零稅率經海關出口免附證明文件之銷項', value: '2' }
+  ];
 
   constructor(
     private fin13030Service: FIN13030Service,
@@ -72,7 +79,6 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
 
   ngOnInit(): void {
     this.initializePage('FIN13030', this.dataForm);
-    this.loadOptions();
     // 帶入零稅率發票資料
     if (this.crudstatus === CRUDStatus.Create) {
       const state = this.router.lastSuccessfulNavigation?.extras.state;
@@ -89,13 +95,6 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
       this.getZeroTaxGUIData(this.dataForm);
     }
     this.setUnEditableFields();
-    console.log('zeroTaxGUIData:', this.zeroTaxGUIData);
-  }
-
-  loadOptions() {
-    this.exportMethodOptions = this.fin13030Service.getExportMethodOptions();
-    this.exportTypeOptions = this.fin13030Service.getINV_ExportTypeOptions();
-    this.invPassTypeOptions = this.fin13030Service.getINV_PassTypeOptions();
   }
 
   onSubmit(form: FormGroup): void {

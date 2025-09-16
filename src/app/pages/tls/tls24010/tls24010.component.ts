@@ -48,8 +48,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   queryForm = this.formBuilder.nonNullable.group({
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
-    ECR_No: [''], /*收銀機號 → ECR_No */
-    TLT_No: [''], /*櫃編 → TLT_No */
+    ECR_No: [null as string | null], /*收銀機號 → ECR_No */
+    TLT_No: [null as string | null], /*櫃編 → TLT_No */
     TXN_No: [null as string | number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */

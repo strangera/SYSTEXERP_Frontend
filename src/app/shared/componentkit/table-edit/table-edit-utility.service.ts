@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Column } from './table-edit.model';
+import { EditColumn } from './table-edit.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class TableUtilityService {
    * @param data 完整的表格資料 (用於跨行驗證)
    * @returns {isValid: boolean, errors: { [field: string]: string[] }} 驗證結果
    */
-  validateRowData(rowData: any, columns: Column[], data: any): { isValid: boolean, errors: Record<string, string[]> } {
+  validateRowData(rowData: any, columns: EditColumn[], data: any): { isValid: boolean, errors: Record<string, string[]> } {
     const allFieldErrors: Record<string, string[]> = {};
     let isRowValid = true;
 
@@ -35,7 +35,7 @@ export class TableUtilityService {
   }
   insertNewRow(
     data: any[],
-    originalColumns: Column[],
+    originalColumns: EditColumn[],
     dataKey: string,
     defaultInsertData: any,
     dataStatusField: string, // 新增參數
@@ -52,5 +52,29 @@ export class TableUtilityService {
     newRowData['_isAutoInsertCandidate'] = true; // 新增旗標
     const updatedData = [...data, newRowData];
     return { newRowData, data: updatedData };
+  }
+  // 判斷是否應該渲染分組標題
+  shouldRenderGroupHeader(col: EditColumn, index: number, columns: EditColumn[]): boolean {
+    if (!col.groupField) {
+      return false;
+    }
+    const currentGroup = col.groupField;
+    for (let i = 0; i < index; i++) {
+      const prev = columns[i];
+      if (prev.groupField === currentGroup) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // 取得可見欄位總數
+  getVisibleColumnCount(columns: EditColumn[]): number {
+    if (!Array.isArray(columns)) { return 0; }
+    return columns.length;
+  }
+  // 計算分組欄位跨度
+  getColumnSpan(columns: EditColumn[], groupField: string): number {
+    return columns.filter(col => col.groupField === groupField).length;
   }
 }

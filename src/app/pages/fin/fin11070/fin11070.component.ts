@@ -32,7 +32,7 @@ import { ValidationService } from '@shared/service/validation.service';
 })
 export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YYMM: ['', [Validators.required, this.validationService.evenMonthValidator]],    // 申報年月
+    GUI_YYMM: ['', [Validators.required, this.validationService.evenMonthValidator, this.validationService.maxMonthValidator]],    // 申報年月
     ...createPaginationConfig([])
   });
 
@@ -113,6 +113,12 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
   }
 
   downloadFIN11070() {
+    // 檢查必填欄位
+    if (this.queryForm.controls['GUI_YYMM'].invalid) {
+      this.queryForm.controls['GUI_YYMM'].markAsDirty();
+      this.submitted = true;
+      return;
+    }
     const requestData = {
       MID: 0,
       STO_No: '10',
@@ -155,6 +161,12 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
   }
 
   insertFIN11070() {
+    // 檢查必填欄位
+    if (this.queryForm.controls['GUI_YYMM'].invalid) {
+      this.queryForm.controls['GUI_YYMM'].markAsDirty();
+      this.submitted = true;
+      return;
+    }
     const requestData = {
       MID: 0,
       SYS_StoreNo: '10',

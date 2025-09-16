@@ -1,100 +1,86 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS2C050Service } from '../../../service/api/tls/tls2-c050.service';
-import { TLS2B020Service } from '../../../service/api/tls/tls2-b020.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs'; // 引入 forkJoin
+import { finalize, map } from 'rxjs/operators';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-tls2c050',
   templateUrl: './tls2c050.component.html',
-  styleUrls: ['./tls2c050.component.scss'],
   standalone: true,
   imports: [
+    NgIf,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
-    TranslateModule
+    TranslateModule,
   ]
 })
-export class TLS2C050Component extends BasicQueryPageComponent<any> {
-
+export class TLS2C050Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
-    onedatedd: [null, [Validators.required]], // 匯檔發票日期
+    cls_date: [new Date(), [Validators.required]],
   });
 
-
-
-  data: any[] = [];
-  totalRecords = 0;
-  selectedItems: any[] = [];
-
-  closeDate: string = '查詢中...';
-  summaryDate: string = '查詢中...';
+  // 使用新的 Observable 型別
+  closeDate: string | undefined;
+  summaryDate: string | undefined;
+  loadingDates = false;
 
   constructor(
     private tls2c050Service: TLS2C050Service,
-    private tls2b020Service: TLS2B020Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2C050', '/tls2000/tls2C050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2C050');
+    this.fetchDates();
   }
 
   onSubmit(form: FormGroup): void {
-    this.submitted = true;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
-    }
-
-    const payload = { ...form.value };
-    for (const key in payload) {
-      if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim() || null;
-      }
-    }
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    forkJoin({
-      dataRes: this.tls2c050Service.queryTLS2C050(payload),
-      closeDateRes: this.tls2b020Service.queryCloseDate(payload),
-      summaryDateRes: this.tls2c050Service.querySummaryDate(payload)
-    }).subscribe({
-      next: ({ dataRes, closeDateRes, summaryDateRes }) => {
-        this.data = dataRes?.Data ?? [];
-        this.totalRecords = dataRes?.TotalCount ?? this.data.length;
-        this.closeDate = closeDateRes?.Data ?? '-';
-        this.summaryDate = summaryDateRes?.Data ?? '-';
-
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-        this.closeDate = closeDateRes?.Data ?? '-';
-
-        this.messageService.successBubble('查詢成功');
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢失敗，請稍後再試');
-        this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
+    // 轉檔按鈕的邏輯
+    this.handleSubmit(form, () => {
+      if (form.value.cls_date) {
+        this.tls2c050Service.invoiceTLS2C050(form.value.cls_date).pipe(finalize(() => this.loading = false)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.fetchDates();
+        });
       }
     });
+  }
+
+  /**
+   * 取得最近的關帳日期和匯總日期
+   */
+  fetchDates(): void {
+    this.loadingDates = true;
+
+    const closeDateApi$ = this.tls2c050Service.getTLS2C050Date().pipe(
+      map(response => response.Data?.CLS_DATE ?? 'N/A')
+    );
+
+    const summaryDateApi$ = this.tls2c050Service.getTLS2C050Date_invoice().pipe(
+      map(response => response.Data?.invoice_lock_date ?? 'N/A')
+    );
+
+    forkJoin([closeDateApi$, summaryDateApi$])
+      .pipe(
+        finalize(() => this.loadingDates = false)
+      )
+      .subscribe(([closeDate, summaryDate]) => {
+        // 直接賦值給 string 變數
+        this.closeDate = closeDate;
+        this.summaryDate = summaryDate;
+      });
   }
 }

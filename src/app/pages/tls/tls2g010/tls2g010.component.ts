@@ -8,21 +8,21 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { DividerModule } from 'primeng/divider';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { Observable } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import { Option } from '@service/utility/dropdown-api.model';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 // 2.2.16.1 專櫃預估業績轉入作業
 @Component({
   selector: 'app-tls2g010',
   templateUrl: './tls2g010.component.html',
   standalone: true,
-  imports: [AsyncPipe, CalendarComponent, DropdownComponent, DividerModule, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
+  imports: [MultiSelectComponent, AsyncPipe, CalendarComponent, DividerModule, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
 })
 export class TLS2G010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -55,6 +55,14 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(frm, () => {
 
     })
+  }
+  onFileSelect(event: FileSelectEvent) {
+    this.files = event.files
+    this.queryForm.get('worksheetName')?.setValue(event.files[0].name);
+  }
+  onFileRemove() {
+    this.queryForm.get('worksheetName')?.setValue('系統帶入(excel檔名)');
+    this.files = [];
   }
   handleCustomUpload(event: FileUploadHandlerEvent) {
     if (event.files && event.files.length > 0) {

@@ -10,17 +10,18 @@ import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { creditCardColumns, creditCardGroup, TLS22020Data, payNoDataList } from './tls22020.model';
+import { creditCardColumns, creditCardGroup, TLS22020Data } from './tls22020.model';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { HttpResponse } from '@angular/common/http';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 @Component({
@@ -34,11 +35,11 @@ yesterday.setDate(yesterday.getDate() - 1);
     CalendarComponent,
     DropdownModule,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     DropdownRangeComponent,
     CommonModule,
-    ButtonModule
+    ButtonModule,
+    CustomFooterTableComponent
 
   ],
 })
@@ -64,8 +65,9 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
 
   ];
+  footerData: any[] = [];
+  private skipAutoQueryOnce = false;
   exportExcelLoading = false;
-
   // 下拉選單選項
   whetherOptions: any[] = [];
   totalRecords = 0;
@@ -80,31 +82,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     SLE_Total: 0,
     Diff_Total: 0,
   };
-
-
-  calcTotal(data: TLS22020Data[]) {
-    this.total = {
-      TXN_Total: 0,
-      SLE_Total: 0,
-      Diff_Total: 0,
-    };
-
-    for (const item of data) {
-      for (const pay of payNoDataList) {
-        const payNo = pay.Pay_No;
-        for (const type of ['TXN_PayAmt', 'SLE_PayAmt', 'Diff_PayAmt']) {
-          const key = `${type}_${payNo}`;
-          this.total[key] = (this.total[key] || 0) + (item[key] || 0);
-        }
-      }
-
-      this.total['TXN_Total'] += item['TXN_Total'] || 0;
-      this.total['SLE_Total'] += item['SLE_Total'] || 0;
-      this.total['Diff_Total'] += item['Diff_Total'] || 0;
-    }
-  }
-
-
 
   constructor(
 
@@ -125,41 +102,88 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
     });
+    const state = this.router.lastSuccessfulNavigation?.extras.state;
+    const isFromRelatedRoute = state?.['fromRoute']?.includes(this.ProgNo.toLowerCase());
+    if (isFromRelatedRoute) {
+      this.skipAutoQueryOnce = true;
+      const savedData = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
+      if (savedData.length === 0) return;
+
+      this.data = savedData.Data.QueryData;
+      this.totalRecords = savedData.TotalCount ?? this.data.length;
+
+      // footerData 這裡要自己組 (因為後端沒給 Sum)
+      const totals: any = {};
+      for (const col of this.selectedColumns) {
+        if (col.isTotal) {
+          totals[col.field] = this.data.reduce((sum, row) => sum + (row[col.field] || 0), 0);
+        }
+      }
+      this.footerData = [{ group_name: '總計', ...totals }];
+    }
   }
+
 
   onSubmit(form: FormGroup): void {
-    console.log('表單提交:', form.value);
+    if (this.skipAutoQueryOnce) {
+      this.skipAutoQueryOnce = false;
+      return;
+    }
+
     this.handleSubmit(form, () => {
-      this.tls22020Service.queryTLS22020(form.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        const flatData = (res.Data ?? []).map((item: any) => {
-          const row: any = {
-            ECR_No: item.ECR_No,
-            tlt_no: item.tlt_no,
-            tlt_name: item.tlt_name,
-            TXN_Total: item.Total_Txn_PayAmt,
-            SLE_Total: item.Total_SLE_PayAmt,
-            Diff_Total: item.Total_Diff_PayAmt,
-          };
+      this.tls22020Service.queryTLS22020(form.value).subscribe({
+        next: (res) => {
+          const flatData = (res.Data?.QueryData ?? []).map((item: any) => {
+            const row: any = {
+              ECR_No: item.ECR_No,
+              tlt_no: item.tlt_no,
+              tlt_name: item.tlt_name,
+              Total_Txn_PayAmt: item.Total_Txn_PayAmt,
+              Total_SLE_PayAmt: item.Total_SLE_PayAmt,
+              Total_Diff_PayAmt: item.Total_Diff_PayAmt,
+            };
+            for (const pay of item.pay_NoDataList || []) {
+              const payNo = pay.Pay_No;
+              row[`TXN_PayAmt_${payNo}`] = pay.TXN_PayAmt;
+              row[`SLE_PayAmt_${payNo}`] = pay.SLE_PayAmt;
+              row[`Diff_PayAmt_${payNo}`] = pay.Diff_PayAmt;
+            }
+            return row;
+          });
 
-          for (const pay of item.pay_NoDataList) {
-            const payNo = pay.Pay_No;
-            row[`TXN_PayAmt_${payNo}`] = pay.TXN_PayAmt;
-            row[`SLE_PayAmt_${payNo}`] = pay.SLE_PayAmt;
-            row[`Diff_PayAmt_${payNo}`] = pay.Diff_PayAmt;
+          this.data = flatData;
+          this.totalRecords = res.TotalCount ?? flatData.length;
+
+          // footerData 組總計
+          const totals: any = {};
+          for (const col of this.selectedColumns) {
+            if (col.isTotal) {
+              totals[col.field] = flatData.reduce(
+                (sum: number, row: any) => sum + (row[col.field] || 0),
+                0
+              );
+            }
           }
+          this.footerData = [{ group_name: '總計', ...totals }];
 
-          return row;
-        });
+          // 保留查詢狀態
+          this.queryStateService.setQueryState(this.ProgNo, form.value);
+          this.queryStateService.setQueryState(this.ProgNo + '_data', res);
 
-        this.data = flatData;
-        this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, form.value);
-        this.calcTotal(this.data);
-        this.loading = false;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('查詢 TLS22020 失敗:', err);
+          this.loading = false;
+        },
       });
-
     });
   }
+
+
+
+
+
   exportReport = () => {
     const raw = this.queryForm.getRawValue();
 

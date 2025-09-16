@@ -54,13 +54,14 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     tlt_floorList: [[]], // 樓層(SYS3900)
     area_noList: [[]], // 區域 (SYS3a00)
     bus_typeList: [[]], // 大分類 (tltbustype)
+    org_idList:[[]], // 組織代碼 (SYS3100) 0916新增
 
     tlt_openflagList: [[]], // 營運狀況 閉店/撤櫃, 營業中, 合約結束,核准時合約尚未開始, 洽談中, 簽約中, 已作廢 fix
     contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start
     contract_subno_end: ['', [Validators.maxLength(100)]], // 版本編號_end
     apply_statusList: [[], [Validators.maxLength(100)]], // 合約狀態 1=未審核 2=已審核 fix
-    tlt_bdate: [yesterday], // 營運起始日
-    tlt_edate: [yesterday], // 營運終止日
+    tlt_bdate: [null], // 營運起始日
+    tlt_edate: [null], // 營運終止日
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'tlt_no', order: 0 }]), // 分頁和排序參數
@@ -89,6 +90,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   bus_typeOptions: apiOption[] = []; // 大分類的下拉選單
   location_noOptions: option[] = []; // 位置的下拉選單
   buildingOptions: apiOption[] = []; // 館別的下拉選單
+  org_idOptions: apiOption[] = []; // 組織代碼的下拉選單 0916新增
 
   data: TLTContract[] = [];
   columns: Column[] = [
@@ -216,6 +218,16 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
         }));
 
         console.log('buildingOptions:', this.location_noOptions);
+      });
+      // 組織代碼 SYS3100 下拉選單
+      this.tls14010Service.querySYS3100_DropDownList({}).subscribe((response) => {
+        this.org_idOptions = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('組織代碼:', this.org_idOptions);
       });
     }
   }

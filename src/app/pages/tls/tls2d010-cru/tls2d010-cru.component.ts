@@ -1,196 +1,161 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
-import { ValidationService } from '../../../shared/service/validation.service';
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
-import { DeductionCodeNameService } from './../../../service/basic/deduction-code-name.service';
-import { ReleaseInvoiceService } from './../../../service/basic/release-invoice.service';
-import { EventCodeService } from '../../../service/basic/event-code.service';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { NgIf } from '@angular/common';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 
 @Component({
-    selector: 'app-tls2d010-cru',
-    templateUrl: './tls2d010-cru.component.html',
-    styleUrl: './tls2d010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarComponent, InputTextComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2d010-cru',
+  templateUrl: './tls2d010-cru.component.html',
+  styleUrl: './tls2d010-cru.component.scss',
+  standalone: true,
+  imports: [TableEditComponent, CalendarComponent,
+    InputTextComponent, DropdownTableComponent, RadiobuttonComponent, TableComponent, DialogComponent, MenubarComponent, PanelModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class TLS2D010CRUComponent extends BasicCrupageComponent implements OnInit {
-  deductionItemsOptions: any[] = [];
-  organizationOptions: any[] = [];
-  eventCodeOptions: any[] = [];
-  establishOptions: any[] = [];
+export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  currentCreateType: 'normal' | 'counter' = 'counter'
+  tlt_noOptions: any[] = [];
+  pod_noOptions: any[] = [];
+  data: any[] = [];
+  selectedItems: any[] = [];
+  CAP_TypeOptions: any[] = [];
+  cap_taxtypeOptions: any[] = [
+    { value: '0', label: '免稅' },
+    { value: '1', label: '應稅 APS1003.CAP_TaxType' }
+
+  ];
   // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    counterInfo: [], // 專櫃編號/名稱 招募編號/營運起始日/營運截止日
-    totalCash: [, [this.validationService.numberValidator, Validators.maxLength(15)]], // 總金額
-    eventCode: [], // 活動代碼/名稱
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+  dataFormCounter = this.formBuilder.group({
+    tlt_no: [], // 專櫃編號/名稱 招募編號/營運起始日/營運截止日
+    totalCash: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    pod_no: [], // 活動代碼/名稱
+    contract_no: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    contract_subno: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    tlt_contract_bdate: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    tlt_contract_edate: [{ value: null as string | null, disabled: true }, [Validators.required]],
   });
-  // ----------------------------------------------------------------
+
+  dataFormNormal = this.formBuilder.group({
+    CAP_Type: [],
+    CAP_Item: [],
+    tpy_date: [null as null | Date, [Validators.required]], // 扣款日期
+    tpy_net: [],
+    cap_taxtype: [],
+    GUI_FLAG: [],
+    AccNo: [],
+    org_id: [],
+  });
+  columnsCounter: EditColumn[] = [
+    { field: 'tpy_date', header: '扣款日期', type: 'input', width: '12rem' },
+    { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
+    { field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
+    { field: 'TLT_No', header: '會計科目', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No' },
+    { field: 'AccNo', header: '會計科目', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code' },
+    { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No' },
+    { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No' },
+    { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No' },
+    { field: 'tpy_net', header: '金額', type: 'inputNumber', width: '12rem' },
+    { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
+  ];
+  columnsNormal: EditColumn[] = [
+    { field: 'tlt_no', header: '專櫃編號/名稱', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
+    { field: 'contract_no', header: '契約編號', type: 'inputNumber', width: '12rem', disabled: () => true },
+    { field: 'contract_subno', header: '版次', type: 'inputNumber', width: '15rem', disabled: () => true },
+    { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code' },
+    { field: 'tpy_date', header: '扣款日期', type: 'input', width: '12rem' },//共通要新增
+    { field: 'tpy_date', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
+    { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
+
+  ];
+  // dialogData: IPOS2004DetailData[] = [];
+  totalRecords = 0;
+  dialogVisible = false;
+  selectedItemsDialog: any[] = [];
+  saveDialog() {
+    this.dialogVisible = false;
+    this.data = [
+      ...this.data,
+      ...this.selectedItemsDialog.map(item => ({
+        ...item,
+        PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
+        POD_SubQty: 0,
+        POD_Remark: ''
+      }))
+    ];
+    this.selectedItemsDialog = [];
+    this.selectedItems = [];
+  }
+  dialogQueryForm = this.formBuilder.group({
+    PLU_MagNo: ['', [Validators.maxLength(20)]],
+    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
+    CAT_LNo: [null], // 大分類代碼
+    CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
+    CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+  });
+  dialogColumns: EditColumn[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'UNIT_NAME', header: '單位' },
+    { field: 'PLU_BoxQty', header: '包裝入數' },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
+    { field: 'PLU_SalePrc_UNI', header: '單價' },
+    { field: 'PLU_SalePrc', header: '售價' },
+  ]
+  dialogLoading = false;
+  // onQuery(frm: FormGroup) {
+  //   this.dialogLoading = true;
+  //   const body = {
+  //     ...frm.getRawValue(),
+  //     // VEN_No: this.dataFormNormal.controls.VEN_No.value,
+  //     // LOGO_No: this.dataFormNormal.controls.LOGO_No.value,
+  //   }
+  //   // this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+  //   //   this.dialogData = response.Data;
+  //   //   this.totalRecords = response.TotalCount;
+  //   // })
+  // }
+  // isRowSelectable(event: IPOS2004DetailData): boolean {
+  //   return !this.data || !this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === event.PLU_MagNo);
+  // }
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private deductionCodeNameService: DeductionCodeNameService,
-    private organizationNumberService: OrganizationNumberService,
-    private eventCodeService: EventCodeService,
-    private releaseInvoiceService: ReleaseInvoiceService,
+    private dropDownListService: DropDownListService,
+    private route: ActivatedRoute
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '220063';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.eventCodeService.getSystemTypes().subscribe(data => {
-      this.eventCodeOptions = data;
-    });
-    //
-    this.deductionCodeNameService.getDeductionCodeNames().subscribe(data => {
-      this.deductionItemsOptions = data;
-    });
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationOptions = data;
-    });
-    //
-    this.releaseInvoiceService.getSystemTypes().subscribe(data => {
-      this.establishOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+    if (this.currentCreateType === 'counter') {
+      this.initializePage('TLS2D010', this.dataFormCounter);
+    } else {
+      this.initializePage('TLS2D010', this.dataFormNormal);
+    }
+    if (this.rowdata) {
+      console.log(this.rowdata);
+      this.currentCreateType = this.rowdata.type;
     }
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      deductionItems: [, [Validators.required]], // 扣款項目
-      accountingCode: ['', [Validators.maxLength(8)]], // 會計科目
-      organization: [], // 組織代號
-      debitDay: [, [Validators.required]], // 扣款日期
-      establish: [, [Validators.required]], // 是否開立發票
-      noTaxPrice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 金額(未稅)
-      remark: ['', [Validators.maxLength(30)]], // 備註
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
+  onSubmit(): void {
     this.submitted = true;
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
-  }
-
-  onCancel() {
-    this.router.navigate(['/TLS2000/TLS2D010']);
-  }
-  //-------------------------------------------------------------------------------------------------------------
 }
-

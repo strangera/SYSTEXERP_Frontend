@@ -1,188 +1,92 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ECRNoService } from '@service/basic/ECRNo.service';
+import { Column, formatDate} from '@shared/componentkit/table/table.model';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 // 2.4.6.4  收銀機異動排程維護
 @Component({
   selector: 'app-tls46040',
   templateUrl: './tls46040.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, DropdownComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, TableComponent, CalendarRangeComponent, TranslateModule, InputTextComponent]
 })
-export class TLS46040Component {
-  ProgNo: string = '240022';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS46040Component extends BasicQueryPageComponent<any> implements OnInit {
+  ECR_FLD_IDOptions: any[] = [];
   queryForm = this.formBuilder.group({
-    // POS1002SCH 收銀機設定排程檔
-
-    ECR_SchNo: [, [Validators.maxLength(20)]], // 排程編號
-    ECR_SchDate: [], // 設定啟用日期
-    ECR_SchStatus: [[] as number[], [Validators.maxLength(2)]], // 排程狀態
-
-    SYS_StoreNo: [, [Validators.maxLength(10)]], // 收銀機所屬門市店號
-    ECR_No: [, [Validators.maxLength(6)]], // 收銀機號
-    //
-    ORG_ECR_TLT_No: [, [Validators.maxLength(20)]], // 原機台所屬專櫃編號
-    ECR_TLT_No: [, [Validators.maxLength(20)]], // 新機台所屬專櫃編號，若為空白則代表不修改
-    ORG_ECR_USR_No: [, [Validators.maxLength(8)]], // 原機台所屬收銀員
-    ECR_USR_No: [, [Validators.maxLength(8)]], // 新機台所屬收銀員，若為空白則代表不修改
-    ORG_ECR_TmplNo: [, [Validators.maxLength(20)]], // 原環境變數編號
-    ECR_TmplNo: [, [Validators.maxLength(20)]], // 新環境變數編號，若為空白則代表不修改
-    ORG_ECR_Status: [, [Validators.maxLength(2)]], // 原收銀機狀態
-    ECR_Status: [, [Validators.maxLength(2)]], // 新收銀機狀態，若為空白則代表不修改
-    //
-
-    ECR_SchFinTime: [], // 異動作業完成時間
-
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
+    ECR_SchNo: [''], // 排程編號
+    ECR_SchDateStart: [''], // 設定啟用日期(起)
+    ECR_SchDateEnd: [''], // 設定啟用日期(訖)
+    ECR_SchStatus: [[]], // 排程狀態
+    ECR_No: [''], // 收銀機編號
+    ECR_SchFinTimeStart: [''], // 排程作業完成時間(起)
+    ECR_SchFinTimeEnd: [''], // 排程作業完成時間(訖)
+    ECR_FLD_ID: [[]], // 異動類型
+    ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      ECR_SchNo: 'serial123', ECR_SchDate: '2024/08/08', ECR_SchStatus: 'A', SYS_StoreNo: 'store123', ECR_No: 'register123',
-      ECR_TLT_No: '123', ECR_USR_No: '123', ECR_TmplNo: '123', ECR_Status: '123',
-      ECR_SchFinTime: '2024/08/08 08:08'
-    },
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+  data: any[] = [];
+  totalRecords = 0;
+  ECRNoOptions: any[] = [];
+  ECR_SchStatus_Options = [
+    { label: '啟用', value: 'A' },
+    { label: '取消', value: 'C' },  // 取消
+    { label: '執行完畢', value: 'F' },  // 執行完畢
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'ECR_SchNo', header: '排程編號', visible: true },
-    { field: 'ECR_SchDate', header: '設定啟用日期', visible: true },
-    { field: 'ECR_SchStatus', header: '排程狀態', visible: true },
-    // { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-
-    { field: 'ECR_TLT_No', header: '新機台所屬專櫃編號', visible: true },
-    { field: 'ECR_USR_No', header: '新機台所屬收銀員', visible: true },
-    { field: 'ECR_TmplNo', header: '新模版編號', visible: true },
-    { field: 'ECR_Status', header: '新收銀機狀態', visible: true },
-
-    { field: 'ECR_SchFinTime', header: '異動作業完成時間', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  ECR_SchStatus_Options: any[] = [
-    { value: 'A', label: '啟用' }, // 預設值為A
-    { value: 'C', label: '取消' },
+  columns: Column[] = [
+    { field: 'ECR_SchNo', header: '排程編號' },
+    { field: 'ECR_SchDate', header: '設定啟用日期', format: formatDate },
+    { field: 'ECR_SchStatus', header: '排程狀態' },
+    { field: 'ECR_No', header: '收銀機號' },
+    { field: 'ECR_FLD_ID', header: '異動類型' },
+    { field: 'ECR_FLD_OrgVal', header: '新機台內容' },
+    { field: 'ECR_FLD_NewVal', header: '原機台內容' },
+    { field: 'ECR_FLD_CompleteTime', header: '異動作業完成時間', format: formatDate },
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    private ECRNoService: ECRNoService,
     private validationService: ValidationService,
+    private dropDownListService: DropDownListService,
+
   ) {
+    super();
   }
+
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    // this.cahserTypeService.getSystemTypes().subscribe(data => {
-    //   this.registerTypeOptions = data;
-    // });
+    this.initializePage('TLS46040', 'TLS/TLS46040cru', this.queryForm, (form) => this.onSubmit(form));
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
+
+    // 串 SYS1000 下拉選單
+    const params = { SYS_Type: 'ECR_FLD_ID' };
+    this.dropDownListService.querySYS1000_DropDownList(params).subscribe(res => {
+      if (res && res.Data) {
+        this.ECR_FLD_IDOptions = res.Data.map(item => ({
+          label: `${item.Name}`,
+          value: item.No
+        }));
+      }
+    });
+
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS4000/TLS46040CRU'], extras);
-  }
 }

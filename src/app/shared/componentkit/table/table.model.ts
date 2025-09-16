@@ -11,6 +11,7 @@ export interface Column {
   isTotal?: boolean; // 是否為總計欄位
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
+  htmlFormat?: boolean; // 是否為 HTML 格式 (適用於顯示特殊符號或樣式)
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
@@ -121,8 +122,6 @@ export const formatYYYYMM = (value: string | Date | null): string => {
   if (value instanceof Date) {
     const year = value.getFullYear().toString();
     const month = String(value.getMonth() + 1).padStart(2, '0');
-    console.log(year, month);
-
     return `${year}/${month}`;
   }
 

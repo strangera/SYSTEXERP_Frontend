@@ -95,14 +95,14 @@
         <app-table #tb
                    [showDetail]="false"
                    [showEdit]="false"
-                   [alwaysEdit]="!isFormReadable"
-                   [alwaysBlurValidate]="!isFormReadable"
+                   [alwaysEdit]="true"
+                   [alwaysBlurValidate]="true"
                    [showCheckBox]="!isFormReadable"
-                   [showRowEdit]="!isFormReadable"
-                   [showManage]="!isFormReadable"
-                   [showHeader]="!isFormReadable"
+                   [showRowEdit]="true"
+                   [showManage]="true"
+                   [showHeader]="true"
                    [showInsert]="!isFormReadable"
-                   [insertRowData]="!isFormReadable"
+                   [insertRowData]="true"
                    [data]="filteredData()"
                    [totalRecords]="totalRecords()"
                    (delete)="onDelete($event)"
@@ -111,11 +111,11 @@
                    (rowEditInit)="onRowInit($event)"
                    (rowEditSave)="onRowEdit($event)"
                    (rowEditCancel)="onRowEdit($event)"
-                   [loading]="loading"
+                   [loading]="service.tableLoading"
                    [dataKey]="'Apply_No'"
                    [tableKey]="'ASS21020_detail'"
                    [columns]="columns">
-          <header>
+          <header *ngIf="!isFormReadable">
             <div class="flex align-items-center justify-content-between w-full border-1 surface-border p-2">
               <div></div>
               <app-button label="自動依面積計算比率"

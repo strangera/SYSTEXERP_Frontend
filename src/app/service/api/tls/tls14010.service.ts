@@ -44,4 +44,9 @@ export class Tls14010Service {
   queryPOS2002_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2002_DropDownList`, body);
   }
+
+  //查詢組織代碼(SYS3100) 下拉選單
+  querySYS3100_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
+  }
 }

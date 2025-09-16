@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AfterContentInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableColumnReorderEvent } from 'primeng/table';
 import { TableUtilityService } from './table-edit-utility.service';
-import { Column, FieldChangeEvent } from './table-edit.model';
+import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoCompleteModule } from 'primeng/autocomplete';
@@ -22,6 +22,7 @@ import { validateRequired } from './validate-field.model';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SkeletonModule } from 'primeng/skeleton';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { SortMeta } from 'primeng/api';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -55,17 +56,23 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() title: string | undefined = undefined;         // table 標題
   @Input() tableRequired = false;                         // table 是否為必填
   tableDataEmpty = false;                                 // table 資料是否為空
-  @Input() columns!: Column[];                            // table 欄位配置 (必填)
+  @Input() columns!: EditColumn[];                            // table 欄位配置 (必填)
+  @Input() columns2!: EditColumn[];                            // table 欄位配置 (必填)
   @Input() data: any[] = [];                              // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();       // table 資料改變 (事件)
   @Input() loading = false;                               // 是否顯示 loading
   @Input() disabled = false;                              // 是否禁用 table
+  @Input() multiSortMeta: SortMeta[] | null | undefined = undefined; // table 多重排序
+  // 欄位群組
+  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   // select 選擇Row相關
   @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = () => true; // 可選擇(條件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
   // Header(左) 相關
-  @Output() insert = new EventEmitter<any>(); // 新增事件                     // 資料變更(事件)
+  @Input() showInsert = false;                // 是否顯示 新增按鈕
+  @Input() insertDisabled = false;            // 新增按鈕是否禁用
+  @Output() insert = new EventEmitter<any>(); // 新增事件
   // Header(右) 相關
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
@@ -97,38 +104,63 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   // }
   @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
+  @Input() errorMessage = '至少輸入一筆資料'; // 錯誤訊息
   constructor(
     private readonly tableUtilityService: TableUtilityService,
     private readonly cdr: ChangeDetectorRef,
     private readonly messageService: NotificationService
   ) { }
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] && this.data.length > 0) {
-      // 一開始先將無狀態的資料設為Original
-      this.data = this.data.filter(item => item != null).map((item: any, index) => {
-        if (item[this.dataStatusField] === undefined) {
-          item[this.dataStatusField] = this.dataStatusValue.Original;
-          item[this.dataKey] = `temp-${uuidv4()}`;
-        }
-        // 載入資料時也執行整行驗證
-        if (this.rowValidate) {
-          item._rowValidationError = this.rowValidate(item, index);
-        }
-        return item;
-      });
+    if (changes['data']) {
+      if (this.data.length > 0) {
+        // 一開始先將無狀態的資料設為Original
+        this.data = this.data.filter(item => item != null).map((item: any, index) => {
+          if (item[this.dataStatusField] === undefined) {
+            item[this.dataStatusField] = this.dataStatusValue.Original;
+            item[this.dataKey] = `temp-${uuidv4()}`;
+          }
+          // 載入資料時，確保所有計算欄位都是最新的
+          // 新增的邏輯：呼叫計算方法
+          this.calculateRow(item);
+          // 載入資料時也執行整行驗證
+          if (this.rowValidate) {
+            item._rowValidationError = this.rowValidate(item, index);
+          }
+          return item;
+        });
+      }
       // 如果資料中沒有 _isAutoInsertCandidate 欄位則新增
       if (!this.data.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
         this.insertRow();
       }
     }
   }
-  ngAfterContentInit(): void {
-    setTimeout(() => {
-      if (!this.disabled && this.canInsert) {
-        this.insertRow();
-        this.cdr.detectChanges();
+  // 輔助方法：計算單一列的欄位值
+  private calculateRow(rowData: any): void {
+    // 遍歷所有 editColumns
+    this.columns.forEach(col => {
+      // 檢查此欄位是否有 calculate 方法
+      if (col.calculate) {
+        // 執行計算並取得結果物件
+        const updates = col.calculate(rowData, rowData[col.field]);
+
+        // 將計算結果應用到 rowData
+        for (const key in updates) {
+          if (Object.prototype.hasOwnProperty.call(updates, key)) {
+            rowData[key] = updates[key];
+          }
+        }
       }
-    }, 0);
+    });
+    this.dataChange.emit(this.data);
+  }
+  ngAfterContentInit(): void {
+    // setTimeout(() => {
+    //   if (!this.disabled && this.canInsert) {
+    //     this.insertRow();
+    //     this.cdr.detectChanges();
+    //   }
+    // }, 0);
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
@@ -137,10 +169,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   }
   // Insert 按鈕
   insertRow() {
-    if (this.disabled) { return; }
-    if (this.data.length === 0) {
-      this.insert.emit();
-    }
+    if (this.disabled || !this.canInsert) { return; }
     const { newRowData, data } = this.tableUtilityService.insertNewRow(
       this.data,
       this.columns,
@@ -150,7 +179,6 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
-    this.insert.emit();
   }
   // Delete 按鈕
   deleteRow(selectedItems: any) {
@@ -177,7 +205,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     }
   }
   // 處理 ngModelChange 事件，並發送給父元件
-  onValueChange(rowData: any, value: any, col: Column, index: number) {
+  onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
     if (this.disabled) {
       return;
     }
@@ -199,7 +227,19 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     // 不論是不是新增列，都執行單一欄位的驗證
     this.validateField(rowData, col, value);
-
+    // --- 新增的自動計算邏輯 ---
+    if (col.calculate) {
+      // 呼叫 calculate 方法，取得要更新的欄位值
+      const updates = col.calculate(rowData, value);
+      // 遍歷回傳的物件，更新 rowData 的值
+      for (const field in updates) {
+        if (Object.prototype.hasOwnProperty.call(updates, field)) {
+          // 使用 patchValue 方法更新欄位值，這樣可以觸發相關的變更偵測
+          // 但這裡我們直接更新 rowData，因為 ngModelChange 事件已經在處理中
+          rowData[field] = updates[field];
+        }
+      }
+    }
     // 執行整行驗證並儲存結果
     // 只有當行不再是自動插入的候選行時才執行整行驗證，以避免驗證空行
     if (this.rowValidate && !isAutoInsertCandidate) {
@@ -246,7 +286,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   }
 
   // 對單一欄位執行驗證，並更新 rowData 中的錯誤狀態
-  validateField(rowData: any, col: Column, value: any): boolean {
+  validateField(rowData: any, col: EditColumn, value: any): boolean {
     // 確保 _validationErrors 物件存在
     if (!rowData._validationErrors) {
       rowData._validationErrors = {};
@@ -287,7 +327,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
  * @returns {boolean} 整個表格是否有效
  */
   validateAndShowErrors(): boolean {
-    if (!this.disabled && this.data[0]._isAutoInsertCandidate && this.tableRequired) {
+    if (!this.disabled && this.data && !this.data.length && this.tableRequired) {
       this.tableDataEmpty = true;
       return false;
     }
@@ -347,11 +387,11 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   }
   // !!! 以下為核心
   // 判斷此col的validate參數是否有validateRequired的fuction
-  isRequired(col: Column) {
+  isRequired(col: EditColumn) {
     return col.validate?.some(validate => validate === validateRequired);
   }
   onColReorder(event: TableColumnReorderEvent) {
-    this.columns = event.columns as Column[];// 欄位調整
+    this.columns = event.columns as EditColumn[];// 欄位調整
   }
   trackByRow = (index: number, item: any) => item[this.dataKey];// 行追蹤
   // 行是否可選，還有第一筆也不能被點選
@@ -360,7 +400,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     return this.isRowSelectable(data, index, this.data) && !data._isAutoInsertCandidate;
   };
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
-  getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
+  getOptions(rowData: any, col: EditColumn) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
   // 最後一筆
   lastRow() {
     return this.data.length > 0 ? this.data.length - 1 : -1;
@@ -371,5 +411,22 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     if (event) {
       this.fileUpload.clear();
     }
+  }
+  // 判斷是否應該渲染分組標題
+  shouldRenderGroupHeader(col: EditColumn, index: number, columns: EditColumn[]): boolean {
+    return this.tableUtilityService.shouldRenderGroupHeader(col, index, columns);
+  }
+  // 計算分組欄位跨度
+  getColumnSpan(columns: EditColumn[], groupField: string): number {
+    return this.tableUtilityService.getColumnSpan(columns, groupField);
+  }
+  // 分組標題
+  getGroupHeader(groupField: string): string {
+    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
+  }
+  // 分組欄位對齊
+  getGroupAlignClass(groupField: string): string {
+    const align = this.columnGroup?.find(g => g.field === groupField)?.align;
+    return align ? 'text-' + align : 'text-center';
   }
 }

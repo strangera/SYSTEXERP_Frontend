@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { FIN11090Data, Fin11090Service } from '../../../service/api/fin/fin11090.service';
+import { FIN11090Data, FIN11090RestoreAndUploadRequest, Fin11090Service } from '../../../service/api/fin/fin11090.service';
 import { ECRNoService } from '@service/basic/ECRNo.service';
 import { ValidationService } from '@shared/service/validation.service';
 import {
@@ -53,8 +53,8 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       Validators.maxLength(6),
       this.validationService.numberValidator
     ]],
-    TXN_GUITrack: ['', [Validators.maxLength(2)]],
-    TXN_GUINo: ['', [Validators.maxLength(8)]],
+    TXN_GUITrack: ['', [Validators.required,Validators.maxLength(2),this.validationService.guiTrackValidator]],
+    TXN_GUINo: ['', [Validators.required,Validators.maxLength(8)]],
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]),
   });
 
@@ -103,7 +103,10 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       field: 'SaleReturn_Status',
       header: '折讓狀態',
       visible: true,
-      format: (value: string) => value === 'Y' ? '作廢' : '正常(已銷退)'
+      format : (value: string) =>
+        value === 'Y' ? '作廢' :
+        value === 'N' ? '開立' :
+        value === 'X' ? '未開折讓' : ''
     },
     {
       field: 'TXN_VoidDT',
@@ -170,8 +173,35 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
    * 作廢還原操作
    */
   onConfirm(rowData: FIN11090Data[]) {
-    // 待實作
-    console.log('作廢還原操作', rowData);
-    this.confirmBtnLoading = true;
+    this.messageService.confirm({
+      header: '是否執行作廢還原',
+      accept: () => {
+        // 將選中的資料轉換為 API 請求格式
+        const payload: FIN11090RestoreAndUploadRequest[] = rowData.map(item => ({
+          TXN_Date: item.TXN_Date || '',
+          ECR_No: item.ECR_No || '',
+          TXN_No: item.TXN_No?.toString() || '',
+          SaleReturn_Status: item.SaleReturn_Status || ''
+        }));
+
+        this.confirmBtnLoading = true;
+
+        // 呼叫 API
+        this.fin11090Service.restoreAndUploadFIN11090(payload)
+          .pipe(
+            finalize(() => this.confirmBtnLoading = false),
+            untilDestroyed(this)
+          )
+          .subscribe({
+            next: (response) => {
+              this.messageService.successBubble('作廢還原成功');
+              // 成功後重新查詢資料
+              this.onSubmit(this.queryForm);
+              // 清空已選擇的項目
+              this.selectedItems = [];
+            }
+          });
+      }
+    });
   }
 }

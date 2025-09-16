@@ -14,7 +14,7 @@ import { CardModule } from 'primeng/card';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { TabViewModule } from 'primeng/tabview';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { TLS2C020Data, TLS2c020Service } from '@service/api/tls/tls2-c020.service';
+import { TLS2C020Data, TLS2C020Service } from '@service/api/tls/tls2-c020.service';
 import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -64,7 +64,8 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
   closeDate = ''; // 最近關帳日期
   responseData: ResponseData | null = null;
 
-  data: CheckData[] = [
+  // 原始的檢查項目資料（不會被修改）
+  private readonly originalData: CheckData[] = [
     { checkOrder: '1', checkContent: '檢查收銀機對帳查詢是否有不平的資料', isPassed: '' },
     { checkOrder: '2', checkContent: '檢查發票金額是否為應稅金額 + 免稅金額的加總(不含訂金)', isPassed: '' },
     { checkOrder: '3', checkContent: '檢查發票金額 01 -> 金額等於大於0，03 -> 金額小於等於0', isPassed: '' },
@@ -78,6 +79,9 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
     { checkOrder: '11', checkContent: '檢核系統帳與實收帳是否等於溢收欠金額', isPassed: '' },
     { checkOrder: '12', checkContent: '檢核合約抽成類別是否尚未設定', isPassed: '' },
   ];
+
+  // 顯示用的資料（會被更新）
+  data: CheckData[] = [];
 
   columns: Column[] = [
     { field: 'checkOrder', header: '檢查順序', hidden: true },
@@ -95,7 +99,7 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private datePipe: DatePipe,
     private cd: ChangeDetectorRef,
-    private tls2c020Service: TLS2c020Service,
+    private tls2c020Service: TLS2C020Service,
     private tls2c010Service: TLS2C010Service,
     private dropDownListService: DropDownListService,
   ) {
@@ -103,15 +107,15 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2c020', 'tls/tls2c020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2C020', 'tls/tls2c020cru', this.queryForm, (form) => this.onSubmit(form));
     // 取得最近關帳日期
     this.tls2c010Service.getTLS2C010Date()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.closeDate = response.Data.CLS_DATE || '';
-        // cls_date 為 closeDate + 1 天
+        // cls_date 為 closeDate - 1 天
         const nextDate = new Date(this.closeDate);
-        nextDate.setDate(nextDate.getDate() + 1);
+        nextDate.setDate(nextDate.getDate() - 1);
         this.queryForm.patchValue({ cls_date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
       });
     // 載入下拉選單選項
@@ -120,10 +124,11 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls2c020Service.queryTLS2c020(
+      this.tls2c020Service.queryTLS2C020(
         {
           ECR_No: frm.value.ECR_No || '',
-          cls_date: this.datePipe.transform(frm.value.cls_date, 'yyyy-MM-dd') || ''
+          cls_date: this.datePipe.transform(frm.value.cls_date, 'yyyy-MM-dd') || '',
+          checkDuplicateInvoice: frm.value.checkDuplicateInvoice
         })
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
@@ -149,7 +154,14 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
   }
 
   updateData(responseData: ResponseData): CheckData[] {
-    return this.data.map(item => {
+    // 根據 checkDuplicateInvoice 的值決定要處理的資料
+    let dataToProcess = this.originalData;
+    if (!this.queryForm.value.checkDuplicateInvoice) {
+      // 如果不檢核發票重複，過濾掉第8項
+      dataToProcess = this.originalData.filter(item => item.checkOrder !== '8');
+    }
+
+    return dataToProcess.map(item => {
       const queryDataKey = `QueryData${item.checkOrder}` as keyof ResponseData;
       const details = responseData[queryDataKey] || [];
 

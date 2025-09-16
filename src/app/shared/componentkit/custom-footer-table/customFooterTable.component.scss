@@ -168,8 +168,8 @@
   }
   .html-cell,
   .html-cell * {
-    font-size: 14px !important;
-    line-height: 1.2 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
     font-weight: normal !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -179,10 +179,10 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-height: 1.2em; /* 限制高度為一行 */
+    max-height: 1.2em;
     white-space: normal;
     word-break: break-word;
-    max-width: 75px; /* 可選：限制寬度 */
+    max-width: 75px;
   }
 
   .empty-message {

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -12,7 +12,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { FIN15090Service } from '@service/api/fin/fin15090.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 /** GLS1016 對象別設定檔 */
@@ -53,7 +52,7 @@ export interface GLS1016 {
 // 對象及對帳維護作業
 export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implements OnInit {
   queryForm = this.formBuilder.group({
-    CompNo: ['', [Validators.maxLength(6)]], //  公司代號
+    CompNo: ['', [Validators.maxLength(6)]], //  公司代號 
     RefCode: ['', [ Validators.maxLength(20)]], // 對象別代碼
     RefName: ['', [Validators.maxLength(30)]], // 對象別名稱
 
@@ -102,9 +101,9 @@ export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implemen
 
       this.data = [
         { 
-          "CompNo": "公司代號1",
+          "CompNo": "Comp1",
           "RefCode": "對象別代碼1",
-          "RefName": "對象別名稱1",
+          "RefName": "廠商一",
           "SubRefName": "代送商名稱1"
         }
       ];
@@ -123,6 +122,8 @@ export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implemen
       // });
     });
   }
+  // 刪除控制_Grace 9/9: 
+  // GLS6002 GLS3002若有對象別編號不可刪除
   onDelete(selectedRows: GLS1016[]) {
     // const ids = selectedRows.map(row => row.id);
     // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({

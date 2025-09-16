@@ -12,25 +12,24 @@
 
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="銷售日期-日報表"
-              [startControl]="queryForm.controls.TXN_Date_Start"
-              [endControl]="queryForm.controls.TXN_Date_End"
-              [submitted]="submitted"  
-             >
-              
-            </app-calendar-range>
-          </div>
-
+          <!-- 月份（選了會同步把日期設成整月） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
-              label="銷售年月-月報表"
-              controlName="TXN_YearMonth"
+              label="銷售月份"
               [calendarType]="'dateMonthOne'"
-              [control]="queryForm.controls.TXN_YearMonth"
-              [submitted]="submitted" >
+              [control]="queryForm.controls.TXN_Month"
+              [submitted]="submitted">
             </app-calendar>
+          </div>
+
+          <!-- 日期區間 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              label="銷售日期"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -103,7 +102,6 @@
             </app-multi-select>
           </div>
 
-          <!-- 新增：僅顯示溢欠 -->
           <div class="col-12 md:col-6 lg:col-4 align-items-center flex">
             <p-checkbox
               binary="true"
@@ -127,16 +125,15 @@
   <app-table
     [tableKey]="'tls2b030'"
     dataKey="TLT_Name"
-    [multiSortMeta]="[{ field: 'TLT_Name', order: 1}]"
+    [multiSortMeta]="[{ field: 'TLT_Name', order: 1 }]"
     [columns]="columns"
     [data]="data"
     [loading]="loading"
     [showCheckBox]="false"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [showCheckBox]="false"
     [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-        [lazy]="true"></app-table>
- 
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
+  </app-table>
 </div>

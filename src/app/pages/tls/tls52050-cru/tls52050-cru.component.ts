@@ -1,9 +1,9 @@
 import { ValidationService } from '@shared/service/validation.service';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ITLS52050Data, Tls52050Service } from '../../../service/api/tls/tls52050.service';
-import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
+import { IInsertTLS52050Detail, IQueryTLS52050DetailData, IQueryTLS52050DetailRequest, ITLS52050Data, IUpdateTLS52050Detail, Tls52050Service } from '../../../service/api/tls/tls52050.service';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, distinctUntilChanged, finalize, merge, Observable, of, switchMap } from 'rxjs';
@@ -20,14 +20,15 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AsyncPipe, NgIf } from '@angular/common';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { tomorrow } from '@shared/models/system/query-form.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { columnGroup, columns } from './tls52050-cru.model';
 import { Tls52010Service } from '@service/api/tls/tls52010.service';
-import { Tls52020Service } from '@service/api/tls/tls52020.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 
 @Component({
   selector: 'app-tls52050-cru',
@@ -51,7 +52,8 @@ import { Tls52020Service } from '@service/api/tls/tls52020.service';
     DialogComponent,
     DropdownTableComponent,
     TranslateModule,
-    AsyncPipe
+    AsyncPipe,
+    TableEditComponent
   ],
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
@@ -85,17 +87,14 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   },);
   brandOptions?: Observable<Option[] | null>;   // 品牌
   vendorOptions?: Observable<Option[] | null>;  // 廠商編號
-  data: any[] = [
-    { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 500, MAM_OrderPrc: 0, PLU_SalePrc: 450, MAM_UnitPrc: 0, MAD_Remark: "單項說明", }
-  ];
-  selectedItems: any[] = [];
-  columns = columns;
+  data: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
+  selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
+  editColumns = columns;
   columnGroup = columnGroup;
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly tls52050Service: Tls52050Service,
     private readonly tls52010Service: Tls52010Service,
-    private readonly tls52020Service: Tls52020Service,
     public readonly dropdown: DropdownApiService,
     private readonly validationService: ValidationService
   ) {
@@ -108,6 +107,9 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     // 監聽 MAM_Method 是否為永久變價
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      if (!this.isFormCreateable) {
+        return;
+      }
       const MAM_EndDate = this.dataForm.controls.MAM_EndDate;
       MAM_EndDate.setValue(null);
       if (value === '1') {
@@ -116,6 +118,24 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         MAM_EndDate.enable();
       }
     });
+    if (!this.isFormCreateable) {
+      if (this.rowdata?.MAM_Status === '0') {
+        this.dataForm.controls.VEN_No.disable();
+        this.dataForm.controls.LOGO_No.disable();
+        this.dataForm.controls.MAM_Method.disable();
+        this.dataForm.controls.MAM_BegDate.disable();
+        this.dataForm.controls.MAM_EndDate.disable();
+      }
+      if (this.rowdata?.MAM_Method === '1') {
+        this.dataForm.controls.MAM_EndDate.disable();
+      }
+      const MAM_No = this.rowdata?.MAM_No;
+      if (MAM_No) {
+        this.tls52050Service.queryTLS52050UpdateDetail(MAM_No).pipe(untilDestroyed(this)).subscribe(response => {
+          this.data = response.Data.map(item => ({ ...item, id: Number(item.id) }));
+        });
+      }
+    }
     this.setupFormLogic();
     this.setupDialogLogic();
   }
@@ -134,7 +154,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.setupPriceFields('salePriceDiscount', 'salePriceAmount', this.roundToInt);
   }
   private setupPriceFields(discountControl: string, amountControl: string, roundingFn: (value: number) => number): void {
-    const controls: any = this.dataForm.controls;
+    const controls: Record<string, AbstractControl> = this.dataForm.controls;
     const discountCtrl = controls[discountControl];
     const amountCtrl = controls[amountControl];
     merge(discountCtrl.valueChanges, amountCtrl.valueChanges).pipe(untilDestroyed(this), distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))).subscribe(() => {
@@ -202,8 +222,6 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   private roundToInt(value: number): number {
     return Math.round(value);
   }
-  onRowEditSave(event: RowEditSaveEvent) {
-  }
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號
@@ -217,16 +235,16 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   CAT_LNoOptions: IDropdownItem[] = [];
   CAT_MNoOptions: IDropdownItem[] = [];
   CAT_SNoOptions: IDropdownItem[] = [];
-  dialogData: any[] = [];
-  selectedItemsDialog: any[] = [];
+  dialogData: IQueryTLS52050DetailData[] = [];
+  selectedItemsDialog: IQueryTLS52050DetailData[] = [];
   dialogColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
-    { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
+    { field: 'PLU_OrderPrc', header: '單價', showSort: false },
     { field: 'PLU_SalePrc', header: '售價' },
   ]
   dialogLoading = false;
@@ -264,11 +282,11 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   onQuery(frm: FormGroup) {
     this.dialogLoading = true;
     const body = {
-      ...frm.getRawValue(),
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
-    }
-    this.tls52020Service.queryPOS2004DetailVENNoTLS52020(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+      ...frm.getRawValue(),
+    } as IQueryTLS52050DetailRequest
+    this.tls52050Service.queryTLS52050Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
     })
@@ -276,17 +294,26 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   saveDialog() {
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
-      ...item,
-      CRN_SubQty: 0,
-      CRN_BuyPrc: item.PLU_SalePrc_UNI,
-      CRN_SalePrc: item.PLU_SalePrc,
-      CRN_Remark: ''
+      PLU_MagNo: item.PLU_MagNo,
+      PLU_Name: item.PLU_Name,
+      CAT_LNo: item.CAT_LNo,
+      CAT_LName: item.CAT_LName,
+      CAT_MNo: item.CAT_MNo,
+      CAT_MName: item.CAT_MName,
+      CAT_SNo: item.CAT_SNo,
+      CAT_SName: item.CAT_SName,
+      PLU_OrderPrcRate: Number(item.PLU_OrderPrcRate),
+      PLU_OrderPrc: Number(item.PLU_OrderPrc),
+      MAM_OrderPrc: 0,
+      PLU_SalePrc: Number(item.PLU_SalePrc),
+      MAM_UnitPrc: 0,
+      MAD_Remark: ''
     }))];
     this.selectedItemsDialog = [];
     this.selectedItems = [];
   }
-  isRowSelectable(event: any): boolean {
-    return !this.data || !this.data.some((item: any) => item.PLU_MagNo === event.PLU_MagNo);
+  isRowSelectable(event: IInsertTLS52050Detail): boolean {
+    return !this.data || !this.data.some((item: IInsertTLS52050Detail) => item.PLU_MagNo === event.PLU_MagNo);
   }
   opLoading = false;
   opForm = this.formBuilder.group({
@@ -294,11 +321,11 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
-  suggestions: any[] = [];
-  fieldsConfig: any[] = [
+  suggestions: { PLU_MagNo: string, PLU_No: string, PLU_OrgPLUNo: string, PLU_Name: string }[] = [];
+  fieldsConfig: FieldsConfig[] = [
     { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號 - 商品名稱', mainDataField: true },
   ];
-  opData: any[] = [];// overlayPanel 裡面的table
+  opData: { PLU_MagNo: string, PLU_No: string, PLU_OrgPLUNo: string, PLU_Name: string }[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_No', header: '國際條碼' },
@@ -306,25 +333,23 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     { field: 'PLU_Name', header: '商品名稱' },
   ];
   opTotalRecords = 0;
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<string, string>) {
     const body = {
-      ...event,
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event['PLU_MagNo'] || '',
       pageSize: 30,
       pageIndex: 1,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.dialogData = [...results.Data.map(item => ({
+      this.suggestions = [...results.Data.map(item => ({
         ...item,
         label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-      this.suggestions = [...this.dialogData];
     });
   }
-  onformValueChanged(event: any) {
+  onformValueChanged(event: { queryNo: string, PLU_Name: string, pageIndex: number, pageSize: number, SortBy: { field: string, order: number }[] }) {
     this.opLoading = true;
     const body = {
       ...event,
@@ -337,23 +362,40 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       this.opLoading = false;
     });
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   // onShowDialog
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('query condition', frm.value);
-      console.log('this.data', this.data);
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
       const body = {
-        ...frm.value,
+        ...frm.getRawValue(),
+        ID: this.isFormCreateable ? undefined : Number(this.rowdata?.Id),
+        MAM_No: this.isFormCreateable ? undefined : this.rowdata?.MAM_No,
         details: this.data.map(item => ({
+          ID: Number(item.id) || 0,
           PLU_MagNo: item.PLU_MagNo,
           PLU_OrderPrcRate: item.PLU_OrderPrcRate,
           PLU_OrderPrc: item.PLU_OrderPrc,
           MAM_OrderPrc: item.MAM_OrderPrc,
           PLU_SalePrc: item.PLU_SalePrc,
-          MAM_UnitPrc: item.MAM_UnitPrc
+          MAM_UnitPrc: item.MAM_UnitPrc,
+          MAD_Remark: item.MAD_Remark
         }))
       }
-      console.log('body', body);
+      const $request = this.isFormCreateable ? this.tls52050Service.insertTLS52050(body) : this.tls52050Service.updateTLS52050(body);
+      $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.messageService.successBubble(response.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+          this.data = [];
+        } else {
+          this.onCancel();
+        }
+      })
     });
   }
 }

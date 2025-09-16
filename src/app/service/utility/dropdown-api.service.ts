@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 import {
   Option,
   IDropdownItem,
@@ -147,8 +147,8 @@ export class DropdownApiService {
   }
 
   /** 查詢專櫃大分類(業種)設定檔(TLTBUSTYPE)資料表 */
-  queryTltBusType(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryTLTBUSTYPE_DropDownList');
+  queryTltBusType(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTBUSTYPE_DropDownList', 'No', 'Name');
   }
 
   /** 查詢館別代碼(SYS3800)資料表下拉選單 */
@@ -160,7 +160,6 @@ export class DropdownApiService {
   querySys3900(): Observable<IDropdownItem[] | null> {
     return this.queryDropdown<IDropdownItem>('/querySYS3900_DropDownList');
   }
-
   /** 查詢區域代碼(SYS3A00)資料表下拉選單 */
   querySys3A00(): Observable<IDropdownItem[] | null> {
     return this.queryDropdown<IDropdownItem>('/querySYS3A00_DropDownList');
@@ -172,8 +171,8 @@ export class DropdownApiService {
   }
 
   /** 查詢中分類(商品類別)設定檔(TLTBUSCLASS)資料表 */
-  queryTltBusClass(body: BusClassQuery): Observable<BusClassItem[] | null> {
-    return this.queryDropdownWithParams<BusClassItem, BusClassQuery>('/queryTLTBUSCLASS_DropDownList', body);
+  queryTltBusClass(body?: BusClassQuery): Observable<BusClassItem[] | null> {
+    return this.queryDropdownWithParams<BusClassItem, BusClassQuery | object>('/queryTLTBUSCLASS_DropDownList', body ?? {})
   }
 
   /** 查詢小分類設定檔(TLTBUSSCLASS)資料表 */
@@ -256,7 +255,9 @@ export class DropdownApiService {
 
   /** 查詢廠商資料表(POS2013) */
   queryPos2013(body: Pos2013Query): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<Pos2013Item, Pos2013Query>('/queryPOS2013_DropDownList', 'No', 'Name', body);
+    return this.queryAndMapDropdown<Pos2013Item, Pos2013Query>('/queryPOS2013_DropDownList', 'VEN_No', 'Name', body).pipe(
+      shareReplay(1)// 避免重複查詢
+    );
   }
 
   // --- 品牌代碼相關 ---
@@ -272,8 +273,10 @@ export class DropdownApiService {
   }
 
   /** 查詢品牌代碼(PLULOGO) (含HOS_No) */
-  queryPluLogoHosNo(): Observable<PluLogoHOSNoInnerItem[] | null> {
-    return this.queryNestedDropdown<PluLogoHOSNoInnerItem>('/queryPLULOGO_HOS_No_DropDownList');
+  queryPluLogoHosNo(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<PluLogoHOSNoInnerItem>('/queryPLULOGO_HOS_No_DropDownList', 'No', 'Name').pipe(
+      shareReplay(1)// 避免重複查詢
+    );
   }
   // --- POS 相關 (新增) ---
 
@@ -293,8 +296,10 @@ export class DropdownApiService {
   }
 
   /** 查詢倉別(POS2034) */
-  queryPos2034(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS2034_DropDownList');
+  queryPos2034(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS2034_DropDownList', 'No', 'Name').pipe(
+      shareReplay(1)// 避免重複查詢
+    );
   }
 
   /** 查詢收銀機群組(POS1002GRM) */
@@ -340,8 +345,8 @@ export class DropdownApiService {
   // --- 專櫃相關 (新增) ---
 
   /** 查詢專櫃主檔(TLTTALENT) (取得最新合約資料) */
-  queryTltTalent(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryTLTTALENT_DropDownList');
+  queryTltTalent(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT_DropDownList', 'No', 'Name');
   }
 
   /** 查詢專櫃主檔(TLTTALENT) (依照審核狀態查詢) */

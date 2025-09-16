@@ -7,7 +7,7 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="dataForm.controls.SYS_StoreNo"
+                <app-input-text label="門市店號" controlName="SYS_StoreNo" [control]="dataForm.controls.SYS_StoreNo"
                   [submitted]="submitted"></app-input-text>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
@@ -25,21 +25,21 @@
                   optionValue="value" [control]="dataForm.controls.ECR_Type" [submitted]="submitted"></app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
+                <app-input-text label="專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
                   [submitted]="submitted"></app-input-text>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="機台所屬專櫃名稱" controlName="ECR_TLT_Name" [control]="dataForm.controls.ECR_TLT_Name"
+                <app-input-text label="專櫃名稱" controlName="ECR_TLT_Name" [control]="dataForm.controls.ECR_TLT_Name"
                   [submitted]="submitted"></app-input-text>
               </div>
             </div>
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="機台所屬收銀員" controlName="ECR_USR_No" [control]="dataForm.controls.ECR_USR_No"
+                <app-input-text label="收銀員" controlName="ECR_USR_No" [control]="dataForm.controls.ECR_USR_No"
                   [submitted]="submitted"></app-input-text>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="機台所屬收銀員姓名" controlName="ECR_USR_Name" [control]="dataForm.controls.ECR_USR_Name"
+                <app-input-text label="收銀員姓名" controlName="ECR_USR_Name" [control]="dataForm.controls.ECR_USR_Name"
                   [submitted]="submitted"></app-input-text>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
@@ -67,11 +67,11 @@
                   optionValue="value" [control]="dataForm.controls.ECR_GUI_Type" [submitted]="submitted"></app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number label="每期電子發票預設配號數量" controlName="ECR_GUI_PeriodQty" [control]="dataForm.controls.ECR_GUI_PeriodQty"
+                <app-input-number label="發票預設配號量" controlName="ECR_GUI_PeriodQty" [control]="dataForm.controls.ECR_GUI_PeriodQty"
                   [min]="50" [max]="999999999" [submitted]="submitted"></app-input-number>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number label="電子發票最小安全存量" controlName="ECR_GUI_MinQty" [control]="dataForm.controls.ECR_GUI_MinQty"
+                <app-input-number label="發票安全存量" controlName="ECR_GUI_MinQty" [control]="dataForm.controls.ECR_GUI_MinQty"
                   [min]="50" [max]="999999999" [submitted]="submitted"></app-input-number>
               </div>
             </div>

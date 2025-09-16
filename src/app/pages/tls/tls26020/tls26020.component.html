@@ -40,7 +40,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS26020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+  <app-table #tableComponent tableKey="TLS26020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" dataKey="tlt_no" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);
     onSubmit(queryForm)" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [lazy]="true" [loading]="loading"
     [showManage]="false" [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details"

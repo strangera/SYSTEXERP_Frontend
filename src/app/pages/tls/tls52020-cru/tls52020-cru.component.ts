@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { IPOS2004DetailData, ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
@@ -22,6 +22,10 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { getSYS1000 } from '@service/system/sys1000.service';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
   selector: 'app-tls52020-cru',
@@ -44,40 +48,54 @@ import { TranslateModule } from '@ngx-translate/core';
     DialogComponent,
     DropdownTableComponent,
     TranslateModule,
+    TableEditComponent
   ],
 })
 export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> implements OnInit {
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   dataForm = this.formBuilder.nonNullable.group({
     CRN_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
-    VEN_No: ['84445301-1', [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
+    VEN_No: [null as string | null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
     vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
-    LOGO_No: ['0001', [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
-    HOS_No: ['' as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
+    LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
+    HOS_No: [null as string | null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     CRN_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
     CRN_TotalBuyTax: [{ value: 0, disabled: true }], //稅額
     CRN_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
     CRN_TotalSaleAmt: [{ value: 0, disabled: true }], //售價總計
     APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期 (對應 POS2016.APPLY_Date)
-    CRN_Remark: ['', [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
+    CRN_Remark: [null as string | null, [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
   });
   vendorOptions: IDropdownItem[] = []; // 廠商下拉選單選項
   brandOptions: IDropdownItem[] = []; // 品牌下拉選單選項
   warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
   userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
-  columns: Column[] = [
+  editColumns: EditColumn[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
-    { field: 'CRN_SubQty', header: '數量', type: 'inputNumber', validate: [validateMinNumber(0)] },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
+    {
+      field: 'CRN_SubQty',
+      header: '數量',
+      type: 'inputNumber',
+      validate: [validateRequired, validateMinNumber(1)],
+      width: '100px',
+      calculate: (row) => {
+        return {
+          'CRN_BuyNet': row.CRN_SubQty * row.CRN_BuyPrc, // 計算小計
+          'CRN_SaleAmt': row.CRN_SubQty * row.CRN_SalePrc // 計算售價小計
+        };
+      }
+    },
     { field: 'CRN_BuyPrc', header: '單價' },
     { field: 'CRN_BuyNet', header: '小計' },
     { field: 'CRN_SalePrc', header: '售價' },
     { field: 'CRN_SaleAmt', header: '售價小計' },
-    { field: 'CRN_Remark', header: '備註', type: 'input' },
+    { field: 'CRN_Remark', header: '備註', type: 'input', width: '150px' },
   ]
   data: TLS52020Detail[] = [];
   selectedItems: TLS52020Detail[] = [];
@@ -239,7 +257,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
       ...item,
-      CRN_SubQty: 0,
+      CRN_SubQty: 1,
       PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
       CRN_BuyPrc: item.PLU_SalePrc_UNI,
       CRN_SalePrc: item.PLU_SalePrc,
@@ -287,7 +305,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
   }
 
   // 總計計算邏輯
-  private calculateTotals(): void {
+  calculateTotals(): void {
     let totalBuyNet = 0; // 採購金額(即所有明細的「小計」加總)
     let totalBuyTax = 0; // 採購金額(即所有明細的「小計」加總)
     let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
@@ -304,14 +322,10 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const hasInvalidQuantity = this.data.some(item => (item.CRN_SubQty || 0) <= 0);
-      if (hasInvalidQuantity) {
-        this.messageService.errorBubble('商品明細的「數量」必須大於 0。');
-        return; // 阻止表單提交
-      }
-      if (!this.data || this.data.length === 0) {
-        this.messageService.errorBubble('請至少選擇一個商品明細！');
-        return; // 阻止提交
+      const valid = this.tableEditComponent.validateAndShowErrors()
+      if (!valid) {
+        this.loading = false
+        return;
       }
       const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
       const details: TLS52020Detail[] = this.data.map((item) => ({

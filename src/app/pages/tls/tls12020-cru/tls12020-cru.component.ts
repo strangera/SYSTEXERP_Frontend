@@ -40,7 +40,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     vendorCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     brand: ['', [Validators.maxLength(30)]], // 品牌
-    bus_type: ['', [Validators.required]], // 大分類（必填）
+    bus_type: [''], // 業腫
     VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
     VEN_BossTitle: ['', [Validators.maxLength(15)]], // 聯絡人稱謂
@@ -49,16 +49,16 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
 
     contact_Date: [null, [Validators.required]], // 訪談日期（必填）
-    contact_Time: [null, [Validators.required]], // 訪談時間(24H)（必填）
-    building_no: ['', [Validators.required]],
-    willing_level: ['', [Validators.required]], // 意願等級（必填）
-    FLOOR_NO: ['', [Validators.required]], // 樓層編號（必填）
+    contact_Time: [null], // 訪談時間(24H)（必填）
+    building_no: [''],
+    willing_level: ['', [Validators.required]], //
+    FLOOR_NO: [''], // 樓層編號（必填）
     LOCATION_No: [null, [Validators.maxLength(60)]], // 擬洽位置編號
 
     contact_record: [''], // 洽談重點及洽談紀錄
     contact_remarks: [''], // 備註
 
-    contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
+    contact_USR_Name: ['admin', [Validators.required]], // 訪談人員（必填）
   });
 
 
@@ -98,10 +98,16 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         value: item.No     // 實際值
       }));
     });
-    //大分類API
-    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.industryCodeOptions = res.Data;
-    });
+      //業種API
+      this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+        if (res?.Status === '0000') {
+          this.industryCodeOptions = res.Data.map(item => ({
+            ...item,
+            label: item.Name,
+            value: item.No
+          }));
+        }
+      });
     //館別
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
