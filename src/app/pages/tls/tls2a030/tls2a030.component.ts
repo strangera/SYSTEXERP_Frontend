@@ -16,16 +16,16 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { yesterday } from '@shared/models/system/query-form.model';
-
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 interface SalesRecord {
-  paymentTool: string;
-  actualShortfallAmount: number;
-  preAuditShortfallAmount: number;
-  receiptTotal: number;
-  systemTotal: number;
-  compareCD: 'Y' | 'N';
-  compareAB: 'Y' | 'N';
+  PAY_NAME: string;
+  OVER_PayAmt: number;
+  PreAudit_OVER_PayAmt: number;
+  Actual_ReceivedAmt: number;
+  BOOK_PayAmt: number;
+  Compare_CD: 'Y' | 'N' | 'O' | 'X';
+  Compare_AB: 'Y' | 'N' | 'O' | 'X';
 }
 
 @Component({
@@ -33,8 +33,18 @@ interface SalesRecord {
   templateUrl: './tls2a030.component.html',
   styleUrls: ['./tls2a030.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownRangeComponent,
-    ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CustomFooterTableComponent,
+    CalendarRangeQuickComponent,
+    DropdownRangeComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -46,23 +56,26 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'PAY_NAME', order: 1 }])
   });
 
+  footerData: any[] = [];
+  private skipAutoQueryOnce = false;
   data: SalesRecord[] = [];
   totalRecords = 0;
   selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
+
   // 表格欄位
   columns: Column[] = [
-    { field: 'PAY_NAME', header: '支付工具', visible: true, },
-    { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount },
-    { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount },
-    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true, format: formatAmount },
-    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true, format: formatAmount },
+    { field: 'PAY_NAME', header: '支付工具', visible: true },
+    { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount, isTotal: true },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true, format: formatAmount, isTotal: true },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true, format: formatAmount, isTotal: true },
     {
       field: 'Compare_CD',
       header: '(C) 與 (D) 比較',
       htmlFormat: true,
       format: (v: any) =>
-        v === true || v === 'Y'|| v === 'O'
+        v === true || v === 'Y' || v === 'O'
           ? '<span class="circle">〇</span>'
           : '<span class="cross">✖</span>',
       visible: true,
@@ -72,22 +85,18 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       header: '(A) 與 (B) 比較',
       htmlFormat: true,
       format: (v: any) =>
-        v === true || v === 'Y'|| v === 'O'
+        v === true || v === 'Y' || v === 'O'
           ? '<span class="circle">〇</span>'
           : '<span class="cross">✖</span>',
       visible: true,
     }
-
-
   ];
-
-
 
   constructor(
     private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
     private tls2a030Service: TLS2A030Service,
-    private http: HttpClient,
+    private http: HttpClient
   ) {
     super();
   }
@@ -100,6 +109,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       this.ECRNoOptions = data;
     });
   }
+
   onImportExcel(event: any): void {
     const file = event.files[0];
     if (!file) {
@@ -123,13 +133,13 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
           : raw.SaleDateEnd ?? null,
       ECR_No: raw.ECR_No?.trim() ?? '',
       ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
-      ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+      ECR_No_End: raw.ECR_No_End?.trim() ?? ''
     };
 
     const payload = {
       query_condition: {
         ServiceName: 'queryTLS2A030',
-        Conditions: [condition],
+        Conditions: [condition]
       },
       report_title: '溢欠彙總表',
       file_name: `TLS22030_${new Date().toISOString().slice(0, 10)}`,
@@ -139,7 +149,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
         print_reportTitle_per_page: 'N',
         print_eject: 'Y',
         print_field_title: 'Y',
-        print_field_title_per_page: 'N',
+        print_field_title_per_page: 'N'
       }
     };
 
@@ -163,15 +173,35 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-
       this.tls2a030Service.queryTLS2A030(form.value).subscribe({
         next: (res) => {
-          const list = res?.Data ?? [];
-          this.data = list.map((it: any) => ({
+          const main = res?.Data?.mainData ?? [];
+          const total = res?.Data?.totalData?.[0] ?? null;
+
+          // 綁定主資料
+          this.data = main.map((it: any) => ({
             ...it,
             Compare_CD: it?.Compare_CD,
             Compare_AB: it?.Compare_AB
           }));
+
+          // 綁定總計
+          if (total) {
+            this.footerData = [
+              {
+                group_name: '總計',
+                OVER_PayAmt: total.OVER_Total_PayAmt,
+                PreAudit_OVER_PayAmt: total.PreAudit_OVER_Total_PayAmt,
+                Actual_ReceivedAmt: total.Actual_ReceivedAmt_Total,
+                BOOK_PayAmt: total.BOOK_Total_PayAmt,
+                Compare_CD: '',
+                Compare_AB: ''
+              }
+            ];
+          } else {
+            this.footerData = [];
+          }
+
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.loading = false;
         },
@@ -182,6 +212,4 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
-
-
 }
