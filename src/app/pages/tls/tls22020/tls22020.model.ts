@@ -68,14 +68,14 @@ const baseColumns: Column[] = [
 const paymentColumns: Column[] = payNoDataList.flatMap((item) => [
   { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
   { header: '帳單', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
-  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, },
+  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount,},
 ]);
 
 // 固定欄位
 const tailColumns: Column[] = [
-  { header: '明細總金額', field: 'Total_Txn_PayAmt', isTotal: true },
-  { header: '帳單總金額', field: 'Total_SLE_PayAmt', isTotal: true },
-  { header: '總差額', field: 'Total_Diff_PayAmt', isTotal: true },
+  { header: '明細總金額', field: 'Total_Txn_PayAmt', isTotal: true, format: formatAmount, },
+  { header: '帳單總金額', field: 'Total_SLE_PayAmt', isTotal: true, format: formatAmount, },
+  { header: '總差額', field: 'Total_Diff_PayAmt', isTotal: true, format: formatAmount, },
 
 ];
 

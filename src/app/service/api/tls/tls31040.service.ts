@@ -48,8 +48,8 @@ export interface TLS31040PrintDetailRequest extends TLS31040DetailRequest {
 }
 
 export interface TLS31040Response {
-  bus_type: string;
-  bus_type_name: string;
+  tlt_kind: string;
+  tlt_kind_name: string;
   
   budget: number;
   AVN_TotSaleAmt: number;

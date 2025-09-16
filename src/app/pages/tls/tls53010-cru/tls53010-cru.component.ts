@@ -1,175 +1,157 @@
-// 點單開立
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { InventoryStatusService } from '../../../service/basic/inventory-status.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService } from '@ngx-translate/core';
-import { Router } from '@angular/router';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { DropdownOption } from '../../../shared/models/api/base-api.interface';
+import { DatePipe, NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { finalize } from 'rxjs';
+import { ValidationService } from '@shared/service/validation.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS53010Data, TLS53010Service } from '@service/api/tls/tls53010.service';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+
 @Component({
-    selector: 'app-tls53010-cru',
-    templateUrl: './tls53010-cru.component.html',
-    styleUrl: './tls53010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, NgIf]
+  selector: 'app-tls53010-cru',
+  templateUrl: './tls53010-cru.component.html',
+  styleUrl: './tls53010-cru.component.scss',
+  standalone: true,
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+    TranslateModule,
+    InputTextareaComponent
+  ]
 })
-export class TLS53010CRUComponent extends BasicCrupageComponent implements OnInit {
-
-
-
-  dataForm = this.formBuilder.group({
-    inventoryCode: [{ value: '自動編號', disabled: true }], // 新增盤點單編號
-    warehouseCode: [null, Validators.required], // 倉別 dropdown
-    brandCode: [null, Validators.required],
-    inventoryDateFrom: [],
-    inventoryDateTo: [],
-    inventoryStatus: [null, Validators.required],
-    Description: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> implements OnInit {
+  dataForm = this.formBuilder.nonNullable.group({
+    ID: [0], // 資料識別碼
+    PST_No: [''], // 盤點單編號
+    HOS_No: [''], // 倉別代碼
+    LOGO_No: [''], // 品牌代碼
+    PST_Date: [''], // 盤點基準日期
+    PST_Status: ['0'], // 盤點單狀態，預設為草稿
+    PST_Remark: [''], // 備註
   });
 
-  // Dropdown options
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  inventoryStatusOptions: any[] = [];
-
-
-
+  // 下拉選單
+  hosOptions: any[] = [];   // 倉別選項
+  logoOptions: any[] = [];  // 品牌選項
+  // 盤點單狀態選項 TODO: 待定義
+  pstStatusOptions: any[] = [
+    { value: '0', label: '未完成' },
+    { value: '1', label: '已完成' },
+    { value: '2', label: '已取消' }
+  ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private inventoryStatusService: InventoryStatusService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private messageService: NotificationService,
+    private tls53010Service: TLS53010Service,
+    private datePipe: DatePipe,
+    private validationService: ValidationService,
+    private dropDownListService: DropDownListService
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '250021';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe(data => this.warehouseOptions = data);
-    this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
-    this.inventoryStatusService.getInventoryStatusOptions().subscribe(data => this.inventoryStatusOptions = data);
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };//CRU
+    this.initializePage('TLS53010', this.dataForm);
+    this.loadOptions();
+    this.setReadOnlyFields();
 
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }//CRU
-  }
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      mgname: [],
-      barcode: [{ value: '自動帶入', disabled: true }],
-      vendorCode: [{ value: '自動帶入', disabled: true }],
-      remark: [],
-    });
-  }
-
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
+    if (this.crudstatus === 'Create') {
+      // 新增時產生盤點單編號
+      this.generatePSTNo();
     }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  onSubmit(form: FormGroup): void {
+    // const formValue = form.getRawValue();
+    // this.handleSubmit(form, () => {
+    //   switch (this.crudstatus) {
+    //     case CRUDStatus.Create:
+    //       if (this.canAdd()) {
+    //         const rb: TLS53010InsertRequest = {
+    //           PST_No: formValue.PST_No,
+    //           HOS_No: formValue.HOS_No,
+    //           LOGO_No: formValue.LOGO_No,
+    //           PST_Date: this.datePipe.transform(formValue.PST_Date, 'yyyy-MM-dd') ?? '',
+    //           PST_Status: formValue.PST_Status,
+    //           PST_Remark: formValue.PST_Remark
+    //         };
+    //         this.tls53010Service.insertTLS53010(rb)
+    //           .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+    //           .subscribe(() => {
+    //             this.messageService.successBubble('新增成功');
+    //             this.onCancel();
+    //           });
+    //       }
+    //       break;
+    //     case CRUDStatus.Edit:
+    //       if (this.canEdit()) {
+    //         const rb: TLS53010UpdateRequest = {
+    //           ID: formValue.ID,
+    //           PST_No: formValue.PST_No,
+    //           HOS_No: formValue.HOS_No,
+    //           LOGO_No: formValue.LOGO_No,
+    //           PST_Date: this.datePipe.transform(formValue.PST_Date, 'yyyy-MM-dd') ?? '',
+    //           PST_Status: formValue.PST_Status,
+    //           PST_Remark: formValue.PST_Remark
+    //         };
+    //         this.tls53010Service.updateTLS53010(rb)
+    //           .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+    //           .subscribe(() => {
+    //             this.messageService.successBubble('更新成功');
+    //             this.onCancel();
+    //           });
+    //       }
+    //       break;
+    //   }
+    // });
   }
 
-  onCancel() {
-    this.router.navigate(['/TLS5000/TLS53010']);
+  loadOptions() {
+    // 倉別選項
+    this.dropDownListService.getPOS2034Options()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.hosOptions = response.Data.map(item => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+      });
+
+    // 品牌選項
+    this.dropDownListService.queryPLULOGO_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.logoOptions = response.Data.map(item => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+      });
   }
-  switchloadbtn1() { }
-  switchloadbtn2() { }
+
+  setReadOnlyFields() {
+    // 盤點單編號不能修改
+    this.dataForm.get('PST_No')?.disable();
+  }
+
+  generatePSTNo() {
+    // 產生盤點單編號
+    this.dataForm.patchValue({ PST_No: '系統自動產生' });
+  }
 }

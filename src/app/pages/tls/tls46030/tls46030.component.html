@@ -90,19 +90,21 @@
 </div>
 <div class="card">
   <app-table
-    dataKey="id"
+    dataKey="ECR_SchNo"
     [data]="data"
     [columns]="columns"
     [showCheckBox]="true"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    [multiSortMeta]="[{ field: 'ECR_SchNo', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
     [showPaginator]="true"
+    [selectedItems]="selectedItems"
     [showReportMode]="false"
     [showDelete]="false"
     [showDetail]="false"
     [showEdit]="true"
     [showManage]="true"
+    (edit)="onEdit($event)"
   ></app-table>
 </div>

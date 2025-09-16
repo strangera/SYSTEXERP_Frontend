@@ -1,26 +1,45 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { FIN15090Service } from '@service/api/fin/fin15090.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+
+export interface testDorm {
+  AccNo: string, // 科目代號
+  AccCname: string, // 科目名稱
+  AccEname: string, // 科目英文名稱
+  AccDC: string, // 借/貸
+  Ledger_MD: string, // 統制/明細
+  ClassNo: string, // 三碼代號
+  ABAT_YN: string, // 是否為沖帳代號
+  Voucher_Type: string, // 傳票格式
+  Budget_YN: string, // 是否為預算科目
+  Org_YN: string, // 是否設定部門代號
+  rest_value: number, // 折舊攤提年限
+  rest_value2: number, // 殘值年限
+  Input_YN: string, // 是否可輸
+
+  //---可能也會需要下面這些---
+  CRT_Date?: Date,
+  CRT_USR_No?: string,
+  CRT_USR_Name?: string,
+  UPD_Date?: Date,
+  UPD_USR_No?: string,
+  UPD_USR_Name?: string,
+}
 
 @Component({
   selector: 'app-fin52080',
@@ -33,259 +52,175 @@ import { TranslateModule } from '@ngx-translate/core';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
+    CalendarComponent,
     DropdownComponent,
+    MultiSelectComponent,
+    InputTextComponent,
+    InputNumberComponent,
+    InputTextRangeComponent,
     TableComponent,
-    TranslateModule,
-  ],
+    TranslateModule
+  ]
 })
-export class FIN52080Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+// 
+export class FIN52080Component extends BasicQueryPageComponent<testDorm> implements OnInit {
   queryForm = this.formBuilder.group({
-    systemYear: [], // 系統年結年度
-    accountingStartMonth: [], // 系統開帳年月
-    accountingEndMonth: [], // 系統關帳年月
-    defaultVoucherDate: [], // 傳票日期預設
-    defaultOrganization: [, Validators.required], // 預設組織
-    accumulatedProfitLossAccount: [], // 累積盈虧科目
-    currentProfitLossAccount: [], // 本期損益科目
-    cashAccount: [], // 現金科目
-    accountsReceivableAccount: [], // 應收帳款科目
-    accountsPayableAccount: [], // 應付帳款科目
-    inputTaxAccount: [], // 進項稅額科目
-    outputTaxAccount: [], // 銷項稅額科目
-    postAndTelecomFeeAccount: [], // 郵電費科目
-    discountRate: [], // 貼現日利率
-    discountFeeRevenueAccount: [], // 貼現手續費收入科目
-    discountOutputTaxAccount: [], // 貼現銷項稅額科目
-    startdate: [], // 貼現銷項稅額科目起始日
-    enddate: [], // 貼現銷項稅額科目結束日
-    bankTransferFeeAccount: [], // 銀行匯款手續費科目
-    advanceExpenseAccount: [], // 預支費用科目
-    billTransferCondition: [], // 應付票據是否需領用才拋轉傳票
-    typecode: [],
-    typename: [],
-    Subpoenatype: [],
-    accountcategoryEname: [],
-    accountcategoryname: [],
-    accountcategorycode: [],
-    mediumcategorycode: [],
-    borrowloan: [],
-    detail: [],
-    threecodecategorycode: [],
-    offsetcode: [],
-    Subpoenaformatl: [],
-    Budgetaccount: [],
-    Departmentcode: [],
-    input: [],
-    Residualvalueyears: [],
-    Depreciation: [],
-
-  });
-
-  // Dropdown options
-
-  departmentOptions: any[] = [];
-  ifOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  detail: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-  Subpoenaformatl: any[] = [
-    { value: 1, label: '無特定' },
-    { value: 2, label: '應付票據' },
-    { value: 3, label: '應收票據' },
-  ];
-  threecodecategorycodeOptions: any[] = [
-    { value: 110, label: '現金及約當現金' },
-    { value: 111, label: '金融資產' },
-    { value: 112, label: '應收票據' },
-    { value: 113, label: '應收票據-關係人' },
-    { value: 114, label: '應收帳款' },
-    { value: 115, label: '應收帳款-關係人' },
-    { value: 116, label: '其他應收款' },
-    { value: 117, label: '其他應收款-關係人' },
-    { value: 118, label: '應收保證票' },
-    { value: 120, label: '存貨' },
-  ];
-  borrowloanOptions: any[] = [
-    { value: 1, label: '借' },
-    { value: 2, label: '貸' },
-  ];
-
-  accountingaccountOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' },
-  ];
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' },
-  ];
-
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-
-  SubpoenastatusOptions: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' },
-  ];
-
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' },
-  ];
-
-  // Table data
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'accountCode', header: '科目代碼', visible: true },
-    { field: 'accountName', header: '科目名稱', visible: true },
-    { field: 'accountEnglishName', header: '科目英文名稱', visible: true },
-    { field: 'debitCredit', header: '借貸', visible: true },
-    { field: 'summaryDescription', header: '綜制/明細', visible: true },
-    { field: 'subCategoryCode', header: '三類代碼', visible: true },
-    { field: 'isHighCardCode', header: '是否為扣帳卡代碼', visible: true },
-    { field: 'voucherSpecial', header: '傳票特別', visible: true },
-    { field: 'isBudgetSubject', header: '是否為預算科目', visible: true },
-    { field: 'isFixedCloseAccount', header: '是否設定閉門代號', visible: true },
-    { field: 'discountLimitYear', header: '折舊攤提年限', visible: true },
-    { field: 'residualValueLimit', header: '殘值年限', visible: true },
-    { field: 'isExportable', header: '是否可輸出', visible: true }
-  ];
-
-  // TypeScript Options
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService
-  ) {
-    super(); // 呼叫父類建構子
-  }
-
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  ngOnInit(): void {
-    this.ProgNo = '150014';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
+      //會計科目代號維護
+      AccNo: ['', [Validators.maxLength(8)]], //  科目代號
+      AccCname: ['', [ Validators.maxLength(40)]], // 科目名稱
+      AccEname: ['', [Validators.maxLength(50) ]], // 科目英文名稱 (非必填)
+      AccDC: [[]], //  借/貸
+      Ledger_MD: [[]], //  統制/明細
+      ClassNo: [[]], //  三碼代號
+      ABAT_YN: [[]], //  是否為沖帳代號
+      Voucher_Type: [[]], //  傳票格式
+      Budget_YN: [[]], //  是否為預算科目
+      Org_YN: [[]], //  是否設定部門代號
+      rest_value: [null, [ Validators.maxLength(10),this.validationService.numberValidator]], //  折舊攤提年限
+      rest_value2: [null, [ Validators.maxLength(10),this.validationService.numberValidator]], //  殘值年限
+      Input_YN: [[]], //  是否可輸
+                    
+      ...createPaginationConfig([{ field: 'AccNo', order: 1 }]), // 分頁和排序參數
     });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
+    
+    ClassNo_Option: apiOption[] = [ //中類代碼
+      {No: '1', Name: '下拉1'},
+      {No: '2', Name: '下拉2'},
+      {No: '3', Name: '下拉3'}
+    ]
+
+    AccDC_Option: apiOption[] = [ // 借/貸
+      {No: '0', Name: '借'},
+      {No: '1', Name: '貸'}
+    ]
+
+    Ledger_MD_Option: apiOption[] = [ // 統制/明細
+      {No: '0', Name: '統制'},
+      {No: '1', Name: '明細'}
+    ]
+
+    ABAT_YN_Option: apiOption[] = [ // 是否為沖帳代號
+      {No: 'Y', Name: '是'},
+      {No: 'N', Name: '否'}
+    ]
+
+    Voucher_Type_Option: apiOption[] = [ // 傳票格式
+      {No: '0', Name: '無特定'},
+      {No: '1', Name: '應付票據'},
+      {No: '2', Name: '應收票據'},
+      {No: '3', Name: '應付帳款'},
+
+      {No: '4', Name: '應收帳款'},
+      {No: '5', Name: '進項稅額'},
+      {No: '6', Name: '銷項稅額'},
+      {No: '7', Name: '銀行存款'},
+
+      {No: 'A', Name: '應付費用'},
+      {No: 'B', Name: '代收稅款'},
+      {No: 'C', Name: '固定資產'},
+      {No: 'D', Name: '現金'},
+      {No: 'E', Name: '應收保證票據'}
+    ]
+              
+    totalRecords = 0;// 分頁和排序參數 // 排序需要
+    data: testDorm[] = [];
+    selectedRows: testDorm[] = [];
+                      
+    columns: Column[] = [ //先放可視範圍內的
+      { field: 'AccNo', header: '科目代號', visible: true }, // 科目代號
+      { field: 'AccCname', header: '科目名稱', visible: true }, // 科目名稱
+      { field: 'AccEname', header: '科目英文名稱', visible: true }, // 科目英文名稱
+      { field: 'AccDC', header: '借/貸', visible: true, options: this.ClassNo_Option }, // 借/貸
+      { field: 'Ledger_MD', header: '統制/明細', visible: true, options: this.ClassNo_Option }, // 統制/明細
+      { field: 'ClassNo', header: '三碼代號', visible: true }, // 三碼代號
+      { field: 'ABAT_YN', header: '是否為沖帳代號', visible: true }, // 是否為沖帳代號
+      { field: 'Voucher_Type', header: '傳票格式', visible: true, options: this.ClassNo_Option }, // 傳票格式
+      { field: 'Budget_YN', header: '是否為預算科目', visible: true, options: this.ClassNo_Option }, // 是否為預算科目
+      { field: 'Org_YN', header: '是否設定部門代號', visible: true, options: this.ClassNo_Option }, // 是否設定部門代號
+      { field: 'Input_YN', header: '是否可輸', visible: true, options: this.ClassNo_Option }, // 是否可輸
+
+              
+      { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+      { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+      { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+      { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+      { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+      { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+    ];
+              
+    constructor(
+      private fin15090Service: FIN15090Service,
+      private validationService: ValidationService
+      ) {
+        super(); // 呼叫父類建構子
+    }
+                
+    ngOnInit(): void {
+      this.initializePage('FIN52080', '/FIN/FIN52080cru', this.queryForm, (form) => this.onSubmit(form));
+    }
+                
+    onSubmit(frm: FormGroup) {
+      this.handleSubmit(frm, () => {
+        const body = {
+           ...frm.value,
+        }
+              
+        console.log('對象及對帳維護作業 request', body);
+        
+              // Voucher_Type: string, // 傳票格式
+              // Budget_YN: string, // 是否為預算科目
+              // Org_YN: string, // 是否設定部門代號
+              // rest_value: number, // 折舊攤提年限
+              // rest_value2: number, // 殘值年限
+              // Input_YN: string, // 是否可輸
+
+        this.data = [
+          { 
+            "AccNo": "科目代號",
+            "AccCname": "科目名稱",
+            "AccEname": "科目英文名稱",
+            "AccDC": "0",
+            "Ledger_MD": "0",
+            "ClassNo": '3',
+            "ABAT_YN": "Y",
+            "Voucher_Type": "0",
+            "Budget_YN": "Y",
+            "Org_YN": "Y",
+            "rest_value": 1,
+            "rest_value2":1,
+            "Input_YN": "Y"
+          }
+        ];
+        
+        this.loading = false;
+              
+        // this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
+        //   next: (response) => {
+        //     this.data = response.Data;
+        //     console.log('對象及對帳維護作業 response', response);
+        //     this.totalRecords = response.TotalCount;
+        //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        //     this.loading = false;
+        //   },
+        //   error: () => { this.loading = false; },
+        // });
       });
-    // this.accountingaccountService.getOptions().subscribe((data) => {
-    //   this.accountingaccountOptions = data;
-    // });
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN5000/FIN52080CRU'], extras);
+    // 刪除控制_Grace 9/9: 
+    // GLS6002 GLS3002若有對象別編號不可刪除
+    onDelete(selectedRows: testDorm[]) {
+      // const ids = selectedRows.map(row => row.id);
+      // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+      //   next: () => {
+      //     this.onSubmit(this.queryForm);
+      //     this.selectedRows = [];
+      //   },
+      //   error: () => { this.loading = false; },
+      // });
     }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+                
+    isRowSelectable(row: testDorm) {
+      // return row.CanDel;
+      return true
     }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
 }
