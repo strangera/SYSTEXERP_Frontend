@@ -63,7 +63,7 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [null], // 主鍵，decimal(19,0)
-    SYS_StoreNo: [{ value: '', disabled: true }, [Validators.required]], // 收銀機所屬門市店號（不可新增/修改）
+    SYS_StoreNo: [{ value: '', disabled: true }, [Validators.required]], // 門市店號（不可新增/修改）
     ECR_No: [{ value: '', disabled: true }, [Validators.required]], // 收銀機號（不可新增/修改）
     ECR_Name: [{ value: '', disabled: true }, [Validators.required]], // 收銀機名稱（不可新增/修改）
     ECR_Type: [{ value: '', disabled: true }, [Validators.required]], // 機台類型（不可新增/修改）1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
@@ -76,10 +76,10 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
     ECR_CloseDate: [{ value: null, disabled: true }], // 停用日期
     ECR_Status: [{ value: '', disabled: true }], // 收銀機狀態，A=啟用(預設值)、C=停用、S=強制停用、T=訓練
     ECR_GUI_Type: [{ value: '', disabled: true }, [Validators.required]], // 發票使用類別（不可新增/修改）
-    ECR_GUI_PeriodQty: [ // 機台每期電子發票預設配號數量，預設值為50，設定值必須為50的倍數
+    ECR_GUI_PeriodQty: [ // 發票預設配號量，預設值為50，設定值必須為50的倍數
       50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
     ],
-    ECR_GUI_MinQty: [ // 機台電子發票最小安全存量，預設值為50，設定值必須為50的倍數
+    ECR_GUI_MinQty: [ // 發票安全存量，預設值為50，設定值必須為50的倍數
       50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
     ],
   });
