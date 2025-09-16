@@ -53,4 +53,28 @@ export class TableUtilityService {
     const updatedData = [...data, newRowData];
     return { newRowData, data: updatedData };
   }
+  // 判斷是否應該渲染分組標題
+  shouldRenderGroupHeader(col: EditColumn, index: number, columns: EditColumn[]): boolean {
+    if (!col.groupField) {
+      return false;
+    }
+    const currentGroup = col.groupField;
+    for (let i = 0; i < index; i++) {
+      const prev = columns[i];
+      if (prev.groupField === currentGroup) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // 取得可見欄位總數
+  getVisibleColumnCount(columns: EditColumn[]): number {
+    if (!Array.isArray(columns)) { return 0; }
+    return columns.length;
+  }
+  // 計算分組欄位跨度
+  getColumnSpan(columns: EditColumn[], groupField: string): number {
+    return columns.filter(col => col.groupField === groupField).length;
+  }
 }
