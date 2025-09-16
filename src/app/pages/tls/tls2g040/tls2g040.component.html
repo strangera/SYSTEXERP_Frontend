@@ -14,15 +14,15 @@
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="年月"
             controlName="budget_date" [control]="queryForm.controls.budget_date" [submitted]="submitted"></app-calendar>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="大分類代碼/名稱" controlName="bus_type"
-            [options]="bus_typeOptions | async" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="中分類代碼/名稱" controlName="bus_class"
-            [options]="bus_classOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.bus_class" [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="小分類代碼/名稱" controlName="bus_sclass"
+          <app-input-group class="col-12 md:col-6 lg:col-4" label="大分類代碼/名稱" controlName="bus_type"
+            [control]="queryForm.controls.bus_type" [submitted]="submitted" [options]="bus_typeOptions | async"
+            optionLabel="label" optionValue="value" [columns]="bus_typeColumns" />
+          <app-input-group class="col-12 md:col-6 lg:col-4" label="中分類代碼/名稱" controlName="bus_class"
+            [control]="queryForm.controls.bus_class" [submitted]="submitted" [options]="bus_classOptions || []"
+            optionLabel="Name" templateLabel="label" customLabel="No" [columns]="bus_classColumns" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="小分類代碼/名稱" controlName="bus_sclass"
             [options]="bus_sclassOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.bus_sclass" [submitted]="submitted"></app-multi-select>
+            [control]="queryForm.controls.bus_sclass" [submitted]="submitted"></app-dropdown>
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織代號/名稱" controlName="org_id"
             [options]="org_idOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>

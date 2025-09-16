@@ -171,8 +171,8 @@ export class DropdownApiService {
   }
 
   /** 查詢中分類(商品類別)設定檔(TLTBUSCLASS)資料表 */
-  queryTltBusClass(body: BusClassQuery): Observable<BusClassItem[] | null> {
-    return this.queryDropdownWithParams<BusClassItem, BusClassQuery>('/queryTLTBUSCLASS_DropDownList', body);
+  queryTltBusClass(body?: BusClassQuery): Observable<BusClassItem[] | null> {
+    return this.queryDropdownWithParams<BusClassItem, BusClassQuery | object>('/queryTLTBUSCLASS_DropDownList', body ?? {})
   }
 
   /** 查詢小分類設定檔(TLTBUSSCLASS)資料表 */
