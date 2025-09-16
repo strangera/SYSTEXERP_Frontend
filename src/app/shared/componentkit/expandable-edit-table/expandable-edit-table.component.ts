@@ -1062,12 +1062,37 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   onDetailEditInit(detailData: any, rowData: any, rowIndex: number, detailIndex: number) {
-    console.log('Detail edit:', event);
     this.editingDetail = { rowIndex, detailIndex };
-    this.clonedDetails[detailData.id] = { ...detailData };
+
+    // 不要只備份 detailData，備份整個 rowData
+    const parentKey = rowData[this.dataKey];
+    if (!this.clonedItems[parentKey]) {
+      // 深拷貝整個父項目，包括所有子項目
+      this.clonedItems[parentKey] = JSON.parse(JSON.stringify(rowData));
+    }
+
     this.detailEdit.emit(detailData);
   }
 
+  onDetailEditCancel(detailData: any, rowData: any, rowIndex: number, detailIndex: number) {
+    const parentKey = rowData[this.dataKey];
+    const originalParentData = this.clonedItems[parentKey];
+
+    if (originalParentData) {
+      // 還原整個父項目
+      Object.assign(rowData, originalParentData);
+
+      // 觸發 Next2 的同步邏輯
+      this.detailCancel.emit({
+        detailData,
+        parentData: rowData,
+        shouldRefreshDisplay: true
+      });
+    }
+
+    this.editingDetail = null;
+    delete this.clonedItems[parentKey];
+  }
   onDetailEditSave(detailData: any, rowData: any) {
     try {
       // 只做通用的驗證框架，不包含具體業務邏輯
@@ -1100,12 +1125,21 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.messageService.warnBubble('儲存失敗，請檢查輸入內容');
     }
   }
+  /**
+ * 清理詳細資料的日期輸入狀態
+ */
+  private cleanupDetailDateInputStates(detailData: any, detailIndex: number): void {
+    const detailKey = detailData[this.dataKey] || detailData.id;
+    const keysToDelete: string[] = [];
 
-  onDetailEditCancel(detailData: any, rowData: any, rowIndex: number, detailIndex: number) {
-    rowData[this.detailKey][detailIndex] = this.clonedDetails[detailData.id];
-    delete this.clonedDetails[detailData.id];
-    this.editingDetail = null;
-    this.detailCancel.emit(detailData);
+    this.userInputValues.forEach((value, key) => {
+      if (key.includes(`${detailKey}_`) && key.includes(`_detail_${detailIndex}`)) {
+        keysToDelete.push(key);
+      }
+    });
+
+    keysToDelete.forEach(key => this.userInputValues.delete(key));
+    console.log(`清理詳細資料 ${detailIndex} 的日期輸入狀態:`, keysToDelete);
   }
 
   onSelectionChange(event: any) {
