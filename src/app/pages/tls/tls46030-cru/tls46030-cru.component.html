@@ -30,7 +30,7 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
+          <app-dropdown
             label="排程狀態"
             controlName="ECR_SchStatus"
             [options]="ECR_SchStatus_Options"
@@ -38,17 +38,17 @@
             optionValue="value"
             [control]="dataForm.controls.ECR_SchStatus"
             [submitted]="submitted"
-          ></app-multi-select>
+          ></app-dropdown>
         </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="設定啟用日期"
-              calendarType="dateMonthOne"
-              [control]="dataForm.controls.ECR_SchDate"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            label="設定啟用日期"
+            calendarType="dateOne"
+            [control]="dataForm.controls.ECR_SchDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -73,8 +73,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="原機台內容"
-            controlName="ECR_FLD_NewVal"
-            [control]="dataForm.controls.ECR_FLD_NewVal"
+            controlName="ECR_FLD_OrgVal"
+            [control]="dataForm.controls.ECR_FLD_OrgVal"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -84,24 +84,24 @@
               *ngSwitchCase="'calendar'"
               label="新機台內容"
               calendarType="dateMonthOne"
-              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [control]="dataForm.controls.ECR_FLD_NewVal"
               [submitted]="submitted"
             ></app-calendar>
             <app-dropdown
               *ngSwitchCase="'dropdown'"
               label="新機台內容"
-              controlName="ECR_FLD_OrgVal"
-              [options]="orgValDropdownOptions"
+              controlName="ECR_FLD_NewVal"
+              [options]="NewValDropdownOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [control]="dataForm.controls.ECR_FLD_NewVal"
               [submitted]="submitted"
             ></app-dropdown>
-              <app-input-text
+            <app-input-text
               *ngSwitchCase="'input'"
               label="新機台內容"
-               controlName="ECR_FLD_OrgVal"
-              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              controlName="ECR_FLD_NewVal"
+              [control]="dataForm.controls.ECR_FLD_NewVal"
               [submitted]="submitted"
             ></app-input-text>
           </ng-container>

@@ -65,7 +65,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   // ------ 欄位定義 ------
   columns7: Column[] = [
     { header: '總計', field: 'group_name', hidden: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html' },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'FLOOR_NO', header: '樓層', visible: true },
     { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, isTotal: true },
@@ -171,12 +171,36 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
           } else {
             this.TXN_Date = '';
           }
+          this.data = res.Data.queryTLS22010_DataList.map((item: any) => {
+            let iconHtml = '';
+            switch (item.Status_Code) {
+              case '#':
+                iconHtml = '<span class="text-red-500 mr-1">#</span>';
+                break;
+              case '@':
+                iconHtml = '<span class="text-red-500 mr-1">@</span>';
+                break;
+              case '!':
+                iconHtml = '<span class="text-red-500 mr-1">!</span>';
+                break;
+            }
+            return {
+              ...item,
+              ECR_No_Display: `${iconHtml}${item.ECR_No}`
+            };
+          });
+
 
           // 保留「表單值」到查詢狀態（initializePage 才能正確還原 Date 型別）
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.queryStateService.setQueryState(this.ProgNo + '_data', res);
           this.loading = false;
           this.footerData = [{ group_name: '總計', ...res.Data.queryTLS22010_Sum }];
+
+          this.data = (res?.Data ?? []).map((item: any) => ({
+            ...item,
+            ECR_No_Display: `${item?.Status_Code ?? ''}${item?.ECR_No ?? ''}`
+          }));
         },
 
         error: (err) => {

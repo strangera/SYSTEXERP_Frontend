@@ -28,8 +28,8 @@
           <app-calendar-range
             class="col-12 md:col-6 lg:col-4"
             label="設定啟用日期"
-            [startControl]="queryForm.controls.ECR_SchDateStart"
-            [endControl]="queryForm.controls.ECR_SchDateEnd"
+            [startControl]="queryForm.controls.ECR_SchDate_Start"
+            [endControl]="queryForm.controls.ECR_SchDate_End"
             calendarType="dateRange"
             [submitted]="submitted"
           ></app-calendar-range>
@@ -62,8 +62,8 @@
           <app-calendar-range
             class="col-12 md:col-6 lg:col-4"
             label="排程作業完成時間"
-            [startControl]="queryForm.controls.ECR_SchFinTimeStart"
-            [endControl]="queryForm.controls.ECR_SchFinTimeEnd"
+            [startControl]="queryForm.controls.ECR_SchFinTime_Start"
+            [endControl]="queryForm.controls.ECR_SchFinTime_End"
             calendarType="dateRange"
             [submitted]="submitted"
           ></app-calendar-range>
