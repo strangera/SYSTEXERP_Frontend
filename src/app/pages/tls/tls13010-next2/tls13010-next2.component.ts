@@ -35,6 +35,29 @@ import { TLS13010Next2ColumnsConfig } from './Services/tls13010-next2-columns.co
 import { TLS13010Next2ValidationService } from './Services/tls13010-next2-validation.service';
 import { TLS13010Next2EventHandlersService } from './Services/tls13010-next2-event-handlers.service';
 
+class ValidationContext {
+  errors: string[] = [];
+  errorItems: Set<any> = new Set();
+
+  addError(message: string, item?: any) {
+    this.errors.push(message);
+    if (item) {
+      this.errorItems.add(item);
+      item._hasValidationError = true;
+    }
+  }
+
+  get isValid(): boolean {
+    return this.errors.length === 0;
+  }
+
+  markAllErrors(): void {
+    this.errorItems.forEach(item => {
+      item._hasValidationError = true;
+    });
+  }
+}
+
 @Component({
   selector: 'app-tls13010-next2',
   templateUrl: './tls13010-next2.component.html',
@@ -42,6 +65,8 @@ import { TLS13010Next2EventHandlersService } from './Services/tls13010-next2-eve
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, ButtonDirective]
 })
+
+
 export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> implements OnInit, OnDestroy {
   @ViewChild('expandedContent') expandedContentTemplate!: TemplateRef<any>;
   //檢視頁面參數
@@ -1463,17 +1488,197 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
   // 導航方法
   onSubmitNext(): void {
-    console.log('🚀 準備提交...');
+    console.log('準備提交...');
 
-    // 不需要複雜的同步，因為所有變更都已即時儲存
+    // 執行驗證
+    const validation = this.validateAllData();
+
+    if (!validation.isValid) {
+      // 標記錯誤並顯示
+      this.handleValidationErrors(validation);
+      return;
+    }
+
+    // 清除錯誤標記並繼續提交
+    this.clearAllErrorMarks();
+
+    // 原有提交邏輯
     if (!this.isSaving) {
       this.executeOriginalSubmitLogic();
     } else {
-      // 如果正在儲存，稍等一下再提交
-      setTimeout(() => {
-        this.executeOriginalSubmitLogic();
-      }, 100);
+      setTimeout(() => this.executeOriginalSubmitLogic(), 100);
     }
+  }
+
+  // 3. 統一驗證方法 - 無需太多參數
+  private validateAllData(): ValidationContext {
+    const ctx = new ValidationContext();
+
+    // 基本檢查
+    if (this.commissionData.length === 0) {
+      ctx.addError('請至少設定一個抽成項目');
+      return ctx;
+    }
+
+    // 對每個項目執行驗證
+    this.commissionData.forEach((item, index) => {
+      this.validateCommissionItem(item, index + 1, ctx);
+    });
+
+    return ctx;
+  }
+
+  // 4. 單一項目驗證 - 只需要一個 context 參數
+  private validateCommissionItem(item: CommissionItem, itemNumber: number, ctx: ValidationContext): void {
+    const prefix = `抽成項目 ${itemNumber}`;
+
+    // 基本欄位驗證
+    if (!item.tlt_id?.trim()) ctx.addError(`${prefix}: 抽成類別不能為空`, item);
+    if (!item.tlt_id_desc?.trim()) ctx.addError(`${prefix}: 抽成類別名稱不能為空`, item);
+    if (typeof item.cag_taxtype === 'undefined') ctx.addError(`${prefix}: 請選擇稅別`, item);
+    if (item.sst_amount < 0) ctx.addError(`${prefix}: 單筆交易金額不能為負數`, item);
+    if (item.sst_rate < 0 || item.sst_rate > 100) ctx.addError(`${prefix}: 特價抽成率必須在0-100%之間`, item);
+
+    // 折扣設定驗證 (包含日期重疊)
+    this.validateDiscountItems(item, prefix, ctx);
+
+    // 年度業績驗證 (包含日期重疊)
+    this.validateAnnualItems(item, prefix, ctx);
+
+    // 層級抽成驗證
+    this.validateLevelItems(item, prefix, ctx);
+  }
+
+  // 5. 具體的驗證方法 - 簡化參數
+  private validateDiscountItems(item: CommissionItem, prefix: string, ctx: ValidationContext): void {
+    const activeItems = item.discountSettingItems?.filter(d => d._status !== 'deleted' && d.selected) || [];
+    if (activeItems.length === 0) return;
+
+    // 個別項目驗證
+    activeItems.forEach((discount, index) => {
+      const itemPrefix = `${prefix} 折扣設定 ${index + 1}`;
+
+      if (!discount.cag_barcode) ctx.addError(`${itemPrefix}: 請選擇折扣別`, discount);
+
+      if ((discount.cag_charge_rate || 0) < 0 || (discount.cag_charge_rate || 0) > 100) {
+        ctx.addError(`${itemPrefix}: 抽成率必須在0-100%之間`, discount);
+      }
+
+      if (!this.isValidDateRange(discount.tlt_bdate, discount.tlt_edate)) {
+        ctx.addError(`${itemPrefix}: 日期範圍無效`, discount);
+      }
+    });
+
+    // 關鍵: 日期重疊驗證
+    const overlapResult = this.validationService.validateDiscountDateOverlap(item.discountSettingItems);
+    if (!overlapResult.isValid) {
+      overlapResult.errors.forEach(error => ctx.addError(`${prefix}: ${error}`));
+      // 標記重疊的項目
+      item.discountSettingItems.forEach(d => {
+        if (d._hasDateOverlapError) ctx.errorItems.add(d);
+      });
+    }
+  }
+
+  private validateAnnualItems(item: CommissionItem, prefix: string, ctx: ValidationContext): void {
+    const activeItems = item.annualPerformanceItems?.filter(a => a._status !== 'deleted') || [];
+    if (activeItems.length === 0) return;
+
+    activeItems.forEach((annual, index) => {
+      const itemPrefix = `${prefix} 年度業績 ${index + 1}`;
+
+      if ((annual.year_amount || 0) <= 0) ctx.addError(`${itemPrefix}: 業績金額必須大於0`, annual);
+      if ((annual.extra_rate || 0) < 0 || (annual.extra_rate || 0) > 100) {
+        ctx.addError(`${itemPrefix}: 額外抽成率必須在0-100%之間`, annual);
+      }
+      if (!this.isValidDateRange(annual.tlt_bdate, annual.tlt_edate)) {
+        ctx.addError(`${itemPrefix}: 日期範圍無效`, annual);
+      }
+    });
+
+    // 年度業績日期重疊驗證
+    const overlapResult = this.validationService.validateAnnualDateRanges(activeItems);
+    if (!overlapResult.isValid) {
+      overlapResult.errors.forEach(error => ctx.addError(`${prefix}: ${error}`));
+      activeItems.forEach(a => {
+        if (a._hasDateOverlapError) ctx.errorItems.add(a);
+      });
+    }
+  }
+
+  private validateLevelItems(item: CommissionItem, prefix: string, ctx: ValidationContext): void {
+    const activeItems = item.discountLevelItems?.filter(l => l._status !== 'deleted' && l.selected) || [];
+    if (activeItems.length === 0) return;
+
+    activeItems.forEach((level, index) => {
+      const itemPrefix = `${prefix} 層級抽成 ${index + 1}`;
+
+      if (!level.cag_barcode) ctx.addError(`${itemPrefix}: 請選擇折扣別`, level);
+
+      const bmount = level.level_bmount || 0;
+      const eamount = level.level_eamount || 0;
+
+      if (bmount < 0 || eamount < 0) ctx.addError(`${itemPrefix}: 金額不能為負數`, level);
+      if (bmount >= eamount) ctx.addError(`${itemPrefix}: 起始金額必須小於結束金額`, level);
+      if ((level.level_charge_rate || 0) < 0 || (level.level_charge_rate || 0) > 100) {
+        ctx.addError(`${itemPrefix}: 抽成率必須在0-100%之間`, level);
+      }
+    });
+  }
+
+  // 6. 錯誤處理方法
+  private handleValidationErrors(validation: ValidationContext): void {
+    // 標記錯誤項目
+    validation.markAllErrors();
+
+    // 更新UI顯示
+    this.commissionData.forEach(item => {
+      this.updateSingleItemDetailDisplay(item);
+    });
+    this.cdr.detectChanges();
+
+    // 顯示錯誤訊息
+    this.showValidationErrors(validation.errors);
+  }
+
+  private showValidationErrors(errors: string[]): void {
+    const maxShow = 5;
+    const showErrors = errors.slice(0, maxShow);
+
+    let message = `發現 ${errors.length} 個錯誤:\n\n`;
+    message += showErrors.join('\n');
+
+    if (errors.length > maxShow) {
+      message += `\n\n...還有 ${errors.length - maxShow} 個錯誤`;
+    }
+
+    message += '\n\n請修正後重新提交';
+    this.notificationService.errorBubble(message);
+  }
+
+  // 7. 輔助方法
+  private isValidDateRange(startDate: any, endDate: any): boolean {
+    if (!startDate || !endDate) return false;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return !isNaN(start.getTime()) && !isNaN(end.getTime()) && start < end;
+  }
+
+  private clearAllErrorMarks(): void {
+    this.commissionData.forEach(item => {
+      this.clearItemErrors(item);
+      item.discountSettingItems?.forEach(d => this.clearItemErrors(d));
+      item.annualPerformanceItems?.forEach(a => this.clearItemErrors(a));
+      item.discountLevelItems?.forEach(l => this.clearItemErrors(l));
+      item.detailItems?.forEach(detail => this.clearItemErrors(detail));
+    });
+    this.cdr.detectChanges();
+  }
+
+  private clearItemErrors(item: any): void {
+    delete item._hasValidationError;
+    delete item._hasError;
+    delete item._hasDateOverlapError;
   }
 
   /**
@@ -1862,6 +2067,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const modifiedParent = this.updateItemStatus(event.parentData);
     this.updateCommissionDataArray(modifiedParent);
   }
+
 
   onBeforeDetailSave(event: { data: any, preventDefault: () => void }): void {
     const { data } = event;

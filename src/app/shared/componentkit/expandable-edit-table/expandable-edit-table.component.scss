@@ -836,3 +836,33 @@
     transform: translate(-50%, -50%);
   }
 }
+
+.error-row {
+  background-color: #ffe6e6 !important; /* 淡紅色背景 */
+
+  &:hover {
+    background-color: #ffcccc !important; /* 懸停時稍深一點的紅色 */
+  }
+
+  &.p-highlight {
+    background-color: #ffaaaa !important; /* 選中時的紅色 */
+  }
+}
+
+// 錯誤邊框樣式
+.error-border {
+  border: 2px solid #dc3545 !important;
+  border-radius: 4px;
+}
+
+// 錯誤文字顏色
+.error-text {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+// 錯誤圖標
+.error-icon {
+  color: #dc3545;
+  margin-left: 5px;
+}

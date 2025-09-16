@@ -1,4 +1,4 @@
-import { AnnualPerformanceItem, CommissionItem } from './../../tls13010/tls13010.model';
+import { AnnualPerformanceItem, CommissionItem, DiscountSettingItem } from './../../tls13010/tls13010.model';
 // tls13010-next2-validation.service.ts
 import { Injectable } from '@angular/core';
 
@@ -456,5 +456,81 @@ export class TLS13010Next2ValidationService {
    */
   private formatDate(date: Date): string {
     return date.toISOString().split('T')[0];
+  }
+
+
+  /**
+ * 驗證折扣設定項目的日期是否重疊（同一折扣別）
+ */
+  validateDiscountDateOverlap(discountItems: DiscountSettingItem[]): ValidationResult {
+    const errors: string[] = [];
+
+    // 過濾出未刪除的項目
+    const activeItems = discountItems.filter(item => item._status !== 'deleted');
+
+    // 按折扣別分組
+    const groupedByDiscount = this.groupDiscountItemsByType(activeItems);
+
+    // 檢查每個折扣別內部是否有日期重疊
+    Object.entries(groupedByDiscount).forEach(([discountType, items]) => {
+      if (items.length <= 1) return;
+
+      // 按起始日期排序
+      const sortedItems = items.sort((a, b) => {
+        const dateA = new Date(a.tlt_bdate || new Date());
+        const dateB = new Date(b.tlt_bdate || new Date());
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      // 檢查相鄰項目是否重疊
+      for (let i = 0; i < sortedItems.length - 1; i++) {
+        const currentItem = sortedItems[i];
+        const nextItem = sortedItems[i + 1];
+
+        const currentStart = new Date(currentItem.tlt_bdate || new Date());
+        const currentEnd = new Date(currentItem.tlt_edate || new Date());
+        const nextStart = new Date(nextItem.tlt_bdate || new Date());
+        const nextEnd = new Date(nextItem.tlt_edate || new Date());
+
+        // 檢查日期有效性
+        if (isNaN(currentStart.getTime()) || isNaN(currentEnd.getTime()) ||
+          isNaN(nextStart.getTime()) || isNaN(nextEnd.getTime())) {
+          errors.push(`${discountType} 存在無效的日期格式`);
+          continue;
+        }
+
+        // 檢查重疊：如果當前項目的終止日期 >= 下一個項目的起始日期，就是重疊
+        if (currentEnd >= nextStart) {
+          errors.push(
+            `${discountType} 日期區間重疊: ` +
+            `項目 ${i + 1} (${this.formatDate(currentStart)} ~ ${this.formatDate(currentEnd)}) ` +
+            `與項目 ${i + 2} (${this.formatDate(nextStart)} ~ ${this.formatDate(nextEnd)})`
+          );
+
+          // 標記錯誤的項目ID
+          currentItem._hasDateOverlapError = true;
+          nextItem._hasDateOverlapError = true;
+        }
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * 按折扣別分組項目
+   */
+  private groupDiscountItemsByType(items: DiscountSettingItem[]): { [discountType: string]: DiscountSettingItem[] } {
+    return items.reduce((groups, item) => {
+      const discountType = item.cag_barcode || '未設定';
+      if (!groups[discountType]) {
+        groups[discountType] = [];
+      }
+      groups[discountType].push(item);
+      return groups;
+    }, {} as { [discountType: string]: DiscountSettingItem[] });
   }
 }

@@ -465,6 +465,9 @@ export interface CommissionItem {
   _status?: 'original' | 'modified' | 'new' | 'deleted';
   mainStartDate?: Date | string;
   mainEndDate?: Date | string;
+
+  _hasError?: boolean;
+  _hasValidationError?: boolean;
 }
 
 export interface DiscountSettingItem {
@@ -478,6 +481,10 @@ export interface DiscountSettingItem {
 
   is_configured: boolean;
   is_enabled: boolean;
+
+  _hasError?: boolean;
+  _hasValidationError?: boolean;
+  _hasDateOverlapError?: boolean;
 }
 
 export interface AnnualPerformanceItem {
@@ -488,6 +495,10 @@ export interface AnnualPerformanceItem {
   year_amount: number;
   extra_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+
+  _hasError?: boolean;
+  _hasValidationError?: boolean;
+  _hasDateOverlapError?: boolean;
 }
 
 export interface DiscountLevelItem {
@@ -501,6 +512,9 @@ export interface DiscountLevelItem {
 
   is_configured: boolean;
   is_enabled: boolean;
+
+  _hasError?: boolean;
+  _hasValidationError?: boolean;
 }
 
 // 條件設定相關介面

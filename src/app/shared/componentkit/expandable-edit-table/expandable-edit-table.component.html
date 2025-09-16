@@ -108,7 +108,10 @@
     >
       <tr
         [pEditableRow]="rowData"
-        [ngClass]="{ 'editing-row': isRowEditing(ri) }"
+        [ngClass]="{
+          'editing-row': isRowEditing(ri),
+          'error-row': hasRowErrors(rowData),
+        }"
       >
         <td style="text-align: center">{{ ri + 1 }}</td>
 
@@ -538,7 +541,7 @@
                 </div>
               </ng-template>
               <ng-template pTemplate="body" let-detailData let-di="rowIndex">
-                <tr>
+                <tr [ngClass]="{ 'error-row': hasDetailErrors(detailData) }">
                   <td style="text-align: center">{{ di + 1 }}</td>
 
                   <td

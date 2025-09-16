@@ -2764,4 +2764,68 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const detailArray = rowData[this.detailKey] || [];
     return detailIndex === detailArray.length - 1;
   }
+
+  //=======錯誤訊息背景顏色==========
+  /**
+ * 檢查行是否有錯誤
+ */
+  hasRowErrors(rowData: any): boolean {
+    // 檢查主要資料是否有錯誤標記
+    if (rowData._hasError || rowData._hasValidationError) {
+      return true;
+    }
+
+    // 檢查詳細項目是否有錯誤
+    if (rowData[this.detailKey]) {
+      return rowData[this.detailKey].some((detail: any) =>
+        detail._hasError || detail._hasValidationError || detail._hasDateOverlapError
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * 檢查詳細項目是否有錯誤
+   */
+  hasDetailErrors(detailData: any): boolean {
+    return !!(detailData._hasError || detailData._hasValidationError || detailData._hasDateOverlapError);
+  }
+
+  /**
+   * 獲取行的錯誤樣式類
+   */
+  getRowErrorClass(rowData: any): string {
+    if (this.hasRowErrors(rowData)) {
+      return 'error-row';
+    }
+    return '';
+  }
+
+  /**
+   * 獲取詳細項目的錯誤樣式類
+   */
+  getDetailErrorClass(detailData: any): string {
+    if (this.hasDetailErrors(detailData)) {
+      return 'error-row';
+    }
+    return '';
+  }
+
+  /**
+   * 清除錯誤狀態
+   */
+  clearRowErrors(rowData: any): void {
+    delete rowData._hasError;
+    delete rowData._hasValidationError;
+    delete rowData._hasDateOverlapError;
+
+    if (rowData[this.detailKey]) {
+      rowData[this.detailKey].forEach((detail: any) => {
+        delete detail._hasError;
+        delete detail._hasValidationError;
+        delete detail._hasDateOverlapError;
+      });
+    }
+  }
 }
