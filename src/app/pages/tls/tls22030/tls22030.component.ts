@@ -57,8 +57,14 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     { field: 'SLE_TxnEndNo', header: '前台清機記錄', visible: true },
     { field: 'SLE_GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'SLE_GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'IsPerDayLoss', header: '當日是否欠落', visible: true },
-    { field: 'IsCrossDayLoss', header: '跨日是否欠落', visible: true },
+    {
+      field: 'IsPerDayLoss', header: '日內欠落', visible: true,
+      format: (val: string) => val === '1' ? 'Y' : '--'
+    },
+    {
+      field: 'IsCrossDayLoss', header: '跨日欠落', visible: true,
+      format: (val: string) => val === '1' ? 'Y' : '--'
+    },
   ];
 
 

@@ -271,10 +271,10 @@ export const columns: Column[] = [
     field: 'ECR_Type', header: '機台類型', visible: true,
     format: (value) => SystemOptionsService.getOptions('ECR_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
   },
-  { field: 'ECR_TLT_No', header: '機台所屬專櫃編號' },
-  { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱' },
-  { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
-  { field: 'ECR_USR_Name', header: '機台所屬收銀員姓名', visible: true },
+  { field: 'ECR_TLT_No', header: '專櫃編號' },
+  { field: 'ECR_TLT_Name', header: '專櫃名稱' },
+  { field: 'ECR_USR_No', header: '收銀員', visible: true },
+  { field: 'ECR_USR_Name', header: '收銀員姓名', visible: true },
   { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDate },
   { field: 'ECR_ExpireDate', header: '到期日期', visible: true, format: formatDate  },
   { field: 'ECR_CloseDate', header: '停用日期', visible: true, format: formatDate  },
@@ -293,9 +293,9 @@ export const columns: Column[] = [
     field: 'ECR_SAL_Type', header: '機台用途別', visible: true,
     format: (value) => SystemOptionsService.getOptions('ECR_SAL_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
   },
-  { field: 'ECR_ComName', header: '收銀機電腦名稱', visible: true },
-  { field: 'ECR_IP', header: '收銀機網路IP', visible: true },
-  { field: 'ECR_SrvIP', header: '收銀機後台主機IP', visible: true },
+  { field: 'ECR_ComName', header: '電腦名稱', visible: true },
+  { field: 'ECR_IP', header: '網路IP', visible: true },
+  { field: 'ECR_SrvIP', header: '後台主機IP', visible: true },
   { field: 'ECR_TmplNo', header: '周邊設定模版編號', visible: true },
   {
     field: 'ECR_SernoType',
