@@ -41,6 +41,10 @@
               optionValue="No" [control]="queryForm.controls.bus_typeList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="組織代碼" controlName="org_idList" [options]="org_idOptions" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="營運狀況" controlName="tlt_openflagList" [options]="tlt_openOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_openflagList"
               [submitted]="submitted"></app-multi-select>
