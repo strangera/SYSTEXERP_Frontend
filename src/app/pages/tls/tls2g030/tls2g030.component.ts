@@ -4,12 +4,9 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { Column, ColumnGroup } from '@shared/componentkit/table-report/table-report.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
@@ -20,14 +17,13 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
   selector: 'app-tls2g030',
   templateUrl: './tls2g030.component.html',
   standalone: true,
-  imports: [MultiSelectComponent, AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MultiSelectComponent, AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
 })
 export class TLS2G030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     budget_yy: [null, [Validators.required]], // 年
     bus_type: [null], // 大分類
     tlt_no: [null], // 專櫃
-    ...createPaginationConfig([{ field: 'contactPerson', order: 1 }]), // 分頁和排序參數
   });
   bus_typeOptions = this.dropdown.queryTltBusType();
   tlt_noOptions = this.dropdown.queryTltTalent();
@@ -120,7 +116,7 @@ export class TLS2G030Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2G030', '/tls/tls2g030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2G030', '/tls/tls2g030cru');
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

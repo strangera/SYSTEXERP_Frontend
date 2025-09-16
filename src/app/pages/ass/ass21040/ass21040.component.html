@@ -15,8 +15,9 @@
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" label="結算" [loading]="loading"></app-button>
           <app-button label="產生結算報表" [loading]="loading" (click)="onGenerateReport(queryForm)"></app-button>
+          <app-button btnType="query" label="結算" [loading]="loading"></app-button>
+          <app-button label="取消結算" [loading]="loading" (click)="onCancelClearing(queryForm)"></app-button>
         </div>
       </form>
     </p-accordionTab>

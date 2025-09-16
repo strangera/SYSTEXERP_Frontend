@@ -24,19 +24,17 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() override label = '';
   @Input() override controlName = '';
   @Input() set options(value: any[] | null) {
-    // 當 options 收到資料時，停止載入
     if (value !== null) {
       this.loading = false;
       this._options = value;
     } else {
-      // 當 options 收到 null 時，表示開始載入
       this.loading = true;
-      this._options = []; // 清空選項，避免顯示舊資料
+      this._options = [];
     }
   };
   get options(): any[] { return this._options; }
   @Input() optionLabel = ''; // 資料的 Label
-  @Input() optionValue = ''; // 資料的 Value
+  @Input() optionValue: string | undefined = ''; // 資料的 Value
   @Input() control = new FormControl;
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() loading = false;

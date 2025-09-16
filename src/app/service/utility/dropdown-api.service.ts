@@ -147,8 +147,8 @@ export class DropdownApiService {
   }
 
   /** 查詢專櫃大分類(業種)設定檔(TLTBUSTYPE)資料表 */
-  queryTltBusType(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryTLTBUSTYPE_DropDownList');
+  queryTltBusType(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTBUSTYPE_DropDownList', 'No', 'Name');
   }
 
   /** 查詢館別代碼(SYS3800)資料表下拉選單 */
@@ -171,8 +171,8 @@ export class DropdownApiService {
   }
 
   /** 查詢中分類(商品類別)設定檔(TLTBUSCLASS)資料表 */
-  queryTltBusClass(body: BusClassQuery): Observable<BusClassItem[] | null> {
-    return this.queryDropdownWithParams<BusClassItem, BusClassQuery>('/queryTLTBUSCLASS_DropDownList', body);
+  queryTltBusClass(body?: BusClassQuery): Observable<BusClassItem[] | null> {
+    return this.queryDropdownWithParams<BusClassItem, BusClassQuery | object>('/queryTLTBUSCLASS_DropDownList', body ?? {})
   }
 
   /** 查詢小分類設定檔(TLTBUSSCLASS)資料表 */
