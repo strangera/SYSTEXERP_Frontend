@@ -15,6 +15,7 @@ import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableRowUnSelectEvent } from 'primeng/table';
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-tls21030-cru',
@@ -37,7 +38,7 @@ import { InputTextareaComponent } from "@shared/componentkit/input-textarea/inpu
 export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     money_type: [null, Validators.required],       // 結帳方式
-    term_no: [1, Validators.required],       // 帳次
+    term_no: [{ value: 1, disabled: true }, Validators.required],       // 帳次
     rece_yn: ['Y', Validators.required],        // 是否使用業主發票
     bill_remark1: [''],           // 說明1
     bill_remark2: [''],           // 說明2
@@ -45,11 +46,7 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  settlementMethodOptions = [
-    { value: '10', label: '十日結' },
-    { value: '15', label: '半月結' },
-    { value: '30', label: '月結' },
-  ];
+  settlementMethodOptions = getSYS1000Options('money_type');
   accountingPeriodOptions = [
     { value: 1, label: '1' },
     { value: 2, label: '2' },
@@ -73,6 +70,36 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
       this.dataForm.get('rece_yn')?.disable();
       this.onQuery(this.dataForm);
     }
+    this.dataForm.get('money_type')?.valueChanges.subscribe(value => {
+      if (!value) {
+        this.dataForm.get('term_no')?.setValue(1);
+        this.dataForm.get('term_no')?.disable();
+        return;
+      }
+      this.dataForm.get('term_no')?.enable();
+      switch (value) {
+        case '10': // 十日結
+          this.accountingPeriodOptions = [
+            { value: 1, label: '1' },
+            { value: 2, label: '2' },
+            { value: 3, label: '3' },
+          ]
+          break;
+        case '15': // 半月節
+          this.accountingPeriodOptions = [
+            { value: 1, label: '1' },
+            { value: 2, label: '2' },
+          ]
+          break;
+        case '30': // 年結
+          this.accountingPeriodOptions = [
+            { value: 1, label: '1' },
+          ]
+          break;
+        default:
+          this.accountingPeriodOptions = []
+      }
+    });
   }
   onUnSelect(event: TableRowUnSelectEvent) {
     this.selectedRows = this.selectedRows.filter(x => x.talent_id.toString() !== event.data.talent_id.toString());
@@ -103,10 +130,6 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
       if (remark1 === '' && remark2 === '' && remark3 === '') {
         this.loading = false;
         return this.messageService.errorBubble('請至少輸入一個說明');
-      }
-      if (this.isFormCreateable && this.selectedRows.length === 0) {
-        this.loading = false;
-        return this.messageService.errorBubble('請至少選擇一個專櫃');
       }
       const body = {
         ...frm.getRawValue(),
