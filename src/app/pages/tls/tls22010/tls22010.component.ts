@@ -68,7 +68,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { header: '總計', field: 'group_name', hidden: true },
     { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html' },
     { field: 'AREA_NO', header: '區域', visible: true },
-    { field: 'FLOOR_NO', header: '樓層', visible: true },
+    { field: 'FLOOR_Name', header: '樓層', visible: true },
     { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, isTotal: true },
     { field: 'sad_preorder_Amt', header: '預購金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'sad_settle_Amt', header: '預購結帳 (C2)', visible: true, format: formatAmount, isTotal: true },
@@ -132,9 +132,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       // }
       // 還原資料
       const res = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
-      if (res.length > 0) {
-        this.processResponseData(res);
-      }
+      this.processResponseData(res);
     }
   }
 

@@ -46,12 +46,29 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     { label: '取消', value: 'C' },  // 取消
     { label: '執行完畢', value: 'F' },  // 執行完畢
   ];
+  // 狀態代碼對照表
+  statusMap: Record<string, string> = {
+    A: '啟用',
+    C: '取消',
+    F: '執行完畢'
+  };
   columns: Column[] = [
     { field: 'ECR_SchNo', header: '排程編號' },
     { field: 'ECR_SchDate', header: '設定啟用日期', format: formatDate },
-    { field: 'ECR_SchStatus', header: '排程狀態' },
+    {
+      field: 'ECR_SchStatus',
+      header: '排程狀態',
+      format: (value: string) => this.statusMap[value] || value
+    },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'ECR_FLD_ID', header: '異動類型' },
+    {
+      field: 'ECR_FLD_ID',
+      header: '異動類型',
+      format: (value: string) => {
+        const option = this.ECR_FLD_IDOptions.find(opt => opt.value === value);
+        return option ? option.label : value;
+      }
+    },
     { field: 'ECR_FLD_NewVal', header: '新機台內容' },
     { field: 'ECR_FLD_OrgVal', header: '原機台內容' },
     { field: 'ECR_SchFinTime', header: '異動作業完成時間', format: formatDate },
