@@ -33,7 +33,7 @@
               optionValue="No" [control]="queryForm.controls.ClassNo" [submitted]="submitted"></app-multi-select>  
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否為沖帳代號" controlName="ABAT_YN" [options]="ABAT_YN_Option" optionLabel="Name"
+            <app-multi-select label="是否為沖帳代號" controlName="ABAT_YN" [options]="whether_Option" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.ABAT_YN" [submitted]="submitted"></app-multi-select>  
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -41,11 +41,11 @@
               optionValue="No" [control]="queryForm.controls.Voucher_Type" [submitted]="submitted"></app-multi-select>  
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否為預算科目" controlName="Budget_YN" [options]="ClassNo_Option" optionLabel="Name"
+            <app-multi-select label="是否為預算科目" controlName="Budget_YN" [options]="whether_Option" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.Budget_YN" [submitted]="submitted"></app-multi-select>  
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否設定部門代號" controlName="Org_YN" [options]="ClassNo_Option" optionLabel="Name"
+            <app-multi-select label="是否設定部門代號" controlName="Org_YN" [options]="whether_Option" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.Org_YN" [submitted]="submitted"></app-multi-select>  
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -57,7 +57,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否可輸" controlName="Input_YN" [options]="ClassNo_Option" optionLabel="Name"
+            <app-multi-select label="是否可輸" controlName="Input_YN" [options]="whether_Option" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.Input_YN" [submitted]="submitted"></app-multi-select>  
           </div>
         </div>

@@ -1,24 +1,43 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MargintypeService } from '../../../service/basic/margintype.service';
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+
+export interface testDorm {
+  AccNo: string, // 科目代號
+  AccCname: string, // 科目名稱
+  AccEname: string, // 科目英文名稱
+  AccDC: string, // 借/貸
+  Ledger_MD: string, // 統制/明細
+  ClassNo: string, // 三碼代號
+  ABAT_YN: string, // 是否為沖帳代號
+  Voucher_Type: string, // 傳票格式
+  Budget_YN: string, // 是否為預算科目
+  Org_YN: string, // 是否設定部門代號
+  rest_value: number, // 折舊攤提年限
+  rest_value2: number, // 殘值年限
+  Input_YN: string, // 是否可輸
+
+  //---可能也會需要下面這些---
+  CRT_Date?: Date,
+  CRT_USR_No?: string,
+  CRT_USR_Name?: string,
+  UPD_Date?: Date,
+  UPD_USR_No?: string,
+  UPD_USR_Name?: string,
+}
 
 @Component({
     selector: 'app-fin52080-cru',
@@ -26,370 +45,86 @@ import { NgIf } from '@angular/common';
     styleUrl: './fin52080-cru.component.scss',
     standalone: true,
     imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-    ],
+      MenubarComponent,
+      ButtonComponent,
+      PanelModule,
+      FormsModule,
+      ReactiveFormsModule,
+      InputTextComponent,
+      DropdownComponent,
+      DialogComponent,
+      NgIf, 
+      TranslateModule,
+      TableComponent
+    ]
 })
-export class FIN52080CRUComponent
-  extends BasicCrupageComponent
-  implements OnInit {
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '150014';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.margintypeService.getOptions().subscribe((data) => {
-      this.margintypeOptions = data;
-    });
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      remark: [], // Input Text
-      startdate: [],
-      enddate: [],
-      SMarginserialnumber: [],
-      EMarginserialnumber: [],
-      vendorCode: [],
-      Flippingstate: [1, Validators.required],
-      Checknumber: [],
-      margintype: [],
-      borrowloan: [],
-      type: [],
-      Accountcode: [],
-      vendorCodeOptions: [],
-      name: [],
-      organizationCodeOptions: [],
-      unifiedNumberOptions: [],
-      categoryCodeOptions: [],
-    });
-  }
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
+export class FIN52080CRUComponent extends BasicCruPageComponent<testDorm> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    systemYear: [], // 系統年結年度
-    accountingStartMonth: [], // 系統開帳年月
-    accountingEndMonth: [], // 系統關帳年月
-    defaultVoucherDate: [], // 傳票日期預設
-    defaultOrganization: [, Validators.required], // 預設組織
-    accumulatedProfitLossAccount: [], // 累積盈虧科目
-    currentProfitLossAccount: [], // 本期損益科目
-    cashAccount: [], // 現金科目
-    accountsReceivableAccount: [], // 應收帳款科目
-    accountsPayableAccount: [], // 應付帳款科目
-    inputTaxAccount: [], // 進項稅額科目
-    outputTaxAccount: [], // 銷項稅額科目
-    postAndTelecomFeeAccount: [], // 郵電費科目
-    discountRate: [], // 貼現日利率
-    discountFeeRevenueAccount: [], // 貼現手續費收入科目
-    discountOutputTaxAccount: [], // 貼現銷項稅額科目
-    startdate: [], // 貼現銷項稅額科目起始日
-    enddate: [], // 貼現銷項稅額科目結束日
-    bankTransferFeeAccount: [], // 銀行匯款手續費科目
-    advanceExpenseAccount: [], // 預支費用科目
-    billTransferCondition: [], // 應付票據是否需領用才拋轉傳票
-    typecode: [],
-    typename: [],
-    Subpoenatype: [],
-    usagec: [],
-    name: [],
-    threecodecategoryEname: [],
-    threecodecategoryname: [],
-    threecodecategorycode: [],
-    categoryCodeOptions: [],
-    accountcategoryEname: [],
-    accountcategoryname: [],
-    accountcategorycode: [],
-    mediumcategorycode: [],
-    borrowloan: [],
-    detail: [],
-    offsetcode: [],
-    Subpoenaformatl: [],
-    Budgetaccount: [],
-    Departmentcode: [],
-    input: [],
-    Residualvalueyears: [],
-    Depreciation: [],
-    Accumulateddepreciation: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
+    //會計科目代號維護
+    AccNo: ['', [Validators.required, Validators.maxLength(8)]], //  科目代號
+    AccCname: ['', [Validators.required, Validators.maxLength(40)]], // 科目名稱
+    AccEname: ['', [Validators.maxLength(50) ]], // 科目英文名稱 (非必填)
+    AccDC: ['',[Validators.required, Validators.maxLength(1)]], //  借/貸  //借:0/貸:1
+    Ledger_MD: ['',[Validators.required, Validators.maxLength(1)]], //  統制/明細  //統制:0/明細:1
+    ClassNo: ['',[Validators.required, Validators.maxLength(3)]], //  三碼代號 // 自動帶入科目編號前三碼
+    ABAT_YN: ['N',[Validators.maxLength(1)]], //  是否為沖帳代號 Y/N
+    Voucher_Type: ['',[Validators.required, Validators.maxLength(1)]], //  傳票格式 // 下方下拉
+    Budget_YN: ['N',[Validators.required, Validators.maxLength(1)]], //  是否為預算科目 Y/N
+    Org_YN: ['N',[Validators.required, Validators.maxLength(1)]], //  是否設定部門代號 Y/N
+    rest_value: [null, [ Validators.maxLength(10),this.validationService.numberValidator]], //  折舊攤提年限 (不用新增/編輯這個)
+    rest_value2: [null, [ Validators.maxLength(10),this.validationService.numberValidator]], //  殘值年限 (不用新增/編輯這個)
+    Input_YN: ['N',[Validators.required, Validators.maxLength(1)]], //  是否可輸
   });
-  // Dropdown options
-  Accumulateddepreciation: any[] = [
-    { value: 1, label: '110101' },
-    { value: 2, label: '110102' },
-    { value: 3, label: '110103' },
-    { value: 4, label: '110111' },
-    { value: 5, label: '110112' },
-    { value: 6, label: '110199' },
-    { value: 7, label: '110200' },
-    { value: 8, label: '110201' },
-    { value: 9, label: '110210' },
-    { value: 10, label: '110220' },
-  ];
-  Depreciation: any[] = [
-    { value: 1, label: '110101' },
-    { value: 2, label: '110102' },
-    { value: 3, label: '110103' },
-    { value: 4, label: '110111' },
-    { value: 5, label: '110112' },
-    { value: 6, label: '110199' },
-    { value: 7, label: '110200' },
-    { value: 8, label: '110201' },
-    { value: 9, label: '110210' },
-    { value: 10, label: '110220' },
-  ];
-  departmentOptions: any[] = [];
-  ifOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  detail: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-  Subpoenaformatl: any[] = [
-    { value: 1, label: '無特定' },
-    { value: 2, label: '應付票據' },
-    { value: 3, label: '應收票據' },
-  ];
-  threecodecategorycodeOptions: any[] = [
-    { value: 110, label: '現金及約當現金' },
-    { value: 111, label: '金融資產' },
-    { value: 112, label: '應收票據' },
-    { value: 113, label: '應收票據-關係人' },
-    { value: 114, label: '應收帳款' },
-    { value: 115, label: '應收帳款-關係人' },
-    { value: 116, label: '其他應收款' },
-    { value: 117, label: '其他應收款-關係人' },
-    { value: 118, label: '應收保證票' },
-    { value: 120, label: '存貨' },
-  ];
-  borrowloanOptions: any[] = [
-    { value: 1, label: '借' },
-    { value: 2, label: '貸' },
-  ];
 
-  accountingaccountOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
+  ClassNo_Option: apiOption[] = [ //中類代碼
+      {No: '1', Name: '下拉1'},
+      {No: '2', Name: '下拉2'},
+      {No: '3', Name: '下拉3'}
+    ]
 
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' },
-  ];
+    AccDC_Option: apiOption[] = [ // 借/貸
+      {No: '0', Name: '借'},
+      {No: '1', Name: '貸'}
+    ]
 
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' },
-  ];
+    Ledger_MD_Option: apiOption[] = [ // 統制/明細
+      {No: '0', Name: '統制'},
+      {No: '1', Name: '明細'}
+    ]
 
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
+    whether_Option: apiOption[] = [ // 是否
+      {No: 'Y', Name: '是'},
+      {No: 'N', Name: '否'}
+    ]
 
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
+    Voucher_Type_Option: apiOption[] = [ // 傳票格式
+      {No: '0', Name: '無特定'},
+      {No: '1', Name: '應付票據'},
+      {No: '2', Name: '應收票據'},
+      {No: '3', Name: '應付帳款'},
 
-  SubpoenastatusOptions: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' },
-  ];
+      {No: '4', Name: '應收帳款'},
+      {No: '5', Name: '進項稅額'},
+      {No: '6', Name: '銷項稅額'},
+      {No: '7', Name: '銀行存款'},
 
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' },
-  ];
+      {No: 'A', Name: '應付費用'},
+      {No: 'B', Name: '代收稅款'},
+      {No: 'C', Name: '固定資產'},
+      {No: 'D', Name: '現金'},
+      {No: 'E', Name: '應收保證票據'}
+    ]
 
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  Accountcode: any[] = [
-    { value: 1, label: '110101' },
-    { value: 2, label: '110102' },
-    { value: 3, label: '110103' },
-    { value: 4, label: '110111' },
-    { value: 5, label: '110112' },
-    { value: 6, label: '110199' },
-    { value: 7, label: '110200' },
-    { value: 8, label: '110201' },
-    { value: 9, label: '110210' },
-    { value: 10, label: '110220' },
-  ];
-  unifiedNumberOptions: any[] = [
-    { value: 1, label: '00000000' },
-    { value: 2, label: '00000000' },
-    { value: 3, label: '00000000' },
-    { value: 4, label: '00000000' },
-    { value: 5, label: '00000000' },
-    { value: 6, label: '00000000' },
-    { value: 7, label: '00852492' },
-    { value: 8, label: '01052878' },
-    { value: 9, label: '01508949' },
-  ];
-
-  organizationCodeOptions: any[] = [
-    { value: 1, label: '100000' },
-    { value: 2, label: '100100' },
-    { value: 3, label: '101000' },
-    { value: 4, label: '101100' },
-    { value: 5, label: '101200' },
-    { value: 6, label: '101300' },
-    { value: 7, label: '101400' },
-    { value: 8, label: '101500' },
-    { value: 9, label: '101600' },
-    { value: 10, label: '101700' },
-  ];
-  categoryCodeOptions: any[] = [
-    { value: 1, label: '1' },
-    { value: 2, label: '2' },
-    { value: 3, label: '3' },
-    { value: 4, label: '4' },
-    { value: 5, label: '5' },
-    { value: 6, label: '6' },
-    { value: 7, label: '7' },
-    { value: 8, label: '8' },
-    { value: 9, label: '9' },
-  ];
-  margintypeOptions: any[] = [];
-  vendorCodeOptions: any[] = [
-    { value: 1, label: '00000000-1' },
-    { value: 2, label: '00000000-2' },
-    { value: 3, label: '00000000-4' },
-    { value: 4, label: '00000000-5' },
-    { value: 5, label: '00000000-7' },
-    { value: 6, label: '00000000-8' },
-    { value: 7, label: '00852492-1' },
-    { value: 8, label: '01052878-1' },
-    { value: 9, label: '01508949-1' },
-    { value: 10, label: '01515462-1' },
-  ];
-
-  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private margintypeService: MargintypeService,
-    private translate: TranslateService
+    private tls51080Service: Tls51080Service,
+    private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
+  ngOnInit(): void {
+    this.initializePage('FIN52080', this.dataForm);
   }
 
   onSubmit(frm: FormGroup) {
@@ -397,28 +132,30 @@ export class FIN52080CRUComponent
     this.submitted = true;
 
     if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
       this.messageService.unblockUi();
       return;
     }
-
+    
+    // 送出前檢查 大+中+三碼 不可重複
+    const formValue = frm.getRawValue();
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
+          console.log('insert', formValue);
+          // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
+          //   this.messageService.successBubble('新增成功');
+          //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+          //   this.dataForm.reset(); // 重置表單
+          // });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
+          console.log('update', formValue);
+          // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
+          //   // this.messageService.successBubble('更新成功');
+          //   this.onCancel(); // 儲存後，會返回列表
+          // });
         }
         break;
     }
@@ -428,11 +165,10 @@ export class FIN52080CRUComponent
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
-  } //CRU
+  }
 
-  onCancel() {
-    this.router.navigate(['FIN5000/FIN52080']);
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
   }
 }
