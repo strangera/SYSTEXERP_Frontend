@@ -67,9 +67,9 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   selectedItems: IQueryData[] = [];
   columns: Column[] = [
     { field: 'sam_yyymm', header: '結算年月', visible: true },
-    { field: 'money_type', header: '結帳方式', visible: true }, // !!!
-    { field: 'sam_termno', header: '帳次', visible: true },// !!!
-    { field: 'tlt_term_type', header: '抽成方式', visible: true },// !!!
+    { field: 'money_type_name', header: '結帳方式', visible: true },
+    { field: 'sam_termno', header: '帳次', visible: true },
+    { field: 'tlt_term_type_name', header: '抽成方式', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'contract_no', header: '契約編號', visible: true },
     { field: 'contract_subno', header: '版次', visible: true },

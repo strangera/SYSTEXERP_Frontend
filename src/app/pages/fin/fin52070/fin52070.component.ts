@@ -11,15 +11,15 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { FIN15090Service } from '@service/api/fin/fin15090.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { apiOption } from '@shared/models/sys/sysb000.model';
+import { Fin52070Service } from '@service/api/fin/fin52070.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
-export interface testDorm {
-  AccNo: string, // 三碼代號
-  AccCname: string, // 三碼名稱
-  AccEname: string, // 三碼英文名稱
-  ClassNo: string, // 中類代碼
+export interface GLS1005 {
+  ClassNo: string, // 三碼代號
+  ClassCName: string, // 三碼名稱
+  ClassEname: string, // 三碼英文名稱
+  ParentClass: string, // 中類代碼
 
   //---可能也會需要下面這些---
   CRT_Date?: Date,
@@ -28,6 +28,12 @@ export interface testDorm {
   UPD_Date?: Date,
   UPD_USR_No?: string,
   UPD_USR_Name?: string,
+}
+
+// 科目中類GLS1003 格式
+export interface ClassAttr{
+  ClassNo: string, // 大類代碼
+  ClassCName: string, // 大類代碼
 }
 
 @Component({
@@ -50,32 +56,28 @@ export interface testDorm {
   ]
 })
 // FIN52070 科目三碼代號維護
-export class FIN52070Component extends BasicQueryPageComponent<testDorm> implements OnInit {
+export class FIN52070Component extends BasicQueryPageComponent<GLS1005> implements OnInit {
   queryForm = this.formBuilder.group({
     // 科目三碼代號維護
-    AccNo: ['', [Validators.maxLength(3)]], //  三碼代號
-    AccCname: ['', [ Validators.maxLength(24)]], // 三碼名稱
-    AccEname: ['', [Validators.maxLength(50)]], // 三碼英文名稱 (非必填)
-    ClassNo: ['', [Validators.maxLength(1)]], //  中類代碼
+    ClassNo: ['', [Validators.maxLength(14)]], //  三碼代號
+    ClassCName: ['', [ Validators.maxLength(100)]], // 三碼名稱
+    ClassEname: ['', [Validators.maxLength(100)]], // 三碼英文名稱 (非必填)
+    ParentClass: ['', [Validators.maxLength(3)]], //  中類代碼
                   
-    ...createPaginationConfig([{ field: 'AccNo', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'ClassNo', order: 1 }]), // 分頁和排序參數
   });
   
-  ClassNo_Option: apiOption[] = [ //中類代碼
-    {No: '1', Name: '中類1'},
-    {No: '2', Name: '中類2'},
-    {No: '3', Name: '中類3'}
-  ]
+  ClassAttr_Option: ClassAttr[] = []; //中類代碼
             
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-  data: testDorm[] = [];
-  selectedRows: testDorm[] = [];
+  data: GLS1005[] = [];
+  selectedRows: GLS1005[] = [];
                     
   columns: Column[] = [ //先放可視範圍內的
-    { field: 'AccNo', header: '三碼代號', visible: true }, // 三碼代號
-    { field: 'AccCname', header: '三碼名稱', visible: true }, // 三碼名稱
-    { field: 'AccEname', header: '三碼英文名稱', visible: true }, // 三碼英文名稱
-    { field: 'ClassNo', header: '中類代碼', visible: true, options: this.ClassNo_Option }, // 中類代碼
+    { field: 'ClassNo', header: '三碼代號', visible: true, exportFormat: [] }, // 三碼代號
+    { field: 'ClassCName', header: '三碼名稱', visible: true }, // 三碼名稱
+    { field: 'ClassEname', header: '三碼英文名稱', visible: true }, // 三碼英文名稱
+    { field: 'ParentClass', header: '中類代碼', visible: true, options: this.ClassAttr_Option}, // 中類代碼
             
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
     { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
@@ -86,7 +88,7 @@ export class FIN52070Component extends BasicQueryPageComponent<testDorm> impleme
   ];
             
   constructor(
-    private fin15090Service: FIN15090Service,
+    private fin52070Service: Fin52070Service,
     private validationService: ValidationService
     ) {
       super(); // 呼叫父類建構子
@@ -94,6 +96,7 @@ export class FIN52070Component extends BasicQueryPageComponent<testDorm> impleme
               
   ngOnInit(): void {
     this.initializePage('FIN52070', '/FIN/FIN52070cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOption();
   }
               
   onSubmit(frm: FormGroup) {
@@ -102,34 +105,22 @@ export class FIN52070Component extends BasicQueryPageComponent<testDorm> impleme
          ...frm.value,
       }
             
-      console.log('對象及對帳維護作業 request', body);
-      
-      this.data = [
-        { 
-          "AccNo": "三碼代號",
-          "AccCname": "三碼名稱",
-          "AccEname": "三碼英文名稱",
-          "ClassNo": "1",
-        }
-      ];
-      
-      this.loading = false;
-            
-      // this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
-      //   next: (response) => {
-      //     this.data = response.Data;
-      //     console.log('對象及對帳維護作業 response', response);
-      //     this.totalRecords = response.TotalCount;
-      //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     this.loading = false;
-      //   },
-      //   error: () => { this.loading = false; },
-      // });
+      this.fin52070Service.queryFIN52070(body).pipe(untilDestroyed(this)).subscribe({
+        next: (response) => {
+          this.data = response.Data;
+          console.log('科目三碼代號 response', response);
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+        },
+        error: () => { this.loading = false; },
+      });
     });
   }
   // 刪除控制_Grace 9/9: 
   // GLS6002 GLS3002若有對象別編號不可刪除
-  onDelete(selectedRows: testDorm[]) {
+  // 9/9 SA註明: 該作業不可修改/刪除
+  onDelete(selectedRows: GLS1005[]) {
     // const ids = selectedRows.map(row => row.id);
     // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
     //   next: () => {
@@ -140,8 +131,19 @@ export class FIN52070Component extends BasicQueryPageComponent<testDorm> impleme
     // });
   }
               
-  isRowSelectable(row: testDorm) {
+  isRowSelectable(row: GLS1005) {
     // return row.CanDel;
     return true
   }
+
+  //讀取下拉
+  loadOption() {
+    this.fin52070Service.queryParentClassDropdown({}).pipe(untilDestroyed(this)).subscribe({
+      next: (response) => {
+        console.log('中下拉 response', response);
+        this.ClassAttr_Option = response.Data;
+      },
+      error: () => { this.loading = false; },
+    });
+  }  
 }
