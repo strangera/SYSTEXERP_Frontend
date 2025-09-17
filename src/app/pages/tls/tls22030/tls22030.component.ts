@@ -19,6 +19,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { WhetherService } from './../../../service/basic/whether.service';
+import { ButtonModule } from 'primeng/button';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -27,7 +28,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   selector: 'app-tls22030',
   templateUrl: './tls22030.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableComponent, DropdownComponent, TranslateModule],
+  imports: [MenubarComponent, AccordionModule, FormsModule,ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableComponent, DropdownComponent, TranslateModule],
 })
 
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -67,19 +68,19 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
       format: (val: string) => val === '1' ? 'Y' : '--'
     },
   ];
-
-
+  btnLoading = false;
   listZeroDifferenceOptions: any[] = [];
   displayConditionOptions: any[] = [];
   tlt_no?: string;
+
   constructor(
     private ECRNoService: ECRNoService,
     private whetherService: WhetherService,
     private displayService: DisplayService,
     private tls22030Service: Tls22030Service,
     private dropDownListService: DropDownListService,
-    private service: Tls22030Service, // Added service property
-    private http: HttpClient, // Inject HttpClient service
+    private service: Tls22030Service,
+    private http: HttpClient,
   ) {
     super();
   }
@@ -105,8 +106,6 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
           }));
         }
       });
-
-
   }
 
   /** 處理文件上傳事件 */
@@ -119,7 +118,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   }
 
   onExportExcel(): void {
-    const condition = this.queryForm.getRawValue();  // ''保證是純物件
+    const condition = this.queryForm.getRawValue();
 
     const payload = {
       query_condition: {
@@ -147,13 +146,31 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
         a.href = url;
         a.download = `${payload.file_name}.xlsx`;
         a.click();
-      },
-      error: (err) => {
-        console.error('Excel 匯出失敗', err);
       }
     });
   }
 
+  onExportPDF(): void {
+    const condition = this.queryForm.getRawValue();
+
+    // 組 payload：跟 Excel 類似，但只要帶查詢條件
+    const payload = {
+      ...condition,
+      TXN_DateStart: this.toYMD(condition.TXN_DateStart),
+      TXN_DateEnd: this.toYMD(condition.TXN_DateEnd),
+    };
+
+    this.tls22030Service.exportTLS22030PDF(payload).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `TLS22030_${new Date().toISOString().slice(0, 10)}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+    });
+  }
 
   private toYMD(date: Date | string | null): string | null {
     if (!date) return null;
@@ -184,10 +201,6 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
           // 儲存查詢條件
           this.queryStateService.setQueryState(this.ProgNo, payload);
         },
-        error: (err) => {
-          console.error('TLS22030 查詢失敗', err);
-          this.loading = false;
-        }
       });
     });
   }
