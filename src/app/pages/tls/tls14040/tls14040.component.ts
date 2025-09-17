@@ -12,6 +12,7 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -21,7 +22,18 @@ yesterday.setDate(yesterday.getDate() - 1);
   templateUrl: './tls14040.component.html',
   styleUrl: './tls14040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, ButtonComponent, ReportTableGroupComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MultiSelectComponent,
+    InputTextComponent,
+    CalendarRangeQuickComponent,
+    ButtonComponent,
+    ReportTableGroupComponent,
+    TableComponent,
+    TranslateModule]
 })
 
 // 保證票彙總表
@@ -235,7 +247,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     // 大分類下拉
     this.tls14030Service
-      .queryPOS2003_DropDownList({})
+      .queryTLTBUSTYPE_DropDownList({})
       .subscribe((response) => {
         this.bus_typeOption = response.Data.map((item: apiOption) => ({
           No: item.No,
