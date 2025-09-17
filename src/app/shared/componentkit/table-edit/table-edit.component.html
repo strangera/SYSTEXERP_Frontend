@@ -3,18 +3,19 @@
     {{ title }}
   </span>
 </p-divider>
-<p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems" selectionMode="multiple"
-  sortMode="multiple" [dataKey]="dataKey" [rowTrackBy]="trackByRow" [resizableColumns]="true"
-  [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onRowReorder)="onRowReorder($event)"
-  [multiSortMeta]="multiSortMeta" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  (selectionChange)="onSelectionChange($event)" [rowSelectable]="rowSelectableWrapper" [loading]="loading">
+<p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems"
+  [selectionMode]="showCheckBox ? 'multiple' : undefined" sortMode="multiple" [dataKey]="dataKey"
+  [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
+  (onRowReorder)="onRowReorder($event)" [multiSortMeta]="multiSortMeta"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
+  [rowSelectable]="rowSelectableWrapper" [loading]="loading">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
         <p-button *ngIf="showInsert && !disabled" (click)="insert.emit()" pTooltip="新增" tooltipPosition="top" pButton
           icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text" [disabled]="insertDisabled" />
-        <p-button *ngIf="!disabled" (click)="deleteRow(selectedItems)" pTooltip="刪除" tooltipPosition="top" pButton
-          icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
+        <p-button *ngIf="showDelete && !disabled" (click)="deleteRow(selectedItems)" pTooltip="刪除" tooltipPosition="top"
+          pButton icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
           [disabled]="selectedItems?.length <= 0" />
       </div>
       <div class="flex-grow-1 p-2">
@@ -39,7 +40,8 @@
         <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
           class="w-1rem text-center">序號
         </th>
-        <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" rowspan="2" class="w-1rem text-center">
+        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate" rowspan="2"
+          class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
         <ng-container *ngFor="let col of columns; let i = index">
@@ -73,7 +75,8 @@
         <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
         <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
         </th>
-        <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" class="w-1rem text-center">
+        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate"
+          class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
@@ -108,7 +111,7 @@
           rowData._rowValidationError?.isValid === false ? '' : rowIndex + 1 }}
         </span>
       </td>
-      <td *ngIf="!disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
+      <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
           [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" />
       </td>

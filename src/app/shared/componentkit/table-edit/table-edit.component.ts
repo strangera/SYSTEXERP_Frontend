@@ -57,7 +57,6 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() tableRequired = false;                         // table 是否為必填
   tableDataEmpty = false;                                 // table 資料是否為空
   @Input() columns!: EditColumn[];                            // table 欄位配置 (必填)
-  @Input() columns2!: EditColumn[];                            // table 欄位配置 (必填)
   @Input() data: any[] = [];                              // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();       // table 資料改變 (事件)
   @Input() loading = false;                               // 是否顯示 loading
@@ -66,11 +65,13 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   // 欄位群組
   @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   // select 選擇Row相關
+  @Input() showCheckBox = true;                                               // 是否顯示 checkbox
   @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = () => true; // 可選擇(條件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
   // Header(左) 相關
   @Input() showInsert = false;                // 是否顯示 新增按鈕
+  @Input() showDelete = true;                // 是否顯示 刪除按鈕
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
   @Output() insert = new EventEmitter<any>(); // 新增事件
   // Header(右) 相關

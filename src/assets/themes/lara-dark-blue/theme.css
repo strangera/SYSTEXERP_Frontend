@@ -364,7 +364,7 @@
     color: rgba(255, 255, 255, 0.6);
   }
   .pi {
-    font-size: 1rem;
+    font-size: 12px;
   }
   .p-icon {
     width: 1rem;
@@ -622,7 +622,7 @@
     margin-right: 0.5rem;
   }
   .p-datepicker table {
-    font-size: 1rem;
+    font-size: 12px;
     margin: 0.5rem 0;
   }
   .p-datepicker table th {
@@ -2288,7 +2288,7 @@
     background: #60a5fa;
     border: 1px solid #60a5fa;
     padding: 0.75rem 1.25rem;
-    font-size: 1rem;
+    font-size: 12px;
     transition:
       background-color 0.2s,
       color 0.2s,
@@ -5095,7 +5095,7 @@
   .p-dialog .p-dialog-content {
     background: #1f2937;
     color: rgba(255, 255, 255, 0.87);
-    padding: 0 1.5rem 2rem 1.5rem;
+    padding: 0 1.5rem 0 1.5rem;
   }
   .p-dialog .p-dialog-content:last-of-type {
     border-bottom-right-radius: 6px;
@@ -6972,7 +6972,7 @@
     color: #fca5a5;
   }
   .p-inline-message .p-inline-message-icon {
-    font-size: 1rem;
+    font-size: 12px;
     margin-right: 0.5rem;
   }
   .p-inline-message .p-icon {
@@ -6980,7 +6980,7 @@
     height: 1rem;
   }
   .p-inline-message .p-inline-message-text {
-    font-size: 1rem;
+    font-size: 12px;
   }
   .p-inline-message.p-inline-message-icon-only .p-inline-message-icon {
     margin-right: 0;
@@ -7059,7 +7059,7 @@
     color: #fca5a5;
   }
   .p-message .p-message-text {
-    font-size: 1rem;
+    font-size: 12px;
     font-weight: 500;
   }
   .p-message .p-message-icon {
