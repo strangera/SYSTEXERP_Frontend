@@ -396,6 +396,7 @@
                 [rowData]="rowData"
                 [rowIndex]="rowIndex"
                 [alwaysEdit]="false"
+                (dpTableSelected)="rowData[col.field] = $event"
                 (fieldChange)="
                   onFieldChange(
                     rowData,
@@ -419,6 +420,7 @@
                 [rowData]="rowData"
                 [rowIndex]="rowIndex"
                 [alwaysEdit]="alwaysEdit"
+                (dpTableSelected)="rowData[col.field] = $event"
                 (fieldChange)="
                   onFieldChange(
                     rowData,
