@@ -59,21 +59,21 @@ import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-t
     ReportTableGroupComponent,
     DatePipe,
     NgIf,
-   tls2b010tableComponent,
+    tls2b010tableComponent,
 
 
   ],
   providers: [CashShowupByService],
 })
 export class TLS2B010Component extends BasicQueryPageComponent<any> {
-    readonly yesterday: Date = (() => {
+  readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
-   CounterOptions: any[] = []; // 專櫃選項
+  CounterOptions: any[] = []; // 專櫃選項
   data: any[] = [];
   closeDate: string = '查詢中...';
   ECR_TypeOptions = [
@@ -85,7 +85,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   CashShowupByOptions: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
- 
+
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   reimbursementOptions: any[] = [
@@ -179,39 +179,39 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 
     this.printedAt =
       this.datePipe.transform(new Date(), 'yyyy/MM/dd HH:mm') || '';
-      this.refreshCloseDate();
+    this.refreshCloseDate();
   }
 
-updateColumnVisibility(selectedValues: number[]) {
-  const reporttype = this.queryForm.controls.reporttype.value;
+  updateColumnVisibility(selectedValues: number[]) {
+    const reporttype = this.queryForm.controls.reporttype.value;
 
-  // 修正欄位名稱 + 在明細表時固定顯示 PAY_NO
-  const alwaysVisibleFields = [
-    'building_desc',
-    'floor_desc',
-    'ECR_No',
-    'USR_No',
-     ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []), 
-  ];
-  const visibilityMap = new Set(alwaysVisibleFields);
+    // 修正欄位名稱 + 在明細表時固定顯示 PAY_NO
+    const alwaysVisibleFields = [
+      'building_desc',
+      'floor_desc',
+      'ECR_No',
+      'USR_No',
+      ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []),
+    ];
+    const visibilityMap = new Set(alwaysVisibleFields);
 
-  if (selectedValues.includes(1)) {
-    visibilityMap.add('BOOK_PayAmt');
-  }
-  if (selectedValues.includes(2)) {
-    visibilityMap.add('SELF_PayAmt');
-    visibilityMap.add('SOVER_PayAmt');
-  }
-  if (selectedValues.includes(3)) {
-    visibilityMap.add('ACT_PayAmt');
-    visibilityMap.add('OVER_PayAmt');
-  }
+    if (selectedValues.includes(1)) {
+      visibilityMap.add('BOOK_PayAmt');
+    }
+    if (selectedValues.includes(2)) {
+      visibilityMap.add('SELF_PayAmt');
+      visibilityMap.add('SOVER_PayAmt');
+    }
+    if (selectedValues.includes(3)) {
+      visibilityMap.add('ACT_PayAmt');
+      visibilityMap.add('OVER_PayAmt');
+    }
 
-  this.columns = this.columns.map(col => ({
-    ...col,
-    visible: visibilityMap.has(col.field),
-  }));
-}
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibilityMap.has(col.field),
+    }));
+  }
 
 
   onSubmit(form: FormGroup): void {
@@ -272,7 +272,7 @@ updateColumnVisibility(selectedValues: number[]) {
         finalize(() => {
           this.loading = false;
           this.messageService.unblockUi();
-           this.refreshCloseDate(); 
+          this.refreshCloseDate();
         }),
       )
       .subscribe({
@@ -304,18 +304,18 @@ updateColumnVisibility(selectedValues: number[]) {
               // ✅ 支付別溢欠明細表
               const responseData = res.Data || {};
               this.data = responseData.QueryData || [];
-            
+
               this.totalRecords = res.TotalCount || 0;
             }
           } else {
-            
+
           }
         },
         error: () => {
-          
+
         },
       });
-     
+
   }
 
 
@@ -378,14 +378,14 @@ updateColumnVisibility(selectedValues: number[]) {
       style: 'text-right',
       format: this.moneyFormat,
     },
-   {
-  field: 'SOVER_PayAmt',
-  header: '溢欠差異(自我報帳 - 系統帳)',
-  visible: false,
-  style: 'text-right',
-  // 只要是 0（數字或字串）都輸出字串 "0"，其他交給 moneyFormat
-  format: (v: any) => (v === 0 || v === '0') ? '0' : this.moneyFormat(Number(v)),
-},
+    {
+      field: 'SOVER_PayAmt',
+      header: '溢欠差異(自我報帳 - 系統帳)',
+      visible: false,
+      style: 'text-right',
+      // 只要是 0（數字或字串）都輸出字串 "0"，其他交給 moneyFormat
+      format: (v: any) => (v === 0 || v === '0') ? '0' : this.moneyFormat(Number(v)),
+    },
     {
       field: 'ACT_PayAmt',
       header: '實收帳',
@@ -472,29 +472,29 @@ updateColumnVisibility(selectedValues: number[]) {
       visible: false,
     },
   ];
- refreshCloseDate(): void {
-  this.closeDate = '查詢中...';
-  this.tls2B010Service.getCloseDate().subscribe({
-    next: (res) => {
-      // 後端回傳範例：
-      // {
-      //   "Status": "0000",
-      //   "Data": { "CLS_DATE": "2025/08/31" },
-      //   ...
-      // }
-      const d = res?.Data ?? res;
-      const close =
-        d?.CLS_DATE ??            // ✅ 你要的欄位
-        d?.LastCloseDate ??       // 兼容舊欄位
-        d?.CloseDate ??
-        d?.closeDate ??
-        (typeof d === 'string' ? d : null);
+  refreshCloseDate(): void {
+    this.closeDate = '查詢中...';
+    this.tls2B010Service.getCloseDate().subscribe({
+      next: (res) => {
+        // 後端回傳範例：
+        // {
+        //   "Status": "0000",
+        //   "Data": { "CLS_DATE": "2025/08/31" },
+        //   ...
+        // }
+        const d = res?.Data ?? res;
+        const close =
+          d?.CLS_DATE ??            // ✅ 你要的欄位
+          d?.LastCloseDate ??       // 兼容舊欄位
+          d?.CloseDate ??
+          d?.closeDate ??
+          (typeof d === 'string' ? d : null);
 
-      this.closeDate = close || '-';
-    },
-    error: () => (this.closeDate = '-'),
-  });
-}
+        this.closeDate = close || '-';
+      },
+      error: () => (this.closeDate = '-'),
+    });
+  }
 
 
 }
