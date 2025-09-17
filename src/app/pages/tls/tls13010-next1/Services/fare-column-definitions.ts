@@ -484,9 +484,9 @@ export class FareColumnDefinitions {
         field: 'period_nos',
         header: '期數',
         type: 'number',
-        editable: false, // 🎯 設為不可編輯，因為要自動計算
+        editable: false, // 設為不可編輯，因為要自動計算
         width: '70px',
-        // 🎯 關鍵：為期數添加動態預設值函數
+        // 關鍵：為期數添加動態預設值函數
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate && contractInfo?.tlt_contract_edate) {

@@ -79,7 +79,7 @@ export class LocationOptionsService {
   getLocationWithDetailsOptions(searchParams?: any): Observable<any[]> {
     console.log('🔍 LocationService 收到原始參數:', searchParams);
 
-    // 🎯 準備請求體，符合後端期望格式
+    // 準備請求體，符合後端期望格式
     const body: any = this.buildRequestBody(searchParams);
 
     console.log('📤 LocationService 發送請求體:', body);
@@ -93,7 +93,7 @@ export class LocationOptionsService {
           const results = res?.Data?.map((x: any) => ({
             label: x.location_no,           // 下拉選單顯示用
             value: x.location_no,           // 下拉選單選擇值
-            location_no: x.location_no,     // 🎯 確保這個欄位存在
+            location_no: x.location_no,     // 確保這個欄位存在
             tlt_building: x.tlt_building,   // 自動帶入用 - 館別
             tlt_floor: x.tlt_floor,         // 自動帶入用 - 樓層
             area_no: x.area_no,             // 自動帶入用 - 區域
@@ -103,7 +103,7 @@ export class LocationOptionsService {
             area_desc: x.area_desc || ''      // 區域描述
           })) ?? [];
 
-          // 🎯 關鍵：將後端的分頁資訊附加到結果上
+          // 關鍵：將後端的分頁資訊附加到結果上
           (results as any).__paginationInfo = {
             totalCount: res?.TotalCount || 0,
             totalPages: res?.TotalPages || 0,
@@ -129,7 +129,7 @@ export class LocationOptionsService {
       );
   }
 
-  // 🎯 建構符合後端期望的請求體
+  // 建構符合後端期望的請求體
   private buildRequestBody(searchParams?: any): any {
     const body: any = {};
 

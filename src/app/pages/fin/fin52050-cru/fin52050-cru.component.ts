@@ -51,7 +51,7 @@ export interface testDorm {
 export class FIN52050CRUComponent extends BasicCruPageComponent<testDorm> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    ClassAttr: ['', [Validators.required, Validators.maxLength(1)]], //  大類代碼
+    ClassAttr: ['', [Validators.required, Validators.maxLength(1), this.validationService.numberValidator]], //  大類代碼
     ClassAttrCname: ['', [Validators.required,  Validators.maxLength(20)]], // 大類名稱
     ClassAttrEname: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 大類英文名稱 (非必填)
   });

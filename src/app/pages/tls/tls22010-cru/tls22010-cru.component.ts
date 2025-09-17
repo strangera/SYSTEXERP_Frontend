@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import {  FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -8,7 +8,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { AccordionModule } from 'primeng/accordion';
-import { ActivatedRoute } from '@angular/router';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 
@@ -55,7 +54,7 @@ export interface ITxnData {
   ]
 })
 export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     TXN_Date: ['', Validators.required],
     ECR_No: [''],
     floor_no: [''],
@@ -88,10 +87,7 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
 
 
   constructor(
-    private fb: FormBuilder,
-    private translate: TranslateService,
     private apiService: Tls22010Service,
-    private route: ActivatedRoute
   ) {
     super();
   }
@@ -117,9 +113,7 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
     const body = {
       PageSize: raw.pageSize ?? 10,
       PageIndex: raw.pageIndex ?? 1,
-      OrderBy: "",
-      Offset: ((raw.pageIndex ?? 1) - 1) * (raw.pageSize ?? 10),
-      SortBy: [],
+      SortBy: [{ field: 'TXN_No', order: 1 }],
       TXN_Date: toApiDate(this.rowdata?.TXN_DATE),
       ECR_No: this.rowdata?.ECR_No ?? "",
       floor_no: this.rowdata?.FLOOR_NO ?? ""

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AfterContentInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableColumnReorderEvent } from 'primeng/table';
 import { TableUtilityService } from './table-edit-utility.service';
-import { EditColumn, FieldChangeEvent } from './table-edit.model';
+import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoCompleteModule } from 'primeng/autocomplete';
@@ -63,6 +63,8 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() loading = false;                               // 是否顯示 loading
   @Input() disabled = false;                              // 是否禁用 table
   @Input() multiSortMeta: SortMeta[] | null | undefined = undefined; // table 多重排序
+  // 欄位群組
+  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   // select 選擇Row相關
   @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = () => true; // 可選擇(條件)
@@ -409,5 +411,22 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     if (event) {
       this.fileUpload.clear();
     }
+  }
+  // 判斷是否應該渲染分組標題
+  shouldRenderGroupHeader(col: EditColumn, index: number, columns: EditColumn[]): boolean {
+    return this.tableUtilityService.shouldRenderGroupHeader(col, index, columns);
+  }
+  // 計算分組欄位跨度
+  getColumnSpan(columns: EditColumn[], groupField: string): number {
+    return this.tableUtilityService.getColumnSpan(columns, groupField);
+  }
+  // 分組標題
+  getGroupHeader(groupField: string): string {
+    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
+  }
+  // 分組欄位對齊
+  getGroupAlignClass(groupField: string): string {
+    const align = this.columnGroup?.find(g => g.field === groupField)?.align;
+    return align ? 'text-' + align : 'text-center';
   }
 }

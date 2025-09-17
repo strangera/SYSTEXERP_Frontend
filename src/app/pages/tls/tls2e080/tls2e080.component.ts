@@ -16,6 +16,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ButtonModule } from 'primeng/button';
 
 // 2.2.14.8 專櫃對帳單
 @Component({
@@ -33,7 +34,8 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     MultiSelectComponent,
     AsyncPipe,
     InputTextComponent,
-    TableReportComponent
+    TableReportComponent,
+    ButtonModule
   ]
 })
 export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> implements OnInit {
@@ -62,6 +64,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   check_typeListOption = getSYS1000Options('check_type');
   totalRecords = 0;
   data: IQueryData[] = [];
+  selectedItems: IQueryData[] = [];
   columns: Column[] = [
     { field: 'sam_yyymm', header: '結算年月', visible: true },
     { field: 'money_type', header: '結帳方式', visible: true }, // !!!
@@ -72,6 +75,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     { field: 'contract_subno', header: '版次', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
+  btnLoading = false;
   ngOnInit(): void {
     this.initializePage('TLS2E080', 'tls/tls2e080', this.queryForm, (form) => this.onSubmit(form));
   }
@@ -108,5 +112,19 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     })
+  }
+
+  autoReport(status: string) {
+    // this.loading = true;
+    // const body = {
+    //   ...this.historyRequestBody,
+    //   pageIndex: 1,
+    //   pageSize: 30,
+    //   SortBy: [{ field: 'tlt_no', order: 1 }],
+    // }
+    // this.tls2e080Service.queryTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+    //   this.data = res.Data
+    //   this.totalRecords = res.TotalCount || 0;
+    // })
   }
 }

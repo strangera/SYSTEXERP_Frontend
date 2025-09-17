@@ -28,16 +28,16 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
   ECR_FLD_IDOptions: any[] = [];
   queryForm = this.formBuilder.group({
     ECR_SchNo: [''], // 排程編號
-    ECR_SchDate_Start: [''], // 設定啟用日期(起)
-    ECR_SchDate_End: [''], // 設定啟用日期(訖)
-     ECR_SchStatus: [''], // 排程狀態
+    ECR_SchDate_Start: [null], // 設定啟用日期(起)
+    ECR_SchDate_End: [null], // 設定啟用日期(訖)
+    ECR_SchStatus: [''], // 排程狀態
     ECR_No: [''], // 收銀機編號
-    ECR_SchFinTime_Start: [''], // 排程作業完成時間(起)
-    ECR_SchFinTime_End: [''], // 排程作業完成時間(訖)
+    ECR_SchFinTime_Start: [null], // 排程作業完成時間(起)
+    ECR_SchFinTime_End: [null], // 排程作業完成時間(訖)
     ECR_FLD_ID: [''], // 異動類型
     ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
   });
-
+selectedItems: any[] = [];
   data: any[] = [];
   totalRecords = 0;
   ECRNoOptions: any[] = [];
@@ -46,14 +46,31 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     { label: '取消', value: 'C' },  // 取消
     { label: '執行完畢', value: 'F' },  // 執行完畢
   ];
+  // 狀態代碼對照表
+  statusMap: Record<string, string> = {
+    A: '啟用',
+    C: '取消',
+    F: '執行完畢'
+  };
   columns: Column[] = [
     { field: 'ECR_SchNo', header: '排程編號' },
     { field: 'ECR_SchDate', header: '設定啟用日期', format: formatDate },
-    { field: 'ECR_SchStatus', header: '排程狀態' },
+    {
+      field: 'ECR_SchStatus',
+      header: '排程狀態',
+      format: (value: string) => this.statusMap[value] || value
+    },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'ECR_FLD_ID', header: '異動類型' },
-    { field: 'ECR_FLD_OrgVal', header: '新機台內容' },
-    { field: 'ECR_FLD_NewVal', header: '原機台內容' },
+    {
+      field: 'ECR_FLD_ID',
+      header: '異動類型',
+      format: (value: string) => {
+        const option = this.ECR_FLD_IDOptions.find(opt => opt.value === value);
+        return option ? option.label : value;
+      }
+    },
+    { field: 'ECR_FLD_NewVal', header: '新機台內容' },
+    { field: 'ECR_FLD_OrgVal', header: '原機台內容' },
     { field: 'ECR_SchFinTime', header: '異動作業完成時間', format: formatDate },
   ];
 
@@ -88,7 +105,7 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup) {
-    this.tls46030Service.queryTLS46040(frm.value).subscribe({
+    this.tls46030Service.queryTLS46030(frm.value).subscribe({
       next: (res) => {
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount ?? this.data.length;

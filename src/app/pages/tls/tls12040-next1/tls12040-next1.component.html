@@ -2,12 +2,19 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
+    <app-button
+      btnType="create"
+      label="下一步(抽成設定)"
+      (click)="onSubmitNext()"
+    ></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 
   <!-- 載入中指示器 -->
-  <div *ngIf="loading" class="flex justify-content-center align-items-center p-4">
+  <div
+    *ngIf="loading"
+    class="flex justify-content-center align-items-center p-4"
+  >
     <p-progressSpinner></p-progressSpinner>
     <span class="ml-2">載入扣款資料中...</span>
   </div>
@@ -17,8 +24,12 @@
     <!-- 全域控制按鈕 -->
     <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
       <div class="flex align-items-center gap-2">
-        <app-button [label]="getCommonModeText()" icon="pi pi-filter" (click)="toggleCommonMode()"
-          [outlined]="showMode !== 'common'"></app-button>
+        <app-button
+          [label]="getCommonModeText()"
+          icon="pi pi-filter"
+          (click)="toggleCommonMode()"
+          [outlined]="showMode !== 'common'"
+        ></app-button>
         <span class="text-sm text-gray-600 ml-2">
           目前模式: {{ getCurrentDisplayMode() }}
         </span>
@@ -29,12 +40,26 @@
     <div class="scroll-container">
       <!-- 合約基本資訊顯示 - 使用 expandable-edit-table -->
       <p-accordion *ngIf="currentContractData">
-        <p-accordionTab header="專櫃契約書資訊" [selected]="true" class="line-height-3 m-0">
+        <p-accordionTab
+          header="專櫃契約書資訊"
+          [selected]="true"
+          class="line-height-3 m-0"
+        >
           <div class="col-12">
-            <app-expandable-edit-table class="custom-table-red" [data]="contractInfoData"
-              [mainColumns]="contractInfoColumns" [showCheckBox]="false" [showPaginator]="false" [showAddButton]="false"
-              [showBatchDelete]="false" [loading]="loading" [dataKey]="'id'" [readonly]="true" [detailKey]="''"
-              [emptyMessage]="'沒有合約資訊'"></app-expandable-edit-table>
+            <app-expandable-edit-table
+              class="custom-table-red"
+              [data]="contractInfoData"
+              [mainColumns]="contractInfoColumns"
+              [showCheckBox]="false"
+              [showPaginator]="false"
+              [showAddButton]="false"
+              [showBatchDelete]="false"
+              [loading]="loading"
+              [dataKey]="'id'"
+              [readonly]="true"
+              [detailKey]="''"
+              [emptyMessage]="'沒有合約資訊'"
+            ></app-expandable-edit-table>
           </div>
         </p-accordionTab>
       </p-accordion>
@@ -46,7 +71,11 @@
         <p class="text-gray-500 mb-3">
           目前合約（{{ currentApplyNo }}）沒有設定任何扣款項目
         </p>
-        <app-button label="重新載入資料" icon="pi pi-refresh" (click)="reloadData()"></app-button>
+        <app-button
+          label="重新載入資料"
+          icon="pi pi-refresh"
+          (click)="reloadData()"
+        ></app-button>
       </div>
 
       <!-- 動態生成各類型扣款表格 -->
@@ -58,50 +87,98 @@
             </div> -->
 
             <!-- 無資料顯示 -->
-            <div *ngIf="!hasDataForType(capType)" class="text-center p-4 bg-gray-50 border-round">
+            <div
+              *ngIf="!hasDataForType(capType)"
+              class="text-center p-4 bg-gray-50 border-round"
+            >
               <i class="pi pi-inbox text-3xl text-gray-400 mb-2"></i>
             </div>
 
             <!-- 使用 expandable-edit-table 組件 -->
             <div *ngIf="hasDataForType(capType)" class="col-12">
-              <app-expandable-edit-table [data]="fareData[capType]" [mainColumns]="getColumnsForType(capType)"
-                (buttonClick)="onButtonClick($event, capType)" [showCheckBox]="false"
-                (fieldChange)="onFieldChange($event.fieldName, $event.newValue, $event.rowData, capType)"
-                [showPaginator]="false" [showAddButton]="false" [showBatchDelete]="false" [loading]="loading"
-                [dataKey]="'id'" [detailKey]="''" [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'"
-                (save)="onFareTableSave($event, capType)" (edit)="onFareTableEdit($event, capType)"
+              <app-expandable-edit-table
+                [data]="fareData[capType]"
+                [mainColumns]="getColumnsForType(capType)"
+                (buttonClick)="onButtonClick($event, capType)"
+                [showCheckBox]="false"
+                (fieldChange)="
+                  onFieldChange(
+                    $event.fieldName,
+                    $event.newValue,
+                    $event.rowData,
+                    capType
+                  )
+                "
+                [showPaginator]="false"
+                [showAddButton]="false"
+                [showBatchDelete]="false"
+                [loading]="loading"
+                [dataKey]="'id'"
+                [detailKey]="''"
+                [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'"
+                (save)="onFareTableSave($event, capType)"
+                (edit)="onFareTableEdit($event, capType)"
                 (cancel)="onFareTableCancel($event, capType)"
-                (beforeSave)="onBeforeSave($event, capType)"></app-expandable-edit-table>
+                (beforeSave)="onBeforeSave($event, capType)"
+                [forceEditMode]="true"
+                [showActionColumn]="false"
+              ></app-expandable-edit-table>
             </div>
 
             <!-- 底部操作按鈕 -->
-            <div *ngIf="hasDataForType(capType)"
-              class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200">
+            <div
+              *ngIf="hasDataForType(capType)"
+              class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200"
+            >
               <div class="flex gap-2">
-                <app-button label="全部選擇" icon="pi pi-check-square" styleClass="green-button"
-                  (click)="selectAllByType(capType)">
-                </app-button>
+                <app-button
+                  label="全部選擇"
+                  icon="pi pi-check-square"
+                  styleClass="green-button"
+                  (click)="selectAllByType(capType)"
+                ></app-button>
 
-                <app-button label="取消選擇" icon="pi pi-times" styleClass="red-button" [outlined]="true"
-                  (click)="deselectAllByType(capType)">
-                </app-button>
+                <app-button
+                  label="取消選擇"
+                  icon="pi pi-times"
+                  styleClass="red-button"
+                  [outlined]="true"
+                  (click)="deselectAllByType(capType)"
+                ></app-button>
               </div>
             </div>
           </p-accordionTab>
         </p-accordion>
       </div>
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-        <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button
+          btnType="back"
+          label="上一步"
+          (click)="onCancel()"
+        ></app-button>
+        <app-button
+          btnType="create"
+          label="下一步(抽成設定)"
+          (click)="onSubmitNext()"
+        ></app-button>
         <app-button btnType="back" (click)="onClearAndExit()"></app-button>
       </div>
     </div>
   </div>
 </div>
 
-<app-dialog [visible]="showCalculationDialog" (visibleChange)="onCalculationDialogClose($event)"
-  (save)="onCalculationSave()" header="🧮 自動計算確認" width="500px" height="auto" maxWidth="600px" [showFooter]="true">
-
+<app-dialog
+  [visible]="showCalculationDialog"
+  (visibleChange)="onCalculationDialogClose($event)"
+  (save)="onCalculationSave()"
+  header="🧮 自動計算確認"
+  width="500px"
+  height="auto"
+  maxWidth="600px"
+  [showFooter]="true"
+>
   <div class="calculation-content" *ngIf="calculationResult">
     <div class="result-summary text-center mb-4">
       <h4 class="text-primary mb-3">📊 計算結果</h4>
@@ -109,13 +186,19 @@
       <div class="result-cards flex gap-3 justify-content-center">
         <div class="result-card bg-blue-50 p-3 border-round text-center flex-1">
           <div class="text-sm text-gray-600 mb-1">每月金額</div>
-          <div class="text-2xl font-bold text-primary">{{ calculationResult.monthlyAmount }}</div>
+          <div class="text-2xl font-bold text-primary">
+            {{ calculationResult.monthlyAmount }}
+          </div>
           <div class="text-sm text-gray-500">元</div>
         </div>
 
-        <div class="result-card bg-green-50 p-3 border-round text-center flex-1">
+        <div
+          class="result-card bg-green-50 p-3 border-round text-center flex-1"
+        >
           <div class="text-sm text-gray-600 mb-1">首期金額</div>
-          <div class="text-2xl font-bold text-green-600">{{ calculationResult.downPayment }}</div>
+          <div class="text-2xl font-bold text-green-600">
+            {{ calculationResult.downPayment }}
+          </div>
           <div class="text-sm text-gray-500">元</div>
         </div>
       </div>
@@ -123,8 +206,11 @@
 
     <div class="summary-info text-center">
       <div class="text-lg text-gray-600">
-        總金額 <strong>{{ calculationResult.totalAmount }}</strong> 元 分 <strong>{{ calculationResult.periods
-          }}</strong> 期攤還
+        總金額
+        <strong>{{ calculationResult.totalAmount }}</strong>
+        元 分
+        <strong>{{ calculationResult.periods }}</strong>
+        期攤還
       </div>
     </div>
   </div>

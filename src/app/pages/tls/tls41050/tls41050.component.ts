@@ -130,10 +130,10 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
         this.ECR_Type_Option.find((option) => option.value === value)?.label ||
         value,
     },
-    { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
-    { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱', visible: true },
-    { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
-    { field: 'ECR_USR_Name', header: '機台所屬收銀員姓名', visible: true },
+    { field: 'ECR_TLT_No', header: '專櫃編號', visible: true },
+    { field: 'ECR_TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'ECR_USR_No', header: '收銀員', visible: true },
+    { field: 'ECR_USR_Name', header: '收銀員姓名', visible: true },
     { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDate },
     { field: 'ECR_ExpireDate', header: '到期日期', visible: true, format: formatDate },
     { field: 'ECR_CloseDate', header: '停用日期', visible: true, format: formatDate },
@@ -144,13 +144,13 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
         value,
     },
     {
-      field: 'ECR_GUI_Type', header: '發票使用類別', visible: true
+      field: 'ECR_GUI_Type', header: '發票類別', visible: true
       , format: (value: string) =>
         this.ECR_GUI_Type_Option.find((option) => option.value === value)?.label ||
         value,
     },
-    { field: 'ECR_GUI_PeriodQty', header: '每期電子發票預設配號數量', visible: true },
-    { field: 'ECR_GUI_MinQty', header: '電子發票最小安全存量', visible: true },
+    { field: 'ECR_GUI_PeriodQty', header: '發票預設配號數量', visible: true },
+    { field: 'ECR_GUI_MinQty', header: '發票安全存量', visible: true },
   ];
 
   selectedItems: POS1002[] = [];// 多選項目

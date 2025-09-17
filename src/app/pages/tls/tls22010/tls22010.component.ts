@@ -18,6 +18,7 @@ import { ButtonModule } from 'primeng/button';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { NgIf } from '@angular/common';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { finalize } from 'rxjs';
 
 
 
@@ -65,9 +66,9 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   // ------ 欄位定義 ------
   columns7: Column[] = [
     { header: '總計', field: 'group_name', hidden: true },
-    { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html' },
+    { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html',sortField: 'ECR_No' },
     { field: 'AREA_NO', header: '區域', visible: true },
-    { field: 'FLOOR_NO', header: '樓層', visible: true },
+    { field: 'FLOOR_Name', header: '樓層', visible: true },
     { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, isTotal: true },
     { field: 'sad_preorder_Amt', header: '預購金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'sad_settle_Amt', header: '預購結帳 (C2)', visible: true, format: formatAmount, isTotal: true },
@@ -84,7 +85,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'GUI_REFUND', header: '折讓 (J)', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_TotPayAmt', header: '付款金額(H)=(D)+(G)-(C2)-(K)', visible: true, format: formatAmount, isTotal: true },
     { field: 'SLE_SaleAmt', header: 'Z 報表總金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_Mode_P', header: '後台(作廢/補登)', visible: true, isTotal: true },
+    { field: 'TXN_Mode_P', header: '後台(作廢/補登)', visible: true, isTotal: true, format: formatAmount },
     { field: 'Status_Code', header: '狀態', visible: true },
   ];
 
@@ -130,20 +131,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       //   if (savedForm.pageSize) this.queryForm.get('pageSize')?.setValue(savedForm.pageSize);
       // }
       // 還原資料
-      const savedData = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
-      if (savedData.length === 0) {
-        return;
-      }
-      this.data = savedData.Data.queryTLS22010_DataList;
-      // 統一提供 TXN_Date 為 YYYY-MM-DD
-      this.totalRecords = savedData.TotalCount ?? this.data.length;
-
-      if (savedData?.Data?.queryTLS22010_DataList?.length > 0 && savedData.Data.queryTLS22010_DataList[0].TXN_DATE) {
-        this.TXN_Date = savedData.Data.queryTLS22010_DataList[0].TXN_DATE;
-      } else {
-        this.TXN_Date = '';
-      }
-      this.footerData = [{ group_name: '總計', ...savedData.Data.queryTLS22010_Sum }];
+      const res = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
+      this.processResponseData(res);
     }
   }
 
@@ -159,55 +148,44 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       return;
     }
     this.handleSubmit(frm, () => {
-
-      this.tls22010Service.queryTLS22010(frm.value).subscribe({
+      this.tls22010Service.queryTLS22010(frm.value).pipe(finalize(() => this.loading = false)).subscribe({
         next: (res) => {
-          this.data = res.Data.queryTLS22010_DataList;
-          // 統一提供 TXN_Date 為 YYYY-MM-DD
-          this.totalRecords = res?.TotalCount ?? this.data.length;
-
-          if (res?.Data?.queryTLS22010_DataList?.length > 0 && res.Data.queryTLS22010_DataList[0].TXN_DATE) {
-            this.TXN_Date = res.Data.queryTLS22010_DataList[0].TXN_DATE;
-          } else {
-            this.TXN_Date = '';
-          }
-          this.data = res.Data.queryTLS22010_DataList.map((item: any) => {
-            let iconHtml = '';
-            switch (item.Status_Code) {
-              case '#':
-                iconHtml = '<span class="text-red-500 mr-1">#</span>';
-                break;
-              case '@':
-                iconHtml = '<span class="text-red-500 mr-1">@</span>';
-                break;
-              case '!':
-                iconHtml = '<span class="text-red-500 mr-1">!</span>';
-                break;
-            }
-            return {
-              ...item,
-              ECR_No_Display: `${iconHtml}${item.ECR_No}`
-            };
-          });
-
-
+          this.processResponseData(res);
           // 保留「表單值」到查詢狀態（initializePage 才能正確還原 Date 型別）
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.queryStateService.setQueryState(this.ProgNo + '_data', res);
-          this.loading = false;
-          this.footerData = [{ group_name: '總計', ...res.Data.queryTLS22010_Sum }];
-
-          this.data = (res?.Data ?? []).map((item: any) => ({
-            ...item,
-            ECR_No_Display: `${item?.Status_Code ?? ''}${item?.ECR_No ?? ''}`
-          }));
-        },
-
-        error: (err) => {
-          console.error('查詢 TLS22010 失敗:', err);
-          this.loading = false;
         },
       });
     });
+  }
+
+
+  // 處理response data資料
+  private processResponseData(res: any) {
+    if (res?.Data?.queryTLS22010_DataList?.length > 0 && res.Data.queryTLS22010_DataList[0].TXN_DATE) {
+      this.TXN_Date = res.Data.queryTLS22010_DataList[0].TXN_DATE;
+    } else {
+      this.TXN_Date = '';
+    }
+    this.data = res.Data.queryTLS22010_DataList.map((item: any) => {
+      let iconHtml = '';
+      switch (item.Status_Code) {
+        case '#':
+          iconHtml = '<span class="text-red-500 mr-1">#</span>';
+          break;
+        case '@':
+          iconHtml = '<span class="text-red-500 mr-1">@</span>';
+          break;
+        case '!':
+          iconHtml = '<span class="text-red-500 mr-1">!</span>';
+          break;
+      }
+      return {
+        ...item,
+        ECR_No_Display: `${iconHtml}${item.ECR_No}`
+      };
+    });
+    this.footerData = [{ group_name: '總計', ...res.Data.queryTLS22010_Sum }];
+    this.totalRecords = res?.TotalCount ?? this.data.length;
   }
 }

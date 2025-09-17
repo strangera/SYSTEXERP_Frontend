@@ -1,158 +1,151 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { InventoryStatusService } from '../../../service/basic/inventory-status.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column, AddButton } from '../../../shared/componentkit/table/table.model';
+import { TLS53010Data, TLS53010QueryRequest, TLS53010Service } from '../../../service/api/tls/tls53010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls53010',
   templateUrl: './tls53010.component.html',
-  styleUrls: ['./tls53010.component.scss'],
+  styleUrl: './tls53010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    MultiSelectComponent,
+    CalendarRangeComponent,
+    TableComponent,
+    TranslateModule,
+  ]
 })
-export class TLS53010Component {
-
-  ProgNo: string = '250021';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
+export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    inventoryCode: [], // 新增盤點單編號
-    warehouseCode: [null, Validators.required], // 倉別 dropdown
-    brandCode: [null, Validators.required],
-    inventoryDateFrom: [],
-    inventoryDateTo: [],
-    inventoryStatus: [null, Validators.required],
+    PST_No: [''],                                           // 盤點單編號
+    HOS_No: [''],                                           // 倉別代碼/名稱
+    LOGO_No: [''],                                          // 品牌代碼/名稱
+    PST_Date_B: [''],                                       // 盤點基準日期(起)
+    PST_Date_E: [''],                                       // 盤點基準日期(訖)
+    PST_Status: [[]],                                       // 盤點單狀態 (多選)
+    ...createPaginationConfig([{ field: 'ID', order: -1 }]) // 分頁和排序參數
   });
 
-  // Dropdown options
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  inventoryStatusOptions: any[] = [];
+  data: TLS53010Data[] = [];
+  selectedItems: TLS53010Data[] = [];
+  totalRecords = 0;
 
-  // Table data
-  data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
-    // Other data
+  // 下拉選單
+  hosOptions: any[] = [];// 倉別選項
+  logoOptions: any[] = [];// 品牌選項
+  // 盤點單狀態選項 TODO: 待定義
+  pstStatusOptions: any[] = [
+    { value: '0', label: '未完成' },
+    { value: '1', label: '已完成' },
+    { value: '2', label: '已取消' }
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'name', header: 'Name', visible: true },
-    { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
-    // Other columns
+
+  columns: Column[] = [
+    { field: 'ID', header: '序號', visible: false },
+    { field: 'PST_No', header: '盤點單編號', visible: true },
+    {
+      field: 'HOS_No', header: '倉別代碼/名稱', visible: true,
+      format: (v, i, r) => `${r.HOS_No}-${r.HOS_Name}`,
+    },
+    {
+      field: 'LOGO_No', header: '品牌代碼/名稱', visible: true,
+      format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_Name}`,
+    },
+    { field: 'PST_Date', header: '盤點基準日期', visible: true },
+    { field: 'PST_Status', header: '盤點單狀態', visible: true, },
+  ];
+
+  addButton: AddButton[] = [
+    {
+      label: '列印',
+      icon: 'pi pi-print',
+      action: (rowData: TLS53010Data) => { this.onPrint(rowData); },
+    },
+    {
+      label: '匯出',
+      icon: 'pi pi-file-export',
+      action: (rowData: TLS53010Data) => { this.onExport(rowData); },
+    },
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private inventoryStatusService: InventoryStatusService,
-    private authService: AuthService,
-  ) { }
+    private tls53010Service: TLS53010Service,
+    private datePipe: DatePipe,
+    private dropDownListService: DropDownListService
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe(data => this.warehouseOptions = data);
-    this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
-    this.inventoryStatusService.getInventoryStatusOptions().subscribe(data => this.inventoryStatusOptions = data);
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS53010', 'tls/tls53010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS5000/TLS53010CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    const queryRequest: TLS53010QueryRequest = {
+      ...frm.value,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      this.tls53010Service.queryTLS53010(queryRequest)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
+  }
+
+  loadOptions() {
+    // 倉別選項
+    this.dropDownListService.getPOS2034Options()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.hosOptions = response.Data.map(item => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+      });
+
+    // 品牌選項
+    this.dropDownListService.queryPLULOGO_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.logoOptions = response.Data.map(item => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+      });
+  }
+
+  // 列印
+  onPrint(rowData: TLS53010Data) {
+    // TODO: 實作列印功能
+  }
+
+  // 匯出
+  onExport(rowData: TLS53010Data) {
+    // TODO: 實作匯出功能
   }
 }

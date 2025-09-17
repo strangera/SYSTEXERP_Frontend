@@ -54,10 +54,10 @@ export class FIN52070CRUComponent extends BasicCruPageComponent<testDorm> implem
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // 科目三碼代號維護
-    AccNo: ['', [Validators.required, Validators.maxLength(3)]], //  三碼代號
+    AccNo: ['', [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], //  三碼代號
     AccCname: ['', [Validators.required,  Validators.maxLength(24)]], // 三碼名稱
-    AccEname: ['', [Validators.maxLength(50)]], // 三碼英文名稱 (非必填)
-    ClassNo: ['', [Validators.required, Validators.maxLength(1)]], //  中類代碼
+    AccEname: ['', [Validators.maxLength(50), this.validationService.noChineseValidator]], // 三碼英文名稱 (非必填)
+    ClassNo: ['', [Validators.required, Validators.maxLength(1), this.validationService.numberValidator]], //  中類代碼
   });
 
   ClassNo_Option: apiOption[] = [ //中類代碼

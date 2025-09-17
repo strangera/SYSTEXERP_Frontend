@@ -58,9 +58,9 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.closeDate = response.Data.CLS_DATE || '';
-        // cls_date 為 closeDate + 1 天
+        // cls_date 為 closeDate - 1 天
         const nextDate = new Date(this.closeDate);
-        nextDate.setDate(nextDate.getDate() + 1);
+        nextDate.setDate(nextDate.getDate() - 1);
         this.queryForm.patchValue({ onedatedd: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
       });
   }

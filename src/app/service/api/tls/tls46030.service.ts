@@ -11,18 +11,18 @@ export class Tls46030Service {
 
   constructor(private http: HttpClient) {}
 
-  // 查詢 TLS46040
-  queryTLS46040(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS46040`, data);
+  // 查詢 TLS46030
+  queryTLS46030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS46030`, data);
   }
 
-  // 新增 TLS46040
-  insertTLS46040(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/insertTLS46040`, data);
+  // 新增 TLS46030
+  insertTLS46030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS46030`, data);
   }
 
-  // 更新 TLS46040
-  updateTLS46040(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/updateTLS46040`, data);
+  // 更新 TLS46030
+  updateTLS46030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS46030`, data);
   }
 }

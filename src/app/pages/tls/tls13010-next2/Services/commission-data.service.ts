@@ -1,4 +1,4 @@
-// commission-data.service.ts - 現代化版本
+// commission-data.service.ts - 修改版本，適應分離的 API
 import { Injectable } from '@angular/core';
 import { Observable, firstValueFrom, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -11,7 +11,6 @@ import {
   AnnualPerformanceItem,
   DiscountLevelItem,
   WorkflowStep,
-  UnifiedCommissionResponse,
   ChargeSettingApiItem
 } from './../../tls13010/tls13010.model';
 
@@ -19,7 +18,7 @@ import {
 export interface CommissionDataLoadResult {
   success: boolean;
   data: CommissionItem[];
-  source: 'saved' | 'unified_api' | 'new_contract';
+  source: 'saved' | 'charge_api' | 'new_contract';
   warnings?: string[];
   errors?: string[];
   metadata?: {
@@ -40,6 +39,17 @@ export interface CommissionDataLoadOptions {
   discountOptions: any[];
 }
 
+// 新增：單純的抽成設定 API 回應介面
+export interface ChargeApiResponse {
+  Status: string;
+  Data: {
+    TalentId: string;
+    ChargeSettings: ChargeSettingApiItem[];
+    TotalRecords: number;
+  };
+  Message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -55,7 +65,7 @@ export class CommissionDataService {
    * 主要載入方法 - 統一入口
    */
   async loadCommissionData(options: CommissionDataLoadOptions): Promise<CommissionDataLoadResult> {
-    console.log('🔄 CommissionDataService: 開始載入抽成資料', options);
+    console.log('📄 CommissionDataService: 開始載入抽成資料', options);
 
     try {
       // 第一優先：嘗試載入暫存資料
@@ -68,7 +78,7 @@ export class CommissionDataService {
       if (options.isNewContract) {
         return this.loadForNewContract(options);
       } else {
-        return await this.loadFromUnifiedAPI(options);
+        return await this.loadFromChargeAPI(options);
       }
 
     } catch (error) {
@@ -82,7 +92,7 @@ export class CommissionDataService {
    */
   async loadDiscountOptions(): Promise<any[]> {
     try {
-      // 🎯 使用 firstValueFrom 替代 toPromise
+      // 使用 firstValueFrom 替代 toPromise
       const options = await firstValueFrom(
         this.locationOptionsService.getPaperTypeOptions('T102').pipe(
           catchError(error => {
@@ -186,40 +196,35 @@ export class CommissionDataService {
   }
 
   /**
-   * 統一 API 載入 - 移除舊版 API 支援
+   * 修改：使用單純的抽成設定 API
    */
-  private async loadFromUnifiedAPI(options: CommissionDataLoadOptions): Promise<CommissionDataLoadResult> {
+  private async loadFromChargeAPI(options: CommissionDataLoadOptions): Promise<CommissionDataLoadResult> {
     // 檢查是否有抽成類別
     if (!options.currentCommissionType) {
       console.warn('⚠ 無抽成類別，初始化為新合約模式');
       return this.loadForNewContract(options);
     }
 
-    const request = {
-      TalentId: options.talentId,
-      CurrentTltTermType: options.currentCommissionType
-    };
-
-    console.log('🔗 呼叫統一抽成設定 API:', request);
+    console.log('🔗 呼叫單純抽成設定 API:', options.talentId);
 
     try {
-      // 🎯 使用 firstValueFrom 替代 toPromise
+      // 使用 firstValueFrom 替代 toPromise
       const response = await firstValueFrom(
-        this.tls13010Service.queryTLS13010ChargeUnified(request).pipe(
+        this.tls13010Service.queryTLS13010Charge(options.talentId).pipe(
           catchError(error => {
-            console.error('統一 API 呼叫失敗:', error);
+            console.error('抽成設定 API 呼叫失敗:', error);
             throw error;
           })
         )
       );
 
-      return this.processUnifiedAPIResponse(response.Data, options);
+      return this.processChargeAPIResponse(response, options);
     } catch (error) {
-      console.error('❌ 統一 API 載入失敗:', error);
+      console.error('❌ 抽成設定 API 載入失敗:', error);
 
       // 如果 API 失敗，根據錯誤類型決定處理方式
       if (this.isNotFoundError(error)) {
-        console.log('📭 查無資料，初始化為新合約模式');
+        console.log('🔭 查無資料，初始化為新合約模式');
         return this.loadForNewContract(options);
       }
 
@@ -228,48 +233,40 @@ export class CommissionDataService {
   }
 
   /**
-   * 處理統一 API 回應
+   * 新增：處理單純抽成設定 API 回應
    */
-  private processUnifiedAPIResponse(data: UnifiedCommissionResponse, options: CommissionDataLoadOptions): CommissionDataLoadResult {
-    console.log('📄 處理統一 API 回應');
+  private processChargeAPIResponse(response: ChargeApiResponse, options: CommissionDataLoadOptions): CommissionDataLoadResult {
+    console.log('📄 處理抽成設定 API 回應');
 
     const warnings: string[] = [];
 
-    // 處理抽成別變更警告
-    if (data.IsTermTypeChanged && data.Warning) {
-      warnings.push(data.Warning.Message);
-      if (data.Warning.ItemsToBeDeleted?.length > 0) {
-        warnings.push(`將刪除 ${data.Warning.ItemsToBeDeleted.length} 個項目`);
-      }
-    }
-
-    // 處理使用者訊息
-    if (data.UserMessage) {
-      warnings.push(data.UserMessage);
+    // 檢查 API 回應狀態
+    if (response.Status !== '0000') {
+      throw new Error(response.Message || '抽成設定查詢失敗');
     }
 
     // 轉換資料
     let commissionData: CommissionItem[] = [];
-    if (data.ExistingChargeData?.ChargeSettings) {
-      commissionData = this.convertUnifiedAPIData(data.ExistingChargeData, options);
+    if (response.Data?.ChargeSettings) {
+      commissionData = this.convertChargeAPIData(response.Data, options);
     }
 
-    // 儲存完整回應到服務（供其他地方使用）
-    this.contractFlowService.setUnifiedCommissionData(data);
+    // 注意：這裡不再儲存統一回應，因為是單純的抽成設定 API
+    // this.contractFlowService.setUnifiedCommissionData(data); // 移除這行
 
     return {
       success: true,
       data: commissionData,
-      source: 'unified_api',
+      source: 'charge_api',
       warnings,
       metadata: this.generateMetadata(commissionData)
     };
   }
 
   /**
-   * 轉換統一 API 資料格式
+   * 修改：轉換單純抽成設定 API 資料格式
    */
-  private convertUnifiedAPIData(apiData: any, options: CommissionDataLoadOptions): CommissionItem[] {
+  private convertChargeAPIData(apiData: any, options: CommissionDataLoadOptions): CommissionItem[] {
     const result: CommissionItem[] = [];
 
     if (!apiData.ChargeSettings || !Array.isArray(apiData.ChargeSettings)) {
@@ -281,7 +278,7 @@ export class CommissionDataService {
         id: chargeSetting.id || (index + 1),
         tlt_id: chargeSetting.tlt_id || '',
         tlt_id_desc: chargeSetting.tlt_id_desc || `抽成類別${index + 1}`,
-        cag_taxtype: chargeSetting.cag_taxtype === '1' ? 1 : 0,
+        cag_taxtype: chargeSetting.cag_taxtype === '1' ? '1' : '0',
         discountSummary: this.generateDiscountSummary(chargeSetting),
         sst_amount: chargeSetting.sst_amount || 0,
         sst_rate: chargeSetting.sst_rate || 0,
@@ -323,8 +320,8 @@ export class CommissionDataService {
       tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
       cag_charge_rate: detail.cag_charge_rate || 0,
       _status: 'original',
-      is_configured: true,
-      is_enabled: true
+      is_configured: detail.is_configured || true,
+      is_enabled: detail.is_enabled || true
     }));
   }
 
@@ -336,38 +333,40 @@ export class CommissionDataService {
     const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
     const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
 
-    // 🎯 新增：檢查是否為新合約且沒有既有資料
     const isNewContractWithoutData = existingDetails.length === 0;
 
     options.discountOptions?.forEach((option, index) => {
-      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
+      // 修改：使用 filter 而不是 find，處理同一折扣別的多筆資料
+      const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
 
-      if (existingItem) {
-        // 已設定的項目
-        result.push({
-          id: existingItem.id || this.generateTempId(),
-          selected: true,
-          cag_barcode: existingItem.cag_barcode,
-          tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
-          tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
-          cag_charge_rate: existingItem.cag_charge_rate || 0,
-          _status: 'original',
-          is_configured: true,
-          is_enabled: true
+      if (existingItems.length > 0) {
+        // 為每個既有項目創建一筆記錄
+        existingItems.forEach(existingItem => {
+          result.push({
+            id: existingItem.id || this.generateTempId(),
+            selected: true,
+            cag_barcode: existingItem.cag_barcode,
+            tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
+            tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
+            cag_charge_rate: existingItem.cag_charge_rate || 0,
+            _status: 'original',
+            is_configured: existingItem.is_configured || true,
+            is_enabled: existingItem.is_enabled || true
+          });
         });
       } else {
-        // 🎯 關鍵修改：未設定的項目，如果是新合約且是第一個選項（000-正品），預設勾選
+        // 未設定的項目處理邏輯保持不變
         const isFirstOption = index === 0;
         const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
           (option.value === '000' || option.label?.includes('正品'));
 
         result.push({
           id: this.generateTempId(),
-          selected: shouldSelectByDefault, // 🎯 根據條件決定是否預設勾選
+          selected: shouldSelectByDefault,
           cag_barcode: option.value,
           tlt_bdate: contractStartDate,
           tlt_edate: contractEndDate,
-          cag_charge_rate: shouldSelectByDefault ? 0 : 0, // 可以設定預設抽成率
+          cag_charge_rate: shouldSelectByDefault ? 0 : 0,
           _status: shouldSelectByDefault ? 'new' : 'new',
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault
@@ -377,7 +376,6 @@ export class CommissionDataService {
 
     return result;
   }
-
 
   /**
    * 轉換年度業績項目
@@ -394,55 +392,11 @@ export class CommissionDataService {
     }));
   }
 
-  private buildCompleteLevelItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
-    const result: DiscountLevelItem[] = [];
-
-    // 🎯 新增：檢查是否為新合約且沒有既有資料
-    const isNewContractWithoutData = existingDetails.length === 0;
-
-    options.discountOptions?.forEach((option, index) => {
-      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
-
-      if (existingItem) {
-        result.push({
-          id: existingItem.id || this.generateTempId(),
-          selected: true,
-          cag_barcode: existingItem.cag_barcode,
-          level_bmount: existingItem.level_bmount || 0,
-          level_eamount: existingItem.level_eamount || 0,
-          level_charge_rate: existingItem.level_charge_rate || 0,
-          _status: 'original',
-          is_configured: true,
-          is_enabled: true
-        });
-      } else {
-        // 🎯 關鍵修改：對於 level 項目也套用相同邏輯
-        const isFirstOption = index === 0;
-        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
-          (option.value === '000' || option.label?.includes('正品'));
-
-        result.push({
-          id: this.generateTempId(),
-          selected: shouldSelectByDefault, // 🎯 根據條件決定是否預設勾選
-          cag_barcode: option.value,
-          level_bmount: 0,
-          level_eamount: 0,
-          level_charge_rate: shouldSelectByDefault ? 0 : 0, // 可以設定預設抽成率
-          _status: shouldSelectByDefault ? 'new' : 'new',
-          is_configured: shouldSelectByDefault,
-          is_enabled: shouldSelectByDefault
-        });
-      }
-    });
-
-    return result;
-  }
-
   /**
    * 轉換層級抽成項目
    */
   private convertLevelItems(levelDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
-    // 🎯 如果有折扣選項，使用新的建立方法
+    // 如果有折扣選項，使用新的建立方法
     if (options.discountOptions?.length > 0) {
       return this.buildCompleteLevelItems(levelDetails, options);
     } else {
@@ -460,6 +414,54 @@ export class CommissionDataService {
       }));
     }
   }
+
+  private buildCompleteLevelItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
+    const result: DiscountLevelItem[] = [];
+    const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
+    const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
+
+    const isNewContractWithoutData = existingDetails.length === 0;
+
+    options.discountOptions?.forEach((option, index) => {
+      // Use filter to handle multiple existing items for the same cag_barcode
+      const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
+
+      if (existingItems.length > 0) {
+        existingItems.forEach(existingItem => {
+          result.push({
+            id: existingItem.id || this.generateTempId(),
+            selected: true,
+            cag_barcode: existingItem.cag_barcode,
+            level_bmount: existingItem.level_bmount || 0,
+            level_eamount: existingItem.level_eamount || 0,
+            level_charge_rate: existingItem.level_charge_rate || 0,
+            _status: 'original',
+            is_configured: existingItem.is_configured ?? true,
+            is_enabled: existingItem.is_enabled ?? true
+          });
+        });
+      } else {
+        const isFirstOption = index === 0;
+        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
+          (option.value === '000' || option.label?.includes('正品'));
+
+        result.push({
+          id: this.generateTempId(),
+          selected: shouldSelectByDefault,
+          cag_barcode: option.value,
+          level_bmount: 0,
+          level_eamount: 0,
+          level_charge_rate: shouldSelectByDefault ? 0 : 0,
+          _status: shouldSelectByDefault ? 'new' : 'new',
+          is_configured: shouldSelectByDefault,
+          is_enabled: shouldSelectByDefault
+        });
+      }
+    });
+
+    return result;
+  }
+
 
   // ============ 工具方法 ============
 
@@ -530,7 +532,7 @@ export class CommissionDataService {
   }
 
   /**
-   * 🎯 使用 substring 替代 substr (已廢棄)
+   * 使用 substring 替代 substr (已廢棄)
    */
   private generateTempId(): string {
     return 'temp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);

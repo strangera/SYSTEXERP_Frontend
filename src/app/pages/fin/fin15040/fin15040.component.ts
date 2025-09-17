@@ -21,6 +21,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { ValidationService } from '@shared/service/validation.service';
 
 export interface Option {
   label: string;
@@ -48,15 +50,15 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     INV_GUINumber_E: ['', [Validators.maxLength(8)]],           // 發票號碼訖 (string(8))
     INV_YM1_S: [null],                                          // 資料所屬年月起 (date picker)
     INV_YM1_E: [null],                                          // 資料所屬年月訖 (date picker)
-    INV_YM2: [null, [Validators.required]],                     // 申報年月 (必填, date picker)
-    PUR_Uniform: ['', [Validators.maxLength(8)]],               // 廠商編號(統一編號) (string(8))
+    INV_YM2: [null, [Validators.required, this.validationService.evenMonthValidator]],                     // 申報年月 (必填, date picker)
+    PUR_Uniform: ['', [Validators.maxLength(8)]],               // 統一編號 (string(8))
     PUR_TaxType: [null],                                        // 課稅別 (dropdown)
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起 (string(16))
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖 (string(16))
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起 (string(16))
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖 (string(16))
     SAL_Type: [null],                                           // 系統別 (dropdown)
-    Voucher_no: ['', [Validators.maxLength(20)]],               // 傳票傳票建立者 (string(20))
+    Voucher_no: ['', [Validators.maxLength(20)]],               // 傳票建立者 (string(20))
     Asset_Notation: [null],                                     // 資產註記 (dropdown)
     HasUniform: [null],                                         // 是否有統編 (dropdown)
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
@@ -91,27 +93,13 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
 
   // 下拉選項
   invoiceFormatOptions: Option[] = [];   // 發票格式
-  systemTypeOptions: Option[] = [];      // 系統別
+  taxTypeOptions = getSYS1000Options('PUR_TaxType');       // 課稅別
+  systemTypeOptions = getSYS1000Options('T205');           // 系統別
+  assetNotationOptions = getSYS1000Options('AssetType');   // 資產註記
   guiTrackOptions: Option[] = [];        // 字軌
-  taxTypeOptions: Option[] = [
-    { label: '應稅', value: '1' },
-    { label: '零稅率', value: '2' },
-    { label: '免稅', value: '3' },
-    { label: '作廢及空白未使用之統一發票', value: 'D' }
-  ];
-  assetNotationOptions: Option[] = [
-    { label: '固定資產', value: '0' },
-    { label: '土地', value: '1' }
-  ];
   hasUniformOptions: Option[] = [
     { label: '有', value: true },
     { label: '無', value: false }
-  ];
-  discountOptions: Option[] = [
-    { label: '進項可扣抵之進貨及費用', value: '1' },
-    { label: '進項可扣抵之固定資產', value: '2' },
-    { label: '進項不可扣抵之進貨及費用', value: '3' },
-    { label: '進項不可扣抵之固定資產', value: '4' }
   ];
   mergeOptions: Option[] = [
     { label: '分開列印', value: '0' },
@@ -125,7 +113,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   constructor(
     private readonly fin15040Service: FIN15040Service,
     private readonly datePipe: DatePipe,
-    private readonly dropDownListService: DropDownListService
+    private readonly dropDownListService: DropDownListService,
+    private readonly validationService: ValidationService
   ) {
     super();
   }
@@ -204,11 +193,9 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   private loadDropdownOptions(): void {
     // 發票格式
     this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
-      this.invoiceFormatOptions = r.Data.INV_GUITypes.map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }));
-    });
-    // 系統別
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'T207' }).subscribe(r => {
-      this.systemTypeOptions = r.Data.map(item => ({ label: item.Name, value: item.No }));
+      this.invoiceFormatOptions = r.Data.INV_GUITypes
+        .filter(item => item.INV_GUIType >= '31' && item.INV_GUIType <= '38')
+        .map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }))
     });
   }
 

@@ -53,7 +53,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     ECR_No: [null as string | null],
     ECR_No_Start: [null as string | null],
     ECR_No_End: [null as string | null],
-    ...createPaginationConfig([{ field: 'PAY_NAME', order: 1 }])
+    ...createPaginationConfig([{ field: 'PAY_NO', order: 1 }])
   });
 
   footerData: any[] = [];

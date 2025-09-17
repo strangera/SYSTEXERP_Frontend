@@ -33,7 +33,7 @@ import { Observable } from 'rxjs';
 })
 export class TableCaptionComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
-  @Input() dataKey = 'ID';                                                      // table 資料key
+  @Input() dataKey: string | undefined = 'ID';                                                      // table 資料key
   @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   @Input() expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
