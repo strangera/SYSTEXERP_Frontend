@@ -330,69 +330,87 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
         ? this.tls23090Service.queryTLS23090CounterCard(payload)
         : this.tls23090Service.queryTLS23090(payload);
 
-    return call$.pipe(
-      map((res: any) => {
-        if (this.viewMode === 'counter') {
-          // ====== 專櫃卡別分析 ======
-          const items: any[] =
-            Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-            Array.isArray(res?.Data)            ? res.Data :
-            [];
+return call$.pipe(
+  map((res: any) => {
+    if (this.viewMode === 'counter') {
+      // ====== 專櫃卡別分析 ======
+      const items: any[] =
+        Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+        Array.isArray(res?.Data)            ? res.Data :
+        [];
 
-          const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
-            Number(obj?.[brand]?.[field] ?? 0);
+      const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
+        Number(obj?.[brand]?.[field] ?? 0);
 
-          const rows = items.map((r: any) => {
-            const list = r?.CRD_Type_List || {};
-            return {
-              TXN_Date: r?.TXN_Date,
-              ECR_No  : r?.ECR_No,
-              tlt_no  : r?.tlt_no,
-              tlt_name: r?.tlt_name,
+      const rows = items.map((r: any) => {
+        const list = r?.CRD_Type_List || {};
+        return {
+          TXN_Date: r?.TXN_Date,
+          ECR_No  : r?.ECR_No,
+          tlt_no  : r?.tlt_no,
+          tlt_name: r?.tlt_name,
 
-              AE_Count:       pick(list, 'AE', 'Count'),       AE_Amount:       pick(list, 'AE', 'Amount'),
-              DA_Count:       pick(list, 'DA', 'Count'),       DA_Amount:       pick(list, 'DA', 'Amount'),
-              MASTER_Count:   pick(list, 'MASTER', 'Count'),   MASTER_Amount:   pick(list, 'MASTER', 'Amount'),
-              VISA_Count:     pick(list, 'VISA', 'Count'),     VISA_Amount:     pick(list, 'VISA', 'Amount'),
-              JCB_Count:      pick(list, 'JCB', 'Count'),      JCB_Amount:      pick(list, 'JCB', 'Amount'),
-              UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
-              // NCCC_* → 已移除
-              Others_Count:   pick(list, 'Others', 'Count'),   Others_Amount:   pick(list, 'Others', 'Amount'),
-              Total_Count:    pick(list, 'Total', 'Count'),    Total_Amount:    pick(list, 'Total', 'Amount'),
+          AE_Count:       pick(list, 'AE', 'Count'),       AE_Amount:       pick(list, 'AE', 'Amount'),
+          DA_Count:       pick(list, 'DA', 'Count'),       DA_Amount:       pick(list, 'DA', 'Amount'),
+          MASTER_Count:   pick(list, 'MASTER', 'Count'),   MASTER_Amount:   pick(list, 'MASTER', 'Amount'),
+          VISA_Count:     pick(list, 'VISA', 'Count'),     VISA_Amount:     pick(list, 'VISA', 'Amount'),
+          JCB_Count:      pick(list, 'JCB', 'Count'),      JCB_Amount:      pick(list, 'JCB', 'Amount'),
+          UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
+          Others_Count:   pick(list, 'Others', 'Count'),   Others_Amount:   pick(list, 'Others', 'Amount'),
+          Total_Count:    pick(list, 'Total', 'Count'),    Total_Amount:    pick(list, 'Total', 'Amount'),
 
-              _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}`,
-            };
-          });
+          _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}`,
+        };
+      });
 
-          const totalRecords =
-            typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          const externalTotals = this.sumCounterTotals(rows, this.counterTotalFieldMap);
-          return { rows, totalRecords, externalTotals, externalSubtotals: {} };
-        }
+      // ✅ 優先吃 API 總計（支援多種包裝）
+      const totalCarrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? null);
+      const apiTotals = this.pickApiTotals(totalCarrier, Object.values(this.counterTotalFieldMap));
+      const externalTotals = apiTotals ?? this.sumCounterTotals(rows, this.counterTotalFieldMap);
 
-        // ====== 信用卡明細 ======
-        const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
-        const rows = wrappers
-          .flatMap((x: any) => x?.tLS23090_CreditDetails ?? [])
-          .map((row: any, idx: number) => ({
-            ...row,
-            _rowKey: `crt|${row?.TXN_Date ?? ''}|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
-          }));
+      return { rows, totalRecords, externalTotals, externalSubtotals: {} };
+    }
 
-        const totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+    // ====== 信用卡明細 ======
+    const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
 
-        const externalTotals = { TXN_PayAmt: 0, TXN_Point: 0, EDC_InstHeadAmt: 0, EDC_InstEachAmt: 0 };
-        for (const w of wrappers) {
-          externalTotals.TXN_PayAmt      += Number(w?.TotalPayAmt ?? 0);
-          externalTotals.TXN_Point       += Number(w?.TotalPoint ?? 0);
-          externalTotals.EDC_InstHeadAmt += Number(w?.TotalInstHeadAmt ?? 0);
-          externalTotals.EDC_InstEachAmt += Number(w?.TotalInstEachAmt ?? 0);
-        }
+    // ⬇️ 這段是關鍵：容錯抓所有可能的 key
+    const takeDetails = (w: any) =>
+      w?.tLS23090_CreditDetails ??
+      w?.TLS23090_CreditDetails ??
+      w?.CreditDetails ??
+      w?.Details ??
+      [];
 
-        return { rows, totalRecords, externalTotals, externalSubtotals: {} };
-      })
-    );
+    const rows = wrappers
+      .flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : [])
+      .map((row: any, idx: number) => ({
+        ...row,
+        _rowKey: `crt|${row?.TXN_Date ?? ''}|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
+      }));
+
+    const totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+    // ✅ externalTotals 用 API 的欄位名做 key
+    const externalTotals = wrappers.reduce((acc: any, w: any) => {
+      acc.TotalPayAmt      += Number(w?.TotalPayAmt ?? 0);
+      acc.TotalPoint       += Number(w?.TotalPoint ?? 0);
+      acc.TotalInstHeadAmt += Number(w?.TotalInstHeadAmt ?? 0);
+      acc.TotalInstEachAmt += Number(w?.TotalInstEachAmt ?? 0);
+      return acc;
+    }, { TotalPayAmt: 0, TotalPoint: 0, TotalInstHeadAmt: 0, TotalInstEachAmt: 0 });
+
+    return { rows, totalRecords, externalTotals, externalSubtotals: {} };
+  })
+);
+
+
+
+
+
   };
 
   /* ----------------- 查詢 ----------------- */
@@ -443,66 +461,53 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
         ? this.tls23090Service.queryTLS23090CounterCard(payload)
         : this.tls23090Service.queryTLS23090(payload);
 
-      call$.subscribe({
-        next: (res) => {
-          if (this.viewMode === 'counter') {
-            const items: any[] =
-              Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-              Array.isArray(res?.Data)            ? res.Data :
-              [];
+ call$.subscribe({
+  next: (res) => {
+    if (this.viewMode === 'counter') {
+      // ... rows 組裝（照你原本的）
 
-            const pick = (obj: any, brand: string, field: 'Count'|'Amount') =>
-              Number(obj?.[brand]?.[field] ?? 0);
+      this.columns = this.columnsCounter;
+      this.columnGroup = this.columnGroupCounter;
+      this.externalTotalFieldMap = { ...this.counterTotalFieldMap };
 
-            this.data = items.map((r: any) => {
-              const list = r?.CRD_Type_List || {};
-              return {
-                TXN_Date: r?.TXN_Date,
-                ECR_No  : r?.ECR_No,
-                tlt_no  : r?.tlt_no,
-                tlt_name: r?.tlt_name,
+      // ✅ 總計優先吃 API
+      const totalCarrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? null);
+      const apiTotals = this.pickApiTotals(totalCarrier, Object.values(this.counterTotalFieldMap));
+      this.detailTotals = apiTotals ?? this.sumCounterTotals(this.data, this.counterTotalFieldMap);
 
-                AE_Count:       pick(list,'AE','Count'),       AE_Amount:       pick(list,'AE','Amount'),
-                DA_Count:       pick(list,'DA','Count'),       DA_Amount:       pick(list,'DA','Amount'),
-                MASTER_Count:   pick(list,'MASTER','Count'),   MASTER_Amount:   pick(list,'MASTER','Amount'),
-                VISA_Count:     pick(list,'VISA','Count'),     VISA_Amount:     pick(list,'VISA','Amount'),
-                JCB_Count:      pick(list,'JCB','Count'),      JCB_Amount:      pick(list,'JCB','Amount'),
-                UnionPay_Count: pick(list,'UnionPay','Count'), UnionPay_Amount: pick(list,'UnionPay','Amount'),
-                // NCCC_* → 已移除
-                Others_Count:   pick(list,'Others','Count'),   Others_Amount:   pick(list,'Others','Amount'),
-                Total_Count:    pick(list,'Total','Count'),    Total_Amount:    pick(list,'Total','Amount'),
+      this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+    } else {
+      // ====== 信用卡明細 ======
+      const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
 
-                _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}`,
-              };
-            });
+      const takeDetails = (w: any) =>
+        w?.tLS23090_CreditDetails ??
+        w?.TLS23090_CreditDetails ??
+        w?.CreditDetails ??
+        w?.Details ??
+        [];
 
-            this.columns = this.columnsCounter;
-            this.columnGroup = this.columnGroupCounter;
-            this.externalTotalFieldMap = { ...this.counterTotalFieldMap };
-            this.detailTotals = this.sumCounterTotals(this.data, this.counterTotalFieldMap);
-            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-          } else {
-            const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
-            const flat  = wrappers.flatMap((x: any) => x?.tLS23090_CreditDetails ?? []);
-            this.data = flat.map((row: any, idx: number) => ({
-              ...row, _rowKey: `crt|${row?.TXN_Date ?? ''}|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`
-            }));
+      const flat = wrappers.flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : []);
+      this.data = flat.map((row: any, idx: number) => ({
+        ...row, _rowKey: `crt|${row?.TXN_Date ?? ''}|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`
+      }));
 
-            this.columns = this.columnsCredit;
-            this.columnGroup = undefined;
+      this.columns = this.columnsCredit;
+      this.columnGroup = undefined;
+      this.externalTotalFieldMap = { ...this.creditTotalFieldMap };
 
-            const totalsAggByField = { TXN_PayAmt: 0, TXN_Point: 0, EDC_InstHeadAmt: 0, EDC_InstEachAmt: 0 };
-            for (const w of wrappers) {
-              totalsAggByField.TXN_PayAmt      += Number(w?.TotalPayAmt ?? 0);
-              totalsAggByField.TXN_Point       += Number(w?.TotalPoint ?? 0);
-              totalsAggByField.EDC_InstHeadAmt += Number(w?.TotalInstHeadAmt ?? 0);
-              totalsAggByField.EDC_InstEachAmt += Number(w?.TotalInstEachAmt ?? 0);
-            }
-            this.detailTotals = totalsAggByField;
-            this.externalTotalFieldMap = { ...this.creditTotalFieldMap };
-            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-          }
-        },
+      const totals = wrappers.reduce((acc: any, w: any) => {
+        acc.TotalPayAmt      += Number(w?.TotalPayAmt ?? 0);
+        acc.TotalPoint       += Number(w?.TotalPoint ?? 0);
+        acc.TotalInstHeadAmt += Number(w?.TotalInstHeadAmt ?? 0);
+        acc.TotalInstEachAmt += Number(w?.TotalInstEachAmt ?? 0);
+        return acc;
+      }, { TotalPayAmt: 0, TotalPoint: 0, TotalInstHeadAmt: 0, TotalInstEachAmt: 0 });
+
+      this.detailTotals = totals;
+      this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+    }
+  },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
@@ -516,6 +521,24 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       });
     });
   }
+  /** 從 API 回應中撈出總計：支援 source.Totals / source.Summary / 直接平鋪在 source 上 */
+private pickApiTotals(source: any, keys: string[]): Record<string, number> | null {
+  if (!source || typeof source !== 'object') return null;
+  const out: Record<string, number> = {};
+  let found = false;
+  for (const k of keys) {
+    const v =
+      source?.Totals?.[k] ??
+      source?.Summary?.[k] ??
+      source?.[k];
+    if (v != null) {
+      out[k] = Number(v) || 0;
+      found = true;
+    }
+  }
+  return found ? out : null;
+}
+
 
   /* ----------------- 檢視模式套用（給 setter / 舊事件共用） ----------------- */
   onModeChange(): void { this.applyViewMode(); } // 兼容舊 template 綁法
