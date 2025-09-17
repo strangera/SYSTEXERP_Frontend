@@ -38,7 +38,7 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
     modifier: new FormControl<string | void>(void 0),
     ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
-  public readonly qf = signal(this.queryForm.controls);
+  public readonly qf = computed(() => this.queryForm.controls);
 
   public filteredData = computed(() => {
     const data = this.service.FIN52030Data();
@@ -96,6 +96,8 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
 
   public ngOnInit(): void {
     this.initializePage('FIN52030', '/FIN/FIN52030CRU', this.queryForm, this.onSubmit.bind(this));
+    const store = this.queryStateService.getQueryState(this.ProgNo);
+    if (store?.value) this.queryForm.setValue(store.value);
 
     this.service.test ? this.service.creators.set(creators) : this.service.creators();
     this.service.test ? this.service.modifiers.set(modifiers) : this.service.modifiers();
@@ -112,6 +114,7 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
 
       this.service.test ? this.service.FIN52030Data.set(dummyData) : this.service.loadFIN52030(payload);
 
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.submitted = !0;
       this.loading = !1;
     });

@@ -46,7 +46,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
     modifier: new FormControl<string | void>(void 0),
     modifyDate: new FormControl<Date | void>(void 0),
   });
-  public readonly df = signal(this.dataForm.controls);
+  public readonly df = computed(() => this.dataForm.controls);
 
   private tableData = signal<Record<string, any>[]>([]);
 

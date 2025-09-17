@@ -1,8 +1,7 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, OnInit, computed } from '@angular/core';
 import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { TLS21020Service } from '@service/api/tls/tls21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -12,7 +11,6 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Column } from '@shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 
@@ -40,7 +38,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public dataForm = this.formBuilder.nonNullable.group({
     items: this.formBuilder.array([this.createItem()]),
   });
-  public readonly df = toSignal(this.dataForm.valueChanges);
+  public readonly df = computed(() => this.dataForm.valueChanges);
 
   public SDcolumn: Column[] = [
     { field: 'AccDC', header: '借/貸' },

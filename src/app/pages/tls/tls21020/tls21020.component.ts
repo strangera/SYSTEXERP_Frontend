@@ -1,4 +1,4 @@
-import { Component, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -34,7 +34,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     ENTRY_TYPE: new FormControl<string | void>(void 0),
     ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
   });
-  public readonly qf = signal(this.queryForm.controls);
+  public readonly qf = computed(() => this.queryForm.controls);
 
   private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
 
@@ -180,11 +180,12 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public ngOnInit(): void {
     this.initializePage('TLS21020', 'TLS/TLS21020', this.queryForm, this.onSubmit.bind(this));
+    const store = this.queryStateService.getQueryState('TLS21020');
+    if (store?.value) this.queryForm.setValue(store.value);
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
-    this.queryStateService.getQueryState('TLS21020');
     this.logger.debug(`init:`, []);
   }
 
