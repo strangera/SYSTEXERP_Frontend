@@ -1,3 +1,4 @@
+import { Signal, TemplateRef } from '@angular/core';
 import { SortMeta } from 'primeng/api';
 
 export interface Column {
@@ -50,6 +51,8 @@ export interface Column {
   totalRecords?: number; // 總數
   multiSortMeta?: SortMeta[]; // 多重排序設定
   lazy?: boolean; // 是否啟用懶加載
+
+  tableTemplate?: Signal<TemplateRef<any>>; // TODO: 自定義表格模板
 }
 
 export interface ColumnGroup {
@@ -302,4 +305,5 @@ export type TableTypes =
   'autoComplete' |
   'image' |
   'default' |
-  'dropdownTable';
+  'dropdownTable' |
+  'dropdownTableTemplate';

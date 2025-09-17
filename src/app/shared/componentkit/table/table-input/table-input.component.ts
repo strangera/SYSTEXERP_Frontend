@@ -1,6 +1,6 @@
 // table-input.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, computed, Input, output } from '@angular/core';
+import { Component, computed, effect, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PrimeTemplate } from 'primeng/api';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
@@ -17,16 +17,16 @@ import { Column } from '../table.model';
   selector: 'app-table-input',
   standalone: true,
   imports: [
-    InputTextModule,
-    InputNumberModule,
     AutoCompleteModule,
-    DropdownModule,
     CalendarModule,
-    FormsModule,
     CommonModule,
-    PrimeTemplate,
+    DropdownModule,
+    FormsModule,
     ImageModule,
+    InputNumberModule,
+    InputTextModule,
     OverlayPanelModule,
+    PrimeTemplate,
     TableModule,
   ],
   templateUrl: './table-input.component.html',
@@ -56,11 +56,11 @@ import { Column } from '../table.model';
 })
 export class TableInputComponent {
   // 接收父元件傳來的資料與欄位設定
-  @Input() public col!: Column;
-  @Input() public rowData: any;
-  @Input() public rowIndex!: number;
-  @Input() public alwaysEdit: boolean = !1;
-  @Input() public disabled: boolean = !1;
+  public col = input.required<Column>();
+  public rowData = input<any>();
+  public rowIndex = input.required<number>();
+  public alwaysEdit = input<boolean>(!1);
+  public disabled = input<boolean>(!1);
 
   // 輸出事件，通知父元件資料已變動或失去焦點
   public readonly fieldChange = output<FieldChangeEvent>();
@@ -73,24 +73,29 @@ export class TableInputComponent {
 
   /** 處理 Dropdown/AutoComplete 的選項來源 */
   public getOptions = computed(() => {
-    const colOptions = this.col.options;
-    return typeof colOptions === 'function' ? (colOptions(this.rowData) || void 0) : colOptions || void 0;
+    const colOptions = this.col().options;
+    return typeof colOptions === 'function' ? (colOptions(this.rowData()) || void 0) : colOptions || void 0;
   });
 
-  constructor() { }
+  constructor() {
+    // effect(() => console.log(`init:`, [this.col(), this.rowData(), this.rowIndex(), this.alwaysEdit(), this.disabled()]));
+  }
 
   /** 處理 ngModelChange 事件，並發送給父元件 */
   public onValueChange(value: any): void {
-    this.fieldChange.emit({ field: this.col.field, value, rowIndex: this.rowIndex });
+    // console.log(`onValueChange:`, [value]);
+    this.fieldChange.emit({ field: this.col().field, value, rowIndex: this.rowIndex() });
   }
 
   /** 處理 onBlur 事件，並發送給父元件 */
   public onBlur(): void {
-    this.fieldBlur.emit({ field: this.col.field, value: this.rowData[this.col.field], rowIndex: this.rowIndex });
+    // console.log(`onBlur:`, [this.rowData()[this.col().field]]);
+    this.fieldBlur.emit({ field: this.col().field, value: this.rowData()[this.col().field], rowIndex: this.rowIndex() });
   }
 
   /** 處理 AutoComplete 的過濾事件，並發送給父元件 */
   public onFilterComplete(event: AutoCompleteCompleteEvent): void {
+    // console.log(`onFilterComplete:`, [event]);
     this.filterChange.emit(event);
   }
 
@@ -98,16 +103,17 @@ export class TableInputComponent {
   public onLazyLoadData = (event: any): void => {
     const pageSize: number = event.rows && event.rows > 0 ? event.rows : 30;
     const pageIndex = (event.first ?? !1) / pageSize + 1;
-    const SortBy = event.multiSortMeta ?? [{ field: this.col.tableKey, order: 1 }];
+    const SortBy = event.multiSortMeta ?? [{ field: this.col().tableKey, order: 1 }];
+    // console.log(`onLazyLoadData:`, [pageIndex, pageSize, SortBy]);
     this.dpTableLazyLoadData.emit({ pageIndex, pageSize, SortBy });
   };
 
   /** 處理下拉 Table 的選擇變更 */
   public onTableSelectionChange(): void {
-    if (this.col.type !== 'dropdownTable') return;
-    // console.log(`onTableSelectionChange:`, [this.selectedItems, this.rowData, this.col]);
-    this.rowData[this.col.field] = this.selectedItems[this.col.valueKey || 'id'] || null;
-    this.fieldChange.emit({ field: this.col.field, value: this.rowData[this.col.field], rowIndex: this.rowIndex });
+    if (this.col().type !== 'dropdownTable') return;
+    // console.log(`onTableSelectionChange:`, [this.selectedItems, this.rowData(), this.col]);
+    this.rowData()[this.col().field] = this.selectedItems[this.col().valueKey || 'id'] || null;
+    this.fieldChange.emit({ field: this.col().field, value: this.rowData()[this.col().field], rowIndex: this.rowIndex() });
   };
 }
 
