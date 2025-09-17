@@ -49,6 +49,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() showHeader = true;                 // 是否顯示 Header
   @Input() showFilter = true;                 // 是否顯示 Filter
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
+  @Input() showReportPDF = true;             // 是否顯示 匯出PDF按鈕
+  @Input() showReportExcel = true;             // 是否顯示 匯出Excel按鈕
   @Input() customReport = false;               // 是否自訂報表
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕

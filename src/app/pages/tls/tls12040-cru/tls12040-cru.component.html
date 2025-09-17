@@ -362,11 +362,17 @@
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email"
-                [submitted]="submitted"></app-input-text>
+                (blurEvent)="formatEmailField('email', $event)" [submitted]="submitted"></app-input-text>
+              <small class="block mt-1 text-blue-600 text-base">
+                💡 多個信箱請用分號(；)分隔
+              </small>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="發票電子郵件" controlName="invoice_email" [control]="dataForm.controls.invoice_email"
-                [submitted]="submitted"></app-input-text>
+                (blurEvent)="formatEmailField('invoice_email', $event)" [submitted]="submitted"></app-input-text>
+              <small class="block mt-1 text-blue-600 text-base">
+                💡 多個信箱請用分號(；)分隔
+              </small>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="票據抬頭" controlName="CHECK_TITLE" [control]="dataForm.controls.CHECK_TITLE"
@@ -402,8 +408,8 @@
             </div>
             <div class="col-12 md:col-6 lg:col-6 flex flex-column gap-3">
               <!-- 公司登記地址 -->
-              <app-input-text label="公司登記地址" controlName="company_register_address"
-                [control]="dataForm.controls.company_register_address" [submitted]="submitted">
+              <app-input-text label="公司登記地址" controlName="VEN_Address" [control]="dataForm.controls.VEN_Address"
+                [submitted]="submitted">
               </app-input-text>
 
               <!-- 郵寄地址 - 統一使用 app-input-text -->

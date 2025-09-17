@@ -11,15 +11,15 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { FIN15090Service } from '@service/api/fin/fin15090.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { Fin52050Service } from '@service/api/fin/fin52050.service';
 
-export interface testDorm {
+export interface GLS1003 {
   ClassAttr: string, // 大類代碼
-  ClassAttrCname: string, // 大類名稱
+  ClassAttrCName: string, // 大類名稱
   ClassAttrEname: string, // 大類英文名稱
 
-  //---可能也會需要下面這些---
   CRT_Date?: Date,
   CRT_USR_No?: string,
   CRT_USR_Name?: string,
@@ -49,88 +49,78 @@ export interface testDorm {
 })
 
 // 科目大分類代號維護
-export class FIN52050Component extends BasicQueryPageComponent<testDorm> implements OnInit {
+export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implements OnInit {
   queryForm = this.formBuilder.group({
-      ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
-      ClassAttrCname: ['', [ Validators.maxLength(20)]], // 大類名稱
-      ClassAttrEname: ['', [Validators.maxLength(100)]], // 大類英文名稱 (非必填)
-              
-      ...createPaginationConfig([{ field: 'CompNo', order: 1 }]), // 分頁和排序參數
-    });
-        
-    totalRecords = 0;// 分頁和排序參數 // 排序需要
-    data: testDorm[] = [];
-    selectedRows: testDorm[] = [];
-                
-    columns: Column[] = [ //先放可視範圍內的
-      { field: 'ClassAttr', header: '大類代碼', visible: true }, // 大類代碼
-      { field: 'ClassAttrCname', header: '大類名稱', visible: true }, // 大類名稱
-      { field: 'ClassAttrEname', header: '大類英文名稱', visible: true }, // 大類英文名稱
-        
-      { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-      { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-      { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-      { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-      { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-      { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
-    ];
-        
-    constructor(
-      private fin15090Service: FIN15090Service,
-      private validationService: ValidationService
-    ) {
-      super(); // 呼叫父類建構子
-    }
-          
-    ngOnInit(): void {
-      this.initializePage('FIN52050', '/FIN/FIN52050cru', this.queryForm, (form) => this.onSubmit(form));
-    }
-          
-    onSubmit(frm: FormGroup) {
-      this.handleSubmit(frm, () => {
-        const body = {
-          ...frm.value,
-        }
-        
-        console.log('對象及對帳維護作業 request', body);
-  
-        this.data = [
-          { 
-            "ClassAttr": "大類代碼1",
-            "ClassAttrCname": "大類名稱1",
-            "ClassAttrEname": "大類英文名稱1",
-          }
-        ];
-  
-        this.loading = false;
-        
-        // this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
-        //   next: (response) => {
-        //     this.data = response.Data;
-        //     console.log('對象及對帳維護作業 response', response);
-        //     this.totalRecords = response.TotalCount;
-        //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        //     this.loading = false;
-        //   },
-        //   error: () => { this.loading = false; },
-        // });
+    // GLS1003 科目大類設定檔
+    ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
+    ClassAttrCName: ['', [Validators.maxLength(100)]], // 大類名稱
+    ClassAttrEname: ['', [Validators.maxLength(100)]], // 大類英文名稱 (非必填)
+
+    ...createPaginationConfig([{ field: 'ClassAttr', order: 1 }]), // 分頁和排序參數
+  });
+
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: GLS1003[] = [];
+  selectedRows: GLS1003[] = [];
+
+  columns: Column[] = [ //先放可視範圍內的
+    { field: 'ClassAttr', header: '大類代碼', visible: true, exportFormat: [] }, // 大類代碼
+    { field: 'ClassAttrCName', header: '大類名稱', visible: true }, // 大類名稱
+    { field: 'ClassAttrEname', header: '大類英文名稱', visible: true }, // 大類英文名稱
+
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+  ];
+
+  constructor(
+    private fin52050Service: Fin52050Service,
+    private validationService: ValidationService
+  ) {
+    super(); // 呼叫父類建構子
+  }
+
+  ngOnInit(): void {
+    this.initializePage('FIN52050', '/FIN/FIN52050cru', this.queryForm, (form) => this.onSubmit(form));
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+      }
+      console.log('科目大類 request', body);
+
+      this.fin52050Service.queryFIN52050(body).pipe(untilDestroyed(this)).subscribe({
+        next: (response) => {
+          this.data = response.Data;
+          console.log('科目大類設定檔 response', response.Data);
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+        },
+        error: () => { this.loading = false; },
       });
-    }
-    // 刪除控制_Grace 9/9: 
-    // GLS6002 GLS3002若有對象別編號不可刪除
-    onDelete(selectedRows: testDorm[]) {
-      // const ids = selectedRows.map(row => row.id);
-      // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-      //   next: () => {
-      //     this.onSubmit(this.queryForm);
-      //     this.selectedRows = [];
-      //   },
-      //   error: () => { this.loading = false; },
-      // });
-    }
-          
-    isRowSelectable(row: testDorm) {
-      // return row.CanDel;
-      return true
-    }
+    });
+  }
+  // 刪除控制_Grace 9/9: 
+  // 9/9 SA註明: 該作業不可修改/刪除
+  onDelete(selectedRows: GLS1003[]) {
+    // const ids = selectedRows.map(row => row.id);
+    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+    //   next: () => {
+    //     this.onSubmit(this.queryForm);
+    //     this.selectedRows = [];
+    //   },
+    //   error: () => { this.loading = false; },
+    // });
+  }
+
+  isRowSelectable(row: GLS1003) {
+    // return row.CanDel;
+    return true
+  }
 }

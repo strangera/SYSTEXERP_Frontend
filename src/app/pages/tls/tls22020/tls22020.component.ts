@@ -112,14 +112,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
       this.data = savedData.Data.QueryData;
       this.totalRecords = savedData.TotalCount ?? this.data.length;
 
-      // footerData 這裡要自己組 (因為後端沒給 Sum)
-      const totals: any = {};
-      for (const col of this.selectedColumns) {
-        if (col.isTotal) {
-          totals[col.field] = this.data.reduce((sum, row) => sum + (row[col.field] || 0), 0);
-        }
-      }
-      this.footerData = [{ group_name: '總計', ...totals }];
+      // footerData 總計
+      this.footerData = [{ group_name: '總計', ...savedData.Data.SumData }];
     }
   }
 
@@ -154,17 +148,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
           this.data = flatData;
           this.totalRecords = res.TotalCount ?? flatData.length;
 
-          // footerData 組總計
-          const totals: any = {};
-          for (const col of this.selectedColumns) {
-            if (col.isTotal) {
-              totals[col.field] = flatData.reduce(
-                (sum: number, row: any) => sum + (row[col.field] || 0),
-                0
-              );
-            }
-          }
-          this.footerData = [{ group_name: '總計', ...totals }];
+          // footerData 總計
+          this.footerData = [{ group_name: '總計', ...res.Data?.SumData }];
 
           // 保留查詢狀態
           this.queryStateService.setQueryState(this.ProgNo, form.value);

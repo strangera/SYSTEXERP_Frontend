@@ -21,9 +21,30 @@ import { Injectable } from '@angular/core';
 export class ConditionDataManager {
 
   /**
+ * 生成暫時唯一 ID
+ */
+  private generateTempId(): string {
+    return `temp_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  }
+
+  /**
+ * 獲取下一個序號
+ */
+  private getNextSeqNo(existingItems: any[]): number {
+    if (!existingItems || existingItems.length === 0) {
+      return 1;
+    }
+
+    // 找出目前最大的序號（包括已刪除的項目）
+    const maxSeqNo = Math.max(...existingItems.map(item => item.seq_no || 0));
+    return maxSeqNo + 1;
+  }
+
+
+  /**
    * 根據抽成類型初始化空的條件數據
    */
-  initializeEmptyConditions(commissionType: string, talentId: string): ConditionItem[] {
+  initializeEmptyConditions(commissionType: string, talentId: string, existingItems?: any[]): ConditionItem[] {
     switch (commissionType) {
       case '1':
         return [this.createFixedRentItem(talentId)];
@@ -32,9 +53,9 @@ export class ConditionDataManager {
       case '4':
         return [this.createBaseCommissionItem(talentId)];
       case '5':
-        return [this.createGraduatedItem(talentId)];
+        return [this.createGraduatedItem(talentId, existingItems as GraduatedCommissionCondition[])];
       case '6':
-        return [this.createBaseTierItem(talentId)];
+        return [this.createBaseTierItem(talentId, existingItems as BaseTierCondition[])];
       default:
         return [];
     }
@@ -64,8 +85,22 @@ export class ConditionDataManager {
         break;
     }
 
+    // 確保所有從後端映射的資料都有 original 狀態
+    conditions.forEach(condition => {
+      if (!(condition as any)._status) {
+        (condition as any)._status = 'original';
+      }
+    });
+
+    // console.log('🔄 後端資料映射完成:', {
+    //   類型: commissionType,
+    //   項目數量: conditions.length,
+    //   狀態統計: this.getStatusStats(conditions)
+    // });
+
     return conditions;
   }
+
 
   /**
    * 將條件項目按類型分類
@@ -88,23 +123,42 @@ export class ConditionDataManager {
     };
 
     items.forEach(item => {
-      if (this.isBaseRentHigherCondition(item)) {
-        result.baseRentHigher.push({
-          ...item,
-          _fromNext2: (item as any)._fromNext2 || false,
-          _status: (item as any)._status || 'original',
-          _readonly: (item as any)._readonly || false
-        } as BaseRentHigherCondition);
-      } else if (this.isFixedRentCondition(item)) {
-        result.fixedRent.push(item as FixedRentCondition);
-      } else if (this.isBaseTierCondition(item)) {
-        result.baseTier.push(item as BaseTierCondition);
-      } else if (this.isBaseCommissionCondition(item)) {
-        result.baseCommission.push(item as BaseCommissionCondition);
-      } else if (this.isGraduatedCommissionCondition(item)) {
-        result.graduated.push(item as GraduatedCommissionCondition);
+      // 確保狀態信息在分類過程中被保留
+      const enhancedItem = {
+        ...item,
+        _status: (item as any)._status || 'original',
+        _fromNext2: (item as any)._fromNext2 || false,
+        _readonly: (item as any)._readonly || false
+      };
+
+      if (this.isBaseRentHigherCondition(enhancedItem)) {
+        result.baseRentHigher.push(enhancedItem as BaseRentHigherCondition);
+      } else if (this.isFixedRentCondition(enhancedItem)) {
+        result.fixedRent.push(enhancedItem as FixedRentCondition);
+      } else if (this.isBaseTierCondition(enhancedItem)) {
+        result.baseTier.push(enhancedItem as BaseTierCondition);
+      } else if (this.isBaseCommissionCondition(enhancedItem)) {
+        result.baseCommission.push(enhancedItem as BaseCommissionCondition);
+      } else if (this.isGraduatedCommissionCondition(enhancedItem)) {
+        result.graduated.push(enhancedItem as GraduatedCommissionCondition);
       }
     });
+
+    // console.log('🗂️ 條件項目分類完成:', {
+    //   fixedRent: result.fixedRent.length,
+    //   baseRentHigher: result.baseRentHigher.length,
+    //   generalCommission: result.generalCommission.length,
+    //   baseCommission: result.baseCommission.length,
+    //   graduated: result.graduated.length,
+    //   baseTier: result.baseTier.length,
+    //   各類型狀態統計: {
+    //     fixedRent: this.getStatusStats(result.fixedRent),
+    //     baseRentHigher: this.getStatusStats(result.baseRentHigher),
+    //     baseCommission: this.getStatusStats(result.baseCommission),
+    //     graduated: this.getStatusStats(result.graduated),
+    //     baseTier: this.getStatusStats(result.baseTier)
+    //   }
+    // });
 
     return result;
   }
@@ -155,7 +209,46 @@ export class ConditionDataManager {
    * 過濾顯示用的數據（排除已刪除的項目）
    */
   filterDisplayItems<T extends ConditionItem>(items: T[]): T[] {
-    return items.filter(item => (item as any)._status !== 'deleted');
+    const filtered = items.filter(item => {
+      const status = (item as any)._status;
+      // 只排除明確標記為 deleted 的項目
+      const shouldShow = status !== 'deleted';
+
+      if (!shouldShow) {
+        console.log('🗑️ 過濾掉已刪除項目:', item.id);
+      }
+
+      return shouldShow;
+    });
+
+    // console.log('🔍 過濾結果:', {
+    //   原始數量: items.length,
+    //   過濾後數量: filtered.length,
+    //   狀態統計: this.getStatusStats(items)
+    // });
+
+    return filtered;
+  }
+
+  private getStatusStats(items: any[]): any {
+    const stats = {
+      new: 0,
+      original: 0,
+      modified: 0,
+      deleted: 0,
+      undefined: 0
+    };
+
+    items.forEach(item => {
+      const status = item._status;
+      if (status) {
+        stats[status as keyof typeof stats]++;
+      } else {
+        stats.undefined++;
+      }
+    });
+
+    return stats;
   }
 
   /**
@@ -167,20 +260,28 @@ export class ConditionDataManager {
     new: number;
     modified: number;
     deleted: number;
+    original: number;
   } {
-    return {
+    const stats = {
       total: items.length,
       display: this.filterDisplayItems(items).length,
       new: items.filter(item => (item as any)._status === 'new').length,
       modified: items.filter(item => (item as any)._status === 'modified').length,
-      deleted: items.filter(item => (item as any)._status === 'deleted').length
+      deleted: items.filter(item => (item as any)._status === 'deleted').length,
+      original: items.filter(item => (item as any)._status === 'original').length
     };
+
+    console.log('📊 項目狀態統計:', stats);
+    return stats;
   }
+
+
 
   // =============== 私有方法 ===============
 
   private createFixedRentItem(talentId: string): FixedRentCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -193,6 +294,7 @@ export class ConditionDataManager {
 
   private createBaseRentHigherItem(talentId: string): BaseRentHigherCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -206,6 +308,7 @@ export class ConditionDataManager {
 
   private createBaseCommissionItem(talentId: string): BaseCommissionCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -216,11 +319,11 @@ export class ConditionDataManager {
       _isNew: true
     };
   }
-
-  private createGraduatedItem(talentId: string): GraduatedCommissionCondition {
+  private createGraduatedItem(talentId: string, existingItems: GraduatedCommissionCondition[] = []): GraduatedCommissionCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
-      seq_no: 1,
+      seq_no: this.getNextSeqNo(existingItems), // 使用正確的序號
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),
       start_number: 0,
@@ -231,10 +334,11 @@ export class ConditionDataManager {
     };
   }
 
-  private createBaseTierItem(talentId: string): BaseTierCondition {
+  private createBaseTierItem(talentId: string, existingItems: BaseTierCondition[] = []): BaseTierCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
-      seq_no: 1,
+      seq_no: this.getNextSeqNo(existingItems), // 使用正確的序號
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),

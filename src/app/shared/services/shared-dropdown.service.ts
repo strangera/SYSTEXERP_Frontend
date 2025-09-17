@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { SHARED_DROPDOWN_OPTIONS, DropdownOption } from '../constants/business.constants';
+import { environment } from '../../../environments/environment';
 // API 服務注入
 import { Sysb800DropdownService } from '../../service/api/sys/sysb800-dropdown.service';
 import { Sysb900DropdownService } from '../../service/api/sys/sysb900-dropdown.service';
@@ -10,7 +11,7 @@ import { VendorCategoryOptionsService } from '../../service/api/dropdownservice/
 import { NegotiatorOptionsService } from '../../service/api/dropdownservice/negotiator-options.service';
 import { BankOptionsService } from '@service/api/dropdownservice/bank-option.service';
 import { BussclassDropdownService } from '@service/api/dropdownservice/tltbussclass-options.service';
-
+import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
@@ -50,6 +51,7 @@ export class SharedDropdownService {
     private negotiatorService: NegotiatorOptionsService,
     private bankService: BankOptionsService,
     private bussclassService: BussclassDropdownService,
+    private http: HttpClient
   ) { }
 
   // ========== 工具方法 ==========
@@ -199,5 +201,30 @@ export class SharedDropdownService {
       this.bankService.getBankOptions()
     );
   }
+  /**
+ * 載入活動清單 (TALPORDERM)
+ */
+  getActivityOptions(mid: number, strNo: string, podType: string[] = [], podStatus = ''): Observable<DropdownOption[]> {
+    if (!mid || !strNo) {
+      console.warn(' mid 或 strNo 為空，回傳空的活動清單');
+      return of([]);
+    }
+
+    const body = {
+      mid,
+      str_no: strNo,
+      pod_type: podType,
+      pod_status: podStatus
+    };
+
+    return this.callApi('活動清單', () =>
+      this.http.post<any>(
+        `${environment.ApiUrl}/Share/queryTALPORDERM_DropDownList`,
+        body
+      )
+    );
+  }
+
+
 
 }

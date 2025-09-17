@@ -131,6 +131,11 @@ export const TPY_TYPE_OPTIONS = {
   '06': '線數',
 } as const;
 
+export const CAG_TAXTYPE_OPTIONS = {
+  '0': '免稅',
+  '1': '應稅',
+} as const;
+
 // ========== 通用格式化函數 ==========
 
 // 多選格式化函數
@@ -241,5 +246,6 @@ export const SHARED_DROPDOWN_OPTIONS = {
   depositPayment: convertToDropdownOptions(DEPOSIT_PAYMENT_OPTIONS),
   overallStatus: convertToDropdownOptions(OVERALL_STATUS_OPTIONS),
   tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
+  cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }]
 } as const;

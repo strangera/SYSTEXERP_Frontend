@@ -116,7 +116,7 @@ class CruDataCleaner implements TLS12040DataCleaner {
       total_amt_unit: data.total_amt_unit || '',
       total_amt_vendor_unit: data.total_amt_vendor_unit || '',
       approve_status: data.approve_status || '',
-      company_register_address: data.company_register_address || '',
+      VEN_Address: data.VEN_Address || '',
       locationData: Array.isArray(data.locationData) ?
         data.locationData
           .filter((item: any) => {
@@ -501,7 +501,7 @@ export class TLS12040FlowService {
           });
         }
 
-        // 🎯 修正：從 CRU 資料取得正確的 applyNo
+        // 修正：從 CRU 資料取得正確的 applyNo
         let correctedApplyNo = data.applyNo || '';
         const cruStepData = stepDataMap.get('cru');
         if (cruStepData?.data?.apply_no && !correctedApplyNo) {
@@ -509,16 +509,16 @@ export class TLS12040FlowService {
           console.log('🔧 從 CRU 資料修正 applyNo:', correctedApplyNo);
         }
 
-        // 🎯 修正：根據是否有 apply_no 決定 isNewContract
+        // 修正：根據是否有 apply_no 決定 isNewContract
         const correctedIsNewContract = !correctedApplyNo || correctedApplyNo === '';
 
         this._state = {
           ...data,
           stepData: stepDataMap,
           completedSteps: completedStepsSet,
-          applyNo: correctedApplyNo,  // 🎯 修正 applyNo
-          isNewContract: correctedIsNewContract,  // 🎯 修正 isNewContract
-          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo  // 🎯 修正 contractId
+          applyNo: correctedApplyNo,  // 修正 applyNo
+          isNewContract: correctedIsNewContract,  // 修正 isNewContract
+          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo  // 修正 contractId
         };
 
         this.notifyStateChange();

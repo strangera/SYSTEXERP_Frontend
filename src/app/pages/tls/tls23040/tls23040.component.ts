@@ -65,6 +65,11 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
+  private invoiceTotals: { TotalGUI: number; TotalSaleAmt: number } | null = null;
+  private paymentTotals: { TotalPayAmt: number } | null = null;
+  private discountTotals: { TotalSalePrc: number; TotalNet: number; TotalTax: number } | null = null;
+  private paymentSubtotals: Record<string, Record<string, number>> = {};
+  private discountSubtotals: Record<string, Record<string, number>> = {};
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
 
@@ -265,245 +270,294 @@ fetchTLS23040 = (evt: LazyLoadEvent) => {
 
   // ---- 呼叫 API ----
   return this.tls23040Service.queryTLS23040(payload).pipe(
-    map((res: any) => {
-      const packs: any[] = Array.isArray(res?.Data) ? res.Data : [];
+   map((res: any) => {
+  const packs: any[] = Array.isArray(res?.Data) ? res.Data : [];
 
-      // ========= 依回傳包裝展平三類明細 =========
-      const inv = packs.flatMap(p =>
-        Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : []
-      ).map((r: any, i: number) => {
-        const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
-        return {
-          ...r,
-          ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
-          ORG_ECR_No : isNormal ? '' : (r?.ORG_ECR_No  ?? ''),
-          ORG_TXN_No : isNormal ? '' : (r?.ORG_TXN_No  ?? ''),
-          _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-        };
-      });
+  // ===== 既有：展平三類明細（保留你的原碼） =====
+  const inv = packs.flatMap(p =>
+    Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : []
+  ).map((r: any, i: number) => {
+    const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+    return {
+      ...r,
+      ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
+      ORG_ECR_No : isNormal ? '' : (r?.ORG_ECR_No  ?? ''),
+      ORG_TXN_No : isNormal ? '' : (r?.ORG_TXN_No  ?? ''),
+      _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+    };
+  });
 
-      const pay = packs.flatMap(p =>
-        Array.isArray(p?.payment?.PaymentDetail) ? p.payment.PaymentDetail : []
-      ).map((r: any, i: number) => ({
-        ...r,
-        _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-      }));
+  const pay = packs.flatMap(p =>
+    Array.isArray(p?.payment?.PaymentDetail) ? p.payment.PaymentDetail : []
+  ).map((r: any, i: number) => ({
+    ...r,
+    _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+  }));
 
-      const disc = packs.flatMap(p =>
-        Array.isArray(p?.discount?.DiscountDetail) ? p.discount.DiscountDetail : []
-      ).map((r: any, i: number) => ({
-        ...r,
-        _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-      }));
+  const disc = packs.flatMap(p =>
+    Array.isArray(p?.discount?.DiscountDetail) ? p.discount.DiscountDetail : []
+  ).map((r: any, i: number) => ({
+    ...r,
+    _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+  }));
 
-      // ========= 依視圖決定 rows / 群組 / 總計&小計 =========
-      let rows: any[] = [];
-      let externalTotals: Record<string, number> = {};
-      let externalSubtotals: Record<string, Record<string, number>> = {};
+  // ===== 新增：從 API 取總計（多 pack 就加總） =====
+  const apiInvTotalGUI      = packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI      ?? 0), 0);
+  const apiInvTotalSaleAmt  = packs.reduce((s, p) => s + Number(p?.invoice?.TotalSaleAmt  ?? 0), 0);
+  const apiPayTotalAmt      = packs.reduce((s, p) => s + Number(p?.payment?.TotalPayAmt   ?? 0), 0);
+  const apiDiscTotalSalePrc = packs.reduce((s, p) => s + Number(p?.discount?.TotalSalePrc ?? 0), 0);
+  const apiDiscTotalNet     = packs.reduce((s, p) => s + Number(p?.discount?.TotalNet     ?? 0), 0);
+  const apiDiscTotalTax     = packs.reduce((s, p) => s + Number(p?.discount?.TotalTax     ?? 0), 0);
 
-      if (this.viewMode === 'invoice') {
-        this.activeGroupBy = '';
-        this.activeShowSubTotal = false;
+  // 暫存總計
+  this.invoiceTotals  = { TotalGUI: apiInvTotalGUI, TotalSaleAmt: apiInvTotalSaleAmt };
+  this.paymentTotals  = { TotalPayAmt: apiPayTotalAmt };
+  this.discountTotals = { TotalSalePrc: apiDiscTotalSalePrc, TotalNet: apiDiscTotalNet, TotalTax: apiDiscTotalTax };
 
-        rows = inv;
+  // ===== 新增：從 API 取小計（有提供就用；沒有就 fallback 逐筆累加） =====
+  const paySub: Record<string, Record<string, number>> = {};
+  for (const r of pay) {
+    const g = String(r?.PAY_NO ?? 'UNKNOWN');
+    const b = (paySub[g] = paySub[g] || { SubTotalPayAmt: 0 });
+    if (r?.SubTotalPayAmt != null) b['SubTotalPayAmt'] = Number(r.SubTotalPayAmt);
+    else b['SubTotalPayAmt'] += Number(r?.TXN_PayAmt ?? 0);
+  }
+  this.paymentSubtotals = paySub;
 
-        const guiSum  = inv.reduce((s, r) => s + (Number(r?.TXN_TotGUI    ?? 0)), 0);
-        const saleSum = inv.reduce((s, r) => s + (Number(r?.TXN_TotSaleAmt ?? 0)), 0);
+  const discSub: Record<string, Record<string, number>> = {};
+  for (const r of disc) {
+    const g = String(r?.TXN_DiscCode ?? 'UNKNOWN');
+    const b = (discSub[g] = discSub[g] || { SubTotalSalePrc: 0, SubTotalNet: 0, SubTotalTax: 0 });
+    if (r?.SubTotalSalePrc != null || r?.SubTotalNet != null || r?.SubTotalTax != null) {
+      if (r?.SubTotalSalePrc != null) b['SubTotalSalePrc'] = Number(r.SubTotalSalePrc);
+      if (r?.SubTotalNet     != null) b['SubTotalNet']     = Number(r.SubTotalNet);
+      if (r?.SubTotalTax     != null) b['SubTotalTax']     = Number(r.SubTotalTax);
+    } else {
+      b['SubTotalSalePrc'] += Number(r?.PLU_SalePrc ?? 0);
+      b['SubTotalNet']     += Number(r?.TXN_Net     ?? 0);
+      b['SubTotalTax']     += Number(r?.TXN_Tax     ?? 0);
+    }
+  }
+  this.discountSubtotals = discSub;
 
-        externalTotals = {
-          Total_TXN_TotGUI: guiSum,
-          Total_TXN_TotSaleAmt: saleSum,
-        };
+  // ========= 依視圖決定 rows / 群組 / 總計&小計 =========
+  let rows: any[] = [];
+  let externalTotals: Record<string, number> = {};
+  let externalSubtotals: Record<string, Record<string, number>> = {};
 
-        this.activeExternalTotalFieldMap = {
-          TXN_TotGUI: 'Total_TXN_TotGUI',
-          TXN_TotSaleAmt: 'Total_TXN_TotSaleAmt',
-        };
-        this.activeExternalSubtotalFieldMap = {};
-      }
-      else if (this.viewMode === 'payment') {
-        this.activeGroupBy = 'PAY_NO';
-        this.activeShowSubTotal = true;
+  if (this.viewMode === 'invoice') {
+    this.activeGroupBy = '';
+    this.activeShowSubTotal = false;
+    rows = inv;
 
-        rows = pay;
+    // ✅ 直接用 API 的 key
+    externalTotals = { ...this.invoiceTotals };
 
-        const totalAmt = pay.reduce((s, r) => s + (Number(r?.TXN_PayAmt ?? 0)), 0);
-        externalTotals = { Total_TXN_PayAmt: totalAmt };
+    this.activeExternalTotalFieldMap = {
+      TXN_TotGUI: 'TotalGUI',
+      TXN_TotSaleAmt: 'TotalSaleAmt',
+    };
+    this.activeExternalSubtotalFieldMap = {};
+  }
+  else if (this.viewMode === 'payment') {
+    this.activeGroupBy = 'PAY_NO';
+    this.activeShowSubTotal = true;
+    rows = pay;
 
-        // 依 PAY_NO 聚合小計
-        const sub: Record<string, Record<string, number>> = {};
-for (const r of pay) {
-  const g = String(r?.PAY_NO ?? 'UNKNOWN');
-  const bucket = (sub[g] = sub[g] || { ['SubTotal_TXN_PayAmt']: 0 } as Record<string, number>);
-  bucket['SubTotal_TXN_PayAmt'] = (bucket['SubTotal_TXN_PayAmt'] || 0) + Number(r?.TXN_PayAmt ?? 0);
-}
-externalSubtotals = sub;
+    externalTotals = { ...this.paymentTotals };
+    externalSubtotals = { ...this.paymentSubtotals };
 
+    this.activeExternalTotalFieldMap    = { TXN_PayAmt: 'TotalPayAmt' };
+    this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotalPayAmt' };
+  }
+  else { // discount
+    this.activeGroupBy = 'TXN_DiscCode';
+    this.activeShowSubTotal = true;
+    rows = disc;
 
-        this.activeExternalTotalFieldMap    = { TXN_PayAmt: 'Total_TXN_PayAmt' };
-        this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotal_TXN_PayAmt' };
-      }
-      else { // discount
-        this.activeGroupBy = 'TXN_DiscCode';
-        this.activeShowSubTotal = true;
+    externalTotals   = { ...this.discountTotals };
+    externalSubtotals = { ...this.discountSubtotals };
 
-        rows = disc;
+    this.activeExternalTotalFieldMap = {
+      PLU_SalePrc: 'TotalSalePrc',
+      TXN_Net:     'TotalNet',
+      TXN_Tax:     'TotalTax',
+    };
+    this.activeExternalSubtotalFieldMap = {
+      PLU_SalePrc: 'SubTotalSalePrc',
+      TXN_Net:     'SubTotalNet',
+      TXN_Tax:     'SubTotalTax',
+    };
+  }
 
-        const salePrc = disc.reduce((s, r) => s + (Number(r?.PLU_SalePrc ?? 0)), 0);
-        const net     = disc.reduce((s, r) => s + (Number(r?.TXN_Net     ?? 0)), 0);
-        const tax     = disc.reduce((s, r) => s + (Number(r?.TXN_Tax     ?? 0)), 0);
+  this.activeExternalTotals    = externalTotals;
+  this.activeExternalSubtotals = externalSubtotals;
 
-        externalTotals = {
-          Total_PLU_SalePrc: salePrc,
-          Total_TXN_Net:     net,
-          Total_TXN_Tax:     tax,
-        };
+  const totalRecords = Number(res?.TotalCount ?? rows.length ?? 0);
 
-        const sub: Record<string, Record<string, number>> = {};
-        for (const r of disc) {
-          const g = String(r?.TXN_DiscCode ?? 'UNKNOWN');
-          const bucket = (sub[g] = sub[g] || { SubTotal_SalePrc: 0, SubTotal_Net: 0, SubTotal_Tax: 0 });
- bucket['SubTotal_SalePrc'] = (bucket['SubTotal_SalePrc'] || 0) + Number(r?.PLU_SalePrc ?? 0);
-  bucket['SubTotal_Net']     = (bucket['SubTotal_Net']     || 0) + Number(r?.TXN_Net     ?? 0);
-  bucket['SubTotal_Tax']     = (bucket['SubTotal_Tax']     || 0) + Number(r?.TXN_Tax     ?? 0);
-        }
-        externalSubtotals = sub;
-
-        this.activeExternalTotalFieldMap = {
-          PLU_SalePrc: 'Total_PLU_SalePrc',
-          TXN_Net:     'Total_TXN_Net',
-          TXN_Tax:     'Total_TXN_Tax',
-        };
-        this.activeExternalSubtotalFieldMap = {
-          PLU_SalePrc: 'SubTotal_SalePrc',
-          TXN_Net:     'SubTotal_Net',
-          TXN_Tax:     'SubTotal_Tax',
-        };
-      }
-
-      // 將狀態同步給畫面（若你的 template 有綁定這些 map / groupBy）
-      this.activeExternalTotals       = externalTotals;
-      this.activeExternalSubtotals    = externalSubtotals;
-
-      // 回傳給 Table2
-      const totalRecords =
-        Number(res?.TotalCount ?? rows.length ?? 0);
-
-      return {
-        rows,
-        totalRecords,
-        externalTotals,
-        externalSubtotals,
-      };
-    })
+  return {
+    rows,
+    totalRecords,
+    externalTotals,     // ✅ 回傳給 Table2（serverFetch）
+    externalSubtotals,  // ✅ 回傳給 Table2（serverFetch）
+  };
+})
   );
 };
 
 
   /** 送出查詢（不包含 Offset/OrderBy） */
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const raw = this.queryForm.getRawValue() as any;
-      const toIso = (x: any) => {
-        if (!x) return undefined;
-        const d = typeof x === 'string' ? new Date(x) : (x as Date);
-        if (isNaN(d.getTime())) return undefined;
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 19);
-      };
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const raw = this.queryForm.getRawValue() as any;
 
-      const pageSize = Number(raw?.pageSize) || 10;
-      const pageIndex = Number(raw?.pageIndex) || 1;
-      const sortByArr =
-        Array.isArray(raw?.SortBy) && raw.SortBy.length
-          ? raw.SortBy
-          : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+    // 小工具
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+    };
+    const ensureArr = (v: any) => (Array.isArray(v) ? v : v == null || v === '' ? [] : [v]);
+    const toNumOrUndef = (v: any) => (v == null || v === '' || isNaN(Number(v)) ? undefined : Number(v));
 
-      // ✅ 組 payload：不放 Offset/OrderBy
-      const payload: any = {
-        TXN_DateStart: toIso(raw?.TXN_DateStart ?? this.yesterday),
-        TXN_DateEnd: toIso(raw?.TXN_DateEnd ?? this.yesterday),
-        ...(raw?.ECR_No?.length ? { ECR_No: raw.ECR_No } : {}),
-        ...(raw?.TLT_No?.length ? { TLT_No: raw.TLT_No } : {}),
-        ...(raw?.TXN_Status?.length ? { TXN_Status: raw.TXN_Status } : {}),
-        ...(raw?.TXN_FlagStatus?.length ? { TXN_FlagStatus: raw.TXN_FlagStatus } : {}),
-        ...(raw?.tlt_floor?.length ? { tlt_floor: raw.tlt_floor } : {}),
-        ...(raw?.org_id?.length ? { org_id: raw.org_id } : {}),
-        ...(raw?.tlt_building ? { tlt_building: raw.tlt_building } : {}),
-        ...(raw?.TXN_PkngUID ? { TXN_PkngUID: raw.TXN_PkngUID } : {}),
-        ...(raw?.TXN_MemCard ? { TXN_MemCard: raw.TXN_MemCard } : {}),
-        ...(raw?.TXN_GUIBegNo ? { TXN_GUIBegNo: raw.TXN_GUIBegNo } : {}),
-        ...(raw?.TXN_No_Start != null && raw?.TXN_No_Start !== '' ? { TXN_No_Start: Number(raw.TXN_No_Start) } : {}),
-        ...(raw?.TXN_No_End   != null && raw?.TXN_No_End   !== '' ? { TXN_No_End:   Number(raw.TXN_No_End)   } : {}),
-        pageIndex,
-        pageSize,
-        SortBy: sortByArr,
-      };
+    // 分頁與排序
+    const pageSize  = Number(raw?.pageSize)  || 20;
+    const pageIndex = Number(raw?.pageIndex) || 1;
+    const sortByArr =
+      Array.isArray(raw?.SortBy) && raw.SortBy.length
+        ? raw.SortBy
+        : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
-      // ✅ 匯出沿用同一包參數
-      this.historyRequestBody = { ...payload };
+    // 組 payload（與 lazy/serverFetch 一致）
+    const payload: any = {
+      TXN_DateStart: toIso(raw?.TXN_DateStart ?? this.yesterday),
+      TXN_DateEnd:   toIso(raw?.TXN_DateEnd   ?? this.yesterday),
 
-      this.loading = true;
-      this.messageService?.blockUi();
+      ...(ensureArr(raw?.ECR_No).length         ? { ECR_No: ensureArr(raw?.ECR_No) }               : {}),
+      ...(ensureArr(raw?.TLT_No).length         ? { TLT_No: ensureArr(raw?.TLT_No) }               : {}),
+      ...(ensureArr(raw?.TXN_Status).length     ? { TXN_Status: ensureArr(raw?.TXN_Status) }       : {}),
+      ...(ensureArr(raw?.TXN_FlagStatus).length ? { TXN_FlagStatus: ensureArr(raw?.TXN_FlagStatus) } : {}),
+      ...(ensureArr(raw?.tlt_floor).length      ? { tlt_floor: ensureArr(raw?.tlt_floor) }         : {}),
+      ...(ensureArr(raw?.org_id).length         ? { org_id: ensureArr(raw?.org_id) }               : {}),
 
-      this.tls23040Service.queryTLS23040(payload).subscribe({
-        next: (res) => {
-          const packs = Array.isArray(res?.Data) ? res.Data : [];
+      ...(raw?.tlt_building ? { tlt_building: raw.tlt_building } : {}),
+      ...(raw?.TXN_PkngUID  ? { TXN_PkngUID:  raw.TXN_PkngUID  } : {}),
+      ...(raw?.TXN_MemCard  ? { TXN_MemCard:  raw.TXN_MemCard  } : {}),
+      ...(raw?.TXN_GUIBegNo ? { TXN_GUIBegNo: raw.TXN_GUIBegNo } : {}),
 
-          // ===== Flatten 三種明細 =====
-          const invoiceDetails = packs.flatMap((p: any) =>
-            Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : [],
-          );
-          this.invoiceRows = invoiceDetails.map((r: any, i: number) => {
-            const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
-            return {
-              ...r,
-              ORG_TXN_Date: isNormal ? '' : r?.ORG_TXN_Date ?? '',
-              ORG_ECR_No: isNormal ? '' : r?.ORG_ECR_No ?? '',
-              ORG_TXN_No: isNormal ? '' : r?.ORG_TXN_No ?? '',
-              _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-            };
-          });
+      ...(toNumOrUndef(raw?.TXN_No_Start) != null ? { TXN_No_Start: toNumOrUndef(raw?.TXN_No_Start) } : {}),
+      ...(toNumOrUndef(raw?.TXN_No_End)   != null ? { TXN_No_End:   toNumOrUndef(raw?.TXN_No_End)   } : {}),
 
-          const paymentDetails = packs.flatMap((p: any) =>
-            Array.isArray(p?.payment?.PaymentDetail) ? p.payment.PaymentDetail : [],
-          );
-          this.paymentRows = paymentDetails.map((r: any, i: number) => ({
+      pageIndex,
+      pageSize,
+      SortBy: sortByArr,
+    };
+
+    // 匯出沿用
+    this.historyRequestBody = { ...payload };
+
+    // UI 狀態
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23040Service.queryTLS23040(payload).subscribe({
+      next: (res) => {
+        const packs: any[] = Array.isArray(res?.Data) ? res.Data : [];
+
+        // ===== 展平三類明細 =====
+        const invoiceDetails = packs.flatMap((p: any) =>
+          Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : [],
+        );
+        this.invoiceRows = invoiceDetails.map((r: any, i: number) => {
+          const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+          return {
             ...r,
-            _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-          }));
+            ORG_TXN_Date: isNormal ? '' : r?.ORG_TXN_Date ?? '',
+            ORG_ECR_No:   isNormal ? '' : r?.ORG_ECR_No   ?? '',
+            ORG_TXN_No:   isNormal ? '' : r?.ORG_TXN_No   ?? '',
+            _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+          };
+        });
 
-          const discountDetails = packs.flatMap((p: any) =>
-            Array.isArray(p?.discount?.DiscountDetail) ? p.discount.DiscountDetail : [],
-          );
-          this.discountRows = discountDetails.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-          }));
+        const paymentDetails = packs.flatMap((p: any) =>
+          Array.isArray(p?.payment?.PaymentDetail) ? p.payment.PaymentDetail : [],
+        );
+        this.paymentRows = paymentDetails.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+        }));
 
-          // 更新總筆數（如果後端沒給就用目前視圖筆數）
-          this.totalRecords = Number(res?.TotalCount ?? this.activeData.length ?? 0);
+        const discountDetails = packs.flatMap((p: any) =>
+          Array.isArray(p?.discount?.DiscountDetail) ? p.discount.DiscountDetail : [],
+        );
+        this.discountRows = discountDetails.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+        }));
 
-          // 依目前視圖重算 總計/小計 + 群組鍵
-          this.recomputeAggregatesForView();
-        },
-        error: () => {
-          this.invoiceRows = [];
-          this.paymentRows = [];
-          this.discountRows = [];
-          this.totalRecords = 0;
+        // ===== API 總計（多包裝就彙總） =====
+        this.invoiceTotals = {
+          TotalGUI:     packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI     ?? 0), 0),
+          TotalSaleAmt: packs.reduce((s, p) => s + Number(p?.invoice?.TotalSaleAmt ?? 0), 0),
+        };
+        this.paymentTotals = {
+          TotalPayAmt:  packs.reduce((s, p) => s + Number(p?.payment?.TotalPayAmt  ?? 0), 0),
+        };
+        this.discountTotals = {
+          TotalSalePrc: packs.reduce((s, p) => s + Number(p?.discount?.TotalSalePrc ?? 0), 0),
+          TotalNet:     packs.reduce((s, p) => s + Number(p?.discount?.TotalNet     ?? 0), 0),
+          TotalTax:     packs.reduce((s, p) => s + Number(p?.discount?.TotalTax     ?? 0), 0),
+        };
 
-          this.activeExternalTotals = {};
-          this.activeExternalSubtotals = {};
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        },
-      });
+        // ===== API 小計（若明細有 SubTotalXXX 就直接用；否則前端聚合） =====
+        const paySub: Record<string, Record<string, number>> = {};
+        for (const r of this.paymentRows) {
+          const g = String(r?.PAY_NO ?? 'UNKNOWN');
+          const b = (paySub[g] = paySub[g] || { SubTotalPayAmt: 0 });
+          if (r?.SubTotalPayAmt != null) b['SubTotalPayAmt'] = Number(r.SubTotalPayAmt);
+          else b['SubTotalPayAmt'] += Number(r?.TXN_PayAmt ?? 0);
+        }
+        this.paymentSubtotals = paySub;
+
+        const discSub: Record<string, Record<string, number>> = {};
+        for (const r of this.discountRows) {
+          const g = String(r?.TXN_DiscCode ?? 'UNKNOWN');
+          const b = (discSub[g] = discSub[g] || { SubTotalSalePrc: 0, SubTotalNet: 0, SubTotalTax: 0 });
+          if (r?.SubTotalSalePrc != null || r?.SubTotalNet != null || r?.SubTotalTax != null) {
+            if (r?.SubTotalSalePrc != null) b['SubTotalSalePrc'] = Number(r.SubTotalSalePrc);
+            if (r?.SubTotalNet     != null) b['SubTotalNet']     = Number(r.SubTotalNet);
+            if (r?.SubTotalTax     != null) b['SubTotalTax']     = Number(r.SubTotalTax);
+          } else {
+            b['SubTotalSalePrc'] += Number(r?.PLU_SalePrc ?? 0);
+            b['SubTotalNet']     += Number(r?.TXN_Net     ?? 0);
+            b['SubTotalTax']     += Number(r?.TXN_Tax     ?? 0);
+          }
+        }
+        this.discountSubtotals = discSub;
+
+        // 總筆數
+        this.totalRecords = Number(res?.TotalCount ?? this.activeData.length ?? 0);
+
+        // 依目前視圖套用（含 externalTotals / externalSubtotals / 對應 map）
+        this.recomputeAggregatesForView();
+      },
+      error: () => {
+        this.invoiceRows = [];
+        this.paymentRows = [];
+        this.discountRows = [];
+        this.totalRecords = 0;
+        this.activeExternalTotals = {};
+        this.activeExternalSubtotals = {};
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      },
     });
-  }
+  });
+}
+
 
   onViewChange() {
     this.recomputeAggregatesForView();
@@ -511,95 +565,90 @@ externalSubtotals = sub;
   }
 
   /** 依視圖建立 totals/subtotals 與群組欄位/是否顯示小計 */
-  private recomputeAggregatesForView() {
-    // 1) 預設清空
-    this.activeExternalTotals = {};
-    this.activeExternalTotalFieldMap = {};
-    this.activeExternalSubtotals = {};
-    this.activeExternalSubtotalFieldMap = {};
+private recomputeAggregatesForView() {
+  // 清預設
+  this.activeExternalTotals = {};
+  this.activeExternalTotalFieldMap = {};
+  this.activeExternalSubtotals = {};
+  this.activeExternalSubtotalFieldMap = {};
+  this.activeGroupBy = '';
+  this.activeShowSubTotal = false;
+
+  if (this.viewMode === 'invoice') {
     this.activeGroupBy = '';
     this.activeShowSubTotal = false;
 
-    if (this.viewMode === 'invoice') {
-      // ---- 發票：僅總計（不分組）----
-      const guiSum = this.invoiceRows.reduce((s, r) => s + Number(r?.TXN_TotGUI ?? 0), 0);
-      const saleSum = this.invoiceRows.reduce((s, r) => s + Number(r?.TXN_TotSaleAmt ?? 0), 0);
-
-      this.activeExternalTotals = {
-        Total_TXN_TotGUI: guiSum,
-        Total_TXN_TotSaleAmt: saleSum,
-      };
-      this.activeExternalTotalFieldMap = {
-        TXN_TotGUI: 'Total_TXN_TotGUI',
-        TXN_TotSaleAmt: 'Total_TXN_TotSaleAmt',
-      };
-      // 無小計/群組
-      this.activeGroupBy = '';
-      this.activeShowSubTotal = false;
-      return;
-    }
-
-    if (this.viewMode === 'payment') {
-      // ---- 付款：以 PAY_NO 分組；金額小計/總計 ----
-      this.activeGroupBy = 'PAY_NO';
-      this.activeShowSubTotal = true;
-
-      const totalAmt = this.paymentRows.reduce((s, r) => s + Number(r?.TXN_PayAmt ?? 0), 0);
-      this.activeExternalTotals = { Total_TXN_PayAmt: totalAmt };
-      this.activeExternalTotalFieldMap = { TXN_PayAmt: 'Total_TXN_PayAmt' };
-
-      // 小計（以 PAY_NO 聚合）
-      const sub: Record<string, Record<string, number>> = {};
-      for (const row of this.paymentRows) {
-        const g = String(row?.PAY_NO ?? 'UNKNOWN');
-        sub[g] = sub[g] || { SubTotal_TXN_PayAmt: 0 };
-        sub[g]['SubTotal_TXN_PayAmt'] =
-          (sub[g]['SubTotal_TXN_PayAmt'] || 0) + Number(row?.TXN_PayAmt ?? 0);
-      }
-      this.activeExternalSubtotals = sub;
-      this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotal_TXN_PayAmt' };
-      return;
-    }
-
-    // ---- 折扣：以 TXN_DiscCode 分組；三欄小計/總計 ----
-    this.activeGroupBy = 'TXN_DiscCode';
-    this.activeShowSubTotal = true;
-
-    const totalSalePrc = this.discountRows.reduce((s, r) => s + Number(r?.PLU_SalePrc ?? 0), 0);
-    const totalNet = this.discountRows.reduce((s, r) => s + Number(r?.TXN_Net ?? 0), 0);
-    const totalTax = this.discountRows.reduce((s, r) => s + Number(r?.TXN_Tax ?? 0), 0);
-
-    this.activeExternalTotals = {
-      Total_PLU_SalePrc: totalSalePrc,
-      Total_TXN_Net: totalNet,
-      Total_TXN_Tax: totalTax,
+    // ✅ 優先用 API 總計；沒有時才前端加總
+    const api = this.invoiceTotals;
+    this.activeExternalTotals = api ?? {
+      TotalGUI:     this.invoiceRows.reduce((s, r) => s + Number(r?.TXN_TotGUI    ?? 0), 0),
+      TotalSaleAmt: this.invoiceRows.reduce((s, r) => s + Number(r?.TXN_TotSaleAmt ?? 0), 0),
     };
     this.activeExternalTotalFieldMap = {
-      PLU_SalePrc: 'Total_PLU_SalePrc',
-      TXN_Net: 'Total_TXN_Net',
-      TXN_Tax: 'Total_TXN_Tax',
+      TXN_TotGUI: 'TotalGUI',
+      TXN_TotSaleAmt: 'TotalSaleAmt',
     };
-
-    const sub: Record<string, Record<string, number>> = {};
-    for (const row of this.discountRows) {
-      const g = String(row?.TXN_DiscCode ?? 'UNKNOWN');
-      const bucket = (sub[g] = sub[g] || {
-        SubTotal_SalePrc: 0,
-        SubTotal_Net: 0,
-        SubTotal_Tax: 0,
-      } as Record<string, number>);
-      bucket['SubTotal_SalePrc'] =
-        (bucket['SubTotal_SalePrc'] || 0) + Number(row?.PLU_SalePrc ?? 0);
-      bucket['SubTotal_Net'] = (bucket['SubTotal_Net'] || 0) + Number(row?.TXN_Net ?? 0);
-      bucket['SubTotal_Tax'] = (bucket['SubTotal_Tax'] || 0) + Number(row?.TXN_Tax ?? 0);
-    }
-    this.activeExternalSubtotals = sub;
-    this.activeExternalSubtotalFieldMap = {
-      PLU_SalePrc: 'SubTotal_SalePrc',
-      TXN_Net: 'SubTotal_Net',
-      TXN_Tax: 'SubTotal_Tax',
-    };
+    return;
   }
+
+  if (this.viewMode === 'payment') {
+    this.activeGroupBy = 'PAY_NO';
+    this.activeShowSubTotal = true;
+
+    this.activeExternalTotals = this.paymentTotals ?? {
+      TotalPayAmt: this.paymentRows.reduce((s, r) => s + Number(r?.TXN_PayAmt ?? 0), 0),
+    };
+    this.activeExternalTotalFieldMap = { TXN_PayAmt: 'TotalPayAmt' };
+
+    this.activeExternalSubtotals = Object.keys(this.paymentSubtotals).length
+      ? this.paymentSubtotals
+      : (() => {
+          const sub: Record<string, Record<string, number>> = {};
+          for (const r of this.paymentRows) {
+            const g = String(r?.PAY_NO ?? 'UNKNOWN');
+            const b = (sub[g] = sub[g] || { SubTotalPayAmt: 0 });
+            b['SubTotalPayAmt'] += Number(r?.TXN_PayAmt ?? 0);
+          }
+          return sub;
+        })();
+    this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotalPayAmt' };
+    return;
+  }
+
+  // discount
+  this.activeGroupBy = 'TXN_DiscCode';
+  this.activeShowSubTotal = true;
+
+  this.activeExternalTotals = this.discountTotals ?? {
+    TotalSalePrc: this.discountRows.reduce((s, r) => s + Number(r?.PLU_SalePrc ?? 0), 0),
+    TotalNet:     this.discountRows.reduce((s, r) => s + Number(r?.TXN_Net     ?? 0), 0),
+    TotalTax:     this.discountRows.reduce((s, r) => s + Number(r?.TXN_Tax     ?? 0), 0),
+  };
+  this.activeExternalTotalFieldMap = {
+    PLU_SalePrc: 'TotalSalePrc',
+    TXN_Net:     'TotalNet',
+    TXN_Tax:     'TotalTax',
+  };
+
+  this.activeExternalSubtotals = Object.keys(this.discountSubtotals).length
+    ? this.discountSubtotals
+    : (() => {
+        const sub: Record<string, Record<string, number>> = {};
+        for (const r of this.discountRows) {
+          const g = String(r?.TXN_DiscCode ?? 'UNKNOWN');
+          const b = (sub[g] = sub[g] || { SubTotalSalePrc: 0, SubTotalNet: 0, SubTotalTax: 0 });
+          b['SubTotalSalePrc'] += Number(r?.PLU_SalePrc ?? 0);
+          b['SubTotalNet']     += Number(r?.TXN_Net     ?? 0);
+          b['SubTotalTax']     += Number(r?.TXN_Tax     ?? 0);
+        }
+        return sub;
+      })();
+  this.activeExternalSubtotalFieldMap = {
+    PLU_SalePrc: 'SubTotalSalePrc',
+    TXN_Net:     'SubTotalNet',
+    TXN_Tax:     'SubTotalTax',
+  };
+}
 
   /** 群組欄位優先排序（invoice 無群組會原樣返回） */
   private ensureGroupFirst(sortBy: any[] | undefined): any[] {

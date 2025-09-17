@@ -33,7 +33,7 @@
   cursor: not-allowed;
 }
 
-// 🎯 覆蓋面板樣式
+// 覆蓋面板樣式
 ::ng-deep .selector-overlay-panel {
   .p-overlaypanel-content {
     padding: 0;
@@ -100,7 +100,7 @@
   }
 }
 
-// 🎯 響應式設計
+// 響應式設計
 @media (max-width: 768px) {
   ::ng-deep .selector-overlay-panel {
     .p-overlaypanel {
@@ -132,7 +132,7 @@
   }
 }
 
-// 🎯 主題適配
+// 主題適配
 :host-context(.dark-theme) {
   .readonly-field {
     background-color: #2d3748;
@@ -180,7 +180,7 @@
   }
 }
 
-// 🎯 動畫效果
+// 動畫效果
 .selector-input-wrapper {
   .selector-button {
     transition: all 0.2s ease;

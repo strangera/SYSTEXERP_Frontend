@@ -36,20 +36,20 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
   @Input() maxResults = 10;
   @Input() searchMethod?: (keyword: string) => Observable<any[]>;
 
-  // 🎯 新增：支援外部設定選中值
+  // 新增：支援外部設定選中值
   @Input() selectedOption: AutoCompleteOption | null = null;
 
   @Output() selectEvent = new EventEmitter<AutoCompleteOption>();
   @Output() unselectEvent = new EventEmitter<any>();
   @Output() changeEvent = new EventEmitter<any>();
-  // 🎯 新增：選中值變更事件
+  // 新增：選中值變更事件
   @Output() selectedOptionChange = new EventEmitter<AutoCompleteOption | null>();
 
   filteredOptions: AutoCompleteOption[] = [];
   processedOptions: AutoCompleteOption[] = [];
 
   private destroy$ = new Subject<void>();
-  private isInternalChange = false; // 🎯 防止循環更新
+  private isInternalChange = false; // 防止循環更新
 
   constructor(private cdr: ChangeDetectorRef) { }
 
@@ -60,7 +60,7 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // 🎯 當外部設定 selectedOption 時
+    // 當外部設定 selectedOption 時
     if (changes['selectedOption'] && !this.isInternalChange) {
       console.log('🔄 外部設定 selectedOption:', changes['selectedOption'].currentValue);
       this.handleExternalSelectedOptionChange();
@@ -72,7 +72,7 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
     this.destroy$.complete();
   }
 
-  // 🎯 處理外部設定的 selectedOption
+  // 處理外部設定的 selectedOption
   private handleExternalSelectedOptionChange(): void {
     if (this.selectedOption) {
       // 設定 FormControl 的值
@@ -96,7 +96,7 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  // 🎯 從 FormControl 初始值初始化
+  // 從 FormControl 初始值初始化
   private initializeFromControlValue(): void {
     const currentValue = this.control.value;
     if (currentValue && !this.selectedOption) {
@@ -110,7 +110,7 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private parseApiData(apiData: string): AutoCompleteOption {
-    // 🎯 解析 "0040037臺灣銀行營業部" 格式
+    // 解析 "0040037臺灣銀行營業部" 格式
     let bankCode = '';
     let bankName = '';
 
@@ -123,7 +123,7 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
 
     return {
       value: bankCode || apiData.substring(0, 7),  // 用於 FormControl 的值（只有代碼）
-      label: apiData,                              // 🎯 顯示完整文字（代碼+名稱）
+      label: apiData,                              // 顯示完整文字（代碼+名稱）
       fullText: apiData,                           // 完整文字
       bankCode: bankCode,
       bankName: bankName,
@@ -164,7 +164,7 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  // 🎯 新增：監聽 PrimeNG AutoComplete 的選擇事件
+  // 新增：監聽 PrimeNG AutoComplete 的選擇事件
   onModelChange(selectedOption: AutoCompleteOption | null): void {
     console.log('🎯 AutoComplete 模型變更:', selectedOption);
 
@@ -200,14 +200,14 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
 
   private initializeFromValue(value: string): void {
     if (value && value.length >= 1) {
-      // 🎯 嘗試從現有選項中找到匹配項
+      // 嘗試從現有選項中找到匹配項
       const option = this.processedOptions.find(opt => opt.value === value);
       if (option) {
         this.selectedOption = option;
         this.cdr.detectChanges();
         console.log('🎯 已從值初始化選項:', option);
       } else {
-        // 🎯 如果找不到，嘗試用搜尋方法重建
+        // 如果找不到，嘗試用搜尋方法重建
         if (this.searchMethod) {
           this.searchMethod(value).subscribe({
             next: (data: string[]) => {
@@ -242,7 +242,7 @@ export class AutoCompleteComponent implements OnInit, OnDestroy, OnChanges {
     return this.submitted && this.control?.errors !== null && this.control?.errors !== undefined;
   }
 
-  // 🎯 新增：除錯方法
+  // 新增：除錯方法
   debugAutoComplete(): void {
     console.log('🔍 AutoComplete 狀態:');
     console.log('  selectedOption:', this.selectedOption);

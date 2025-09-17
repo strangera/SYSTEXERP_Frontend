@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
-// 🎯 直接導入需要的服務，不再繼承
+// 直接導入需要的服務，不再繼承
 import { AuthService } from '@service/system/auth.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 // import { CurrentPageService } from '@core/services/current-page.service';
@@ -70,7 +70,7 @@ import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiato
 
 })
 export class TLS13010CRUComponent implements OnInit, OnDestroy {
-  // ========== 🎯 核心屬性（取代繼承的部分） ==========
+  // ========== 核心屬性（取代繼承的部分） ==========
   ProgNo = 'TLS13010';
   formTitle = '';
   submitted = false;
@@ -81,7 +81,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   user: any;
   funInfo: any;
 
-  // ========== 🎯 檢視模式管理 ==========
+  // ========== 檢視模式管理 ==========
   isViewMode = false;
   private viewModeSubscription?: Subscription;
   // 位置選項資料
@@ -99,7 +99,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     {
       field: 'location_no',
       header: '位置編號',
-      type: 'selector-panel',  // 🎯 改用 selector-panel
+      type: 'selector-panel',  // 改用 selector-panel
       editable: true,
       style: 'min-width: 200px',
       selectorConfig: {
@@ -126,7 +126,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
             label: '館別',
             type: 'dropdown',
             colClass: 'col-4',
-            options: [], // 🎯 會在 updateSelectorPanelOptions 中更新
+            options: [], // 會在 updateSelectorPanelOptions 中更新
             placeholder: '選擇館別',
           },
           {
@@ -281,7 +281,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     expiration_fees: [0], //契約屆滿保證金金額
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
-    company_register_address: [''],
     selectedBankInfo: [null]
   });
 
@@ -348,7 +347,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
     window.scrollTo({ top: 0 });
-    // 🎯 自定義初始化，完全控制流程
+    // 自定義初始化，完全控制流程
     this.initializeBasics();
     this.initializeViewMode();
     this.initializeWorkflow();
@@ -359,7 +358,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // 🎯 清理訂閱
+    // 清理訂閱
     if (this.viewModeSubscription) {
       this.viewModeSubscription.unsubscribe();
     }
@@ -368,31 +367,31 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
 
   private initializeBasics(): void {
-    // 🎯 基本設定
+    // 基本設定
     if (this.authService.currentUserValue) {
       this.user = this.authService.currentUserValue;
     }
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-    // 🎯 固定為 Edit，避免表單被 disable
+    // 固定為 Edit，避免表單被 disable
     this.crudstatus = CRUDStatus.Edit;
 
-    // 🎯 設定標題
+    // 設定標題
     this.formTitle = this.getCustomTitle();
 
-    // 🎯 延遲設定初始控制狀態
+    // 延遲設定初始控制狀態
     setTimeout(() => {
       this.setFormControlsState();
     }, 100);
   }
 
   /**
- * 🎯 檢查特定欄位的 readonly 狀態（供 UI 參考）
+ * 檢查特定欄位的 readonly 狀態（供 UI 參考）
  */
   isFieldReadonly(fieldName: string): boolean {
     // 永遠 readonly 的欄位
-    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'company_register_address', 'ven_no'];
+    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'ven_no'];
 
     if (alwaysReadonlyFields.includes(fieldName)) {
       return true;
@@ -412,13 +411,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private initializeViewMode(): void {
-    // 🎯 從服務取得檢視模式狀態
+    // 從服務取得檢視模式狀態
     this.isViewMode = this.contractFlowService.isViewMode();
 
-    // 🎯 設定檢視模式 UI 監聽
+    // 設定檢視模式 UI 監聽
     this.setupViewModeUI();
 
-    // 🎯 如果是檢視模式，設定表單為唯讀
+    // 如果是檢視模式，設定表單為唯讀
     if (this.isViewMode) {
       setTimeout(() => {
         // this.setFormReadonly(true);
@@ -427,22 +426,22 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private initializeWorkflow(): void {
-    // 🎯 處理 router state
+    // 處理 router state
     this.handleRouterState();
 
-    // 🎯 載入工作流程資料
+    // 載入工作流程資料
     this.loadWorkflowData();
   }
 
   private initializeData(): void {
-    // 🎯 載入下拉選單和位置選項
+    // 載入下拉選單和位置選項
     this.loadLocationWithDetailsOptions();
     this.loadPOS2013Options();
     this.loadNegotiatorOptions();
   }
 
   private setupListeners(): void {
-    // 🎯 設定監聽
+    // 設定監聽
     this.setupAutoSave();
     this.setupBusTypeListener();
     this.setupVendorUniformListener();
@@ -451,7 +450,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.validateWorkflowData();
       this.updateDisplayLocationData();
 
-      // 🎯 檢查並重新載入分類資料
+      // 檢查並重新載入分類資料
       const currentBusType = this.dataForm.get('bus_type')?.value;
       if (currentBusType) {
         this.ensureClassificationDataLoaded(currentBusType);
@@ -468,10 +467,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       if (venUniform && venUniform.trim()) {
         this.loadVendorInfo(venUniform);
       } else {
-        // 🎯 清空相關欄位
+        // 清空相關欄位
         this.dataForm.patchValue({
           VEN_Name: '',
-          company_register_address: '',
           ven_no: ''
         });
       }
@@ -482,33 +480,33 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   private loadVendorInfo(venUniform: string): void {
 
-    // 🎯 使用 VendorCategoryOptionsService 載入廠商資料
+    // 使用 VendorCategoryOptionsService 載入廠商資料
     this.tls13010DropdownService.pos2013Options.find(vendor => vendor.value === venUniform);
 
     // 如果pos2013Options還沒載入，直接呼叫API
     this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
       next: (vendors: any[]) => {
 
-        // 🎯 尋找匹配的廠商
+        // 尋找匹配的廠商
         const matchedVendor = vendors.find((vendor: { value: string; }) => vendor.value === venUniform);
 
         if (matchedVendor) {
 
-          // 🎯 更新廠商名稱和公司地址
+          // 更新廠商名稱和公司地址
           this.dataForm.patchValue({
             VEN_Name: matchedVendor.Name || '',
             VEN_Address: matchedVendor.VEN_Address || '',
             ven_no: matchedVendor.ven_no || matchedVendor.ven_no || ''
           });
 
-          // 🎯 立即儲存到工作流程
+          // 立即儲存到工作流程
           this.saveToWorkflow();
 
         } else {
           console.warn('⚠️ 找不到匹配的廠商');
           this.messageService.warnBubble('找不到該廠商統一編號的資料');
 
-          // 🎯 清空相關欄位
+          // 清空相關欄位
           this.dataForm.patchValue({
             VEN_Name: '',
             VEN_Address: '',
@@ -520,7 +518,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         console.error('❌ 載入廠商資訊失敗:', err);
         this.messageService.errorBubble('載入廠商資訊失敗，請檢查統一編號是否正確');
 
-        // 🎯 發生錯誤時清空相關欄位
+        // 發生錯誤時清空相關欄位
         this.dataForm.patchValue({
           VEN_Name: '',
           VEN_Address: ''
@@ -548,7 +546,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.isViewMode = true;
       this.contractFlowService.setViewMode(true);
 
-      // 🎯 立即設定表單為 disabled
+      // 立即設定表單為 disabled
       setTimeout(() => {
         // this.setFormReadonly(true);
       }, 0);
@@ -570,7 +568,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.locationWithDetailsOptions = data;
 
-        // 🎯 資料載入完成後，更新 selector 面板選項
+        // 資料載入完成後，更新 selector 面板選項
         setTimeout(() => {
           this.updateSelectorPanelOptions();
         }, 100);
@@ -618,7 +616,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const workflowData = this.contractFlowService.getCurrentData();
 
     if (workflowData.contractId) {
-      // 🎯 統一使用 ContractFlowService 的模式判定
+      // 統一使用 ContractFlowService 的模式判定
       if (this.contractFlowService.isNewContractMode()) {
         this.loadNewModeData();
       } else {
@@ -632,7 +630,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   private loadNewModeData(): void {
 
-    // 🎯 檢查是否有暫存的 Step1 資料
+    // 檢查是否有暫存的 Step1 資料
     const savedFormData = this.contractFlowService.getStep1Data();
 
     if (savedFormData && Object.keys(savedFormData).length > 0) {
@@ -677,7 +675,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }, 100);
     }
 
-    // 🎯 載入位置資料
+    // 載入位置資料
     if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo) && savedFormData.locationInfo.length > 0) {
       this.locationData = savedFormData.locationInfo.map((item: any) => ({
         ...item,
@@ -693,7 +691,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 🎯 重新設定控制狀態
+    // 重新設定控制狀態
     setTimeout(() => {
       this.setFormControlsState();
     }, 100);
@@ -716,14 +714,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
 
   /**
-   * 🎯 統一設定表單欄位的 disabled 狀態
+   * 統一設定表單欄位的 disabled 狀態
    */
   private setFormControlsState(): void {
 
     const isNewMode = this.contractFlowService.isNewContractMode();
     const isViewMode = this.isViewMode;
 
-    // 🎯 第一步：先啟用所有欄位
+    // 第一步：先啟用所有欄位
     Object.keys(this.dataForm.controls).forEach(key => {
       const control = this.dataForm.get(key);
       if (control && control.disabled) {
@@ -731,7 +729,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }
     });
 
-    // 🎯 第二步：設定永遠 readonly 的欄位
+    // 第二步：設定永遠 readonly 的欄位
     const alwaysReadonlyFields = [
       'apply_no',                    // 專櫃招募編號
       'tlt_no',                      // 專櫃編號
@@ -748,7 +746,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }
     });
 
-    // 🎯 第三步：處理條件 readonly - 營運狀況
+    // 第三步：處理條件 readonly - 營運狀況
     const tltOpenflagControl = this.dataForm.get('tlt_openflag');
     if (tltOpenflagControl) {
       if (isNewMode) {
@@ -761,7 +759,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 🎯 第四步：檢視模式 - 全部 readonly
+    // 第四步：檢視模式 - 全部 readonly
     if (isViewMode) {
       Object.keys(this.dataForm.controls).forEach(key => {
         const control = this.dataForm.get(key);
@@ -773,7 +771,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private initializeEmptyForm(): void {
-    // 🎯 設定預設值 - 根據 constants 檔案的正確值
+    // 設定預設值 - 根據 constants 檔案的正確值
     this.dataForm.patchValue({
       talent_id: '',
       apply_no: '',
@@ -822,7 +820,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       gas_flag: 'N',
     });
 
-    // 🎯 清空位置資料
+    // 清空位置資料
     this.locationData = [];
     this.selectedBankInfo = null;
 
@@ -928,7 +926,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }, 100);
     }
 
-    // 🎯 重新設定控制狀態
+    // 重新設定控制狀態
     setTimeout(() => {
       this.setFormControlsState();
     }, 100);
@@ -1012,16 +1010,16 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
             const validBusClass = options.find(option => option.value === currentBusClass);
 
             if (currentBusClass && !validBusClass) {
-              // 🎯 中分類無效時，清空中分類和小分類
+              // 中分類無效時，清空中分類和小分類
               this.dataForm.get('bus_class')?.setValue('');
               this.dataForm.get('bus_sclass')?.setValue('');
               // 清空小分類選項
               this.tls13010DropdownService.clearBusSClassOptions();
             } else if (currentBusClass && validBusClass) {
-              // 🎯 中分類有效時，檢查並載入小分類
+              // 中分類有效時，檢查並載入小分類
               this.loadAndValidateBusSClass(busType, currentBusClass);
             } else {
-              // 🎯 沒有中分類值時，清空小分類
+              // 沒有中分類值時，清空小分類
               this.dataForm.get('bus_sclass')?.setValue('');
               this.tls13010DropdownService.clearBusSClassOptions();
             }
@@ -1036,7 +1034,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           }
         });
       } else {
-        // 🎯 大分類清空時，清空所有下級分類
+        // 大分類清空時，清空所有下級分類
         this.tls13010DropdownService.clearBusClassOptions();
         this.tls13010DropdownService.clearBusSClassOptions();
         this.dataForm.get('bus_class')?.setValue('');
@@ -1051,7 +1049,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       if (busType && busClass) {
         this.loadAndValidateBusSClass(busType, busClass);
       } else {
-        // 🎯 中分類清空時，清空小分類
+        // 中分類清空時，清空小分類
         this.tls13010DropdownService.clearBusSClassOptions();
         this.dataForm.get('bus_sclass')?.setValue('');
       }
@@ -1062,7 +1060,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：載入並驗證小分類
+   * 新增：載入並驗證小分類
    */
   private loadAndValidateBusSClass(busType: string, busClass: string): void {
     this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
@@ -1074,7 +1072,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           const validBusSClass = options.find(option => option.value === currentBusSClass);
 
           if (!validBusSClass) {
-            // 🎯 小分類無效時清空
+            // 小分類無效時清空
             this.dataForm.get('bus_sclass')?.setValue('');
           } else {
             console.log('✅ 小分類有效，保持原值');
@@ -1093,7 +1091,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   private saveToWorkflow(): void {
     const currentTotalSpace = this.getTotaltlt_space();
     const formData = this.dataForm.getRawValue();
-    // 🎯 型別轉換輔助函數
+    // 型別轉換輔助函數
     const convertToString = (value: any): string | undefined => {
       if (value === null || value === undefined) return undefined;
       return String(value);
@@ -1430,14 +1428,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：檢查是否為新增模式
+   * 新增：檢查是否為新增模式
    */
   isNewContractMode(): boolean {
     return this.contractFlowService.isNewContractMode();
   }
 
   /**
-   * 🎯 新增：取得頁面標題
+   * 新增：取得頁面標題
    */
   getPageTitle(): string {
     return this.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
@@ -1459,7 +1457,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       新狀態: newData._status
     });
 
-    // 🎯 重點：檢查位置編號是否重複
+    // 重點：檢查位置編號是否重複
     if (newData.location_no && newData.location_no.trim() !== '') {
       const isDuplicate = this.checkLocationDuplicate(newData);
 
@@ -1469,14 +1467,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         // 顯示錯誤訊息
         this.messageService.errorBubble(`位置編號 ${newData.location_no} 重複！`);
 
-        // 🎯 直接從陣列中移除這筆資料
+        // 直接從陣列中移除這筆資料
         this.removeLocationItem(String(newData.id));
 
         return; // 不繼續後續處理
       }
     }
 
-    // 🎯 沒有重複，正常處理儲存邏輯
+    // 沒有重複，正常處理儲存邏輯
     this.updateDisplayLocationData();
 
     // 詳細的狀態判斷邏輯
@@ -1545,7 +1543,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     return duplicateCount > 0;
   }
 
-  // 🎯 新增：移除位置項目
+  // 新增：移除位置項目
   private removeLocationItem(itemId: string): void {
     console.log('🗑️ 開始移除位置項目:', itemId);
 
@@ -1562,10 +1560,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       是否成功: beforeLength > afterLength
     });
 
-    // 🎯 更新顯示資料
+    // 更新顯示資料
     this.updateDisplayLocationData();
 
-    // 🎯 強制觸發變更檢測
+    // 強制觸發變更檢測
     this.locationData = [...this.locationData];
 
     // 儲存到工作流程
@@ -1705,7 +1703,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     field: string;
     newValue: string;
     oldValue: string;
-    selectedOption?: any; // 🎯 關鍵：selector-panel 應該提供這個
+    selectedOption?: any; // 關鍵：selector-panel 應該提供這個
   }): void {
     const { rowData, field, newValue, oldValue, selectedOption } = event;
 
@@ -1718,7 +1716,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     });
 
     if (field === 'location_no' && newValue) {
-      // 🎯 優先使用 selectedOption（來自 selector-panel）
+      // 優先使用 selectedOption（來自 selector-panel）
       if (selectedOption) {
         console.log('📋 使用 selector-panel 提供的完整資料:', selectedOption);
         this.handleLocationSelectionFromSelectorPanel(rowData, selectedOption);
@@ -1727,7 +1725,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.saveToWorkflow();
   }
 
-  // 🎯 新增：專門處理來自 selector-panel 的選擇
+  // 新增：專門處理來自 selector-panel 的選擇
   private handleLocationSelectionFromSelectorPanel(rowData: LocationItem, selectedOption: any): void {
     const targetIndex = this.locationData.findIndex(item => item.id === rowData.id);
 
@@ -1736,7 +1734,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // 🎯 從 selectedOption 取得所有需要的資料
+    // 從 selectedOption 取得所有需要的資料
     const locationData = {
       location_no: selectedOption.value || selectedOption.location_no || '',
       tlt_building: selectedOption.tlt_building || '',
@@ -1750,7 +1748,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     console.log('📋 從 selector-panel 取得的位置資料:', locationData);
 
-    // 🎯 更新資料
+    // 更新資料
     const currentStatus = this.locationData[targetIndex]._status;
     const newStatus = currentStatus === 'new' ? 'new' : 'modified';
 
@@ -1760,10 +1758,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       _status: newStatus
     };
 
-    // 🎯 同步更新 rowData（讓表格立即顯示）
+    // 同步更新 rowData（讓表格立即顯示）
     Object.assign(rowData, this.locationData[targetIndex]);
 
-    // 🎯 觸發變更檢測
+    // 觸發變更檢測
     this.locationData = [...this.locationData];
     this.updateDisplayLocationData();
 
@@ -1825,24 +1823,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     return this.contractFlowService.getCurrentStatus();
   }
 
-  getProgressPercentage(): number {
-    return this.contractFlowService.getProgressPercentage();
-  }
-
   hasFieldError(fieldName: string): boolean {
     const field = this.dataForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
   }
-
-  // getFieldErrorMessage(fieldName: string): string {
-  //   const field = this.dataForm.get(fieldName);
-  //   if (field && field.errors) {
-  //     if (field.errors['required']) return '此欄位為必填';
-  //     if (field.errors['email']) return '請輸入正確的 Email 格式';
-  //     if (field.errors['maxlength']) return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
-  //   }
-  //   return '';
-  // }
 
   onRefreshBusClass(): void {
     const busType = this.dataForm.get('bus_type')?.value;
@@ -1930,7 +1914,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         const originalName = this.getTermTypeName(originalCommissionType);
         const newName = this.getTermTypeName(newValue);
 
-        // 🎯 生成具體的清除資訊
+        // 生成具體的清除資訊
         const clearOps = this.generateClearOperations(originalCommissionType);
         const clearDetails = this.generateClearDetails(clearOps);
 
@@ -1986,7 +1970,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：取得抽成別名稱
+   * 新增：取得抽成別名稱
    */
   private getTermTypeName(termType: string): string {
     const option = this.tltTermTypeOptions.find(opt => opt.value === termType);
@@ -2028,7 +2012,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：處理 router state
+   * 新增：處理 router state
    */
   private async handleRouterState(): Promise<void> {
     try {
@@ -2038,7 +2022,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       console.log('🔍 檢查 router state:', routerState);
 
       if (routerState && (routerState['mode'] || routerState['talentId'])) {
-        // 🎯 從其他程式跳轉進來
+        // 從其他程式跳轉進來
         console.log('🚀 從其他程式跳轉，初始化工作流程');
 
         const success = await this.contractFlowService.initializeFromRouterState(routerState);
@@ -2046,7 +2030,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         if (success) {
           console.log('✅ 工作流程初始化成功');
 
-          // 🎯 延遲一點再載入工作流程資料，確保初始化完成
+          // 延遲一點再載入工作流程資料，確保初始化完成
           setTimeout(() => {
             this.loadWorkflowData();
           }, 100);
@@ -2058,7 +2042,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         }
 
       } else {
-        // 🎯 正常流程：從查詢頁面進來，不做額外處理
+        // 正常流程：從查詢頁面進來，不做額外處理
         console.log('📋 正常流程，將在後續載入工作流程資料');
       }
 
@@ -2070,22 +2054,22 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：設定檢視模式 UI
+   * 新增：設定檢視模式 UI
    */
   private setupViewModeUI(): void {
     console.log('🔧 設定檢視模式 UI 監聽');
 
-    // 🎯 先檢查當前狀態
+    // 先檢查當前狀態
     const currentViewMode = this.contractFlowService.isViewMode();
     console.log('📋 當前檢視模式狀態:', currentViewMode);
 
-    // 🎯 如果已經是檢視模式，立即設定
+    // 如果已經是檢視模式，立即設定
     if (currentViewMode) {
       this.isViewMode = true;
       this.handleViewModeChange(true);
     }
 
-    // 🎯 訂閱後續變更
+    // 訂閱後續變更
     this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       console.log('🔍 檢視模式變更:', isViewMode);
       this.isViewMode = isViewMode;
@@ -2104,14 +2088,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       console.log('🔓 切換到編輯模式');
     }
 
-    // 🎯 重新設定控制狀態
+    // 重新設定控制狀態
     setTimeout(() => {
       this.setFormControlsState();
     }, 0);
   }
 
   /**
-   * 🎯 新增：處理初始化失敗
+   * 新增：處理初始化失敗
    */
   private handleInitializationFailure(): void {
     this.messageService.errorBubble('載入資料失敗，請重新選擇要檢視的項目');
@@ -2119,7 +2103,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：按鈕顯示控制
+   * 新增：按鈕顯示控制
    */
   showEditButtons(): boolean {
     return !this.isViewMode;
@@ -2143,7 +2127,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    */
   switchToEditMode(): void {
     if (confirm('確定要切換到編輯模式嗎？')) {
-      // 🎯 移除 URL 參數，導航到乾淨的編輯頁面
+      // 移除 URL 參數，導航到乾淨的編輯頁面
       this.router.navigate(['account/tls/tls13010cru'], {
         queryParams: {}  // 清空參數
       });
@@ -2202,7 +2186,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    * 檢查按鈕是否可用
    */
   canCopyAddress(): boolean {
-    // 🎯 只要有公司登記地址且不是檢視模式就可以複製
+    // 只要有公司登記地址且不是檢視模式就可以複製
     const hasAddress = !!this.getCompanyAddress();
     const canEdit = !this.isViewMode;
 
@@ -2219,11 +2203,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   searchLocationOptions(searchParams: any): Observable<any[]> {
     console.log('🔍 CRU 收到搜尋參數:', searchParams);
 
-    // 🎯 轉換 SortBy 的欄位名稱
+    // 轉換 SortBy 的欄位名稱
     if (searchParams.SortBy && Array.isArray(searchParams.SortBy)) {
       searchParams.SortBy = searchParams.SortBy.map((sort: any) => ({
-        field: sort.field === 'value' ? 'location_no' : sort.field,  // 🎯 轉換欄位名
-        order: 1  // 🎯 固定為升序，或保持原值 sort.order
+        field: sort.field === 'value' ? 'location_no' : sort.field,  // 轉換欄位名
+        order: 1  // 固定為升序，或保持原值 sort.order
       }));
     }
 
@@ -2237,7 +2221,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
 
     if (locationColumn?.selectorConfig?.searchFormFields) {
-      // 🎯 使用 dropdown 服務中已載入的館別選項
+      // 使用 dropdown 服務中已載入的館別選項
       const buildingField = locationColumn.selectorConfig.searchFormFields.find(
         field => field.name === 'building_code'
       );
@@ -2246,7 +2230,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         console.log('🏢 館別選項已更新:', buildingField.options.length);
       }
 
-      // 🎯 使用 dropdown 服務中已載入的樓層選項
+      // 使用 dropdown 服務中已載入的樓層選項
       const floorField = locationColumn.selectorConfig.searchFormFields.find(
         field => field.name === 'floor_code'
       );
@@ -2255,7 +2239,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         console.log('🏢 樓層選項已更新:', floorField.options.length);
       }
 
-      // 🎯 使用 dropdown 服務中已載入的區域選項
+      // 使用 dropdown 服務中已載入的區域選項
       const areaField = locationColumn.selectorConfig.searchFormFields.find(
         field => field.name === 'area_code'
       );
@@ -2277,7 +2261,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   //=================動態驗證====================================
   /**
-   * 🎯 新增：設定動態驗證器
+   * 新增：設定動態驗證器
    */
   private setupDynamicValidators(): void {
     console.log('🔧 設定動態驗證器...');
@@ -2297,7 +2281,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.updateCreditCardValidators();
     });
 
-    // 🎯 修改：設定預收租金相關監聽
+    // 修改：設定預收租金相關監聽
     this.setupRentAheadCalculation();
 
     this.setupDateValidators();
@@ -2314,7 +2298,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.updateInitialRequiredFields();
   }
 
-  // 🎯 新增：設定預收租金計算邏輯
+  // 新增：設定預收租金計算邏輯
   private setupRentAheadCalculation(): void {
     // 監聽預收租金選項變更
     this.dataForm.get('rent_ahead')?.valueChanges.subscribe((rentAhead) => {
@@ -2350,7 +2334,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     });
   }
 
-  // 🎯 新增：檢查條件並計算預收租金期數
+  // 新增：檢查條件並計算預收租金期數
   private calculateRentPeriodIfPossible(): void {
     const rentAhead = this.dataForm.get('rent_ahead')?.value;
     const startDate = this.dataForm.get('tlt_bdate')?.value;
@@ -2362,7 +2346,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       迄日: endDate
     });
 
-    // 🎯 關鍵條件：預收租金必須為"是"
+    // 關鍵條件：預收租金必須為"是"
     if (rentAhead !== 'Y') {
       console.log('❌ 預收租金不是"是"，不計算期數');
       return;
@@ -2378,7 +2362,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.calculateAndSetRentPeriod();
   }
 
-  // 🎯 新增：設定日期驗證器
+  // 新增：設定日期驗證器
   private setupDateValidators(): void {
     // 契約起始日和截止日監聽
     this.dataForm.get('tlt_bdate')?.valueChanges.subscribe(() => {
@@ -2408,7 +2392,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     });
   }
 
-  // 🎯 新增：驗證契約日期
+  // 新增：驗證契約日期
   private validateContractDates(): void {
     const startDate = this.dataForm.get('tlt_bdate')?.value;
     const endDate = this.dataForm.get('tlt_edate')?.value;
@@ -2426,7 +2410,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🎯 新增：驗證營運日期
+  // 新增：驗證營運日期
   private validateOperationDates(): void {
     const startDate = this.dataForm.get('tlt_contract_bdate')?.value;
     const endDate = this.dataForm.get('tlt_contract_edate')?.value;
@@ -2443,14 +2427,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 🎯 如果是固定租金或底租抽成取高者，重新計算預收租金期數
+    // 如果是固定租金或底租抽成取高者，重新計算預收租金期數
     // const tltTermType = this.dataForm.get('tlt_term_type')?.value;
     // if (['1', '2'].includes(tltTermType || '')) {
     //   this.calculateAndSetRentPeriod();
     // }
   }
 
-  // 🎯 新增：驗證回函日期
+  // 新增：驗證回函日期
   private validateFeedbackDates(): void {
     const feedbackDate = this.dataForm.get('feedback_date')?.value;
     const dueDate = this.dataForm.get('due_date')?.value;
@@ -2468,7 +2452,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🎯 新增：設定初始必填欄位
+  // 新增：設定初始必填欄位
   private updateInitialRequiredFields(): void {
     // 聯名卡折數 - 預設 vip_yn = 'Y'，所以一開始就設為必填
     this.updateCreditCardValidators();
@@ -2478,7 +2462,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：更新欄位驗證器（根據抽成別）
+   * 新增：更新欄位驗證器（根據抽成別）
    */
   private updateFieldValidators(): void {
     const tltTermType = this.dataForm.get('tlt_term_type')?.value;
@@ -2501,7 +2485,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：更新包底類別驗證器
+   * 新增：更新包底類別驗證器
    */
   private updateBaodiValidators(tltTermType: string): void {
     const baodiControl = this.dataForm.get('tlt_ctype_mtotal');
@@ -2523,7 +2507,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：更新預收租金相關驗證器
+   * 新增：更新預收租金相關驗證器
    */
   private updateRentAheadValidators(tltTermType: string): void {
     const rentAheadControl = this.dataForm.get('rent_ahead');
@@ -2562,7 +2546,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：計算並設定預收租金期數
+   * 新增：計算並設定預收租金期數
    */
   private calculateAndSetRentPeriod(): void {
     const startDate = this.dataForm.get('tlt_bdate')?.value;
@@ -2589,7 +2573,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：計算月數差異
+   * 新增：計算月數差異
    */
   private calculateMonthsDifference(startDate: Date, endDate: Date): number {
     const yearDiff = endDate.getFullYear() - startDate.getFullYear();
@@ -2598,7 +2582,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：更新是否為抽成
+   * 新增：更新是否為抽成
    */
   private updateCommissionValidators(tltTermType: string): void {
     const commYnControl = this.dataForm.get('comm_yn');
@@ -2614,7 +2598,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：更新付款方式相關驗證器
+   * 新增：更新付款方式相關驗證器
    */
   private updatePaymentValidators(): void {
     const paytype = this.dataForm.get('paytype')?.value;
@@ -2643,7 +2627,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：更新聯名卡相關驗證器
+   * 新增：更新聯名卡相關驗證器
    */
   private updateCreditCardValidators(): void {
     const vipYn = this.dataForm.get('vip_yn')?.value;
@@ -2668,7 +2652,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：更新保證金相關驗證器
+   * 新增：更新保證金相關驗證器
    */
   private updateDepositValidators(): void {
     // 履約保證金
@@ -2682,7 +2666,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：驗證保證金配對
+   * 新增：驗證保證金配對
    */
   private validateDepositPair(paymentMethodField: string, amountField: string, displayName: string): void {
     const paymentMethodControl = this.dataForm.get(paymentMethodField);
@@ -2705,7 +2689,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：自訂驗證器 - 保證金依賴驗證
+   * 新增：自訂驗證器 - 保證金依賴驗證
    */
   private createDepositDependencyValidator(paymentMethodField: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -2724,7 +2708,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：自訂錯誤訊息處理
+   * 新增：自訂錯誤訊息處理
    */
   getFieldErrorMessage(fieldName: string): string {
     const field = this.dataForm.get(fieldName);
@@ -2770,7 +2754,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
 
   /**
-   * 🎯 新增：根據欄位獲取必填錯誤訊息
+   * 新增：根據欄位獲取必填錯誤訊息
    */
   private getRequiredErrorMessage(fieldName: string): string {
     const requiredMessages: { [key: string]: string } = {
@@ -2791,7 +2775,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
- * 🎯 觸發所有動態驗證器（用於初始化和資料載入後）
+ * 觸發所有動態驗證器（用於初始化和資料載入後）
  */
   private triggerAllDynamicValidators(): void {
     console.log('🔥 觸發所有動態驗證器');

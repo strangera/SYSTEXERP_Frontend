@@ -121,7 +121,8 @@ export interface TLS12040DetailModel {
 
   approve_status: string; // 合約狀態
 
-  company_register_address: string; // 公司登記地址
+  VEN_Address: string; //公司登記地址
+
 
   // ========== 位置資訊 ==========
   locationInfo: LocationDetails[];

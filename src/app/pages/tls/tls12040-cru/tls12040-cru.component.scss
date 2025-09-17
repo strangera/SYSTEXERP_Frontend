@@ -1,6 +1,6 @@
 // tls13010-cru.component.scss
 
-// 🎯 地址複製按鈕專用樣式
+// 地址複製按鈕專用樣式
 .copy-address-button {
   // 高度與 PrimeNG 輸入框完全一致
   height: 38px !important;
@@ -53,7 +53,7 @@
   z-index: 10;
 }
 
-// 🎯 輸入框容器的調整（確保有足夠空間給按鈕）
+// 輸入框容器的調整（確保有足夠空間給按鈕）
 .address-input-container {
   position: relative;
 
@@ -85,7 +85,7 @@
   padding: 0.5rem 0.75rem 0 0.75rem !important; /* 只保留左右和上方的 padding */
 }
 
-// 🎯 響應式調整
+// 響應式調整
 @media (max-width: 768px) {
   .copy-address-button {
     font-size: 12px;

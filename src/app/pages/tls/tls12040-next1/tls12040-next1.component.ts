@@ -83,7 +83,20 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private _lastViewMode: boolean | null = null;
   private _lastContractInfoLength = 0;
   // 檢視模式用 要換方式
-  isViewMode = false;
+  // isViewMode = false;
+
+  // 使用 CRUDStatus 判斷模式
+  get isReadOnlyMode(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
+
+  get isEditMode(): boolean {
+    return this.crudstatus === CRUDStatus.Edit;
+  }
+
+  get isCreateMode(): boolean {
+    return this.crudstatus === CRUDStatus.Create;
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -109,6 +122,14 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   ngOnInit(): void {
     window.scrollTo(0, 0);
     this.initializePage('TLS12040', this.dataForm);
+
+    console.log('=== CRUD 狀態調試 ===');
+    console.log('當前 CRUD 狀態:', this.crudstatus);
+    console.log('路由狀態:', this.router.lastSuccessfulNavigation?.extras?.state);
+    console.log('isReadOnlyMode:', this.isReadOnlyMode);
+    console.log('isEditMode:', this.isEditMode);
+    console.log('isCreateMode:', this.isCreateMode);
+
     this.initializeDataStructure();
     this.contractInfoColumns = TLS12040FareColumnDefinitions.getContractInfoColumns();
 
@@ -134,13 +155,16 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private loadOrgOptions(): void {
     console.log('載入組織選項...');
 
-    // 你需要找到對應的服務來載入組織選項
-    // 從你的 TLS13010Next1 程式碼看來，可能是這樣：
-
     const subscription = this.locationOptionsService.getOrgOptions().subscribe({
       next: (options) => {
         console.log('組織選項載入成功:', options);
         this.orgOptions = options;
+
+        // 🔥 強制清除所有快取，確保重新生成欄位定義
+        this.clearColumnCache();
+
+        // 🔥 觸發變更檢測
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('載入組織選項失敗:', error);
@@ -150,6 +174,18 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     this.subscriptions.push(subscription);
+  }
+
+  private clearColumnCache(): void {
+    console.log('🗑️ 清除欄位定義快取');
+    this._cachedDeductionAColumns = null;
+    this._cachedDeductionBColumns = null;
+    this._cachedDeductionCColumns = null;
+    this._cachedDeductionDColumns = null;
+    this._cachedDeductionEColumns = null;
+
+    // 重置快取標記
+    this._lastOrgOptionsLength = -1;
   }
 
   private loadWorkflowDataWithRetry(retryCount: number = 0): void {
@@ -246,7 +282,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     let hasAnyData = false;
     let totalItems = 0;
-    let hasUserModifications = false; // 🎯 檢查是否有使用者修改
+    let hasUserModifications = false; // 檢查是否有使用者修改
 
     for (const capType of capTypes) {
       if (fareData[capType] && Array.isArray(fareData[capType])) {
@@ -256,7 +292,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         if (items.length > 0) {
           hasAnyData = true;
 
-          // 🎯 檢查是否有使用者修改的痕跡
+          // 檢查是否有使用者修改的痕跡
           const hasSelectedItems = items.some(item => item.is_selected);
           const hasModifiedItems = items.some(item =>
             item._status === 'new' ||
@@ -722,13 +758,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionAColumns(): ColumnDef[] {
     if (!this._cachedDeductionAColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionAColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionAColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionAColumns = columns;
@@ -739,12 +775,12 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   get deductionBColumns(): ColumnDef[] {
     if (!this._cachedDeductionBColumns ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionBColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionBColumns(this.contractInfoData);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionBColumns = columns;
@@ -756,13 +792,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionCColumns(): ColumnDef[] {
     if (!this._cachedDeductionCColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionCColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionCColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionCColumns = columns;
@@ -774,13 +810,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionDColumns(): ColumnDef[] {
     if (!this._cachedDeductionDColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionDColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionDColumns = columns;
@@ -792,13 +828,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionEColumns(): ColumnDef[] {
     if (!this._cachedDeductionEColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionEColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionEColumns = columns;
@@ -809,7 +845,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private _updateCacheFlags(): void {
     this._lastOrgOptionsLength = this.orgOptions.length;
-    this._lastViewMode = this.isViewMode;
+    this._lastViewMode = this.isReadOnlyMode;
     this._lastContractInfoLength = this.contractInfoData.length;
   }
 
@@ -845,7 +881,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log(`🔘 按鈕點擊: ${field}`, rowData);
 
-    // 🎯 直接根據 field 判斷要做什麼
+    // 直接根據 field 判斷要做什麼
     if (field === 'auto_calc') {
       this.doAutoCalculate(rowData, capType);
     } else if (field === 'copy_button') {
@@ -854,7 +890,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-     * 🎯 自動計算邏輯
+     * 自動計算邏輯
      */
   private doAutoCalculate(rowData: any, capType: string): void {
     console.log('🧮 開始自動計算');
@@ -870,7 +906,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const monthlyAmount = Math.round(totalAmount / periods);
     const downPayment = totalAmount - (monthlyAmount * (periods - 1));
 
-    // 🎯 設定對話框資料並顯示
+    // 設定對話框資料並顯示
     this.calculationResult = {
       totalAmount,
       periods,
@@ -1154,7 +1190,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  // 🎯 B類型計算優化
+  // B類型計算優化
   private handleTypeBCalculation(fieldName: string, newValue: any, rowData: any): void {
 
     if (fieldName === 'tpy_type' && newValue === '01') {
@@ -1176,11 +1212,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 C類型計算優化 - 最重要的優化
+  // C類型計算優化 - 最重要的優化
   private handleTypeCCalculation(fieldName: string, newValue: any, rowData: any): void {
     console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
 
-    // 🎯 日期變更時重新計算期數
+    // 日期變更時重新計算期數
     if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
       console.log('📅 日期欄位變更，重新計算期數');
 
@@ -1201,7 +1237,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       }, 10);
     }
 
-    // 🎯 金額相關欄位變更時的計算
+    // 金額相關欄位變更時的計算
     const calculationFields = ['tpy_totalamt', 'period_nos', 'tpy_amount', 'down_payment'];
     if (calculationFields.includes(fieldName)) {
       this.fareCalculationService.autoCalculateAmount(rowData, 'C', fieldName);
@@ -1216,7 +1252,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 D/E類型計算優化
+  // D/E類型計算優化
   private handleTypeDCalculation(fieldName: string, newValue: any, rowData: any): void {
     if (fieldName === 'tpy_rate') {
       this.fareCalculationService.autoCalculateAmount(rowData, 'D', fieldName);
@@ -1240,7 +1276,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       let startDate: Date;
       let endDate: Date;
 
-      // 🎯 智能日期解析
+      // 智能日期解析
       try {
         if (rowData.tpy_bdate instanceof Date) {
           startDate = rowData.tpy_bdate;
@@ -1269,7 +1305,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
           console.log(`✅ 期數更新: ${oldPeriods} → ${calculatedPeriods}`);
 
-          // 🎯 如果期數變化，觸發C類型重新計算
+          // 如果期數變化，觸發C類型重新計算
           if (oldPeriods !== calculatedPeriods) {
             console.log('🔄 期數變化，觸發C類型重新計算');
             this.fareCalculationService.autoCalculateAmount(rowData, 'C', 'period_nos');
@@ -1305,7 +1341,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const endYear = endDate.getFullYear();
     const endMonth = endDate.getMonth(); // 0-based
 
-    // 🎯 正確的月份差計算公式
+    // 正確的月份差計算公式
     const months = (endYear - startYear) * 12 + (endMonth - startMonth);
 
     console.log('🧮 期數計算詳情:', {
@@ -1326,7 +1362,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     const { newData } = event;
 
-    // 🎯 根據類型執行最終計算
+    // 根據類型執行最終計算
     switch (capType) {
       case 'A':
         this.fareCalculationService.autoCalculateAmount(newData, 'A');

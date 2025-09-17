@@ -99,7 +99,7 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
       {No: '1', Name: '明細'}
     ]
 
-    ABAT_YN_Option: apiOption[] = [ // 是否為沖帳代號
+    whether_Option: apiOption[] = [ // 是否
       {No: 'Y', Name: '是'},
       {No: 'N', Name: '否'}
     ]
@@ -130,15 +130,14 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
       { field: 'AccNo', header: '科目代號', visible: true }, // 科目代號
       { field: 'AccCname', header: '科目名稱', visible: true }, // 科目名稱
       { field: 'AccEname', header: '科目英文名稱', visible: true }, // 科目英文名稱
-      { field: 'AccDC', header: '借/貸', visible: true, options: this.ClassNo_Option }, // 借/貸
-      { field: 'Ledger_MD', header: '統制/明細', visible: true, options: this.ClassNo_Option }, // 統制/明細
+      { field: 'AccDC', header: '借/貸', visible: true, options: this.AccDC_Option }, // 借/貸
+      { field: 'Ledger_MD', header: '統制/明細', visible: true, options: this.Ledger_MD_Option }, // 統制/明細
       { field: 'ClassNo', header: '三碼代號', visible: true }, // 三碼代號
       { field: 'ABAT_YN', header: '是否為沖帳代號', visible: true }, // 是否為沖帳代號
-      { field: 'Voucher_Type', header: '傳票格式', visible: true, options: this.ClassNo_Option }, // 傳票格式
-      { field: 'Budget_YN', header: '是否為預算科目', visible: true, options: this.ClassNo_Option }, // 是否為預算科目
-      { field: 'Org_YN', header: '是否設定部門代號', visible: true, options: this.ClassNo_Option }, // 是否設定部門代號
-      { field: 'Input_YN', header: '是否可輸', visible: true, options: this.ClassNo_Option }, // 是否可輸
-
+      { field: 'Voucher_Type', header: '傳票格式', visible: true, options: this.Voucher_Type_Option }, // 傳票格式
+      { field: 'Budget_YN', header: '是否為預算科目', visible: true, options: this.whether_Option }, // 是否為預算科目
+      { field: 'Org_YN', header: '是否設定部門代號', visible: true, options: this.whether_Option }, // 是否設定部門代號
+      { field: 'Input_YN', header: '是否可輸', visible: true, options: this.whether_Option }, // 是否可輸
               
       { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
       { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
@@ -176,19 +175,19 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
 
         this.data = [
           { 
-            "AccNo": "科目代號",
-            "AccCname": "科目名稱",
-            "AccEname": "科目英文名稱",
+            "AccNo": "1101",
+            "AccCname": "庫存現金",
+            "AccEname": "",
             "AccDC": "0",
             "Ledger_MD": "0",
-            "ClassNo": '3',
-            "ABAT_YN": "Y",
+            "ClassNo": '110',
+            "ABAT_YN": "N",
             "Voucher_Type": "0",
-            "Budget_YN": "Y",
+            "Budget_YN": "N",
             "Org_YN": "Y",
             "rest_value": 1,
             "rest_value2":1,
-            "Input_YN": "Y"
+            "Input_YN": "N"
           }
         ];
         

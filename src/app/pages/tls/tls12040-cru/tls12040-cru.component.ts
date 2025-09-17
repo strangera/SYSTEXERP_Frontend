@@ -48,7 +48,7 @@ export class TLS12040CRUComponent implements OnInit {
   formTitle = '';
   submitted = false;
   loading = false;
-  crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
+  crudstatus: CRUDStatus = CRUDStatus.Read;// 固定為 Edit，避免表單被 disable
 
   // 用戶和權限
   user: any;
@@ -60,7 +60,7 @@ export class TLS12040CRUComponent implements OnInit {
     {
       field: 'location_no',
       header: '位置編號',
-      type: 'selector-panel',  // 🎯 改用 selector-panel
+      type: 'selector-panel',  // 改用 selector-panel
       editable: true,
       style: 'min-width: 200px',
       selectorConfig: {
@@ -87,7 +87,7 @@ export class TLS12040CRUComponent implements OnInit {
             label: '館別',
             type: 'dropdown',
             colClass: 'col-4',
-            options: [], // 🎯 會在 updateSelectorPanelOptions 中更新
+            options: [], // 會在 updateSelectorPanelOptions 中更新
             placeholder: '選擇館別',
           },
           {
@@ -292,7 +292,7 @@ export class TLS12040CRUComponent implements OnInit {
     expiration_fees: [0], //契約屆滿保證金金額
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
-    company_register_address: [''],
+    VEN_Address: [''],
   });
   // ----------------------------------------------------------------
   constructor(
@@ -314,18 +314,24 @@ export class TLS12040CRUComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    // 先處理路由狀態
+    this.handleRouterState();
+
+    // 🔍 調試當前狀態
+    console.log('=== CRU 狀態調試 ===');
+    console.log('當前 CRUD 狀態:', this.crudstatus);
+    console.log('表單標題:', this.formTitle);
+    console.log('表單是否禁用:', this.dataForm.disabled);
+
     // 先保護現有資料
     const existingData = this.flowService.getCruData() as any;
 
     // 先初始化下拉選項
     this.initializeDropdownOptions();
 
-    // 處理路由狀態
-    this.handleRouterState();
-
     // 如果之前有資料，確保不被覆蓋
     if (existingData && Object.keys(existingData).length > 0) {
-      // 🎯 修正：先載入基本下拉選項，然後再載入緩存資料
+      // 修正：先載入基本下拉選項，然後再載入緩存資料
       this.loadCachedDataWithClassifications(existingData);
     }
   }
@@ -348,7 +354,7 @@ export class TLS12040CRUComponent implements OnInit {
       this.updateDisplayLocationData();
     }
 
-    // 🎯 關鍵修正：確保分類按正確順序載入
+    // 關鍵修正：確保分類按正確順序載入
     if (cruData.bus_type) {
       this.loadClassificationChain(cruData);
     } else {
@@ -506,15 +512,35 @@ export class TLS12040CRUComponent implements OnInit {
     const currentState = this.flowService.getCurrentState();
     const hasExistingFlow = currentState.contractId && currentState.contractId !== '';
 
+    console.log('=== 路由狀態處理開始 ===');
+    console.log('路由狀態:', state);
+    console.log('是否有現有流程:', hasExistingFlow);
+
     if (state) {
       const rowdata = state['rowdata'] as TLS12040Response;
       const crudstatus = state['crudstatus'] as CRUDStatus;
 
+      console.log('接收到的狀態:', { crudstatus, rowdata });
+
       if (rowdata && (rowdata.id || rowdata.apply_no)) {
+        // 設定 CRUD 狀態和標題
         this.crudstatus = crudstatus;
         this.formTitle = this.getFormTitle(crudstatus);
 
-        // 關鍵修改：只在沒有現有流程時才初始化新流程
+        console.log('設定 CRUD 狀態:', this.crudstatus);
+        console.log('表單標題:', this.formTitle);
+
+        // 根據狀態決定表單是否可編輯
+        if (this.crudstatus === CRUDStatus.Read) {
+          console.log('檢視模式：將禁用表單');
+          // 延遲禁用表單，確保初始化完成
+          setTimeout(() => {
+            this.dataForm.disable();
+            console.log('表單已禁用');
+          }, 100);
+        }
+
+        // 工作流程處理：只在沒有現有流程時才初始化新流程
         if (!hasExistingFlow) {
           console.log('初始化新的工作流程');
           this.flowService.startFlow({
@@ -528,25 +554,37 @@ export class TLS12040CRUComponent implements OnInit {
         // 載入詳細資料
         this.loadContractDetail(rowdata);
       } else {
-        // 沒有資料時，才初始化空流程
+        // 沒有 rowdata，但有路由狀態 - 通常是新增模式
+        this.crudstatus = CRUDStatus.Create;
+        this.formTitle = '新增專櫃要約書';
+        console.log('無 rowdata，設定為新增模式');
+
         if (!hasExistingFlow) {
           this.flowService.startFlow({
             applyNo: '',
             isNewContract: true
           });
+          console.log('初始化空流程（新增模式）');
         }
-        this.formTitle = '新增專櫃要約書';
       }
     } else {
-      // 預設初始化，也要檢查是否已有流程
+      // 沒有路由狀態 - 直接訪問頁面，預設為新增模式
+      this.crudstatus = CRUDStatus.Create;
+      this.formTitle = '新增專櫃要約書';
+      console.log('無路由狀態，預設新增模式');
+
       if (!hasExistingFlow) {
         this.flowService.startFlow({
           applyNo: '',
           isNewContract: true
         });
+        console.log('預設初始化空流程');
       }
-      this.formTitle = '新增專櫃要約書';
     }
+
+    console.log('=== 路由狀態處理完成 ===');
+    console.log('最終 CRUD 狀態:', this.crudstatus);
+    console.log('最終表單標題:', this.formTitle);
   }
 
   private getFormTitle(crudstatus: CRUDStatus): string {
@@ -735,7 +773,7 @@ export class TLS12040CRUComponent implements OnInit {
       ticket_remarks: data.ticket_remarks,
       total_amt_unit: data.total_amt_unit,
       total_amt_vendor_unit: data.total_amt_vendor_unit,
-      company_register_address: data.company_register_address,
+      VEN_Address: data.VEN_Address,
 
       // 狀態欄位
       cap_saletype1: data.cap_saletype1,
@@ -812,7 +850,7 @@ export class TLS12040CRUComponent implements OnInit {
         // 在所有選項載入完成後更新 selector 面板選項
         this.updateSelectorPanelOptions();
 
-        // 🎯 關鍵：檢查是否需要處理緩存的分類資料
+        // 關鍵：檢查是否需要處理緩存的分類資料
         const existingData = this.flowService.getCruData() as any;
         if (existingData && existingData.bus_type && !this.busClassOptions.length) {
           console.log('🔄 API 載入完成後處理分類資料');
@@ -874,7 +912,7 @@ export class TLS12040CRUComponent implements OnInit {
       if (confirm('是否要儲存目前的編輯內容？')) {
         const completeData = {
           ...this.dataForm.value,
-          locationData: this.locationData  // 🎯 包含位置資料
+          locationData: this.locationData  // 包含位置資料
         };
         this.flowService.setCruData(completeData);
       }
@@ -891,7 +929,7 @@ export class TLS12040CRUComponent implements OnInit {
       return;
     }
 
-    // 🎯 合併表單資料和位置資料
+    // 合併表單資料和位置資料
     const completeData = {
       ...frm.value,
       locationData: this.locationData  // 加入位置資料
@@ -909,14 +947,24 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   onSubmitNext(): void {
-    // 🎯 直接保存並導航到下一步，包含位置資料
+    // 直接保存並導航到下一步，包含位置資料
     const completeData = {
       ...this.dataForm.value,
       locationData: this.locationData  // 加入位置資料
     };
 
+    // 先保存數據
     this.flowService.setCruData(completeData);
-    this.router.navigate(['account/tls/tls12040next1']);
+
+    // 然後導航並傳遞狀態
+    const navigationExtras: NavigationExtras = {
+      state: {
+        crudstatus: this.crudstatus, // 確保這裡有設定現有狀態
+        fromRoute: this.router.url
+      }
+    };
+
+    this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -930,11 +978,11 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   hasCommissionTypeChanged(): boolean {
-    // if (this.contractFlowService.isNewContractMode()) {
-    //   return false;
-    // }
+    if (this.crudstatus === CRUDStatus.Create) {
+      return false;
+    }
 
-    // const originalData = this.contractFlowService.getCurrentData()?.queryRowData;
+    // const originalData = this.flowService.getCurrentData()?.queryRowData;
     // const originalCommissionType = originalData?.tlt_term_type?.toString().trim();
     // const currentCommissionType = this.dataForm.get('tlt_term_type')?.value?.toString().trim();
 
@@ -988,14 +1036,14 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   canCopyAddress(): boolean {
-    // 🎯 只要有公司登記地址且不是檢視模式就可以複製
+    // 只要有公司登記地址且不是檢視模式就可以複製
     const hasAddress = !!this.getCompanyAddress();
     const canEdit = this.crudstatus !== CRUDStatus.Read;
     return hasAddress && canEdit;
   }
 
   getCompanyAddress(): string {
-    const address = this.dataForm.get('company_register_address')?.value;
+    const address = this.dataForm.get('VEN_Address')?.value;
     const trimmedAddress = address?.trim() || '';
 
     return trimmedAddress;
@@ -1053,11 +1101,11 @@ export class TLS12040CRUComponent implements OnInit {
   searchLocationOptions(searchParams: any): Observable<any[]> {
     console.log('🔍 CRU 收到搜尋參數:', searchParams);
 
-    // 🎯 轉換 SortBy 的欄位名稱
+    // 轉換 SortBy 的欄位名稱
     if (searchParams.SortBy && Array.isArray(searchParams.SortBy)) {
       searchParams.SortBy = searchParams.SortBy.map((sort: any) => ({
-        field: sort.field === 'value' ? 'location_no' : sort.field,  // 🎯 轉換欄位名
-        order: 1  // 🎯 固定為升序，或保持原值 sort.order
+        field: sort.field === 'value' ? 'location_no' : sort.field,  // 轉換欄位名
+        order: 1  // 固定為升序，或保持原值 sort.order
       }));
     }
 
@@ -1212,7 +1260,7 @@ export class TLS12040CRUComponent implements OnInit {
       新狀態: newData._status
     });
 
-    // 🎯 重點：檢查位置編號是否重複
+    // 重點：檢查位置編號是否重複
     if (newData.location_no && newData.location_no.trim() !== '') {
       const isDuplicate = this.checkLocationDuplicate(newData);
 
@@ -1222,14 +1270,14 @@ export class TLS12040CRUComponent implements OnInit {
         // 顯示錯誤訊息
         this.messageService.errorBubble(`位置編號 ${newData.location_no} 重複！`);
 
-        // 🎯 直接從陣列中移除這筆資料
+        // 直接從陣列中移除這筆資料
         this.removeLocationItem(String(newData.id));
 
         return; // 不繼續後續處理
       }
     }
 
-    // 🎯 沒有重複，正常處理儲存邏輯
+    // 沒有重複，正常處理儲存邏輯
     this.updateDisplayLocationData();
 
     // 詳細的狀態判斷邏輯
@@ -1286,7 +1334,7 @@ export class TLS12040CRUComponent implements OnInit {
     field: string;
     newValue: string;
     oldValue: string;
-    selectedOption?: any; // 🎯 關鍵：selector-panel 應該提供這個
+    selectedOption?: any; // 關鍵：selector-panel 應該提供這個
   }): void {
     const { rowData, field, newValue, oldValue, selectedOption } = event;
 
@@ -1299,7 +1347,7 @@ export class TLS12040CRUComponent implements OnInit {
     });
 
     if (field === 'location_no' && newValue) {
-      // 🎯 優先使用 selectedOption（來自 selector-panel）
+      // 優先使用 selectedOption（來自 selector-panel）
       if (selectedOption) {
         console.log('📋 使用 selector-panel 提供的完整資料:', selectedOption);
         this.handleLocationSelectionFromSelectorPanel(rowData, selectedOption);
@@ -1316,7 +1364,7 @@ export class TLS12040CRUComponent implements OnInit {
       return;
     }
 
-    // 🎯 從 selectedOption 取得所有需要的資料
+    // 從 selectedOption 取得所有需要的資料
     const locationData = {
       location_no: selectedOption.value || selectedOption.location_no || '',
       tlt_building: selectedOption.tlt_building || '',
@@ -1330,7 +1378,7 @@ export class TLS12040CRUComponent implements OnInit {
 
     console.log('📋 從 selector-panel 取得的位置資料:', locationData);
 
-    // 🎯 更新資料
+    // 更新資料
     const currentStatus = this.locationData[targetIndex]._status;
     const newStatus = currentStatus === 'new' ? 'new' : 'modified';
 
@@ -1340,10 +1388,10 @@ export class TLS12040CRUComponent implements OnInit {
       _status: newStatus
     };
 
-    // 🎯 同步更新 rowData（讓表格立即顯示）
+    // 同步更新 rowData（讓表格立即顯示）
     Object.assign(rowData, this.locationData[targetIndex]);
 
-    // 🎯 觸發變更檢測
+    // 觸發變更檢測
     this.locationData = [...this.locationData];
     this.updateDisplayLocationData();
 
@@ -1366,10 +1414,10 @@ export class TLS12040CRUComponent implements OnInit {
       是否成功: beforeLength > afterLength
     });
 
-    // 🎯 更新顯示資料
+    // 更新顯示資料
     this.updateDisplayLocationData();
 
-    // 🎯 強制觸發變更檢測
+    // 強制觸發變更檢測
     this.locationData = [...this.locationData];
 
     // 儲存到工作流程
@@ -1453,5 +1501,101 @@ export class TLS12040CRUComponent implements OnInit {
     return this.locationData.some(item =>
       item._status === 'new' || item._status === 'modified' || item._status === 'deleted'
     );
+  }
+
+  /**
+* 格式化 email 欄位（當使用者離開輸入框時觸發）
+*/
+  formatEmailField(fieldName: string, value: string): void {
+    console.log(`格式化 ${fieldName} 欄位:`, value);
+
+    if (!value || value.trim() === '') {
+      return;
+    }
+
+    // 檢查是否包含分隔符號，如果沒有就不需要格式化
+    if (!value.includes(',') && !value.includes(';')) {
+      // 單一 email，只需要驗證格式
+      this.validateSingleEmail(fieldName, value.trim());
+      return;
+    }
+
+    // 格式化多個 email
+    const formattedValue = this.formatMultipleEmails(value);
+
+    // 如果格式有改變，更新表單值
+    if (formattedValue !== value) {
+      const control = this.dataForm.get(fieldName);
+      control?.setValue(formattedValue);
+
+      this.messageService.infoBubble(`已自動格式化 ${this.getFieldDisplayName(fieldName)}`);
+
+      // 自動儲存
+      // this.saveToWorkflow();
+    }
+
+    // 驗證格式化後的 email
+    this.validateMultipleEmails(fieldName, formattedValue);
+  }
+
+  /**
+   * 格式化多個 email 字串
+   */
+  private formatMultipleEmails(emailString: string): string {
+    return emailString
+      .split(/[;,]/) // 支援分號和逗號分隔
+      .map(email => email.trim()) // 去除前後空格
+      .filter(email => email !== '') // 過濾空字串
+      .join(';'); // 統一用分號連接
+  }
+
+  /**
+   * 驗證單一 email
+   */
+  private validateSingleEmail(fieldName: string, email: string): void {
+    if (email && !this.isValidEmailFormat(email)) {
+      this.messageService.warnBubble(`${this.getFieldDisplayName(fieldName)} 格式不正確`);
+    }
+  }
+
+  /**
+   * 驗證多個 email
+   */
+  private validateMultipleEmails(fieldName: string, emailString: string): void {
+    if (!emailString) return;
+
+    const emails = emailString.split(';');
+    const invalidEmails: string[] = [];
+
+    emails.forEach(email => {
+      if (email && !this.isValidEmailFormat(email)) {
+        invalidEmails.push(email);
+      }
+    });
+
+    if (invalidEmails.length > 0) {
+      this.messageService.warnBubble(
+        `${this.getFieldDisplayName(fieldName)} 中有無效格式：${invalidEmails.join(', ')}`
+      );
+    }
+  }
+
+  /**
+   * 驗證 email 格式
+   */
+  private isValidEmailFormat(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  }
+
+  /**
+   * 取得欄位顯示名稱
+   */
+  private getFieldDisplayName(fieldName: string): string {
+    const fieldNames: { [key: string]: string } = {
+      'email': '聯絡信箱',
+      'invoice_email': '發票信箱'
+    };
+    return fieldNames[fieldName] || fieldName;
   }
 }
