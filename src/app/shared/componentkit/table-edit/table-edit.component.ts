@@ -56,7 +56,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() title: string | undefined = undefined;         // table 標題
   @Input() tableRequired = false;                         // table 是否為必填
   tableDataEmpty = false;                                 // table 資料是否為空
-  @Input() columns!: EditColumn[];                            // table 欄位配置 (必填)
+  @Input() columns!: EditColumn[];                        // table 欄位配置 (必填)
   @Input() data: any[] = [];                              // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();       // table 資料改變 (事件)
   @Input() loading = false;                               // 是否顯示 loading

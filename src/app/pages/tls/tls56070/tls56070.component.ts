@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -7,15 +7,17 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
-import { Tls56070Service } from '@service/api/tls/tls56070.service';
+import { POS2023DAMResponse, Tls56070Service } from '@service/api/tls/tls56070.service';
 import { finalize } from 'rxjs';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ButtonModule } from 'primeng/button';
 
 export const enum SCRPStatus {
   已申請 = '1',
@@ -39,147 +41,114 @@ export const enum SCRPStatus {
     TableComponent,
     CommonModule,
     MultiSelectComponent,
-    CalendarRangeQuickComponent
+    CalendarRangeQuickComponent,
+    AsyncPipe,
+    ButtonModule
   ],
 })
-export class TLS56070Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm = this.formBuilder.group({
-    SCRP_No: [null, [Validators.maxLength(16)]],
-    LOGO_No: [null],
-    SCRP_Status: [null],
-    APPLY_USR_No: [null],
-    APRV_USR_No: [null],
+export class TLS56070Component extends BasicQueryPageComponent<POS2023DAMResponse> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    DAM_No: [null, [Validators.maxLength(16)]],
+    HOS_NoList: [null],
+    LOGO_NoList: [null],
+    DAM_StatusList: [null],
     APPLY_Date_Start: [null],
     APPLY_Date_End: [null],
+    APPLY_USR: [null],
     APRV_Date_Start: [null],
     APRV_Date_End: [null],
-    HOS_No: [null],
-    ...createPaginationConfig([{ field: 'SCRP_No', order: 1 }]),
+    APRV_USR: [null],
+    ...createPaginationConfig([{ field: 'DAM_No', order: 1 }]),
   });
   totalRecords = 0;
-  data: any[] = [];
+  data: POS2023DAMResponse[] = [];
+  selectedItems: POS2023DAMResponse[] = [];
   columns: Column[] = [
-    { field: 'SCRP_No', header: '報廢單編號', visible: true },
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
-    { field: 'HOS_No', header: '倉別', visible: true },
+    { field: 'DAM_No', header: '報廢單編號', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
-    { field: 'SCRP_Remark', header: '說明', visible: true },
-    { field: 'APPLY_USR_No', header: '申請人', visible: true },
-    { field: 'APRV_USR_No', header: '審核人', visible: true },
-    { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDateTime },
-    { field: 'SCRP_Status', header: '單據狀態', visible: true, format: (value) => this.scrapStatusOptions.find((item) => item.value === value)?.label || value },
+    { field: 'HOS_No', header: '倉別代碼', visible: true },
+    { field: 'HOS_NAME', header: '倉別名稱', visible: true },
+    { field: 'org_id', header: '組織編號', visible: true },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate },
+    { field: 'APPLY_USR_No', header: '申請人編號', visible: true },
+    { field: 'APPLY_USR_Name', header: '申請人名稱', visible: true },
+    { field: 'DAM_Status', header: '單據狀態', visible: true, format: (value) => this.scrapStatusOptions.find((item) => item.value === value)?.label || value },
+    { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate },
+    { field: 'APRV_USR_No', header: '審核人編號', visible: true },
+    { field: 'APRV_USR_Name', header: '審核人名稱', visible: true },
+    { field: 'DAM_TotQty', header: '報廢數量合計', visible: true, format: formatAmount },
+    { field: 'DAM_TotBuyNet', header: '報廢未稅進價小計', visible: true, format: formatAmount },
+    { field: 'DAM_TotBuyTax', header: '報廢進價稅額小計', visible: true, format: formatAmount },
+    { field: 'DAM_TotBuyAmt', header: '報廢進價合計', visible: true, format: formatAmount },
+    { field: 'DAM_TotSaleNet', header: '報廢未稅售價小計', visible: true, format: formatAmount },
+    { field: 'DAM_TotSaleTax', header: '報廢售價稅額小計', visible: true, format: formatAmount },
+    { field: 'DAM_TotSaleAmt', header: '報廢售價合計', visible: true, format: formatAmount },
+    { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDate },
+    { field: 'VOID_USR_No', header: '作廢人員', visible: true },
+    { field: 'VOID_USR_Name', header: '作廢人員姓名', visible: true },
+    { field: 'DAM_Date', header: '報廢日期', visible: true, format: formatDate },
+    { field: 'DAM_USR_No', header: '報廢人員', visible: true },
+    { field: 'DAM_USR_Name', header: '報廢人員姓名', visible: true },
+    { field: 'ReAPRV_Date', header: '反審核日期', visible: false, format: formatDate },
+    { field: 'ReAPRV_USR_No', header: '反審核人員', visible: false },
+    { field: 'ReAPRV_USR_Name', header: '反審核人員姓名', visible: false },
+    { field: 'DAM_Remark', header: '說明', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
+  scrapStatusOptions = getSYS1000Options('DAM_Status');
 
-  multipleButtons: AddButton[] = [
-    {
-      label: '審核', icon: 'pi pi-check-circle text-green-500', action: (selectedItems) => {
-        this.batchUpdateStatus(selectedItems, SCRPStatus.已審核);
-      }, disabled: (item) => item.SCRP_Status !== SCRPStatus.已申請
-    },
-    {
-      label: '已報廢', icon: 'pi pi-trash text-red-500', action: (selectedItems) => {
-        this.batchUpdateStatus(selectedItems, SCRPStatus.已作廢);
-      }, disabled: (item) => item.SCRP_Status !== SCRPStatus.已審核
-    },
-  ];
-
-  scrapStatusOptions = [
-    { label: '已申請', value: '1' },
-    { label: '已審核', value: '2' },
-    { label: '已作廢', value: '9' },
-  ];
-
-  brandOptions: { label: string; value: string }[] = [];
-  warehouseOptions: { label: string; value: string }[] = [];
-  userOptions: { label: string; value: string }[] = [];
+  brandOptions = this.dropdown.queryPluLogo();
+  warehouseOptions = this.dropdown.queryPos2034();
+  userOptions = this.dropdown.queryTblUser();
 
   constructor(
     private tls56070Service: Tls56070Service,
-    private dropDownListService: DropDownListService,
+    private dropdown: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS56070', '/TLS/TLS56070CRU', this.queryForm, (form) => this.onSubmit(form));
-    this.loadDropdownOptions();
-  }
-
-  loadDropdownOptions(): void {
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      const mockData = [
-        {
-          SCRP_No: 'SCRP20250813001',
-          APPLY_Date: '2025-08-13',
-          LOGO_No: 'LOGO01',
-          HOS_No: 'H001',
-          SCRP_TotBuyAmt: 1000,
-          APPLY_USR_No: 'U001',
-          APRV_USR_No: null,
-          APRV_Date: null,
-          SCRP_Remark: '備註1',
-          SCRP_Status: '1',
-          id: 1
-        },
-        {
-          SCRP_No: 'SCRP20250812001',
-          APPLY_Date: '2025-08-12',
-          LOGO_No: 'LOGO02',
-          HOS_No: 'H002',
-          SCRP_TotBuyAmt: 500,
-          APPLY_USR_No: 'U002',
-          APRV_USR_No: 'U003',
-          APRV_Date: '2025-08-12',
-          SCRP_Remark: '備註2',
-          SCRP_Status: '2',
-          id: 2
-        }
-      ];
-      // this.tls56070Service.queryScrapList(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
-      //   this.data = response.Data;
-      //   this.totalRecords = response.TotalCount;
-      // });
-      this.data = mockData;
-      this.totalRecords = mockData.length;
-      this.loading = false;
+      this.tls56070Service.queryTLS56070(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
     });
   }
 
-  btnLoading = false;
+  btnLoading = signal(false);
 
-  batchUpdateStatus(selectedItems: any[], status: string): void {
-    this.btnLoading = true;
-    const idList = selectedItems.map(item => item.id);
+  batchUpdateStatus(status: string): void {
     const body = {
-      idList: idList,
-      SCRP_Status: status
+      DetailList: this.selectedItems.map(item => ({
+        DAM_No: item.DAM_No,
+        DAM_Status: status
+      }))
     };
-
-    // this.tls56070Service.batchUpdateStatus(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
-    //   this.messageService.successBubble(response.Message);
-    //   this.onSubmit(this.queryForm);
-    // });
-
-    // 模擬成功訊息
-    console.log(`批量更新報廢單狀態為 ${status}`, body);
-    this.btnLoading = false;
-    this.onSubmit(this.queryForm);
+    this.btnLoading.set(true);
+    this.tls56070Service.updateStatusTLS56070(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading.set(false))).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.selectedItems = [];
+      this.onSubmit(this.queryForm);
+    });
   }
 
-  editDisabled(rowData: any) {
-    return rowData.SCRP_Status !== SCRPStatus.已申請;
+  editDisabled(rowData: POS2023DAMResponse) {
+    return rowData.DAM_Status !== SCRPStatus.已申請;
+  }
+
+  checkStatus(status: string): boolean {
+    return this.selectedItems.some(item => item.DAM_Status !== status);
   }
 }
