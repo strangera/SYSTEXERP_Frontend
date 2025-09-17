@@ -180,32 +180,37 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
       this.refreshCloseDate();
   }
 
-  updateColumnVisibility(selectedValues: number[]) {
-    const alwaysVisibleFields = [
-      'tlt_building',
-      'tlt_floor',
-      'ECR_No',
-      'USR_No',
-    ];
-    const visibilityMap = new Set(alwaysVisibleFields);
+updateColumnVisibility(selectedValues: number[]) {
+  const reporttype = this.queryForm.controls.reporttype.value;
 
-    if (selectedValues.includes(1)) {
-      visibilityMap.add('BOOK_PayAmt');
-    }
-    if (selectedValues.includes(2)) {
-      visibilityMap.add('SELF_PayAmt');
-      visibilityMap.add('SOVER_PayAmt');
-    }
-    if (selectedValues.includes(3)) {
-      visibilityMap.add('ACT_PayAmt');
-      visibilityMap.add('OVER_PayAmt');
-    }
+  // 修正欄位名稱 + 在明細表時固定顯示 PAY_NO
+  const alwaysVisibleFields = [
+    'building_desc',
+    'floor_desc',
+    'ECR_No',
+    'USR_No',
+    ...(reporttype === 1 ? ['PAY_NO'] : []), // 明細表才顯示付款別
+  ];
+  const visibilityMap = new Set(alwaysVisibleFields);
 
-    this.columns = this.columns.map((col) => ({
-      ...col,
-      visible: visibilityMap.has(col.field),
-    }));
+  if (selectedValues.includes(1)) {
+    visibilityMap.add('BOOK_PayAmt');
   }
+  if (selectedValues.includes(2)) {
+    visibilityMap.add('SELF_PayAmt');
+    visibilityMap.add('SOVER_PayAmt');
+  }
+  if (selectedValues.includes(3)) {
+    visibilityMap.add('ACT_PayAmt');
+    visibilityMap.add('OVER_PayAmt');
+  }
+
+  this.columns = this.columns.map(col => ({
+    ...col,
+    visible: visibilityMap.has(col.field),
+  }));
+}
+
 
   onSubmit(form: FormGroup): void {
     this.submitted = true;
@@ -353,7 +358,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     //   visible: true,
     // },
     {
-      field: 'PAY_NO',
+      field: 'PAY_Name',
       header: '付款別',
       visible: true,
     },
@@ -371,11 +376,14 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
       style: 'text-right',
       format: this.moneyFormat,
     },
-    {
-      field: 'SOVER_PayAmt',
-      header: '溢欠差異(自我報帳 - 系統帳)',
-      visible: false,
-    },
+   {
+  field: 'SOVER_PayAmt',
+  header: '溢欠差異(自我報帳 - 系統帳)',
+  visible: false,
+  style: 'text-right',
+  // 只要是 0（數字或字串）都輸出字串 "0"，其他交給 moneyFormat
+  format: (v: any) => (v === 0 || v === '0') ? '0' : this.moneyFormat(Number(v)),
+},
     {
       field: 'ACT_PayAmt',
       header: '實收帳',
