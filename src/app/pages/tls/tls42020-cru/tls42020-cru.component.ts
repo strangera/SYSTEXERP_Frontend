@@ -294,6 +294,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       STO_No: this.STORE_NO,
       SBM_Type: formValue.SBM_Type!,
       TLT_No: formValue.TLT_No!,
+      TLT_Name: this.tltNoOptions.find(item => item.value === formValue.TLT_No)?.name ?? '',
       SBM_BegDate: formValue.SBM_BegDate!,
       SBM_EndDate: formValue.SBM_EndDate!
     };

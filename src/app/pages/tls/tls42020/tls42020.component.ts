@@ -59,15 +59,15 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   // 匯入菜單 dialog
   queryForm2 = this.fb.group({
-    uploadType: [0, Validators.required],  // 異動方式                         
+    uploadType: ['0', Validators.required],  // 異動方式                         
   });
 
   dialogVisible = false;
 
   uploadTypeOptions = [
-    { label: '先刪除後新增', value: 0 },
-    { label: '更新', value: 1 },
-    { label: '新增', value: 2 }
+    { label: '先刪除後新增', value: '0' },
+    { label: '更新', value: '1' },
+    { label: '新增', value: '2' }
   ];
 
   // 下拉選單選項
@@ -202,7 +202,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   onFileUpload(event: FileUploadHandlerEvent) {
     const file = event.files[0];
-    this.tls42020Service.uploadTLS42020(file).pipe(untilDestroyed(this)).subscribe(res => {
+    this.tls42020Service.uploadTLS42020(file, this.queryForm2.value.uploadType!).pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Status === '0000') {
         this.messageService.successBubble(res.Message);
       } else {
