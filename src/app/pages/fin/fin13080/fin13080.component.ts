@@ -38,7 +38,7 @@ export const monthOptions = [
     TooltipModule,
     InputTextComponent,
     TableComponent,
-        ButtonModule,
+    ButtonModule,
   ],
 })
 export class FIN13080Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -52,7 +52,7 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     No: [null, Validators.maxLength(16)],
     Date: [yesterday],
-    GUI_YYMM: [null, [this.validationService.evenMonthOnlyValidator]],
+    GUI_YYMM: [null, [this.validationService.evenMonthValidator]],
     Invoice_No_Start: ['', Validators.maxLength(10)],
     Invoice_No_End: ['', Validators.maxLength(10)],
     ...createPaginationConfig([{ field: 'No', order: 1 }]),

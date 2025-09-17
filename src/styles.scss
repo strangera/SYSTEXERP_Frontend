@@ -18,7 +18,6 @@ $gutter: 1rem; //for primeflex grid system
 body {
   font-family: "NotoSansTC", serif;
 }
-
 .no-wrap {
   white-space: nowrap;
 }
@@ -131,7 +130,7 @@ input[disabled],
 }
 
 .p-accordion-header-link {
-  font-size: 14px;
+  font-size: 12px;
   background-color: var(--accordion-header-bg) !important;
   color: var(--accordion-header-text) !important;
   font-weight: bold;

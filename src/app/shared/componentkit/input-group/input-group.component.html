@@ -2,12 +2,13 @@
   <span *ngIf="isRequired" class="required">*</span>
 </label>
 <div class="custom-input-group p-inputgroup">
-  <p-autoComplete class="w-full" [id]="controlName" [formControl]="control"
+  <p-autoComplete class="w-full" [id]="controlName" [inputId]="controlName" [formControl]="control"
     [placeholder]="customPlaceholder || placeholder" [dropdown]="!control.disabled" [suggestions]="filteredOptions"
     [optionLabel]="optionValue ? optionValue : customLabel" [optionValue]="optionValue"
     styleClass="w-full flex flex-row-reverse" inputStyleClass="w-full border-noround"
     (completeMethod)="filterOptions($event)" appendTo="body" (onSelect)="onSelect($event)" [maxlength]="maxLength"
-    [forceSelection]="true" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}">
+    [forceSelection]="true" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" (onInput)="onInput($event)"
+    (onKeyDown)="onInput($event)" [forceSelection]="true" [autofocus]="true" autocomplete="on">
     <ng-template let-option pTemplate="item" *ngIf="templateLabel">
       <div class="flex align-items-center gap-2">
         <div>{{ option[this.templateLabel] }}</div>
@@ -15,8 +16,8 @@
     </ng-template>
   </p-autoComplete>
   <div class="flex w-full">
-    <input title='請輸入' class="border-none border-noround" type="text" pInputText [disabled]="true" [value]="value"
-      [placeholder]="'請選擇' + label" />
+    <input title='請輸入' class="border-none border-noround" type="text" pInputText [disabled]="true" [(ngModel)]="value"
+      [ngModelOptions]="{ standalone: true }" [placeholder]="'請選擇' + label" />
     <button *ngIf="!control.disabled" pButton class="p-inputgroup-addon" icon="pi pi-search"
       (click)="dialogVisible = true" type="button" aria-label="Search" [disabled]="control.disabled">
     </button>

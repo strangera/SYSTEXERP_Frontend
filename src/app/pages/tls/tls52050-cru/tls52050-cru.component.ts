@@ -173,7 +173,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       this.data.forEach(row => {
         if (hasDiscountValue) {
           const originalPrice = discountControl === 'costPriceDiscount' ? row.PLU_OrderPrc : row.PLU_SalePrc;
-          row[discountControl === 'costPriceDiscount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = roundingFn(originalPrice * discountCtrl.value / 100);
+          row[discountControl === 'costPriceDiscount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = roundingFn((originalPrice ?? 0) * discountCtrl.value / 100);
         } else if (hasAmountValue) {
           const originalPrice = amountControl === 'costPriceAmount' ? row.PLU_OrderPrc : row.PLU_SalePrc;
           row[amountControl === 'costPriceAmount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = roundingFn(originalPrice + amountCtrl.value);
@@ -376,7 +376,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         ID: this.isFormCreateable ? undefined : Number(this.rowdata?.Id),
         MAM_No: this.isFormCreateable ? undefined : this.rowdata?.MAM_No,
         details: this.data.map(item => ({
-          ID: Number(item.id) || 0,
+          ID: Number(item.id) || null,
           PLU_MagNo: item.PLU_MagNo,
           PLU_OrderPrcRate: item.PLU_OrderPrcRate,
           PLU_OrderPrc: item.PLU_OrderPrc,

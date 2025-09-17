@@ -3,12 +3,12 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button
       btnType="create"
-      (clickEvent)="onCreate({type: 'normal'})"
+      (clickEvent)="onCreate({ type: 'normal' })"
       label="新增扣款"
     ></app-button>
     <app-button
       btnType="create"
-      (clickEvent)="onCreate({type: 'counter'})"
+      (clickEvent)="onCreate({ type: 'counter' })"
       label="新增專櫃扣款"
     ></app-button>
   </div>
@@ -28,8 +28,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
-              controlName="tlt_no"
-              [control]="queryForm.controls.tlt_no"
+              controlName="tlt_noList"
+              [control]="queryForm.controls.tlt_noList"
               [options]="tlt_noOptions"
               [submitted]="submitted"
             ></app-multi-select>
@@ -37,18 +37,19 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="扣款項目"
-              controlName="CAP_Item"
+              controlName="CAP_ItemList"
               [options]="CAP_ItemOptions"
-              [control]="queryForm.controls.CAP_Item"
+              [control]="queryForm.controls.CAP_ItemList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="會計科目代碼"
-              controlName="AccNo"
-              [control]="queryForm.controls.AccNo"
+              controlName="AccNoList"
+              [control]="queryForm.controls.AccNoList"
               [submitted]="submitted"
+              [options]="AccNoOptions"
             ></app-multi-select>
           </div>
         </div>
@@ -56,9 +57,9 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
-              controlName="org_id"
+              controlName="org_idList"
               [options]="org_idOptions"
-              [control]="queryForm.controls.org_id"
+              [control]="queryForm.controls.org_idList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -96,11 +97,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="活動代碼/名稱"
-              controlName="pod_no"
+              controlName="pod_noList"
               [options]="pod_noOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.pod_no"
+              [control]="queryForm.controls.pod_noList"
               [submitted]="submitted"
             ></app-dropdown>
           </div>

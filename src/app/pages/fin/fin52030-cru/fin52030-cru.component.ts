@@ -51,23 +51,35 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
   private tableData = signal<Record<string, any>[]>([]);
 
   public readonly filteredData = computed(() => {
-    const data = !this.isFormCreateable
-      ? this.service.test ? this.tableData() : this.service.FIN52030DetailData()
-      : [];
-
-    return data.filter(item => ({
-      ...(this.df().typeCode.value ? { typeCode: this.df().typeCode.value } : {}),
-      ...(this.df().subpoenaName.value ? { subpoenaName: this.df().subpoenaName.value } : {}),
-      ...(this.df().subpoenaType.value ? { subpoenaType: this.df().subpoenaType.value } : {}),
-    }));
+    const data = this.isFormCreateable ? [] : this.service.test ? dummyData : this.tableData();
+    return data;
   });
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
   public readonly columns: Column[] = [
-    { field: 'subjectCode', header: '科目代號', type: 'dropdown', options: this.service.FIN52030xxxxData(), optionLabel: 'xxxxName', optionValue: 'xxxxId' },
+    {
+      field: 'subjectCode',
+      header: '科目代號',
+      type: 'dropdown',
+      options: this.service.test ? dummyId : this.service.FIN52030xxxxData(),
+      optionLabel: 'Name',
+      optionValue: 'No',
+    },
+    { field: 'subjectName', header: '科目名稱' },
     { field: 'vendorEmployeeCode', header: '廠商/員工代號', type: 'input' },
-    { field: 'vendorEmployeeName', header: '廠商/員工名稱', type: 'input' },
+    {
+      field: 'vendorEmployeeName',
+      header: '廠商/員工名稱',
+      type: 'dropdownTable',
+      tableData: vendorEmployeeTable,
+      tableColumns: vendorEmployeeColumns,
+      tableKey: 'id',
+      tableRows: 5,
+      tableLoading: !1,
+      valueKey: 'name',
+      totalRecords: vendorEmployeeTable?.length,
+    },
     { field: 'summary', header: '摘要', type: 'input' },
     { field: 'debitAmount', header: '借方金額', type: 'inputNumber', format: formatAmount, isTotal: true },
     { field: 'creditAmount', header: '貸方金額', type: 'inputNumber', format: formatAmount, isTotal: true },
@@ -92,12 +104,17 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
       this.df().createDate.setValue(new Date());
     }
     else {
+      if (this.isFormEditable) {
+        this.df().modifier.setValue(this.user.user_Name);
+        this.df().modifyDate.setValue(new Date());
+      }
       this.service.getSubpoenaTypes();
-
-      this.tableData.set(dummyData);
+      this.service.test ? this.tableData.set(dummyData) : this.service.loadFIN52030Detail({
+        /** payload */
+      });
     }
 
-    this.logger.debug(`init:`, [this.rowdata, dummyData]);
+    this.logger.debug(`init:`, [this.rowdata, dummyData, vendorEmployeeTable]);
   }
 
   public onSubmit(): void {
@@ -131,15 +148,30 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
   public onInsert(event: any): void {
     this.logger.debug(`onInsert:`, [event]);
   }
+
+  public onItemClick(event: any): void {
+    this.logger.debug(`onItemClick:`, [event]);
+  }
 }
 
+const dummyId = Array.from({ length: 100 }, (_, i) => ({ No: i + 3, Name: `Item ${i + 3}` }));
 
+const vendorEmployeeTable = Array.from({ length: 100 }, (_, i) => ({
+  id: `V00${i + 3}`,
+  name: `Vendor ${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+}));
+
+const vendorEmployeeColumns: Column[] = [
+  { field: 'id', header: '廠商/員工代號' },
+  { field: 'name', header: '廠商/員工名稱' },
+];
 
 const dummyData = Array.from({ length: 100 }, (_, i) => ({
-  id: (i + 1) * 10,
+  id: dummyId[i % dummyId.length].No,
   subjectCode: `00${i + 3}`,
-  vendorEmployeeCode: `V00${i + 3}`,
-  vendorEmployeeName: `Vendor ${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+  subjectName: `Subject ${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+  vendorEmployeeCode: vendorEmployeeTable[i % vendorEmployeeTable.length].id,
+  vendorEmployeeName: vendorEmployeeTable[i % vendorEmployeeTable.length].name,
   summary: `Generated summary ${i + 3}`,
   debitAmount: Math.floor(Math.random() * 1e6) + 1e4,
   creditAmount: Math.floor(Math.random() * 1e6) + 1e4,

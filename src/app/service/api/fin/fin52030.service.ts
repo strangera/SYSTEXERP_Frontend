@@ -18,7 +18,6 @@ export class FIN52030Service {
   public readonly creators = signal<DropdownOption[]>([]);
   public readonly modifiers = signal<DropdownOption[]>([]);
 
-
   /** 預留給科目api */
   public readonly FIN52030xxxxData = signal<Record<string, any>[]>([]);
 

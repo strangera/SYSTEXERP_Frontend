@@ -14,7 +14,7 @@ import { AsyncPipe } from '@angular/common';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { bus_classColumns, bus_sclassColumns, bus_typeColumns, org_idColumns, tlt_noColumns } from './tls2g040.model';
 import { debounceTime } from 'rxjs';
-import { BusClassItem } from '@service/utility/dropdown-api.model';
+import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputGroupColumn, InputGroupComponent } from '@shared/componentkit/input-group/input-group.component';
@@ -29,13 +29,16 @@ import { InputGroupColumn, InputGroupComponent } from '@shared/componentkit/inpu
 export class TLS2G040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     budget_date: [null, [Validators.required]], // 年月
-    bus_type: [null as null | string[]], // 大分類
+    bus_type: [null], // 大分類
     bus_class: [null as any], // 中分類
-    bus_sclass: [null], // 小分類
+    bus_sclass: [null as any], // 小分類
     org_id: [null], // 組織
     tlt_no: [null], // 專櫃
     report_type: ['bus_type', [Validators.required]]
   });
+  bus_type_name = '';
+  bus_class_name = '';
+  bus_sclass_name = '';
   bus_typeOptions = this.dropdown.queryTltBusType();
   bus_typeColumns: InputGroupColumn[] = [
     { field: 'No', header: '大分類代碼', visible: true },
@@ -48,7 +51,15 @@ export class TLS2G040Component extends BasicQueryPageComponent<any> implements O
     { field: 'No', header: '小分類代碼', visible: true },
     { field: 'Name', header: '小分類名稱', visible: true }
   ];
-  bus_sclassOptions = [];
+  bus_sclassOptions?: BusSClassItem[] = [];
+  bus_sclassColumns: InputGroupColumn[] = [
+    { field: 'bus_type', header: '大分類代碼', visible: true },
+    { field: 'bus_type_name', header: '大分類名稱', visible: true },
+    { field: 'bus_class', header: '中分類名稱', visible: true },
+    { field: 'bus_class_name', header: '中分類名稱', visible: true },
+    { field: 'No', header: '小分類代碼', visible: true },
+    { field: 'Name', header: '小分類名稱', visible: true }
+  ]
   org_idOptions = this.dropdown.querySys3100();
   tlt_noOptions = this.dropdown.queryTltTalent();
   report_typeOptions = [
@@ -75,30 +86,35 @@ export class TLS2G040Component extends BasicQueryPageComponent<any> implements O
         label: item.bus_type + ' - ' + item.bus_type_name + ' - ' + item.No + ' - ' + item.Name,
       }));
     });
-    // 監聽 report_type 和 budget_date 的變化
+    this.dropdown.queryTltBusSClass().pipe(untilDestroyed(this)).subscribe(data => {
+      this.bus_sclassOptions = data?.map(item => ({
+        ...item,
+        label: item.bus_type + ' - ' + item.bus_type_name + ' - ' + item.bus_class + ' - ' + item.bus_class_name + ' - ' + item.No + ' - ' + item.Name,
+      }));
+    });
     this.queryForm.valueChanges.pipe(debounceTime(200)).subscribe(() => {
       this.updateColumns();
     });
     // 監聽大分類的變化
     this.queryForm.get('bus_type')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      // 當大分類改變時，清空中分類
-      // 使用 { emitEvent: false } 來避免觸發中分類的 valueChanges 監聽器
       this.queryForm.get('bus_class')?.setValue(null, { emitEvent: false });
+      this.bus_class_name = '';
+      this.queryForm.get('bus_sclass')?.setValue(null, { emitEvent: false });
+      this.bus_sclass_name = '';
     });
-
     // 監聽中分類的變化
     this.queryForm.get('bus_class')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      // 當中分類改變時，清空小分類
-      this.queryForm.get('bus_sclass')?.setValue(null);
-
-      // 根據中分類的值，設定大分類
-      // 使用 { emitEvent: false } 來避免觸發大分類的 valueChanges 監聽器，從而打破循環
+      this.queryForm.get('bus_sclass')?.setValue(null, { emitEvent: false });
       this.queryForm.get('bus_type')?.setValue(value?.bus_type, { emitEvent: false });
+      this.bus_type_name = value?.bus_type_name ?? '';
+      this.bus_sclass_name = '';
     });
     this.queryForm.get('bus_sclass')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      console.log(value);
+      this.queryForm.get('bus_type')?.setValue(value?.bus_type, { emitEvent: false });
+      this.queryForm.get('bus_class')?.setValue(value?.bus_class, { emitEvent: false });
+      this.bus_type_name = value?.bus_type_name ?? '';
+      this.bus_class_name = value?.bus_class_name ?? '';
     });
-    // 初始化時先呼叫一次，以顯示預設欄位
     this.updateColumns();
   }
   onSubmit(frm: FormGroup) {

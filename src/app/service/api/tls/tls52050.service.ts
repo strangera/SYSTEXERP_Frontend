@@ -52,19 +52,19 @@ export interface ITLS52050Data {
 // 插入 POS2008M 的單項明細資料介面
 export interface IInsertTLS52050Detail {
   id?: number;
-  PLU_MagNo: string;
-  PLU_OrderPrcRate: number;
-  PLU_OrderPrc: number;
-  MAM_OrderPrc: number;
-  PLU_SalePrc: number;
-  MAM_UnitPrc: number;
-  MAD_Remark: string;
+  PLU_MagNo?: string;
+  PLU_OrderPrcRate?: number;
+  PLU_OrderPrc?: number;
+  MAM_OrderPrc?: number;
+  PLU_SalePrc?: number;
+  MAM_UnitPrc?: number;
+  MAD_Remark?: string;
 }
 
 // 插入 POS2008M (商品促銷主檔) 的請求介面
 export interface IInsertTLS52050Request {
-  LOGO_No: string;
-  VEN_No: string;
+  LOGO_No?: string;
+  VEN_No?: string;
   MAM_Remark?: string;
   MAM_BegDate?: string;
   MAM_EndDate?: string;
@@ -85,13 +85,13 @@ export interface IInsertTLS52050Request {
 }
 // 新增: 更新明細資料介面
 export interface IUpdateTLS52050Detail extends IInsertTLS52050Detail {
-  ID: number;
+  ID?: number | null;
 }
 
 // 新增: 更新主檔請求介面
 export interface IUpdateTLS52050Request extends IInsertTLS52050Request {
-  ID: number;
-  MAM_No: string;
+  ID?: number | null;
+  MAM_No?: string;
   details: IUpdateTLS52050Detail[];
 }
 
@@ -192,8 +192,8 @@ export class Tls52050Service {
     return this.http.post<ApiResponse<TLS52050UpdateDetail[]>>(`${this.apiUrl}/queryTLS52050UpdateDetail`, { MAM_No });
   }
 
-  updateStatusTLS52050(data: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52050`, data);
+  approveTLS52050(data: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/approveTLS52050`, data);
   }
 
   // 取得標籤檔資料

@@ -63,7 +63,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   salesMinDate: Date | null = null;
   salesMaxDate: Date | null = null;
   columns: any[] = [
-    { field: "TXN_Date", header: '交易日期', visible: true},
+    { field: "TXN_Date", header: '交易日期', visible: true },
     { field: "0_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '0' },
     { field: "0_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '0' },
     { field: "0_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '0' },
@@ -114,12 +114,12 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     { field: '0', header: '[一卡通] 行動支付' },
     { field: '1', header: '[LINE Pay] 行動支付' },
     { field: '2', header: '[iPASS MONEY] 行動支付' },
-    { field: '3', header: '[台灣Pay] 行動支付'},
-    { field: '4', header: '[南紡錢包] 行動支付'},
-    { field: '5', header: '[即享券] 行動支付'},
-    { field: '6', header: '[喜客券] 行動支付'},
-    { field: '7', header: '[一卡通-停車場] 行動支付'},
-    { field: '8', header: '[LINE Pay-停車場] 行動支付'}
+    { field: '3', header: '[台灣Pay] 行動支付' },
+    { field: '4', header: '[南紡錢包] 行動支付' },
+    { field: '5', header: '[即享券] 行動支付' },
+    { field: '6', header: '[喜客券] 行動支付' },
+    { field: '7', header: '[一卡通-停車場] 行動支付' },
+    { field: '8', header: '[LINE Pay-停車場] 行動支付' }
   ];
   exportExcelLoading = false;
 
@@ -135,7 +135,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2A050', '/TLS/TLS2A050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2A050', 'TLS/TLS2A050cru', this.queryForm, (form) => this.onSubmit(form));
     this.queryForm.get('salesDate')?.valueChanges.subscribe((val) => {
       if (val) {
         const selected = new Date(val);
@@ -149,6 +149,24 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
           TXN_DateEnd: this.salesMaxDate,
         });
       }
+    });
+  }
+  override onDetail(rowData: any) {
+    const payload = {
+      TXN_DateStart: rowData.TXN_Date,
+      TXN_DateEnd: rowData.TXN_Date,
+      // POS_TypeList: this.queryForm.value.POS_TypeList ?? []
+    };
+
+    this.tls2A050Service.queryTLS22050(payload).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          this.navigateWithState(rowData, {
+            detailData: res.Data || [],
+            queryConditions: this.queryForm.value
+          });
+        }
+      },
     });
   }
 
@@ -193,6 +211,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
             flatData.push(row);
           });
+          console.log(flatData);
+
 
           const payNames = Array.from(payNameSet);
           const columns: any[] = [{ field: 'TXN_Date', header: '交易日期', visible: true }];
@@ -217,11 +237,6 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
           this.totalRecords = res.TotalCount ?? 0;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err) => {
-          console.error('TLS2A050 查詢失敗', err);
           this.loading = false;
           this.messageService.unblockUi();
         },
@@ -260,10 +275,6 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
-        this.exportExcelLoading = false;
-      },
-      error: (err) => {
-        console.error('TLS2A050 匯出失敗', err);
         this.exportExcelLoading = false;
       },
     });
