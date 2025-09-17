@@ -33,7 +33,7 @@
 <div class="card">
     <app-table tableKey="FIN52050" dataKey="field" [data]="data" [columns]="columns"
         (detail)="onDetail($event)" [showCheckBox]="false" [showEdit]="false"
-         [multiSortMeta]="[{ field: 'ClassAttr', order: 1 }]"
+         [multiSortMeta]="[{ field: 'ClassAttr', order: 1 }]" apiUrl="queryFIN52050"
         [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
         [lazy]="true" [loading]="loading">
     </app-table>

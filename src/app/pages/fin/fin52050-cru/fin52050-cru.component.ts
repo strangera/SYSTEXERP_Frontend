@@ -51,7 +51,7 @@ export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> impleme
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     ClassAttr: ['', [Validators.required, Validators.maxLength(1), this.validationService.numberValidator]], //  大類代碼
-    ClassAttrCName: ['', [Validators.required,  Validators.maxLength(20)]], // 大類名稱
+    ClassAttrCName: ['', [Validators.required,  Validators.maxLength(100)]], // 大類名稱
     ClassAttrEname: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 大類英文名稱 (非必填)
   });
 

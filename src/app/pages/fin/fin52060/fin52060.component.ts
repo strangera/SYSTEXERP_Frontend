@@ -57,10 +57,10 @@ export interface ClassAttr{
 export class FIN52060Component extends BasicQueryPageComponent<GLS1004> implements OnInit {
   queryForm = this.formBuilder.group({
         // 大+中分類不可重複
-        ClassNo: ['', [Validators.maxLength(2)]], //  中類代碼
-        ClassCName: ['', [ Validators.maxLength(20)]], // 中類名稱
+        ClassNo: ['', [Validators.maxLength(3)]], //  中類代碼
+        ClassCName: ['', [ Validators.maxLength(100)]], // 中類名稱
         ClassEname: ['', [Validators.maxLength(100)]], // 中類英文名稱 (非必填)
-        ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
+        ClassAttr: ['', [Validators.maxLength(2)]], //  大類代碼
                 
         ...createPaginationConfig([{ field: 'ClassNo', order: 1 }]), // 分頁和排序參數
       });
@@ -72,7 +72,7 @@ export class FIN52060Component extends BasicQueryPageComponent<GLS1004> implemen
       selectedRows: GLS1004[] = [];
                   
       columns: Column[] = [
-        { field: 'ClassNo', header: '中類代碼', visible: true }, // 中類代碼
+        { field: 'ClassNo', header: '中類代碼', visible: true, exportFormat: [] }, // 中類代碼
         { field: 'ClassCName', header: '中類名稱', visible: true }, // 中類名稱
         { field: 'ClassEname', header: '中類英文名稱', visible: true }, // 中類英文名稱
         { field: 'ClassAttr', header: '大類代碼', visible: true}, // 大類代碼

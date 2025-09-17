@@ -51,76 +51,76 @@ export interface GLS1003 {
 // 科目大分類代號維護
 export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implements OnInit {
   queryForm = this.formBuilder.group({
-      // GLS1003 科目大類設定檔
-      ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
-      ClassAttrCName: ['', [ Validators.maxLength(20)]], // 大類名稱
-      ClassAttrEname: ['', [Validators.maxLength(100)]], // 大類英文名稱 (非必填)
-              
-      ...createPaginationConfig([{ field: 'ClassAttr', order: 1 }]), // 分頁和排序參數
-    });
-        
-    totalRecords = 0;// 分頁和排序參數 // 排序需要
-    data: GLS1003[] = [];
-    selectedRows: GLS1003[] = [];
-                
-    columns: Column[] = [ //先放可視範圍內的
-      { field: 'ClassAttr', header: '大類代碼', visible: true }, // 大類代碼
-      { field: 'ClassAttrCName', header: '大類名稱', visible: true }, // 大類名稱
-      { field: 'ClassAttrEname', header: '大類英文名稱', visible: true }, // 大類英文名稱
-        
-      { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-      { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-      { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-      { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-      { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-      { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
-    ];
-        
-    constructor(
-      private fin52050Service: Fin52050Service,
-      private validationService: ValidationService
-    ) {
-      super(); // 呼叫父類建構子
-    }
-          
-    ngOnInit(): void {
-      this.initializePage('FIN52050', '/FIN/FIN52050cru', this.queryForm, (form) => this.onSubmit(form));
-    }
-          
-    onSubmit(frm: FormGroup) {
-      this.handleSubmit(frm, () => {
-        const body = {
-          ...frm.value,
-        }
-        console.log('科目大類 request', body);
-        
-        this.fin52050Service.queryFIN52050(body).pipe(untilDestroyed(this)).subscribe({
-          next: (response) => {
-            this.data = response.Data;
-            console.log('科目大類設定檔 response', response.Data);
-            this.totalRecords = response.TotalCount;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            this.loading = false;
-          },
-          error: () => { this.loading = false; },
-        });
+    // GLS1003 科目大類設定檔
+    ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
+    ClassAttrCName: ['', [Validators.maxLength(100)]], // 大類名稱
+    ClassAttrEname: ['', [Validators.maxLength(100)]], // 大類英文名稱 (非必填)
+
+    ...createPaginationConfig([{ field: 'ClassAttr', order: 1 }]), // 分頁和排序參數
+  });
+
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: GLS1003[] = [];
+  selectedRows: GLS1003[] = [];
+
+  columns: Column[] = [ //先放可視範圍內的
+    { field: 'ClassAttr', header: '大類代碼', visible: true, exportFormat: [] }, // 大類代碼
+    { field: 'ClassAttrCName', header: '大類名稱', visible: true }, // 大類名稱
+    { field: 'ClassAttrEname', header: '大類英文名稱', visible: true }, // 大類英文名稱
+
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+  ];
+
+  constructor(
+    private fin52050Service: Fin52050Service,
+    private validationService: ValidationService
+  ) {
+    super(); // 呼叫父類建構子
+  }
+
+  ngOnInit(): void {
+    this.initializePage('FIN52050', '/FIN/FIN52050cru', this.queryForm, (form) => this.onSubmit(form));
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+      }
+      console.log('科目大類 request', body);
+
+      this.fin52050Service.queryFIN52050(body).pipe(untilDestroyed(this)).subscribe({
+        next: (response) => {
+          this.data = response.Data;
+          console.log('科目大類設定檔 response', response.Data);
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+        },
+        error: () => { this.loading = false; },
       });
-    }
-    // 刪除控制_Grace 9/9: 
-    // 9/9 SA註明: 該作業不可修改/刪除
-    onDelete(selectedRows: GLS1003[]) {
-      // const ids = selectedRows.map(row => row.id);
-      // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-      //   next: () => {
-      //     this.onSubmit(this.queryForm);
-      //     this.selectedRows = [];
-      //   },
-      //   error: () => { this.loading = false; },
-      // });
-    }
-          
-    isRowSelectable(row: GLS1003) {
-      // return row.CanDel;
-      return true
-    }
+    });
+  }
+  // 刪除控制_Grace 9/9: 
+  // 9/9 SA註明: 該作業不可修改/刪除
+  onDelete(selectedRows: GLS1003[]) {
+    // const ids = selectedRows.map(row => row.id);
+    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+    //   next: () => {
+    //     this.onSubmit(this.queryForm);
+    //     this.selectedRows = [];
+    //   },
+    //   error: () => { this.loading = false; },
+    // });
+  }
+
+  isRowSelectable(row: GLS1003) {
+    // return row.CanDel;
+    return true
+  }
 }
