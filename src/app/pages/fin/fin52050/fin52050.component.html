@@ -13,7 +13,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="大類名稱" controlName="ClassAttrCname" [control]="queryForm.controls.ClassAttrCname"
+            <app-input-text label="大類名稱" controlName="ClassAttrCName" [control]="queryForm.controls.ClassAttrCName"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -31,8 +31,9 @@
   </p-accordion>
 </div>
 <div class="card">
-    <app-table tableKey="FIN52050" dataKey="field" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)" [showCheckBox]="false" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
+    <app-table tableKey="FIN52050" dataKey="field" [data]="data" [columns]="columns"
+        (detail)="onDetail($event)" [showCheckBox]="false" [showEdit]="false"
+         [multiSortMeta]="[{ field: 'ClassAttr', order: 1 }]"
         [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
         [lazy]="true" [loading]="loading">
     </app-table>
