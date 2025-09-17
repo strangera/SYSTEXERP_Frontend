@@ -19,6 +19,11 @@
             [options]="invoiceFormatOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.PUR_VoucherType" [submitted]="submitted">
           </app-dropdown>
+          <!-- 申報年月 (必填) -->
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
+            [control]="queryForm.controls.INV_YM2" [submitted]="submitted"
+            (calendarEvent)="loadGuiTrackOptions($event)">
+          </app-calendar>
           <!-- 字軌 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_Track" [options]="guiTrackOptions"
             [optionLabel]="'label'" [optionValue]="'value'" [control]="queryForm.controls.GUI_Track"
@@ -29,19 +34,15 @@
             [startControl]="queryForm.controls.INV_GUINumber_S" [endControl]="queryForm.controls.INV_GUINumber_E"
             [submitted]="submitted">
           </app-input-text-range>
-          <!-- 申報年月 (必填) -->
-          <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
-            [control]="queryForm.controls.INV_YM2" [submitted]="submitted"
-            (calendarEvent)="loadGuiTrackOptions($event)">
-          </app-calendar>
+
           <!-- 資料所屬年月起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
             [startControl]="queryForm.controls.INV_YM1_S" [endControl]="queryForm.controls.INV_YM1_E"
             [submitted]="submitted">
           </app-calendar-range>
 
-          <!-- 廠商編號(統一編號) -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商編號(統一編號)" controlName="PUR_Uniform"
+          <!-- 統一編號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="統一編號" controlName="PUR_Uniform"
             [control]="queryForm.controls.PUR_Uniform" [submitted]="submitted">
           </app-input-text>
           <!-- 課稅別 -->
@@ -69,8 +70,8 @@
             [options]="assetNotationOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.Asset_Notation" [submitted]="submitted">
           </app-dropdown>
-          <!-- 傳票傳票建立者 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票傳票建立者" controlName="Voucher_no"
+          <!-- 傳票建立者 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票建立者" controlName="Voucher_no"
             [control]="queryForm.controls.Voucher_no" [submitted]="submitted">
           </app-input-text>
 
