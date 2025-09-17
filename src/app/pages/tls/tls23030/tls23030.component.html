@@ -130,14 +130,20 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <div class="flex flex-column">
-              <label class="mb-1">是否查詢券類大批</label>
-              <p-checkbox binary="false" formControlName="VOU_Check" inputId="VOU_Check"></p-checkbox>
-              <label for="VOU_Check" class="ml-2 mt-1 text-sm text-gray-600">
-                是(此條件必須配合付款別選擇[商品券]或[紙張禮券])
-              </label>
-            </div>
-          </div>
+  <div class="flex flex-column">
+    <label class="mb-1">是否查詢券類大批</label>
+    <!-- 關鍵：binary 改成布林綁定 -->
+    <p-checkbox
+      [binary]="true"
+      formControlName="VOU_Check"
+      inputId="VOU_Check">
+    </p-checkbox>
+
+    <label for="VOU_Check" class="ml-2 mt-1 text-sm text-gray-600">
+      是（此條件必須配合付款別選擇「商品券」或「紙張禮券」）
+    </label>
+  </div>
+</div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -176,7 +182,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="館別"
               controlName="tlt_building"
               [options]="BUILDING_NO_Options"
@@ -184,7 +190,7 @@
               optionValue="value"
               [control]="queryForm.controls.tlt_building"
               [submitted]="submitted">
-            </app-dropdown>
+            </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
