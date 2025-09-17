@@ -230,7 +230,7 @@ export class ValidationService {
       return null;
     };
   }
-  // GUI_YYMM 驗證：只能為單數月，且只能是當月的前一個月
+  // GUI_YYMM 驗證：只能為單數月
   oddMonthValidator(control: { value: Date | null }) {
     const value = control.value;
 
@@ -248,6 +248,25 @@ export class ValidationService {
 
     return null;
   }
+
+  // GUI_YYMM 驗證：只能為雙數月
+  evenMonthValidator(control: { value: Date | null }): ValidationErrors | null {
+    const value = control.value;
+
+    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+      const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
+      // 檢查是否為雙數月
+      if (month % 2 !== 0) {
+        return { invalidEvenMonth: true };
+      }
+    } else {
+      // 如果不是有效的 Date 物件
+      return { invalidDate2: true };
+    }
+
+    return null;
+  }
+
 
   // 輸入日期不能小於前一個月
   minMonthValidator(control: { value: Date | null }): ValidationErrors | null {
@@ -288,38 +307,6 @@ export class ValidationService {
       return { invalidDate2: true };
     }
 
-    return null;
-  }
-
-
-  // GUI_YYMM 驗證：只能為雙數月，且不能大於當前月份
-  evenMonthValidator(control: { value: Date | null }): ValidationErrors | null {
-    const value = control.value;
-
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
-      const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
-      // 檢查是否為雙數月
-      if (month % 2 !== 0) {
-        return { invalidEvenMonth: true };
-      }
-    } else {
-      // 如果不是有效的 Date 物件
-      return { invalidDate2: true };
-    }
-
-    return null;
-  }
-  // 只允許雙數月，不限制大於當前月份
-  evenMonthOnlyValidator(control: { value: Date | null }): ValidationErrors | null {
-    const value = control.value;
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
-      const month = value.getMonth() + 1;
-      if (month % 2 !== 0) {
-        return { invalidEvenMonth: true };
-      }
-    } else {
-      return { invalidDate2: true };
-    }
     return null;
   }
 

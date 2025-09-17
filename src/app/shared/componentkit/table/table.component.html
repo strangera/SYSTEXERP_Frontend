@@ -200,7 +200,7 @@
           [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
           <p-cellEditor *ngIf="showRowEdit">
             <ng-template pTemplate="input">
-              <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false" (fieldChange)="
+              <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false" (dpTableSelected)="rowData[col.field] = $event" (fieldChange)="
                   onFieldChange(
                     rowData,
                     $event.field,
@@ -215,7 +215,7 @@
                 (filterChange)="filterOptions($event)"></app-table-input>
             </ng-template>
             <ng-template pTemplate="output">
-              <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit"
+              <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit" (dpTableSelected)="rowData[col.field] = $event"
                 (fieldChange)="
                   onFieldChange(
                     rowData,

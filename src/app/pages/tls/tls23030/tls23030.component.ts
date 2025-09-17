@@ -83,6 +83,7 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     Table2Component,
     CommonModule,
     ButtonModule,
+    MultiSelectComponent,
     DecimalPipe
   ],
 })
@@ -211,7 +212,7 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
     { field: 'TXN_Time', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v) },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
-    { field: 'TERM_No', header: '分期', visible: true },
+    // { field: 'TERM_No', header: '分期', visible: true },
     {
       field: 'IsHaveTERM_No', header: '是否分期', visible: true,
       format: (_: any, row: any) => (Number(row?.TERM_No ?? 0) > 1 ? '是' : '否')
@@ -237,10 +238,8 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
   constructor(
     private whetherService: WhetherService,
     private displayModeService: DisplayModeService,
-    private paymentTypeService: PaymentTypeService,
     private transactionTypeService: TransactionTypeService,
     private cardTypeService: CardTypeService,
-    private ticketStatusService: TicketStatusService,
     private taxableService: TaxableService,
     private discountService: DiscountService,
     private deductionbigCategoryService: DeductionbigCategoryService,
@@ -248,7 +247,6 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
     private floorService: FloorService,
     private tls23030Service: TLS23030Service,
     private tls11010Service: Tls11010Service,
-    private txnStatusService: TxnStatusService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
     private dropDownListService: DropDownListService
@@ -696,7 +694,7 @@ private buildSubtotalsMapFromResponse(wrappers: any[]): Record<string, Record<st
     const d = new Date(val); if (isNaN(d.getTime())) return val;
     const yyyy=d.getFullYear(), MM=(d.getMonth()+1).toString().padStart(2,'0'), dd=d.getDate().toString().padStart(2,'0');
     const HH=d.getHours().toString().padStart(2,'0'), mm=d.getMinutes().toString().padStart(2,'0');
-    return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
+    return `${HH}:${mm}`;
   }
   money(val: number): string { return Number(val ?? 0).toLocaleString('en-US'); }
 

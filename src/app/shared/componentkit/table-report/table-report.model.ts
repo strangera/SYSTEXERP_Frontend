@@ -1,4 +1,6 @@
-import { SortMeta } from "primeng/api";
+import { SortMeta } from 'primeng/api';
+import { TableTypes } from '../table/table.model';
+
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -17,7 +19,7 @@ export interface Column {
   validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[]; // 驗證規則(如果是可輸入的欄位)
 
   dataKey?: string;
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'image' | 'default'; // 欄位類型
+  type?: TableTypes; // 欄位類型
   prefix?: string; // 前綴 (適用於 input 類型)
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
