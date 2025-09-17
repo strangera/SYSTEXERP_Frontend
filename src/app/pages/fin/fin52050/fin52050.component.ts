@@ -20,7 +20,6 @@ export interface GLS1003 {
   ClassAttrCName: string, // 大類名稱
   ClassAttrEname: string, // 大類英文名稱
 
-  //---可能也會需要下面這些---
   CRT_Date?: Date,
   CRT_USR_No?: string,
   CRT_USR_Name?: string,
@@ -93,7 +92,7 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
         const body = {
           ...frm.value,
         }
-        console.log('對象及對帳維護作業 request', body);
+        console.log('科目大類 request', body);
         
         this.fin52050Service.queryFIN52050(body).pipe(untilDestroyed(this)).subscribe({
           next: (response) => {

@@ -6,6 +6,8 @@ import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
+
+// 科目大分類代號維護
 export class Fin52050Service {
   private apiUrl = `${environment.ApiUrl}/FIN0000/GLS1000`;
   constructor(private http: HttpClient) {}

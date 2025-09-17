@@ -14,12 +14,11 @@ import { ValidationService } from '@shared/service/validation.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Fin52050Service } from '@service/api/fin/fin52050.service';
 
-export interface testDorm {
+export interface GLS1003 {
   ClassAttr: string, // 大類代碼
   ClassAttrCName: string, // 大類名稱
   ClassAttrEname: string, // 大類英文名稱
 
-  //---可能也會需要下面這些---
   CRT_Date?: Date,
   CRT_USR_No?: string,
   CRT_USR_Name?: string,
@@ -48,7 +47,7 @@ export interface testDorm {
       TableComponent
     ]
 })
-export class FIN52050CRUComponent extends BasicCruPageComponent<testDorm> implements OnInit {
+export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     ClassAttr: ['', [Validators.required, Validators.maxLength(1), this.validationService.numberValidator]], //  大類代碼

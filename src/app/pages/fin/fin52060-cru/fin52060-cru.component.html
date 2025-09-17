@@ -19,9 +19,9 @@
                 [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大類代號" controlName="ClassAttr" [options]="ClassAttr_Option" optionLabel="Name"
-              optionValue="No" [control]="dataForm.controls.ClassAttr" [submitted]="submitted"></app-dropdown>  
-          </div>
+              <app-dropdown label="大類代號" controlName="ClassAttr" [options]="ClassAttr_Option" optionLabel="ClassAttrCName"
+                optionValue="ClassAttr" [control]="dataForm.controls.ClassAttr" [submitted]="submitted"></app-dropdown>  
+            </div>
           </div>
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">
