@@ -250,7 +250,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     // 大分類下拉
     this.tls14030Service
-      .queryPOS2003_DropDownList({})
+      .queryTLTBUSTYPE_DropDownList({})
       .subscribe((response) => {
         this.bus_typeOption = response.Data.map((item: apiOption) => ({
           No: item.No,
