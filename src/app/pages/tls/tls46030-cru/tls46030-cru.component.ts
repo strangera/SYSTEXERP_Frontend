@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import {  TranslateModule } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -12,17 +12,12 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { finalize } from 'rxjs';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Tls46030Service } from '@service/api/tls/tls46030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { finalize } from 'rxjs';
 
-export function formatDateYMD(value: any): string {
-  if (!value) return '';
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return value; // 如果不是有效日期，直接回傳原值
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
-}
 
 @Component({
   selector: 'app-tls46030-cru',
@@ -53,7 +48,7 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
   dataForm = this.formBuilder.nonNullable.group({
     ECR_SchNo: [{ value: '自動編號', disabled: true }],
     ECR_SchDate: [null, Validators.required],
-    ECR_SchStatus: [[], Validators.required],
+    ECR_SchStatus: ['' as 'A' | 'C' | 'F', Validators.required],
     ECR_No: ['', Validators.required],
     ECR_SchFinTime: [{ value: null, disabled: true }],
     ECR_FLD_ID: ['', Validators.required],
@@ -67,7 +62,7 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
     { value: 'C', label: '取消' },
     { value: 'F', label: '執行完畢' }
   ];
-
+  TLTTALENT_Option: apiOption[] = []; //專櫃編號
   constructor(
     private ECRNoService: ECRNoService,
     private dropDownListService: DropDownListService,
@@ -88,7 +83,17 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 預先打所有下拉 API
     this.preloadDropdowns();
+    // 判斷是新增 or 編輯
+    const isUpdate = !!this.rowdata?.ECR_SchNo;
 
+    if (isUpdate) {
+      // 編輯畫面：只允許 A、C
+      this.ECR_SchStatus_Options = this.ECR_SchStatus_Options.filter(opt => opt.value !== 'F');
+    } else {
+      // 新增畫面：預設啟用，只能選 A
+      this.dataForm.controls.ECR_SchStatus.setValue('A');
+      this.ECR_SchStatus_Options = this.ECR_SchStatus_Options.filter(opt => opt.value === 'A');
+    }
     // 監聽異動類型
     this.dataForm.controls.ECR_FLD_ID.valueChanges.subscribe(val => {
       const newValCtrl = this.dataForm.controls.ECR_FLD_NewVal;
@@ -121,42 +126,28 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
   private preloadDropdowns() {
     // ECR_Type
     this.dropdownCache['ECR_Type'] = getSYS1000Options('ECR_Type');
+    // ECR_SAL_Type
+    this.dropdownCache['ECR_SAL_Type'] = getSYS1000Options('ECR_SAL_Type');
 
-    // ECR_TLT_No
-    this.counterNameService.getCounters().subscribe(res => {
+    // ECR_TLT_No 改串 queryPOS2001_DropDownList
+    this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
       this.dropdownCache['ECR_TLT_No'] =
-        res?.map((x: any) => ({
-          label: `${x.value} - ${x.label}`,
-          value: x.value,
+        res?.Data?.map((item: any) => ({
+          label: item.No + '-' + item.Name,
+          value: item.No
         })) || [];
     });
-
     // ECR_LocNo
-    const payload = { ECR_LocNo: '', PageSize: 50, PageIndex: 1 };
-    this.loading = true;
-    this.tls11010Service.queryData(payload)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe(res => {
-        this.dropdownCache['ECR_LocNo'] =
-          res?.Data?.map((x: any) => ({
-            label: x.LOCATION_No,
-            value: x.LOCATION_No
-          })) || [];
-      });
+    this.dropdownCache['ECR_LocNo'] = getSYS1000Options('ECR_LocNo');
 
-    // ECR_SAL_Type
-    this.dropdownCache['ECR_SAL_Type'] = [
-      { label: '商場收銀機台', value: '' },
-      { label: '停車場機台', value: 'PKNG' },
-      { label: '會員APP', value: 'APP' },
-      { label: '環友票券系統', value: 'CPN' }
-    ];
-
-    // SYS_SrvNo
-    this.dropdownCache['SYS_SrvNo'] = [
-      { label: '主機A', value: 'A' },
-      { label: '主機B', value: 'B' }
-    ];
+    // SYS_SrvNo 串接 POS10015 下拉
+    this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
+      this.dropdownCache['SYS_SrvNo'] =
+        res?.Data?.map((item: any) => ({
+          label: item.Name,
+          value: item.No
+        })) || [];
+    });
 
     // ECR_TmplNo
     this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
@@ -178,31 +169,63 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
         newVal = new Date(newVal).toISOString();
       }
 
-      const payload = {
+      // 共用欄位
+      const basePayload = {
         ECR_No: raw.ECR_No || '',
         ECR_SchStatus: raw.ECR_SchStatus || '',
-        ECR_SchDate: raw.ECR_SchDate ? new Date(raw.ECR_SchDate).toISOString() : new Date().toISOString(),
+        ECR_SchDate: raw.ECR_SchDate
+          ? new Date(raw.ECR_SchDate).toISOString()
+          : new Date().toISOString(),
         ECR_FLD_ID: raw.ECR_FLD_ID || '',
-        ECR_FLD_OrgVal: raw.ECR_FLD_OrgVal || '',
         ECR_FLD_NewVal: newVal
       };
 
       const isUpdate = raw.ECR_SchNo && raw.ECR_SchNo !== '自動編號';
 
       if (isUpdate) {
-        this.tls46030Service.updateTLS46030({ ...payload, ECR_SchNo: raw.ECR_SchNo }).subscribe({
-          next: (res) => {
-            this.messageService.successBubble('更新成功');
-            console.log('更新成功:', res);
-          }
-        });
+        const updatePayload = {
+          ...basePayload,
+          ID: this.rowdata?.ID,
+          ECR_SchNo: raw.ECR_SchNo
+        };
+
+        this.tls46030Service.updateTLS46030(updatePayload)
+          .pipe(finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('更新成功');
+              }
+              console.log('更新結果:', res);
+            }
+          });
       } else {
-        this.tls46030Service.insertTLS46030(payload).subscribe({
-          next: (res) => {
-            this.messageService.successBubble('新增成功');
-            console.log('新增成功:', res);
-          }
-        });
+        const insertPayload = {
+          ECR_No: raw.ECR_No || '',
+          ECR_SchStatus: raw.ECR_SchStatus || '',
+          ECR_SchDate: raw.ECR_SchDate
+            ? new Date(raw.ECR_SchDate).toISOString()
+            : new Date().toISOString(),
+          ECR_SchFinTime: null,
+          ECR_FLD_ID: raw.ECR_FLD_ID || '',
+          ECR_FLD_OrgVal: raw.ECR_FLD_OrgVal || '',
+          ECR_FLD_NewVal: newVal
+        };
+
+        this.tls46030Service.insertTLS46030(insertPayload)
+          .pipe(finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('新增成功');
+              }
+              console.log('新增結果:', res);
+            },
+            error: () => {
+              this.loading = false;
+            }
+          });
+
       }
     });
   }

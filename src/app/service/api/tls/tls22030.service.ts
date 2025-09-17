@@ -16,6 +16,10 @@ export class Tls22030Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS22030`, data);
   }
 
-
+// 匯出 TLS22030 PDF
+  exportTLS22030PDF(data: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS22030PDF`, data, {
+      responseType: 'blob'
+    });
 }
-
+}
