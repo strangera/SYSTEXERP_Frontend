@@ -1,13 +1,14 @@
 // src/app/components/input-text/input-text.component.ts
 
+import { NgClass, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgIf, NgClass } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
+import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
-import { ButtonComponent } from '../button/button.component';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { ButtonComponent } from '../button/button.component';
 import { InputTextService } from './input-text.service';
 
 @Component({
@@ -19,8 +20,9 @@ import { InputTextService } from './input-text.service';
     NgIf,
     NgClass,
     FormsModule,
-    ReactiveFormsModule,
     InputTextModule,
+    KeyFilterModule,
+    ReactiveFormsModule,
     TooltipModule,
     ButtonComponent,
     ControlMessagesComponent,
@@ -45,6 +47,8 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() showErrorMessage = true;
   @Input() disabled = false;
   @Input() weightedMax: number | null = null;
+
+  @Input() keyFilter: KeyFilterPattern | RegExp | undefined; // 輸入過濾規則
 
   @Input() autoPadZero = false; // 新增：是否自動補零
   @Input() padLength = 16; // 新增：補零後的總長度

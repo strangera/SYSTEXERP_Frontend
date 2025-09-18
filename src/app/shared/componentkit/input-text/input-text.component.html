@@ -13,7 +13,7 @@
       [ngClass]="{ 'ng-invalid ng-dirty': (submitted && control.errors) || (errorForGroup && control.parent?.errors) }"
       pInputText [attr.aria-label]="label || placeholder" [title]="label || placeholder"
       (compositionstart)="onCompositionStart()" (compositionend)="onCompositionEnd($event)" (input)="onInput($event)"
-      (blur)="onBlur($event)" />
+      (blur)="onBlur($event)" [pKeyFilter]="keyFilter" />
   </ng-container>
 
   <ng-template #starredInput>
