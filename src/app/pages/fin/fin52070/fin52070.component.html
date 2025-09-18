@@ -9,20 +9,20 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="三碼代號" controlName="AccNo" [control]="queryForm.controls.AccNo"
+            <app-input-text label="三碼代號" controlName="ClassNo" [control]="queryForm.controls.ClassNo"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="三碼名稱" controlName="AccCname" [control]="queryForm.controls.AccCname"
+            <app-input-text label="三碼名稱" controlName="ClassCName" [control]="queryForm.controls.ClassCName"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="三碼英文名稱" controlName="AccEname" [control]="queryForm.controls.AccEname"
+            <app-input-text label="三碼英文名稱" controlName="ClassEname" [control]="queryForm.controls.ClassEname"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="中類代碼" controlName="ClassNo" [options]="ClassNo_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.ClassNo" [submitted]="submitted"></app-dropdown>  
+            <app-dropdown label="中類代碼" controlName="ParentClass" [options]="ClassAttr_Option" optionLabel="ClassCName"
+              optionValue="ClassNo" [control]="queryForm.controls.ParentClass" [submitted]="submitted"></app-dropdown>  
           </div>
         </div>
 
@@ -35,8 +35,8 @@
   </p-accordion>
 </div>
 <div class="card">
-    <app-table tableKey="FIN52070" dataKey="field" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)" [showCheckBox]="false" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
+    <app-table tableKey="FIN52070" dataKey="field" [data]="data" [columns]="columns"
+        (detail)="onDetail($event)" [showCheckBox]="false" [showEdit]="false" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
         [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
         [lazy]="true" [loading]="loading">
     </app-table>

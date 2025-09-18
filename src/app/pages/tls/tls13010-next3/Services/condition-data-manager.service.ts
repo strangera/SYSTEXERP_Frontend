@@ -11,6 +11,7 @@ import {
 } from './../../tls13010/tls13010.model';
 // condition-data-manager.service.ts - 條件數據管理服務
 import { Injectable } from '@angular/core';
+import { SmartDateSegmentationService } from './smart-date-manager.service';
 /**
  * 條件數據管理服務
  * 負責條件數據的創建、分類、驗證等操作
@@ -18,8 +19,11 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root'
 })
+
+
 export class ConditionDataManager {
 
+  constructor(private smartDateService: SmartDateSegmentationService) { }
   /**
  * 生成暫時唯一 ID
  */
@@ -58,6 +62,32 @@ export class ConditionDataManager {
         return [this.createBaseTierItem(talentId, existingItems as BaseTierCondition[])];
       default:
         return [];
+    }
+  }
+
+  /**
+   * 使用智能日期初始化空的條件數據（新方法）
+   */
+  initializeSmartConditions(
+    commissionType: string,
+    talentId: string,
+    contractStartDate: string,
+    contractEndDate: string,
+    existingItems?: any[]
+  ): ConditionItem[] {
+    try {
+      const newItem = this.createSmartConditionItem(
+        commissionType,
+        talentId,
+        contractStartDate,
+        contractEndDate,
+        existingItems || []
+      );
+      return newItem ? [newItem] : [];
+    } catch (error) {
+      console.warn('智能創建項目失敗，使用默認創建:', error);
+      // 失敗時回退到原始方法
+      return this.initializeEmptyConditions(commissionType, talentId, existingItems);
     }
   }
 
@@ -557,5 +587,74 @@ export class ConditionDataManager {
 
   private getDefaultEndDate(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  // 3. 添加新的智能創建方法（不改動現有方法）
+  /**
+   * 使用智能日期創建新項目
+   */
+  createSmartConditionItem(
+    commissionType: string,
+    talentId: string,
+    contractStartDate: string,
+    contractEndDate: string,
+    existingItems: ConditionItem[]
+  ): ConditionItem | null {
+
+    if (commissionType === '6') {
+      const canAddResult = this.smartDateService.canAddBaseTierItem(existingItems as BaseTierCondition[]);
+      if (!canAddResult.canAdd) {
+        throw new Error(canAddResult.reason || '無法新增包底加階梯項目');
+      }
+    }
+
+    const smartItem = this.smartDateService.generateSmartNewItem(
+      commissionType,
+      talentId,
+      contractStartDate,
+      contractEndDate,
+      existingItems
+    );
+
+    return smartItem;
+  }
+
+  /**
+   * 驗證新項目的日期範圍
+   */
+  validateNewItemDates(
+    newItem: ConditionItem,
+    contractStartDate: string,
+    contractEndDate: string,
+    existingItems: ConditionItem[]
+  ): { isValid: boolean; errors: string[] } {
+
+    const dateValidation = this.smartDateService.validateDateRange(
+      newItem.cag_bdate,
+      newItem.cag_edate,
+      contractStartDate,
+      contractEndDate
+    );
+
+    if (!dateValidation.isValid) {
+      return dateValidation;
+    }
+
+    // 檢查日期重疊
+    const overlapCheck = this.smartDateService.checkDateOverlap(
+      newItem.cag_bdate,
+      newItem.cag_edate,
+      existingItems,
+      newItem.id !== undefined ? String(newItem.id) : undefined
+    );
+
+    if (overlapCheck.hasOverlap) {
+      return {
+        isValid: false,
+        errors: ['新增項目的日期範圍與現有項目重疊']
+      };
+    }
+
+    return { isValid: true, errors: [] };
   }
 }

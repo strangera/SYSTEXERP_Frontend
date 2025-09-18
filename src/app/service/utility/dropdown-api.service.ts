@@ -41,7 +41,8 @@ import {
   Pos1008Item,
   Pos1006Item,
   Pos2013Query,
-  Pos2013Item
+  Pos2013Item,
+  BusSClassItem
 } from './dropdown-api.model';
 import { ApiResponse } from '@service/system/auth.service';
 import { environment } from 'src/environments/environment';
@@ -176,8 +177,8 @@ export class DropdownApiService {
   }
 
   /** 查詢小分類設定檔(TLTBUSSCLASS)資料表 */
-  queryTltBusSClass(body: BusSClassQuery): Observable<IDropdownItem[] | null> {
-    return this.queryDropdownWithParams<IDropdownItem, BusSClassQuery>('/queryTLTBUSSCLASS_DropDownList', body);
+  queryTltBusSClass(body?: BusSClassQuery): Observable<BusSClassItem[] | null> {
+    return this.queryDropdownWithParams<BusSClassItem, BusSClassQuery | object>('/queryTLTBUSSCLASS_DropDownList', body ?? {});
   }
 
   /** 查詢組織代碼(SYS3100)資料表下拉選單 */

@@ -12,6 +12,7 @@ import { ButtonDirective } from 'primeng/button';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { DialogModule } from 'primeng/dialog';
 import { TableComponent } from '../table/table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface InputGroupColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
@@ -53,7 +54,7 @@ export class InputGroupComponent extends BasicKitComponent implements OnInit, On
   @Output() selected = new EventEmitter<TableRowSelectEvent>();
   filteredData: any = []; // 過濾後的資料
   // 右邊文字顯示
-  value = '';
+  @Input() value: any = '';
 
   constructor() { super(); }
   ngOnInit(): void {
@@ -63,7 +64,19 @@ export class InputGroupComponent extends BasicKitComponent implements OnInit, On
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['options'] && this.options) {
       this.filteredData = [...this.options];
-      this.initDialog();
+    }
+    let foundOption: any = null;
+    if (this.optionValue) {
+      foundOption = this.options.find(option => option[this.optionValue as string] === this.control.value);
+    } else {
+      foundOption = this.options.find(option => option === this.control.value);
+    }
+    if (foundOption) {
+      if (this.optionLabel) {
+        this.value = foundOption[this.optionLabel];
+      } else {
+        this.value = '';
+      }
     }
     this.filterOptions({ originalEvent: {} as Event, query: '' });
 
@@ -72,7 +85,7 @@ export class InputGroupComponent extends BasicKitComponent implements OnInit, On
       this.columns.forEach(column => {
         const control = new FormControl('');
         this.searchForm.addControl(column.field, control);
-        control.valueChanges.subscribe(() => {
+        control.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
           // Table 過濾資料
           this.filteredData = this.options.filter(item => {
             return this.columns.every(column => {
@@ -105,9 +118,27 @@ export class InputGroupComponent extends BasicKitComponent implements OnInit, On
     }
     this.filteredOptions = filtered;
   }
+  onInput(event: any) {
+    let foundOption: any = null;
+    if (this.optionValue) {
+      foundOption = this.options.find(option => option[this.optionValue as string] === this.control.value);
+    } else {
+      foundOption = this.options.find(option => option === this.control.value);
+    }
+    if (foundOption) {
+      if (this.optionLabel) {
+        this.value = foundOption[this.optionLabel];
+      } else {
+        this.value = '';
+      }
+    }
+  }
   // 初始化 Dialog
   initDialog() {
-    this.control.valueChanges.subscribe(value => {
+    this.control.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      if (!value) {
+        this.value = '';
+      }
       let foundOption: any = null;
       if (this.optionValue) {
         foundOption = this.options.find(option => option[this.optionValue as string] === value);
@@ -117,6 +148,8 @@ export class InputGroupComponent extends BasicKitComponent implements OnInit, On
       if (foundOption) {
         if (this.optionLabel) {
           this.value = foundOption[this.optionLabel];
+        } else {
+          this.value = '';
         }
       }
     });

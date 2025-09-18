@@ -977,12 +977,25 @@ export class DataCleaner {
     annualSettings: CleanCommissionDetails,
     levelSettings: CleanCommissionDetails
   ): void {
+
     // 處理折扣設定明細
     commission.discountSettingItems?.forEach((detail: any) => {
-      if (!detail.selected) {
-        console.log(`跳過未勾選的折扣項目: ${detail.cag_barcode}`);
+      console.log(`處理折扣項目: ${detail.cag_barcode}, selected: ${detail.selected}, status: ${detail._status}`);
+
+      // 關鍵修正：處理取消勾選的現有項目
+      if (!detail.selected && this.hasValidId(detail.id)) {
+        console.log(`處理取消勾選的折扣項目: ${detail.cag_barcode} (ID: ${detail.id})`);
+        discountSettings.toDelete.push({ id: Number(detail.id) });
         return;
       }
+
+      // 跳過未勾選的新項目（沒有有效ID）
+      if (!detail.selected && !this.hasValidId(detail.id)) {
+        console.log(`跳過未勾選的新折扣項目: ${detail.cag_barcode}`);
+        return;
+      }
+
+      // 處理已勾選的項目
       const cleanDetail = {
         ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
         tlt_id: commission.tlt_id || '',
@@ -1007,8 +1020,10 @@ export class DataCleaner {
       }
     });
 
-    // 處理年度業績明細
+    // 處理年度業績明細（年度業績沒有 selected 欄位，按原邏輯處理）
     commission.annualPerformanceItems?.forEach((detail: any) => {
+      console.log(`處理年度業績項目: ID ${detail.id}, status: ${detail._status}`);
+
       const cleanAnnual = {
         ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
         tlt_id: commission.tlt_id || '',
@@ -1035,10 +1050,22 @@ export class DataCleaner {
 
     // 處理層級抽成明細
     commission.discountLevelItems?.forEach((detail: any, index: number) => {
-      if (!detail.selected) {
-        console.log(`跳過未勾選的層級抽成項目: ${detail.cag_barcode}`);
+      console.log(`處理層級抽成項目: ${detail.cag_barcode}, selected: ${detail.selected}, status: ${detail._status}`);
+
+      // 關鍵修正：處理取消勾選的現有項目
+      if (!detail.selected && this.hasValidId(detail.id)) {
+        console.log(`處理取消勾選的層級抽成項目: ${detail.cag_barcode} (ID: ${detail.id})`);
+        levelSettings.toDelete.push({ id: Number(detail.id) });
         return;
       }
+
+      // 跳過未勾選的新項目（沒有有效ID）
+      if (!detail.selected && !this.hasValidId(detail.id)) {
+        console.log(`跳過未勾選的新層級抽成項目: ${detail.cag_barcode}`);
+        return;
+      }
+
+      // 處理已勾選的項目
       const cleanLevel = {
         ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
         tlt_id: commission.tlt_id || '',

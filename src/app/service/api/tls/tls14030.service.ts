@@ -56,8 +56,8 @@ export class Tls14030Service {
     }
 
     //查詢 大分類 下拉
-    queryPOS2003_DropDownList(body: any): Observable<any> {
-      return this.http.post<any>(`${environment.ApiUrl}/queryPOS2003_DropDownList`, body);
+    queryTLTBUSTYPE_DropDownList(body: any): Observable<any> {
+      return this.http.post<any>(`${environment.ApiUrl}/queryTLTBUSTYPE_DropDownList`, body);
     }
 
     //查詢 組織代碼 下拉

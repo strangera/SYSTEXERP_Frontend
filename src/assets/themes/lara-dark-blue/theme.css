@@ -346,7 +346,7 @@
   .p-component {
     font-family: var(--font-family);
     font-feature-settings: var(--font-feature-settings, normal);
-    font-size: 1rem;
+    font-size: 12px;
     font-weight: normal;
   }
   .p-component-overlay {
@@ -364,7 +364,7 @@
     color: rgba(255, 255, 255, 0.6);
   }
   .pi {
-    font-size: 1rem;
+    font-size: 12px;
   }
   .p-icon {
     width: 1rem;
@@ -373,7 +373,7 @@
   .p-link {
     font-family: var(--font-family);
     font-feature-settings: var(--font-feature-settings, normal);
-    font-size: 1rem;
+    font-size: 12px;
     border-radius: 6px;
   }
   .p-link:focus-visible {
@@ -433,7 +433,7 @@
     input {
     font-family: var(--font-family);
     font-feature-settings: var(--font-feature-settings, normal);
-    font-size: 1rem;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.87);
     padding: 0;
     margin: 0;
@@ -622,7 +622,7 @@
     margin-right: 0.5rem;
   }
   .p-datepicker table {
-    font-size: 1rem;
+    font-size: 12px;
     margin: 0.5rem 0;
   }
   .p-datepicker table th {
@@ -820,7 +820,7 @@
   .p-cascadeselect .p-cascadeselect-label {
     background: transparent;
     border: 0 none;
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
   }
   .p-cascadeselect .p-cascadeselect-label.p-placeholder {
     color: rgba(255, 255, 255, 0.6);
@@ -960,7 +960,7 @@
   .p-checkbox .p-checkbox-box .p-checkbox-icon {
     transition-duration: 0.2s;
     color: #030712;
-    font-size: 14px;
+    font-size: 12px;
   }
   .p-checkbox .p-checkbox-box .p-icon {
     width: 14px;
@@ -1053,7 +1053,7 @@
   .p-chips .p-chips-multiple-container .p-chips-input-token input {
     font-family: var(--font-family);
     font-feature-settings: var(--font-feature-settings, normal);
-    font-size: 1rem;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.87);
     padding: 0;
     margin: 0;
@@ -1243,7 +1243,7 @@
     border-top: 1px solid #424b57;
     border-left: 1px solid #424b57;
     border-bottom: 1px solid #424b57;
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     min-width: 3rem;
   }
   .p-inputgroup-addon:last-child {
@@ -1416,10 +1416,10 @@
   .p-inputtext {
     font-family: var(--font-family);
     font-feature-settings: var(--font-feature-settings, normal);
-    font-size: 1rem;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.87);
     background: #111827;
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     border: 1px solid #424b57;
     transition:
       background-color 0.2s,
@@ -1634,7 +1634,7 @@
     border-color: #60a5fa;
   }
   .p-multiselect .p-multiselect-label {
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     transition:
       background-color 0.2s,
       color 0.2s,
@@ -2151,7 +2151,7 @@
     border-color: #60a5fa;
   }
   .p-treeselect .p-treeselect-label {
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     transition:
       background-color 0.2s,
       color 0.2s,
@@ -2288,7 +2288,7 @@
     background: #60a5fa;
     border: 1px solid #60a5fa;
     padding: 0.75rem 1.25rem;
-    font-size: 1rem;
+    font-size: 12px;
     transition:
       background-color 0.2s,
       color 0.2s,
@@ -2399,7 +2399,7 @@
   }
   .p-button.p-button-icon-only {
     width: 3rem;
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
   }
   .p-button.p-button-icon-only .p-button-icon-left,
   .p-button.p-button-icon-only .p-button-icon-right {
@@ -5095,7 +5095,7 @@
   .p-dialog .p-dialog-content {
     background: #1f2937;
     color: rgba(255, 255, 255, 0.87);
-    padding: 0 1.5rem 2rem 1.5rem;
+    padding: 0 1.5rem 0 1.5rem;
   }
   .p-dialog .p-dialog-content:last-of-type {
     border-bottom-right-radius: 6px;
@@ -5220,7 +5220,7 @@
   .p-tooltip .p-tooltip-text {
     background: #424b57;
     color: rgba(255, 255, 255, 0.87);
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     box-shadow:
       0 2px 4px -1px rgba(0, 0, 0, 0.2),
       0 4px 5px 0 rgba(0, 0, 0, 0.14),
@@ -6931,7 +6931,7 @@
     height: 0.875rem;
   }
   .p-inline-message {
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     margin: 0;
     border-radius: 6px;
   }
@@ -6972,7 +6972,7 @@
     color: #fca5a5;
   }
   .p-inline-message .p-inline-message-icon {
-    font-size: 1rem;
+    font-size: 12px;
     margin-right: 0.5rem;
   }
   .p-inline-message .p-icon {
@@ -6980,7 +6980,7 @@
     height: 1rem;
   }
   .p-inline-message .p-inline-message-text {
-    font-size: 1rem;
+    font-size: 12px;
   }
   .p-inline-message.p-inline-message-icon-only .p-inline-message-icon {
     margin-right: 0;
@@ -7059,7 +7059,7 @@
     color: #fca5a5;
   }
   .p-message .p-message-text {
-    font-size: 1rem;
+    font-size: 12px;
     font-weight: 500;
   }
   .p-message .p-message-icon {
@@ -7493,7 +7493,7 @@
     outline: 0 none;
   }
   .p-inplace .p-inplace-display {
-    padding: 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
     transition:
       background-color 0.2s,
@@ -7701,7 +7701,7 @@
   .p-terminal .p-terminal-input {
     font-family: var(--font-family);
     font-feature-settings: var(--font-feature-settings, normal);
-    font-size: 1rem;
+    font-size: 12px;
   }
 }
 @layer primeng {

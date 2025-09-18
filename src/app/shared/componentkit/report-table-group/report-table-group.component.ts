@@ -1,30 +1,29 @@
-import { Component, Input, OnInit, TemplateRef, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 
 import {
+  DatePipe,
   Location,
-  NgIf,
-  NgFor,
-  NgTemplateOutlet,
   NgClass,
+  NgFor,
+  NgIf,
   NgSwitch,
   NgSwitchCase,
   NgSwitchDefault,
-  DatePipe,
+  NgTemplateOutlet,
 } from '@angular/common';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-import { ChangeDetectorRef } from '@angular/core';
-import { formatDate } from '../table/table.model';
+import { ChangeDetectorRef, TrackByFunction } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { FormsModule } from '@angular/forms';
 import { InputSwitchModule } from 'primeng/inputswitch';
-import { TableModule } from 'primeng/table';
-import { PrimeTemplate } from 'primeng/api';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { TrackByFunction } from '@angular/core';
+import { TableModule } from 'primeng/table';
+import { formatDate, TableTypes } from '../table/table.model';
 
 
 interface Column {
@@ -40,9 +39,9 @@ interface Column {
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   style?: string; // styles
 
-  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'image' | 'default'; // 欄位類型
+  type?: TableTypes; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
   useGrouping?: boolean;
@@ -97,7 +96,7 @@ export class ReportTableGroupComponent implements OnInit {
 
   @Input() extraTablesForPDF: {                           // PDF 附加額外表格
     title: string;
-    columns: { header: string; field: string; style?: string }[];
+    columns: { header: string; field: string; style?: string; }[];
     data: any[];
   }[] = [];
 
@@ -176,9 +175,9 @@ export class ReportTableGroupComponent implements OnInit {
   }
 
 
-  expandedRows: { [key: string]: boolean } = {};
-  rowDetails: { [key: string]: any[] } = {};
-  groupBodyExpanded: { [key: string]: boolean } = {};
+  expandedRows: { [key: string]: boolean; } = {};
+  rowDetails: { [key: string]: any[]; } = {};
+  groupBodyExpanded: { [key: string]: boolean; } = {};
 
   getRowKey(row: any): string {
     return row[this.dataKey] ?? JSON.stringify(row);
@@ -194,9 +193,9 @@ export class ReportTableGroupComponent implements OnInit {
       this.rowDetails[key] = await this.fetchDetailFn(payload);
     }
   }
-  expandedRowKeys: { [key: string]: boolean } = {};
+  expandedRowKeys: { [key: string]: boolean; } = {};
 
-  onExpandedRowKeysChange(event: { [key: string]: boolean }) {
+  onExpandedRowKeysChange(event: { [key: string]: boolean; }) {
     this.expandedRowKeys = event;
   }
 
@@ -531,7 +530,7 @@ export class ReportTableGroupComponent implements OnInit {
     marginLeft: number,
   ): void {
     const headers = this.selectedColumns.map((col) => col.header);
-    const columnStyles: { [key: string]: any } = {};
+    const columnStyles: { [key: string]: any; } = {};
     this.selectedColumns.forEach((col, index) => {
       let halign: 'left' | 'right' | 'center' = 'center';
       if (col.style === 'text-left') halign = 'left';
@@ -658,7 +657,7 @@ export class ReportTableGroupComponent implements OnInit {
     marginLeft: number,
   ): void {
     const headers = this.selectedColumns.map((col) => col.header);
-    const columnStyles: { [key: string]: any } = {};
+    const columnStyles: { [key: string]: any; } = {};
     this.selectedColumns.forEach((col, index) => {
       let halign: 'left' | 'right' | 'center' = 'center';
       if (col.style === 'text-left') halign = 'left';

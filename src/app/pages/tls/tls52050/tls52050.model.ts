@@ -1,5 +1,7 @@
+import { EditColumn } from "@shared/componentkit/table-edit/table-edit.model";
 import { Column, formatAmount, formatDate } from "../../../shared/componentkit/table/table.model";
 import { getSYS1000 } from "@service/system/sys1000.service";
+import { validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
 
 export const enum MAMStatus {
   已申請 = '0',
@@ -27,3 +29,13 @@ export const POS2008M_COLUMNS: Column[] = [
   { field: 'APRV_USR_Name', header: '審核人員', visible: true },
   { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate },
 ];
+
+export const EXPORT_LABEL_COLUMNS: EditColumn[] = [
+  { field: 'PLU_MagNo', header: '商品管理編號' },
+  { field: 'PLU_Name', header: '商品名稱' },
+  { field: 'Label_Qty', header: '標籤數量', type: 'inputNumber', width: '100px', validate: [validateRequired, validateMinNumber(1)] },
+  { field: 'PLU_SalePrc', header: '商品售價' },
+  { field: 'PLU_Unit', header: '商品單位' },
+  { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+  { field: 'PLU_No', header: '國際條碼' },
+]

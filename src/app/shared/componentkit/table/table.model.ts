@@ -1,4 +1,5 @@
-import { SortMeta } from "primeng/api";
+import { SortMeta } from 'primeng/api';
+
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -18,7 +19,7 @@ export interface Column {
   validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[]; // 驗證規則(如果是可輸入的欄位)
 
   dataKey?: string;
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'image' | 'default'; // 欄位類型
+  type?: TableTypes; // 欄位類型
   prefix?: string; // 前綴 (適用於 input 類型)
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
@@ -38,6 +39,17 @@ export interface Column {
   dateFormat?: string; // 日期格式（例如 'yy-mm-dd'，僅適用於 type='date'）
   frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
   alignFrozen?: string; // 凍結欄位對齊方式
+
+  /** 給dropdownTable 用的數值 */
+  tableData?: any[]; // 表格數據
+  tableColumns?: any[]; // 表格欄位
+  tableKey?: string; // 表格數據的唯一鍵值欄位
+  tableRows?: number; // 表格顯示的行數
+  tableLoading?: boolean; // 載入狀態
+  valueKey?: string; // 回傳值欄位
+  totalRecords?: number; // 總數
+  multiSortMeta?: SortMeta[]; // 多重排序設定
+  lazy?: boolean; // 是否啟用懶加載
 }
 
 export interface ColumnGroup {
@@ -278,3 +290,16 @@ export const formatAmountWithFraction = (val: number | string): string => {
   if (isNaN(num)) return '0';
   return num.toLocaleString(undefined, { maximumFractionDigits: 0 }); // eg. 1,000,000.00
 };
+
+
+export type TableTypes =
+  'input' |
+  'inputNumber' |
+  'dropdown' |
+  'button' |
+  'html' |
+  'date' |
+  'autoComplete' |
+  'image' |
+  'default' |
+  'dropdownTable';
