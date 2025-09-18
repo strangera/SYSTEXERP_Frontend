@@ -77,7 +77,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() buttonsLoading = false;           // 按鈕們 loading
-
+  @Input() footerData: any;
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Input() disabled = false;
   //
