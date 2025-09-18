@@ -146,18 +146,19 @@ export class SmartDateSegmentationService {
       return { canAdd: true };
     }
 
-    // 檢查是否有項目的end_number為最大值
-    const hasMaxEndNumber = validItems.some(item =>
-      item.end_number === 999999999 || item.end_number === 9999999999
-    );
+    // 按照 seq_no 找到最後一筆
+    const sortedItems = validItems.sort((a, b) => (a.seq_no || 0) - (b.seq_no || 0));
+    const lastItem = sortedItems[sortedItems.length - 1];
 
-    if (!hasMaxEndNumber) {
+    // 只有當最後一筆的訖金額是特殊最大值時，才限制新增
+    if (lastItem.end_number === 9999999999999) {
       return {
         canAdd: false,
-        reason: '需要先將現有階梯的迄值設定為999999999才能新增下一個區段'
+        reason: '最後一筆階梯的訖金額已設為9999999999999，表示涵蓋所有更大金額，無需再新增'
       };
     }
 
+    // 其他情況都可以新增
     return { canAdd: true };
   }
 
@@ -270,7 +271,10 @@ export class SmartDateSegmentationService {
       return 1;
     }
 
+    // 確保按照實際的seq_no排序
     const maxSeqNo = Math.max(...validItems.map(item => item.seq_no || 0));
+    console.log(`當前最大序號：${maxSeqNo}，下一個序號：${maxSeqNo + 1}`);
+
     return maxSeqNo + 1;
   }
 
@@ -285,35 +289,48 @@ export class SmartDateSegmentationService {
     const validItems = existingItems.filter(item => (item as any)._status !== 'deleted');
 
     if (validItems.length === 0) {
-      // 第一筆從0開始，迄值設為null讓使用者自己輸入
+      // 第一筆從0開始
+      console.log('沒有現有項目，從0開始');
       return {
         start_number: 0,
-        end_number: null  // 改為null，讓使用者自己決定
+        end_number: null
       };
     }
 
-    // 找出當前最大的end_number
-    const maxEndNumber = Math.max(...validItems.map(item => item.end_number || 0));
+    // 按照 seq_no 排序，找到最後一筆（序號最大的）
+    const sortedItems = validItems.sort((a, b) => (a.seq_no || 0) - (b.seq_no || 0));
+    const lastItem = sortedItems[sortedItems.length - 1];
 
-    // 從table-config-manager.service.ts看到最大值是9999999999999
-    const MAX_VALUE = 9999999999999;
+    console.log('現有項目列表：', validItems.map(item => ({
+      seq_no: item.seq_no,
+      end_number: item.end_number,
+      _status: (item as any)._status
+    })));
 
-    // 檢查是否已達最大值
-    if (maxEndNumber >= MAX_VALUE) {
-      // 如果上一筆已是最大值，新的一筆從0重新開始
-      console.log('上一筆已達最大值，新階梯從0重新開始');
+    console.log('最後一筆項目：', {
+      seq_no: lastItem.seq_no,
+      end_number: lastItem.end_number
+    });
+
+    // 判斷最後一筆的訖金額
+    if (lastItem.end_number === 9999999999999) {
+      console.log('最後一筆訖金額是9999999999999，新增從0開始');
       return {
         start_number: 0,
-        end_number: null  // 讓使用者自己輸入
+        end_number: null
       };
     }
 
-    // 一般情況：接續上一個的結束值+1
+    // 一般情況：最後一筆訖金額 + 1
+    const nextStartValue = (lastItem.end_number || 0) + 1;
+    console.log(`最後一筆訖金額是${lastItem.end_number}，新增從${nextStartValue}開始`);
+
     return {
-      start_number: maxEndNumber + 1,
-      end_number: null  // 不預設結束值，讓使用者自己決定
+      start_number: nextStartValue,
+      end_number: null
     };
   }
+
   /**
    * 生成完整的新增項目數據（整合日期和其他智能邏輯）
    */
