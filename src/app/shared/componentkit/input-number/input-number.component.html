@@ -9,7 +9,8 @@
       [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
       [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode" [maxlength]="maxLength"
       (onInput)="onInputChange($event)" (onBlur)="onBlur($event)" [pTooltip]="customPlaceholder || placeholder"
-      tooltipPosition="bottom" />
+      tooltipPosition="bottom"
+      [pKeyFilter]="keyFilter" />
   </ng-container>
   <ng-template #inputNumber>
     <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control"
@@ -17,7 +18,8 @@
       [max]="max || maxValue" [step]="step" [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits"
       [maxFractionDigits]="maxFractionDigits" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
       [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)" (onBlur)="onBlur($event)"
-      [pTooltip]="customPlaceholder || placeholder" tooltipPosition="bottom" />
+      [pTooltip]="customPlaceholder || placeholder" tooltipPosition="bottom"
+      [pKeyFilter]="keyFilter" />
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>

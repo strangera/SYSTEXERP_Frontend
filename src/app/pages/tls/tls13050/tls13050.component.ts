@@ -34,10 +34,12 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 export class TLS13050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_floorList: [[]],
-    date_start: ['',[Validators.required]],
-    date_end: ['',[Validators.required]],
-    check_day_start: ['',[Validators.required]],
-    check_day_end: ['',[Validators.required]],
+    tlt_bdate_start: [(new Date()), [Validators.required]],
+    tlt_bdate_end: [(new Date()), [Validators.required]],
+    tlt_edate_start: [(new Date()), [Validators.required]],
+    tlt_edate_end: [(new Date()), [Validators.required]],
+    check_day_start: [null],
+    check_day_end: [null],
     Building_No:  [[]],
     org_idList: [[]],
     ...createPaginationConfig([{ field: 'apply_no', order: 1 }])

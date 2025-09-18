@@ -8,8 +8,8 @@
     <p-table
       [value]="detailData"
       rowGroupMode="rowspan"
-      groupRowsBy="PAY_Name"
-      sortField="PAY_Name"
+      groupRowsBy="representative.PAY_Name"
+      sortField="representative.PAY_Name"
       sortMode="single"
       [tableStyle]="{ 'min-width': '60rem' }"
     >
@@ -26,29 +26,19 @@
 
       <ng-template
         pTemplate="body"
-        let-customer
-        let-rowIndex="rowIndex"
+        let-rowData
         let-rowgroup="rowgroup"
         let-rowspan="rowspan"
       >
         <tr>
-          <td *ngIf="rowgroup && !customer.isTotal" [attr.rowspan]="rowspan">
-            {{ customer.PAY_Name }}
+          <td *ngIf="rowgroup" [attr.rowspan]="rowspan">
+            {{ rowData.PAY_Name }}
           </td>
-
-          <td>{{ customer.ECR_No || "" }}</td>
-          <td>{{ customer.TXN_No || "" }}</td>
-          <td>{{ customer.BOOK_PayAmt | number }}</td>
-          <td>{{ customer.ACT_PayAmt | number }}</td>
-          <td>{{ customer.OVER_PayAmt | number }}</td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="groupfooter" let-group>
-        <tr class="bg-yellow-100 font-bold">
-          <td colspan="3" class="text-right">合計</td>
-          <td>{{ group.BOOK_PayCnt_Sum | number }}</td>
-          <td>{{ group.ACT_PayAmt_Sum | number }}</td>
-          <td>{{ group.OVER_PayAmt_Sum | number }}</td>
+          <td>{{ rowData.ECR_No }}</td>
+          <td>{{ rowData.TXN_No }}</td>
+          <td>{{ rowData.BOOK_PayAmt | number }}</td>
+          <td>{{ rowData.ACT_PayAmt | number }}</td>
+          <td>{{ rowData.OVER_PayAmt | number }}</td>
         </tr>
       </ng-template>
     </p-table>

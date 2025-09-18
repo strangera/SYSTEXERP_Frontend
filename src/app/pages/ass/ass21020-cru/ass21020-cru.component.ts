@@ -298,11 +298,11 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       if (total > 100) return void (this.loading = !1);
 
       this.service.updateASS21020(payload).pipe(
-        finalize(() => this.loading = !1),
         tap(() => {
           this.onCancel();
           this.service.loadASS21020({ ENG_MeterNo: this.df().ENG_MeterNo.value! });
-        })
+        }),
+        finalize(() => this.loading = !1),
       ).subscribe();
     });
   }

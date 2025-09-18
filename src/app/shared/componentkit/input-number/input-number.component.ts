@@ -1,12 +1,13 @@
+import { NgClass, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { NgIf, NgClass } from '@angular/common';
-import { InputGroupModule } from 'primeng/inputgroup';
-import { InputNumberInputEvent, InputNumberModule } from 'primeng/inputnumber';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
+import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { InputNumberInputEvent, InputNumberModule } from 'primeng/inputnumber';
+import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
 @UntilDestroy()
 @Component({
@@ -17,12 +18,13 @@ import { TooltipModule } from 'primeng/tooltip';
   imports: [
     NgIf,
     NgClass,
-    ReactiveFormsModule,
-    InputNumberModule,
-    InputGroupModule,
     InputGroupAddonModule,
+    InputGroupModule,
+    InputNumberModule,
+    KeyFilterModule,
+    ReactiveFormsModule,
+    TooltipModule,
     ControlMessagesComponent,
-    TooltipModule
   ],
 })
 export class InputNumberComponent extends BasicKitComponent implements OnInit {
@@ -42,6 +44,7 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
   @Input() suffix: string | undefined | null = null;
   @Input() step = 1; // 步進值
   @Input() showButtons = false; // 是否顯示按鈕
+  @Input() keyFilter: KeyFilterPattern | RegExp | undefined; // 輸入過濾規則
   // 自訂屬性
   @Input() customPlaceholder: string | undefined; // 自訂提示
   @Input() showErrorMessage = true;

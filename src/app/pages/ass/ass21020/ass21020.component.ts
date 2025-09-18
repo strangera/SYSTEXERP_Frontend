@@ -17,6 +17,7 @@ import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
 import { ASS21020Data } from './ass21020.model';
 
@@ -180,9 +181,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
         PageIndex: pageIndex || void 0,
       });
 
+      this.loading = this.service.tableLoading;
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.submitted = !0;
-      this.loading = !1;
     });
   }
 

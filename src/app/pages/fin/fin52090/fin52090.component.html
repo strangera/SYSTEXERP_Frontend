@@ -1,70 +1,56 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="create"
+                (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab [header]="'query-conditions' | translate"
+                    [selected]="true"
+                    class="line-height-3 m-0"
+                    [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="科目代號"
-              controlName="accountcode"
-              [options]="accountcodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.accountcode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="科目摘要"
-              controlName="accountsummary"
-              [control]="queryForm.controls.accountsummary"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+          <app-multi-select class="col-12 md:col-6 lg:col-4"
+                            label="科目代號"
+                            controlName="accountcode"
+                            [options]="service.accountCodes()"
+                            optionLabel="label"
+                            optionValue="value"
+                            [control]="qf().accountCodes"
+                            [submitted]="submitted"></app-multi-select>
+
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="科目摘要"
+                          controlName="accountSummary"
+                          [control]="qf().accountSummary"
+                          [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"
+                      [form]="queryForm"></app-button>
+          <app-button btnType="query"
+                      [loading]="service.tableLoading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
+
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table [data]="filteredData()"
+               [columns]="columns"
+               [totalRecords]="totalRecords()"
+               (edit)="onEdit($event)"
+               (detail)="onDetail($event)"
+               [loading]="service.tableLoading"
+               [dataKey]="'id'"
+               [tableKey]="'FIN52090'"></app-table>
   </div>
 </div>

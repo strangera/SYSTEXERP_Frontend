@@ -18,7 +18,7 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import * as XLSX from 'xlsx';
 import { TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/tls26080.model';
 
@@ -68,10 +68,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private fileSignal = signal<FormData | undefined>(void 0);
   public fileUpload = viewChild.required<FileUpload>('fileUpload');
 
-  private dfSignal = toSignal(this.dataForm.valueChanges);
   private podDescSignal = toSignal(this.df().pod_desc.valueChanges);
-  private podNoSignal = toSignal(this.df().pod_no.valueChanges);
-  private podTypeSignal = toSignal(this.df().pod_type.valueChanges);
 
   public readonly totalRecords = computed(() => this.service.TLS26080Detail().length);
 
@@ -84,24 +81,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // private deductionData = new Map<string, DeductionItem>();
 
   // public selectedCounter?: CounterData;
-
-  public readonly dfEffect = effect(() => {
-    const value = this.dfSignal();
-    if (!value) return;
-    this.logger.debug(`dfEffect:`, [value, this.df()]);
-  });
-
-  public readonly podNoEffect = effect(() => {
-    const podNo = this.podNoSignal();
-    if (!podNo) return;
-    this.logger.debug(`podNoEffect:`, [podNo]);
-  });
-
-  public readonly podTypeEffect = effect(() => {
-    const podType = this.podTypeSignal();
-    if (!podType) return;
-    this.logger.debug(`podTypeEffect:`, [podType]);
-  });
 
   public readonly fileUploadEffect = effect(() => {
     const file = this.fileSignal();
@@ -228,14 +207,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         })),
       };
 
-      this.service.insertTLS26080(payload).pipe(finalize(() => {
-        this.loading = !1;
-        this.logger.debug(`onSubmit:`, [d, payload]);
-      })).subscribe(res => {
-        if (res.Error) return this.messageService.errorBubble(res.Message, '更新失敗');
-        this.dataForm.reset();
-        this.messageService.successBubble('更新成功');
-      });
+      this.service.insertTLS26080(payload).pipe(
+        tap(() => this.dataForm.reset()),
+        finalize(() => {
+          this.loading = !1;
+          this.logger.debug(`onSubmit:`, [d, payload]);
+        })
+      ).subscribe();
     });
   }
 

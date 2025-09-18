@@ -16,6 +16,8 @@ import { ButtonModule } from 'primeng/button';
 import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
 import { TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
+import { TagModule } from 'primeng/tag';
+
 @Component({
   selector: 'app-tls2a050-cru',
   templateUrl: './tls2a050-cru.component.html',
@@ -29,7 +31,8 @@ import { CommonModule } from '@angular/common';
     TranslateModule,
     ButtonModule,
     TableModule,
-    CommonModule
+    CommonModule,
+    TagModule
   ],
 })
 export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -39,18 +42,9 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
   totalRecords = 0;
   selectedItems: any[] = [];
   detailData: any[] = [];
-  counter = 0; // Initialize counter
+
   columns: Column[] = [
-    {
-      field: 'PAY_Name',
-      header: '付款別',
-      visible: true,
-      format: (val, _, row) => {
-        if (row.isGroup) return `${val}`;
-        if (row.isTotal) return '合計';
-        return val;
-      }
-    },
+    { field: 'PAY_Name', header: '付款別', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     {
@@ -73,14 +67,13 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
     },
   ];
 
-
   constructor(
     private fb: FormBuilder,
     private tls2A050Service: Tls2A050Service
-
   ) {
     super();
   }
+
   ngOnInit(): void {
     this.dataForm = this.fb.group({});
     this.initializePage('TLS2A050', this.dataForm);
@@ -90,37 +83,50 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
 
     if (TXN_Date) {
       const payload = {
-        TXN_DateStart: TXN_Date,
-        TXN_DateEnd: TXN_Date,
+        PageSize: 0,
+        PageIndex: 0,
+        OrderBy: "TXN_Date",
+        Offset: 0,
+        SortBy: [],
+        TXN_Date: TXN_Date,
+        POS_TypeList: [],
+        VOU_CheckList: []
       };
 
       this.tls2A050Service.queryTLS22050(payload).subscribe({
         next: (res) => {
-          console.log('queryTLS22050 response:', res);
-
           if (res.Status === '0000' || res.Status === 0) {
-            // 保持分組結構
-            this.detailData = res.Data.map((group: any) => {
-              return {
+            this.detailData = [];
+
+            (res.Data || []).forEach((group: any) => {
+              // push 明細列
+              (group._DetailList || []).forEach((d: any) => {
+                this.detailData.push({
+                  ...d,
+                  PAY_Name: group.PAY_Name,
+                  isDetail: true
+                });
+              });
+
+              // push 小計列
+              this.detailData.push({
                 PAY_Name: group.PAY_Name,
-                BOOK_PayCnt_Sum: group.BOOK_PayCnt_Sum,
-                ACT_PayAmt_Sum: group.ACT_PayAmt_Sum,
-                OVER_PayAmt_Sum: group.OVER_PayAmt_Sum,
-                _DetailList: group._DetailList || []
-              };
+                isTotal: true,
+                BOOK_PayAmt: group.BOOK_PayCnt_Sum ?? 0,
+                ACT_PayAmt: group.ACT_PayAmt_Sum ?? 0,
+                OVER_PayAmt: group.OVER_PayAmt_Sum ?? 0
+              });
             });
 
-            this.totalRecords = this.detailData.length;
-            console.log('整理後 detailData:', this.detailData);
+            console.log('展平後 detailData:', this.detailData);
           } else {
             this.messageService.errorBubble(`查詢失敗: ${res.Message}`);
           }
         },
         error: (err) => {
           console.error('API 錯誤:', err);
-        },
+        }
       });
     }
   }
 }
-

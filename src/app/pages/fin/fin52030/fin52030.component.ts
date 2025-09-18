@@ -1,5 +1,5 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, computed, OnInit } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52030Service } from '@service/api/fin/fin52030.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -11,6 +11,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, tap } from 'rxjs';
 
 @Component({
   selector: 'app-fin52030',
@@ -38,7 +39,7 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
     modifier: new FormControl<string | void>(void 0),
     ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
-  public readonly qf = signal(this.queryForm.controls);
+  public readonly qf = computed(() => this.queryForm.controls);
 
   public filteredData = computed(() => {
     const data = this.service.FIN52030Data();
@@ -96,24 +97,24 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
 
   public ngOnInit(): void {
     this.initializePage('FIN52030', '/FIN/FIN52030CRU', this.queryForm, this.onSubmit.bind(this));
+    const store = this.queryStateService.getQueryState(this.ProgNo);
+    if (store?.value) this.queryForm.setValue(store.value);
 
-    this.service.test ? this.service.creators.set(creators) : this.service.creators();
-    this.service.test ? this.service.modifiers.set(modifiers) : this.service.modifiers();
+    this.service.loadCreators();
+    this.service.loadModifiers();
 
-    this.logger.debug(`init:`, [dummyData]);
+    this.logger.debug(`init:`, [this.service.creators(), this.service.modifiers()]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = {
-        ...this.queryForm.getRawValue(),
-      };
+      const payload = { ...this.queryForm.getRawValue() };
+      this.logger.debug(`onSubmit:`, [payload]);
       this.service.FIN52030Data.set([]);
 
-      this.service.test ? this.service.FIN52030Data.set(dummyData) : this.service.loadFIN52030(payload);
-
-      this.submitted = !0;
-      this.loading = !1;
+      this.service.loadFIN52030(payload);
+      this.loading = this.service.tableLoading;
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }
 
@@ -121,29 +122,3 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
     this.queryForm.reset();
   }
 }
-
-const creators = Array.from({ length: 50 }, (_, i) => ({
-  No: `U${(i + 1).toString().padStart(3, '0')}`,
-  Name: `User ${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-  createDate: new Date(new Date().getFullYear(), 0, 1 + Math.floor(Math.random() * 365)),
-}));
-
-const modifiers = Array.from({ length: 50 }, (_, i) => ({
-  No: `U${(i + 11).toString().padStart(3, '0')}`,
-  Name: `User ${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-  modifyDate: new Date(new Date().getFullYear(), 0, 1 + Math.floor(Math.random() * 365)),
-}));
-
-
-const dummyData = Array.from({ length: 100 }, (_, i) => ({
-  id: i + 1,
-  isDeleted: i % 2 === 0 ? 'Y' : 'N',
-  subpoenaCode: `CODE${i + 1}`,
-  subpoenaNumber: `NUM${i + 1}`,
-  subpoenaName: `Subpoena Name ${i + 1}`,
-  detailCount: Math.floor(Math.random() * 1e5) + 1,
-  typeCode: Math.random().toString(36).substring(2, 10).toUpperCase(),
-  subpoenaType: ((i % 3) + 1).toString(),
-  creator: creators[i % creators.length].Name,
-  createDate: creators[i % creators.length].createDate,
-}));

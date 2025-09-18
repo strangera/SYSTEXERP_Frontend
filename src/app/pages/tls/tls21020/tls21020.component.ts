@@ -1,4 +1,4 @@
-import { Component, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,6 +11,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, ColumnGroup, createPaginationConfig, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, tap } from 'rxjs';
 import { TLS21020Data, TLS21020GLS1005Data, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -34,7 +35,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     ENTRY_TYPE: new FormControl<string | void>(void 0),
     ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
   });
-  public readonly qf = signal(this.queryForm.controls);
+  public readonly qf = computed(() => this.queryForm.controls);
 
   private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
 
@@ -180,11 +181,12 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public ngOnInit(): void {
     this.initializePage('TLS21020', 'TLS/TLS21020', this.queryForm, this.onSubmit.bind(this));
+    const store = this.queryStateService.getQueryState('TLS21020');
+    if (store?.value) this.queryForm.setValue(store.value);
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
-    this.queryStateService.getQueryState('TLS21020');
     this.logger.debug(`init:`, []);
   }
 
@@ -324,11 +326,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         id: v.id,
       }));
       this.logger.debug(`onSubmit:`, [data, payload]);
-      this.service.updateTLS21020(payload);
-      this.service.queryTLS21020({ SortBy, ...field, ENTRY_TYPE: entryType });
-      this.messageService.successBubble('更新成功');
-      this.submitted = !1;
-      this.loading = !1;
+      this.service.updateTLS21020(payload).pipe(
+        tap(() => this.service.queryTLS21020({ SortBy, ...field, ENTRY_TYPE: entryType })),
+        finalize(() => this.loading = !1),
+      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }
