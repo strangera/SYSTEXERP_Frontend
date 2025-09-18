@@ -63,7 +63,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   public readonly df = computed(() => this.dataForm.controls);
 
   // 變化追蹤
-  private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly sys3800Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3800.valueChanges);
   private readonly sys3900Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3900.valueChanges);
   private readonly sys3A00Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3A00.valueChanges);
@@ -159,10 +158,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.logger.debug(`TLS26010DetailEffect:`, [this.ecrTableFiltered(), this.tltTableFiltered(), this.dataForm.value]);
     this.TLS26010DetailEffect.destroy(); // 只需執行一次
   }, { allowSignalWrites: !0 });
-  /** 表單變化追蹤 */
-  public readonly dfEffect = effect(() => {
-    this.logger.debug(`dfEffect:`, [this.dfSignal()]);
-  });
 
   public readonly dialogData = computed(() =>
     this.dialogVisible() === 'ecr' ? this.service.ecrData() :
@@ -293,7 +288,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       const importExcelColumn: ImportExcelColumn[] = [
         { field: 'tlt_no', header: '專櫃編號', type: 'string' },
         { field: 'tlt_name', header: '專櫃名稱', type: 'string' },
-      ]
+      ];
       // 使用中文欄位名稱匯入，然後手動對應到資料欄位
       const rawData = await this.excelImport.importExcel(file, importExcelColumn);
 
@@ -361,17 +356,16 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
       this.logger.debug(`submit:`, [d, payload]);
       (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload))
-        .pipe(finalize(() => {
-          this.loading = !1;
-          if (this.dialogVisible()) {
-            this.dialogVisible.set(!1);
-            this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
-          }
-        }))
-        .subscribe(() => {
-          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
-          if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
-        });
+        .pipe(
+          tap(() => { if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel(); }),
+          finalize(() => {
+            this.loading = !1;
+            if (this.dialogVisible()) {
+              this.dialogVisible.set(!1);
+              this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+            }
+          }))
+        .subscribe();
     });
   };
 

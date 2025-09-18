@@ -4,7 +4,7 @@ import { POS2013, TLS21020Data, TLS21020GLS1005Data, TLS21020GLS1005Query, TLS21
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, take, tap } from 'rxjs';
+import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Sysb400Service } from '../sys/sysb400.service';
 
@@ -78,13 +78,13 @@ export class TLS21020Service {
       ).subscribe();
   }
 
-  public updateTLS21020(query: TLS21020UpdateQuery[]): void {
-    this.http.post<BaseQueryResponse<unknown>>(apiUrl + 'updateTLS21020', { GLS1020Datas: query })
+  public updateTLS21020(query: TLS21020UpdateQuery[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(apiUrl + 'updateTLS21020', { GLS1020Datas: query })
       .pipe(
         take(1),
         tap(res => { }),
         finalize(() => this.logger.debug(`updateTLS21020`, [])),
-      ).subscribe();
+      );
   }
 
   public getOrgIDs(): void {

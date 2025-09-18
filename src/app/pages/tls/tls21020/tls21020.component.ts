@@ -11,6 +11,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, ColumnGroup, createPaginationConfig, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, tap } from 'rxjs';
 import { TLS21020Data, TLS21020GLS1005Data, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -325,11 +326,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         id: v.id,
       }));
       this.logger.debug(`onSubmit:`, [data, payload]);
-      this.service.updateTLS21020(payload);
-      this.service.queryTLS21020({ SortBy, ...field, ENTRY_TYPE: entryType });
-      this.messageService.successBubble('更新成功');
-      this.submitted = !1;
-      this.loading = !1;
+      this.service.updateTLS21020(payload).pipe(
+        tap(() => this.service.queryTLS21020({ SortBy, ...field, ENTRY_TYPE: entryType })),
+        finalize(() => this.loading = !1),
+      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }

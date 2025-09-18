@@ -13,7 +13,7 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
 
 @Component({
@@ -97,15 +97,12 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
         Mid: Number(this.user.mid),
       };
 
-      this.service.updateASS21010(payload)
-        .pipe(finalize(() => {
+      this.service.updateASS21010(payload).pipe(
+        tap(() => this.isFormCreateable ? this.dataForm.reset() : this.onCancel()),
+        finalize(() => {
           this.loading = !1;
           this.logger.debug(`onSubmit:`, [d, payload]);
-        })).subscribe(res => {
-          if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, this.isFormCreateable ? '新增失敗' : '更新失敗');
-          this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
-          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
-        });
+        })).subscribe();
     });
   }
 }
