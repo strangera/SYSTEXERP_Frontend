@@ -168,6 +168,7 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<POS2023DAMRespon
   saveDialog() {
     this.data = [...this.data, ...this.selectedItemsDialog.map((item) => ({
       ...item,
+      id: 0
     }))];
     this.selectedItemsDialog = [];
     this.selectedItems = [];
