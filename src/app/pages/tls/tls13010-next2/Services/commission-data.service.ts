@@ -1,4 +1,4 @@
-// commission-data.service.ts - 修改版本，適應分離的 API
+// commission-data.service.ts - 修正版本，確保 cap_saletype 同步
 import { Injectable } from '@angular/core';
 import { Observable, firstValueFrom, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -71,7 +71,9 @@ export class CommissionDataService {
       // 第一優先：嘗試載入暫存資料
       const savedResult = await this.tryLoadFromSavedData();
       if (savedResult.success) {
-        return savedResult;
+        // 重要：即使是暫存資料，也要確保 cap_saletype 與 step1 同步
+        const syncedData = this.syncCapSaletypeWithStep1(savedResult.data);
+        return { ...savedResult, data: syncedData };
       }
 
       // 第二優先：根據模式載入
@@ -85,6 +87,33 @@ export class CommissionDataService {
       console.error('❌ CommissionDataService: 載入失敗', error);
       return this.createErrorResult(error);
     }
+  }
+
+  /**
+   * 新增：確保所有抽成項目的 cap_saletype 與 step1 同步
+   */
+  private syncCapSaletypeWithStep1(commissionData: CommissionItem[]): CommissionItem[] {
+    const step1Data = this.contractFlowService.getStep1Data();
+
+    if (!step1Data) {
+      console.warn('⚠️ 無法取得 Step1 資料，跳過 cap_saletype 同步');
+      return commissionData;
+    }
+
+    const step1CapSaletype1 = Boolean(step1Data.cap_saletype1);
+    const step1CapSaletype2 = Boolean(step1Data.cap_saletype2);
+
+    console.log('🔄 同步 cap_saletype 到所有抽成項目:', {
+      step1CapSaletype1,
+      step1CapSaletype2,
+      itemCount: commissionData.length
+    });
+
+    return commissionData.map(item => ({
+      ...item,
+      cap_saletype1: step1CapSaletype1,
+      cap_saletype2: step1CapSaletype2
+    }));
   }
 
   /**
@@ -201,7 +230,7 @@ export class CommissionDataService {
   private async loadFromChargeAPI(options: CommissionDataLoadOptions): Promise<CommissionDataLoadResult> {
     // 檢查是否有抽成類別
     if (!options.currentCommissionType) {
-      console.warn('⚠ 無抽成類別，初始化為新合約模式');
+      console.warn('⚠️ 無抽成類別，初始化為新合約模式');
       return this.loadForNewContract(options);
     }
 
@@ -249,10 +278,10 @@ export class CommissionDataService {
     let commissionData: CommissionItem[] = [];
     if (response.Data?.ChargeSettings) {
       commissionData = this.convertChargeAPIData(response.Data, options);
-    }
 
-    // 注意：這裡不再儲存統一回應，因為是單純的抽成設定 API
-    // this.contractFlowService.setUnifiedCommissionData(data); // 移除這行
+      // 重要：確保與 step1 同步
+      commissionData = this.syncCapSaletypeWithStep1(commissionData);
+    }
 
     return {
       success: true,
@@ -264,7 +293,7 @@ export class CommissionDataService {
   }
 
   /**
-   * 修改：轉換單純抽成設定 API 資料格式
+   * 修改：轉換單純抽成設定 API 資料格式 - 強化 cap_saletype 處理
    */
   private convertChargeAPIData(apiData: any, options: CommissionDataLoadOptions): CommissionItem[] {
     const result: CommissionItem[] = [];
@@ -272,6 +301,19 @@ export class CommissionDataService {
     if (!apiData.ChargeSettings || !Array.isArray(apiData.ChargeSettings)) {
       return result;
     }
+
+    // 從 step1 取得最新的 cap_saletype 值（最高優先級）
+    const step1Data = this.contractFlowService.getStep1Data();
+    const finalCapSaletype1 = step1Data?.cap_saletype1 !== undefined ?
+      Boolean(step1Data.cap_saletype1) : false;
+    const finalCapSaletype2 = step1Data?.cap_saletype2 !== undefined ?
+      Boolean(step1Data.cap_saletype2) : false;
+
+    console.log('🎯 使用 Step1 的 cap_saletype 值:', {
+      cap_saletype1: finalCapSaletype1,
+      cap_saletype2: finalCapSaletype2,
+      step1HasData: !!step1Data
+    });
 
     apiData.ChargeSettings.forEach((chargeSetting: ChargeSettingApiItem, index: number) => {
       const commissionItem: CommissionItem = {
@@ -282,8 +324,11 @@ export class CommissionDataService {
         discountSummary: this.generateDiscountSummary(chargeSetting),
         sst_amount: chargeSetting.sst_amount || 0,
         sst_rate: chargeSetting.sst_rate || 0,
-        cap_saletype2: chargeSetting.cap_saletype2 === 'Y',
-        cap_saletype1: chargeSetting.cap_saletype1 === 'Y',
+
+        // 關鍵修正：優先使用 step1 的值，確保同步
+        cap_saletype1: finalCapSaletype1,
+        cap_saletype2: finalCapSaletype2,
+
         selectedSettingOption: 'discount',
         currentTab: 'discount',
         discountSettingItems: this.convertDiscountItems(chargeSetting.ChargeDetails || [], options),
@@ -461,7 +506,6 @@ export class CommissionDataService {
 
     return result;
   }
-
 
   // ============ 工具方法 ============
 

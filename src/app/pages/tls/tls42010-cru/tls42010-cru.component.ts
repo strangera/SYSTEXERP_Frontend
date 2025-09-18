@@ -24,6 +24,7 @@ export interface KeyItem {
   code: string;
   x: number;
   y: number;
+  ID?: number;
   KB_Func?: string;
   KB_Switch?: string;
   KB_Display1?: string;
@@ -179,6 +180,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${value.r},${value.g},${value.b}`);
       }
     });
+
     // === 編輯 / 檢視模式 ===
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       if (this.rowdata?.USR_Level) {
@@ -187,10 +189,14 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           next: (res) => {
             const master = res?.Data?.[0];
             if (master) {
-              console.log('主檔資料:', master); // debug 看看有沒有 TSB_Name
+              console.log('主檔資料:', master);
+
+              // ⚠️ 主檔 ID 一定要存起來
+              this.rowdata.ID = master.id;
+
               this.dataForm.patchValue({
                 USR_Level: master.USR_Level,
-                TSB_Name: master.TSB_Name,   // ← 這裡應該要吃到
+                TSB_Name: master.TSB_Name,
                 ECR_KBType: master.ECR_KBType,
                 ECR_KBDesc: master.ECR_KBDesc,
                 activePage: (master.kg_keypage ?? 1) - 1
@@ -200,23 +206,18 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         });
 
         // 再查明細
-        this.tls42010Service.queryTLS42010_Detail({ USR_Level: this.rowdata.USR_Level }).subscribe({
+        this.tls42010Service.queryTLS42010_Detail({
+          USR_Level: [this.rowdata.USR_Level]
+        }).subscribe({
           next: (res) => {
             this.applyDetail(res?.Data ?? []);
           },
-          error: (err) => {
-            console.error('查詢明細失敗:', err);
-          }
         });
       }
     }
-
-
   }
 
-
   private loadDropdowns() {
-    // 收銀畫面名稱
     this.dropDownListService.queryPOS1008DropDownList().subscribe({
       next: (res) => {
         this.TSB_NameOptions = res?.Data?.map((item: any) => ({
@@ -235,14 +236,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
 
-    // 鍵盤型態
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe({
       next: (res) => {
         this.ECR_KBTypeOptions = res?.Data ?? [];
       }
     });
 
-    // 鍵盤樣式
     const params = { SYS_Type: 'KB_Style', SYS_Status: 'A' };
     this.dropDownListService.querySYS1000_DropDownList(params).subscribe({
       next: (res) => {
@@ -271,11 +270,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.buildGrid();
 
     detailList.forEach((d: any) => {
-      // 修正: 後端回來的 KB_ScanCode = USR_Level, 真正位置在 KB_Merge
       const scanCode = d.KB_Merge;
       const key = this.keys.find(k => k.code === scanCode);
       if (key) {
         Object.assign(key, {
+          ID: d.ID ?? 0,   // ⚠️ 每筆保留自己的 ID
           KB_Func: d.KB_Func,
           KB_Switch: d.KB_Switch,
           KB_Display1: d.KB_Display1,
@@ -338,7 +337,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  // ---------------- 儲存 ----------------
+  // ---------------- Submit ----------------
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
@@ -352,9 +351,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
 
         return {
+          ID: k.ID ?? 0,  // ⚠️ 每筆保留自己的 ID
           ECR_KBType: frm.value.ECR_KBType,
           USR_Level: frm.value.USR_Level,
-          KB_ScanCode: k.code,  // insert/update 一律傳 code
+          KB_ScanCode: k.code,
           KB_Func: hasConfig ? k.KB_Func : '',
           KB_Arg1: hasConfig ? k.KB_Arg1 : '',
           KB_Arg2: hasConfig ? k.KB_Arg2 : '',
@@ -378,11 +378,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       });
 
       const payload = {
+        ID: this.rowdata?.ID ?? 0,  // ⚠️ 主檔 ID 要用查回來的，不要硬塞 0
         ECR_KBType: frm.value.ECR_KBType,
         USR_Level: frm.value.USR_Level,
         ECR_KBDesc: frm.value.ECR_KBDesc,
         TSB_Name: frm.value.TSB_Name,
-        POS1004Disc
+        POS1004: POS1004Disc
       };
 
       const save$ =
@@ -395,10 +396,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           this.loading = false;
           console.log(`${this.crudstatus} 成功:`, res);
         },
-        error: (err) => {
-          this.loading = false;
-          console.error(`${this.crudstatus} 失敗:`, err);
-        }
       });
     });
   }

@@ -99,35 +99,28 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
           console.log('queryTLS22050 response:', res);
 
           if (res.Status === '0000' || res.Status === 0) {
-            this.detailData = [];
-            res.Data.forEach((group: any) => {
-              // 明細
-              (group._DetailList || []).forEach((d: any) => {
-                this.detailData.push({
-                  ...d,
-                  PAY_Name: group.PAY_Name,
-                  isDetail: true,
-                });
-              });
-
-              // 合計 (獨立一排)
-              this.detailData.push({
+            // 保持分組結構
+            this.detailData = res.Data.map((group: any) => {
+              return {
                 PAY_Name: group.PAY_Name,
-                ECR_No: '',
-                TXN_No: '',
-                BOOK_PayAmt: group.BOOK_PayCnt_Sum ?? 0,
-                ACT_PayAmt: group.ACT_PayAmt_Sum ?? 0,
-                OVER_PayAmt: group.OVER_PayAmt_Sum ?? 0,
-                isTotal: true,
-              });
+                BOOK_PayCnt_Sum: group.BOOK_PayCnt_Sum,
+                ACT_PayAmt_Sum: group.ACT_PayAmt_Sum,
+                OVER_PayAmt_Sum: group.OVER_PayAmt_Sum,
+                _DetailList: group._DetailList || []
+              };
             });
 
-
             this.totalRecords = this.detailData.length;
-            console.log('攤平後 detailData:', this.detailData);
+            console.log('整理後 detailData:', this.detailData);
+          } else {
+            this.messageService.errorBubble(`查詢失敗: ${res.Message}`);
           }
+        },
+        error: (err) => {
+          console.error('API 錯誤:', err);
         },
       });
     }
   }
 }
+

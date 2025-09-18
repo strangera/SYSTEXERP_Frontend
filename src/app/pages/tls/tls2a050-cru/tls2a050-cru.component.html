@@ -26,25 +26,29 @@
 
       <ng-template
         pTemplate="body"
-        let-row
+        let-customer
+        let-rowIndex="rowIndex"
         let-rowgroup="rowgroup"
         let-rowspan="rowspan"
       >
-        <tr
-          ngClass="{
-            'bg-yellow-100 font-bold': row.isTotal
-          }"
-        >
-          <!-- 付款別，只在群組第一筆出現 (不含合計) -->
-          <td *ngIf="rowgroup && !row.isTotal" [attr.rowspan]="rowspan">
-            {{ row.PAY_Name }}
+        <tr>
+          <td *ngIf="rowgroup && !customer.isTotal" [attr.rowspan]="rowspan">
+            {{ customer.PAY_Name }}
           </td>
 
-          <td>{{ row.ECR_No || "" }}</td>
-          <td>{{ row.TXN_No || "" }}</td>
-          <td>{{ row.BOOK_PayAmt | number }}</td>
-          <td>{{ row.ACT_PayAmt | number }}</td>
-          <td>{{ row.OVER_PayAmt | number }}</td>
+          <td>{{ customer.ECR_No || "" }}</td>
+          <td>{{ customer.TXN_No || "" }}</td>
+          <td>{{ customer.BOOK_PayAmt | number }}</td>
+          <td>{{ customer.ACT_PayAmt | number }}</td>
+          <td>{{ customer.OVER_PayAmt | number }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="groupfooter" let-group>
+        <tr class="bg-yellow-100 font-bold">
+          <td colspan="3" class="text-right">合計</td>
+          <td>{{ group.BOOK_PayCnt_Sum | number }}</td>
+          <td>{{ group.ACT_PayAmt_Sum | number }}</td>
+          <td>{{ group.OVER_PayAmt_Sum | number }}</td>
         </tr>
       </ng-template>
     </p-table>

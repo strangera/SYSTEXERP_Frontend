@@ -132,6 +132,20 @@ export class ContractFlowService {
           }
         });
       });
+      console.log('🔍 傳給 DataCleaner 的 step3 原始數據:');
+      step3Data.forEach((commission, index) => {
+        console.log(`Commission ${index} 傳給 DataCleaner:`, {
+          id: commission.id,
+          tlt_id: commission.tlt_id,
+          discountItems: commission.discountSettingItems?.map(item => ({
+            id: item.id,
+            selected: item.selected,
+            _status: item._status,
+            應該進toDelete: item.selected === false && item.id === 10601
+          })) || []
+        });
+      });
+
     } else {
       console.warn('Step4 資料為空，可能的原因:', {
         原始step4Data: step4Data,

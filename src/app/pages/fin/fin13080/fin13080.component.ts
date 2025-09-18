@@ -115,8 +115,8 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
       SortBy: raw.SortBy ?? [{ field: 'No', order: 1 }],
       No: raw.No ?? '',
       Date: raw.Date ? this.formatDate(new Date(raw.Date)) : '',
-      INV_DeclareYM: raw.INV_DeclareYM
-        ? this.formatDate(new Date(raw.INV_DeclareYM)).substring(0, 7).replace('-', '') // e.g. "202509"
+      GUI_YYMM: raw.GUI_YYMM
+        ? this.formatDate(new Date(raw.GUI_YYMM)).substring(0, 7).replace('-', '') // e.g. "202509"
         : '', No_Start: null,
       Invoice_No_Start: raw.Invoice_No_Start !== '' ? raw.Invoice_No_Start : null,
       Invoice_No_End: raw.Invoice_No_End !== '' ? raw.Invoice_No_End : null,

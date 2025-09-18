@@ -59,20 +59,23 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   // 匯入菜單 dialog
   queryForm2 = this.fb.group({
-    uploadType: [0, Validators.required],  // 異動方式                         
+    uploadType: ['0', Validators.required],  // 異動方式                         
   });
 
   dialogVisible = false;
 
   uploadTypeOptions = [
-    { label: '先刪除後新增', value: 0 },
-    { label: '更新', value: 1 },
-    { label: '新增', value: 2 }
+    { label: '先刪除後新增', value: '0' },
+    { label: '更新', value: '1' },
+    { label: '新增', value: '2' }
   ];
 
   // 下拉選單選項
-  menuTypeOptions: { label: string; value: string }[] = [];
-  tltNoOptions: { label: string; value: string }[] = [];
+  menuTypeOptions: any[] = [
+    { label: '一般菜單', value: '1' },
+    { label: '員工菜單', value: '2' }
+  ];
+  tltNoOptions: any[] = [];
 
   // 主表格欄位定義
   columns: Column[] = [
@@ -99,6 +102,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   // 展開詳細資料欄位定義
   expansionColumns: Column[] = [
+    { field: 'SBM_SeqNo', header: '序號', hidden: true },
     { field: 'SBM_BtnNo', header: '菜單按鍵序號', visible: true },
     { field: 'PLU_MagNo', header: '商品貨號', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
@@ -106,7 +110,6 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     { field: 'PLU_PrnName', header: '商品列印名稱', visible: true },
     { field: 'PLU_FixPrc', header: '商品定價', visible: true, format: formatAmount },
     { field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount },
-    { field: 'SBM_SeqNo', header: '序號', hidden: true },
     { field: 'SBM_Type', header: '子菜單類別', hidden: true },
     { field: 'TLT_No', header: '專櫃編號', hidden: true },
     { field: 'SBM_BegDate', header: '開始日期', hidden: true },
@@ -151,12 +154,6 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   }
 
   private loadOptions(): void {
-    // 載入菜單類別選項
-    this.menuTypeOptions = [
-      { label: '一般菜單', value: '1' },
-      { label: '員工菜單', value: '2' }
-    ];
-
     // 載入專櫃編號選項
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))
@@ -202,12 +199,38 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   onFileUpload(event: FileUploadHandlerEvent) {
     const file = event.files[0];
-    this.tls42020Service.uploadTLS42020(file).pipe(untilDestroyed(this)).subscribe(res => {
+    this.tls42020Service.uploadTLS42020(file, this.queryForm2.value.uploadType!).pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Status === '0000') {
         this.messageService.successBubble(res.Message);
       } else {
         this.messageService.errorBubble(res.Message);
       }
+    });
+  }
+
+  downloadTemplate() {
+    this.tls42020Service.downloadRule().subscribe(response => {
+      if (!response.Data.FileData) return;
+
+      const byteCharacters = atob(response.Data.FileData);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], {
+        type: response.Data.ContentType
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'TLS42020收銀菜單設定_範例檔案.xlsx';
+      document.body.appendChild(a);
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     });
   }
 }

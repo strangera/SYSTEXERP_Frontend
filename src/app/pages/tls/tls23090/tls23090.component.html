@@ -128,7 +128,7 @@
 
           <!-- 館別 / 樓層 / 組織 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="館別"
               controlName="tlt_building"
               [options]="BUILDING_NO_Options"
@@ -136,7 +136,7 @@
               optionValue="value"
               [control]="queryForm.controls.tlt_building"
               [submitted]="submitted">
-            </app-dropdown>
+            </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
