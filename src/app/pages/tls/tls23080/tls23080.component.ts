@@ -38,7 +38,7 @@ import { ButtonModule } from 'primeng/button';
     CalendarRangeQuickComponent,
     MultiSelectComponent,
     RadiobuttonComponent,
-    DropdownComponent,
+    // DropdownComponent,
     InputTextModule,
     ButtonComponent,
     TranslateModule,
