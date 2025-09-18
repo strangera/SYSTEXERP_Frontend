@@ -7,20 +7,20 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="公司代號" controlName="CompNo" [options]="GLS1001_Options" optionLabel="Name"
+                    <!-- <app-dropdown label="公司代號" controlName="CompNo" [options]="GLS1001_Options" optionLabel="Name"
                         optionValue="No" [control]="dataForm.controls.CompNo" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <!-- 觸發 Dialog 的按鈕 -->
-                    <app-button 
-                        icon="pi pi-search" 
-                        type="button"
-                        label="選擇對象別"
-                        (click)="openDialog()">
-                    </app-button>
+                    </app-dropdown> -->
+                    <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="dataForm.controls.CompNo"
+                        templateLabel="label" [submitted]="submitted" optionLabel="Name" optionValue="No"
+                        [fieldsConfig]="fieldsConfig"
+                        (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+                        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+                        [totalRecords]="opTotalRecords">
+                        <app-input-text class="col-12 md:col-6" label="管理編號" controlName="RefCode"
+                        [control]="opForm.controls.RefCode" />
+                        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="RefName"
+                        [control]="opForm.controls.RefName" />
+                    </app-dropdown-table>
                 </div>
             </div>
             <div class="grid p-fluid">
@@ -56,50 +56,3 @@
         </form>
     </p-panel>
 </div>
-<!-- 對象別選擇 Dialog -->
-<app-dialog 
-  [visible]="dialogVisible" 
-  header="選擇廠商" 
-  (visibleChange)="dialogVisible = $event" 
-  (save)="saveDialog()"
-  [disable]="selectedItemsDialog.length === 0">
-  
-  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
-    <div class="grid p-fluid">
-      <app-input-text 
-        class="col-12 md:col-6" 
-        label="廠商編號" 
-        controlName="RefCode"
-        [control]="dialogQueryForm.controls.RefCode" />
-      <app-input-text 
-        class="col-12 md:col-6" 
-        label="廠商名稱" 
-        controlName="RefName"
-        [control]="dialogQueryForm.controls.RefName" />
-    </div>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
-      <app-button btnType="query" [loading]="dialogLoading"></app-button>
-    </div>
-  </form>
-
-  <app-table
-    tableKey="fin52040DialogTable" 
-    dataKey="RefCode"
-    [data]="dialogData"
-    [columns]="dialogColumns"
-    [showDelete]="false"
-    [selectedItems]="selectedItemsDialog"
-    [showCaption]="false"
-    [showHeader]="false"
-    [showManage]="false"
-    [showCheckBox]="true"
-    [selectionMode]="'single'"
-    (selectionChange)="selectedItemsDialog = $event"
-    [multiSortMeta]="[{ field: 'RefCode', order: 1 }]" 
-    [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" 
-    [lazy]="true"
-    [loading]="dialogLoading">
-  </app-table>
-</app-dialog>

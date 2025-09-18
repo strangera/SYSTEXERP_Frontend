@@ -15,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 
 /** GLS1016 對象別設定檔 */
 export interface GLS1016 {
@@ -46,6 +47,7 @@ export interface GLS1016 {
       ReactiveFormsModule,
       InputTextComponent,
       DropdownComponent,
+      DropdownTableComponent,
       DialogComponent,
       NgIf, 
       TranslateModule,
@@ -153,33 +155,107 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     this.dataForm.reset(); // 重置表單
   }
 
-  // 廠商表格
-  openDialog(): void {
-  this.dialogVisible = true;
-}
-
-  onQuery(frm: FormGroup) {
-    this.dialogLoading = true;
-    // 模擬 API
-    const mockData = [
-      { id:'1', RefCode: 'C001', brand: '品牌1', RefName: '廠商一', uni: '統一標號1', shortName: '簡稱1' },
-      { id:'2', RefCode: 'C002', brand: '品牌2', RefName: '廠商二', uni: '統一標號2', shortName: '簡稱2' },
-      { id:'3', RefCode: 'C003', brand: '品牌3', RefName: '廠商三', uni: '統一標號3', shortName: '簡稱3' },
+  // 管理編號
+    opLoading = false;
+    opForm = this.formBuilder.group({
+      RefCode: ['', [Validators.maxLength(20)]], // 對象別代碼
+      RefName: ['', [Validators.maxLength(60)]], // 對象別名稱
+      ...createPaginationConfig([{ field: 'RefCode', order: 1 }]), // 分頁和排序參數
+    });
+    suggestions: any[] = [];
+    fieldsConfig: any[] = [
+      { field: 'RefCode', header: '管理編號', mainDataField: true },
     ];
-    this.dialogData = mockData;
-    this.totalRecords = mockData.length;
-    this.dialogLoading = false;
-  }
+    opData: any[] = [];// overlayPanel 裡面的table
+    opColumns: Column[] = [
+      { field: 'RefCode', header: '商品管理編號' },
+      { field: 'PLU_No', header: '國際條碼' },
+      { field: 'RefCode', header: '對象別代碼' },
+      { field: 'RefName', header: '對象別名稱' },
+    ];
+    opTotalRecords = 0;
 
-  saveDialog() {
-    this.dialogVisible = false;
-    if (this.selectedItemsDialog.length > 0) {
-      const selected = this.selectedItemsDialog[0]; // 單選
-      this.dataForm.patchValue({
-        RefCode: selected.uni,
-        RefName: selected.RefName
-      });
+    onAutoCompleteInputChange(event: any) {
+      const body = {
+        ...event,
+        VEN_No: '',
+        LOGO_No: '',
+        queryNo: event.PLU_MagNo || '',
+        pageSize: 30,
+        pageIndex: 1,
+        SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      }
+
+      this.suggestions = [
+      {
+        RefCode: 'M001',
+        RefName: '測試對象一',
+        PLU_MagNo: 'MAG001',
+        PLU_Name: '商品A',
+        PLU_No: '471000000001',
+        PLU_OrgPLUNo: 'ORG001',
+        label: 'MAG001 - 商品A - 471000000001 - ORG001'
+      },
+      {
+        RefCode: 'M002',
+        RefName: '測試對象二',
+        PLU_MagNo: 'MAG002',
+        PLU_Name: '商品B',
+        PLU_No: '471000000002',
+        PLU_OrgPLUNo: 'ORG002',
+        label: 'MAG002 - 商品B - 471000000002 - ORG002'
+      },
+      {
+        RefCode: 'M003',
+        RefName: '測試對象三',
+        PLU_MagNo: 'MAG003',
+        PLU_Name: '商品C',
+        PLU_No: '471000000003',
+        PLU_OrgPLUNo: 'ORG003',
+        label: 'MAG003 - 商品C - 471000000003 - ORG003'
+      }
+    ];
+    
+      // this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      //   this.suggestions = [...results.Data.map(item => ({
+      //     ...item,
+      //     label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+      //   }))];
+      // });
     }
-    this.selectedItemsDialog = [];
-  }
+    onformValueChanged(event: any) {
+      this.opLoading = true;
+      const body = {
+        queryNo: event.queryNo || '',
+        PLU_Name: event.PLU_Name || '',
+        VEN_No: '',
+        LOGO_No: '',
+      };
+
+      // overlayPanel 裡面的 table 測試資料
+    this.opData = [
+      {
+        RefCode: 'M001',
+        RefName: '測試對象一',
+        PLU_No: '471000000001'
+      },
+      {
+        RefCode: 'M002',
+        RefName: '測試對象二',
+        PLU_No: '471000000002'
+      },
+      {
+        RefCode: 'M003',
+        RefName: '測試對象三',
+        PLU_No: '471000000003'
+      }
+    ];
+    this.opTotalRecords = this.opData.length;
+    this.opLoading = false;
+      // this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      //   this.opData = [...results.Data]; // 更新data資料
+      //   this.opTotalRecords = results.TotalCount;
+      //   this.opLoading = false;
+      // });
+    }
 }
