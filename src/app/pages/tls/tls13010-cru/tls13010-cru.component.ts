@@ -1097,16 +1097,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       return String(value);
     };
 
-    const convertToBoolean = (value: any): boolean => {
-      if (value === true || value === 'true' || value === 'Y' || value === '1') return true;
-      if (value === false || value === 'false' || value === 'N' || value === '0') return false;
-      return Boolean(value);
-    };
-
+    // 修正：統一的 Y/N 字串轉換方法
     const convertBooleanToYN = (value: any): string => {
       if (value === true || value === 'true' || value === 'Y') return 'Y';
       if (value === false || value === 'false' || value === 'N') return 'N';
-      return String(value || '');
+      return String(value || 'N'); // 預設為 N
     };
 
     // 準備符合 ContractInfo 介面的資料
@@ -1187,8 +1182,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       rent_ahead: formData.rent_ahead || '',
       open_deposit: formData.open_deposit || '',
       expiration_deposit: formData.expiration_deposit || '',
-      cap_saletype1: formData.cap_saletype1 || '',
-      cap_saletype2: formData.cap_saletype2 || '',
+      cap_saletype1: convertBooleanToYN(formData.cap_saletype1),
+      cap_saletype2: convertBooleanToYN(formData.cap_saletype2),
       cap_saletype3: convertBooleanToYN(formData.cap_saletype3),
       cap_saletype4: convertBooleanToYN(formData.cap_saletype4),
       water_flag: formData.water_flag || '',
@@ -1203,7 +1198,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       locationInfo: this.prepareLocationDataForSubmit(), // 新增總營業坪數
     };
     this.contractFlowService.saveStep1Data(contractInfo);
-    console.log('✅ 已暫存到工作流程');
+    console.log('✅ 已暫存到工作流程，cap_saletype 格式:', {
+      cap_saletype1: contractInfo.cap_saletype1,
+      cap_saletype2: contractInfo.cap_saletype2,
+      type1: typeof contractInfo.cap_saletype1,
+      type2: typeof contractInfo.cap_saletype2
+    });
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

@@ -100,12 +100,21 @@ export class CommissionDataService {
       return commissionData;
     }
 
-    const step1CapSaletype1 = Boolean(step1Data.cap_saletype1);
-    const step1CapSaletype2 = Boolean(step1Data.cap_saletype2);
+    // 修正：統一轉換為 Y/N 字串格式
+    const step1CapSaletype1 = this.convertToYN(step1Data.cap_saletype1);
+    const step1CapSaletype2 = this.convertToYN(step1Data.cap_saletype2);
 
     console.log('🔄 同步 cap_saletype 到所有抽成項目:', {
-      step1CapSaletype1,
-      step1CapSaletype2,
+      step1原始值: {
+        cap_saletype1: step1Data.cap_saletype1,
+        cap_saletype2: step1Data.cap_saletype2,
+        type1: typeof step1Data.cap_saletype1,
+        type2: typeof step1Data.cap_saletype2
+      },
+      轉換後YN值: {
+        step1CapSaletype1,
+        step1CapSaletype2
+      },
       itemCount: commissionData.length
     });
 
@@ -114,6 +123,13 @@ export class CommissionDataService {
       cap_saletype1: step1CapSaletype1,
       cap_saletype2: step1CapSaletype2
     }));
+  }
+
+  // 新增轉換方法到 commission-data.service.ts
+  private convertToYN(value: any): string {
+    if (value === true || value === 'true' || value === 'Y') return 'Y';
+    if (value === false || value === 'false' || value === 'N') return 'N';
+    return 'N'; // 預設為 N
   }
 
   /**

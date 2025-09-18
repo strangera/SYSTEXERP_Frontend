@@ -120,10 +120,24 @@ export class CommissionTableService {
       };
     }
 
-    // 新增：從 step1 數據獲取預設值（第一優先）
+    // 修正：從 step1 資料獲取預設值（第一優先）
     const step1Data = this.contractFlowService.getStep1Data();
-    const defaultCapSaletype1 = step1Data?.cap_saletype1 ?? false;
-    const defaultCapSaletype2 = step1Data?.cap_saletype2 ?? false;
+
+    // 統一轉換為 Y/N 字串格式
+    const defaultCapSaletype1 = this.convertToYN(step1Data?.cap_saletype1);
+    const defaultCapSaletype2 = this.convertToYN(step1Data?.cap_saletype2);
+
+    console.log('🆕 新增抽成項目時的 cap_saletype 預設值:', {
+      step1原始資料: {
+        cap_saletype1: step1Data?.cap_saletype1,
+        cap_saletype2: step1Data?.cap_saletype2
+      },
+      轉換後YN值: {
+        defaultCapSaletype1,
+        defaultCapSaletype2
+      }
+    });
+
     const nextNumber = activeItems.length;
     const newCommissionItem: CommissionItem = {
       id: this.generateTempId(),
@@ -133,8 +147,11 @@ export class CommissionTableService {
       discountSummary: '尚未設定',
       sst_amount: 0,
       sst_rate: 0,
+
+      // 關鍵修正：使用 Y/N 字串格式
       cap_saletype1: defaultCapSaletype1,
       cap_saletype2: defaultCapSaletype2,
+
       selectedSettingOption: 'discount',
       currentTab: 'discount',
       discountSettingItems: this.initializeDiscountItems(contractStartDate, contractEndDate, discountOptions),
@@ -154,6 +171,12 @@ export class CommissionTableService {
       message: `已新增${newCommissionItem.tlt_id_desc}`,
       newItem: newCommissionItem
     };
+  }
+
+  private convertToYN(value: any): string {
+    if (value === true || value === 'true' || value === 'Y') return 'Y';
+    if (value === false || value === 'false' || value === 'N') return 'N';
+    return 'N'; // 預設為 N
   }
 
   /**

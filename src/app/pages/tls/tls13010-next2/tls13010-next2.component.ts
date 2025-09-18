@@ -155,8 +155,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.commissionData = result.data;
       this.commissionDataLoaded = true;
 
-      // 關鍵：確保載入後的資料與 step1 同步
-      this.ensureCapSaletypeSync();
+      // 關鍵：載入後立即同步 cap_saletype1 和 cap_saletype2
+      this.syncCapSaletypeFromStep1();
 
       this.ensureDataConsistency();
       this.saveToWorkflow();
@@ -166,39 +166,50 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.commissionDataLoaded = false;
     }
   }
-  /**
-   * 新增：確保所有抽成項目的 cap_saletype 與 step1 同步
-   */
-  private ensureCapSaletypeSync(): void {
+  private syncCapSaletypeFromStep1(): void {
     const step1Data = this.contractFlowService.getStep1Data();
+    if (!step1Data) return;
 
-    if (!step1Data) {
-      console.warn('無法取得 Step1 資料，跳過 cap_saletype 同步');
-      return;
-    }
+    // Y/N → boolean 轉換（供 checkbox 顯示）
+    const toBoolean = (value: any): boolean => {
+      return (value === true || value === 'Y' || value === 'true');
+    };
 
-    const step1CapSaletype1 = Boolean(step1Data.cap_saletype1);
-    const step1CapSaletype2 = Boolean(step1Data.cap_saletype2);
+    const standardCap1 = toBoolean(step1Data.cap_saletype1);
+    const standardCap2 = toBoolean(step1Data.cap_saletype2);
 
-    console.log('確保 cap_saletype 同步:', {
-      step1CapSaletype1,
-      step1CapSaletype2,
-      itemCount: this.commissionData.length
-    });
-
-    // 同步所有抽成項目
-    this.commissionData.forEach(item => {
+    // 只需要同步到抽成項目就好
+    this.commissionData.forEach((item) => {
       if (item._status !== 'deleted') {
-        item.cap_saletype1 = step1CapSaletype1;
-        item.cap_saletype2 = step1CapSaletype2;
+        item.cap_saletype1 = standardCap1;
+        item.cap_saletype2 = standardCap2;
       }
     });
 
-    // 同步合約資訊顯示
-    if (this.contractInfoData?.length > 0) {
-      this.contractInfoData[0].cap_saletype1 = step1CapSaletype1.toString();
-      this.contractInfoData[0].cap_saletype2 = step1CapSaletype2.toString();
+    // 刪除多餘的 contractInfoData 同步
+  }
+
+  // 修改：當 Next2 的 cap_saletype 改變時，同步回 Step1
+  private syncCapSaletypeToStep1(fieldName: string, newValue: boolean): void {
+    // boolean → Y/N 轉換
+    const ynValue = newValue ? 'Y' : 'N';
+
+    console.log(`同步到 Step1: ${fieldName} = ${newValue} → ${ynValue}`);
+
+    // 更新 step1 資料（存為 Y/N 格式）
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (step1Data) {
+      step1Data[fieldName] = ynValue;
+      this.contractFlowService.saveStep1Data(step1Data);
+      console.log('已同步回 Step1');
     }
+  }
+
+  // 在 next2 中新增轉換方法
+  private convertToYN(value: any): string {
+    if (value === true || value === 'true' || value === 'Y') return 'Y';
+    if (value === false || value === 'false' || value === 'N') return 'N';
+    return 'N'; // 預設為 N
   }
 
 
@@ -375,12 +386,23 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private handleMainFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
 
+    console.log('處理主項目欄位變更:', {
+      fieldName,
+      newValue,
+      itemId: rowData.id,
+      是否為cap_saletype: fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2'
+    });
+
     // 更新欄位值
     rowData[fieldName] = newValue;
 
-    // 特殊處理：如果是 cap_saletype1 或 cap_saletype2，需要同步
+    // 特殊處理：如果是 cap_saletype1 或 cap_saletype2，需要統一同步
     if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2') {
-      this.syncCapSaletypeToAll(fieldName, newValue, rowData.id);
+      // 關鍵：統一設定所有抽成類別的相同欄位
+      this.syncCapSaletypeToAllItems(fieldName, newValue);
+
+      // 同步回 Step1
+      this.syncCapSaletypeToStep1(fieldName, newValue);
     }
 
     // 更新狀態
@@ -394,30 +416,45 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   /**
- * 同步 cap_saletype 到所有項目和 step1Data
- */
-  private syncCapSaletypeToAll(fieldName: string, newValue: any, excludeId?: string): void {
-    // 1. 同步到 step1Data
-    const step1Data = this.contractFlowService.getStep1Data();
-    if (step1Data) {
-      step1Data[fieldName] = newValue;
-      this.contractFlowService.saveStep1Data(step1Data);
-    }
+   * 新增：統一同步所有抽成類別的 cap_saletype
+   */
+  private syncCapSaletypeToAllItems(fieldName: string, newValue: boolean): void {
+    console.log(`統一設定所有抽成類別的 ${fieldName} = ${newValue}`);
 
-    // 2. 同步到所有抽成項目
-    this.commissionData.forEach(item => {
-      if (item.id !== excludeId && item._status !== 'deleted') {
+    let updatedCount = 0;
+
+    // 統一設定所有抽成項目的相同欄位
+    this.commissionData.forEach((item, index) => {
+      if (item._status !== 'deleted') {
+        const oldValue = item[fieldName];
+
+        // 更新值
         item[fieldName] = newValue;
+
+        // 更新狀態
         this.updateItemStatus(item);
+
+        if (oldValue !== newValue) {
+          updatedCount++;
+          console.log(`抽成項目 ${index + 1} (${item.tlt_id_desc}): ${fieldName} ${oldValue} → ${newValue}`);
+        }
       }
     });
 
-    // 3. 更新合約資訊顯示
+    // 同步到顯示資料（合約資訊表格，如果有的話）
     if (this.contractInfoData?.length > 0) {
       this.contractInfoData[0][fieldName] = newValue;
     }
-  }
 
+    console.log(`統一同步完成，共更新了 ${updatedCount} 個抽成項目`);
+
+    // 顯示提示訊息
+    if (updatedCount > 1) {
+      const actionText = newValue ? '勾選' : '取消勾選';
+      const fieldText = fieldName === 'cap_saletype1' ? '滿件送佰' : '全館消費滿額集點活動';
+      this.notificationService.infoBubble(`已統一${actionText}所有抽成類別的「${fieldText}」`);
+    }
+  }
 
   /**
    * 找到明細項目的父項目

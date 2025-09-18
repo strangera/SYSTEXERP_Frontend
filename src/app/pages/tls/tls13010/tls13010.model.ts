@@ -603,6 +603,12 @@ export class DataCleaner {
   static cleanContractInfo(rawData: any): CleanContractData {
     console.log('🎯 開始清理合約基本資料的日期欄位...');
 
+    const convertBooleanToYN = (value: any): string => {
+      if (value === true || value === 'true' || value === 'Y') return 'Y';
+      if (value === false || value === 'false' || value === 'N') return 'N';
+      return 'N'; // 預設為 N
+    };
+
     const cleanedData = {
       // 基本資料
       talent_id: rawData.talent_id || '',
@@ -672,10 +678,10 @@ export class DataCleaner {
       water_flag: rawData.water_flag || 'N',
       electric_flag: rawData.electric_flag || 'N',
       gas_flag: rawData.gas_flag || 'N',
-      cap_saletype1: rawData.cap_saletype1,
-      cap_saletype2: rawData.cap_saletype2,
-      cap_saletype3: rawData.cap_saletype3,
-      cap_saletype4: rawData.cap_saletype4,
+      cap_saletype1: convertBooleanToYN(rawData.cap_saletype1),
+      cap_saletype2: convertBooleanToYN(rawData.cap_saletype2),
+      cap_saletype3: convertBooleanToYN(rawData.cap_saletype3),
+      cap_saletype4: convertBooleanToYN(rawData.cap_saletype4),
       // 聯絡資訊
       email: rawData.email,
       invoice_email: rawData.invoice_email,
@@ -942,8 +948,8 @@ export class DataCleaner {
         cag_taxtype: commission.cag_taxtype === 1 ? '1' : '0',
         sst_amount: this.parseNumber(commission.sst_amount),
         sst_rate: this.parseNumber(commission.sst_rate),
-        cap_saletype1: commission.cap_saletype1 ? 'Y' : 'N',
-        cap_saletype2: commission.cap_saletype2 ? 'Y' : 'N',
+        cap_saletype1: commission.cap_saletype1 === true || commission.cap_saletype1 === 'Y' ? 'Y' : 'N',
+        cap_saletype2: commission.cap_saletype2 === true || commission.cap_saletype2 === 'Y' ? 'Y' : 'N',
 
         // 關鍵修正：確保使用有效的合約日期
         cag_bdate: validStartDate || defaultStartDate,
