@@ -12,6 +12,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
+import { FIN52030Data } from './fin52030.model';
 
 @Component({
   selector: 'app-fin52030',
@@ -80,7 +81,7 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
-  public columns: Column[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'isDeleted', header: '是否刪除', format: v => v === 'Y' ? '是' : '否' },
     { field: 'subpoenaCode', header: '常用傳票代號' },
     { field: 'subpoenaNumber', header: '常用傳票號碼' },

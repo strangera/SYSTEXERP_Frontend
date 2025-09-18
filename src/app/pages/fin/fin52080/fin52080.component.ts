@@ -6,7 +6,6 @@ import { FIN52080Service } from '@service/api/fin/fin52080.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
@@ -22,16 +21,15 @@ import { testDorm } from './fin52080.model';
   styleUrl: './fin52080.component.scss',
   standalone: !0,
   imports: [
-    MenubarComponent,
-    ButtonComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputNumberComponent,
+    TranslateModule,
+    ButtonComponent,
     InputTextComponent,
+    MenubarComponent,
     MultiSelectComponent,
     TableComponent,
-    TranslateModule
   ]
 })
 export class FIN52080Component extends BasicQueryPageComponent<testDorm> implements OnInit {
@@ -56,18 +54,18 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
    */
   public readonly queryForm = this.formBuilder.group({
     AccNo: new FormControl<string | void>(void 0, [Validators.minLength(3), Validators.maxLength(8)]),
-    AccCname: new FormControl<string>('', [Validators.maxLength(40)]),
-    AccEname: new FormControl<string>('', [Validators.maxLength(50)]),
-    AccDC: new FormControl<string[] | void>(void 0),
-    Ledger_MD: new FormControl<string[] | void>(void 0),
+    AccCname: new FormControl<string | void>(void 0, [Validators.maxLength(40)]),
+    AccEname: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
+    AccDC: new FormControl<('0' | '1')[] | void>(void 0),
+    Ledger_MD: new FormControl<('0' | '1')[] | void>(void 0),
     ClassNo: new FormControl<string[] | void>(void 0),
-    ABAT_YN: new FormControl<string[] | void>(void 0),
+    ABAT_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
     Voucher_Type: new FormControl<string[] | void>(void 0),
-    Budget_YN: new FormControl<string[] | void>(void 0),
-    Org_YN: new FormControl<string[] | void>(void 0),
+    Budget_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
+    Org_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
     rest_value: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
     rest_value2: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
-    Input_YN: new FormControl<string[] | void>(void 0),
+    Input_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -101,7 +99,7 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
   });
 
 
-  columns: (Omit<Column, 'field'> & { field: keyof testDorm; })[] = [ //先放可視範圍內的
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof testDorm; })[] = [ //先放可視範圍內的
     { field: 'AccNo', header: '科目代號' }, // 科目代號
     { field: 'AccCname', header: '科目名稱' }, // 科目名稱
     { field: 'AccEname', header: '科目英文名稱' }, // 科目英文名稱

@@ -19,7 +19,7 @@ import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020Data } from './ass21020.model';
+import { ASS21020Data, TLTByFlag } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -118,7 +118,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     this.logger.debug(`tltNo changes:`, [tltNo, selected]);
   }, { allowSignalWrites: !0 });
 
-  public readonly columns: Column[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21020Data; })[] = [
     { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
     { field: 'CRT_Date', header: '建立日期' },
@@ -127,7 +127,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     { field: 'UPD_USR_Name', header: '變更人員名稱' },
   ];
 
-  public readonly extColumns: Column[] = [
+  public readonly extColumns: (Omit<Column, 'field'> & { field: keyof TLTByFlag; })[] = [
     { field: 'TLT_No', header: '專櫃編號/名稱', format: (v, i, r) => `${v}${r?.TLT_Name ? '-' + r.TLT_Name : ''}` },
     { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
     { field: 'ENG_Remark', header: '備註' },
@@ -139,7 +139,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     { field: 'ENG_Type', header: '能源類型' },
   ];
 
-  public readonly tltNoColumns: Column[] = [
+  public readonly tltNoColumns: (Omit<Column, 'field'> & { field: keyof TLTByFlag; })[] = [
     { field: 'TLT_No', header: '專櫃編號' },
     { field: 'TLT_Name', header: '專櫃名稱' },
     { field: 'NET_SPACE', header: '專櫃面積坪數' },

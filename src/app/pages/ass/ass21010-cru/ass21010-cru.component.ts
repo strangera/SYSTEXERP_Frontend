@@ -1,4 +1,3 @@
-import { NgIf } from '@angular/common';
 import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -22,7 +21,6 @@ import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
   styleUrl: './ass21010-cru.component.scss',
   standalone: !0,
   imports: [
-    NgIf,
     FormsModule,
     PanelModule,
     ReactiveFormsModule,

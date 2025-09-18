@@ -13,6 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { FIN52090Data } from './fin52090.model';
 
 @Component({
   selector: 'app-fin52090',
@@ -49,7 +50,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
-  public readonly columns: Column[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52090Data; })[] = [
     { field: 'AccNo', header: '科目代號' },
     { field: 'AccCname', header: '科目名稱' },
 

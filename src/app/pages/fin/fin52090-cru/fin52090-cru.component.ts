@@ -1,6 +1,5 @@
-import { NgIf } from '@angular/common';
 import { Component, OnInit, computed } from '@angular/core';
-import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52090Service } from '@service/api/fin/fin52090.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -18,7 +17,6 @@ import { finalize, tap } from 'rxjs';
   styleUrl: './fin52090-cru.component.scss',
   standalone: true,
   imports: [
-    NgIf,
     FormsModule,
     PanelModule,
     ReactiveFormsModule,

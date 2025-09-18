@@ -27,13 +27,14 @@
                         [control]="df().accountSummary"
                         [submitted]="submitted"></app-input-text>
 
-        <div *ngIf="!isFormReadable"
-             class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        @if (!isFormReadable) {
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="cancel"
                       [form]="dataForm"></app-button>
           <app-button btnType="submit"
                       [loading]="service.tableLoading"></app-button>
         </div>
+        }
       </div>
     </form>
   </p-panel>
