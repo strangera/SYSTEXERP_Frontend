@@ -9,7 +9,7 @@ import { NgIf } from '@angular/common';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { DropDownListService ,IDropdownItem } from './../../../service/utility/dropDownList.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -19,6 +19,7 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 
 @Component({
   selector: 'app-tls2d010-cru',
@@ -30,7 +31,7 @@ import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-ta
 })
 export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   currentCreateType: 'normal' | 'counter' = 'counter'
-  tlt_noOptions: any[] = [];
+   tlt_noOptions: IDropdownItem[] = [];
   pod_noOptions: any[] = [];
   data: any[] = [];
   selectedItems: any[] = [];
@@ -65,7 +66,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'tpy_date', header: '扣款日期', type: 'input', width: '12rem' },
     { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
     { field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
-    { field: 'TLT_No', header: '會計科目', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No' },
     { field: 'AccNo', header: '會計科目', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code' },
     { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No' },
     { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No' },
@@ -137,7 +137,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // }
   constructor(
     private dropDownListService: DropDownListService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+        public sharedDropdownService: SharedDropdownService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -152,6 +153,24 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       console.log(this.rowdata);
       this.currentCreateType = this.rowdata.type;
     }
+     this.dropDownListService.queryPOS2001_DropDownList().subscribe((res) => {
+      this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No ?? item.NO,
+        label: `${item.No ?? item.NO}-${item.Name ?? item.NAME}`,
+        No: item.No ?? item.NO,
+        Name: item.Name ?? item.NAME
+      }));
+    });
+     this.sharedDropdownService.getActivityOptions(1001, 'A01', [], '').subscribe({
+      next: (options) => {
+        this.pod_noOptions = options.map((item: any) => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+        console.log('活動清單載入完成:', this.pod_noOptions);
+      },
+
+    });
   }
 
   onSubmit(): void {

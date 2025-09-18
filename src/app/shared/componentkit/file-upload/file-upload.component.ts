@@ -158,4 +158,12 @@ export class FileUploadComponent {
     console.log(event);
     this.send.emit(event);
   }
+
+  // 添加公開的清空方法
+  public clearFiles(): void {
+    if (this.fileUpload) {
+      this.fileUpload.clear();
+      this.progress = 0;
+    }
+  }
 }

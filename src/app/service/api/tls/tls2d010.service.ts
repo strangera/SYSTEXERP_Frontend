@@ -16,6 +16,8 @@ export class Tls2d010Service {
   queryTLS2D010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2D010`, data);
   }
-
+  insertTLS2D010(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS2D010`, data);
+  }
 
 }

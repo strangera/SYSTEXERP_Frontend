@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
 import {
-  FormBuilder,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
@@ -11,7 +10,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
 import { TableModule } from 'primeng/table';
@@ -36,7 +35,10 @@ import { TagModule } from 'primeng/tag';
   ],
 })
 export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-  dataForm!: FormGroup;
+  dataForm = this.formBuilder.nonNullable.group({
+    TXN_Date: [null],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+  });
 
   data: any[] = [];
   totalRecords = 0;
@@ -68,65 +70,48 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
   ];
 
   constructor(
-    private fb: FormBuilder,
     private tls2A050Service: Tls2A050Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.dataForm = this.fb.group({});
     this.initializePage('TLS2A050', this.dataForm);
+    this.onSubmit(this.dataForm);
+  }
 
-    const state = history.state;
-    const TXN_Date = state?.crudstatus?.TXN_Date;
+  onSubmit(frm: FormGroup) {
+    const raw = frm.value;
+    this.tls2A050Service.queryTLS22050(raw).subscribe({
+      next: (res) => {
+        if (res.Status === '0000' || res.Status === 0) {
+          this.detailData = [];
 
-    if (TXN_Date) {
-      const payload = {
-        PageSize: 0,
-        PageIndex: 0,
-        OrderBy: "TXN_Date",
-        Offset: 0,
-        SortBy: [],
-        TXN_Date: TXN_Date,
-        POS_TypeList: [],
-        VOU_CheckList: []
-      };
-
-      this.tls2A050Service.queryTLS22050(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000' || res.Status === 0) {
-            this.detailData = [];
-
-            (res.Data || []).forEach((group: any) => {
-              // push 明細列
-              (group._DetailList || []).forEach((d: any) => {
-                this.detailData.push({
-                  ...d,
-                  PAY_Name: group.PAY_Name,
-                  isDetail: true
-                });
-              });
-
-              // push 小計列
+          (res.Data || []).forEach((group: any) => {
+            // 明細列
+            (group._DetailList || []).forEach((d: any) => {
               this.detailData.push({
+                ...d,
                 PAY_Name: group.PAY_Name,
-                isTotal: true,
-                BOOK_PayAmt: group.BOOK_PayCnt_Sum ?? 0,
-                ACT_PayAmt: group.ACT_PayAmt_Sum ?? 0,
-                OVER_PayAmt: group.OVER_PayAmt_Sum ?? 0
+                isDetail: true
               });
             });
 
-            console.log('展平後 detailData:', this.detailData);
-          } else {
-            this.messageService.errorBubble(`查詢失敗: ${res.Message}`);
-          }
-        },
-        error: (err) => {
-          console.error('API 錯誤:', err);
+            // 小計列
+            this.detailData.push({
+              PAY_Name: group.PAY_Name,
+              isTotal: true,
+              BOOK_PayAmt: group.BOOK_PayCnt_Sum ?? 0,
+              ACT_PayAmt: group.ACT_PayAmt_Sum ?? 0,
+              OVER_PayAmt: group.OVER_PayAmt_Sum ?? 0
+            });
+          });
+
+          console.log('展平後 detailData:', this.detailData);
+        } else {
+          this.messageService.errorBubble(`查詢失敗: ${res.Message}`);
         }
-      });
-    }
+      },
+    });
   }
 }

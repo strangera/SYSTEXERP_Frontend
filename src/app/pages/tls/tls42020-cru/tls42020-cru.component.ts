@@ -300,8 +300,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         SBM_BegDate: mainData.SBM_BegDate,
         SBM_EndDate: mainData.SBM_EndDate,
         // 明細資料
-        SBM_SeqNo: item.SBM_SeqNo ?? (index + 1).toString().padStart(4, '0'),  // TODO: 待確認
-        PLU_MagNo: item.PLU_MagNo ?? `${mainData.TLT_No}${(index + 1).toString().padStart(4, '0')}`,
+        SBM_SeqNo: '',  // 後端處理
+        PLU_MagNo: item.PLU_MagNo,  // 若為空則由後端產生
         PLU_No: item.PLU_No,
         PLU_Name: item.PLU_Name,
         PLU_PrnName: item.PLU_PrnName,
@@ -341,8 +341,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         SBM_BegDate: mainData.SBM_BegDate,
         SBM_EndDate: mainData.SBM_EndDate,
         // 明細資料
-        SBM_SeqNo: item.SBM_SeqNo ?? (index + 1).toString().padStart(4, '0'),  // TODO: 待確認
-        PLU_MagNo: item.PLU_MagNo ?? `${mainData.TLT_No}${(index + 1).toString().padStart(4, '0')}`,
+        SBM_SeqNo: '',  // 後端處理
+        PLU_MagNo: item.PLU_MagNo,  // 若為空則由後端產生
         PLU_No: item.PLU_No,
         PLU_Name: item.PLU_Name,
         PLU_PrnName: item.PLU_PrnName,
