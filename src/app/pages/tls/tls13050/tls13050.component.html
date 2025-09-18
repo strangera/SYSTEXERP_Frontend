@@ -20,8 +20,8 @@
             <app-calendar-range
               calendarType="dateMonthRange"
               label="契約起始日"
-              [startControl]="queryForm.controls.date_start"
-              [endControl]="queryForm.controls.date_end"
+              [startControl]="queryForm.controls.tlt_bdate_start"
+              [endControl]="queryForm.controls.tlt_bdate_end"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -47,6 +47,15 @@
           </div>
         </div>
         <div class="grid p-fluid">
+           <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateMonthRange"
+              label="契約截止日"
+              [startControl]="queryForm.controls.tlt_edate_start"
+              [endControl]="queryForm.controls.tlt_edate_end"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
               label="月結天數"
