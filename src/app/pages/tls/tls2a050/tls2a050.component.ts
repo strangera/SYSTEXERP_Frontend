@@ -10,12 +10,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
-import { ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { yesterday } from '@shared/models/system/query-form.model';
-
-
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls2a050',
@@ -49,7 +49,6 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     salesDate: [new Date()],
     TXN_DateStart: [yesterday],
     TXN_DateEnd: [yesterday],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
   data: any[] = [];
@@ -62,65 +61,9 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
   salesMinDate: Date | null = null;
   salesMaxDate: Date | null = null;
-  columns: any[] = [
-    { field: "TXN_Date", header: '交易日期', visible: true },
-    { field: "0_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '0' },
-    { field: "0_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '0' },
-    { field: "0_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '0' },
-    { field: "0_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '0' },
-    { field: "0_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '0' },
-    { field: "1_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '1' },
-    { field: "1_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '1' },
-    { field: "1_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '1' },
-    { field: "1_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '1' },
-    { field: "1_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '1' },
-    { field: "2_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '2' },
-    { field: "2_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '2' },
-    { field: "2_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '2' },
-    { field: "2_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '2' },
-    { field: "2_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '2' },
-    { field: "3_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '3' },
-    { field: "3_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '3' },
-    { field: "3_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '3' },
-    { field: "3_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '3' },
-    { field: "3_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '3' },
-    { field: "4_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '4' },
-    { field: "4_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '4' },
-    { field: "4_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '4' },
-    { field: "4_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '4' },
-    { field: "4_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '4' },
-    { field: "5_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '5' },
-    { field: "5_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '5' },
-    { field: "5_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '5' },
-    { field: "5_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '5' },
-    { field: "5_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '5' },
-    { field: "6_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '6' },
-    { field: "6_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '6' },
-    { field: "6_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '6' },
-    { field: "6_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '6' },
-    { field: "6_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '6' },
-    { field: "7_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '7' },
-    { field: "7_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '7' },
-    { field: "7_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '7' },
-    { field: "7_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '7' },
-    { field: "7_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '7' },
-    { field: "8_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '8' },
-    { field: "8_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '8' },
-    { field: "8_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '8' },
-    { field: "8_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '8' },
-    { field: "8_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '8' }
-  ];
-  columnGroup: ColumnGroup[] = [
-    { field: '0', header: '[一卡通] 行動支付' },
-    { field: '1', header: '[LINE Pay] 行動支付' },
-    { field: '2', header: '[iPASS MONEY] 行動支付' },
-    { field: '3', header: '[台灣Pay] 行動支付' },
-    { field: '4', header: '[南紡錢包] 行動支付' },
-    { field: '5', header: '[即享券] 行動支付' },
-    { field: '6', header: '[喜客券] 行動支付' },
-    { field: '7', header: '[一卡通-停車場] 行動支付' },
-    { field: '8', header: '[LINE Pay-停車場] 行動支付' }
-  ];
+  columns: any[] = [];
+  columnGroup: ColumnGroup[] = [];
+  sumData: any = {};   // 🔹 新增: 存放後端的總計資料
   exportExcelLoading = false;
 
   constructor(
@@ -151,11 +94,11 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
       }
     });
   }
+
   override onDetail(rowData: any) {
     const payload = {
       TXN_DateStart: rowData.TXN_Date,
       TXN_DateEnd: rowData.TXN_Date,
-      // POS_TypeList: this.queryForm.value.POS_TypeList ?? []
     };
 
     this.tls2A050Service.queryTLS22050(payload).subscribe({
@@ -177,26 +120,22 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
     if (frm.valid && this.canQuery()) {
       const raw = frm.value;
-      const requestParams = {
-        salesDate: raw.salesDate ? this.formatDate(raw.salesDate) : null,
-        TXN_DateStart: raw.TXN_DateStart ? this.formatDate(raw.TXN_DateStart) : null,
-        TXN_DateEnd: raw.TXN_DateEnd ? this.formatDate(raw.TXN_DateEnd) : null,
-        POS_TypeList: raw.POS_TypeList?.includes('all') ? [] : raw.POS_TypeList,
-      };
 
       const params = {
-        ...requestParams,
-        pageIndex: raw.pageIndex ?? 1,
-        pageSize: raw.pageSize ?? 10,
-        SortBy: raw.SortBy ?? [],
+        TXN_DateStart: raw.TXN_DateStart ? this.formatDate(raw.TXN_DateStart) : null,
+        TXN_DateEnd: raw.TXN_DateEnd ? this.formatDate(raw.TXN_DateEnd) : null,
+        POS_TypeList: raw.POS_TypeList?.includes('all') ? [] : raw.POS_TypeList
       };
 
-      this.tls2A050Service.queryTLS2A050(params).subscribe({
+      this.tls2A050Service.queryTLS2A050(params).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe({
         next: (res) => {
           const flatData: any[] = [];
           const payNameSet = new Set<string>();
 
-          (res.Data ?? []).forEach((entry: any) => {
+          (res.Data?.QueryData ?? []).forEach((entry: any) => {
             const row: any = { TXN_Date: entry.TXN_Date };
 
             (entry._DetailList ?? []).forEach((detail: any, index: number) => {
@@ -211,8 +150,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
             flatData.push(row);
           });
-          console.log(flatData);
 
+          console.log("flatData:", flatData);
 
           const payNames = Array.from(payNameSet);
           const columns: any[] = [{ field: 'TXN_Date', header: '交易日期', visible: true }];
@@ -230,22 +169,25 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
           });
 
           this.columns = [...columns];
-          this.cdr.markForCheck();
           this.columnGroup = columnGroup;
           this.data = flatData;
-          console.log(this.data);
+
+
+          this.sumData = res.Data?.SumData ?? {};
+
+          console.log("sumData:", this.sumData);
 
           this.totalRecords = res.TotalCount ?? 0;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
           this.messageService.unblockUi();
+          this.cdr.markForCheck();
         },
       });
-    } else {
-      this.loading = false;
-      this.messageService.unblockUi();
     }
   }
+
+
   exportReport = () => {
     const raw = this.queryForm.getRawValue();
 
@@ -280,4 +222,3 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     });
   };
 }
-
