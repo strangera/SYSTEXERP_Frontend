@@ -53,6 +53,7 @@ export interface TLS2G040Data {
 export interface QueryTLS2G040Result extends ApiResponse<TLS2G040Response[]> {
   Data: TLS2G040Response[];
   TotalCount: number;
+  FooterTotal: TLS2G040Response;
 }
 @Injectable({
   providedIn: 'root'
@@ -71,18 +72,8 @@ export class TLS2G040Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2G040`, params)
       .pipe(
         map(response => {
-          if (!response.Data) {
-            return {
-              ...response,
-              Data: [],
-              TotalCount: 0
-            };
-          }
-
-          const processedData: TLS2G040Data[] = response.Data.map((item: TLS2G040Response) => {
+          const processDailyBudgets = (item: TLS2G040Response): TLS2G040Data => {
             const processedItem: TLS2G040Data = { ...item } as TLS2G040Data;
-
-            // 將 DailyBudgets 物件的鍵值對扁平化
             if (item.DailyBudgets) {
               for (const day in item.DailyBudgets) {
                 if (Object.prototype.hasOwnProperty.call(item.DailyBudgets, day)) {
@@ -90,16 +81,19 @@ export class TLS2G040Service {
                 }
               }
             }
-            // 刪除原始的 DailyBudgets 物件
             delete processedItem['DailyBudgets'];
-
             return processedItem;
-          });
+          };
+
+          // 處理一般資料
+          const processedData: TLS2G040Data[] = response.Data?.map(processDailyBudgets) || [];
+          // 處理總計資料
+          const processedFooterTotal: TLS2G040Data | null = response.FooterTotal ? processDailyBudgets(response.FooterTotal) : null;
 
           return {
             ...response,
-            Data: processedData,
-            TotalCount: response.TotalCount // 確保 TotalCount 屬性也被正確傳遞
+            Data: processedData, // 回傳處理好的資料陣列
+            FooterTotal: processedFooterTotal // 回傳處理好的總計資料
           };
         })
       );

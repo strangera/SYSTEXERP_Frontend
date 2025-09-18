@@ -10,7 +10,7 @@ import { Column, formatAmount } from '@shared/componentkit/table-report/table-re
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { bus_classColumns, bus_classFieldColumns, bus_sclassColumns, bus_sclassFieldColumns, bus_typeColumns, bus_typeFieldColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';
 import { debounceTime, finalize } from 'rxjs';
@@ -18,16 +18,17 @@ import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputGroupComponent } from '@shared/componentkit/input-group/input-group.component';
-import { TLS2G040Service } from '@service/api/tls/tls2g040.service';
+import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service';
+import { ButtonModule } from 'primeng/button';
 
 // 2.2.16.4 預算日報表
 @Component({
   selector: 'app-tls2g040',
   templateUrl: './tls2g040.component.html',
   standalone: true,
-  imports: [InputGroupComponent, DropdownComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  imports: [NgIf, ButtonModule, InputGroupComponent, DropdownComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
-export class TLS2G040Component extends BasicQueryPageComponent<unknown> implements OnInit {
+export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> implements OnInit {
   queryForm = this.formBuilder.group({
     budget_yymm: [null, [Validators.required]], // 年月
     bus_type: [null], // 大分類
@@ -50,9 +51,11 @@ export class TLS2G040Component extends BasicQueryPageComponent<unknown> implemen
   tlt_noOptions = this.dropdown.queryTltTalent();
   report_typeOptions = report_typeOptions;
   totalRecords = 0;
-  data: unknown[] = [];
+  data: TLS2G040Data[] = [];
+  footerTotal: TLS2G040Data | null = null;
   columns: Column[] = bus_typeColumns;
   lastQueryForm: any;
+  btnLoading = false;
   constructor(
     private readonly dropdown: DropdownApiService,
     public readonly tls2g040Service: TLS2G040Service
@@ -118,6 +121,7 @@ export class TLS2G040Component extends BasicQueryPageComponent<unknown> implemen
         this.lastQueryForm = body;
         this.totalRecords = res.TotalCount;
         this.data = res.Data;
+        this.footerTotal = res.FooterTotal;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
@@ -175,5 +179,12 @@ export class TLS2G040Component extends BasicQueryPageComponent<unknown> implemen
 
     // 將所有欄位合併
     this.columns = [...baseColumns, ...dailyColumns];
+  }
+
+  onExportPDF() {
+
+  }
+  onExportXLSX() {
+
   }
 }
