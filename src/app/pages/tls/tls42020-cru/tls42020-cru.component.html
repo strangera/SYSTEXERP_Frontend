@@ -20,12 +20,12 @@
       </div>
 
       <!-- 明細 -->
-      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="SBM_SeqNo" [columns]="columns" [data]="data"
+      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="id" [columns]="columns" [data]="data"
         [showEdit]="false" [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
         (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
         [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
         [insertRowData]="true" (dataChange)="data = $event" [showReportMode]="false"
-        (fieldChange)="onFieldChange($event)"></app-table>
+        (fieldChange)="onFieldChange($event)" [showFilter]="false"></app-table>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

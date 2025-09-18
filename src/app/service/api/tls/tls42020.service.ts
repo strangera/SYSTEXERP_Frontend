@@ -17,12 +17,6 @@ export interface TLS42020QueryRequest extends BaseQueryRequest {
 
 // Data result interface for TLS42020 (POS1027M資料表)
 export interface TLS42020Data {
-  crt_date: string;               // 建立日期 - 改為小寫 snake_case
-  crt_usr_no: string;             // 建立者編號 - 改為小寫 snake_case
-  crt_usr_name: string;           // 建立者姓名 - 改為小寫 snake_case
-  upd_date: string;               // 更新日期 - 改為小寫 snake_case
-  upd_usr_no: string;             // 更新者編號 - 改為小寫 snake_case
-  upd_usr_name: string;           // 更新者姓名 - 改為小寫 snake_case
   id: number;                     // ID
   mid: number;                    // MID
   STO_No: string;                 // 店舖編號
@@ -31,11 +25,17 @@ export interface TLS42020Data {
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
   TLT_Name: string;               // 專櫃名稱
+  crt_date: string;               // 建立日期
+  crt_usr_no: string;             // 建立者編號
+  crt_usr_name: string;           // 建立者姓名
+  upd_date: string;               // 更新日期
+  upd_usr_no: string;             // 更新者編號
+  upd_usr_name: string;           // 更新者姓名
 }
 
 // Detail query request interface for TLS42020
 export interface TLS42020DetailQueryRequest {
-  tltNo: string;                // 專櫃編號
+  tltNo: string;                  // 專櫃編號
 }
 
 // Detail data result interface for TLS42020 (POS10271資料表)
@@ -92,8 +92,8 @@ export interface TLS42020UpdateDetailData {
   PLU_No: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
   PLU_PrnName: string;            // 商品列印名稱
-  PLU_FixPrc: string;    // 商品定價
-  PLU_SalePrc: string;   // 商品售價
+  PLU_FixPrc: string;             // 商品定價
+  PLU_SalePrc: string;            // 商品售價
   SBM_BtnNo: string;              // 菜單按鍵序號
   ID: number;                     // ID
 }
@@ -105,6 +105,7 @@ export interface TLS42020InsertRequest {
   TLT_No: string;                 // 專櫃編號
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
+  TLT_Name: string;               // 專櫃名稱
   POS10271: TLS42020InsertDetailData[];  // POS10271子資料
 }
 
@@ -116,6 +117,7 @@ export interface TLS42020UpdateRequest {
   TLT_No: string;                 // 專櫃編號
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
+  TLT_Name: string;               // 專櫃名稱
   POS10271: TLS42020UpdateDetailData[];  // POS10271子資料
 }
 
@@ -243,7 +245,6 @@ export class TLS42020Service {
   // 新增POS1027M資料表
   insertTLS42020M(data: TLS42020InsertRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS42020M`, data);
-    // return of({ Status: '0000', Message: '新增成功' });
   }
 
   // 更新POS1027M資料表
@@ -257,9 +258,15 @@ export class TLS42020Service {
   }
 
   // 匯入TLS42020資料
-  uploadTLS42020(file: File): Observable<any> {
+  uploadTLS42020(file: File, uploadType: string): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('uploadType', uploadType);
     return this.http.post<any>(`${this.apiUrl}/uploadTLS42020`, formData);
+  }
+
+  // 下載收銀觸控按鍵設定作業Excel規範
+  downloadRule(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/downloadRule`, {});
   }
 }
