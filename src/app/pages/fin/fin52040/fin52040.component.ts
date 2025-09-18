@@ -19,7 +19,7 @@ export interface GLS1016 {
   CompNo: string, // VARCHAR(06)      Not null, /*公司代號*/
   RefCode: string, // VARCHAR(20)     not null, /*對象別代碼*/
   RefName: string, // VARCHAR(30)     not null, /*對象別名稱*/
-  SubRefName: string, // VARCHAR(30)      null, /*代送商名稱*/
+  UniformNo: string, // VARCHAR(30)      null, /*統一編號*/
 
   //---可能也會需要下面這些---
   CRT_Date?: Date,
@@ -52,7 +52,7 @@ export interface GLS1016 {
 // 對象及對帳維護作業
 export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implements OnInit {
   queryForm = this.formBuilder.group({
-    CompNo: ['', [Validators.maxLength(6)]], //  公司代號 
+    UniformNo: ['', [Validators.maxLength(6)]], //  統一編號 
     RefCode: ['', [ Validators.maxLength(20)]], // 對象別代碼
     RefName: ['', [Validators.maxLength(30)]], // 對象別名稱
 
@@ -70,7 +70,7 @@ export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implemen
     { field: 'CompNo', header: '公司代號', visible: true }, // 公司代號
     { field: 'RefCode', header: '對象別代碼', visible: true }, // 對象別代碼
     { field: 'RefName', header: '對象別名稱', visible: true }, // 對象別名稱
-    { field: 'SubRefName', header: '代送商名稱', visible: true }, // 代送商名稱
+    { field: 'UniformNo', header: '統一編號', visible: true }, // 統一編號
       
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
     { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
@@ -104,7 +104,7 @@ export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implemen
           "CompNo": "Comp1",
           "RefCode": "對象別代碼1",
           "RefName": "廠商一",
-          "SubRefName": "代送商名稱1"
+          "UniformNo": "UniformNo1"
         }
       ];
 

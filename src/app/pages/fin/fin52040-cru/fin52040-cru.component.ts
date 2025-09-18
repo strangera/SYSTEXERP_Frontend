@@ -15,13 +15,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 
 /** GLS1016 對象別設定檔 */
 export interface GLS1016 {
   CompNo: string, // VARCHAR(06)      Not null, /*公司代號*/
   RefCode: string, // VARCHAR(20)     not null, /*對象別代碼*/
   RefName: string, // VARCHAR(30)     not null, /*對象別名稱*/
-  SubRefName: string, // VARCHAR(30)      null, /*代送商名稱*/
+  UniformNo: string, // VARCHAR(30)      null, /*統一編號*/
 
   //---可能也會需要下面這些---
   CRT_Date?: Date,
@@ -46,6 +47,7 @@ export interface GLS1016 {
       ReactiveFormsModule,
       InputTextComponent,
       DropdownComponent,
+      DropdownTableComponent,
       DialogComponent,
       NgIf, 
       TranslateModule,
@@ -58,9 +60,9 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   dataForm = this.formBuilder.nonNullable.group({
     CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
     // RefCode: ['', [Validators.required, Validators.maxLength(20)]], // 對象別代碼
-    RefCode: [{ value: null, disabled: true }, [Validators.required]], // 對象別代碼 (不可重複)
+    RefCode: ['', [Validators.required]], // 對象別代碼 (不可重複)
     RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
-    SubRefName: ['', [Validators.maxLength(30)]], // 代送商名稱
+    UniformNo: ['', [Validators.maxLength(30)]], // 統一編號
 
     CRT_USR_Name: [{ value: null, disabled: true }], //  建立人員姓名
     UPD_USR_Name: [{ value: null, disabled: true }], //  變更人員姓名
@@ -75,7 +77,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   // ---------------------- Dialog ----------------------
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    RefCode: ['', [Validators.maxLength(20)]], // 廠商編號
+    UniformNo: ['', [Validators.maxLength(20)]], // 統一編號
     RefName: ['', [Validators.maxLength(30)]], // 廠商名稱
     ...createPaginationConfig([{ field: 'RefCode', order: 1 }]),
   });
@@ -87,7 +89,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     { field: 'RefCode', header: '廠商編號' },
     { field: 'brand', header: '品牌' },
     { field: 'RefName', header: '廠商名稱' },
-    { field: 'uni', header: '統一標號' },
+    { field: 'UniformNo', header: '統一標號' },
     { field: 'shortName', header: '簡稱' },
   ];
   dialogLoading = false;
@@ -153,33 +155,115 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     this.dataForm.reset(); // 重置表單
   }
 
-  // 廠商表格
-  openDialog(): void {
-  this.dialogVisible = true;
-}
-
-  onQuery(frm: FormGroup) {
-    this.dialogLoading = true;
-    // 模擬 API
-    const mockData = [
-      { id:'1', RefCode: 'C001', brand: '品牌1', RefName: '廠商一', uni: '統一標號1', shortName: '簡稱1' },
-      { id:'2', RefCode: 'C002', brand: '品牌2', RefName: '廠商二', uni: '統一標號2', shortName: '簡稱2' },
-      { id:'3', RefCode: 'C003', brand: '品牌3', RefName: '廠商三', uni: '統一標號3', shortName: '簡稱3' },
+  // 廠商編號
+    opLoading = false;
+    opForm = this.formBuilder.group({
+      UniformNo: ['', [Validators.maxLength(20)]], // 統一標號
+      RefName: ['', [Validators.maxLength(60)]], // 廠商名稱
+      ...createPaginationConfig([{ field: 'RefCode', order: 1 }]), // 分頁和排序參數
+    });
+    suggestions: any[] = [];
+    fieldsConfig: any[] = [
+      { field: 'RefCode', header: '廠商編號', mainDataField: true },
     ];
-    this.dialogData = mockData;
-    this.totalRecords = mockData.length;
-    this.dialogLoading = false;
-  }
+    opData: any[] = [];// overlayPanel 裡面的table
+    opColumns: Column[] = [
+      { field: 'id', header: '序號' },
+      { field: 'RefCode', header: '廠商編號' },
+      { field: 'brand', header: '品牌' },
+      { field: 'RefName', header: '廠商名稱' },
+      { field: 'uni', header: '統一標號' },
+      { field: 'shortName', header: '簡稱' },
+    ];
+    opTotalRecords = 0;
 
-  saveDialog() {
-    this.dialogVisible = false;
-    if (this.selectedItemsDialog.length > 0) {
-      const selected = this.selectedItemsDialog[0]; // 單選
-      this.dataForm.patchValue({
-        RefCode: selected.uni,
-        RefName: selected.RefName
-      });
+    onAutoCompleteInputChange(event: any) {
+      const body = {
+        ...event,
+        VEN_No: '',
+        LOGO_No: '',
+        queryNo: event.PLU_MagNo || '',
+        pageSize: 30,
+        pageIndex: 1,
+        SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      }
+
+      this.suggestions = [
+      {
+        id: 'M001',
+        RefCode: '測試對象一',
+        brand: 'MAG001',
+        RefName: '商品A',
+        UniformNo: '471000000001',
+        shortName: 'ORG001',
+      },
+      {
+        id: 'M002',
+        RefCode: '測試對象二',
+        brand: 'MAG002',
+        RefName: '商品B',
+        UniformNo: '471000000002',
+        shortName: 'ORG002',
+      },
+      {
+        id: 'M003',
+        RefCode: '測試對象三',
+        brand: 'MAG003',
+        RefName: '商品C',
+        UniformNo: '471000000003',
+        shortName: 'ORG003',
+      }
+    ];
+    
+      // this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      //   this.suggestions = [...results.Data.map(item => ({
+      //     ...item,
+      //     label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+      //   }))];
+      // });
     }
-    this.selectedItemsDialog = [];
-  }
+    onformValueChanged(event: any) {
+      this.opLoading = true;
+      const body = {
+        queryNo: event.queryNo || '',
+        PLU_Name: event.PLU_Name || '',
+        VEN_No: '',
+        LOGO_No: '',
+      };
+
+      // overlayPanel 裡面的 table 測試資料
+    this.opData = [
+      {
+        id: '1',
+        RefCode: '代碼1',
+        RefName: '對象一',
+        brand: '品牌1',
+        uni: '統編1',
+        shortName: '簡稱1',
+      },
+      {
+        id: '2',
+        RefCode: '代碼2',
+        RefName: '對象二',
+        brand: '品牌2',
+        uni: '統編2',
+        shortName: '簡稱2',
+      },
+      {
+        id: '3',
+        RefCode: '代碼3',
+        RefName: '對象三',
+        brand: '品牌3',
+        uni: '統編3',
+        shortName: '簡稱3',
+      }
+    ];
+    this.opTotalRecords = this.opData.length;
+    this.opLoading = false;
+      // this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      //   this.opData = [...results.Data]; // 更新data資料
+      //   this.opTotalRecords = results.TotalCount;
+      //   this.opLoading = false;
+      // });
+    }
 }
