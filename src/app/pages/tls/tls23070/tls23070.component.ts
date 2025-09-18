@@ -47,7 +47,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     ReactiveFormsModule,
     CalendarRangeQuickComponent,
     MultiSelectComponent,
-    DropdownComponent,
+    // DropdownComponent,
     InputTextModule,
     ButtonComponent,
     TranslateModule,

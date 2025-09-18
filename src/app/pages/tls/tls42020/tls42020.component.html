@@ -47,8 +47,7 @@
 <app-dialog [visible]="dialogVisible" header="匯入菜單" (visibleChange)="dialogVisible = $event" [showFooter]="false"
   [disable]="false" [height]="'auto'" [width]="'auto'">
   <ul>
-    <li>下載<a href="https://docs.google.com/spreadsheets/d/1jwJeUeEFuKA7uIMQ4UGf5-OpRd72xSpErUfzmjLxcuo/edit?gid=0#gid=0"
-        target="_blank">範例檔案</a>，並新增菜單內容。</li>
+    <li>下載 <a (click)="downloadTemplate()" style="cursor: pointer;">範例檔案</a>，並新增菜單內容。</li>
     <li>將編輯好的檔案，上傳至此。</li>
   </ul>
   <form [formGroup]="queryForm2">
