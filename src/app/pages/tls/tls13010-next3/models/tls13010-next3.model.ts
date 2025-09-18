@@ -18,6 +18,7 @@ export interface TableConfiguration {
   showCheckBox?: boolean;
   showActionColumn?: boolean;
   autoAddRowOnTab?: boolean;
+  showSequenceNumber?: boolean;
 }
 
 // 在 component 中使用的完整配置
@@ -107,6 +108,7 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
+    showSequenceNumber: false
   },
   {
     commissionType: '6',
@@ -128,5 +130,6 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
+    showSequenceNumber: false
   }
 ];

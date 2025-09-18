@@ -180,7 +180,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   // 專櫃卡別分析：上層群組
   private readonly columnGroupCounter: any[] = [
     { field: 'AE',        header: 'AE',     align: 'center' },
-    { field: 'DA',        header: 'DA',     align: 'center' },
+    { field: 'DA',        header: 'DINERS',     align: 'center' },
     { field: 'MASTER',    header: 'MASTER', align: 'center' },
     { field: 'VISA',      header: 'VISA',   align: 'center' },
     { field: 'JCB',       header: 'JCB',    align: 'center' },

@@ -25,8 +25,14 @@
         <!-- 盤點單說明 -->
         <app-input-textarea class="col-12" label="盤點單說明" controlName="PST_Remark"
           [control]="dataForm.controls.PST_Remark" [submitted]="submitted"></app-input-textarea>
-
       </div>
+
+      <!-- 明細table -->
+      <app-table-edit class="col-12" tableKey="TLS53010Detail" [columns]="editColumns" [data]="data"
+        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
+        [disabled]="isFormReadable" (insert)="dialogVisible = true" [showInsert]="isFormCreateable"
+        [canInsert]="false" />
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
@@ -34,3 +40,36 @@
     </form>
   </p-panel>
 </div>
+
+<!-- 商品明細選擇dialog -->
+<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="dialogSelectedItems.length === 0">
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
+    <div class="grid p-fluid">
+      <app-dropdown class="col-12" label="商品管理編號/國際條碼/廠商貨號" controlName="PLU_MagNo"
+        [control]="dialogQueryForm.controls.PLU_MagNo" [options]="PLU_MagNoOptions" optionLabel="label"
+        optionValue="No" />
+      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
+        [control]="dialogQueryForm.controls.PLU_Name" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
+        [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="中分類代碼" controlName="CAT_MNo"
+        [control]="dialogQueryForm.controls.CAT_MNo" [options]="CAT_MNoOptions" optionLabel="label" optionValue="No" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="小分類代碼" controlName="CAT_SNo"
+        [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+
+  <hr />
+
+  <app-table tableKey="TLS53010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="dialogSelectedItems" [showCaption]="false"
+    (selectionChange)="dialogSelectedItems = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
+    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); 
+    onQuery(dialogQueryForm)" [lazy]="true" [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
+  </app-table>
+</app-dialog>

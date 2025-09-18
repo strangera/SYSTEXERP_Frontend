@@ -220,8 +220,8 @@ export class DropdownApiService {
   }
 
   /** 查詢位置編號(SYS3A00) */
-  queryPos2002(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS2002_DropDownList');
+  queryPos2002(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS2002_DropDownList', 'No', 'Name');
   }
 
   /** 查詢表格定義檔(DEFTBL) */

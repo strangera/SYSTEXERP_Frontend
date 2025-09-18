@@ -1,11 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button btnType="create" label="大分類"></app-button>
-    <app-button btnType="create" label="中分類"></app-button>
-    <app-button btnType="create" label="小分類"></app-button>
-    <app-button btnType="create" label="組織"></app-button>
-    <app-button btnType="create" label="專櫃"></app-button> -->
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -13,7 +8,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="年月"
-            controlName="budget_date" [control]="queryForm.controls.budget_date" [submitted]="submitted"></app-calendar>
+            controlName="budget_yymm" [control]="queryForm.controls.budget_yymm" [submitted]="submitted"></app-calendar>
           <app-input-group class="col-12 md:col-6 lg:col-4" label="大分類代碼/名稱" controlName="bus_type"
             [control]="queryForm.controls.bus_type" [value]="bus_type_name" [submitted]="submitted"
             [options]="bus_typeOptions | async" optionLabel="Name" optionValue="value" templateLabel="label"
@@ -26,12 +21,12 @@
             [control]="queryForm.controls.bus_sclass" [value]="bus_sclass_name" [submitted]="submitted"
             [options]="bus_sclassOptions || []" optionLabel="Name" templateLabel="label" customLabel="No"
             [columns]="bus_sclassColumns"></app-input-group>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織代號/名稱" controlName="org_id"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織代號/名稱" controlName="org_ids"
             [options]="org_idOptions | async" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_no"
+            [control]="queryForm.controls.org_ids" [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_nos"
             [options]="tlt_noOptions | async" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-multi-select>
+            [control]="queryForm.controls.tlt_nos" [submitted]="submitted"></app-multi-select>
           <app-radiobutton class="col-12" label="報表格式" controlName="report_type"
             [control]="queryForm.controls.report_type" [options]="report_typeOptions"
             [submitted]="submitted"></app-radiobutton>
@@ -46,5 +41,21 @@
 </div>
 <div class="card">
   <app-table-report tableKey="TLS2G040" dataKey="tlt_no" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"></app-table-report>
+    [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"
+    [lastQueryBody]="lastQueryForm" [footerData]="footerTotal"
+    [queryFunction]="tls2g040Service.queryTLS2G040.bind(tls2g040Service)">
+    <header>
+      <div class="flex justify-content-between align-items-center gap-2">
+        <div class="flex gap-2">
+          <span *ngIf="totalRecords">總筆數: {{ totalRecords }}</span>
+        </div>
+        <div class="flex gap-2">
+          <p-button styleClass="p-2" label="產出PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+            [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+          <p-button styleClass="p-2" label="產出XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
+            [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+        </div>
+      </div>
+    </header>
+  </app-table-report>
 </div>

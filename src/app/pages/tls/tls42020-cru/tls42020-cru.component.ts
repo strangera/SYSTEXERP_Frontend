@@ -73,7 +73,9 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   ];
 
   tltNoOptions: TLTOption[] = [];
-  PLU_MagNoOptions: POS2004Item[] = [
+
+  // TODO: 待修改
+  PLU_MagNoOptions: any[] = [
     {
       PLU_MagNo: 'A001',
       PLU_No: '4711234567890',
@@ -87,20 +89,6 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       PLU_Name: '薯條(大)',
       PLU_SalePrc: 60,
       label: 'B001-薯條(大)'
-    },
-    {
-      PLU_MagNo: 'C001',
-      PLU_No: '4711234567895',
-      PLU_Name: '可樂(大)',
-      PLU_SalePrc: 35,
-      label: 'C001-可樂(大)'
-    },
-    {
-      PLU_MagNo: 'D001',
-      PLU_No: '4711234567897',
-      PLU_Name: '巧克力聖代',
-      PLU_SalePrc: 55,
-      label: 'D001-巧克力聖代'
     }
   ];
 
@@ -115,7 +103,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     },
     {
       field: 'PLU_MagNo',
-      header: '商品管理碼',
+      header: '商品貨號',
       type: 'dropdown',
       options: () => this.PLU_MagNoOptions, // 使用函數動態返回選項
       optionLabel: 'label',
@@ -173,8 +161,9 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   ngOnInit(): void {
     this.initializePage('TLS42020', this.dataForm);
     this.loadOptions();
+
+    // 代回明細資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      // 呼叫讀取明細api
       if (this.rowdata) {
         this.tls42020Service.queryTLS42020Detail({ tltNo: this.rowdata.TLT_No })
           .pipe(untilDestroyed(this))
@@ -189,7 +178,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     this.handleSubmit(frm, () => {
       // 檢核 data 至少要有一筆
       if (this.data.length === 0) {
-        this.messageService.errorBubble('請至少有一筆明細資料');
+        this.messageService.errorBubble('請新增至少一筆明細資料');
         this.loading = false;
         return;
       }
@@ -214,20 +203,20 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     this.selectedRows = [];
   }
 
-  // 選擇商品管理碼後自動帶出其他欄位的資料
+  // 選擇商品貨號後自動帶出其他欄位的資料
   onFieldChange(event: FieldChangeEvent): void {
     if (event.field === 'PLU_MagNo' && event.index !== undefined) {
-      // 當 PLU_MagNo (商品管理碼) 改變時，自動帶入相關資料
+      // 當 PLU_MagNo (商品貨號) 改變時，自動帶入相關資料
       const selectedProduct = this.PLU_MagNoOptions.find(item => item.PLU_MagNo === event.value);
       if (selectedProduct) {
         // 更新該行的其他欄位
         const rowData = this.data[event.index];
-        // FIXME: 欄位對應待確認
+        // TODO: 欄位對應待確認
         if (rowData) {
           rowData.PLU_No = selectedProduct.PLU_No || '';
           rowData.PLU_Name = selectedProduct.PLU_Name || '';
-          rowData.PLU_PrnName = selectedProduct.PLU_Name || '';
-          rowData.PLU_FixPrc = selectedProduct.PLU_SalePrc || '';
+          rowData.PLU_PrnName = selectedProduct.PLU_PrnName || '';
+          rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc || '';
           rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc || '';
 
           // 觸發變更檢測
@@ -250,6 +239,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         }));
       });
 
+    // TODO: 待確認
     // this.dropDownListService.queryPOS2004_DropDownList("POS1027M")
     //   .pipe(untilDestroyed(this))
     //   .subscribe(res => {
@@ -258,6 +248,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     //   });
   }
 
+  //#region CRUD 操作
   private performInsert(payload: TLS42020InsertRequest): void {
     this.tls42020Service.insertTLS42020M(payload)
       .pipe(
@@ -294,6 +285,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       STO_No: this.STORE_NO,
       SBM_Type: formValue.SBM_Type!,
       TLT_No: formValue.TLT_No!,
+      TLT_Name: this.tltNoOptions.find(item => item.value === formValue.TLT_No)?.name ?? '',
       SBM_BegDate: formValue.SBM_BegDate!,
       SBM_EndDate: formValue.SBM_EndDate!
     };
@@ -301,17 +293,21 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     // 深拷貝明細資料並加上主檔欄位
     const detailData = this.data
       .map((item, index) => ({
-        ...item,
+        // 複合主鍵
         STO_No: this.STORE_NO,
         SBM_Type: mainData.SBM_Type,
         TLT_No: mainData.TLT_No,
         SBM_BegDate: mainData.SBM_BegDate,
         SBM_EndDate: mainData.SBM_EndDate,
-        PLU_FixPrc: String(item.PLU_FixPrc ?? ''),
-        PLU_SalePrc: String(item.PLU_SalePrc ?? ''),
+        // 明細資料
+        SBM_SeqNo: item.SBM_SeqNo ?? (index + 1).toString().padStart(4, '0'),  // TODO: 待確認
         PLU_MagNo: item.PLU_MagNo ?? `${mainData.TLT_No}${(index + 1).toString().padStart(4, '0')}`,
-        // TODO: 流水號 邏輯待確認，目前先傳index
-        SBM_SeqNo: (index + 1).toString()
+        PLU_No: item.PLU_No,
+        PLU_Name: item.PLU_Name,
+        PLU_PrnName: item.PLU_PrnName,
+        PLU_FixPrc: String(item.PLU_FixPrc),
+        PLU_SalePrc: String(item.PLU_SalePrc),
+        SBM_BtnNo: item.SBM_BtnNo
       }));
 
     return {
@@ -335,34 +331,38 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     };
 
     // 明細資料 - 轉換為 TLS42020UpdateDetailData 格式
-    const detailData = this.data.map((item, index) => ({
-      ...item,
-      STO_No: this.STORE_NO,
-      SBM_Type: mainData.SBM_Type,
-      TLT_No: mainData.TLT_No,
-      SBM_BegDate: mainData.SBM_BegDate,
-      SBM_EndDate: mainData.SBM_EndDate,
-      PLU_MagNo: item.PLU_MagNo ?? `${mainData.TLT_No}${(index + 1).toString().padStart(4, '0')}`,
-      PLU_FixPrc: String(item.PLU_FixPrc ?? ''),
-      PLU_SalePrc: String(item.PLU_SalePrc ?? ''),
-      ID: item.ID
-    }));
+    const detailData = this.data
+      .map((item, index) => ({
+        // 複合主鍵
+        ID: this.rowdata!.id, // 從原始資料取得 ID
+        STO_No: this.STORE_NO,
+        SBM_Type: mainData.SBM_Type,
+        TLT_No: mainData.TLT_No,
+        SBM_BegDate: mainData.SBM_BegDate,
+        SBM_EndDate: mainData.SBM_EndDate,
+        // 明細資料
+        SBM_SeqNo: item.SBM_SeqNo ?? (index + 1).toString().padStart(4, '0'),  // TODO: 待確認
+        PLU_MagNo: item.PLU_MagNo ?? `${mainData.TLT_No}${(index + 1).toString().padStart(4, '0')}`,
+        PLU_No: item.PLU_No,
+        PLU_Name: item.PLU_Name,
+        PLU_PrnName: item.PLU_PrnName,
+        PLU_FixPrc: String(item.PLU_FixPrc),
+        PLU_SalePrc: String(item.PLU_SalePrc),
+        SBM_BtnNo: item.SBM_BtnNo
+      }));
 
     return {
       ...mainData,
       POS10271: detailData
     };
   }
+  //#endregion
+
 
   private requiredValidator(errorMessage: string) {
     return (value: string) => ({
       isValid: !!value,
       errorMessage: [errorMessage]
     });
-  }
-
-  // Getter (保持向下相容)
-  get insertRequestBody(): TLS42020InsertRequest {
-    return this.createInsertRequestBody();
   }
 }

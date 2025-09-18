@@ -6,74 +6,59 @@ import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '@shared/componentkit/table-report/table-report.model';
+import { Column, formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { bus_classColumns, bus_sclassColumns, bus_typeColumns, org_idColumns, tlt_noColumns } from './tls2g040.model';
-import { debounceTime } from 'rxjs';
+import { bus_classColumns, bus_classFieldColumns, bus_sclassColumns, bus_sclassFieldColumns, bus_typeColumns, bus_typeFieldColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';
+import { debounceTime, finalize } from 'rxjs';
 import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputGroupColumn, InputGroupComponent } from '@shared/componentkit/input-group/input-group.component';
+import { InputGroupComponent } from '@shared/componentkit/input-group/input-group.component';
+import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service';
+import { ButtonModule } from 'primeng/button';
 
 // 2.2.16.4 預算日報表
 @Component({
   selector: 'app-tls2g040',
   templateUrl: './tls2g040.component.html',
   standalone: true,
-  imports: [InputGroupComponent, DropdownComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  imports: [NgIf, ButtonModule, InputGroupComponent, DropdownComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
-export class TLS2G040Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    budget_date: [null, [Validators.required]], // 年月
+    budget_yymm: [null, [Validators.required]], // 年月
     bus_type: [null], // 大分類
     bus_class: [null as any], // 中分類
     bus_sclass: [null as any], // 小分類
-    org_id: [null], // 組織
-    tlt_no: [null], // 專櫃
-    report_type: ['bus_type', [Validators.required]]
+    org_ids: [null], // 組織
+    tlt_nos: [null], // 專櫃
+    report_type: ['bus_type', [Validators.required]],
   });
   bus_type_name = '';
   bus_class_name = '';
   bus_sclass_name = '';
   bus_typeOptions = this.dropdown.queryTltBusType();
-  bus_typeColumns: InputGroupColumn[] = [
-    { field: 'No', header: '大分類代碼', visible: true },
-    { field: 'Name', header: '大分類名稱', visible: true }
-  ];
+  bus_typeColumns = bus_typeFieldColumns
   bus_classOptions?: BusClassItem[] = [];
-  bus_classColumns: InputGroupColumn[] = [
-    { field: 'bus_type', header: '大分類代碼', visible: true },
-    { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'No', header: '小分類代碼', visible: true },
-    { field: 'Name', header: '小分類名稱', visible: true }
-  ];
+  bus_classColumns = bus_classFieldColumns;
   bus_sclassOptions?: BusSClassItem[] = [];
-  bus_sclassColumns: InputGroupColumn[] = [
-    { field: 'bus_type', header: '大分類代碼', visible: true },
-    { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'bus_class', header: '中分類名稱', visible: true },
-    { field: 'bus_class_name', header: '中分類名稱', visible: true },
-    { field: 'No', header: '小分類代碼', visible: true },
-    { field: 'Name', header: '小分類名稱', visible: true }
-  ]
+  bus_sclassColumns = bus_sclassFieldColumns
   org_idOptions = this.dropdown.querySys3100();
   tlt_noOptions = this.dropdown.queryTltTalent();
-  report_typeOptions = [
-    { label: '依大分類統計', value: 'bus_type' },
-    { label: '依中分類統計', value: 'bus_class' },
-    { label: '依小分類統計', value: 'bus_sclass' },
-    { label: '依組織統計', value: 'org_id' },
-    { label: '依專櫃統計', value: 'tlt_no' }
-  ];
+  report_typeOptions = report_typeOptions;
   totalRecords = 0;
-  data: any[] = [];
+  data: TLS2G040Data[] = [];
+  footerTotal: TLS2G040Data | null = null;
   columns: Column[] = bus_typeColumns;
+  lastQueryForm: any;
+  btnLoading = false;
   constructor(
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    public readonly tls2g040Service: TLS2G040Service
   ) {
     super();
   }
@@ -119,11 +104,31 @@ export class TLS2G040Component extends BasicQueryPageComponent<any> implements O
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      // 轉換日期格式為 YYYYMM
+      const budgetDate = frm.value.budget_yymm ? (new Date(frm.value.budget_yymm).getFullYear().toString() + (new Date(frm.value.budget_yymm).getMonth() + 1).toString().padStart(2, '0')) : '';
+
+      const body = {
+        ...frm.value,
+        budget_yymm: budgetDate,
+        bus_class: frm.value.bus_class ? typeof frm.value.bus_class === 'string' ? frm.value.bus_class : frm.value.bus_class.No : null,
+        bus_sclass: frm.value.bus_sclass ? frm.value.bus_sclass.No : null,
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: [{ field: 'bus_type', order: 1 }],
+      };
+
+      this.tls2g040Service.queryTLS2G040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.lastQueryForm = body;
+        this.totalRecords = res.TotalCount;
+        this.data = res.Data;
+        this.footerTotal = res.FooterTotal;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
     });
   }
   private updateColumns(): void {
     const reportType = this.queryForm.get('report_type')?.value;
-    const budgetDate = this.queryForm.get('budget_date')?.value;
+    const budgetDate = this.queryForm.get('budget_yymm')?.value;
 
     if (!reportType) {
       this.columns = [];
@@ -166,12 +171,20 @@ export class TLS2G040Component extends BasicQueryPageComponent<any> implements O
         dailyColumns.push({
           field: `daily_${i}`, // 建議使用 unique 的 field 名稱，例如 daily_1, daily_2
           header: `${i}(${dayOfWeek})`,
-          groupField: 'daily' // 可以考慮新增一個 'daily' 的群組
+          groupField: 'daily', // 可以考慮新增一個 'daily' 的群組
+          format: formatAmount
         });
       }
     }
 
     // 將所有欄位合併
     this.columns = [...baseColumns, ...dailyColumns];
+  }
+
+  onExportPDF() {
+
+  }
+  onExportXLSX() {
+
   }
 }

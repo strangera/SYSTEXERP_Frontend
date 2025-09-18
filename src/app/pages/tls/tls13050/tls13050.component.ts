@@ -5,7 +5,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { Tls13050Service } from '../../../service/api/tls/tls13050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
@@ -14,7 +14,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -35,10 +34,12 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 export class TLS13050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_floorList: [[]],
-    date_start: [''],
-    date_end: [''],
-    check_day_start: [''],
-    check_day_end: [[]],
+    tlt_bdate_start: [(new Date()), [Validators.required]],
+    tlt_bdate_end: [(new Date()), [Validators.required]],
+    tlt_edate_start: [(new Date()), [Validators.required]],
+    tlt_edate_end: [(new Date()), [Validators.required]],
+    check_day_start: [null],
+    check_day_end: [null],
     Building_No:  [[]],
     org_idList: [[]],
     ...createPaginationConfig([{ field: 'apply_no', order: 1 }])

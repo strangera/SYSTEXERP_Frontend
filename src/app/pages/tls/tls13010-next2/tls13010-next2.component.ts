@@ -153,15 +153,65 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     if (result.success) {
       this.commissionData = result.data;
-      this.commissionDataLoaded = true; // 設定載入完成狀態
+      this.commissionDataLoaded = true;
+
+      // 關鍵：載入後立即同步 cap_saletype1 和 cap_saletype2
+      this.syncCapSaletypeFromStep1();
+
       this.ensureDataConsistency();
       this.saveToWorkflow();
     } else {
       this.notificationService.errorBubble('載入抽成資料失敗');
       this.commissionData = [];
-      this.commissionDataLoaded = false; // 設定載入失敗狀態
+      this.commissionDataLoaded = false;
     }
   }
+  private syncCapSaletypeFromStep1(): void {
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (!step1Data) return;
+
+    // Y/N → boolean 轉換（供 checkbox 顯示）
+    const toBoolean = (value: any): boolean => {
+      return (value === true || value === 'Y' || value === 'true');
+    };
+
+    const standardCap1 = toBoolean(step1Data.cap_saletype1);
+    const standardCap2 = toBoolean(step1Data.cap_saletype2);
+
+    // 只需要同步到抽成項目就好
+    this.commissionData.forEach((item) => {
+      if (item._status !== 'deleted') {
+        item.cap_saletype1 = standardCap1;
+        item.cap_saletype2 = standardCap2;
+      }
+    });
+
+    // 刪除多餘的 contractInfoData 同步
+  }
+
+  // 修改：當 Next2 的 cap_saletype 改變時，同步回 Step1
+  private syncCapSaletypeToStep1(fieldName: string, newValue: boolean): void {
+    // boolean → Y/N 轉換
+    const ynValue = newValue ? 'Y' : 'N';
+
+    console.log(`同步到 Step1: ${fieldName} = ${newValue} → ${ynValue}`);
+
+    // 更新 step1 資料（存為 Y/N 格式）
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (step1Data) {
+      step1Data[fieldName] = ynValue;
+      this.contractFlowService.saveStep1Data(step1Data);
+      console.log('已同步回 Step1');
+    }
+  }
+
+  // 在 next2 中新增轉換方法
+  private convertToYN(value: any): string {
+    if (value === true || value === 'true' || value === 'Y') return 'Y';
+    if (value === false || value === 'false' || value === 'N') return 'N';
+    return 'N'; // 預設為 N
+  }
+
 
   // === 數據處理方法 ===
   private updateDiscountColumns(): void {
@@ -336,8 +386,24 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private handleMainFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
 
+    console.log('處理主項目欄位變更:', {
+      fieldName,
+      newValue,
+      itemId: rowData.id,
+      是否為cap_saletype: fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2'
+    });
+
     // 更新欄位值
     rowData[fieldName] = newValue;
+
+    // 特殊處理：如果是 cap_saletype1 或 cap_saletype2，需要統一同步
+    if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2') {
+      // 關鍵：統一設定所有抽成類別的相同欄位
+      this.syncCapSaletypeToAllItems(fieldName, newValue);
+
+      // 同步回 Step1
+      this.syncCapSaletypeToStep1(fieldName, newValue);
+    }
 
     // 更新狀態
     this.updateItemStatus(rowData);
@@ -347,6 +413,47 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     // 保存
     this.saveToWorkflow();
+  }
+
+  /**
+   * 新增：統一同步所有抽成類別的 cap_saletype
+   */
+  private syncCapSaletypeToAllItems(fieldName: string, newValue: boolean): void {
+    console.log(`統一設定所有抽成類別的 ${fieldName} = ${newValue}`);
+
+    let updatedCount = 0;
+
+    // 統一設定所有抽成項目的相同欄位
+    this.commissionData.forEach((item, index) => {
+      if (item._status !== 'deleted') {
+        const oldValue = item[fieldName];
+
+        // 更新值
+        item[fieldName] = newValue;
+
+        // 更新狀態
+        this.updateItemStatus(item);
+
+        if (oldValue !== newValue) {
+          updatedCount++;
+          console.log(`抽成項目 ${index + 1} (${item.tlt_id_desc}): ${fieldName} ${oldValue} → ${newValue}`);
+        }
+      }
+    });
+
+    // 同步到顯示資料（合約資訊表格，如果有的話）
+    if (this.contractInfoData?.length > 0) {
+      this.contractInfoData[0][fieldName] = newValue;
+    }
+
+    console.log(`統一同步完成，共更新了 ${updatedCount} 個抽成項目`);
+
+    // 顯示提示訊息
+    if (updatedCount > 1) {
+      const actionText = newValue ? '勾選' : '取消勾選';
+      const fieldText = fieldName === 'cap_saletype1' ? '滿件送佰' : '全館消費滿額集點活動';
+      this.notificationService.infoBubble(`已統一${actionText}所有抽成類別的「${fieldText}」`);
+    }
   }
 
   /**
@@ -626,6 +733,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     );
 
     if (result.success) {
+      // 關鍵：新增後立即確保與 step1 同步
+      const step1Data = this.contractFlowService.getStep1Data();
+      if (step1Data) {
+        result.newItem.cap_saletype1 = Boolean(step1Data.cap_saletype1);
+        result.newItem.cap_saletype2 = Boolean(step1Data.cap_saletype2);
+      }
+
       this.commissionData = [...this.commissionData, result.newItem];
       this.saveToWorkflow();
       this.notificationService.infoBubble('新增完成');
@@ -633,7 +747,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.notificationService.warnBubble(result.message || '新增失敗');
     }
   }
-
   onAddDetailItem(parentData: any): void {
     if (this.isViewMode) {
       this.notificationService.infoBubble('檢視模式下無法新增明細項目');

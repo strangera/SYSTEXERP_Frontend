@@ -8,8 +8,8 @@
     <p-table
       [value]="detailData"
       rowGroupMode="rowspan"
-      groupRowsBy="PAY_Name"
-      sortField="PAY_Name"
+      groupRowsBy="representative.PAY_Name"
+      sortField="representative.PAY_Name"
       sortMode="single"
       [tableStyle]="{ 'min-width': '60rem' }"
     >
@@ -26,25 +26,19 @@
 
       <ng-template
         pTemplate="body"
-        let-row
+        let-rowData
         let-rowgroup="rowgroup"
         let-rowspan="rowspan"
       >
-        <tr
-          ngClass="{
-            'bg-yellow-100 font-bold': row.isTotal
-          }"
-        >
-          <!-- 付款別，只在群組第一筆出現 (不含合計) -->
-          <td *ngIf="rowgroup && !row.isTotal" [attr.rowspan]="rowspan">
-            {{ row.PAY_Name }}
+        <tr>
+          <td *ngIf="rowgroup" [attr.rowspan]="rowspan">
+            {{ rowData.PAY_Name }}
           </td>
-
-          <td>{{ row.ECR_No || "" }}</td>
-          <td>{{ row.TXN_No || "" }}</td>
-          <td>{{ row.BOOK_PayAmt | number }}</td>
-          <td>{{ row.ACT_PayAmt | number }}</td>
-          <td>{{ row.OVER_PayAmt | number }}</td>
+          <td>{{ rowData.ECR_No }}</td>
+          <td>{{ rowData.TXN_No }}</td>
+          <td>{{ rowData.BOOK_PayAmt | number }}</td>
+          <td>{{ rowData.ACT_PayAmt | number }}</td>
+          <td>{{ rowData.OVER_PayAmt | number }}</td>
         </tr>
       </ng-template>
     </p-table>
