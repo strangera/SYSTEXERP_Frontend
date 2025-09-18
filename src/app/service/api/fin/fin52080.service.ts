@@ -26,8 +26,9 @@ export class FIN52080Service {
   public accountCodeLoading = !1;
 
   /** 中類代碼 */
-  public readonly classNoOption: apiOption[] = Array.from({ length: 1000 }).map((_, i) =>
-    ({ No: String(i + 1), Name: String(i + 1) }));
+  public readonly classNoOption: apiOption[] = Array.from({ length: 999 }).map((_, i) =>
+    ({ No: String(i + 1), Name: String(i + 1).padStart(3, '0') }));
+  public readonly classNoMap = new Map(this.classNoOption.map(item => [item.No, item.Name]));
 
   /** 借/貸 */
   public readonly accDCOption: apiOption[] = [

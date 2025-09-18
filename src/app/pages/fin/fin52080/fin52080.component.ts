@@ -1,15 +1,16 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52080Service } from '@service/api/fin/fin52080.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-import { apiOption } from '@shared/models/sys/sysb000.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -26,13 +27,16 @@ import { testDorm } from './fin52080.model';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    MultiSelectComponent,
+    InputNumberComponent,
     InputTextComponent,
+    MultiSelectComponent,
     TableComponent,
     TranslateModule
   ]
 })
 export class FIN52080Component extends BasicQueryPageComponent<testDorm> implements OnInit {
+
+  public readonly accNoFilter = /^\d{1,8}$/;
 
   /**
    * 會計科目代號維護
@@ -51,7 +55,7 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
    * - Input_YN: 是否可輸
    */
   public readonly queryForm = this.formBuilder.group({
-    AccNo: new FormControl<string>('', [Validators.minLength(3), Validators.maxLength(8)]),
+    AccNo: new FormControl<string | void>(void 0, [Validators.minLength(3), Validators.maxLength(8)]),
     AccCname: new FormControl<string>('', [Validators.maxLength(40)]),
     AccEname: new FormControl<string>('', [Validators.maxLength(50)]),
     AccDC: new FormControl<string[] | void>(void 0),
@@ -68,14 +72,36 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  private readonly accNoSignal = signal(this.qf().AccNo.value);
-  private readonly classNoSignal = signal(this.qf().ClassNo.value);
+  private readonly accNoSignal = toSignal(this.qf().AccNo.valueChanges);
+  private readonly classNoSignal = toSignal(this.qf().ClassNo.valueChanges);
 
   public readonly totalRecords = computed(() => this.filteredData().length);
   public readonly filteredData = signal<testDorm[]>([]);
   public readonly selectedRows = signal<testDorm[]>([]);
 
-  columns: Column[] = [ //先放可視範圍內的
+  /** accNo驗證 綁定classNo用 */
+  public readonly accNoEffect = effect(() => {
+    const accNo = String(this.accNoSignal() ?? 0)?.substring(0, 3);
+    this.qf().ClassNo.setValue(void 0);
+    // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
+    if (!accNo) return;
+    const matched = this.service.classNoMap.get(accNo);
+    matched?.length && this.qf().ClassNo.setValue([accNo], { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
+
+  /** classNo驗證 accNo沒在清單內就清空 */
+  public readonly classNoEffect = effect(() => {
+    const classNo = this.classNoSignal() || [];
+    const current = this.qf().AccNo.value?.substring(0, 3);
+    // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
+    if (!classNo.length) return;
+    outerLoop: for (let i = 0; i < classNo.length; i++) {
+      for (const cn of classNo) if (this.service.classNoMap.get(cn) === current) break outerLoop;
+      if (i === classNo.length - 1) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
+    }
+  });
+
+  columns: (Omit<Column, 'field'> & { field: keyof testDorm; })[] = [ //先放可視範圍內的
     { field: 'AccNo', header: '科目代號' }, // 科目代號
     { field: 'AccCname', header: '科目名稱' }, // 科目名稱
     { field: 'AccEname', header: '科目英文名稱' }, // 科目英文名稱
@@ -107,7 +133,7 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
   ngOnInit(): void {
     this.initializePage('FIN52080', '/FIN/FIN52080CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.logger.debug(`init:`, []);
+    this.logger.debug(`init:`, [this.service.classNoOption]);
   }
 
   public onSubmit(): void {

@@ -18,6 +18,7 @@
             <app-input-text label="科目代號"
                             controlName="AccNo"
                             [control]="qf().AccNo"
+                            [keyFilter]="accNoFilter"
                             [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
