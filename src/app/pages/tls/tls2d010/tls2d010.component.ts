@@ -42,9 +42,9 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     AccNoList: [[]], // 會計科目代號
     org_idList: [[] as number[]], // 組織
     tpy_date: [], // 扣款年月
-    CRT_USR_No: [], // 扣款日期
     pod_noList: [], // 維護日
-    GUI_FLAG: [this.authService.currentUserValue?.user_No], // 建立者
+    CRT_USR_No: [this.authService.currentUserValue?.user_No],
+    GUI_FLAG: [''],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
 
