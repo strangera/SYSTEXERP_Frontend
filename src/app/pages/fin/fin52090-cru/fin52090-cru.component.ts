@@ -10,7 +10,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 
 @Component({
   selector: 'app-fin52090-cru',
@@ -54,12 +54,15 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
         ...this.dataForm.value,
       };
 
-      this.service.submitFIN52090Data(payload).pipe(
-        tap(res => this.logger.debug(`submitFIN52090Data:`, [res])),
+      this.service.updateFIN52090Data(payload).pipe(
+        tap(() => {
+          // 更新FIN52090
+        }),
+        finalize(() => {
+          this.loading = !1;
+          this.logger.debug(`onSubmit:`, [payload]);
+        })
       ).subscribe();
-      this.logger.debug(`onSubmit:`, [payload]);
-      this.submitted = !0;
-      this.loading = !1;
     });
   }
 }

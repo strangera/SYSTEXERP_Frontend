@@ -1,79 +1,147 @@
 <div class="card fin11020">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()"></app-button>
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="create"
+                (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab header="{{ 'query-conditions' | translate }}"
+                    [selected]="true"
+                    class="line-height-3 m-0"
+                    [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="科目代號" controlName="AccNo" [control]="queryForm.controls.AccNo"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="科目代號"
+                            controlName="AccNo"
+                            [control]="qf().AccNo"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="科目名稱" controlName="AccCname" [control]="queryForm.controls.AccCname"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="科目名稱"
+                            controlName="AccCname"
+                            [control]="qf().AccCname"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="科目英文名稱" controlName="AccEname" [control]="queryForm.controls.AccEname"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="科目英文名稱"
+                            controlName="AccEname"
+                            [control]="qf().AccEname"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="借/貸" controlName="AccDC" [options]="AccDC_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.AccDC" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="借/貸"
+                              controlName="AccDC"
+                              [options]="service.accDCOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="queryForm.controls.AccDC"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="統制/明細" controlName="Ledger_MD" [options]="Ledger_MD_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.Ledger_MD" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="統制/明細"
+                              controlName="Ledger_MD"
+                              [options]="service.ledgerMDOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().Ledger_MD"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="三碼代號" controlName="ClassNo" [options]="ClassNo_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.ClassNo" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="三碼代號"
+                              controlName="ClassNo"
+                              [options]="service.classNoOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().ClassNo"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否為沖帳代號" controlName="ABAT_YN" [options]="whether_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.ABAT_YN" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="是否為沖帳代號"
+                              controlName="ABAT_YN"
+                              [options]="service.whetherOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().ABAT_YN"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="傳票格式" controlName="Voucher_Type" [options]="Voucher_Type_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.Voucher_Type" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="傳票格式"
+                              controlName="Voucher_Type"
+                              [options]="service.voucherTypeOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().Voucher_Type"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否為預算科目" controlName="Budget_YN" [options]="whether_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.Budget_YN" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="是否為預算科目"
+                              controlName="Budget_YN"
+                              [options]="service.whetherOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().Budget_YN"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否設定部門代號" controlName="Org_YN" [options]="whether_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.Org_YN" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="是否設定部門代號"
+                              controlName="Org_YN"
+                              [options]="service.whetherOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().Org_YN"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="折舊攤提年限" controlName="rest_value" [control]="queryForm.controls.rest_value"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="折舊攤提年限"
+                            controlName="rest_value"
+                            [control]="qf().rest_value"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="殘值年限" controlName="rest_value2" [control]="queryForm.controls.rest_value2"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="殘值年限"
+                            controlName="rest_value2"
+                            [control]="qf().rest_value2"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否可輸" controlName="Input_YN" [options]="whether_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.Input_YN" [submitted]="submitted"></app-multi-select>  
+            <app-multi-select label="是否可輸"
+                              controlName="Input_YN"
+                              [options]="service.whetherOption"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().Input_YN"
+                              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button btnType="clear"
+                      [form]="queryForm"></app-button>
+          <app-button btnType="query"
+                      [loading]="service.tableLoading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
+
 <div class="card">
-    <app-table tableKey="FIN52080" dataKey="field" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)" [showCheckBox]="false" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
-        [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-        [lazy]="true" [loading]="loading">
-    </app-table>
+  <app-table [tableKey]="'FIN52080'"
+             [dataKey]="'field'"
+             [data]="filteredData()"
+             [columns]="columns"
+             (edit)="onEdit($event)"
+             (detail)="onDetail($event)"
+             [showCheckBox]="false"
+             [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
+             [totalRecords]="totalRecords()"
+             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+             [lazy]="true"
+             [loading]="service.tableLoading">
+  </app-table>
 </div>

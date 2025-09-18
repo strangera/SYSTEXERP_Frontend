@@ -14,6 +14,7 @@ import { Column, FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@share
 import { NGXLogger } from 'ngx-logger';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
+import { finalize, tap } from 'rxjs';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -51,8 +52,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
   private tableData = signal<Record<string, any>[]>([]);
 
   public readonly filteredData = computed(() => {
-    const data = this.isFormCreateable ? [] : this.service.test ? dummyData : this.tableData();
-    return data;
+    return this.isFormCreateable ? [] : this.tableData();
   });
 
   public readonly totalRecords = computed(() => this.filteredData().length);
@@ -62,7 +62,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
       field: 'subjectCode',
       header: '科目代號',
       type: 'dropdown',
-      options: this.service.test ? dummyId : this.service.FIN52030xxxxData(),
+      options: this.service.FIN52030xxxxData(),
       optionLabel: 'Name',
       optionValue: 'No',
     },
@@ -109,19 +109,28 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
         this.df().modifyDate.setValue(new Date());
       }
       this.service.getSubpoenaTypes();
-      this.service.test ? this.tableData.set(dummyData) : this.service.loadFIN52030Detail({
+      this.service.loadFIN52030Detail({
         /** payload */
       });
     }
 
-    this.logger.debug(`init:`, [this.rowdata, dummyData, vendorEmployeeTable]);
+    this.logger.debug(`init:`, [this.rowdata, vendorEmployeeTable]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      const payload = { ...this.dataForm.getRawValue() };
+      this.logger.debug(`FIN52030CRU request:`, [payload, this.filteredData()]);
 
-      this.submitted = !0;
-      this.loading = !1;
+      this.service.updateFIN52030Data(payload).pipe(
+        tap(() => {
+          // 更新FIN52090
+        }),
+        finalize(() => {
+          this.loading = !1;
+          this.logger.debug(`onSubmit:`, [this.dataForm.getRawValue(), this.filteredData()]);
+        }),
+      ).subscribe();
     });
   }
 
@@ -154,8 +163,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
   }
 }
 
-const dummyId = Array.from({ length: 100 }, (_, i) => ({ No: i + 3, Name: `Item ${i + 3}` }));
-
 const vendorEmployeeTable = Array.from({ length: 100 }, (_, i) => ({
   id: `V00${i + 3}`,
   name: `Vendor ${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
@@ -165,17 +172,3 @@ const vendorEmployeeColumns: Column[] = [
   { field: 'id', header: '廠商/員工代號' },
   { field: 'name', header: '廠商/員工名稱' },
 ];
-
-const dummyData = Array.from({ length: 100 }, (_, i) => ({
-  id: dummyId[i % dummyId.length].No,
-  subjectCode: `00${i + 3}`,
-  subjectName: `Subject ${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-  vendorEmployeeCode: vendorEmployeeTable[i % vendorEmployeeTable.length].id,
-  vendorEmployeeName: vendorEmployeeTable[i % vendorEmployeeTable.length].name,
-  summary: `Generated summary ${i + 3}`,
-  debitAmount: Math.floor(Math.random() * 1e6) + 1e4,
-  creditAmount: Math.floor(Math.random() * 1e6) + 1e4,
-  organizationCode: `ORG00${i + 3}`,
-  objectCode: `OBJ00${i + 3}`,
-  reconciliationKey: `KEY00${i + 3}`,
-}));

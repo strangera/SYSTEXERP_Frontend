@@ -63,7 +63,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   public ngOnInit(): void {
-    this.initializePage('FIN52090', 'FIN/FIN52090CRU', this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('FIN52090', '/FIN/FIN52090CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
 
@@ -98,9 +98,8 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
       this.service.loadFIN52090(payload);
 
       this.logger.debug(`onSubmit:`, [payload]);
+      this.loading = this.service.tableLoading;
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.submitted = !0;
-      this.loading = !1;
     });
   }
 

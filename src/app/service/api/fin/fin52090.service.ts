@@ -57,16 +57,16 @@ export class FIN52090Service {
     ).subscribe();
   };
 
-  public submitFIN52090Data(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
+  public updateFIN52090Data(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/submitFIN52090`, payload).pipe(
+    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/updateFIN52090`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => { }),
       finalize(() => {
         this.tableLoading = !1;
-        this.logger.debug('提交FIN52090結果:', []);
+        this.logger.debug('更新FIN52090結果:', []);
       })
     );
   };
