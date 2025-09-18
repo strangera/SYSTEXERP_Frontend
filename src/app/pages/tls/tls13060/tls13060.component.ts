@@ -1,3 +1,4 @@
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -17,6 +18,8 @@ import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-tls13060',
@@ -34,6 +37,7 @@ import { TranslateModule } from '@ngx-translate/core';
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    AsyncPipe
   ],
 })
 export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseItem> implements OnInit {
@@ -43,6 +47,8 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
     tlt_no: ['', [Validators.maxLength(12)]], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(100)]], // 櫃位名稱
     location_noList: [null], // 位置編號
+    building_noList: [null], // 館別
+    org_idList: [null], // 【組織代碼/名稱】
     tlt_openflagList: [null], // 營運狀況
     tlt_bdate_start: [null], // 契約起始日
     tlt_bdate_end: [null], // 契約起始日
@@ -64,22 +70,18 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
   columns: Column[] = TLTTALENT_columns;
   vandorCategoryOptions: { label: string, value: string }[] = [];
   locationOptions: { label: string, value: string }[] = [];
-  tlt_openflagOptions = [{ label: '閉店/撤櫃', value: '0' }, { label: '營業中', value: '1' }, { label: '合約結束', value: '2' }, { label: '核准時合約尚未開始', value: '9' }];
-  tlt_term_typeOptions = [
-    { label: '固定租金', value: '1' },
-    { label: '底租抽成取高者', value: '2' },
-    { label: '一般抽成', value: '3' },
-    { label: '包底抽成', value: '4' },
-    { label: '階梯式抽成', value: '5' },
-    { label: '包底加階梯', value: '6' }
-  ]
-  paytypeOptions = [{ label: '匯款', value: '1' }, { label: '支票', value: '2' }];
-  yesNoOptions = [{ label: '是', value: 'Y' }, { label: '否', value: 'N' }];
+  building_noList = this.dropdown.querySys3800();
+  org_idList = this.dropdown.querySys3100();
+  tlt_openflagOptions = getSYS1000Options('tlt_openflag');
+  tlt_term_typeOptions = getSYS1000Options('tlt_term_type');
+  paytypeOptions = getSYS1000Options('paytype');
+  yesNoOptions = getSYS1000Options('YES_NO');
 
   constructor(
-    private vendorCategoryOptionsService: VendorCategoryOptionsService,
-    private locationOptionsService: LocationOptionsService,
-    private tLS13060Service: TLS13060Service
+    private readonly vendorCategoryOptionsService: VendorCategoryOptionsService,
+    private readonly locationOptionsService: LocationOptionsService,
+    private readonly tLS13060Service: TLS13060Service,
+    private readonly dropdown: DropdownApiService
   ) {
     super();
   }

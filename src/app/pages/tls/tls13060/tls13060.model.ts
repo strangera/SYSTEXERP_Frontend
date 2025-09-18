@@ -1,3 +1,4 @@
+import { getSYS1000 } from "@service/system/sys1000.service";
 import { Column, formatAmount, formatDate, formatDateTime, formatYN } from "../../../shared/componentkit/table/table.model";
 
 export const TLTTALENT_columns: Column[] = [
@@ -12,11 +13,15 @@ export const TLTTALENT_columns: Column[] = [
   // { field: 'contract_subno', header: '合約附號', visible: true },
 
   // 基本資料
+  { field: 'building_no', header: '館別', visible: true },
+  { field: 'org_name', header: '組織名稱', visible: true },
+  { field: 'VEN_Name', header: '廠商名稱', visible: true },
+  { field: 'location_no', header: '位置編號', visible: true },
+
   { field: 'tlt_no', header: '專櫃編號', visible: true },
   // { field: 'tlt_shortname', header: '專櫃簡稱', visible: true },
   { field: 'tlt_name', header: '櫃位名稱', visible: true },
   // { field: 'ven_uniform', header: '廠商統一編號(pos2013)', visible: true },
-  { field: 'VEN_Name', header: '廠商名稱', visible: true },
 
   // 洽談階段資訊
   // { field: 'paper_type', header: '營業型態(sys1000.T101)', visible: true },
@@ -80,7 +85,7 @@ export const TLTTALENT_columns: Column[] = [
 
   // 付款條件
   // { field: 'check_day', header: '結帳後幾日付款', visible: true },
-  { field: 'invoice_type', header: '請款單據別', visible: true },
+  { field: 'invoice_type', header: '請款單據別', visible: true, format: (value) => getSYS1000('invoice_type', value) },
   // { field: 'email', header: '電子郵件信箱', visible: true },
   // { field: 'invoice_email', header: '發票電子郵件信箱', visible: true },
 
