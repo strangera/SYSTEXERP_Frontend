@@ -296,6 +296,7 @@ export interface ContractDataStructure {
 }
 
 export interface ContractInfo {
+  [key: string]: any;
   id: string | number;
   talent_id: string;
   tlt_no: string;
@@ -447,6 +448,7 @@ export interface FareItem {
 }
 
 export interface CommissionItem {
+  [key: string]: any;
   id: number | string;
   tlt_id: string;
   tlt_id_desc: string;
@@ -454,8 +456,8 @@ export interface CommissionItem {
   discountSummary: string;
   sst_amount: number;
   sst_rate: number;
-  cap_saletype2: boolean;
-  cap_saletype1: boolean;
+  cap_saletype2: boolean | string;
+  cap_saletype1: boolean | string;
   selectedSettingOption: string;
   discountSettingItems: DiscountSettingItem[];
   annualPerformanceItems: AnnualPerformanceItem[];
@@ -1373,8 +1375,8 @@ export interface ChargeSettingApiItem {
   cag_taxtype: string;
   sst_amount: number | null;
   sst_rate: number | null;
-  cap_saletype1: string | null;
-  cap_saletype2: string | null;
+  cap_saletype1: string | null | boolean;
+  cap_saletype2: string | null | boolean;
   cag_remark: string | null;
   ChargeDetails: ChargeDetailApiItem[];
   YearChargeDetails: YearChargeDetailApiItem[];

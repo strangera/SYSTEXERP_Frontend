@@ -153,15 +153,54 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     if (result.success) {
       this.commissionData = result.data;
-      this.commissionDataLoaded = true; // 設定載入完成狀態
+      this.commissionDataLoaded = true;
+
+      // 關鍵：確保載入後的資料與 step1 同步
+      this.ensureCapSaletypeSync();
+
       this.ensureDataConsistency();
       this.saveToWorkflow();
     } else {
       this.notificationService.errorBubble('載入抽成資料失敗');
       this.commissionData = [];
-      this.commissionDataLoaded = false; // 設定載入失敗狀態
+      this.commissionDataLoaded = false;
     }
   }
+  /**
+   * 新增：確保所有抽成項目的 cap_saletype 與 step1 同步
+   */
+  private ensureCapSaletypeSync(): void {
+    const step1Data = this.contractFlowService.getStep1Data();
+
+    if (!step1Data) {
+      console.warn('無法取得 Step1 資料，跳過 cap_saletype 同步');
+      return;
+    }
+
+    const step1CapSaletype1 = Boolean(step1Data.cap_saletype1);
+    const step1CapSaletype2 = Boolean(step1Data.cap_saletype2);
+
+    console.log('確保 cap_saletype 同步:', {
+      step1CapSaletype1,
+      step1CapSaletype2,
+      itemCount: this.commissionData.length
+    });
+
+    // 同步所有抽成項目
+    this.commissionData.forEach(item => {
+      if (item._status !== 'deleted') {
+        item.cap_saletype1 = step1CapSaletype1;
+        item.cap_saletype2 = step1CapSaletype2;
+      }
+    });
+
+    // 同步合約資訊顯示
+    if (this.contractInfoData?.length > 0) {
+      this.contractInfoData[0].cap_saletype1 = step1CapSaletype1.toString();
+      this.contractInfoData[0].cap_saletype2 = step1CapSaletype2.toString();
+    }
+  }
+
 
   // === 數據處理方法 ===
   private updateDiscountColumns(): void {
@@ -339,6 +378,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     // 更新欄位值
     rowData[fieldName] = newValue;
 
+    // 特殊處理：如果是 cap_saletype1 或 cap_saletype2，需要同步
+    if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2') {
+      this.syncCapSaletypeToAll(fieldName, newValue, rowData.id);
+    }
+
     // 更新狀態
     this.updateItemStatus(rowData);
 
@@ -348,6 +392,32 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     // 保存
     this.saveToWorkflow();
   }
+
+  /**
+ * 同步 cap_saletype 到所有項目和 step1Data
+ */
+  private syncCapSaletypeToAll(fieldName: string, newValue: any, excludeId?: string): void {
+    // 1. 同步到 step1Data
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (step1Data) {
+      step1Data[fieldName] = newValue;
+      this.contractFlowService.saveStep1Data(step1Data);
+    }
+
+    // 2. 同步到所有抽成項目
+    this.commissionData.forEach(item => {
+      if (item.id !== excludeId && item._status !== 'deleted') {
+        item[fieldName] = newValue;
+        this.updateItemStatus(item);
+      }
+    });
+
+    // 3. 更新合約資訊顯示
+    if (this.contractInfoData?.length > 0) {
+      this.contractInfoData[0][fieldName] = newValue;
+    }
+  }
+
 
   /**
    * 找到明細項目的父項目
@@ -626,6 +696,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     );
 
     if (result.success) {
+      // 關鍵：新增後立即確保與 step1 同步
+      const step1Data = this.contractFlowService.getStep1Data();
+      if (step1Data) {
+        result.newItem.cap_saletype1 = Boolean(step1Data.cap_saletype1);
+        result.newItem.cap_saletype2 = Boolean(step1Data.cap_saletype2);
+      }
+
       this.commissionData = [...this.commissionData, result.newItem];
       this.saveToWorkflow();
       this.notificationService.infoBubble('新增完成');
@@ -633,7 +710,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.notificationService.warnBubble(result.message || '新增失敗');
     }
   }
-
   onAddDetailItem(parentData: any): void {
     if (this.isViewMode) {
       this.notificationService.infoBubble('檢視模式下無法新增明細項目');

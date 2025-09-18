@@ -194,6 +194,8 @@ export interface ColumnDef {
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
+  @Input() showSequenceNumber: boolean = true; //外層序號是否顯示
+  @Input() showDetailSequenceNumber: boolean = true; //內層序號是否顯示
   @Input() forceEditMode = false; // 強制編輯模式
   @Input() showActionColumn = true;  // 新增控制操作欄的屬性
   @Input() showDetailActionColumn = true;  // 控制詳細資料表格的操作欄
@@ -1165,19 +1167,22 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   get visibleColumnsCount(): number {
-    let count = 1; // 序號欄
+    let count = 0;
 
-    // 勾選框欄（只在非 readonly 且啟用時計算）
+    // 序號欄（可選）
+    if (this.showSequenceNumber) {
+      count += 1;
+    }
+
+    // 其他欄位...
     if (this.showCheckBox && this.selectionMode === 'multiple' && !this.readonly) {
       count += 1;
     }
 
-    // 展開欄
     if (this.detailKey) {
       count += 1;
     }
 
-    // 主要欄位數量（排除隱藏的）
     count += this.mainColumns.filter(col => !col.hidden).length;
 
     return count;
@@ -1602,8 +1607,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   getExpandedColspan(): number {
-    let colspan = 1; // 序號欄
+    let colspan = 0;
 
+    // 序號欄（可選）
+    if (this.showSequenceNumber) {
+      colspan += 1;
+    }
+
+    // 其他欄位...
     if (this.showCheckBox && this.selectionMode === 'multiple' && !this.readonly) {
       colspan += 1;
     }

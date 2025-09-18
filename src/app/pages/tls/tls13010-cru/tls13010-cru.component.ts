@@ -1097,6 +1097,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       return String(value);
     };
 
+    const convertToBoolean = (value: any): boolean => {
+      if (value === true || value === 'true' || value === 'Y' || value === '1') return true;
+      if (value === false || value === 'false' || value === 'N' || value === '0') return false;
+      return Boolean(value);
+    };
+
     const convertBooleanToYN = (value: any): string => {
       if (value === true || value === 'true' || value === 'Y') return 'Y';
       if (value === false || value === 'false' || value === 'N') return 'N';

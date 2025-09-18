@@ -1,6 +1,7 @@
 // commission-table.service.ts - 專門處理表格事件和數據操作
 import { Injectable } from '@angular/core';
 import { CommissionItem, DiscountSettingItem, AnnualPerformanceItem, DiscountLevelItem } from '../../tls13010/tls13010.model';
+import { ContractFlowService } from '@pages/tls/tls13010/services/contract-flow.service';
 
 export interface OperationResult {
   success: boolean;
@@ -14,6 +15,11 @@ export interface OperationResult {
 })
 export class CommissionTableService {
 
+  constructor(
+    private contractFlowService: ContractFlowService,
+
+  ) { }
+
   /**
    * 處理欄位變更事件
    */
@@ -23,12 +29,43 @@ export class CommissionTableService {
     // 更新欄位值
     rowData[fieldName] = newValue;
 
+    // 特殊處理：如果是 cap_saletype1 或 cap_saletype2，需要同步到 step1Data
+    if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2') {
+      this.syncCapSaletypeToStep1(fieldName, newValue);
+      // 同步到所有其他抽成項目
+      this.syncCapSaletypeToAllItems(fieldName, newValue, commissionData, rowData.id);
+    }
+
     // 更新狀態
     this.updateItemStatus(rowData);
 
     // 更新主數組中的項目
     this.updateItemInArray(rowData, commissionData);
   }
+
+  /**
+  * 同步 cap_saletype 到 step1Data
+  */
+  private syncCapSaletypeToStep1(fieldName: string, newValue: any): void {
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (step1Data) {
+      step1Data[fieldName] = newValue;
+      this.contractFlowService.saveStep1Data(step1Data);
+    }
+  }
+
+  /**
+   * 同步 cap_saletype 到所有抽成項目
+   */
+  private syncCapSaletypeToAllItems(fieldName: string, newValue: any, commissionData: CommissionItem[], excludeId?: string): void {
+    commissionData.forEach(item => {
+      if (item.id !== excludeId && item._status !== 'deleted') {
+        item[fieldName] = newValue;
+        this.updateItemStatus(item);
+      }
+    });
+  }
+
 
   /**
    * 處理明細欄位變更事件
@@ -83,6 +120,10 @@ export class CommissionTableService {
       };
     }
 
+    // 新增：從 step1 數據獲取預設值（第一優先）
+    const step1Data = this.contractFlowService.getStep1Data();
+    const defaultCapSaletype1 = step1Data?.cap_saletype1 ?? false;
+    const defaultCapSaletype2 = step1Data?.cap_saletype2 ?? false;
     const nextNumber = activeItems.length;
     const newCommissionItem: CommissionItem = {
       id: this.generateTempId(),
@@ -92,8 +133,8 @@ export class CommissionTableService {
       discountSummary: '尚未設定',
       sst_amount: 0,
       sst_rate: 0,
-      cap_saletype2: false,
-      cap_saletype1: false,
+      cap_saletype1: defaultCapSaletype1,
+      cap_saletype2: defaultCapSaletype2,
       selectedSettingOption: 'discount',
       currentTab: 'discount',
       discountSettingItems: this.initializeDiscountItems(contractStartDate, contractEndDate, discountOptions),
