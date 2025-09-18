@@ -10,20 +10,24 @@
                     <!-- <app-dropdown label="公司代號" controlName="CompNo" [options]="GLS1001_Options" optionLabel="Name"
                         optionValue="No" [control]="dataForm.controls.CompNo" [submitted]="submitted">
                     </app-dropdown> -->
-                    <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="dataForm.controls.CompNo"
-                        templateLabel="label" [submitted]="submitted" optionLabel="Name" optionValue="No"
+                    <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="dataForm.controls.RefCode"
+                        [submitted]="submitted" optionLabel="RefCode" optionValue="RefCode"
                         [fieldsConfig]="fieldsConfig"
                         (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
                         [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
                         [totalRecords]="opTotalRecords">
-                        <app-input-text class="col-12 md:col-6" label="管理編號" controlName="RefCode"
-                        [control]="opForm.controls.RefCode" />
-                        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="RefName"
+                        <app-input-text class="col-12 md:col-6" label="統一編號" controlName="UniformNo"
+                        [control]="opForm.controls.UniformNo" />
+                        <app-input-text class="col-12 md:col-6" label="廠商名稱" controlName="RefName"
                         [control]="opForm.controls.RefName" />
                     </app-dropdown-table>
                 </div>
             </div>
             <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="統一編號" controlName="UniformNo" [control]="dataForm.controls.UniformNo"
+                    [submitted]="submitted"></app-input-text>
+                </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="對象別代碼" controlName="RefCode" [control]="dataForm.controls.RefCode"
                     [submitted]="submitted"></app-input-text>
@@ -32,21 +36,6 @@
                     <app-input-text label="對象別名稱" controlName="RefName" [control]="dataForm.controls.RefName"
                     [submitted]="submitted"></app-input-text>
                 </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="代送商名稱" controlName="SubRefName" [control]="dataForm.controls.SubRefName"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="建立者" controlName="CRT_USR_Name" [control]="dataForm.controls.CRT_USR_Name"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="修改者" controlName="UPD_USR_Name" [control]="dataForm.controls.UPD_USR_Name"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-
             </div>
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">

@@ -22,7 +22,7 @@ export interface GLS1016 {
   CompNo: string, // VARCHAR(06)      Not null, /*公司代號*/
   RefCode: string, // VARCHAR(20)     not null, /*對象別代碼*/
   RefName: string, // VARCHAR(30)     not null, /*對象別名稱*/
-  SubRefName: string, // VARCHAR(30)      null, /*代送商名稱*/
+  UniformNo: string, // VARCHAR(30)      null, /*統一編號*/
 
   //---可能也會需要下面這些---
   CRT_Date?: Date,
@@ -60,9 +60,9 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   dataForm = this.formBuilder.nonNullable.group({
     CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
     // RefCode: ['', [Validators.required, Validators.maxLength(20)]], // 對象別代碼
-    RefCode: [{ value: null, disabled: true }, [Validators.required]], // 對象別代碼 (不可重複)
+    RefCode: ['', [Validators.required]], // 對象別代碼 (不可重複)
     RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
-    SubRefName: ['', [Validators.maxLength(30)]], // 代送商名稱
+    UniformNo: ['', [Validators.maxLength(30)]], // 統一編號
 
     CRT_USR_Name: [{ value: null, disabled: true }], //  建立人員姓名
     UPD_USR_Name: [{ value: null, disabled: true }], //  變更人員姓名
@@ -77,7 +77,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   // ---------------------- Dialog ----------------------
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    RefCode: ['', [Validators.maxLength(20)]], // 廠商編號
+    UniformNo: ['', [Validators.maxLength(20)]], // 統一編號
     RefName: ['', [Validators.maxLength(30)]], // 廠商名稱
     ...createPaginationConfig([{ field: 'RefCode', order: 1 }]),
   });
@@ -89,7 +89,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     { field: 'RefCode', header: '廠商編號' },
     { field: 'brand', header: '品牌' },
     { field: 'RefName', header: '廠商名稱' },
-    { field: 'uni', header: '統一標號' },
+    { field: 'UniformNo', header: '統一標號' },
     { field: 'shortName', header: '簡稱' },
   ];
   dialogLoading = false;
@@ -155,23 +155,25 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     this.dataForm.reset(); // 重置表單
   }
 
-  // 管理編號
+  // 廠商編號
     opLoading = false;
     opForm = this.formBuilder.group({
-      RefCode: ['', [Validators.maxLength(20)]], // 對象別代碼
-      RefName: ['', [Validators.maxLength(60)]], // 對象別名稱
+      UniformNo: ['', [Validators.maxLength(20)]], // 統一標號
+      RefName: ['', [Validators.maxLength(60)]], // 廠商名稱
       ...createPaginationConfig([{ field: 'RefCode', order: 1 }]), // 分頁和排序參數
     });
     suggestions: any[] = [];
     fieldsConfig: any[] = [
-      { field: 'RefCode', header: '管理編號', mainDataField: true },
+      { field: 'RefCode', header: '廠商編號', mainDataField: true },
     ];
     opData: any[] = [];// overlayPanel 裡面的table
     opColumns: Column[] = [
-      { field: 'RefCode', header: '商品管理編號' },
-      { field: 'PLU_No', header: '國際條碼' },
-      { field: 'RefCode', header: '對象別代碼' },
-      { field: 'RefName', header: '對象別名稱' },
+      { field: 'id', header: '序號' },
+      { field: 'RefCode', header: '廠商編號' },
+      { field: 'brand', header: '品牌' },
+      { field: 'RefName', header: '廠商名稱' },
+      { field: 'uni', header: '統一標號' },
+      { field: 'shortName', header: '簡稱' },
     ];
     opTotalRecords = 0;
 
@@ -188,31 +190,28 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
 
       this.suggestions = [
       {
-        RefCode: 'M001',
-        RefName: '測試對象一',
-        PLU_MagNo: 'MAG001',
-        PLU_Name: '商品A',
-        PLU_No: '471000000001',
-        PLU_OrgPLUNo: 'ORG001',
-        label: 'MAG001 - 商品A - 471000000001 - ORG001'
+        id: 'M001',
+        RefCode: '測試對象一',
+        brand: 'MAG001',
+        RefName: '商品A',
+        UniformNo: '471000000001',
+        shortName: 'ORG001',
       },
       {
-        RefCode: 'M002',
-        RefName: '測試對象二',
-        PLU_MagNo: 'MAG002',
-        PLU_Name: '商品B',
-        PLU_No: '471000000002',
-        PLU_OrgPLUNo: 'ORG002',
-        label: 'MAG002 - 商品B - 471000000002 - ORG002'
+        id: 'M002',
+        RefCode: '測試對象二',
+        brand: 'MAG002',
+        RefName: '商品B',
+        UniformNo: '471000000002',
+        shortName: 'ORG002',
       },
       {
-        RefCode: 'M003',
-        RefName: '測試對象三',
-        PLU_MagNo: 'MAG003',
-        PLU_Name: '商品C',
-        PLU_No: '471000000003',
-        PLU_OrgPLUNo: 'ORG003',
-        label: 'MAG003 - 商品C - 471000000003 - ORG003'
+        id: 'M003',
+        RefCode: '測試對象三',
+        brand: 'MAG003',
+        RefName: '商品C',
+        UniformNo: '471000000003',
+        shortName: 'ORG003',
       }
     ];
     
@@ -235,19 +234,28 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
       // overlayPanel 裡面的 table 測試資料
     this.opData = [
       {
-        RefCode: 'M001',
-        RefName: '測試對象一',
-        PLU_No: '471000000001'
+        id: '1',
+        RefCode: '代碼1',
+        RefName: '對象一',
+        brand: '品牌1',
+        uni: '統編1',
+        shortName: '簡稱1',
       },
       {
-        RefCode: 'M002',
-        RefName: '測試對象二',
-        PLU_No: '471000000002'
+        id: '2',
+        RefCode: '代碼2',
+        RefName: '對象二',
+        brand: '品牌2',
+        uni: '統編2',
+        shortName: '簡稱2',
       },
       {
-        RefCode: 'M003',
-        RefName: '測試對象三',
-        PLU_No: '471000000003'
+        id: '3',
+        RefCode: '代碼3',
+        RefName: '對象三',
+        brand: '品牌3',
+        uni: '統編3',
+        shortName: '簡稱3',
       }
     ];
     this.opTotalRecords = this.opData.length;
