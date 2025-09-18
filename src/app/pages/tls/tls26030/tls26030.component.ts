@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -17,6 +17,7 @@ import { FloorService } from '@service/basic/floor.service';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { DatePipe } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls26030',
@@ -59,6 +60,8 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     Org_Name: [''],                                   // 組織名稱
     tlt_floor: [[]],                                  // 樓層
     SYS_StoreNo: ['10'],                               // 新增：店號
+    ECR_No: [[]],
+    TLT_No: [[]],
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }, { field: 'ECR_No', order: 1 }, { field: 'TXN_No', order: -1 }])
   });
 
@@ -67,19 +70,19 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   selectedItems: TLS26030Data[] = [];
 
   columns: Column[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0', isTotal: true },
-    { field: 'Recog_Amt', header: '認列金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0', isTotal: true },
+    { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'Recog_Amt', header: '認列金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'Batch_No', header: '認列批號', visible: true },
     { field: 'Preorder_status', header: '預售狀態', visible: true },
-    { field: 'CANCEL_Date', header: '作廢/退貨日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'CANCEL_Date', header: '作廢/退貨日期', visible: true, format: formatDate },
     { field: 'CANCEL_ECR_No', header: '作廢/退貨機號', visible: true },
     { field: 'CANCEL_TXN_No', header: '作廢/退貨序號', visible: true },
-    { field: 'Close_Date', header: '結帳日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'Close_Date', header: '結帳日期', visible: true, format: formatDate },
     { field: 'Close_Ecr_No', header: '結帳機號', visible: true },
     { field: 'Close_Txn_No', header: '結帳序號', visible: true },
     // 隱藏不需要顯示的欄位
@@ -91,13 +94,16 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   floorOptions: any[] = [];
   buildingOptions: any[] = [];
   orgOptions: any[] = [];
+  ecrOptions: any[] = [];
+  tltOptions: any[] = [];
 
   constructor(
     private tls26030Service: TLS26030Service,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
     private tls51080Service: Tls51080Service,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -136,5 +142,21 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
       .subscribe((response) => {
         this.orgOptions = response.Data;
       });
+
+    // 收銀機號下拉
+    this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.ecrOptions = options.Data.map(item => ({
+        label: item.Name,
+        value: item.No
+      }));
+    });
+
+    // 專櫃編號下拉
+    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.tltOptions = options.Data.map(item => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No
+      }));
+    });
   }
 }

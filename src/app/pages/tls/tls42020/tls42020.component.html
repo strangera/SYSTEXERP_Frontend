@@ -56,6 +56,6 @@
         [submitted]="submitted"></app-radiobutton>
     </div>
   </form>
-  <app-file-upload [accept]="'.xlsx,.xls'" [customUpload]="true" (uploadHandler)="onFileUpload($event)"
+  <app-file-upload #fileUpload [accept]="'.xlsx,.xls'" [customUpload]="true" (uploadHandler)="onFileUpload($event)"
     (select)="onFileSelect($event)"></app-file-upload>
 </app-dialog>
