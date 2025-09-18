@@ -16,6 +16,7 @@ import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-se
 import { yesterday } from '@shared/models/system/query-form.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2a050',
@@ -49,6 +50,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     salesDate: [new Date()],
     TXN_DateStart: [yesterday],
     TXN_DateEnd: [yesterday],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+
   });
 
   data: any[] = [];
@@ -95,33 +98,15 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-  override onDetail(rowData: any) {
-    const payload = {
-      TXN_DateStart: rowData.TXN_Date,
-      TXN_DateEnd: rowData.TXN_Date,
-    };
-
-    this.tls2A050Service.queryTLS22050(payload).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.navigateWithState(rowData, {
-            detailData: res.Data || [],
-            queryConditions: this.queryForm.value
-          });
-        }
-      },
-    });
-  }
-
   onSubmit(frm: FormGroup) {
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
+    this.handleSubmit(frm, () => {
       const raw = frm.value;
-
       const params = {
+        PageSize: raw.PageSize ?? 20,
+        PageIndex: raw.PageIndex ?? 1,
+        OrderBy: raw.OrderBy ?? "TXN_Date",
+        Offset: raw.Offset ?? 0,
+        SortBy: raw.SortBy ?? [],
         TXN_DateStart: raw.TXN_DateStart ? this.formatDate(raw.TXN_DateStart) : null,
         TXN_DateEnd: raw.TXN_DateEnd ? this.formatDate(raw.TXN_DateEnd) : null,
         POS_TypeList: raw.POS_TypeList?.includes('all') ? [] : raw.POS_TypeList
@@ -150,9 +135,6 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
             flatData.push(row);
           });
-
-          console.log("flatData:", flatData);
-
           const payNames = Array.from(payNameSet);
           const columns: any[] = [{ field: 'TXN_Date', header: '交易日期', visible: true }];
           const columnGroup: ColumnGroup[] = [];
@@ -172,19 +154,13 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
           this.columnGroup = columnGroup;
           this.data = flatData;
 
-
           this.sumData = res.Data?.SumData ?? {};
-
-          console.log("sumData:", this.sumData);
 
           this.totalRecords = res.TotalCount ?? 0;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.cdr.markForCheck();
         },
       });
-    }
+    });
   }
 
 
