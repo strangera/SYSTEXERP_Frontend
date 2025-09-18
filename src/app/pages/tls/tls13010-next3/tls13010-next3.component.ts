@@ -40,6 +40,8 @@ import { ConditionDataManager } from './Services/condition-data-manager.service'
 import { TableConfigManager } from './Services/table-config-manager.service';
 import { EventHandlerManager } from './Services/event-handler-manager.service';
 import { TABLE_CONFIGURATIONS, TableConfiguration } from './models/tls13010-next3.model';
+import { SmartDateSegmentationService } from './Services/smart-date-manager.service';
+import { UpConditionDataManager } from './Services/updated-condition-data-manager.service';
 
 @Component({
   selector: 'app-tls13010-next3',
@@ -112,8 +114,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     private route: ActivatedRoute,
     // 新增的管理服務
     private conditionDataManager: ConditionDataManager,
+
+    private upconditionDataManager: UpConditionDataManager,
+
     private tableConfigManager: TableConfigManager,
-    private eventHandlerManager: EventHandlerManager
+    private eventHandlerManager: EventHandlerManager,
+    private smartDateService: SmartDateSegmentationService
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -314,16 +320,110 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
 
+
+  /**
+   * 更新新契約初始化方法以使用智能日期
+   */
   private initializeNewContractConditionData(commissionType: string): void {
     console.log('新增模式：初始化條件設定，抽成類型:', commissionType);
 
+    // 直接使用原有方法，不傳額外的日期參數
     this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
       commissionType,
       this.currentTalentId
+      // 移除額外的日期參數
     );
 
     this.categorizeConditionItems();
     console.log('新增模式條件設定初始化完成');
+  }
+
+  /**
+   * 日期變更時的自動調整邏輯
+   */
+  onContractDateChanged(): void {
+    console.log('契約日期變更，重新計算項目日期範圍');
+
+    const { startDate, endDate } = this.getContractDates();
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+
+    if (!startDate || !endDate || !commissionType) {
+      return;
+    }
+
+    // 只對新增項目重新計算日期
+    this.adjustNewItemsDates(commissionType, startDate, endDate);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.infoBubble('已根據契約日期調整項目日期');
+  }
+
+  /**
+   * 調整新增項目的日期
+   */
+  private adjustNewItemsDates(commissionType: string, contractStartDate: string, contractEndDate: string): void {
+    switch (commissionType) {
+      case '1':
+        this.adjustItemsDatesForType(this.fixedRentItems, contractStartDate, contractEndDate);
+        break;
+      case '2':
+        this.adjustItemsDatesForType(this.baseRentHigherItems, contractStartDate, contractEndDate);
+        break;
+      case '4':
+        this.adjustItemsDatesForType(this.baseCommissionItems, contractStartDate, contractEndDate);
+        break;
+      case '5':
+        // 階梯式抽成使用契約起訖日
+        this.adjustGraduatedItemsDates(contractStartDate, contractEndDate);
+        break;
+      case '6':
+        // 包底加階梯使用契約起訖日
+        this.adjustBaseTierItemsDates(contractStartDate, contractEndDate);
+        break;
+    }
+  }
+
+  private adjustItemsDatesForType(items: ConditionItem[], contractStartDate: string, contractEndDate: string): void {
+    const newItems = items.filter(item => (item as any)._status === 'new');
+
+    newItems.forEach((item, index) => {
+      if (index === 0) {
+        // 第一個新增項目使用智能日期邏輯
+        const dateRange = this.smartDateService.getSmartDateRange(
+          this.contractInfoData[0]?.tlt_term_type || '1',
+          contractStartDate,
+          contractEndDate,
+          items.filter(i => (i as any)._status !== 'new')
+        );
+        item.cag_bdate = dateRange.cag_bdate;
+        item.cag_edate = dateRange.cag_edate;
+      }
+    });
+  }
+
+  private adjustGraduatedItemsDates(contractStartDate: string, contractEndDate: string): void {
+    const newItems = this.graduatedItems.filter(item => (item as any)._status === 'new');
+    newItems.forEach(item => {
+      item.cag_bdate = contractStartDate;
+      item.cag_edate = contractEndDate;
+    });
+  }
+
+  private adjustBaseTierItemsDates(contractStartDate: string, contractEndDate: string): void {
+    const newItems = this.baseTierItems.filter(item => (item as any)._status === 'new');
+    newItems.forEach(item => {
+      item.cag_bdate = contractStartDate;
+      item.cag_edate = contractEndDate;
+    });
+  }
+
+  private getDefaultStartDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  private getDefaultEndDate(): string {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
+    return date.toISOString().split('T')[0];
   }
 
   private async loadExistingConditionData(): Promise<void> {
@@ -674,76 +774,251 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
   }
 
-  // ===== 新增項目方法 =====
+  // ===== 智能新增項目方法 =====
 
+  /**
+   * 獲取契約起訖日期
+   */
+  private getContractDates(): { startDate: string; endDate: string } {
+    const contractInfo = this.contractInfoData[0];
+    return {
+      startDate: contractInfo?.tlt_bdate || contractInfo?.tlt_contract_bdate || '',
+      endDate: contractInfo?.tlt_edate || contractInfo?.tlt_contract_edate || ''
+    };
+  }
   onAddFixedRentItem(): void {
-    const result = this.eventHandlerManager.handleAddItem('fixedRent', this.isViewMode, () =>
-      this.conditionDataManager.initializeEmptyConditions('1', this.currentTalentId)[0]
-    );
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
 
-    if (result.shouldAdd && result.newItem) {
-      this.fixedRentItems.push(result.newItem);
-      this.saveConditionDataToWorkflow();
+    try {
+      const { startDate, endDate } = this.getContractDates();
+
+      const newItem = this.conditionDataManager.createSmartConditionItem(
+        '1',
+        this.currentTalentId,
+        startDate,
+        endDate,
+        this.fixedRentItems
+      );
+
+      if (newItem) {
+        // 驗證日期範圍
+        const validation = this.conditionDataManager.validateNewItemDates(
+          newItem,
+          startDate,
+          endDate,
+          this.fixedRentItems
+        );
+
+        if (!validation.isValid) {
+          this.notificationService.warnBubble(`新增失敗: ${validation.errors[0]}`);
+          return;
+        }
+
+        this.fixedRentItems.push(newItem as FixedRentCondition);
+        this.saveConditionDataToWorkflow();
+        this.notificationService.successBubble('已新增固定租金項目');
+
+        console.log('🆕 智能新增固定租金:', {
+          id: newItem.id,
+          dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
+          totalItems: this.fixedRentItems.length
+        });
+      }
+    } catch (error) {
+      console.error('新增固定租金項目失敗:', error);
+      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增固定租金項目失敗');
     }
   }
 
+  /**
+  * 智能新增底租抽成取高者項目
+  */
   onAddBaseRentHigherItem(): void {
-    const result = this.eventHandlerManager.handleAddItem('baseRentHigher', this.isViewMode, () =>
-      this.conditionDataManager.initializeEmptyConditions('2', this.currentTalentId)[0]
-    );
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
 
-    if (result.shouldAdd && result.newItem) {
-      this.baseRentHigherItems.push(result.newItem);
-      this.saveConditionDataToWorkflow();
+    try {
+      const { startDate, endDate } = this.getContractDates();
+
+      const newItem = this.conditionDataManager.createSmartConditionItem(
+        '2',
+        this.currentTalentId,
+        startDate,
+        endDate,
+        this.baseRentHigherItems
+      );
+
+      if (newItem) {
+        // 驗證日期範圍
+        const validation = this.conditionDataManager.validateNewItemDates(
+          newItem,
+          startDate,
+          endDate,
+          this.baseRentHigherItems
+        );
+
+        if (!validation.isValid) {
+          this.notificationService.warnBubble(`新增失敗: ${validation.errors[0]}`);
+          return;
+        }
+
+        this.baseRentHigherItems.push(newItem as BaseRentHigherCondition);
+        this.saveConditionDataToWorkflow();
+        this.notificationService.successBubble('已新增底租抽成取高者項目');
+
+        console.log('🆕 智能新增底租抽成取高者:', {
+          id: newItem.id,
+          dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
+          totalItems: this.baseRentHigherItems.length
+        });
+      }
+    } catch (error) {
+      console.error('新增底租抽成取高者項目失敗:', error);
+      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增底租抽成取高者項目失敗');
     }
   }
 
+  /**
+ * 智能新增包底抽成項目
+ */
   onAddBaseCommissionItem(): void {
-    const result = this.eventHandlerManager.handleAddItem('baseCommission', this.isViewMode, () =>
-      this.conditionDataManager.initializeEmptyConditions('4', this.currentTalentId)[0]
-    );
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
 
-    if (result.shouldAdd && result.newItem) {
-      this.baseCommissionItems.push(result.newItem);
-      this.saveConditionDataToWorkflow();
+    try {
+      const { startDate, endDate } = this.getContractDates();
+
+      const newItem = this.upconditionDataManager.createSmartConditionItem(
+        '4',
+        this.currentTalentId,
+        startDate,
+        endDate,
+        this.baseCommissionItems
+      );
+
+      if (newItem) {
+        // 驗證日期範圍
+        const validation = this.upconditionDataManager.validateNewItemDates(
+          newItem,
+          startDate,
+          endDate,
+          this.baseCommissionItems
+        );
+
+        if (!validation.isValid) {
+          this.notificationService.warnBubble(`新增失敗: ${validation.errors[0]}`);
+          return;
+        }
+
+        this.baseCommissionItems.push(newItem as BaseCommissionCondition);
+        this.saveConditionDataToWorkflow();
+        this.notificationService.successBubble('已新增包底抽成項目');
+
+        console.log('🆕 智能新增包底抽成:', {
+          id: newItem.id,
+          dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
+          totalItems: this.baseCommissionItems.length
+        });
+      }
+    } catch (error) {
+      console.error('新增包底抽成項目失敗:', error);
+      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增包底抽成項目失敗');
     }
   }
 
+  /**
+   * 智能新增階梯式抽成項目
+   */
   onAddGraduatedItem(): void {
-    const result = this.eventHandlerManager.handleAddItem('graduated', this.isViewMode, () => {
-      // 傳入現有項目以計算正確序號
-      const newItem = this.conditionDataManager.initializeEmptyConditions(
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
+
+    try {
+      const { startDate, endDate } = this.getContractDates();
+
+      const newItem = this.upconditionDataManager.createSmartConditionItem(
         '5',
         this.currentTalentId,
+        startDate,
+        endDate,
         this.graduatedItems
-      )[0] as GraduatedCommissionCondition;
+      );
 
-      // 不需要再次設定 seq_no，因為已在 createGraduatedItem 中正確設定
-      return newItem;
-    });
+      if (newItem) {
+        const graduatedItem = newItem as GraduatedCommissionCondition;
 
-    if (result.shouldAdd && result.newItem) {
-      this.graduatedItems.push(result.newItem);
-      this.saveConditionDataToWorkflow();
+        this.graduatedItems.push(graduatedItem);
+        this.saveConditionDataToWorkflow();
+        this.notificationService.successBubble('已新增階梯式抽成項目');
+
+        console.log('🆕 智能新增階梯式抽成:', {
+          id: graduatedItem.id,
+          seqNo: graduatedItem.seq_no,
+          dateRange: `${graduatedItem.cag_bdate} ~ ${graduatedItem.cag_edate}`,
+          amountRange: `${graduatedItem.start_number} ~ ${graduatedItem.end_number}`,
+          totalItems: this.graduatedItems.length
+        });
+      }
+    } catch (error) {
+      console.error('新增階梯式抽成項目失敗:', error);
+      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增階梯式抽成項目失敗');
     }
   }
 
+  /**
+   * 智能新增包底加階梯項目
+   */
   onAddBaseTierItem(): void {
-    const result = this.eventHandlerManager.handleAddItem('baseTier', this.isViewMode, () => {
-      // 傳入現有項目以計算正確序號
-      const newItem = this.conditionDataManager.initializeEmptyConditions(
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
+
+    try {
+      // 先檢查是否可以新增
+      const canAddResult = this.smartDateService.canAddBaseTierItem(this.baseTierItems);
+      if (!canAddResult.canAdd) {
+        this.notificationService.warnBubble(canAddResult.reason || '無法新增包底加階梯項目');
+        return;
+      }
+
+      const { startDate, endDate } = this.getContractDates();
+
+      const newItem = this.upconditionDataManager.createSmartConditionItem(
         '6',
         this.currentTalentId,
+        startDate,
+        endDate,
         this.baseTierItems
-      )[0] as BaseTierCondition;
+      );
 
-      // 不需要再次設定 seq_no，因為已在 createBaseTierItem 中正確設定
-      return newItem;
-    });
+      if (newItem) {
+        const baseTierItem = newItem as BaseTierCondition;
 
-    if (result.shouldAdd && result.newItem) {
-      this.baseTierItems.push(result.newItem);
-      this.saveConditionDataToWorkflow();
+        this.baseTierItems.push(baseTierItem);
+        this.saveConditionDataToWorkflow();
+        this.notificationService.successBubble('已新增包底加階梯項目');
+
+        console.log('🆕 智能新增包底加階梯:', {
+          id: baseTierItem.id,
+          seqNo: baseTierItem.seq_no,
+          dateRange: `${baseTierItem.cag_bdate} ~ ${baseTierItem.cag_edate}`,
+          amountRange: `${baseTierItem.start_number} ~ ${baseTierItem.end_number}`,
+          totalItems: this.baseTierItems.length
+        });
+      }
+    } catch (error) {
+      console.error('新增包底加階梯項目失敗:', error);
+      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增包底加階梯項目失敗');
     }
   }
 

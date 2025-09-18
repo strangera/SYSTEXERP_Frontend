@@ -9,7 +9,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls22050Service } from '../../../service/api/tls/tls22050.service';
+import { Tls22050Service } from '@service/api/tls/tls22050.service';
 import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { NgClass } from '@angular/common';
@@ -152,7 +152,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
       };
 
       this.tls22050Service.queryTLS22050(payload).subscribe({
-        next: (res) => {
+        next: (res: { Data: any[]; TotalCount: number }) => {
           this.data = (res.Data ?? []).flatMap((group: any) =>
             (group._DetailList ?? []).map((detail: any) => ({ PAY_Name: group.PAY_Name, ...detail }))
           );
@@ -163,10 +163,6 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
           this.bookPayCntSum = this.data.reduce((sum, cur) => sum + Number(cur.BOOK_PayAmt || 0), 0);
           this.actPayAmtSum = this.data.reduce((sum, cur) => sum + Number(cur.ACT_PayAmt || 0), 0);
           this.overPayAmtSum = this.data.reduce((sum, cur) => sum + Number(cur.OVER_PayAmt || 0), 0);
-        },
-        error: (err) => {
-          console.error('TLS22050 查詢失敗', err);
-          this.loading = false;
         },
       });
     });

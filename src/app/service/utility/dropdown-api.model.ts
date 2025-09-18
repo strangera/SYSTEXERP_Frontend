@@ -32,6 +32,16 @@ export interface BusClassItem extends IDropdownItem {
 }
 
 /**
+ * 查詢 TLTBUSSCLASS 回傳的項目型別
+ */
+export interface BusSClassItem extends IDropdownItem {
+  bus_type: string;
+  bus_type_name: string;
+  bus_class: string;
+  bus_class_name: string;
+}
+
+/**
  * 查詢 TLTBUSSCLASS 時的請求 body
  */
 export interface BusSClassQuery {

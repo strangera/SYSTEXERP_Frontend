@@ -1,6 +1,7 @@
+import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -12,73 +13,148 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Router } from '@angular/router';
-
+import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service'; // ★ 引入 Service
+import { DropDownListService, IDropdownItem, IAPS1003Request } from './../../../service/utility/dropDownList.service';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
-  styleUrl: './tls2d010.component.scss',
+  styleUrls: ['./tls2d010.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, MultiSelectComponent, CalendarComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RadiobuttonComponent,
+    MultiSelectComponent,
+    CalendarComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
 export class TLS2D010Component extends BasicQueryPageComponent<any> implements OnInit {
-  currentCreateType: 'normal' | 'counter' = 'counter'
+  currentCreateType: 'normal' | 'counter' = 'counter';
   queryForm = this.formBuilder.group({
-    tlt_no: [[]], // 專櫃編號
-    CAP_Item: [[]],
-    AccNo: [[Validators.maxLength(8)]], // 會計科目代號
-    org_id: [[] as number[], [Validators.required]], // 組織
+    tlt_noList: [[]], // 專櫃編號
+    CAP_ItemList: [[]],
+    AccNoList: [[]], // 會計科目代號
+    org_idList: [[] as number[]], // 組織
     tpy_date: [], // 扣款年月
     CRT_USR_No: [], // 扣款日期
-    pod_no: [], // 維護日
-    GUI_FLAG: [], // 建立者
+    pod_noList: [], // 維護日
+    GUI_FLAG: [this.authService.currentUserValue?.user_No], // 建立者
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_no', header: '專櫃名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'CAP_Item', header: '扣款項目', visible: true },
+    { field: 'CAP_Name', header: '扣款名稱', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
     { field: 'org_id', header: '組織代號', visible: true },
-    { field: 'org_id', header: '組織名稱', visible: true },
-    { field: 'pod_no', header: '活動名稱', visible: true },
-    { field: 'Date', header: '扣款年月', visible: true },
+    { field: 'Org_Name', header: '組織名稱', visible: true },
+    { field: 'pod_desc', header: '活動名稱', visible: true },
+    { field: 'tpy_date', header: '扣款日期', visible: true },
     { field: 'GUI_FLAG', header: '是否開立發票', visible: true },
     { field: 'tpy_net', header: '扣款(未稅)', visible: true },
     { field: 'remarks', header: '備註', visible: true },
-
   ];
 
   totalRecords = 0;
   data: any[] = [];
-
-  tlt_noOptions: any[] = [];
-  org_idOptions: any[] = []
-  CAP_ItemOptions: any[] = [];
-  CRT_USR_NoOptions: any[] = [];
+  AccNoOptions: IDropdownItem[] = [];
+  tlt_noOptions: IDropdownItem[] = [];
+  org_idOptions: IDropdownItem[] = [];
+  CAP_ItemOptions: IDropdownItem[] = [];
+  CRT_USR_NoOptions: IDropdownItem[] = [];
   pod_noOptions: any[] = [];
 
   get f() {
     return this.queryForm.controls;
   }
+
   constructor(
     router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private tls2d010Service: Tls2d010Service,
+    private dropDownListService: DropDownListService,
+    public sharedDropdownService: SharedDropdownService,
   ) {
     super();
   }
+
   ngOnInit(): void {
     this.initializePage('TLS2D010', '/TLS/TLS2D010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.dropDownListService.queryPOS2001_DropDownList().subscribe((res) => {
+      this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No ?? item.NO,
+        label: `${item.No ?? item.NO}-${item.Name ?? item.NAME}`,
+        No: item.No ?? item.NO,
+        Name: item.Name ?? item.NAME
+      }));
+    });
+    this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).subscribe((res) => {
+      this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No,
+        label: `${item.No}-${item.Name}`,
+        No: item.No,
+        Name: item.Name
+      }));
+    });
+    this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
+      this.AccNoOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No,
+        label: `${item.No}-${item.Name}`,
+        No: item.No,
+        Name: item.Name
+      }));
+    });
+    this.dropDownListService.querySYS3100_DropDownList().subscribe(
+      (res) => {
+        this.org_idOptions = (res?.Data || []).map((item: any) => ({
+          value: item.No,                // 綁定值
+          label: `${item.No}-${item.Name}`, // 顯示文字
+          No: item.No,
+          Name: item.Name
+        }));
+      },
+    );
+    this.dropDownListService.queryTBLUSER_DropDownList().subscribe((res) => {
+      this.CRT_USR_NoOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No,               // 綁定值
+        label: `${item.No}-${item.Name}`, // 顯示文字
+        No: item.No,
+        Name: item.Name
+      }));
+    });
+    this.sharedDropdownService.getActivityOptions(1001, 'A01', [], '').subscribe({
+      next: (options) => {
+        this.pod_noOptions = options.map((item: any) => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+        console.log('活動清單載入完成:', this.pod_noOptions);
+      },
 
+    });
   }
-
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-
+    const payload = frm.value;
+    this.loading = true; // 如果 BasicQueryPageComponent 有 loading 狀態
+    this.tls2d010Service.queryTLS2D010(payload).subscribe({
+      next: (res) => {
+        this.data = res?.Data || [];
+        this.totalRecords = res?.Total || this.data.length;
+      },
+      error: (err) => {
+        console.error('查詢失敗:', err);
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
   }
-
-
 }
-

@@ -40,7 +40,8 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showAddButton: true,
     showBatchDelete: true,
     showCheckBox: true,
-    showActionColumn: false
+    showActionColumn: false,
+    autoAddRowOnTab: true,
   },
   {
     commissionType: '2',
@@ -60,7 +61,9 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showAddButton: true,
     showBatchDelete: true,
     showCheckBox: true,
-    showActionColumn: false
+    showActionColumn: false,
+    autoAddRowOnTab: true,
+
   },
   {
     commissionType: '4',
@@ -80,7 +83,9 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showAddButton: true,
     showBatchDelete: true,
     showCheckBox: true,
-    showActionColumn: false
+    showActionColumn: false,
+    autoAddRowOnTab: true,
+
   },
   {
     commissionType: '5',
