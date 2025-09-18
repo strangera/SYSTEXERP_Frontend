@@ -95,11 +95,11 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
     const current = this.qf().AccNo.value?.substring(0, 3);
     // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
     if (!classNo.length) return;
-    outerLoop: for (let i = 0; i < classNo.length; i++) {
-      for (const cn of classNo) if (this.service.classNoMap.get(cn) === current) break outerLoop;
-      if (i === classNo.length - 1) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
-    }
+
+    const match = classNo.some(cn => this.service.classNoMap.get(cn) === current);
+    if (!match) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
   });
+
 
   columns: (Omit<Column, 'field'> & { field: keyof testDorm; })[] = [ //先放可視範圍內的
     { field: 'AccNo', header: '科目代號' }, // 科目代號
