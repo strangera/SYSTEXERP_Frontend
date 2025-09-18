@@ -1,6 +1,9 @@
 <div class="card tls52050">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="匯出EXCEL範本" (click)="exportExcel()"></app-button>
+    <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xlsx,.xls"
+      (onSelect)="importExcel($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
@@ -49,8 +52,7 @@
   <app-table tableKey="TLS52050" dataKey="MAM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [showDelete]="false" [multiSortMeta]="queryForm.controls.SortBy.value"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [addButton]="addButton" [buttonsLoading]="btnLoading()" [showExcel]="true"
-    (exportExcel)="exportExcel()" (importExcel)="importExcel($event)">
+    [loading]="loading" [addButton]="addButton" [buttonsLoading]="btnLoading()">
   </app-table>
 </div>
 <app-dialog [visible]="dialogVisible()" header="選擇商品明細" (visibleChange)="dialogVisible.set($event)"

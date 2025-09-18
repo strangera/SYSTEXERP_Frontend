@@ -184,7 +184,11 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     this.excelExportService.exportTemplate(this.excelColumns, '進價/售價變價作業Excel範本');
   }
   importExcel(event: FileSelectEvent) {
-    //TODO: 檔案直接打API
+    console.log(event.files[0]);
+    this.tls52050Service.uploadTLS52050(event.files[0]).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onSubmit(this.queryForm);
+    })
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
