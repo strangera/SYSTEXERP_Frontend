@@ -102,7 +102,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2D010', '/TLS/TLS2D010CRU', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownListService.queryPOS2001_DropDownList().subscribe((res) => {
+    this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((res) => {
       this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
         value: item.No ?? item.NO,
         label: `${item.No ?? item.NO}-${item.Name ?? item.NAME}`,

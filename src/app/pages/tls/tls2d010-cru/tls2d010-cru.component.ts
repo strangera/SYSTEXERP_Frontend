@@ -158,7 +158,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ===== 專櫃 & 活動選單 =====
   private loadTltAndPodOptions(): void {
-    this.dropDownListService.queryPOS2001_DropDownList().subscribe((res) => {
+    this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((res) => {
       this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
         value: item.No ?? item.NO,
         label: `${item.No ?? item.NO}-${item.Name ?? item.NAME}`,
@@ -254,7 +254,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   // ===== 載入 normal 欄位動態下拉 =====
   private loadAndSetupColumnsNormal(): void {
-    const tltNo$ = this.dropDownListService.queryPOS2001_DropDownList().pipe(
+    const tltNo$ = this.dropDownListService.queryTLTTALENT_DropDownList().pipe(
       map((res: any) =>
         (res?.Data ?? []).map((x: any) => ({
           label: `${x.No}-${x.Name}`,
@@ -333,7 +333,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
-  // ===== 送出 =====
   // ===== 送出 =====
   onSubmit(): void {
     this.submitted = true;
