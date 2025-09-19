@@ -1,4 +1,3 @@
-import { NgIf } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -22,7 +21,6 @@ import { finalize, tap } from 'rxjs';
   styleUrl: './fin52030-cru.component.scss',
   standalone: !0,
   imports: [
-    NgIf,
     CheckboxModule,
     FormsModule,
     PanelModule,
