@@ -4,7 +4,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { debounceTime, finalize, withLatestFrom } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { IGetBudgetAmountRequest, IPODetail, IPOS2004DetailData, IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, ITLS52010Request, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -24,7 +24,6 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { createPaginationConfig } from '@shared/componentkit/table-report/table-report.model';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({

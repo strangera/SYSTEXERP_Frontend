@@ -100,7 +100,7 @@ export class TLS21020Service {
     this.dropdownApi.queryGls1005()
       .pipe(
         take(1),
-        tap(res => res && this.GLS1005Data.set(res ?? [])),
+        // tap(res => res && this.GLS1005Data.set(res ?? [])), // !! 幫我修正一下這段，DropdownApiService還在調整中 先使用DropDownListService
         finalize(() => this.logger.debug(`GLS1005 Data:`, [this.GLS1005Data()])),
       ).subscribe();
   }

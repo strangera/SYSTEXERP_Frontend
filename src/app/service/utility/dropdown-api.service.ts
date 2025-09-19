@@ -193,8 +193,10 @@ export class DropdownApiService {
   // --- 會計與扣款相關 ---
 
   /** 查詢會計科目設定檔(GLS1005) */
-  queryGls1005(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGLS1005_DropDownList');
+  queryGls1005(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(
+      shareReplay(1)// 避免重複查詢
+    );
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 支存、活存、定存) */

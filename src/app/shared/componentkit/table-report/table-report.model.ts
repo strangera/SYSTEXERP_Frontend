@@ -51,20 +51,6 @@ export interface ColumnGroupRow {
   columns: ColumnGroup[];
 }
 
-export interface LazyLoadEvent {
-  pageIndex: number; // 當前頁碼
-  pageSize: number; // 每頁顯示的數量
-  SortBy: SortMeta[]; // 排序欄位
-}
-
-export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
-  return {
-    pageSize: [20],
-    pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [defaultSortBy ?? []],
-  };
-};
-
 export interface AddButton {
   label: string;
   icon: string;

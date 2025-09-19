@@ -1,138 +1,64 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-//
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
-import { ValidationService } from '../../../shared/service/validation.service';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Fin31010Service, QueryFin31010Response } from '@service/api/fin/fin31010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 //1.3.1.1 收款項目對照會計科目維護 CRU
 @Component({
-    selector: 'app-fin31010-cru',
-    templateUrl: './fin31010-cru.component.html',
-    styleUrl: './fin31010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin31010-cru',
+  templateUrl: './fin31010-cru.component.html',
+  standalone: true,
+  imports: [CalendarComponent, DropdownComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, NgIf, AsyncPipe, InputTextareaComponent]
 })
-export class FIN31010CRUComponent extends BasicCrupageComponent implements OnInit {
-  // ----------------------------------------------------------------
+export class FIN31010CRUComponent extends BasicCruPageComponent<QueryFin31010Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    receiveID: [, [Validators.required, Validators.maxLength(2)]], // 收款項目代號
-    receiveName: ['', [Validators.required, Validators.maxLength(16)]], // 收款項目名稱
-    accountingID: [, [Validators.required, Validators.maxLength(8)]], // 會計科目代號
-    remark: ['', [Validators.maxLength(30)]], // 備註
+    id: [null], // PK
+    CAP_Item: [{ value: '系統自動給號', disabled: true }], // 收款項目代號
+    CAP_Name: [null, [Validators.maxLength(30)]], // 收款項目名稱
+    AccNo: [null], // 會計科目代號
+    Remark: [null, [Validators.maxLength(100)]], // 備註
+    CRT_Date: [{ value: null, disabled: true }], // CRT_USR_No
+    CRT_USR_No: [{ value: null, disabled: true }], // CRT_USR_No
+    CRT_USR_Name: [{ value: null, disabled: true }], // CRT_USR_Name
+    UPD_Date: [{ value: null, disabled: true }], // UPD_Date
+    UPD_USR_No: [{ value: null, disabled: true }], // UPD_USR_No
+    UPD_USR_Name: [{ value: null, disabled: true }], // UPD_USR_Name
   });
-  //
-  // ----------------------------------------------------------------
-  //
-  ticketOptions: any[] = [
-    { value: 1, label: '單一' },
-    { value: 2, label: '合併' },
-  ];
+  AccNoOptions = this.dropdown.queryGls1005();
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
+    private readonly fin31010Service: Fin31010Service,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '130001';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+    this.initializePage('FIN31010', this.dataForm);
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+    this.handleSubmit(frm, () => {
+      const $req = this.isFormCreateable ? this.fin31010Service.insertFin31010(frm.getRawValue()) : this.fin31010Service.updateFin31010(frm.getRawValue());
+      $req.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else {
+          this.onCancel();
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCancel() {
-    this.router.navigate(['/FIN3000/FIN31010']);
+      });
+    });
   }
 }

@@ -1,125 +1,88 @@
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Fin31010Service, QueryFin31010Response } from '@service/api/fin/fin31010.service';
+import { finalize } from 'rxjs';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { AsyncPipe } from '@angular/common';
 
 //1.3.1.1 收款項目對照會計科目維護
 @Component({
-    selector: 'app-fin31010',
-    templateUrl: './fin31010.component.html',
-    styleUrl: './fin31010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-fin31010',
+  templateUrl: './fin31010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+    MultiSelectComponent,
+    AsyncPipe
+  ]
 })
-export class FIN31010Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    receiveID: [, [Validators.maxLength(2)]], // 收款項目代號
-    receiveName: ['', [Validators.maxLength(16)]], // 收款項目名稱
-    accountingID: [, [Validators.maxLength(8)]], // 會計科目代號
-    remark: ['', [Validators.maxLength(30)]], // 備註
+export class FIN31010Component extends BasicQueryPageComponent<QueryFin31010Response> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    CAP_Item: [null, [Validators.maxLength(2)]], // 收款項目代號
+    CAP_Name: [null, [Validators.maxLength(30)]], // 收款項目名稱
+    AccNo: [null], // 會計科目代號
+    Remark: [null, [Validators.maxLength(100)]], // 備註
+    ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  totalRecords = 0;
+  data: QueryFin31010Response[] = [];
+  columns: Column[] = [
+    { field: 'CAP_Item', header: '收款項目代號', visible: true },
+    { field: 'CAP_Name', header: '收款項目名稱', visible: true },
+    { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'AccCname', header: '會計科目名稱', visible: true },
+    { field: 'Remark', header: '備註', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '收款項目代號', visible: true },
-    { field: 'col2', header: '收款項目名稱', visible: true },
-    { field: 'col3', header: '會計科目代號', visible: true },
-    { field: 'col4', header: '備註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-
+  selectedRows: QueryFin31010Response[] = [];
+  AccNoOptions = this.dropdown.queryGls1005();
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private readonly fin31010Service: Fin31010Service,
+    private readonly dropdown: DropdownApiService,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '130001';
-    this.cruPage = '/FIN3000/FIN31010CRU';
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN31010', 'fin/fin31010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.fin31010Service.queryFin31010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
+    });
   }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  onDelete() {
+    const capItems = this.selectedRows.map(item => item.CAP_Item);
+    this.fin31010Service.deleteFin31010(capItems).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.onSubmit(this.queryForm); // 重新載入資料
+    });
   }
 }
