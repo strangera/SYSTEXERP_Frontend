@@ -596,6 +596,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls55050', loadComponent: () => import('./tls55050/tls55050.component').then(m => m.TLS55050Component) },
   // 暫存傳票審核管理作業
   { path: 'tls55060', loadComponent: () => import('./tls55060/tls55060.component').then(m => m.TLS55060Component) },
+    // 銷貨日報查詢列印
+  { path: 'tls55070', loadComponent: () => import('./tls55070/tls55070.component').then(m => m.TLS55070Component) },
   // 商品庫存查詢作業
   { path: 'tls56010', loadComponent: () => import('./tls56010/tls56010.component').then(m => m.TLS56010Component) },
   // 商品領用(內部)作業

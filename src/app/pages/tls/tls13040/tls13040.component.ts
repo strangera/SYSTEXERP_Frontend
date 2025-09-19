@@ -244,7 +244,7 @@ this.data = rows.map((r: any, i: number) => ({
           this.totalRecords = res.TotalCount || this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, formValue);
         } else {
-          this.messageService.errorBubble('查詢失敗');
+          
         }
       },
       error: () => {
