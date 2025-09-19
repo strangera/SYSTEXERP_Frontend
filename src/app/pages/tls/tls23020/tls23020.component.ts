@@ -43,6 +43,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { HttpResponse } from '@angular/common/http';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { debounceTime } from 'rxjs/operators';
 
 @UntilDestroy()
 @Component({
@@ -129,6 +130,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
+    showSummary: [false],
     ...createPaginationConfig([
       { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No', order: 1 },
@@ -175,6 +177,11 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23020', 'tls/tls23020cru', this.queryForm, (form) =>
       this.onSubmit(form),
     );
+    this.queryForm.valueChanges
+  .pipe(untilDestroyed(this), debounceTime(300))
+  .subscribe(() => {
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+  });
     this.queryForm.controls.TXN_Month.valueChanges
   .pipe(untilDestroyed(this))
   .subscribe((d: Date | null) => {
@@ -325,6 +332,7 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
 };
  
   onSubmit(form: FormGroup): void {
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     this.handleSubmit(form, () => {
       // ① 組 payload（條件 + 分頁/排序）
       const condPayload = this.buildPayload(this.queryForm.getRawValue());
@@ -613,12 +621,19 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
       __isBackendTotal: true,
     };
   }
+onToggleSummary() {
+  // 改用表單控制 showSummary（template 已綁 formControlName）
+  const isSummary = !!this.queryForm.value.showSummary;
 
-  onToggleSummary() {
-    // 切換檢視時，重設頁碼並重新查詢；匯出按鈕在明細表 header，彙總不顯示
-    this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
-    this.onSubmit(this.queryForm);
-  }
+  // 切換檢視時，重設頁碼
+  this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+
+  // 儲存目前條件（含 showSummary）
+  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+
+  // 重新查詢
+  this.onSubmit(this.queryForm);
+}
 
   // ===== 表格欄位 =====
   columns = [
