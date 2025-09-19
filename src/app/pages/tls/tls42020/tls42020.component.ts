@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { Observable } from 'rxjs';
@@ -53,6 +53,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     ...createPaginationConfig([])
   });
 
+  @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
   totalRecords = 0;
   data: TLS42020Data[] = [];
   selectedItems: TLS42020Data[] = [];
@@ -202,8 +203,12 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     this.tls42020Service.uploadTLS42020(file, this.queryForm2.value.uploadType!).pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Status === '0000') {
         this.messageService.successBubble(res.Message);
+        // 使用封裝的清空方法
+        this.fileUploadComponent.clearFiles();
+        // 關閉對話框
+        this.dialogVisible = false;
       } else {
-        this.messageService.errorBubble(res.Message);
+        this.messageService.errorBubble(res.Data.Errors[0]);
       }
     });
   }

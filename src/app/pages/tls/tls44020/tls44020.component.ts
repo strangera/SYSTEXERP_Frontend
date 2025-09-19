@@ -90,21 +90,36 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
-  getBankStatus(row: any, bank: '中信' | '聯信'): '關機' | '離線' | '交易中' {
+  getBankStatus(
+    row: any,
+    bank: '中信' | '聯信'
+  ): '關機' | '離線' | '交易中' {
     const edcKey = bank === '中信' ? 'EDC_Online1' : 'EDC_Online2';
 
-    // 若兩個 EDC 都離線 → 視為關機
+    // 額外判斷：EOS_Status = 5 → 強制關機
+    if (row.EOS_Status === 5) {
+      return '關機';
+    }
+
+    // 若兩個 EDC 都離線 → 視為關機（保險判斷，後端已整合時也能用）
     if (row.EDC_Online1 === 'N' && row.EDC_Online2 === 'N') {
       return '關機';
     }
 
-    // 判斷個別 EDC 狀態
-    if (row[edcKey] === 'Y') {
-      return '交易中';
-    } else {
+    // 收銀機沒關機，POS 離線 (EOS_Online=0) → 離線
+    if (row.EOS_Online === 0) {
       return '離線';
     }
+
+    // 收銀機沒關機，POS 在線，刷卡機在線 → 交易中
+    if (row[edcKey] === 'Y') {
+      return '交易中';
+    }
+
+    // 其他情況（例如 POS 在線但 EDC 離線） → 離線
+    return '離線';
   }
+
   isShutdown(row: any): boolean {
     return row.EDC_Online1 === 'N' && row.EDC_Online2 === 'N';
   }

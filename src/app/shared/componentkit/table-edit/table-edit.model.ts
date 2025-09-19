@@ -1,10 +1,12 @@
+import { CalendarTypeView } from "primeng/calendar";
+
 export interface EditColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
-  type?: 'input' | 'inputNumber' | 'dropdown'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'date'; // 欄位類型
   groupField?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
@@ -19,6 +21,15 @@ export interface EditColumn {
   optionValue?: string; // 下拉選單 optionValue
   templateLabel?: string; // 模板欄位 label
   showClear?: boolean; // 是否顯示清除按鈕
+  // date
+  timeOnly?: boolean;
+  showTime?: boolean;
+  hourFormat?: string;
+  dateFormat?: string;
+  showSeconds?: boolean;
+  view?: CalendarTypeView;
+  minDate?: Date;
+  maxDate?: Date;
   // 事件
   calculate?: (rowData: any, value: any) => Record<string, any>;
   onFocus?: (rowData: any, value: any, col: EditColumn, index: number) => void;

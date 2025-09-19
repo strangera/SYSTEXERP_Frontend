@@ -165,6 +165,20 @@ export interface TDS1007Item {
   INV_GUIName: string;
 }
 
+export interface TALPORDERMRequest {
+  mid?: number;
+  str_no?: string;
+  pod_type?: string[];
+  pod_status?: string;
+}
+export interface TALPORDERMResponse {
+  pod_no?: string;
+  pod_type?: string;
+  pod_desc?: string;
+  pod_sdate?: string;
+  pod_edate?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -427,5 +441,8 @@ export class DropDownListService {
   queryPOS1008DropDownList(): Observable<ApiResponse<{ TSB_Name: string }[]>> {
     return this.http.post<ApiResponse<{ TSB_Name: string }[]>>(`${this.apiUrl}/queryPOS1008DropDownList`, {});
   }
-
+ // 載入活動清單 (TALPORDERM)
+  getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
+    return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);
+  }
 }

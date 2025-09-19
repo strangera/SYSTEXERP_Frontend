@@ -16,7 +16,6 @@ import { bus_classColumns, bus_classFieldColumns, bus_sclassColumns, bus_sclassF
 import { debounceTime, finalize } from 'rxjs';
 import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputGroupComponent } from '@shared/componentkit/input-group/input-group.component';
 import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service';
 import { ButtonModule } from 'primeng/button';
@@ -26,7 +25,7 @@ import { ButtonModule } from 'primeng/button';
   selector: 'app-tls2g040',
   templateUrl: './tls2g040.component.html',
   standalone: true,
-  imports: [NgIf, ButtonModule, InputGroupComponent, DropdownComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  imports: [NgIf, ButtonModule, InputGroupComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
 export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> implements OnInit {
   queryForm = this.formBuilder.group({

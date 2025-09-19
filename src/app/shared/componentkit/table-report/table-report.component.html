@@ -29,7 +29,7 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th class="w-1rem text-center" rowspan="2">序號</th>
+        <th class="w-1rem text-center" rowspan="2" pFrozenColumn>序號</th>
         <th class="w-1rem group-header text-center" rowspan="2" *ngIf="showCheckBox">
           <p-tableHeaderCheckbox />
         </th>
@@ -71,7 +71,7 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th class="w-1rem text-center">序號</th>
+        <th class="w-1rem text-center" pFrozenColumn>序號</th>
         <th class="w-1rem text-center" *ngIf="showCheckBox">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
@@ -92,7 +92,7 @@
       [style]="{'height': showManage ? '40.6px' : '24px'}"
       [pSelectableRowDisabled]="!rowSelectableWrapper(rowData) || disabled" [pReorderableRow]="index"
       [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">
-      <td class="text-center">{{ rowIndex + 1 }}</td>
+      <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <td *ngIf="showCheckBox">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
           [value]="rowData" [disabled]="!rowSelectableWrapper(rowData) || disabled" />
@@ -132,7 +132,7 @@
   </ng-template>
   <ng-template pTemplate="footer">
     <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
-      <td class="text-center" [colSpan]="showCheckBox ? 2 : 1">
+      <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
         <span class="font-bold">總計</span>
       </td>
       <ng-container *ngFor="let col of columns">
@@ -146,6 +146,11 @@
 
       <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
     </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
+    <div class="flex align-items-center justify-content-end p-2">
+      總筆數: {{ totalRecords }} 筆
+    </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>

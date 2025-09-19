@@ -102,10 +102,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(frm, () => {
       const raw = frm.value;
       const params = {
-        PageSize: raw.PageSize ?? 20,
-        PageIndex: raw.PageIndex ?? 1,
-        OrderBy: raw.OrderBy ?? "TXN_Date",
-        Offset: raw.Offset ?? 0,
+        PageSize: raw.pageSize ?? 20,
+        PageIndex: raw.pageIndex ?? 1,
         SortBy: raw.SortBy ?? [],
         TXN_DateStart: raw.TXN_DateStart ? this.formatDate(raw.TXN_DateStart) : null,
         TXN_DateEnd: raw.TXN_DateEnd ? this.formatDate(raw.TXN_DateEnd) : null,

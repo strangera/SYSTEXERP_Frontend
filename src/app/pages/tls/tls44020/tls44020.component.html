@@ -15,7 +15,7 @@
         id="queryForm"
         (ngSubmit)="onSubmit(queryForm)"
       >
-       <div class="grid p-fluid">
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
@@ -69,56 +69,33 @@
             ></app-input-text>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="submit" [loading]="loading"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-
       </form>
-        <div class="card mt-5">
-          <!-- TabMenu -->
-          <p-tabMenu
-            [model]="items"
-            [(activeItem)]="activeItem"
-            class="mb-3"
-            (activeItemChange)="onTabChange($event)"
-          ></p-tabMenu>
+      <div class="card mt-5">
+        <!-- TabMenu -->
+        <p-tabMenu
+          [model]="items"
+          [(activeItem)]="activeItem"
+          class="mb-3"
+          (activeItemChange)="onTabChange($event)"
+        ></p-tabMenu>
 
-          <!-- DataView -->
-          <p-dataView [value]="pagedData" [layout]="layout">
-            <!-- Header -->
-            <ng-template pTemplate="header">
-              <div class="w-full">
-                <div
-                  class="flex justify-content-between align-items-center mb-4 mt-2"
-                >
-                  <!-- 搜尋框 -->
-                  <div class="search-bar-container flex-1">
-                    <span class="p-input-icon-left search-bar">
-                      <i class="pi pi-search"></i>
-                      <input
-                        pInputText
-                        type="text"
-                        name="globalFilter"
-                        class="w-full"
-                        placeholder="搜尋專櫃編號、名稱、收銀機代號"
-                        [(ngModel)]="globalFilter"
-                        [ngModelOptions]="{ standalone: true }"
-                        (input)="applyFilter()"
-                      />
-                    </span>
-                  </div>
-
-                  <!-- 切換 layout -->
-                  <p-dataViewLayoutOptions
-                    (layoutChange)="onLayoutChange($event)"
-                  ></p-dataViewLayoutOptions>
-                </div>
-
-                <div class="status-container mb-2">
+        <!-- DataView -->
+        <p-dataView [value]="pagedData" [layout]="layout">
+          <!-- Header -->
+          <ng-template pTemplate="header">
+            <div class="w-full">
+              <!-- 狀態說明 + 切換 layout 同一行 -->
+              <div
+                class="flex justify-content-between align-items-center mb-4 mt-2"
+              >
+                <!-- 狀態說明 -->
+                <div class="status-container">
                   <span class="status-label">狀態說明：</span>
+
                   <div
                     class="status-chip shutdown"
                     style="background: #6c757d; color: #fff"
@@ -141,49 +118,66 @@
                     交易中
                   </div>
                 </div>
-              </div>
-            </ng-template>
 
-            <!-- Grid 模式 -->
-            <ng-template pTemplate="grid" let-row>
-              <div class="custom-grid">
-                <div
-                  class="custom-grid-item"
-                  *ngFor="let row of pagedData"
-                    pTooltip="刷卡機編號(EDC_TmID)<br>刷卡機IP(ECR_IP)"
-                  tooltipPosition="top"
-                >
-                  <div class="p-3 border-1 surface-border surface-card relative">
-                    <div class="status-container-grid grid-status-fixed">
-                      <ng-container *ngIf="isShutdown(row); else edcChips">
-                        <i class="pi pi-desktop shutdown-icon"></i>
-                      </ng-container>
-                      <ng-template #edcChips>
-                        <span [ngClass]="getEdcStatusClass(getBankStatus(row, '中信'))">中信</span>
-                        <span [ngClass]="getEdcStatusClass(getBankStatus(row, '聯信'))">聯信</span>
-                      </ng-template>
-                    </div>
-                    <div class="grid-content">
-                      <div class="grid-title">{{ row.ECR_LocNo }}</div>
-                      <div class="grid-subtitle">
-                        {{ row.TLT_No }} {{ row.TLT_Name }}
-                      </div>
+                <!-- 切換 layout -->
+                <p-dataViewLayoutOptions
+                  (layoutChange)="onLayoutChange($event)"
+                ></p-dataViewLayoutOptions>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- Grid 模式 -->
+          <ng-template pTemplate="grid" let-row>
+            <div class="custom-grid">
+              <div
+                class="custom-grid-item"
+                *ngFor="let row of pagedData"
+                pTooltip="刷卡機編號(EDC_TmID)<br>刷卡機IP(ECR_IP)"
+                tooltipPosition="top"
+              >
+                <div class="p-3 border-1 surface-border surface-card relative">
+                  <div class="status-container-grid grid-status-fixed">
+                    <ng-container *ngIf="isShutdown(row); else edcChips">
+                      <i class="pi pi-desktop shutdown-icon"></i>
+                    </ng-container>
+                    <ng-template #edcChips>
+                      <span
+                        [ngClass]="
+                          getEdcStatusClass(getBankStatus(row, '中信'))
+                        "
+                      >
+                        中信
+                      </span>
+                      <span
+                        [ngClass]="
+                          getEdcStatusClass(getBankStatus(row, '聯信'))
+                        "
+                      >
+                        聯信
+                      </span>
+                    </ng-template>
+                  </div>
+                  <div class="grid-content">
+                    <div class="grid-title">{{ row.ECR_LocNo }}</div>
+                    <div class="grid-subtitle">
+                      {{ row.TLT_No }} {{ row.TLT_Name }}
                     </div>
                   </div>
                 </div>
               </div>
-            </ng-template>
+            </div>
+          </ng-template>
+        </p-dataView>
 
-          </p-dataView>
-
-          <!-- 分頁 -->
-          <p-paginator
-            [rows]="rows"
-            [first]="first"
-            [totalRecords]="filteredData.length"
-            (onPageChange)="onPageChange($event)"
-          ></p-paginator>
-        </div>
+        <!-- 分頁 -->
+        <p-paginator
+          [rows]="rows"
+          [first]="first"
+          [totalRecords]="filteredData.length"
+          (onPageChange)="onPageChange($event)"
+        ></p-paginator>
+      </div>
     </p-accordionTab>
   </p-accordion>
 </div>

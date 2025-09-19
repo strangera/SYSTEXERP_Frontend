@@ -163,7 +163,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="是否為業主收現收現"
+              label="是否為業主收現"
               controlName="cash_yn"
               [options]="whetherOptions"
               optionLabel="label"
@@ -222,12 +222,11 @@
 <div class="col-12 md:col-6 lg:col-4">
   <p-checkbox
     inputId="showSummary"
-    [ngModelOptions]="{ standalone: true }"
-    [(ngModel)]="showSummary"
+    formControlName="showSummary"
     binary="true"
     (onChange)="onToggleSummary()"
-    label="顯示彙總"
-  ></p-checkbox>
+    label="顯示彙總">
+  </p-checkbox>
 </div>
 
 <div class="card">

@@ -200,4 +200,15 @@ export class Tls52050Service {
   getLabelTLS52050(params: { MAM_No: string }): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52050`, params);
   }
+  /**
+   * 上傳檔案到伺服器
+   * @param file 要上傳的檔案
+   * @returns 包含操作結果的 API 響應
+   */
+  uploadTLS52050(file: File): Observable<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/uploadTLS52050`, formData);
+  }
 }
