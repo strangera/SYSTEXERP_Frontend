@@ -15,6 +15,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service'; // ★ 引入 Service
 import { DropDownListService, IDropdownItem, IAPS1003Request } from './../../../service/utility/dropDownList.service';
+import { formatAmount } from '@shared/componentkit/table2/table2.model';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -57,9 +58,22 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     { field: 'org_id', header: '組織代號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
     { field: 'pod_desc', header: '活動名稱', visible: true },
-    { field: 'tpy_date', header: '扣款日期', visible: true },
+    {
+      field: 'tpy_date',
+      header: '扣款日期',
+      visible: true,
+      format: (value: string | Date) => {
+        if (!value) return '';
+        const d = typeof value === 'string' ? new Date(value) : value;
+        if (isNaN(d.getTime())) return '';
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    },
     { field: 'GUI_FLAG', header: '是否開立發票', visible: true },
-    { field: 'tpy_net', header: '扣款(未稅)', visible: true },
+    { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount },
     { field: 'remarks', header: '備註', visible: true },
   ];
 
@@ -130,31 +144,35 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         Name: item.Name
       }));
     });
-    this.sharedDropdownService.getActivityOptions(1001, 'A01', [], '').subscribe({
-      next: (options) => {
-        this.pod_noOptions = options.map((item: any) => ({
-          value: item.No,
-          label: `${item.No}-${item.Name}`
-        }));
-        console.log('活動清單載入完成:', this.pod_noOptions);
-      },
-
+    this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }).subscribe((res) => {
+      this.pod_noOptions = (res?.Data || []).map((item: any) => ({
+        value: item.pod_no,
+        label: `${item.pod_no}-${item.pod_desc}`
+      }));
     });
   }
+
   onSubmit(frm: FormGroup) {
-    const payload = frm.value;
-    this.loading = true; // 如果 BasicQueryPageComponent 有 loading 狀態
+    const payload = { ...frm.value };
+    // 若 tpy_date 有值且為 Date，轉成 yyyy-MM-dd 字串
+    if (payload.tpy_date instanceof Date) {
+      const yyyy = payload.tpy_date.getFullYear();
+      const mm = String(payload.tpy_date.getMonth() + 1).padStart(2, '0');
+      const dd = String(payload.tpy_date.getDate()).padStart(2, '0');
+      payload.tpy_date = `${yyyy}-${mm}-${dd}`;
+    }
+    this.loading = true;
     this.tls2d010Service.queryTLS2D010(payload).subscribe({
       next: (res) => {
         this.data = res?.Data || [];
         this.totalRecords = res?.Total || this.data.length;
       },
-      error: (err) => {
-        console.error('查詢失敗:', err);
-      },
       complete: () => {
         this.loading = false;
       }
     });
+  }
+  setCounterType(row: any) {
+    return { ...row, type: 'counter' };
   }
 }

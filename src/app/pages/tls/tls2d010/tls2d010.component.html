@@ -132,14 +132,13 @@
 
 <div class="card">
   <app-table
-    tableKey="TLS2A020"
     [data]="data"
     [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
+    (edit)="onEdit(setCounterType($event))"
+    (detail)="onDetail(setCounterType($event))"
     [showCheckBox]="false"
     dataKey="id"
-    [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
