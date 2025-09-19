@@ -16,7 +16,7 @@ import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
-import { AccDCType, FIN52080Data, LedgerMDType, VoucherType } from './fin52080.model';
+import { AccDCType, FIN52080Data, FIN52080Query, LedgerMDType, VoucherType } from './fin52080.model';
 
 @Component({
   selector: 'app-fin52080',
@@ -61,9 +61,9 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     AccEname: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
     AccDC: new FormControl<AccDCType | void>(void 0),
     Ledger_MD: new FormControl<LedgerMDType | void>(void 0),
-    ClassNo: new FormControl<string | void>(void 0),
+    ClassNo: new FormControl<string[]>([]),
     ABAT_YN: new FormControl<'Y' | 'N' | void>(void 0),
-    Voucher_Type: new FormControl<VoucherType | void>(void 0),
+    Voucher_Type: new FormControl<VoucherType[]>([]),
     Budget_YN: new FormControl<'Y' | 'N' | void>(void 0),
     Org_YN: new FormControl<'Y' | 'N' | void>(void 0),
     rest_value: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
@@ -98,11 +98,11 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   /** accNo驗證 綁定classNo用 */
   public readonly accNoEffect = effect(() => {
     const accNo = String(this.accNoSignal() ?? 0)?.substring(0, 3);
-    this.qf().ClassNo.setValue(void 0);
+    this.qf().ClassNo.setValue([]);
     // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
     if (!accNo) return;
     const matched = this.service.classNoMap().get(accNo);
-    matched?.length && this.qf().ClassNo.setValue(accNo, { emitEvent: !1 });
+    matched?.length && this.qf().ClassNo.setValue([accNo], { emitEvent: !1 });
   }, { allowSignalWrites: !0 });
 
   /** classNo驗證 accNo沒在清單內就清空 */
@@ -112,7 +112,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
     if (!classNo?.length) return;
 
-    const match = this.service.classNoMap().get(classNo) === current;
+    const match = this.classNoSignal()?.some(cn => this.service.classNoMap().get(cn) === current);
     if (!match) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
   });
 
@@ -164,13 +164,22 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = Object.fromEntries(
-        Object
-          .entries(this.queryForm.getRawValue())
-          .filter(([_, value]) =>
-            (Array.isArray(value) && value.length)
-            || value !== void 0 && value !== '' && value !== null),
-      );
+      const payload = <FIN52080Query>{
+        ...this.queryForm.getRawValue(),
+        AccNo: this.qf().AccNo.value ?? void 0,
+        AccCname: this.qf().AccCname.value ?? void 0,
+        AccEname: this.qf().AccEname.value ?? void 0,
+        AccDC: this.qf().AccDC.value ?? void 0,
+        Ledger_MD: this.qf().Ledger_MD.value ?? void 0,
+        ABAT_YN: this.qf().ABAT_YN.value ?? void 0,
+        Budget_YN: this.qf().Budget_YN.value ?? void 0,
+        Org_YN: this.qf().Org_YN.value ?? void 0,
+        rest_value: this.qf().rest_value.value ?? void 0,
+        rest_value2: this.qf().rest_value2.value ?? void 0,
+        Input_YN: this.qf().Input_YN.value ?? void 0,
+        ClassNo: (this.qf().ClassNo.value ?? []).join(),
+        Voucher_Type: (this.qf().Voucher_Type.value ?? []).join(),
+      };
 
       this.logger.debug(`對象及對帳維護作業 request:`, [payload]);
 
