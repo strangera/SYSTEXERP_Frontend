@@ -78,6 +78,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() buttonsLoading = false;           // 按鈕們 loading
   @Input() footerData: any;
+  @Input() groupRowsBy?: string;
+  @Input() footerSubtotal: any;
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Input() disabled = false;
   //
@@ -142,9 +144,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       return;
     }
     this.isLoading = true;
-    const pageSize = 30; // 或從某處取得 pageSize
-    const pageIndex = Math.floor(this.data.length / pageSize) + 1;
-    const body = { ...this.lastQueryBody, pageIndex: pageIndex, pageSize: pageSize };
+    this.lastQueryBody = {
+      ...this.lastQueryBody,
+      pageIndex: Math.floor(this.data.length / 30) + 1,
+      pageSize: 30,
+      SortBy: this.dt.multiSortMeta
+    }
+    const body = { ...this.lastQueryBody };
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.data = [...this.data, ...res.Data];
@@ -166,9 +172,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     // 3. 準備查詢參數
     const body = {
       ...this.lastQueryBody,
-      pageSize: 30,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
-      SortBy: event.multisortmeta, // 使用內部狀態
     };
 
     // 4. 呼叫 API 重新取得資料
@@ -196,5 +200,46 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as Column[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
+  }
+  /**
+ * 取得分組小計的數值
+ * @param row 當前分組的第一筆資料
+ * @param col 當前的欄位定義
+ * @returns 對應的小計數值，如果找不到或不是數值欄位則回傳空字串
+ */
+  getGroupSubtotal(row: any): any {
+    return this.tableUtility.getGroupSubtotal(row, this.footerSubtotal, this.groupRowsBy);
+  }
+
+  /**
+   * 判斷當前行是否為該分組的最後一筆。
+   * @param rowData 當前行資料。
+   * @param rowIndex 當前行索引。
+   * @returns 如果是最後一筆則回傳 true，否則為 false。
+   */
+  isGroupLastRow(rowData: any, rowIndex: number): boolean {
+    if (!this.groupRowsBy || !this.data || rowIndex === this.data.length - 1) {
+      return true; // 如果沒有分組或已經是最後一筆，則視為群組結尾。
+    }
+
+    // 取得當前行和下一行在分組依據欄位上的值
+    const currentRowGroupValue = rowData[this.groupRowsBy];
+    const nextRowGroupValue = this.data[rowIndex + 1][this.groupRowsBy];
+
+    // 如果當前行的分組值與下一行不同，表示當前行是該分組的最後一筆
+    return currentRowGroupValue !== nextRowGroupValue;
+  }
+  /**
+ * 取得自訂小計區塊中對應欄位的值。
+ * @param subtotalRow 小計資料物件 (例如 QueryTLS57090SubtotalByOdmNo)
+ * @param col 當前的欄位定義
+ * @returns 小計數值，如果找不到則回傳空字串
+ */
+  getCustomSubtotalValue(subtotalRow: any, col: any): any {
+    // 檢查 col.subtotalField 是否存在，以確保這是需要顯示小計的欄位
+    if (subtotalRow && col.field) {
+      return subtotalRow[col.field];
+    }
+    return '';
   }
 }

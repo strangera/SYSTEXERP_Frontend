@@ -103,7 +103,9 @@ export class Tls57090Service {
         return {
           Data: data,
           TotalCount: res.TotalCount,
-          Message: res.Message
+          Message: res.Message,
+          GrandTotal: res.Data.GrandTotal,
+          SubtotalByOdmNo: res.Data.SubtotalByOdmNo
         };
       })
     );

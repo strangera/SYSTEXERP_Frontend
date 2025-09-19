@@ -37,15 +37,18 @@ export class TableReportUtilityService {
     }
     return true;
   }
-
-  // 取得可見欄位總數
-  getVisibleColumnCount(columns: Column[]): number {
-    if (!Array.isArray(columns)) { return 0; }
-    return columns.filter(col => this.isColumnVisible(col)).length;
-  }
-  // 計算全表總計
-  getTotal(data: any[], field: string): number {
-    return data.reduce((sum: number, row: any) => sum + (row[field] || 0), 0);
+  /**
+ * 取得分組小計的數值
+ * @param row 當前分組的第一筆資料
+ * @param col 當前的欄位定義
+ * @returns 對應的小計數值，如果找不到或不是數值欄位則回傳空字串
+ */
+  getGroupSubtotal(rowData: any, footerSubtotal: any[], groupRowsBy: string | undefined): any {
+    if (!footerSubtotal || !groupRowsBy || !rowData) {
+      return undefined;
+    }
+    // 根據 groupRowsBy 屬性找到對應的小計物件
+    return footerSubtotal.find(sub => sub[groupRowsBy] === rowData[groupRowsBy]);
   }
 
   private safeUrlCache = new Map<string, SafeUrl>();

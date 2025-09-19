@@ -57,6 +57,8 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     DisplayMode: [1, [Validators.required]],
   });
   totalRecords = 0;
+  footerTotal: any
+  footerSubtotal: any
   documentTypeOptions = [
     { value: 1, label: '進貨單' },
     { value: 2, label: '退貨單' }
@@ -163,12 +165,15 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         Status: formValue.Status,
         pageIndex: 1,
         pageSize: 30,
-        SortBy: [{ field: 'HOS_NAME', order: 1 }],
+        SortBy: [{ field: 'ODM_No', order: 1 }],
       };
 
       this.tls57090Service.queryTLS57090(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
+          console.log('response', response);
           this.totalRecords = response.TotalCount || 0;
+          this.footerTotal = response.GrandTotal;
+          this.footerSubtotal = response.SubtotalByOdmNo;
           this.historyRequestBody = requestBody;
           this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);

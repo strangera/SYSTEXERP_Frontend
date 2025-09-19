@@ -1,7 +1,7 @@
 <div class="card tls52050">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="匯出EXCEL範本" (click)="exportExcel()"></app-button>
+    <app-button [outlined]="true" label="匯出EXCEL範本" (click)="exportExcel()"></app-button>
     <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xlsx,.xls"
       (onSelect)="importExcel($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
     <app-button btnType="create" (click)="onCreate()"></app-button>
@@ -49,7 +49,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS52050" dataKey="MAM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+  <app-table tableKey="tls52050Table" dataKey="MAM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [showDelete]="false" [multiSortMeta]="queryForm.controls.SortBy.value"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" [addButton]="addButton" [buttonsLoading]="btnLoading()">
@@ -57,7 +57,7 @@
 </div>
 <app-dialog [visible]="dialogVisible()" header="選擇商品明細" (visibleChange)="dialogVisible.set($event)"
   (save)="saveDialog()">
-  <app-table-edit class="col" tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [data]="dialogData"
+  <app-table-edit class="col" tableKey="tls52050CruDialogTable" dataKey="PLU_MagNo" [data]="dialogData"
     [columns]="dialogColumns" [multiSortMeta]="[{ field: 'PLU_MagNO', order: 1 }]" [canInsert]="false"
     [showDelete]="false" [showCheckBox]="false">
   </app-table-edit>
