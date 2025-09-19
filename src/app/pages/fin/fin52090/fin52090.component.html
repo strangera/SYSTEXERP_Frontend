@@ -17,17 +17,17 @@
         <div class="grid p-fluid">
           <app-multi-select class="col-12 md:col-6 lg:col-4"
                             label="科目代號"
-                            controlName="accountcode"
-                            [options]="service.accountCodes()"
-                            optionLabel="label"
-                            optionValue="value"
-                            [control]="qf().accountCodes"
+                            controlName="AccNo"
+                            [options]="service.accNo()"
+                            optionLabel="AccCName"
+                            optionValue="AccNo"
+                            [control]="qf().AccNo"
                             [submitted]="submitted"></app-multi-select>
 
           <app-input-text class="col-12 md:col-6 lg:col-4"
                           label="科目摘要"
-                          controlName="accountSummary"
-                          [control]="qf().accountSummary"
+                          controlName="NoteDesc"
+                          [control]="qf().NoteDesc"
                           [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -44,13 +44,19 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="filteredData()"
+    <app-table [showManage]="false"
+               [showDelete]="false"
+               [showCheckBox]="false"
+               [data]="filteredData()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [loading]="service.tableLoading"
-               [dataKey]="'id'"
-               [tableKey]="'FIN52090'"></app-table>
+               [tableKey]="'FIN52090'"
+               [dataKey]="'AccNo'"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+               [lazy]="true"
+               [loading]="service.tableLoading"></app-table>
   </div>
 </div>

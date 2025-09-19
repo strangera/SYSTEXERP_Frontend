@@ -5,7 +5,6 @@
     <app-button btnType="back"
                 (click)="onCancel()"></app-button>
   </div>
-
   <p-panel [header]="formTitle | translate"
            class="line-height-3 m-0">
     <form [formGroup]="dataForm"
@@ -14,28 +13,27 @@
       <div class="grid p-fluid">
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="科目代號"
-                      controlName="accountCode"
-                      [options]="service.accountCodes()"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="df().accountCode"
+                      controlName="AccNo"
+                      [options]="service.accNo()"
+                      optionLabel="AccCName"
+                      optionValue="AccNo"
+                      [control]="df().AccNo"
                       [submitted]="submitted"></app-dropdown>
 
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="科目摘要"
-                        controlName="accountSummary"
-                        [control]="df().accountSummary"
+                        controlName="NoteDesc"
+                        [control]="df().NoteDesc"
                         [submitted]="submitted"></app-input-text>
-
-        @if (!isFormReadable) {
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="cancel"
-                      [form]="dataForm"></app-button>
-          <app-button btnType="submit"
-                      [loading]="service.tableLoading"></app-button>
-        </div>
-        }
       </div>
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel"
+                    [form]="dataForm"></app-button>
+        <app-button btnType="submit"
+                    [loading]="service.tableLoading"></app-button>
+      </div>
+      }
     </form>
   </p-panel>
 </div>
