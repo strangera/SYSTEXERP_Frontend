@@ -161,6 +161,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
         };
       })
     }
+    this.btnLoading = true;
     this.tls2e080Service.exportTLS2E080PDF(body)
       .pipe(map(response => {
         const contentDisposition = response.headers.get('content-disposition');
@@ -173,6 +174,6 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
         }
         const blob = new Blob([response.body], { type: 'application/zip' });
         return { blob, filename };
-      })).subscribe(data => { saveAs(data.blob, data.filename); });
+      }), untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(data => { saveAs(data.blob, data.filename); });
   }
 }
