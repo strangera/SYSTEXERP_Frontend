@@ -22,6 +22,34 @@ export interface TLS53010DetailQueryRequest {
   HOS_No: string;               // 倉別代碼 - 必填
 }
 
+// Insert request interface for TLS53010 (新增全品項)
+export interface TLS53010InsertRequest {
+  HOS_No: string;               // 倉別代碼 - 必填
+  LOGO_No: string;              // 品牌代碼 - 必填
+  PST_Date: string;             // 盤點基準日期 - 必填
+  PST_Remark?: string;          // 盤點備註
+}
+
+// POS2004 商品資料介面
+export interface POS2004Info {
+  PLU_MagNo: string;            // 商品管理編號 - 必填
+  PLU_No: string;               // 國際條碼 - 必填
+  PLU_Unit?: string;            // 單位代碼
+  PLU_BoxQty?: number;          // 包裝入數
+  PLU_Name?: string;            // 商品名稱
+  PLU_PageNum?: string;         // 棚割編號
+  PLU_LocNo?: number;           // 棚割序號
+}
+
+// Insert manual request interface for TLS53010 (手動新增品項)
+export interface TLS53010InsertManualRequest {
+  HOS_No: string;               // 倉別代碼 - 必填
+  LOGO_No: string;              // 品牌代碼 - 必填
+  PST_Date: string;             // 盤點基準日期 - 必填
+  PST_Remark?: string;          // 盤點備註
+  POS2004List: POS2004Info[];   // 商品管理編號清單 - 必填
+}
+
 // Data result interface for TLS53010 (盤點單資料)
 export interface TLS53010Data {
   id: number;                   // id
@@ -79,5 +107,15 @@ export class TLS53010Service {
   // 查詢盤點單明細
   queryTLS53010Detail(data: TLS53010DetailQueryRequest): Observable<BaseQueryResponse<TLS53010DetailData>> {
     return this.http.post<BaseQueryResponse<TLS53010DetailData>>(`${this.apiUrl}/queryTLS53010_Detail`, data);
+  }
+
+  // 新增盤點單 (新增全品項)
+  insertTLS53010(data: TLS53010InsertRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS53010`, data);
+  }
+
+  // 新增盤點單 (手動新增品項)
+  insertTLS53010Manual(data: TLS53010InsertManualRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS53010_Manual`, data);
   }
 }
