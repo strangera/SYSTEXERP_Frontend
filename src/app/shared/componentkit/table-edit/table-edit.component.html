@@ -154,6 +154,24 @@
                 </div>
               </ng-template>
             </p-dropdown>
+            <p-calendar *ngSwitchCase="'date'" class="min-w-max" [(ngModel)]="rowData[col.field]"
+              [ngModelOptions]="{ standalone: true }" [placeholder]="'請輸入' + col.header"
+              [timeOnly]="col.timeOnly || false" [showTime]="col.showTime || false" [hourFormat]="col.hourFormat"
+              [showSeconds]="col.showSeconds" [view]="col.view || 'date'" [dateFormat]="col.dateFormat || 'yy/mm/dd'"
+              iconDisplay="input" [minDate]="col.minDate" [maxDate]="col.maxDate" [appendTo]="'body'"
+              [showIcon]="!((col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled)"
+              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              (onInput)="onValueChange(rowData,$event.value, col, index)"
+              (onFocus)="col.onFocus?.(rowData, rowData[col.field], col, index)"
+              (onBlur)="col.onBlur?.(rowData, rowData[col.field], col, index); onValueChange(rowData,rowData[col.field], col, index)"
+              [style]="{'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
+              [inputStyle]="{'width': col.width}" [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }">
+              <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                <i *ngIf="col.timeOnly || false" class="pi pi-clock pointer-events-none"></i>
+                <i *ngIf="!col.timeOnly || false" class="pi pi-calendar pointer-events-none"></i>
+              </ng-template>
+            </p-calendar>
             <p-inputIcon *ngIf="rowData._validationErrors?.[col.field]"
               styleClass="pi pi-exclamation-circle text-red-500" [pTooltip]="rowData._validationErrors?.[col.field]"
               tooltipPosition="bottom" />
