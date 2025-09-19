@@ -104,8 +104,7 @@ export class Tls57090Service {
           Data: data,
           TotalCount: res.TotalCount,
           Message: res.Message,
-          GrandTotal: res.Data.GrandTotal,
-          SubtotalByOdmNo: res.Data.SubtotalByOdmNo
+          GrandTotal: body.ReportType === '明細' ? res.Data.GrandTotal : res.Data.SummaryTotal,
         };
       })
     );
