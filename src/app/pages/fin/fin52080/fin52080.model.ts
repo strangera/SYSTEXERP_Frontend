@@ -1,23 +1,63 @@
-export interface testDorm {
-  AccNo: string, // 科目代號
-  AccCname: string, // 科目名稱
-  AccEname: string, // 科目英文名稱
-  AccDC: string, // 借/貸
-  Ledger_MD: string, // 統制/明細
-  ClassNo: string, // 三碼代號
-  ABAT_YN: string, // 是否為沖帳代號
-  Voucher_Type: string, // 傳票格式
-  Budget_YN: string, // 是否為預算科目
-  Org_YN: string, // 是否設定部門代號
-  rest_value: number, // 折舊攤提年限
-  rest_value2: number, // 殘值年限
-  Input_YN: string, // 是否可輸
-
-  //---可能也會需要下面這些---
-  CRT_Date?: Date,
-  CRT_USR_No?: string,
-  CRT_USR_Name?: string,
-  UPD_Date?: Date,
-  UPD_USR_No?: string,
-  UPD_USR_Name?: string,
+export interface FIN52080Data {
+  ABAT_YN: 'Y' | 'N';
+  AccCName: string;
+  AccDC: AccDCType;
+  AccEName: string;
+  AccNo: string;
+  Budget_YN: 'Y' | 'N';
+  ClassNo: string;
+  Input_YN: 'Y' | 'N';
+  Ledger_MD: LedgerMDType;
+  Org_YN: 'Y' | 'N';
+  Voucher_Type: VoucherType;
 }
+
+export interface FIN52080Query {
+  AccNo?: string;
+  AccCName?: string;
+  AccEName?: string;
+  AccDC?: string;
+  Ledger_MD?: string;
+  ClassNo?: string;
+  ABAT_YN?: string;
+  Voucher_Type?: string;
+  Budget_YN?: string;
+  Org_YN?: string;
+  Input_YN?: string;
+}
+
+export interface FIN52080ClassNo {
+  ClassNo: string;
+  ClassCName: string;
+}
+
+export interface FIN52080Tree {
+  org_id: string;
+  org10Label: string;
+  org20Label: string;
+  org30Label: string;
+  org40Label: string;
+  org_name: string;
+}
+
+/** D: 借 C: 貸 */
+export type AccDCType = 'D' | 'C';
+/** 0: 統制 1: 明細 */
+export type LedgerMDType = '0' | '1';
+/** 傳票格式 (Code Table, 未來還會增加)
+ * - 0: 無特定
+ * - 1: 應付票據
+ * - 2: 應收票據
+ * - 3: 應付帳款
+ * - 4: 應收帳款
+ * - 5: 進項稅額
+ * - 6: 銷項稅額
+ * - 7: 銀行存款
+ * - 9: 應付費用
+ * - A: 應收費用
+ * - B: 代收稅款
+ * - C: 固定資產
+ * - D: 現金
+ * - E: 應收保證票據
+ */
+export type VoucherType = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '9' | 'A' | 'B' | 'C' | 'D' | 'E';

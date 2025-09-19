@@ -6,14 +6,17 @@ import { FIN52080Service } from '@service/api/fin/fin52080.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TreeDropdownComponent } from '@shared/componentkit/tree-dropdown/tree-dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { testDorm } from './fin52080.model';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { finalize } from 'rxjs';
+import { AccDCType, FIN52080Data, LedgerMDType, VoucherType } from './fin52080.model';
 
 @Component({
   selector: 'app-fin52080',
@@ -22,19 +25,19 @@ import { testDorm } from './fin52080.model';
   standalone: !0,
   imports: [
     AccordionModule,
+    ButtonComponent,
     FormsModule,
+    ProgressSpinnerModule,
     ReactiveFormsModule,
     TranslateModule,
-    ButtonComponent,
+    DropdownComponent,
     InputTextComponent,
     MenubarComponent,
-    MultiSelectComponent,
     TableComponent,
+    TreeDropdownComponent,
   ]
 })
-export class FIN52080Component extends BasicQueryPageComponent<testDorm> implements OnInit {
-
-  public readonly accNoFilter = /^\d{1,8}$/;
+export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> implements OnInit {
 
   /**
    * 會計科目代號維護
@@ -56,16 +59,16 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
     AccNo: new FormControl<string | void>(void 0, [Validators.minLength(3), Validators.maxLength(8)]),
     AccCname: new FormControl<string | void>(void 0, [Validators.maxLength(40)]),
     AccEname: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
-    AccDC: new FormControl<('0' | '1')[] | void>(void 0),
-    Ledger_MD: new FormControl<('0' | '1')[] | void>(void 0),
-    ClassNo: new FormControl<string[] | void>(void 0),
-    ABAT_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
-    Voucher_Type: new FormControl<string[] | void>(void 0),
-    Budget_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
-    Org_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
+    AccDC: new FormControl<AccDCType | void>(void 0),
+    Ledger_MD: new FormControl<LedgerMDType | void>(void 0),
+    ClassNo: new FormControl<string | void>(void 0),
+    ABAT_YN: new FormControl<'Y' | 'N' | void>(void 0),
+    Voucher_Type: new FormControl<VoucherType | void>(void 0),
+    Budget_YN: new FormControl<'Y' | 'N' | void>(void 0),
+    Org_YN: new FormControl<'Y' | 'N' | void>(void 0),
     rest_value: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
     rest_value2: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
-    Input_YN: new FormControl<('Y' | 'N')[] | void>(void 0),
+    Input_YN: new FormControl<'Y' | 'N' | void>(void 0),
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -74,8 +77,23 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
   private readonly classNoSignal = toSignal(this.qf().ClassNo.valueChanges);
 
   public readonly totalRecords = computed(() => this.filteredData().length);
-  public readonly filteredData = signal<testDorm[]>([]);
-  public readonly selectedRows = signal<testDorm[]>([]);
+
+  public readonly filteredData = computed(() => {
+    const formValue = this.queryForm.getRawValue();
+    return this.service.FIN52080Data().filter(item => {
+      return (!formValue.AccNo || item.AccNo.includes(formValue.AccNo))
+        && (!formValue.AccCname || item.AccCName.includes(formValue.AccCname))
+        && (!formValue.AccEname || item.AccEName?.includes(formValue.AccEname))
+        && (!formValue.AccDC?.length || formValue.AccDC.includes(item.AccDC))
+        && (!formValue.Ledger_MD?.length || formValue.Ledger_MD.includes(item.Ledger_MD))
+        && (!formValue.ClassNo?.length || formValue.ClassNo.includes(item.ClassNo))
+        && (!formValue.ABAT_YN?.length || formValue.ABAT_YN.includes(item.ABAT_YN))
+        && (!formValue.Voucher_Type?.length || formValue.Voucher_Type.includes(item.Voucher_Type))
+        && (!formValue.Budget_YN?.length || formValue.Budget_YN.includes(item.Budget_YN))
+        && (!formValue.Org_YN?.length || formValue.Org_YN.includes(item.Org_YN))
+        && (!formValue.Input_YN?.length || formValue.Input_YN.includes(item.Input_YN));
+    });
+  });
 
   /** accNo驗證 綁定classNo用 */
   public readonly accNoEffect = effect(() => {
@@ -83,41 +101,48 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
     this.qf().ClassNo.setValue(void 0);
     // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
     if (!accNo) return;
-    const matched = this.service.classNoMap.get(accNo);
-    matched?.length && this.qf().ClassNo.setValue([accNo], { emitEvent: !1 });
+    const matched = this.service.classNoMap().get(accNo);
+    matched?.length && this.qf().ClassNo.setValue(accNo, { emitEvent: !1 });
   }, { allowSignalWrites: !0 });
 
   /** classNo驗證 accNo沒在清單內就清空 */
   public readonly classNoEffect = effect(() => {
-    const classNo = this.classNoSignal() || [];
+    const classNo = this.classNoSignal();
     const current = this.qf().AccNo.value?.substring(0, 3);
     // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
-    if (!classNo.length) return;
+    if (!classNo?.length) return;
 
-    const match = classNo.some(cn => this.service.classNoMap.get(cn) === current);
+    const match = this.service.classNoMap().get(classNo) === current;
     if (!match) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
   });
 
-
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof testDorm; })[] = [ //先放可視範圍內的
-    { field: 'AccNo', header: '科目代號' }, // 科目代號
-    { field: 'AccCname', header: '科目名稱' }, // 科目名稱
-    { field: 'AccEname', header: '科目英文名稱' }, // 科目英文名稱
-    { field: 'AccDC', header: '借/貸', options: this.service.accDCOption, format: v => this.service.accDCOption.find(o => o.No === v)?.Name || v }, // 借/貸
-    { field: 'Ledger_MD', header: '統制/明細', options: this.service.ledgerMDOption, format: v => this.service.ledgerMDOption.find(o => o.No === v)?.Name || v }, // 統制/明細
-    { field: 'ClassNo', header: '三碼代號', options: this.service.classNoOption, format: v => this.service.classNoOption.find(o => o.No === v)?.Name || v }, // 三碼代號
-    { field: 'ABAT_YN', header: '是否為沖帳代號', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v }, // 是否為沖帳代號
-    { field: 'Voucher_Type', header: '傳票格式', options: this.service.voucherTypeOption, format: v => this.service.voucherTypeOption.find(o => o.No === v)?.Name || v }, // 傳票格式
-    { field: 'Budget_YN', header: '是否為預算科目', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v }, // 是否為預算科目
-    { field: 'Org_YN', header: '是否設定部門代號', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v }, // 是否設定部門代號
-    { field: 'Input_YN', header: '是否可輸', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v }, // 是否可輸
-
-    { field: 'CRT_Date', header: '建立日期', visible: !1, format: formatDateTime }, // 建立日期
-    { field: 'CRT_USR_No', header: '建立人員', visible: !1 }, // 建立人員
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: !1 }, // 建立人員姓名
-    { field: 'CRT_Date', header: '變更日期', visible: !1, format: formatDateTime }, // 變更日期
-    { field: 'CRT_USR_No', header: '變更人員', visible: !1 }, // 變更人員
-    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: !1 }, // 變更人員姓名
+  /**
+   * - AccNo: 科目代號
+   * - AccCname: 科目名稱
+   * - AccEname: 科目英文名稱
+   * - AccDC: 借/貸
+   * - Ledger_MD: 統制/明細
+   * - ClassNo: 三碼代號
+   * - ABAT_YN: 是否為沖帳代號
+   * - Voucher_Type: 傳票格式
+   * - Budget_YN: 是否為預算科目
+   * - Org_YN: 是否設定部門代號
+   * - rest_value: 折舊攤提年限
+   * - rest_value2: 殘值年限
+   * - Input_YN: 是否可輸
+   */
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52080Data; })[] = [ //先放可視範圍內的
+    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccCName', header: '科目名稱' },
+    { field: 'AccEName', header: '科目英文名稱' },
+    { field: 'AccDC', header: '借/貸', options: this.service.accDCOption, format: v => this.service.accDCOption.find(o => o.No === v)?.Name || v },
+    { field: 'Ledger_MD', header: '統制/明細', options: this.service.ledgerMDOption, format: v => this.service.ledgerMDOption.find(o => o.No === v)?.Name || v },
+    { field: 'ClassNo', header: '三碼代號', options: this.service.classNoOption(), format: v => this.service.classNoOption().find(o => o.ClassNo === v)?.ClassCName || v },
+    { field: 'ABAT_YN', header: '是否為沖帳代號', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
+    { field: 'Voucher_Type', header: '傳票格式', options: this.service.voucherTypeOption, format: v => this.service.voucherTypeOption.find(o => o.No === v)?.Name || v },
+    { field: 'Budget_YN', header: '是否為預算科目', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
+    { field: 'Org_YN', header: '是否設定部門代號', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
+    { field: 'Input_YN', header: '是否可輸', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
   ];
 
   constructor(
@@ -131,56 +156,33 @@ export class FIN52080Component extends BasicQueryPageComponent<testDorm> impleme
   ngOnInit(): void {
     this.initializePage('FIN52080', '/FIN/FIN52080CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.logger.debug(`init:`, [this.service.classNoOption]);
+    this.service.getClassNos();
+    this.service.getFIN52080Tree();
+
+    this.logger.debug(`init:`, [this.service.classNoOption(), this.service.classNoMap()]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = { ...this.queryForm.getRawValue() };
+      const payload = Object.fromEntries(
+        Object
+          .entries(this.queryForm.getRawValue())
+          .filter(([_, value]) =>
+            (Array.isArray(value) && value.length)
+            || value !== void 0 && value !== '' && value !== null),
+      );
 
       this.logger.debug(`對象及對帳維護作業 request:`, [payload]);
 
-      // Voucher_Type: string, // 傳票格式
-      // Budget_YN: string, // 是否為預算科目
-      // Org_YN: string, // 是否設定部門代號
-      // rest_value: number, // 折舊攤提年限
-      // rest_value2: number, // 殘值年限
-      // Input_YN: string, // 是否可輸
+      this.service.loadFIN52080(payload).pipe(
+        finalize(() => this.loading = !1),
+      ).subscribe();
 
-      this.service.loadFIN52080(payload);
-      this.filteredData.set(this.service.FIN52080Data());
-
-      this.loading = !1;
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-
-      // this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
-      //   next: (response) => {
-      //     this.data = response.Data;
-      //     this.logger.debug(`對象及對帳維護作業 response:`, [response]);
-      //     this.totalRecords = response.TotalCount;
-      //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     this.loading = !1;
-      //   },
-      //   error: () => { this.loading = !1; },
-      // });
     });
-  }
+  };
 
-  // 刪除控制_Grace 9/9:
-  // GLS6002 GLS3002若有對象別編號不可刪除
-  onDelete(selectedRows: testDorm[]) {
-    // const ids = selectedRows.map(row => row.id);
-    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-    //   next: () => {
-    //     this.onSubmit(this.queryForm);
-    //     this.selectedRows = [];
-    //   },
-    //   error: () => { this.loading = !1; },
-    // });
-  }
-
-  isRowSelectable(row: testDorm) {
-    // return row.CanDel;
-    return !0;
+  public onLevelSelected(selected: any[]): void {
+    this.logger.debug(`onLevelSelected:`, [selected]);
   }
 }

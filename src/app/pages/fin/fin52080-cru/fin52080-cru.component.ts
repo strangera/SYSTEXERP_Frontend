@@ -1,4 +1,5 @@
-import { Component, computed, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52080Service } from '@service/api/fin/fin52080.service';
@@ -7,10 +8,13 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TreeDropdownComponent } from '@shared/componentkit/tree-dropdown/tree-dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { testDorm } from '../fin52080/fin52080.model';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { finalize } from 'rxjs';
+import { AccDCType, FIN52080Data, FIN52080Query, LedgerMDType, VoucherType } from '../fin52080/fin52080.model';
 
 @Component({
   selector: 'app-fin52080-cru',
@@ -20,15 +24,17 @@ import { testDorm } from '../fin52080/fin52080.model';
   imports: [
     FormsModule,
     PanelModule,
+    ProgressSpinnerModule,
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
+    TreeDropdownComponent,
   ]
 })
-export class FIN52080CRUComponent extends BasicCruPageComponent<testDorm> implements OnInit {
+export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> implements OnInit {
 
   /**
    * 會計科目代號維護
@@ -47,21 +53,45 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<testDorm> implem
    * - Input_YN: 是否可輸
    */
   dataForm = this.formBuilder.nonNullable.group({
-    AccNo: new FormControl<string | void>(void 0, [Validators.required, Validators.minLength(3), Validators.maxLength(8)]),
+    AccNo: new FormControl<string>('', [Validators.required, Validators.minLength(3), Validators.maxLength(8)]),
     AccCname: new FormControl<string>('', [Validators.required, Validators.maxLength(40)]),
     AccEname: new FormControl<string>('', [Validators.maxLength(50)]),
-    AccDC: new FormControl<'0' | '1' | void>(void 0, [Validators.required]),
-    Ledger_MD: new FormControl<'0' | '1' | void>(void 0, [Validators.required]),
-    ClassNo: new FormControl<string[] | void>(void 0),
+    AccDC: new FormControl<AccDCType | void>(void 0, [Validators.required]),
+    Ledger_MD: new FormControl<LedgerMDType | void>(void 0, [Validators.required]),
+    ClassNo: new FormControl<string | void>(void 0, [Validators.required]),
     ABAT_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
-    Voucher_Type: new FormControl<string[] | void>(void 0),
+    Voucher_Type: new FormControl<VoucherType | void>(void 0, [Validators.required]),
     Budget_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
     Org_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
-    rest_value: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
-    rest_value2: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
+    rest_value: new FormControl<string>('', [Validators.maxLength(10), this.validationService.numberValidator]),
+    rest_value2: new FormControl<string>('', [Validators.maxLength(10), this.validationService.numberValidator]),
     Input_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
   });
   public df = computed(() => this.dataForm.controls);
+
+  private readonly accNoSignal = toSignal(this.df().AccNo.valueChanges);
+  private readonly classNoSignal = toSignal(this.df().ClassNo.valueChanges);
+
+  /** accNo驗證 綁定classNo用 */
+  public readonly accNoEffect = effect(() => {
+    const accNo = String(this.accNoSignal() ?? 0)?.substring(0, 3);
+    this.df().ClassNo.setValue(void 0);
+    // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
+    if (!accNo) return;
+    const matched = this.service.classNoMap().get(accNo);
+    matched?.length && this.df().ClassNo.setValue(accNo, { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
+
+  /** classNo驗證 accNo沒在清單內就清空 */
+  public readonly classNoEffect = effect(() => {
+    const classNo = this.classNoSignal();
+    const current = this.df().AccNo.value?.substring(0, 3);
+    // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
+    if (!classNo?.length) return;
+
+    const match = this.service.classNoMap().get(classNo) === current;
+    if (!match) this.df().AccNo.setValue('', { emitEvent: !1 });
+  });
 
   constructor(
     public readonly service: FIN52080Service,
@@ -74,43 +104,31 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<testDorm> implem
   public ngOnInit(): void {
     this.initializePage('FIN52080', this.dataForm);
 
+    this.service.getClassNos();
+    this.service.getFIN52080Tree();
+
     this.logger.debug(`init:`, [this.rowdata, this.crudstatus]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      const payload = <FIN52080Query>{
+        ...this.dataForm.getRawValue(),
+      };
 
+      this.logger.debug(`onSubmit:`, [payload]);
 
-      this.loading = this.service.tableLoading;
+      this.service.saveFIN52080(payload).pipe(
+        finalize(() => this.loading = !1),
+      ).subscribe(res => {
+        if (res.Status !== '0000') return this.messageService.errorBubble('資料儲存失敗，請再次檢查欄位');
+        this.messageService.successBubble('資料儲存成功');
+        this.onCancel();
+      });
     });
-
-
-    // 送出前檢查 大+中+三碼 不可重複
-    // const formValue = this.dataForm.getRawValue();
-    // switch (this.crudstatus) {
-    //   case CRUDStatus.Create:
-    //     if (this.canAdd()) {
-    //       console.log('insert', formValue);
-    //       this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
-    //         this.messageService.successBubble('新增成功');
-    //         // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-    //         this.dataForm.reset(); // 重置表單
-    //       });
-    //     }
-    //     break;
-    //   case CRUDStatus.Edit:
-    //     if (this.canEdit()) {
-    //       console.log('update', formValue);
-    //       this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-    //         // this.messageService.successBubble('更新成功');
-    //         this.onCancel(); // 儲存後，會返回列表
-    //       });
-    //     }
-    //     break;
-    // }
   }
 
-  onClearForm() {
-    this.dataForm.reset(); // 重置表單
+  public onLevelSelected(selected: any[]): void {
+    this.logger.debug(`onLevelSelected:`, [selected]);
   }
 }
