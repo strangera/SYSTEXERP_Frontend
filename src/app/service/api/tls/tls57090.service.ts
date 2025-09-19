@@ -103,7 +103,8 @@ export class Tls57090Service {
         return {
           Data: data,
           TotalCount: res.TotalCount,
-          Message: res.Message
+          Message: res.Message,
+          GrandTotal: body.ReportType === '明細' ? res.Data.GrandTotal : res.Data.SummaryTotal,
         };
       })
     );

@@ -6,7 +6,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
@@ -18,10 +18,11 @@ import {
   Tls57090Service
 } from '@service/api/tls/tls57090.service';
 import { finalize } from 'rxjs';
-import { DatePipe, NgIf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls57090',
@@ -38,8 +39,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    TableReportComponent,
-    NgIf
+    TableReportComponent
   ],
   providers: [DatePipe]
 })
@@ -57,6 +57,9 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     DisplayMode: [1, [Validators.required]],
   });
   totalRecords = 0;
+  footerTotal?: {
+    ODD_ConfirmQty: string, ODD_BuyNet?: string, ODD_BuyTax?: string, ODD_BuyAmt?: string, ODD_SalePrc?: string, ODD_SaleAmt?: string, ODM_TotalBuyNet?: string, ODM_TotalBuyTax?: string, ODM_TotalBuyAmt?: string
+  }
   documentTypeOptions = [
     { value: 1, label: '進貨單' },
     { value: 2, label: '退貨單' }
@@ -74,7 +77,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   brandCodeOptions: IDropdownItem[] = [];
   vendorOptions: IDropdownItem[] = [];
   data: (QueryTLS57090DetailResponse | QueryTLS57090SummaryResponse)[] = [];
-  columns: Column[] = [];
+  columns: ReportColumn[] = [];
 
   btnLoading = false;
   historyRequestBody: QueryTLS57090Request | null = null;
@@ -131,12 +134,12 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         { field: 'ODM_Status', header: '單據狀態', visible: true, showSort: true },
         { field: 'PLU_MagNo', header: '商品管理編號', visible: true, showSort: true },
         { field: 'PLU_Name', header: '品名', visible: true, showSort: true },
-        { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_BuyNet', header: '未稅金額', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_BuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_BuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_BuyNet', header: '未稅金額', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_BuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_BuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
       ];
       this.data = [];
     } else {
@@ -163,12 +166,14 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         Status: formValue.Status,
         pageIndex: 1,
         pageSize: 30,
-        SortBy: [{ field: 'HOS_NAME', order: 1 }],
+        SortBy: [{ field: 'ODM_No', order: 1 }],
       };
 
       this.tls57090Service.queryTLS57090(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
+          console.log('response', response);
           this.totalRecords = response.TotalCount || 0;
+          this.footerTotal = response.GrandTotal;
           this.historyRequestBody = requestBody;
           this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -255,7 +260,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     if (filenameMatch && filenameMatch.length > 1) {
       try {
         return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
-      } catch (error) {
+      } catch {
         return filenameMatch[1];
       }
     }

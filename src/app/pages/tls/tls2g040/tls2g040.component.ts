@@ -6,7 +6,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatAmount } from '@shared/componentkit/table-report/table-report.model';
+import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -52,7 +52,7 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
   totalRecords = 0;
   data: TLS2G040Data[] = [];
   footerTotal: TLS2G040Data | null = null;
-  columns: Column[] = bus_typeColumns;
+  columns: ReportColumn[] = bus_typeColumns;
   lastQueryForm: any;
   btnLoading = false;
   constructor(
@@ -133,7 +133,7 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
       this.columns = [];
       return;
     }
-    let baseColumns: Column[];
+    let baseColumns: ReportColumn[];
     switch (reportType) {
       case 'bus_type':
         baseColumns = bus_typeColumns;
@@ -156,7 +156,7 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
     }
 
     // 建立每日欄位
-    const dailyColumns: Column[] = [];
+    const dailyColumns: ReportColumn[] = [];
     if (budgetDate) {
       const date = new Date(budgetDate);
       const year = date.getFullYear();

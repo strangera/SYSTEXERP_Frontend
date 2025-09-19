@@ -1,14 +1,14 @@
 import { SortMeta } from 'primeng/api';
 import { TableTypes } from '../table/table.model';
 
-export interface Column {
+export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   exportFormat?: Record<string, string>[];
-  groupField?: string;
+  groupField?: string; //
   isSubTotal?: boolean; // 是否為小計欄位
   isTotal?: boolean; // 是否為總計欄位
   showSort?: boolean;

@@ -71,7 +71,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.disabled === undefined) this.disabled = config.disabled;
     if (this.text === undefined) this.text = config.text;
     if (this.outlined === undefined) this.outlined = config.outlined;
-    this.severity = config.severity as 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null | undefined;
+    if (this.severity === undefined) this.severity = config.severity as 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null | undefined;
     this.type = config.type as 'button' | 'submit' | 'reset';
 
     this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {

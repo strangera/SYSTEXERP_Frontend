@@ -10,7 +10,7 @@
       inline: true,
       trackBy: trackByFn,
       onScroll: onScroll,
-  }">
+  }" rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
@@ -129,6 +129,22 @@
         </ng-container>
       </td>
     </tr>
+    <ng-container *ngIf="hasSubtotalColumns()">
+      <tr *ngIf="isGroupLastRow(rowData, rowIndex)" class="font-bold text-center text-sm bg-gray-200 text-primary">
+        <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
+          <span class="font-bold">小計</span>
+        </td>
+        <ng-container *ngFor="let col of columns">
+          <td *ngIf="!col.hidden" class="text-center" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
+            pFrozenColumn [frozen]="col.frozen || false">
+            <span class="font-bold">
+              {{ getGroupSubtotal(rowData, col) }}
+            </span>
+          </td>
+        </ng-container>
+        <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
+      </tr>
+    </ng-container>
   </ng-template>
   <ng-template pTemplate="footer">
     <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">

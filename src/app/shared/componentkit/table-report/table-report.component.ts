@@ -3,7 +3,7 @@ import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
-import { AddButton, Column, ColumnGroup } from './table-report.model';
+import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
 import { TableReportUtilityService } from './table-report-utility.service';
 import { ImageModule } from 'primeng/image';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -30,8 +30,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() totalRecords = 0;                               // 用來儲存總筆數
   @Input() data: any[] = [];                               // 用來儲存查詢結果
   @Input() dataKey: string | undefined;                                 // 用來儲存查詢結果
-  @Input() columns: Column[] = [];                              // 用來儲存查詢結果
-  selectedColumns: Column[] = [];                  // 用來儲存查詢結果
+  @Input() columns: ReportColumn[] = [];                              // 用來儲存查詢結果
+  selectedColumns: ReportColumn[] = [];                  // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   @Input() loading = false;
   // tableKey預設給路由名稱
@@ -77,7 +77,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() buttonsLoading = false;           // 按鈕們 loading
-  @Input() footerData: any;
+  @Input() footerData: any;                  // (總計)頁尾資料
+  @Input() groupRowsBy?: string;              // (小計)群組欄位
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Input() disabled = false;
   //
@@ -104,6 +105,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       } else {
         this.virtualData = [...this.data];
       }
+    } else if (changes['data'] && this.data.length === 0) {
+      this.virtualData = Array(0).fill(null);
+      this.totalRecords = 0;
     }
     if (changes['lastQueryBody'] && this.lastQueryBody) {
       this.dt.multiSortMeta = this.lastQueryBody?.SortBy;
@@ -142,9 +146,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       return;
     }
     this.isLoading = true;
-    const pageSize = 30; // 或從某處取得 pageSize
-    const pageIndex = Math.floor(this.data.length / pageSize) + 1;
-    const body = { ...this.lastQueryBody, pageIndex: pageIndex, pageSize: pageSize };
+    this.lastQueryBody = {
+      ...this.lastQueryBody,
+      pageIndex: Math.floor(this.data.length / 30) + 1,
+      pageSize: 30,
+      SortBy: this.dt.multiSortMeta
+    }
+    const body = { ...this.lastQueryBody };
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.data = [...this.data, ...res.Data];
@@ -166,9 +174,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     // 3. 準備查詢參數
     const body = {
       ...this.lastQueryBody,
-      pageSize: 30,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
-      SortBy: event.multisortmeta, // 使用內部狀態
     };
 
     // 4. 呼叫 API 重新取得資料
@@ -194,7 +200,26 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onColReorder(event: TableColumnReorderEvent) {
-    this.columns = event.columns as Column[];
+    this.columns = event.columns as ReportColumn[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
+  }
+  /**
+ * 檢查是否有任何欄位被配置為需要小計。
+ * @returns 如果至少一個欄位有 subtotalField 屬性則回傳 true。
+ */
+  hasSubtotalColumns(): boolean {
+    return this.columns.some(col => !col.hidden && col.isSubTotal && this.groupRowsBy);
+  }
+  isGroupLastRow(rowData: any, rowIndex: number): boolean {
+    if (!this.groupRowsBy || !this.data || rowIndex === this.data.length - 1) {
+      return true; // 如果沒有分組或已經是最後一筆，則視為群組結尾。
+    }
+    return this.tableUtility.isGroupLastRow(rowData, rowIndex, this.groupRowsBy, this.data);
+  }
+  getGroupSubtotal(rowData: any, col: ReportColumn): any {
+    if (!this.groupRowsBy || !col.isSubTotal) {
+      return ''; // 1. 基本檢查：如果沒有分組依據，或不是小計欄位，直接回傳空字串。
+    }
+    return this.tableUtility.getGroupSubtotal(rowData, col, this.groupRowsBy, this.data);
   }
 }
