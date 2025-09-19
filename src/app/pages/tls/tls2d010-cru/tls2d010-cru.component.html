@@ -75,12 +75,10 @@
         </div>
       </div>
       <app-table-edit
-        *ngIf="currentCreateType === 'counter'"
         title="新增專櫃扣款"
         tableKey="TLSD010Detail"
         [data]="data"
         class="col-12"
-        [data]="data"
         [columns]="columnsCounter"
         (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems"
@@ -117,10 +115,10 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="扣款項目"
-              controlName="CAP_ItemList"
-              [options]="CAP_ItemOptions"
-              [control]="dataFormNormal.controls.CAP_ItemList"
-              [submitted]="submitted"
+            controlName="CAP_Item"
+            [options]="CAP_ItemOptions"
+            [control]="dataFormNormal.controls.CAP_Item"
+            [submitted]="submitted"
           ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -133,12 +131,12 @@
           ></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="扣款金額"
             controlName="tpy_net"
             [control]="dataFormNormal.controls.tpy_net"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -170,7 +168,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-         <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4">
           <app-radiobutton
             label="是否開立發票"
             groupname="GUI_FLAGOption"
@@ -184,7 +182,6 @@
         </div>
       </div>
       <app-table-edit
-        *ngIf="currentCreateType === 'normal'"
         title="新增扣款"
         tableKey="TLSD010Detail"
         [data]="data"
@@ -207,32 +204,3 @@
     </form>
   </p-panel>
 </div>
-<!-- <app-dialog [visible]="dialogVisible" header="整批新增專櫃" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
-  [disable]="selectedItemsDialog.length === 0">
-
-  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
-    <div class="grid p-fluid">
-
-      <app-dropdown class="col-12 col-6 lg:col-4" label="館別" controlName="CAT_LNo"
-        [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="樓層" controlName="CAT_MNo"
-        [control]="dialogQueryForm.controls.CAT_MNo" [options]="CAT_MNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="區域" controlName="CAT_SNo"
-        [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
-        <app-dropdown class="col-12 col-6 lg:col-4" label="專櫃編號" controlName="CAT_SNo"
-        [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
-    </div>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
-      <app-button btnType="query" [loading]="dialogLoading"></app-button>
-    </div>
-  </form>
-  <hr />
-  <app-table tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)"
-    [lazy]="true" [loading]="dialogLoading">
-  </app-table>
-</app-dialog> -->

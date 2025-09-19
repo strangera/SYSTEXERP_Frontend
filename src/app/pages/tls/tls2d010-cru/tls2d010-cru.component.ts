@@ -23,7 +23,7 @@ import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
 import { forkJoin, map } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-
+import { formatDate } from '@angular/common';
 @UntilDestroy()
 @Component({
   selector: 'app-tls2d010-cru',
@@ -76,16 +76,23 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'contract_no', header: '契約編號', type: 'inputNumber', width: '12rem', disabled: () => true },
     { field: 'contract_subno', header: '版次', type: 'inputNumber', width: '15rem', disabled: () => true },
     { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code' },
-    { field: 'tpy_date', header: '扣款日期', type: 'input', width: '12rem' },
+    { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
     { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
     { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
   ];
 
   // 表單
   dataFormCounter = this.formBuilder.group({
-    tlt_no: [],
-    totalCash: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    tlt_no: [''],
+    CAP_Item: [''],
+    AccNo: [''],
+    org_id: [''],
+    tpy_date: [null],
+    GUI_FLAG: [''],
+    tpy_net: [null],
+    remarks: [''],
     pod_no: [],
+    totalCash: [{ value: null as string | null, disabled: true }, [Validators.required]],
     contract_no: [{ value: null as string | null, disabled: true }, [Validators.required]],
     contract_subno: [{ value: null as string | null, disabled: true }, [Validators.required]],
     tlt_contract_bdate: [{ value: null as string | null, disabled: true }, [Validators.required]],
@@ -93,14 +100,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   });
 
   dataFormNormal = this.formBuilder.group({
-    tlt_no: [],
+    tlt_no: [''],
     pod_no: [],
     remarks: [],
     CAP_Type: [],
-    CAP_ItemList: [],
     tpy_date: [null as null | Date, [Validators.required]],
+    CAP_Item: [],
     tpy_net: [],
-    cap_taxtype: [],
+    cap_taxtype: [null],
     GUI_FLAG: [],
     AccNo: [],
     org_id: [],
@@ -116,6 +123,20 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   ngOnInit(): void {
+    const rowdata = history.state?.rowdata;
+    if (rowdata) {
+      this.currentCreateType = rowdata.type;
+      if (this.currentCreateType === 'counter') {
+        // 日期轉型
+        if (rowdata.tpy_date) rowdata.tpy_date = new Date(rowdata.tpy_date);
+        this.dataFormCounter.patchValue(rowdata);
+        // 這裡加上
+        this.data = [rowdata];
+      } else {
+        this.dataFormNormal.patchValue(rowdata);
+        this.data = [rowdata];
+      }
+    }
     if (this.currentCreateType === 'counter') {
       this.initializePage('TLS2D010', this.dataFormCounter);
     } else {
@@ -182,9 +203,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ===== 載入 Counter 欄位動態下拉 =====
   private loadAndSetupColumnsCounter(): void {
-    // const capType$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
-    //   map((res: any) => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
-    // );
 
     const capItem$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
       map((res: any) => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
@@ -222,7 +240,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         this.CapTaxTypeOptions = TAX ?? [];
 
         this.columnsCounter = [
-          { field: 'tpy_date', header: '扣款日期', type: 'input', width: '12rem' },
+          { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
           { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', options: this.CAP_TypeOptions, optionLabel: 'label', optionValue: 'value' },
           { field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', options: this.CAP_ItemOptions, optionLabel: 'label', optionValue: 'value' },
           { field: 'AccNo', header: '會計科目', type: 'dropdown', width: '10rem', options: this.AccNoOptions, optionLabel: 'label', optionValue: 'value' },
@@ -230,7 +248,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
           { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', options: this.CapTaxTypeOptions, optionLabel: 'label', optionValue: 'value' },
           { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
-          { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
+          { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
         ];
       });
   }
@@ -296,7 +314,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           {
             field: 'tpy_date',
             header: '扣款日期',
-            type: 'input',
+            type: 'date',
             width: '12rem',
           },
           {
@@ -316,22 +334,26 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // ===== 送出 =====
+  // ===== 送出 =====
   onSubmit(): void {
     this.submitted = true;
 
     if (this.currentCreateType === 'counter') {
       const counterValue = this.dataFormCounter.getRawValue();
-      const feeList = this.data.map((item) => ({
-        tpy_date: item.tpy_date,
-        CAP_Type: item.CAP_Type,
-        CAP_Item: item.CAP_Item,
-        org_id: item.org_id,
-        AccNo: item.AccNo,
-        GUI_FLAG: item.GUI_FLAG,
-        cap_taxtype: item.cap_taxtype,
-        tpy_net: item.tpy_net,
-        remarks: item.remarks,
-      }));
+
+      const feeList = this.data
+        .filter((item) => !item._isAutoInsertCandidate)
+        .map((item) => ({
+          tpy_date: item.tpy_date ? formatDate(item.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+          CAP_Type: item.CAP_Type,
+          CAP_Item: item.CAP_Item,
+          org_id: item.org_id,
+          AccNo: item.AccNo,
+          GUI_FLAG: item.GUI_FLAG,
+          cap_taxtype: item.cap_taxtype,
+          tpy_net: Number(item.tpy_net ?? 0),
+          remarks: item.remarks,
+        }));
 
       const payload = {
         tltList: [
@@ -341,7 +363,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             pod_no: counterValue.pod_no,
           },
         ],
-        feeList: feeList,
+        feeList,
       };
 
       this.tls2d010Service.insertTLS2D010(payload).subscribe({
@@ -350,17 +372,20 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       });
     } else {
       const normalValue = this.dataFormNormal.getRawValue();
-      const feeList = this.data.map((item) => ({
-        tpy_date: item.tpy_date,
-        CAP_Type: normalValue.CAP_Type,
-        CAP_ItemList: normalValue.CAP_ItemList,
-        org_id: normalValue.org_id,
-        AccNo: normalValue.AccNo,
-        GUI_FLAG: normalValue.GUI_FLAG,
-        cap_taxtype: normalValue.cap_taxtype,
-        tpy_net: normalValue.tpy_net,
-        remarks: normalValue.remarks,
-      }));
+
+      const feeList = this.data
+        .filter((item) => !item._isAutoInsertCandidate)
+        .map((item) => ({
+          tpy_date: item.tpy_date ? formatDate(item.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+          CAP_Type: normalValue.CAP_Type,
+          CAP_Item: normalValue.CAP_Item,
+          org_id: normalValue.org_id,
+          AccNo: normalValue.AccNo,
+          GUI_FLAG: normalValue.GUI_FLAG,
+          cap_taxtype: normalValue.cap_taxtype,
+          tpy_net: Number(normalValue.tpy_net ?? 0),
+          remarks: normalValue.remarks,
+        }));
 
       const payload = {
         tltList: [
@@ -370,7 +395,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             pod_no: normalValue.pod_no,
           },
         ],
-        feeList: feeList,
+        feeList,
       };
 
       this.tls2d010Service.insertTLS2D010(payload).subscribe({
