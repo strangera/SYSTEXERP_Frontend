@@ -63,7 +63,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.logger.debug(`tableEffect:`, [types, meters, locs]);
   }, { allowSignalWrites: !0 });
 
-  public readonly columns: (Column & { exportFormat?: unknown[]; })[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21010Data; exportFormat?: unknown[]; })[] = [
     {
       field: 'ENG_Type',
       header: '能源類型',

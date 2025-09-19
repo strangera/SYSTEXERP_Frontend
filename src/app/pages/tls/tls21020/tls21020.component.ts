@@ -58,7 +58,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
   }, { allowSignalWrites: !0 });
 
-  public columns: Column[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS21020Data; })[] = [
     {
       field: 'AccDC', header: '借/貸',
       format: v => v === 'D' ? '借' : v === 'C' ? '貸' : v

@@ -201,30 +201,4 @@ export class SharedDropdownService {
       this.bankService.getBankOptions()
     );
   }
-  /**
- * 載入活動清單 (TALPORDERM)
- */
-  getActivityOptions(mid: number, strNo: string, podType: string[] = [], podStatus = ''): Observable<DropdownOption[]> {
-    if (!mid || !strNo) {
-      console.warn(' mid 或 strNo 為空，回傳空的活動清單');
-      return of([]);
-    }
-
-    const body = {
-      mid,
-      str_no: strNo,
-      pod_type: podType,
-      pod_status: podStatus
-    };
-
-    return this.callApi('活動清單', () =>
-      this.http.post<any>(
-        `${environment.ApiUrl}/Share/queryTALPORDERM_DropDownList`,
-        body
-      )
-    );
-  }
-
-
-
 }

@@ -1,6 +1,5 @@
-import { NgIf } from '@angular/common';
 import { Component, OnInit, computed } from '@angular/core';
-import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52090Service } from '@service/api/fin/fin52090.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -11,6 +10,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
+import { FIN52090Query } from '../fin52090/fin52090.model';
 
 @Component({
   selector: 'app-fin52090-cru',
@@ -18,7 +18,6 @@ import { finalize, tap } from 'rxjs';
   styleUrl: './fin52090-cru.component.scss',
   standalone: true,
   imports: [
-    NgIf,
     FormsModule,
     PanelModule,
     ReactiveFormsModule,
@@ -32,8 +31,8 @@ import { finalize, tap } from 'rxjs';
 export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
 
   public dataForm = this.formBuilder.nonNullable.group({
-    accountCode: new FormControl<string | void>(void 0, [Validators.required]),
-    accountSummary: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(100)]),
+    AccNo: new FormControl<string | void>(void 0, [Validators.required]),
+    NoteDesc: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(100)]),
   });
   public readonly df = computed(() => this.dataForm.controls);
 
@@ -46,23 +45,28 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   ngOnInit(): void {
     this.initializePage('FIN52090', this.dataForm);
+
+    this.service.getAccNo();
+
+    this.logger.debug(`init:`, [this.rowdata, this.crudstatus, this.service.accNo()]);
   }
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const payload = {
-        ...this.dataForm.value,
+      const payload = <FIN52090Query>{
+        AccNo: this.df().AccNo.value ?? '',
+        NoteDesc: this.df().NoteDesc.value ?? '',
       };
 
-      this.service.updateFIN52090Data(payload).pipe(
-        tap(() => {
-          // 更新FIN52090
-        }),
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug(`onSubmit:`, [payload]);
-        })
-      ).subscribe();
+      this.logger.debug(`onSubmit:`, [payload]);
+
+      this.service.saveFIN52090Data(payload).pipe(
+        finalize(() => this.loading = !1),
+      ).subscribe(res => {
+        if (res.Status !== '0000') return this.messageService.errorBubble('資料儲存失敗，請再次檢查欄位');
+        this.messageService.successBubble('資料儲存成功');
+        this.onCancel();
+      });
     });
   }
 }

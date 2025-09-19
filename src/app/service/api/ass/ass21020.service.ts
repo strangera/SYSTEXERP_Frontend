@@ -3,7 +3,6 @@ import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
 import { ASS21020Data, ASS21020Delete, ASS21020Query, ASS21020Update, ASS21020UpdateStatus, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { EngType } from '@service/api/ass/ass21010.service';
-import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';

@@ -1,39 +1,37 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { testDorm } from '@pages/fin/fin52080/fin52080.model';
+import { FIN52080ClassNo, FIN52080Data, FIN52080Query, FIN52080Tree } from '@pages/fin/fin52080/fin52080.model';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { apiOption } from '@shared/models/sys/sysb000.model';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { NGXLogger } from 'ngx-logger';
-import { catchError, EMPTY, finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-const apiUrl = environment.ApiUrl;
+const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 
 @Injectable({ providedIn: 'root' })
 export class FIN52080Service {
 
-  public readonly test = !0;
-
-  public readonly FIN52080Data = signal<testDorm[]>([]);
-  public readonly FIN52080DetailData = signal<Record<string, any>[]>([]);
-  public readonly accountCodes = signal<DropdownOption[]>([]);
+  public readonly FIN52080Data = signal<FIN52080Data[]>([]);
+  public readonly classNoOption = signal<FIN52080ClassNo[]>([]);
+  public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
 
   private readonly tableCancel$ = new Subject<void>();
-  private readonly accountCodeCancel$ = new Subject<void>();
+  private readonly classNoCancel$ = new Subject<void>();
+  private readonly treeCancel$ = new Subject<void>();
 
   public tableLoading = !1;
-  public accountCodeLoading = !1;
+  public classNoLoading = !1;
+  public treeLoading = !1;
 
-  /** 中類代碼 */
-  public readonly classNoOption: apiOption[] = Array.from({ length: 999 }).map((_, i) =>
-    ({ No: String(i + 1), Name: String(i + 1).padStart(3, '0') }));
-  public readonly classNoMap = new Map(this.classNoOption.map(item => [item.No, item.Name]));
+  public accNoFilter = /^\d{1,8}$/;
+
+  public readonly classNoMap = computed(() => new Map(this.classNoOption().map(item => [item.ClassNo, item.ClassCName])));
 
   /** 借/貸 */
   public readonly accDCOption: apiOption[] = [
-    { No: '0', Name: '借' },
-    { No: '1', Name: '貸' }
+    { No: 'D', Name: '借' },
+    { No: 'C', Name: '貸' }
   ];
 
   /** 統制/明細 */
@@ -66,99 +64,75 @@ export class FIN52080Service {
     { No: 'D', Name: '現金' },
     { No: 'E', Name: '應收保證票據' }
   ];
+  private readonly treeColumn = [
+    { value: 'T10Label', label: '大分類' },
+    { value: 'T20Label', label: '中分類' },
+    { value: 'T30Label', label: '小分類' },
+  ];
 
-  private readonly dummyData = computed(() =>
-    Array.from({ length: 100 }).map(() => (<testDorm>{
-      AccNo: String(Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000),
-      AccCname: '庫存現金' + Math.random().toString(36).substring(2, 6).toUpperCase(),
-      AccEname: Array.from({ length: 8 }).map(() => String.fromCharCode(Math.floor(Math.random() * (90 - 65 + 1)) + 65)).join(''),
-      AccDC: this.accDCOption[Math.floor(Math.random() * this.accDCOption.length)].No,
-      Ledger_MD: this.ledgerMDOption[Math.floor(Math.random() * this.ledgerMDOption.length)].No,
-      ClassNo: String(Math.floor(Math.random() * (999 - 100 + 1)) + 100),
-      ABAT_YN: this.whetherOption[Math.floor(Math.random() * this.whetherOption.length)].No,
-      Voucher_Type: this.voucherTypeOption[Math.floor(Math.random() * this.voucherTypeOption.length)].No,
-      Budget_YN: this.whetherOption[Math.floor(Math.random() * this.whetherOption.length)].No,
-      Org_YN: this.whetherOption[Math.floor(Math.random() * this.whetherOption.length)].No,
-      rest_value: Math.floor(Math.random() * (100 - 1 + 1)) + 1,
-      rest_value2: Math.floor(Math.random() * (100 - 1 + 1)) + 1,
-      Input_YN: this.whetherOption[Math.floor(Math.random() * this.whetherOption.length)].No,
-    }))
-  );
+  private readonly LeaveLabel = 't_name';
+  private readonly listTitle = '科目圖';
+
+  public readonly TreeElements = {
+    treeColumn: this.treeColumn,
+    LeaveLabel: this.LeaveLabel,
+    listTitle: this.listTitle,
+  };
 
   constructor(
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,
   ) { }
 
-  public loadFIN52080(payload: unknown): Observable<BaseQueryResponse<testDorm>> {
+  public loadFIN52080(payload: FIN52080Query): Observable<BaseQueryResponse<FIN52080Data>> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<testDorm>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52080`, payload).pipe(
+    return this.http.post<BaseQueryResponse<FIN52080Data>>(`${apiUrl}/queryFIN52080`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52080Data.set(res.Data)),
-      catchError(() => { this.test && this.FIN52080Data.set(this.dummyData()); return EMPTY; }),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('查詢FIN52080結果:', [this.FIN52080Data()]);
-      })
+      tap(() => this.logger.debug('查詢FIN52080結果:', [this.FIN52080Data()])),
+      finalize(() => this.tableLoading = !1)
     );
   };
 
-  public loadFIN52080Detail(payload: unknown): void {
-    this.tableCancel$.next();
-    this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52080_detail`, payload).pipe(
+  public getClassNos(): void {
+    this.classNoCancel$.next();
+    this.classNoLoading = !0;
+    this.http.post<BaseQueryResponse<FIN52080ClassNo>>(`${apiUrl}/queryClassNoDropdown`, {}).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
-      tap(res => this.FIN52080DetailData.set(res.Data)),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('查詢FIN52080 Detail結果:', [this.FIN52080DetailData()]);
-      })
+      takeUntil(this.classNoCancel$),
+      tap(res => this.classNoOption.set(res.Data)),
+      tap(() => this.logger.debug('查詢ClassNo結果:', [this.classNoOption(), this.classNoMap()])),
+      finalize(() => this.classNoLoading = !1)
     ).subscribe();
   };
 
-  public updateFIN52080Data(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
+  public getFIN52080Tree(): void {
+    this.treeCancel$.next();
+    this.treeLoading = !0;
+    this.http.post<BaseQueryResponse<FIN52080Tree>>(`${apiUrl}/queryFIN52080_tree_DropDownList`, {}).pipe(
+      take(1),
+      takeUntil(this.treeCancel$),
+      tap(res => this.FIN52080Tree.set(res.Data)),
+      tap(() => this.treeLoading = !1),
+      tap(() => this.logger.debug('查詢ClassNo樹狀結構結果:', [this.FIN52080Tree()])),
+      finalize(() => this.treeLoading = !1)
+    ).subscribe();
+  }
+
+  /** 存檔 (目前暫無update) */
+  public saveFIN52080(payload: FIN52080Query, action: 'insert' | 'update' = 'insert'): Observable<BaseQueryResponse<unknown>> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/updateFIN52080`, payload).pipe(
+    const suffix = action === 'insert' ? 'insertFIN52080' : 'updateFIN52080';
+    const logLabel = action === 'insert' ? '插入FIN52080結果:' : '更新FIN52080結果:';
+
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/${suffix}`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(res => { }),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('更新FIN52080結果:', []);
-      })
+      tap(res => this.logger.debug(logLabel, [res])),
+      finalize(() => this.tableLoading = !1)
     );
-  };
-
-  /** 預留給科目api */
-  public loadxxxx(payload?: unknown): void {
-    this.tableCancel$.next();
-    this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/xxxx`, payload).pipe(
-      take(1),
-      takeUntil(this.tableCancel$),
-      tap(res => this.FIN52080DetailData.set(res.Data)),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('查詢FIN52080 Detail結果:', [this.FIN52080DetailData()]);
-      })
-    ).subscribe();
-  };
-
-  public loadAccountCodes(): void {
-    this.accountCodeCancel$.next();
-    this.accountCodeLoading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52080_Creaters`, {}).pipe(
-      take(1),
-      takeUntil(this.accountCodeCancel$),
-      tap(res => this.accountCodes.set(res.Data)),
-      finalize(() => {
-        this.accountCodeLoading = !1;
-        this.logger.debug('查詢AccountCodes結果:', [this.accountCodes()]);
-      })
-    ).subscribe();
   };
 }

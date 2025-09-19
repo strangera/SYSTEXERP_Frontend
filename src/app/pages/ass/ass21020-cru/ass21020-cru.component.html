@@ -73,8 +73,10 @@
                         [disabled]="true"
                         [submitted]="submitted"></app-input-text>
       </div>
-      <div *ngIf="!isFormReadable"
-           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+
+
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel"
                     [form]="dataForm"
                     (click)="onKancel()"></app-button>
@@ -82,6 +84,7 @@
                     [loading]="loading"
                     [disabled]="!rowEditValidSignal()"></app-button>
       </div>
+      }
     </form>
   </p-panel>
 </div>

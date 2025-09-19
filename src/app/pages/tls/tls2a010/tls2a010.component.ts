@@ -180,7 +180,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             No: x.No,
             PAY_Type: x.PAY_Type ?? ''
           };
-        }).filter(opt => ['0', '1', '6', 'B', 'M'].includes(opt.PAY_Type));  // <<== 過濾這些值
+        }).filter(opt => ['0', '1', '6', 'B', 'C', 'M'].includes(opt.PAY_Type));  // <<== 過濾這些值
 
         const payNo = this.queryForm.value.PAY_NO;
         if (payNo) {

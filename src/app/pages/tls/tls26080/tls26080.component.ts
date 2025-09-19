@@ -70,7 +70,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     };
   });
 
-  public columns: Column[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26080Data; })[] = [
     { field: 'pod_no', header: '活動編號' },
     { field: 'pod_desc', header: '活動名稱' },
     { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },

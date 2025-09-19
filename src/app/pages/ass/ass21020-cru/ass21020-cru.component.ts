@@ -17,7 +17,7 @@ import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Detail, ASS21020Query, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
+import { ASS21020CRUTable, ASS21020Data, ASS21020Detail, ASS21020Query, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -229,7 +229,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.initEffect.destroy();
   }, { allowSignalWrites: !0 });
 
-  public readonly columns: Column[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21020CRUTable; })[] = [
     {
       field: 'TLT_No',
       header: '專櫃編號/名稱',

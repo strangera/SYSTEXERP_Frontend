@@ -13,6 +13,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { Column } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
+import { TLS21020Data } from '../tls21020/tls21020.model';
 
 @Component({
   selector: 'app-tls21020-cru',
@@ -40,7 +41,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   });
   public readonly df = computed(() => this.dataForm.valueChanges);
 
-  public SDcolumn: Column[] = [
+  public SDcolumn: (Omit<Column, 'field'> & { field: keyof TLS21020Data; })[] = [
     { field: 'AccDC', header: '借/貸' },
     { field: 'ItemDesc', header: '項目名稱' },
     { field: 'AccNo_Name', header: '會計科目' },

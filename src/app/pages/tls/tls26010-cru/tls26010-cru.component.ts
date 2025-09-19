@@ -201,19 +201,19 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.dialogVisible() === 'tlt' ? this.service.tltLoading : !1;
   }
 
-  public columns: Column[] = [
+  public readonly columns: Column[] = [
     { field: 'ecr_no', header: '收銀機號' },
     { field: 'ecr_name', header: '收銀機名稱' },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
-  public columns2: Column[] = [
+  public readonly columns2: Column[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
-  private columns3: Column[] = [
+  private readonly columns3: Column[] = [
     { field: 'building_name', header: '館別' },
     { field: 'floor_name', header: '樓層' },
     { field: 'area_name', header: '區域' },
@@ -223,7 +223,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
-  private columns4: Column[] = [
+  private readonly columns4: Column[] = [
     { field: 'building_name', header: '館別' },
     { field: 'floor_name', header: '樓層' },
     { field: 'area_name', header: '區域' },

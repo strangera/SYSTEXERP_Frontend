@@ -1,8 +1,7 @@
 import { Signal, TemplateRef } from '@angular/core';
 import { SortMeta } from 'primeng/api';
-
-export interface Column {
-  field: string;     // 欄位名稱 (資料的欄位名稱)
+export interface Column<T = Record<string, any>> {
+  field: keyof T;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)

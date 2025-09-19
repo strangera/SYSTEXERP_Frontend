@@ -11,7 +11,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
+import { FIN52030Data } from './fin52030.model';
 
 @Component({
   selector: 'app-fin52030',
@@ -80,7 +81,7 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
-  public columns: Column[] = [
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'isDeleted', header: '是否刪除', format: v => v === 'Y' ? '是' : '否' },
     { field: 'subpoenaCode', header: '常用傳票代號' },
     { field: 'subpoenaNumber', header: '常用傳票號碼' },
@@ -112,8 +113,12 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
       this.logger.debug(`onSubmit:`, [payload]);
       this.service.FIN52030Data.set([]);
 
-      this.service.loadFIN52030(payload);
-      this.loading = this.service.tableLoading;
+      this.service.loadFIN52030(payload).pipe(
+        finalize(() => {
+          this.loading = !1;
+          this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.filteredData()]);
+        }),
+      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }

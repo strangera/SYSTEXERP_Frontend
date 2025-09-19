@@ -1,69 +1,133 @@
 <div class="card">
-    <div class="flex gap-2 mb-2">
-        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-        <app-button btnType="back" (click)="onCancel()"></app-button>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="科目代號" controlName="AccNo" [control]="dataForm.controls.AccNo"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="科目名稱" controlName="AccCname" [control]="dataForm.controls.AccCname"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="科目英文名稱" controlName="AccEname" [control]="dataForm.controls.AccEname"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="借/貸" controlName="AccDC" [options]="AccDC_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.AccDC" [submitted]="submitted"></app-dropdown>  
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="統制/明細" controlName="Ledger_MD" [options]="Ledger_MD_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.Ledger_MD" [submitted]="submitted"></app-dropdown>  
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="三碼代號" controlName="ClassNo" [options]="ClassNo_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.ClassNo" [submitted]="submitted"></app-dropdown>  
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="是否為沖帳代號" controlName="ABAT_YN" [options]="whether_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.ABAT_YN" [submitted]="submitted"></app-dropdown>  
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="傳票格式" controlName="Voucher_Type" [options]="Voucher_Type_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.Voucher_Type" [submitted]="submitted"></app-dropdown>  
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="是否為預算科目" controlName="Budget_YN" [options]="whether_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.Budget_YN" [submitted]="submitted"></app-dropdown>  
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="是否設定部門代號" controlName="Org_YN" [options]="whether_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.Org_YN" [submitted]="submitted"></app-dropdown>  
-            </div>
-            <!-- <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="折舊攤提年限" controlName="rest_value" [control]="dataForm.controls.rest_value"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="殘值年限" controlName="rest_value2" [control]="dataForm.controls.rest_value2"
-                [submitted]="submitted"></app-input-text>
-            </div> -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="是否可輸" controlName="Input_YN" [options]="whether_Option" optionLabel="Name"
-                optionValue="No" [control]="dataForm.controls.Input_YN" [submitted]="submitted"></app-dropdown>  
-            </div>
-          </div>
-            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-                *ngIf="!isFormReadable">
-                <app-button btnType="cancel" [form]="dataForm"></app-button>
-                <app-button btnType="submit"></app-button>
-            </div>
-        </form>
-    </p-panel>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="back"
+                (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate"
+           class="line-height-3 m-0">
+    <form [formGroup]="dataForm"
+          id="dataForm"
+          (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4"
+                        label="科目代號"
+                        controlName="AccNo"
+                        [control]="df().AccNo"
+                        [keyFilter]="service.accNoFilter"
+                        [submitted]="submitted"></app-input-text>
+
+        <app-input-text class="col-12 md:col-6 lg:col-4"
+                        label="科目名稱"
+                        controlName="AccCname"
+                        [control]="df().AccCname"
+                        [submitted]="submitted"></app-input-text>
+
+        <app-input-text class="col-12 md:col-6 lg:col-4"
+                        label="科目英文名稱"
+                        controlName="AccEname"
+                        [control]="df().AccEname"
+                        [submitted]="submitted"></app-input-text>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="借/貸"
+                      controlName="AccDC"
+                      [options]="service.accDCOption"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [showClear]="false"
+                      [control]="df().AccDC"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="統制/明細"
+                      controlName="Ledger_MD"
+                      [options]="service.ledgerMDOption"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [showClear]="false"
+                      [control]="df().Ledger_MD"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="三碼代號"
+                      controlName="ClassNo"
+                      [options]="service.classNoOption()"
+                      optionLabel="ClassCName"
+                      optionValue="ClassNo"
+                      [showClear]="false"
+                      [control]="df().ClassNo"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="是否為沖帳代號"
+                      controlName="ABAT_YN"
+                      [options]="service.whetherOption"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [showClear]="false"
+                      [control]="df().ABAT_YN"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="傳票格式"
+                      controlName="Voucher_Type"
+                      [options]="service.voucherTypeOption"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [showClear]="false"
+                      [control]="df().Voucher_Type"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="是否為預算科目"
+                      controlName="Budget_YN"
+                      [options]="service.whetherOption"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [showClear]="false"
+                      [control]="df().Budget_YN"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="是否設定部門代號"
+                      controlName="Org_YN"
+                      [options]="service.whetherOption"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [showClear]="false"
+                      [control]="df().Org_YN"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="是否可輸"
+                      controlName="Input_YN"
+                      [options]="service.whetherOption"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [showClear]="false"
+                      [control]="df().Input_YN"
+                      [submitted]="submitted"></app-dropdown>
+      </div>
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        @if (service.treeLoading) {
+        <p-progressSpinner></p-progressSpinner>
+        } @else {
+        <app-tree-dropdown [members]="service.FIN52080Tree()"
+                           [Columns]="service.TreeElements.treeColumn"
+                           [LeaveColumnLabel]="service.TreeElements.LeaveLabel"
+                           (confirmSelected)="onLevelSelected($event)"
+                           [SelectbleCheckBox]="false"
+                           [listTitle]="service.TreeElements.listTitle"></app-tree-dropdown>
+        }
+        <app-button btnType="cancel"
+                    [form]="dataForm"></app-button>
+        <app-button btnType="submit"
+                    [disabled]="dataForm.invalid"></app-button>
+      </div>
+      }
+    </form>
+  </p-panel>
 </div>

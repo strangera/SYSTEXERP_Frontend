@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { catchError, EMPTY, finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl;
@@ -42,34 +42,34 @@ export class FIN52030Service {
     ]);
   }
 
-  public loadFIN52030(payload: unknown): void {
+  public loadFIN52030(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030`, payload).pipe(
+    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52030Data.set(res.Data)),
-      catchError(() => { this.test && this.FIN52030Data.set(dummyData); return EMPTY; }),
       finalize(() => {
         this.tableLoading = !1;
+        this.test && this.FIN52030Data.set(dummyData);
         this.logger.debug('查詢FIN52030結果:', [this.FIN52030Data()]);
       })
-    ).subscribe();
+    );
   };
 
-  public loadFIN52030Detail(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
+  public loadFIN52030Detail(payload: unknown): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030_detail`, payload).pipe(
+    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030_detail`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52030DetailData.set(res.Data)),
-      catchError(() => { this.test && this.FIN52030DetailData.set(dummyDetailData); return EMPTY; }),
       finalize(() => {
         this.tableLoading = !1;
+        this.test && this.FIN52030DetailData.set(dummyDetailData);
         this.logger.debug('查詢FIN52030 Detail結果:', [this.FIN52030DetailData()]);
       })
-    );
+    ).subscribe();
   };
 
   /** 預留給科目api */
@@ -108,9 +108,9 @@ export class FIN52030Service {
       take(1),
       takeUntil(this.creatorCancel$),
       tap(res => this.creators.set(res.Data)),
-      catchError(() => { this.test && this.creators.set(dummyCreators); return EMPTY; }),
       finalize(() => {
         this.creatorLoading = !1;
+        this.test && this.creators.set(dummyCreators);
         this.logger.debug('查詢Creaters結果:', [this.creators()]);
       })
     ).subscribe();
@@ -123,9 +123,9 @@ export class FIN52030Service {
       take(1),
       takeUntil(this.modifierCancel$),
       tap(res => this.modifiers.set(res.Data)),
-      catchError(() => { this.test && this.modifiers.set(dummyModifiers); return EMPTY; }),
       finalize(() => {
         this.modifierLoading = !1;
+        this.test && this.modifiers.set(dummyModifiers);
         this.logger.debug('查詢Modifiers結果:', [this.modifiers()]);
       })
     ).subscribe();
