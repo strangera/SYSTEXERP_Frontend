@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
-import { Column } from './table-report.model';
+import { ReportColumn } from './table-report.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,17 +14,17 @@ export class TableReportUtilityService {
   ) { }
 
   // 判斷欄位是否可見
-  isColumnVisible(col: Column): boolean {
+  isColumnVisible(col: ReportColumn): boolean {
     return col.visible !== false && col.hidden !== true;
   }
 
   // 計算分組欄位跨度
-  getColumnSpan(columns: Column[], groupField: string): number {
+  getColumnSpan(columns: ReportColumn[], groupField: string): number {
     return columns.filter(col => col.groupField === groupField && this.isColumnVisible(col)).length;
   }
 
   // 判斷是否應該渲染分組標題
-  shouldRenderGroupHeader(col: Column, index: number, columns: Column[]): boolean {
+  shouldRenderGroupHeader(col: ReportColumn, index: number, columns: ReportColumn[]): boolean {
     if (!col.groupField || !this.isColumnVisible(col)) {
       return false;
     }
@@ -36,19 +36,6 @@ export class TableReportUtilityService {
       }
     }
     return true;
-  }
-  /**
- * 取得分組小計的數值
- * @param row 當前分組的第一筆資料
- * @param col 當前的欄位定義
- * @returns 對應的小計數值，如果找不到或不是數值欄位則回傳空字串
- */
-  getGroupSubtotal(rowData: any, footerSubtotal: any[], groupRowsBy: string | undefined): any {
-    if (!footerSubtotal || !groupRowsBy || !rowData) {
-      return undefined;
-    }
-    // 根據 groupRowsBy 屬性找到對應的小計物件
-    return footerSubtotal.find(sub => sub[groupRowsBy] === rowData[groupRowsBy]);
   }
 
   private safeUrlCache = new Map<string, SafeUrl>();
@@ -76,5 +63,41 @@ export class TableReportUtilityService {
     this.safeUrlCache.set(url, safeUrl);
 
     return safeUrl;
+  }
+  /**
+   * 判斷當前行是否為該分組的最後一筆。
+   * @param rowData 當前行資料。
+   * @param rowIndex 當前行索引。
+   * @returns 如果是最後一筆則回傳 true，否則為 false。
+   */
+  isGroupLastRow(rowData: any, rowIndex: number, groupRowsBy: string, data: any): boolean {
+    // 取得當前行和下一行在分組依據欄位上的值
+    const currentRowGroupValue = rowData[groupRowsBy];
+    if (groupRowsBy === undefined || rowIndex === data.length - 1 || data[rowIndex + 1] === undefined || data[rowIndex + 1][groupRowsBy] === undefined) {
+      return true;
+    }
+    const nextRowGroupValue = data[rowIndex + 1][groupRowsBy];
+
+    // 如果當前行的分組值與下一行不同，表示當前行是該分組的最後一筆
+    return currentRowGroupValue !== nextRowGroupValue;
+  }
+  /**
+ * 依據群組標示，計算並取得該欄位的小計數值。
+ * @param rowData 當前行的資料。
+ * @param col 當前的欄位定義。
+ * @returns 該欄位的小計數值，如果找不到或不是數值欄位則回傳空字串。
+ */
+  getGroupSubtotal(rowData: any, col: ReportColumn, groupRowsBy: string, data: any): any {
+    // 2. 找到屬於同一個群組的所有資料
+    const groupValue = rowData[groupRowsBy];
+    // 這裡使用 'this.data' 是關鍵，它必須在正確的元件上下文裡
+    const groupRows = data.filter((item: any) => item[groupRowsBy!] === groupValue);
+    // 3. 對找到的資料進行加總，並將值轉為數字
+    const total = groupRows.reduce((sum: number, item: Record<string, any>) => {
+      const value = Number(item[col.field]) || 0;
+      return sum + value;
+    }, 0);
+    // 4. 回傳加總後的數值
+    return col.format ? col.format(total) : total;
   }
 }

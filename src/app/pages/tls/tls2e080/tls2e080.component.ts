@@ -8,7 +8,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { IQueryData, IQueryRequest, TLS2E080Service } from '@service/api/tls/tls2e080.service';
-import { Column } from '@shared/componentkit/table-report/table-report.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -66,7 +66,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   totalRecords = 0;
   data: IQueryData[] = [];
   selectedItems: IQueryData[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'sam_yyymm', header: '結算年月', visible: true },
     { field: 'money_type_name', header: '結帳方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },

@@ -129,7 +129,7 @@
         </ng-container>
       </td>
     </tr>
-    <ng-container *ngIf="this.groupRowsBy && this.footerSubtotal?.length">
+    <ng-container *ngIf="hasSubtotalColumns()">
       <tr *ngIf="isGroupLastRow(rowData, rowIndex)" class="font-bold text-center text-sm bg-gray-200 text-primary">
         <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
           <span class="font-bold">小計</span>
@@ -138,8 +138,7 @@
           <td *ngIf="!col.hidden" class="text-center" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
             pFrozenColumn [frozen]="col.frozen || false">
             <span class="font-bold">
-              {{ col.format ? col.format(getCustomSubtotalValue(getGroupSubtotal(rowData), col)) :
-              getCustomSubtotalValue(getGroupSubtotal(rowData), col)}}
+              {{ getGroupSubtotal(rowData, col) }}
             </span>
           </td>
         </ng-container>

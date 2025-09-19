@@ -1,13 +1,13 @@
 import { InputGroupColumn } from "@shared/componentkit/input-group/input-group.component";
-import { Column, formatAmount } from "@shared/componentkit/table-report/table-report.model";
+import { ReportColumn, formatAmount } from "@shared/componentkit/table-report/table-report.model";
 
-export const bus_typeColumns: Column[] = [
+export const bus_typeColumns: ReportColumn[] = [
   { field: 'bus_type', header: '大分類代碼' },
   { field: 'bus_type_name', header: '大分類名稱' },
   { field: 'total_budget', header: '月預算', format: formatAmount },
 ]
 
-export const bus_classColumns: Column[] = [
+export const bus_classColumns: ReportColumn[] = [
   { field: 'bus_type', header: '大分類代碼' },
   { field: 'bus_type_name', header: '大分類名稱' },
   { field: 'bus_class', header: '中分類代碼' },
@@ -15,7 +15,7 @@ export const bus_classColumns: Column[] = [
   { field: 'total_budget', header: '月預算', format: formatAmount },
 
 ]
-export const bus_sclassColumns: Column[] = [
+export const bus_sclassColumns: ReportColumn[] = [
   { field: 'bus_type', header: '大分類代碼' },
   { field: 'bus_type_name', header: '大分類名稱' },
   { field: 'bus_class', header: '中分類代碼' },
@@ -25,7 +25,7 @@ export const bus_sclassColumns: Column[] = [
   { field: 'total_budget', header: '月預算', format: formatAmount },
 
 ]
-export const org_idColumns: Column[] = [
+export const org_idColumns: ReportColumn[] = [
   { field: 'bus_type', header: '大分類代碼' },
   { field: 'bus_type_name', header: '大分類名稱' },
   { field: 'bus_class', header: '中分類代碼' },
@@ -37,7 +37,7 @@ export const org_idColumns: Column[] = [
   { field: 'total_budget', header: '月預算', format: formatAmount },
 
 ]
-export const tlt_noColumns: Column[] = [
+export const tlt_noColumns: ReportColumn[] = [
   { field: 'bus_type', header: '大分類代碼' },
   { field: 'bus_type_name', header: '大分類名稱' },
   { field: 'bus_class', header: '中分類代碼' },

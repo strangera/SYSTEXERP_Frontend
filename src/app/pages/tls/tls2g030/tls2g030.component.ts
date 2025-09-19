@@ -7,7 +7,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup } from '@shared/componentkit/table-report/table-report.model';
+import { ReportColumn, ColumnGroup } from '@shared/componentkit/table-report/table-report.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -29,7 +29,7 @@ export class TLS2G030Component extends BasicQueryPageComponent<any> implements O
   tlt_noOptions = this.dropdown.queryTltTalent();
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: any[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     // 固定欄位
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
