@@ -44,20 +44,20 @@ export const creditCardColumns: Column[] = [
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
 
-  { header: '信用卡', field: 'BOOK_PayAmt1', groupField: 'BOOK' },
-  { header: 'AE', field: 'BOOK_PayAmt2', groupField: 'BOOK' },
-  { header: 'DINER', field: 'BOOK_PayAmt3', groupField: 'BOOK' },
+  { header: '信用卡', field: 'BOOK_PayAmt1', groupField: 'BOOK', isTotal: true },
+  { header: 'AE', field: 'BOOK_PayAmt2', groupField: 'BOOK', isTotal: true },
+  { header: 'DINER', field: 'BOOK_PayAmt3', groupField: 'BOOK', isTotal: true },
   { header: '總金額', field: 'BOOK_PayAmt', isTotal: true },
 
-  { header: '信用卡', field: 'ACT_PayAmt1', groupField: 'ACT' },
-  { header: 'AE', field: 'ACT_PayAmt2', groupField: 'ACT' },
-  { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT' },
+  { header: '信用卡', field: 'ACT_PayAmt1', groupField: 'ACT', isTotal: true },
+  { header: 'AE', field: 'ACT_PayAmt2', groupField: 'ACT', isTotal: true },
+  { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT', isTotal: true },
   { header: '總金額', field: 'ACT_PayAmt', isTotal: true },
 
 
-  { header: '信用卡', field: 'OVER_PayAmt1', groupField: 'OVER' },
-  { header: 'AE', field: 'OVER_PayAmt2', groupField: 'OVER' },
-  { header: 'DINER', field: 'OVER_PayAmt3', groupField: 'OVER' },
+  { header: '信用卡', field: 'OVER_PayAmt1', groupField: 'OVER', isTotal: true },
+  { header: 'AE', field: 'OVER_PayAmt2', groupField: 'OVER', isTotal: true },
+  { header: 'DINER', field: 'OVER_PayAmt3', groupField: 'OVER', isTotal: true },
   { header: '總金額', field: 'OVER_PayAmt', isTotal: true },
   {
     header: '審核狀態',
