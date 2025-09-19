@@ -23,6 +23,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { SkeletonModule } from 'primeng/skeleton';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { SortMeta } from 'primeng/api';
+import { CalendarModule } from 'primeng/calendar';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -44,7 +45,8 @@ import { SortMeta } from 'primeng/api';
     InputIconModule,
     BreadcrumbModule,
     SkeletonModule,
-    FileUploadModule
+    FileUploadModule,
+    CalendarModule
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
