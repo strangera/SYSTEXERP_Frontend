@@ -720,7 +720,7 @@ onExportXLSX() {
 
     { field: 'TXN_GUI_CarrType', header: '載具種類',     visible: true, format: (v: any) => this.getLabelFromOptions(v, this.carrierTypeOptions) },
     // { field: 'DonateType',     header: '捐贈類別',      visible: true },
-    { field: 'TXN_GUIVehicle', header: '共通性載具號碼', visible: true },
+    { field: 'TXN_GUIVehicle', header: '載具號碼', visible: true },
 
     { field: 'TXN_PrintTimes', header: '發票列印次數',    visible: true, style: 'text-right' },
     { field: 'TXN_PrintGUI',   header: '電子發票是否列印', visible: true, format: this.getYesNoLabel },
