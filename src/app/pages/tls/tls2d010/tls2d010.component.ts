@@ -130,15 +130,11 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         Name: item.Name
       }));
     });
-    this.sharedDropdownService.getActivityOptions(1001, 'A01', [], '').subscribe({
-      next: (options) => {
-        this.pod_noOptions = options.map((item: any) => ({
-          value: item.No,
-          label: `${item.No}-${item.Name}`
-        }));
-        console.log('活動清單載入完成:', this.pod_noOptions);
-      },
-
+    this.dropDownListService.getActivityOptions({mid:0,str_no: '10',pod_type: [],pod_status: ''}).subscribe((res) => {
+      this.pod_noOptions = (res?.Data || []).map((item: any) => ({
+        value: item.pod_no,
+        label: `${item.pod_no}-${item.pod_desc}`
+      }));
     });
   }
   onSubmit(frm: FormGroup) {
