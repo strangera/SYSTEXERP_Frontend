@@ -6,9 +6,18 @@ import { ApiResponse } from '@service/system/auth.service';
 
 // 根據 Swagger 定義的介面
 export interface IExportPDFRequest {
-  talent_id: number;
-  sad_date_Start: string;
-  sad_date_End: string;
+  exportList:
+  {
+    talent_id: number,
+    sam_yyymm: string,
+    sad_date_Start: string | Date,
+    sad_date_End: string | Date,
+    money_type: string,
+    money_type_name: string,
+    sam_termno: number,
+    tlt_term_type: string,
+    tlt_term_type_name: string
+  }[];
 }
 
 export interface IQueryRequest {
@@ -27,11 +36,18 @@ export interface IQueryRequest {
 }
 
 export interface IQueryData {
-  sam_yyymm: string;
-  tlt_no: string;
-  contract_no: string;
-  contract_subno: number;
-  tlt_name: string;
+  id: number,
+  talent_id: number,
+  sam_yyymm: string,
+  money_type: string,
+  money_type_name: string,
+  sam_termno: number,
+  tlt_term_type: string,
+  tlt_term_type_name: string,
+  tlt_no: string,
+  contract_no: string,
+  contract_subno: number,
+  tlt_name: string
 }
 
 
@@ -50,7 +66,7 @@ export class TLS2E080Service {
    * @returns 檔案串流 (Blob) 或其他 API 響應
    */
   exportTLS2E080PDF(data: IExportPDFRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/exportTLS2E080PDF`, data, { responseType: 'blob' });
+    return this.http.post(`${this.apiUrl}/exportTLS2E080PDF`, data, { responseType: 'blob', observe: 'response' });
   }
 
   /**
