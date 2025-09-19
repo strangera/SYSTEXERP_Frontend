@@ -17,7 +17,6 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
@@ -59,15 +58,16 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   pod_noOptions: any[] = [];
 
   // 下拉選項
+  org_idOptions: IDropdownItem[] = [];
   CAP_TypeOptions = getSYS1000Options('CAP_Type');
-  CAP_ItemOptions: any[] = [];
-  AccNoOptions: any[] = [];
+  CAP_ItemOptions: IDropdownItem[] = [];
+  AccNoOptions: IDropdownItem[] = [];
   OrgOptions: any[] = [];
   GuiFlagOptions: any[] = [];
   CapTaxTypeOptions: any[] = [];
   cap_taxtypeOptions = [
-    { label: '0-免稅', value: '0' },
-    { label: '1-應稅', value: '1' },
+    { label: '免稅', value: '0' },
+    { label: '應稅', value: '1' },
   ];
   // 欄位設定
   columnsCounter: EditColumn[] = [];
@@ -97,7 +97,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     pod_no: [],
     remarks: [],
     CAP_Type: [],
-    CAP_Item: [],
+    CAP_ItemList: [],
     tpy_date: [null as null | Date, [Validators.required]],
     tpy_net: [],
     cap_taxtype: [],
@@ -131,6 +131,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 載入 Counter 欄位設定
     this.loadAndSetupColumnsCounter();
+    // 載入 Normal 欄位設定
+    this.loadAndSetupColumnsNormal();
   }
 
   // ===== 專櫃 & 活動選單 =====
@@ -150,6 +152,32 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         label: `${item.pod_no}-${item.pod_desc}`
       }));
     });
+    this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
+      this.AccNoOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No,
+        label: `${item.No}-${item.Name}`,
+        No: item.No,
+        Name: item.Name
+      }));
+    });
+    this.dropDownListService.querySYS3100_DropDownList().subscribe(
+      (res) => {
+        this.org_idOptions = (res?.Data || []).map((item: any) => ({
+          value: item.No,                // 綁定值
+          label: `${item.No}-${item.Name}`, // 顯示文字
+          No: item.No,
+          Name: item.Name
+        }));
+      },
+    );
+    this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).subscribe((res) => {
+      this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No,
+        label: `${item.No}-${item.Name}`,
+        No: item.No,
+        Name: item.Name
+      }));
+    });
   }
 
   // ===== 載入 Counter 欄位動態下拉 =====
@@ -166,27 +194,27 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       map((res: any) => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     );
 
-    const orgId$ = this.dropDownListService.queryTLTTALENT_DropDownList().pipe(
+    const orgId$ = this.dropDownListService.querySYS3100_DropDownList().pipe(
       map((res: any) => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     );
 
     const guiFlag$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
       map(() => [
-        { label: 'Y-開立發票', value: 'Y' },
-        { label: 'N-不開立發票', value: 'N' },
+        { label: '是', value: 'Y' },
+        { label: '否', value: 'N' },
       ])
     );
 
     const capTaxType$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
       map(() => [
-        { label: '0-免稅', value: '0' },
-        { label: '1-應稅', value: '1' },
+        { label: '免稅', value: '0' },
+        { label: '應稅', value: '1' },
       ])
     );
 
     forkJoin([capItem$, accNo$, orgId$, guiFlag$, capTaxType$])
       .pipe(untilDestroyed(this))
-      .subscribe(([ CAP_ITEM, ACCNO, ORG, GUI, TAX]) => {
+      .subscribe(([CAP_ITEM, ACCNO, ORG, GUI, TAX]) => {
         this.CAP_ItemOptions = CAP_ITEM ?? [];
         this.AccNoOptions = ACCNO ?? [];
         this.OrgOptions = ORG ?? [];
@@ -201,8 +229,88 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.OrgOptions, optionLabel: 'label', optionValue: 'value' },
           { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
           { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', options: this.CapTaxTypeOptions, optionLabel: 'label', optionValue: 'value' },
-          { field: 'tpy_net', header: '金額', type: 'inputNumber', width: '12rem' },
+          { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
           { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
+        ];
+      });
+  }
+  // ===== 載入 normal 欄位動態下拉 =====
+  private loadAndSetupColumnsNormal(): void {
+    const tltNo$ = this.dropDownListService.queryPOS2001_DropDownList().pipe(
+      map((res: any) =>
+        (res?.Data ?? []).map((x: any) => ({
+          label: `${x.No}-${x.Name}`,
+          value: x.No,
+          contract_no: x.contract_no,
+          contract_subno: x.contract_subno,
+        }))
+      )
+    );
+
+    const podNo$ = this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }).pipe(
+      map((res: any) => (res?.Data ?? []).map((item: any) => ({
+        value: item.pod_no,
+        label: `${item.pod_no}-${item.pod_desc}`
+      })))
+    );
+
+    forkJoin([tltNo$, podNo$])
+      .pipe(untilDestroyed(this))
+      .subscribe(([TLT, POD]) => {
+        this.tlt_noOptions = TLT ?? [];
+        this.pod_noOptions = POD ?? [];
+
+        this.columnsNormal = [
+          {
+            field: 'tlt_no',
+            header: '專櫃編號/名稱',
+            type: 'dropdown',
+            width: '12rem',
+            options: this.tlt_noOptions,
+            optionLabel: 'label',
+            optionValue: 'value',
+          },
+          {
+            field: 'contract_no',
+            header: '契約編號',
+            type: 'inputNumber',
+            width: '12rem',
+            disabled: () => true, // 自動代入
+          },
+          {
+            field: 'contract_subno',
+            header: '版次',
+            type: 'inputNumber',
+            width: '12rem',
+            disabled: () => true, // 自動代入
+          },
+          {
+            field: 'pod_no',
+            header: '活動代碼/名稱',
+            type: 'dropdown',
+            width: '12rem',
+            options: this.pod_noOptions,
+            optionLabel: 'label',
+            optionValue: 'value',
+          },
+          {
+            field: 'tpy_date',
+            header: '扣款日期',
+            type: 'input',
+            width: '12rem',
+          },
+          {
+            field: 'tpy_net',
+            header: '扣款金額(未稅)',
+            type: 'inputNumber',
+            width: '12rem',
+          },
+          {
+            field: 'remarks',
+            header: '備註',
+            type: 'input',
+            width: '12rem',
+          },
         ];
       });
   }
@@ -245,7 +353,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const feeList = this.data.map((item) => ({
         tpy_date: item.tpy_date,
         CAP_Type: normalValue.CAP_Type,
-        CAP_Item: normalValue.CAP_Item,
+        CAP_ItemList: normalValue.CAP_ItemList,
         org_id: normalValue.org_id,
         AccNo: normalValue.AccNo,
         GUI_FLAG: normalValue.GUI_FLAG,
