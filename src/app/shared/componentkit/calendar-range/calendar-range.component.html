@@ -1,22 +1,29 @@
-<label *ngIf="label !== ''" for="input-text-range" class="flex gap-1">
-  {{ label + '(起迄)' }}
-  <span *ngIf="isRequired" class="required">*</span>
-</label>
+<div class="flex" style="height: 18px;">
+  <label class="col p-0 m-0 pr-2" [for]="startControlName">{{ label === '' ? startLabel : label +
+    '(起迄)' }}
+    <span *ngIf="isRequired" class="required">*</span>
+  </label>
+  <div class="col-fixed py-0">
+    <span class="text-center"></span>
+  </div>
+  <label class="col p-0 m-0" [hidden]="label!==''" [for]="endControlName">{{ endLabel }}
+    <span *ngIf="isRequired" class="required">*</span>
+  </label>
+</div>
 <ng-content select="header"></ng-content>
 <div class="grid p-fluid">
   <div class="col pb-0">
-    <app-calendar class="w-full" [label]="startLabel || ''" [controlName]="startControlName" [control]="startControl"
-      [submitted]="submitted" [calendarType]="calendarOneType" [minDate]="startMinDate"
-      [maxDate]="startMaxDate"  [disabled]="isEndDisabled"></app-calendar>
+    <app-calendar class="w-full" [controlName]="startControlName" [control]="startControl" [submitted]="submitted"
+      [calendarType]="calendarOneType" [minDate]="startMinDate" [maxDate]="startMaxDate"
+      [disabled]="isEndDisabled"></app-calendar>
   </div>
-  <div class="flex justify-content-center align-items-center"
-    [ngStyle]="{ 'margin-top': startLabel ? '27px' : '7px', 'height': '43px' }">
-    <span class="text-center">~</span>
+  <div class="flex flex-column justify-content-center align-items-center pt-3" [ngStyle]="{ 'height': '33.56px' }">
+    <span class="text-center" [ngStyle]="{ 'line-height': '2.8' }">~</span>
   </div>
   <div class="col pb-0">
-    <app-calendar class="w-full" [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
-      [submitted]="submitted" [calendarType]="calendarOneType" [minDate]="endMinDate"
-      [maxDate]="endMaxDate"  [disabled]="isEndDisabled"></app-calendar>
+    <app-calendar class="w-full" [controlName]="endControlName" [control]="endControl" [submitted]="submitted"
+      [calendarType]="calendarOneType" [minDate]="endMinDate" [maxDate]="endMaxDate"
+      [disabled]="isEndDisabled"></app-calendar>
   </div>
 </div>
 <ng-content select="footer"></ng-content>

@@ -39,9 +39,8 @@
       [control]="startControl">
     </app-control-messages>
   </div>
-  <div class="flex justify-content-center align-items-center"
-    [ngStyle]="{ 'margin-top': startLabel ? '27px' : '7px', 'height': '43px' }">
-    <span class="text-center">~</span>
+  <div class="flex flex-column justify-content-center align-items-center pt-3" [ngStyle]="{ 'height': '33.56px' }">
+    <span class="text-center" [ngStyle]="{ 'line-height': '2.8' }">~</span>
   </div>
   <div class="col pb-0">
     <label *ngIf="endLabel" [for]="endControl">{{ endLabel }}
