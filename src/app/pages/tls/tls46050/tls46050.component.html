@@ -1,46 +1,36 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'">
-          <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number-range [useGrouping]="false" label="收銀機號"
-                  [startControl]="queryForm.controls.startserialregister"
-                  [endControl]="queryForm.controls.endserialregister" [submitted]="submitted"></app-input-number-range>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="顯示類型" controlName="showupType" [options]="showupTypeOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.showupType" [submitted]="submitted"></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="設定檔群組" controlName="settingFiles" [options]="settingFilesOptions"
-                  optionLabel="label" optionValue="value" [control]="queryForm.controls.settingFiles"
-                  [submitted]="submitted"></app-dropdown>
-              </div>
-            </div>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <!-- <div class="card">
-            <div class="col-13">
-                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-table>
-            </div>
-        </div> -->
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-dropdown-range class="col-12 md:col-8" startLabel="收銀機號/名稱(起)" endLabel="收銀機號/名稱(迄)"
+            startControlName="ECR_No_Start" endControlName="ECR_No_End" [startControl]="queryForm.controls.ECR_No_Start"
+            [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value" [errorForGroup]="true"
+            [endControl]="queryForm.controls.ECR_No_End" [submitted]="submitted"></app-dropdown-range>
+        </div>
+        <div class="grid p-fluid">
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示類型" controlName="showupType"
+            [options]="[{value:'0',label:'正常'},{ value:'1',label:'不正確'}]" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.IDONTKNOW" [submitted]="submitted"></app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="設定檔群組" controlName="settingFiles"
+            [options]="ECR_GrpNoOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ECR_GrpNo" [submitted]="submitted"></app-multi-select>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report tableKey="tls57050" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false">
+    <!-- [queryFunction]="tls46050Service.queryTLS57050.bind(tls46050Service)"> -->
+  </app-table-report>
 </div>

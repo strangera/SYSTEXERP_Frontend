@@ -1,162 +1,76 @@
-import { ShouwupTypeService } from './../../../service/basic/shouwup-type.service';
-import { SettingFilesService } from './../../../service/basic/setting-files.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { ValidationService } from '@shared/service/validation.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { AsyncPipe } from '@angular/common';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Tls46050Service } from '@service/api/tls/tls46050.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 // 2.4.6.5  TM監控報表
 @Component({
-    selector: 'app-tls46050',
-    templateUrl: './tls46050.component.html',
-    styleUrl: './tls46050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, DropdownComponent, ButtonComponent, TranslateModule]
+  selector: 'app-tls46050',
+  templateUrl: './tls46050.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    ButtonComponent,
+    TranslateModule,
+    DropdownRangeComponent,
+    AsyncPipe,
+    TableReportComponent,
+    MultiSelectComponent
+  ]
 })
-export class TLS46050Component {
-  ProgNo: string = '240023';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    startserialregister: [, [this.validationService.numberValidator]], // start serial number
-    endserialregister: [, [this.validationService.numberValidator]], // end serial Text
-    showupType: [], // DropDown
-    settingFiles: [], // DropDown
-  });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+export class TLS46050Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    ECR_No_Start: [], // start serial number
+    ECR_No_End: [], // end serial Text
+    IDONTKNOW: [], // DropDown
+    ECR_GrpNo: [], // DropDown
+  }, { validators: this.validation.textRangeValidator('ECR_No_Start', 'ECR_No_End') });
+  totalRecords = 0;
+  historyRequestBody: any;
+  ECR_NoOptions = this.dropdown.queryPos1002();
+  ECR_GrpNoOptions = this.dropdown.queryPos1002Grm();
+  data: any[] = [];
+  columns: ReportColumn[] = [
+    { field: 'ECR_No', header: '收銀機號' },
+    { field: 'ECR_Name', header: '收銀機名稱' },
+    { field: '', header: 'POS環境變數檔' },
+    { field: '', header: 'TOUCH功能按鈕開/關設定檔' },
+    { field: '', header: 'POS版本' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '洽談者', visible: true },
-    { field: 'contactDate', header: '洽談日', visible: true },
-    { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '大分類', visible: true },
-    { field: 'category', header: '類型', visible: true },
-    { field: 'version', header: '版本', visible: true },
-    { field: 'rentNumber', header: '位置租賃數', visible: true },
-    { field: 'progress', header: '進度', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  showupTypeOptions: any[] = [];
-  settingFilesOptions: any[] = [];
-
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private settingFilesService: SettingFilesService,
-    private shouwupTypeService: ShouwupTypeService,
-  ) {
-  }
+    private readonly dropdown: DropdownApiService,
+    private readonly validation: ValidationService,
+    public readonly tls46050Service: Tls46050Service
+  ) { super(); }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    this.shouwupTypeService.getSystemTypes().subscribe(data => {
-      this.showupTypeOptions = data;
-    });
-    // ----------------------------------------------------------------
-    this.settingFilesService.getSystemTypes().subscribe(data => {
-      this.settingFilesOptions = data;
-    });
+    this.initializePage('TLS46050', '/tls/tls46050cru', this.queryForm, (form) => this.onSubmit(form));
   }
-
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS2000/TLS46050CRU'], extras);
+    // this.handleSubmit(frm, () => {
+    //   this.tls46050Service.queryTLS57050(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+    //     this.data = res.data;
+    //     this.totalRecords = res.totalRecords;
+    //     this.historyRequestBody = frm.getRawValue();
+    //   });
+    // });
   }
 }
