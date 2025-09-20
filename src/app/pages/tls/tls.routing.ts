@@ -544,8 +544,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls46030cru', loadComponent: () => import('./tls46030-cru/tls46030-cru.component').then(m => m.TLS46030CRUComponent) },
   // 設定檔群組維護 CRU
   { path: 'tls46040cru', loadComponent: () => import('./tls46040-cru/tls46040-cru.component').then(m => m.TLS46040CRUComponent) },
-  // TM監控報表 CRU
-  { path: 'tls46050cru', loadComponent: () => import('./tls46050-cru/tls46050-cru.component').then(m => m.TLS46050CRUComponent) },
   // 資料下傳收銀機作業 CRU
   { path: 'tls47010cru', loadComponent: () => import('./tls47010-cru/tls47010-cru.component').then(m => m.TLS47010CRUComponent) },
   // 大分類維護作業
@@ -596,7 +594,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls55050', loadComponent: () => import('./tls55050/tls55050.component').then(m => m.TLS55050Component) },
   // 暫存傳票審核管理作業
   { path: 'tls55060', loadComponent: () => import('./tls55060/tls55060.component').then(m => m.TLS55060Component) },
-    // 銷貨日報查詢列印
+  // 銷貨日報查詢列印
   { path: 'tls55070', loadComponent: () => import('./tls55070/tls55070.component').then(m => m.TLS55070Component) },
   // 商品庫存查詢作業
   { path: 'tls56010', loadComponent: () => import('./tls56010/tls56010.component').then(m => m.TLS56010Component) },

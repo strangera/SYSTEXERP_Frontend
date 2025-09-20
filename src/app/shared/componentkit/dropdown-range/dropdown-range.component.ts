@@ -32,7 +32,21 @@ export class DropdownRangeComponent extends BasicKitComponent implements OnInit 
   @Input() endControlName = '';
   @Input() startControl = new FormControl(); // 開始值的 FormControl
   @Input() endControl = new FormControl(); // 結束值的 FormControl
-  @Input() options: unknown[] = [];
+  @Input() set options(value: any[] | null) {
+    // 當 options 收到資料時，停止載入
+    if (value !== null) {
+      this.loading = false;
+      this._options = value;
+    } else {
+      // 當 options 收到 null 時，表示開始載入
+      this.loading = true;
+      this._options = []; // 清空選項，避免顯示舊資料
+    }
+  };
+
+  get options(): any[] { return this._options; }
+  private _options: any[] = [];
+  @Input() loading = false;// 是否載入中
   @Input() optionLabel = ''; // 資料的 Label
   @Input() optionValue = ''; // 資料的 Value
   @Input() submitted = false;

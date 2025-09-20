@@ -16,4 +16,4 @@
 </p-dropdown>
 
 <app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"></app-control-messages>
+  [control]="control" [errorForGroup]="errorForGroup"></app-control-messages>

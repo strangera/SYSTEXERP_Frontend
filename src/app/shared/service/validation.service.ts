@@ -49,6 +49,7 @@ export class ValidationService {
       timeGreaterThan: `時間必須大於 ${(formatDate(validatorValue.requiredTime))}`,
       max: `最大值為${validatorValue.max}`,
       min: `最小值為${validatorValue.min}`,
+      textRange: '起號不可大於迄號',
     };
     return config[validatorName];
   }
@@ -427,6 +428,24 @@ export class ValidationService {
         if (inputTime <= requiredTime) { // 使用 <= 以確保時間不能等於
           return { timeGreaterThan: { requiredTime: requiredTime } };
         }
+      }
+      return null;
+    };
+  }
+
+  // 字串範圍 驗證器 - 起號不能大於迄號
+  textRangeValidator(startControlName: string, endControlName: string): ValidatorFn {
+    return (formGroup: AbstractControl): ValidationErrors | null => {
+      if (!(formGroup instanceof FormGroup)) {
+        return null;
+      }
+      const startControl = formGroup.get(startControlName);
+      const endControl = formGroup.get(endControlName);
+      if (!startControl || !endControl) {
+        return null;
+      }
+      if (startControl.value > endControl.value) {
+        return { textRange: true };
       }
       return null;
     };

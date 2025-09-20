@@ -25,7 +25,7 @@
     <p-inputGroup id="input-text-end">
       <app-dropdown class="w-full" [controlName]="endControlName" [options]="options" [optionLabel]="optionLabel"
         [optionValue]="optionValue" [control]="endControl" [submitted]="submitted"
-        (changeEvent)="onEndDropdownChange($event)" />
+        (changeEvent)="onEndDropdownChange($event)" [errorForGroup]="errorForGroup" />
     </p-inputGroup>
   </div>
 </div>

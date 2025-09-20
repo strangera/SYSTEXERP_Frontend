@@ -232,8 +232,8 @@ export class DropdownApiService {
   }
 
   /** 查詢收銀機設定檔(POS1002) */
-  queryPos1002(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS1002_DropDownList');
+  queryPos1002(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002_DropDownList', 'No', 'Name');
   }
 
   /** 查詢收銀機設定檔(POS1002) (整檔下傳作業TLS47010) */
@@ -306,8 +306,8 @@ export class DropdownApiService {
   }
 
   /** 查詢收銀機群組(POS1002GRM) */
-  queryPos1002Grm(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS1002GRM_DropDownList');
+  queryPos1002Grm(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002GRM_DropDownList', 'No', 'Name');
   }
 
   /** 查詢收銀畫面名稱(POS1008) */

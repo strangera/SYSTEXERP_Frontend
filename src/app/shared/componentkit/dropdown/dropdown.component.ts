@@ -51,6 +51,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   // 自訂屬性
   @Input() showErrorMessage = true;
   @Input() templateLabel = ''; // 自訂 Label 模板
+  @Input() errorForGroup = false; // 是否為 FormGroup 的錯誤訊息
   // 觸發事件
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
   @Output() valueChange = new EventEmitter<any>(); //直接用 (valueChange) 拿到值
