@@ -52,6 +52,7 @@
             [showBatchDelete]="false"
             [loading]="loading"
             [dataKey]="'id'"
+            [detailKey]="''"
             [readonly]="true"
             [emptyMessage]="'沒有合約資訊'"
           ></app-expandable-edit-table>
@@ -102,6 +103,10 @@
               (dropdownChange)="onDropdownChange($event)"
               (detailButtonClick)="onDetailButtonClick($event)"
               [detailKey]="getDetailKey()"
+              (fieldChange)="onFieldChange($event)"
+              [forceEditMode]="true"
+              [showActionColumn]="false"
+              [showDetailActionColumn]="false"
             ></app-expandable-edit-table>
           </div>
 

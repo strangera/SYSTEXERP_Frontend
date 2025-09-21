@@ -16,10 +16,9 @@ import { DialogModule } from "primeng/dialog";
 import { ChargeDetailBusinessModel, ChargeSettingBusinessModel, LevelChargeDetailBusinessModel, TLS12040ChargeQueryResponse } from './models/tls12040-next2.model';
 import { FormGroup } from '@angular/forms';
 import { TLS12040Next2ColumnsConfig } from './services/tls12040-next2-columns.config';
-import { TLS12040ChargeDataService } from './services/tls12040-charge-data.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-
+import { TLS12040DataFlowService } from './services/tls12040-data-flow.service';
 interface CategoryItem {
   id: number;
 }
@@ -31,7 +30,7 @@ interface CategoryItem {
     NgIf
   ],
   providers: [
-    TLS12040ChargeDataService
+    TLS12040DataFlowService
   ],
   templateUrl: './tls12040-next2.component.html',
   styleUrl: './tls12040-next2.component.scss'
@@ -40,17 +39,16 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   private readonly notificationService = inject(NotificationService);
   private readonly flowService = inject(TLS12040FlowService);
-  private readonly chargeDataService = inject(TLS12040ChargeDataService);
 
   private discountOptions: any[] = [];
   selectedSettingTab = 'discount';
 
-  // private readonly cdr = inject(ChangeDetectorRef);
   private viewModeSubscription?: Subscription;
 
   private subscriptions: Subscription[] = [];
 
   showConfirmDialog = false;
+  hasUnsavedChanges = false;
   dataLoaded = false;
   commissionDataLoaded = false;
   contractInfoData: SimpleContractInfo[] = [];
@@ -112,8 +110,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     private route: ActivatedRoute,
     private tls12040Service: TLS12040Service,
     private cdr: ChangeDetectorRef,
+    private locationOptionsService: LocationOptionsService,
+    private dataFlowService: TLS12040DataFlowService,
 
-    private locationOptionsService: LocationOptionsService
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -144,13 +143,33 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     this.initializePage('TLS12040', this.dataForm);
 
     try {
+      // 1. 先訂閱資料狀態變更
+      this.dataFlowService.state$.subscribe(state => {
+        this.commissionData = state.currentEditData;
+        this.loading = state.uiState.loading;
+        this.dataLoaded = state.uiState.dataLoaded;
+        this.hasUnsavedChanges = state.uiState.hasUnsavedChanges;
+
+        // 加入這行：當有資料載入完成時，設定 commissionDataLoaded
+        this.commissionDataLoaded = state.uiState.dataLoaded && state.currentEditData.length >= 0;
+
+        this.cdr.detectChanges();
+      });
+
+      // 2. 初始化欄位配置
       this.initializeColumns();
-      this.discountOptions = await this.chargeDataService.loadDiscountOptions();
+
+      // 3. 載入折扣選項（這個還是用原本的服務）
+      this.discountOptions = await this.dataFlowService.loadDiscountOptions();
+      if (this.discountOptions.length === 0) {
+        console.warn('沒有載入到折扣選項');
+      }
       this.updateDiscountColumnOptions();
-      // 載入工作流程資料
+
+      // 4. 載入工作流程資料
       await this.loadWorkflowData();
 
-      // 設定自動儲存 (僅編輯模式)
+      // 5. 設定自動儲存 (僅編輯模式)
       if (!this.isReadOnlyMode) {
         this.setupAutoSave();
       }
@@ -160,6 +179,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       this.notificationService.errorBubble('頁面初始化失敗');
     }
   }
+
 
   private initializeColumns(): void {
     this.contractInfoColumns = TLS12040Next2ColumnsConfig.getContractInfoColumns();
@@ -186,8 +206,19 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 準備合約資訊顯示
     this.prepareContractInfoDisplay(cruData);
 
-    // 載入抽成資料
-    await this.loadChargeData();
+    // 使用新的資料流服務載入抽成資料
+    try {
+      await this.dataFlowService.loadData(
+        this.currentApplyNo,
+        this.discountOptions,
+        cruData.tlt_contract_bdate || cruData.tlt_bdate,
+        cruData.tlt_contract_edate || cruData.tlt_edate
+      );
+      // 注意：commissionData 會透過 state$ 訂閱自動更新，不需要手動賦值
+    } catch (error) {
+      console.error('載入抽成資料失敗:', error);
+      this.notificationService.errorBubble('載入抽成資料失敗');
+    }
   }
 
   /**
@@ -225,86 +256,6 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     }];
 
     console.log('合約資訊:', this.contractInfoData);
-  }
-
-  private async loadChargeData(): Promise<void> {
-    console.log('開始載入抽成資料...');
-    this.loading = true;
-
-    try {
-      // 使用資料載入服務
-      this.commissionData = await this.chargeDataService.loadChargeData(this.currentApplyNo);
-
-      console.log('API 回傳的原始抽成資料:', this.commissionData);
-      console.log('抽成資料項目數量:', this.commissionData.length);
-
-      // 增強每個抽成項目的子資料
-      this.commissionData.forEach((commissionItem, index) => {
-        console.log(`處理抽成項目 ${index + 1} BEFORE:`, {
-          id: commissionItem.id,
-          ChargeDetailsLength: commissionItem.ChargeDetails?.length || 0,
-          LevelChargeDetailsLength: commissionItem.LevelChargeDetails?.length || 0,
-          discountOptionsLength: this.discountOptions.length
-        });
-
-        // 增強 ChargeDetails (折扣設定)
-        if (this.discountOptions.length > 0) {
-          commissionItem.ChargeDetails = this.enhanceChargeDetails(
-            commissionItem.ChargeDetails || [],
-            commissionItem
-          );
-        }
-
-        // 增強 LevelChargeDetails (層級抽成)
-        if (this.discountOptions.length > 0) {
-          commissionItem.LevelChargeDetails = this.enhanceLevelChargeDetails(
-            commissionItem.LevelChargeDetails || [],
-            commissionItem
-          );
-        }
-
-        console.log(`處理抽成項目 ${index + 1} AFTER:`, {
-          id: commissionItem.id,
-          ChargeDetailsLength: commissionItem.ChargeDetails?.length || 0,
-          LevelChargeDetailsLength: commissionItem.LevelChargeDetails?.length || 0,
-          ChargeDetails: commissionItem.ChargeDetails,
-          LevelChargeDetails: commissionItem.LevelChargeDetails
-        });
-      });
-
-      this.commissionDataLoaded = true;
-      this.dataLoaded = true;
-
-      console.log('最終處理的抽成資料:', this.commissionData);
-
-      // 強制觸發變更檢測
-      this.cdr.detectChanges();
-
-      if (this.commissionData.length > 0) {
-        this.notificationService.infoBubble(`已載入 ${this.commissionData.length} 個抽成項目`);
-      } else {
-        this.notificationService.infoBubble('查無抽成設定資料');
-      }
-
-      // 儲存到流程服務
-      if (!this.isReadOnlyMode) {
-        this.flowService.setNext2Data(this.commissionData);
-      }
-
-    } catch (error) {
-      console.error('載入抽成資料發生錯誤:', error);
-      this.notificationService.errorBubble('載入抽成資料失敗');
-
-      // 初始化空資料
-      this.commissionData = [];
-      this.commissionDataLoaded = true;
-      this.dataLoaded = true;
-
-    } finally {
-      this.loading = false;
-      // 再次強制觸發變更檢測
-      this.cdr.detectChanges();
-    }
   }
 
   /**
@@ -719,6 +670,71 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         return 'LevelChargeDetails';
       default:
         return 'ChargeDetails';
+    }
+  }
+
+  onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
+    // 判斷是主檔還是明細
+    const isDetail = this.isDetailItem(event.rowData);
+
+    if (isDetail) {
+      // 明細欄位變更
+      const parentData = this.findParentOfDetail(event.rowData);
+      if (parentData) {
+        this.dataFlowService.updateField(
+          event.rowData.id,
+          this.getDetailItemType(event.rowData),
+          event.fieldName,
+          event.newValue,
+          parentData.id
+        );
+      }
+    } else {
+      // 主檔欄位變更
+      this.dataFlowService.updateField(
+        event.rowData.id,
+        'master',
+        event.fieldName,
+        event.newValue
+      );
+    }
+  }
+
+
+  private findParentOfDetail(detailData: any): ChargeSettingBusinessModel | null {
+    // 在所有主檔中搜尋包含此明細的父項目
+    for (const commissionItem of this.commissionData) {
+      // 檢查 ChargeDetails
+      if (commissionItem.ChargeDetails?.some(item => item.id === detailData.id)) {
+        return commissionItem;
+      }
+
+      // 檢查 YearChargeDetails
+      if (commissionItem.YearChargeDetails?.some(item => item.id === detailData.id)) {
+        return commissionItem;
+      }
+
+      // 檢查 LevelChargeDetails
+      if (commissionItem.LevelChargeDetails?.some(item => item.id === detailData.id)) {
+        return commissionItem;
+      }
+    }
+
+    return null;
+  }
+
+  private isDetailItem(rowData: any): boolean {
+    // 根據你的資料結構判斷是否為明細項目
+    return !this.commissionData.some(item => item.id === rowData.id);
+  }
+
+  private getDetailItemType(rowData: any): 'chargeDetail' | 'yearChargeDetail' | 'levelChargeDetail' {
+    // 根據當前標籤或資料特徵判斷類型
+    switch (this.selectedSettingTab) {
+      case 'discount': return 'chargeDetail';
+      case 'annual': return 'yearChargeDetail';
+      case 'level': return 'levelChargeDetail';
+      default: return 'chargeDetail';
     }
   }
 }
