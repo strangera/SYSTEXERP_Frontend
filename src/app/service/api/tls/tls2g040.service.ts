@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service';
 import { map, Observable } from 'rxjs';
@@ -97,5 +97,16 @@ export class TLS2G040Service {
           };
         })
       );
+  }
+  /**
+  * 匯出專櫃預算日報表為PDF
+  * @param params 查詢條件
+  * @returns Observable of a Blob (PDF file)
+  */
+  public exportTLS2G040Pdf(params: QueryTLS2G040Params): Observable<any> {
+    return this.http.post(`${this.apiUrl}/exportTLS2G040Pdf`, params, {
+      responseType: 'blob',
+      observe: 'response'
+    });
   }
 }
