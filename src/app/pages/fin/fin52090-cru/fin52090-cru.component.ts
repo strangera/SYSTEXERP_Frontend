@@ -9,8 +9,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
-import { FIN52090Query } from '../fin52090/fin52090.model';
+import { finalize } from 'rxjs';
+import { FIN52090Insert } from '../fin52090/fin52090.model';
 
 @Component({
   selector: 'app-fin52090-cru',
@@ -53,7 +53,7 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const payload = <FIN52090Query>{
+      const payload = <FIN52090Insert>{
         AccNo: this.df().AccNo.value ?? '',
         NoteDesc: this.df().NoteDesc.value ?? '',
       };
