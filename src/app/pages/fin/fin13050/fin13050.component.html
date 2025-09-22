@@ -38,12 +38,12 @@
 
           <!-- 發票號碼（前端區間 -> 後端單值，送出時合併） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-number-range
               label="發票號碼"
               [startControl]="queryForm.controls.PUR_GUINoStart"
               [endControl]="queryForm.controls.PUR_GUINoEnd"
               [submitted]="submitted">
-            </app-input-text-range>
+            </app-input-number-range>
           </div>
 
           <!-- 發票日期 -->
@@ -55,34 +55,43 @@
               [endControl]="queryForm.controls.PUR_GUIDate_End"
               [submitted]="submitted">
             </app-calendar-range>
+            
           </div>
 
           <!-- 發票年月（可選） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month
-              label="發票年月"
-              [control]="queryForm.controls.PUR_GUIDate_YYYYMM"
-              [submitted]="submitted">
-            </app-query-year-month>
+           <app-calendar
+            controlName="PUR_GUIDate_YYYYMM"
+            calendarType="dateMonthOne"
+            label="資料所屬年月"
+            [control]="queryForm.controls.PUR_GUIDate_YYYYMM"
+            [submitted]="submitted">
+          </app-calendar>
           </div>
 
           <!-- 資料所屬年月 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month
-              label="資料所屬年月"
-              [control]="queryForm.controls.PUR_RepYYYYMM"
-              [submitted]="submitted"
-              [onlyOddMonths]="true">
-            </app-query-year-month>
+
+            <app-calendar
+            controlName="PUR_RepYYYYMM"
+            calendarType="dateMonthOne"
+            label="申報年月"
+            [control]="queryForm.controls.PUR_RepYYYYMM"
+            [submitted]="submitted">
+          </app-calendar>
           </div>
 
           <!-- 廠商統編 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商編號(統一編號)"
-              [control]="queryForm.controls.PUR_VenUniform"
-              [submitted]="submitted">
-            </app-input-text>
+             <app-dropdown
+    label="廠商編號(統一編號)"
+    controlName="PUR_VenUniform"
+    [options]="vendorOptions"
+    optionLabel="label"
+    optionValue="value"
+    [control]="queryForm.controls.PUR_VenUniform"
+    [submitted]="submitted">
+  </app-dropdown>
           </div>
 
           <!-- 發票總金額 -->
@@ -217,7 +226,7 @@
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" ></app-button>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -230,7 +239,7 @@
     tableKey="FIN13050"
     [data]="data"
     [columns]="columns"
-    dataKey="_rowKey"
+    dataKey="id"
     [multiSortMeta]="[{ field: 'PUR_GUIDate', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
@@ -240,6 +249,7 @@
     [showManage]="true"
     [showDelete]="true"
     [showCheckBox]="true"
+    (delete)="onDelete($event)"  
     (lazyLoadData)="onLazyLoadData($event, queryForm)">
   </app-table>
 </div>
