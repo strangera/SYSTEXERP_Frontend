@@ -40,7 +40,9 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import {  finalize, map } from 'rxjs/operators';
 import { HttpResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
-
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+@UntilDestroy()
 @Component({
   selector: 'app-tls23110',
   templateUrl: './tls23110.component.html',
@@ -60,6 +62,7 @@ import { ButtonModule } from 'primeng/button';
     TranslateModule,
     Table2Component,
     ButtonModule,
+    CalendarComponent,
   ],
 })
 export class TLS23110Component extends BasicQueryPageComponent<any> {
@@ -107,6 +110,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   // 表單
   queryForm: any = this.formBuilder.group(
     {
+      TXN_Month: [null],
       TXN_DateStart: this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
       TXN_DateEnd:   this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
       tlt_term_type: this.formBuilder.control(null),
@@ -166,7 +170,26 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23110', 'tls/tls23110', this.queryForm, (form) => this.onSubmit(form));
+ // 月份變更 -> 同步到日期範圍（不 emit）
+    this.queryForm.controls.TXN_Month.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((d: Date | null) => {
+        if (!d || isNaN(new Date(d).getTime())) return;
+        const { start, end } = this.getMonthRange(d);
+        this.queryForm.patchValue(
+          { TXN_DateStart: start, TXN_DateEnd: end, pageIndex: 1 },
+          { emitEvent: false }
+        );
+      });
 
+    // 日期若不是完整整月 -> 清空 TXN_Month（避免誤會）
+    this.queryForm.controls.TXN_DateStart.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => this.clearMonthIfNotExactRange());
+
+    this.queryForm.controls.TXN_DateEnd.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => this.clearMonthIfNotExactRange());
     // 限定日期同月（自動矯正）
     const startCtrl = this.queryForm.controls.TXN_DateStart as FormControl;
     const endCtrl   = this.queryForm.controls.TXN_DateEnd   as FormControl;
@@ -548,6 +571,30 @@ this.historyRequestBody = { ...payload };
     }
 
     return `download${defaultExtension}`;
+  }
+    /** 取得某日期所在月份的起訖（start: 1號 00:00:00, end: 當月最後一天 23:59:59） */
+  private getMonthRange(d: Date) {
+    const year = d.getFullYear();
+    const month = d.getMonth(); // 0-based
+    const start = new Date(year, month, 1, 0, 0, 0);
+    const end   = new Date(year, month + 1, 0, 23, 59, 59);
+    return { start, end };
+  }
+
+  /** 若目前銷售日期不是「完整整月」，就把 TXN_Month 清空（避免顯示誤會） */
+  private clearMonthIfNotExactRange() {
+    const start: Date | null = this.queryForm.value.TXN_DateStart ?? null;
+    const end: Date | null   = this.queryForm.value.TXN_DateEnd ?? null;
+    if (!start || !end) {
+      this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
+      return;
+    }
+    const { start: mStart, end: mEnd } = this.getMonthRange(start);
+    const sameStart = new Date(start).getTime() === mStart.getTime();
+    const sameEnd   = new Date(end).getTime()   === mEnd.getTime();
+    if (!sameStart || !sameEnd) {
+      this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
+    }
   }
 }
 

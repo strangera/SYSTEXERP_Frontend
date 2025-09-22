@@ -10,7 +10,7 @@ import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/ta
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { bus_classColumns, bus_classFieldColumns, bus_sclassColumns, bus_sclassFieldColumns, bus_typeColumns, bus_typeFieldColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';
 import { debounceTime, finalize } from 'rxjs';
@@ -19,13 +19,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { InputGroupComponent } from '@shared/componentkit/input-group/input-group.component';
 import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service';
 import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 
 // 2.2.16.4 預算日報表
 @Component({
   selector: 'app-tls2g040',
   templateUrl: './tls2g040.component.html',
   standalone: true,
-  imports: [NgIf, ButtonModule, InputGroupComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  imports: [ButtonModule, InputGroupComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
 export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -181,9 +182,93 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
   }
 
   onExportPDF() {
+    this.btnLoading = true;
+    this.tls2g040Service.exportTLS2G040Pdf(this.lastQueryForm)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          if (response.body) {
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `專櫃預算日報表.pdf`; // 預設檔名
 
+            // 嘗試從 Content-Disposition 取得檔名
+            if (contentDisposition) {
+              const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+              if (filenameMatch && filenameMatch.length > 1) {
+                try {
+                  filename = decodeURIComponent(filenameMatch[1]);
+                } catch (e) {
+                  console.error('Failed to decode filename from Content-Disposition', e);
+                }
+              } else {
+                const fallbackMatch = contentDisposition.match(/filename="?([^;"]+)"?/);
+                if (fallbackMatch && fallbackMatch.length > 1) {
+                  filename = fallbackMatch[1];
+                }
+              }
+            }
+
+            const url = window.URL.createObjectURL(response.body);
+            const a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          }
+        },
+        error: (err) => {
+          console.error('PDF export failed', err);
+        }
+      });
   }
   onExportXLSX() {
+    this.btnLoading = true;
+    this.tls2g040Service.exportTLS2G040Excel(this.lastQueryForm)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          if (response.body) {
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `專櫃預算日報表.pdf`; // 預設檔名
 
+            // 嘗試從 Content-Disposition 取得檔名
+            if (contentDisposition) {
+              const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+              if (filenameMatch && filenameMatch.length > 1) {
+                try {
+                  filename = decodeURIComponent(filenameMatch[1]);
+                } catch (e) {
+                  console.error('Failed to decode filename from Content-Disposition', e);
+                }
+              } else {
+                const fallbackMatch = contentDisposition.match(/filename="?([^;"]+)"?/);
+                if (fallbackMatch && fallbackMatch.length > 1) {
+                  filename = fallbackMatch[1];
+                }
+              }
+            }
+
+            const url = window.URL.createObjectURL(response.body);
+            const a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          }
+        },
+        error: (err) => {
+          console.error('PDF export failed', err);
+        }
+      });
   }
 }

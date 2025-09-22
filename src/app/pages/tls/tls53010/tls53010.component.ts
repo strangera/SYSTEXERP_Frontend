@@ -1,14 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, AddButton } from '../../../shared/componentkit/table/table.model';
-import { TLS53010Data, TLS53010QueryRequest, TLS53010Service } from '../../../service/api/tls/tls53010.service';
+import { createPaginationConfig, Column, AddButton, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { TLS53010Data, TLS53010DetailData, TLS53010Service } from '../../../service/api/tls/tls53010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -16,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 @Component({
   selector: 'app-tls53010',
@@ -29,7 +29,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    DropdownComponent,
     MultiSelectComponent,
     CalendarRangeComponent,
     TableComponent,
@@ -39,12 +38,12 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> implements OnInit {
   queryForm = this.formBuilder.group({
     PST_No: [''],                                           // 盤點單編號
-    HOS_No: [''],                                           // 倉別代碼/名稱
-    LOGO_No: [''],                                          // 品牌代碼/名稱
-    PST_Date_B: [''],                                       // 盤點基準日期(起)
-    PST_Date_E: [''],                                       // 盤點基準日期(訖)
-    PST_Status: [[]],                                       // 盤點單狀態 (多選)
-    ...createPaginationConfig([{ field: 'ID', order: -1 }]) // 分頁和排序參數
+    HOS_No: [[], Validators.required],                      // 倉別代碼 (改為陣列)
+    LOGO_No: [[]],                                          // 品牌代碼 (改為陣列)
+    PST_DateStart: ['', Validators.required],               // 盤點基準日期(起)
+    PST_DateEnd: ['', Validators.required],                 // 盤點基準日期(迄)
+    PST_Status: [[]],                                       // 盤點狀態 (多選)
+    ...createPaginationConfig([{ field: 'PST_No', order: -1 }]) // 分頁和排序參數
   });
 
   data: TLS53010Data[] = [];
@@ -54,26 +53,40 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   // 下拉選單
   hosOptions: any[] = [];// 倉別選項
   logoOptions: any[] = [];// 品牌選項
-  // 盤點單狀態選項 TODO: 待定義
+  // 盤點狀態選項
   pstStatusOptions: any[] = [
-    { value: '0', label: '未完成' },
-    { value: '1', label: '已完成' },
-    { value: '2', label: '已取消' }
+    { value: '0', label: '盤點單開立,待盤點' },
+    { value: '1', label: '初盤,盤點中' },
+    { value: '2', label: '複盤,盤點完成' },
+    { value: '3', label: '抽盤,小盤結案' },
+    { value: '4', label: '已結案' },
+    { value: '9', label: '作廢' }
   ];
 
   columns: Column[] = [
-    { field: 'ID', header: '序號', visible: false },
+    { field: 'id', header: '序號', visible: false },
     { field: 'PST_No', header: '盤點單編號', visible: true },
     {
       field: 'HOS_No', header: '倉別代碼/名稱', visible: true,
-      format: (v, i, r) => `${r.HOS_No}-${r.HOS_Name}`,
+      format: (v, i, r) => `${r.HOS_No}-${r.HOS_NAME}`,
     },
     {
       field: 'LOGO_No', header: '品牌代碼/名稱', visible: true,
-      format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_Name}`,
+      format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_CH_NAME}`,
     },
-    { field: 'PST_Date', header: '盤點基準日期', visible: true },
-    { field: 'PST_Status', header: '盤點單狀態', visible: true, },
+    {
+      field: 'PST_Date',
+      header: '盤點基準日期',
+      visible: true,
+      format: formatDate
+    },
+    {
+      field: 'PST_Status',
+      header: '盤點狀態',
+      visible: true,
+      format: (v) => this.getStatusLabel(v)
+    },
+    { field: 'PST_Remark', header: '盤點備註', visible: true },
   ];
 
   addButton: AddButton[] = [
@@ -89,6 +102,45 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     },
   ];
 
+  // 展開行設置
+  expansionColumns: Column[] = [
+    {
+      field: 'LOGO_No',
+      header: '品牌代碼/名稱',
+      visible: true,
+      format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_CH_NAME}`
+    },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true },
+    { field: 'PLU_Name', header: '商品名稱', visible: true },
+    {
+      field: 'CAT_LNo',
+      header: '大分類代碼/名稱',
+      visible: true,
+      format: (v, i, r) => `${r.CAT_LNo}-${r.CAT_LName}`
+    },
+    {
+      field: 'CAT_MNo',
+      header: '中分類代碼/名稱',
+      visible: true,
+      format: (v, i, r) => `${r.CAT_MNo}-${r.CAT_MName}`
+    },
+    {
+      field: 'CAT_SNo',
+      header: '小分類代碼/名稱',
+      visible: true,
+      format: (v, i, r) => `${r.CAT_SNo}-${r.CAT_SName}`
+    },
+    { field: 'PLU_Attribute', header: '商品型態', visible: true },
+    { field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount },
+    {
+      field: 'HOS_No',
+      header: '倉別代碼/名稱',
+      visible: true,
+      format: (v, i, r) => `${r.HOS_No}-${r.HOS_NAME}`
+    }
+  ]
+
   constructor(
     private tls53010Service: TLS53010Service,
     private datePipe: DatePipe,
@@ -103,11 +155,8 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    const queryRequest: TLS53010QueryRequest = {
-      ...frm.value,
-    };
     this.handleSubmit(frm, () => {
-      this.tls53010Service.queryTLS53010(queryRequest)
+      this.tls53010Service.queryTLS53010(frm.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
@@ -139,6 +188,12 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
       });
   }
 
+  // 取得狀態標籤
+  getStatusLabel(status: string): string {
+    const option = this.pstStatusOptions.find(opt => opt.value === status);
+    return option ? option.label : status;
+  }
+
   // 列印
   onPrint(rowData: TLS53010Data) {
     // TODO: 實作列印功能
@@ -147,5 +202,15 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   // 匯出
   onExport(rowData: TLS53010Data) {
     // TODO: 實作匯出功能
+  }
+
+  // 載入明細資料
+  loadDetails = (rowData: TLS53010Data): Observable<BaseQueryResponse<TLS53010DetailData>> => {
+    return this.tls53010Service.queryTLS53010Detail({
+      MID: 0,
+      PST_No: rowData.PST_No,
+      SYS_StoreNo: rowData.SYS_StoreNo,
+      HOS_No: rowData.HOS_No
+    });
   }
 }

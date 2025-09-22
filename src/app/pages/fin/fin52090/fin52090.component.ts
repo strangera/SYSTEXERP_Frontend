@@ -52,8 +52,8 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
   public readonly totalRecords = computed(() => this.filteredData().length);
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52090Data; })[] = [
-    { field: 'AccNo', header: '科目代號' },
-    { field: 'NoteDesc', header: '科目名稱' },
+    { field: 'AccNo', header: '科目代號', format: v => this.service.accNoMap.get(v) ?? v },
+    { field: 'NoteDesc', header: '科目摘要' },
   ];
 
   constructor(
@@ -77,7 +77,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
     this.handleSubmit(this.queryForm, () => {
       const payload = <FIN52090Query>{
         ...this.queryForm.getRawValue(),
-        AccNo: (this.qf().AccNo.value ?? []).join(),
+        AccNo: this.qf().AccNo.value?.length ? this.qf().AccNo.value : void 0,
         NoteDesc: this.qf().NoteDesc.value ?? void 0,
       };
 

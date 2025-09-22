@@ -396,8 +396,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2g020cru', loadComponent: () => import('./tls2g020-cru/tls2g020-cru.component').then(m => m.TLS2G020CRUComponent) },
   // 專櫃預估業績報表 CRU
   { path: 'tls2g030cru', loadComponent: () => import('./tls2g030-cru/tls2g030-cru.component').then(m => m.TLS2G030CRUComponent) },
-  // 預算日報表 CRU
-  { path: 'tls2g040cru', loadComponent: () => import('./tls2g040-cru/tls2g040-cru.component').then(m => m.TLS2G040CRUComponent) },
   // 租金發票套印作業 CRU
   { path: 'tls2h010cru', loadComponent: () => import('./tls2h010-cru/tls2h010-cru.component').then(m => m.TLS2H010CRUComponent) },
   // 專櫃代扣款發票套印作業 CRU

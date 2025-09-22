@@ -189,7 +189,7 @@ updateColumnVisibility(selectedValues: number[]) {
     'floor_desc',
     'ECR_No',
     'USR_No',
-    ...(reporttype === 1 ? ['PAY_NO'] : []), // 明細表才顯示付款別
+     ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []), 
   ];
   const visibilityMap = new Set(alwaysVisibleFields);
 
