@@ -82,6 +82,8 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
         this.lastQueryBody = body;
         this.totalRecords = res.TotalCount;
         this.data = res.Data;
+
+        
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });

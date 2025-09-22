@@ -71,6 +71,7 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
     ButtonModule,
     CheckboxModule,
     Table2Component,
+    
   ],
 })
 export class TLS23010Component
