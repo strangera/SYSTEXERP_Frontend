@@ -171,9 +171,9 @@ export class CommissionValidationService {
         errors.push(`${itemPrefix}: 金額不能為負數`);
       }
 
-      if (bmount >= eamount) {
-        errors.push(`${itemPrefix}: 起始金額必須小於結束金額`);
-      }
+      // if (bmount >= eamount) {
+      //   errors.push(`${itemPrefix}: 起始金額必須小於結束金額`);
+      // }
 
       if ((level.level_charge_rate || 0) < 0 || (level.level_charge_rate || 0) > 100) {
         errors.push(`${itemPrefix}: 抽成率必須在0-100%之間`);
