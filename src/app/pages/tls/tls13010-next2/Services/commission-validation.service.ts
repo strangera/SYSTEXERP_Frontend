@@ -171,9 +171,9 @@ export class CommissionValidationService {
         errors.push(`${itemPrefix}: 金額不能為負數`);
       }
 
-      if (bmount >= eamount) {
-        errors.push(`${itemPrefix}: 起始金額必須小於結束金額`);
-      }
+      // if (bmount >= eamount) {
+      //   errors.push(`${itemPrefix}: 起始金額必須小於結束金額`);
+      // }
 
       if ((level.level_charge_rate || 0) < 0 || (level.level_charge_rate || 0) > 100) {
         errors.push(`${itemPrefix}: 抽成率必須在0-100%之間`);
@@ -195,22 +195,38 @@ export class CommissionValidationService {
     Object.entries(groups).forEach(([discountType, groupItems]) => {
       if (groupItems.length <= 1) return;
 
-      const sorted = groupItems.sort((a, b) =>
-        new Date(a.tlt_bdate).getTime() - new Date(b.tlt_bdate).getTime()
-      );
+      // 檢查每一對項目是否有重疊
+      for (let i = 0; i < groupItems.length; i++) {
+        for (let j = i + 1; j < groupItems.length; j++) {
+          const item1 = groupItems[i];
+          const item2 = groupItems[j];
 
-      for (let i = 0; i < sorted.length - 1; i++) {
-        const current = sorted[i];
-        const next = sorted[i + 1];
-
-        if (this.hasDateOverlap(current.tlt_bdate, current.tlt_edate, next.tlt_bdate, next.tlt_edate)) {
-          errors.push(`${prefix}: ${discountType} 折扣設定日期重疊`);
-          break;
+          if (this.hasDateOverlap(item1.tlt_bdate, item1.tlt_edate, item2.tlt_bdate, item2.tlt_edate)) {
+            const date1 = `${this.formatDate(item1.tlt_bdate)}-${this.formatDate(item1.tlt_edate)}`;
+            const date2 = `${this.formatDate(item2.tlt_bdate)}-${this.formatDate(item2.tlt_edate)}`;
+            errors.push(`${prefix}: 折扣別 ${discountType} 的日期範圍重疊 (${date1} 與 ${date2})`);
+            break; // 找到一個重疊就停止，避免重複訊息
+          }
         }
       }
     });
 
     return errors;
+  }
+
+  /**
+ * 格式化日期用於錯誤訊息
+ */
+  private formatDate(date: any): string {
+    if (!date) return '未設定';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '無效日期';
+
+    // 使用本地時間格式化，避免 UTC 時區轉換問題
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -247,7 +263,22 @@ export class CommissionValidationService {
     const s2 = new Date(start2);
     const e2 = new Date(end2);
 
-    return s1 < e2 && s2 < e1;
+    // 確保日期有效
+    if (isNaN(s1.getTime()) || isNaN(e1.getTime()) || isNaN(s2.getTime()) || isNaN(e2.getTime())) {
+      return false;
+    }
+
+    // 修正：檢查是否有任何重疊（包含完全相同的日期）
+    // 兩個範圍有重疊的條件：start1 <= end2 && start2 <= end1
+    const hasOverlap = s1.getTime() <= e2.getTime() && s2.getTime() <= e1.getTime();
+
+    // 允許的情況：兩個範圍緊鄰但不重疊
+    // 例如：範圍1是1/1-1/10，範圍2是1/11-1/20
+    const isAdjacent = (e1.getTime() + 24 * 60 * 60 * 1000 === s2.getTime()) ||
+      (e2.getTime() + 24 * 60 * 60 * 1000 === s1.getTime());
+
+    // 如果有重疊且不是緊鄰（差一天），就是不允許的重疊
+    return hasOverlap && !isAdjacent;
   }
 
   /**
@@ -259,7 +290,7 @@ export class CommissionValidationService {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    return !isNaN(start.getTime()) && !isNaN(end.getTime()) && start < end;
+    return !isNaN(start.getTime()) && !isNaN(end.getTime()) && start <= end;
   }
 
   /**

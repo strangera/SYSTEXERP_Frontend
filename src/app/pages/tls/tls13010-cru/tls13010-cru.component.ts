@@ -2408,10 +2408,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      if (start >= end) {
-        console.warn('⚠️ 契約截止日不可早於或等於起始日');
+      // 改為只檢查結束日期不可早於開始日期（允許同一天）
+      if (start > end) {  // 原本是 start >= end
+        console.warn('⚠️ 合約截止日不可早於起始日');
         endDateControl?.setValue('');
-        this.messageService.warnBubble('契約截止日必須晚於起始日，已清空截止日');
+        this.messageService.warnBubble('合約截止日不可早於起始日，已清空截止日');
       }
     }
   }
@@ -2426,10 +2427,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      if (start >= end) {
-        console.warn('⚠️ 營運截止日不可早於或等於起始日');
+      // 改為只檢查結束日期不可早於開始日期（允許同一天）
+      if (start > end) {  // 原本是 start >= end
+        console.warn('⚠️ 營運截止日不可早於起始日');
         endDateControl?.setValue('');
-        this.messageService.warnBubble('營運截止日必須晚於起始日，已清空截止日');
+        this.messageService.warnBubble('營運截止日不可早於起始日，已清空截止日');
       }
     }
 
@@ -2450,10 +2452,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       const feedback = new Date(feedbackDate);
       const due = new Date(dueDate);
 
-      if (feedback >= due) {
-        console.warn('⚠️ 回函截止日不可早於或等於回函日期');
+      // 改為只檢查截止日期不可早於回函日期（允許同一天）
+      if (feedback > due) {  // 原本是 feedback >= due
+        console.warn('⚠️ 回函截止日不可早於回函日期');
         dueDateControl?.setValue('');
-        this.messageService.warnBubble('回函截止日必須晚於回函日期');
+        this.messageService.warnBubble('回函截止日不可早於回函日期');
       }
     }
   }

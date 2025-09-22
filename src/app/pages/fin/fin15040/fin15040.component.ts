@@ -23,6 +23,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { ValidationService } from '@shared/service/validation.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 export interface Option {
   label: string;
@@ -37,7 +38,7 @@ export interface Option {
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent, CommonModule
+    TranslateModule, DropdownComponent, CalendarComponent, CommonModule, MultiSelectComponent
   ]
 })
 export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> implements OnInit {
@@ -195,7 +196,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
       this.invoiceFormatOptions = r.Data.INV_GUITypes
         .filter(item => item.INV_GUIType >= '31' && item.INV_GUIType <= '38')
-        .map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }))
+        .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
+        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }))
     });
   }
 

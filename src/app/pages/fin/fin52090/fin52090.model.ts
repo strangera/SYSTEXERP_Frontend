@@ -1,5 +1,3 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /**
  * 科目代號
  * 科目名稱
@@ -10,7 +8,7 @@ export interface FIN52090Data {
 }
 
 export interface FIN52090Query {
-  AccNo?: string;
+  AccNo?: string[];
   NoteDesc?: string;
 }
 

@@ -14,20 +14,20 @@
             [control]="queryForm.controls.PST_No" [submitted]="submitted"></app-input-text>
 
           <!-- 倉別代碼/名稱 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No" [options]="hosOptions"
-            [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No" [options]="hosOptions"
+            [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
 
           <!-- 品牌代碼/名稱 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"
-            [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
+            [options]="logoOptions" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-multi-select>
 
           <!-- 盤點基準日期（起訖） -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="盤點基準日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.PST_Date_B" [endControl]="queryForm.controls.PST_Date_E"
+            [startControl]="queryForm.controls.PST_DateStart" [endControl]="queryForm.controls.PST_DateEnd"
             [submitted]="submitted"></app-calendar-range>
 
-          <!-- 盤點單狀態 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="盤點單狀態" controlName="PST_Status"
+          <!-- 盤點狀態 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="盤點狀態" controlName="PST_Status"
             [options]="pstStatusOptions" [control]="queryForm.controls.PST_Status"
             [submitted]="submitted"></app-multi-select>
 
@@ -41,10 +41,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS53010" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+  <app-table tableKey="TLS53010" dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     [showDetail]="false" [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'ID', order: -1 }]" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{ field: 'PST_No', order: -1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [addButton]="addButton">
+    [addButton]="addButton" [expansionColumns]="expansionColumns" [expansionLoadFn]="loadDetails">
   </app-table>
 </div>
