@@ -1,4 +1,4 @@
-import { Column, ColumnGroup } from "@shared/componentkit/table/table.model";
+import { Column, ColumnGroup, formatAmount } from "@shared/componentkit/table/table.model";
 
 export interface TLS2A010Data {
   TXN_Date: string;         // 日期，例如：'2024/05/08'
@@ -20,9 +20,9 @@ export const defaultColumns = [
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
-  { header: '系統帳', field: 'BOOK_PayAmt', isTotal: true },
-  { header: '實收帳', field: 'ACT_PayAmt', isTotal: true },
-  { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true },
+  { header: '系統帳', field: 'BOOK_PayAmt', isTotal: true, format: formatAmount },
+  { header: '實收帳', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
+  { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true, format: formatAmount },
 
   {
     header: '狀況',
@@ -44,21 +44,21 @@ export const creditCardColumns: Column[] = [
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
 
-  { header: '信用卡', field: 'BOOK_PayAmt1', groupField: 'BOOK', isTotal: true },
-  { header: 'AE', field: 'BOOK_PayAmt2', groupField: 'BOOK', isTotal: true },
-  { header: 'DINER', field: 'BOOK_PayAmt3', groupField: 'BOOK', isTotal: true },
-  { header: '總金額', field: 'BOOK_PayAmt', isTotal: true },
+  { header: '信用卡', field: 'BOOK_PayAmt1', groupField: 'BOOK', isTotal: true, format: formatAmount },
+  { header: 'AE', field: 'BOOK_PayAmt2', groupField: 'BOOK', isTotal: true, format: formatAmount },
+  { header: 'DINER', field: 'BOOK_PayAmt3', groupField: 'BOOK', isTotal: true, format: formatAmount },
+  { header: '總金額', field: 'BOOK_PayAmt', isTotal: true, format: formatAmount },
 
-  { header: '信用卡', field: 'ACT_PayAmt1', groupField: 'ACT', isTotal: true },
-  { header: 'AE', field: 'ACT_PayAmt2', groupField: 'ACT', isTotal: true },
-  { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT', isTotal: true },
-  { header: '總金額', field: 'ACT_PayAmt', isTotal: true },
+  { header: '信用卡', field: 'ACT_PayAmt1', groupField: 'ACT', isTotal: true, format: formatAmount },
+  { header: 'AE', field: 'ACT_PayAmt2', groupField: 'ACT', isTotal: true, format: formatAmount },
+  { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT', isTotal: true, format: formatAmount },
+  { header: '總金額', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
 
 
-  { header: '信用卡', field: 'OVER_PayAmt1', groupField: 'OVER', isTotal: true },
-  { header: 'AE', field: 'OVER_PayAmt2', groupField: 'OVER', isTotal: true },
-  { header: 'DINER', field: 'OVER_PayAmt3', groupField: 'OVER', isTotal: true },
-  { header: '總金額', field: 'OVER_PayAmt', isTotal: true },
+  { header: '信用卡', field: 'OVER_PayAmt1', groupField: 'OVER', isTotal: true, format: formatAmount },
+  { header: 'AE', field: 'OVER_PayAmt2', groupField: 'OVER', isTotal: true, format: formatAmount },
+  { header: 'DINER', field: 'OVER_PayAmt3', groupField: 'OVER', isTotal: true, format: formatAmount },
+  { header: '總金額', field: 'OVER_PayAmt', isTotal: true, format: formatAmount },
   {
     header: '審核狀態',
     field: 'check_status',
