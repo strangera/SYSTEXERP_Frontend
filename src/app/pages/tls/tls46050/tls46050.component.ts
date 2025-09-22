@@ -12,7 +12,7 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
 import { AsyncPipe } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Tls46050Service } from '@service/api/tls/tls46050.service';
+import { Tls46050Request, Tls46050Response, Tls46050Service } from '@service/api/tls/tls46050.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -36,24 +36,30 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
     MultiSelectComponent
   ]
 })
-export class TLS46050Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    ECR_No_Start: [], // start serial number
-    ECR_No_End: [], // end serial Text
-    IDONTKNOW: [], // DropDown
-    ECR_GrpNo: [], // DropDown
+    ECR_No_Start: [null], // start serial number
+    ECR_No_End: [null], // end serial Text
+    ShowTypes: [null], // DropDown
+    ECR_GrpNos: [null], // DropDown
+    PageSize: [30],
+    PageIndex: [1],
+    SortBy: [[{ field: 'ECR_No', order: 1 }]],
   }, { validators: this.validation.textRangeValidator('ECR_No_Start', 'ECR_No_End') });
   totalRecords = 0;
-  historyRequestBody: any;
+  historyRequestBody: Tls46050Request | null = null;
   ECR_NoOptions = this.dropdown.queryPos1002();
   ECR_GrpNoOptions = this.dropdown.queryPos1002Grm();
-  data: any[] = [];
+  data: Tls46050Response[] = [];
   columns: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'ECR_Name', header: '收銀機名稱' },
-    { field: '', header: 'POS環境變數檔' },
-    { field: '', header: 'TOUCH功能按鈕開/關設定檔' },
-    { field: '', header: 'POS版本' },
+    { field: 'EOS_TmplNo', header: '周邊設定模版編號-機台回傳' },
+    { field: 'ECR_TmplNo', header: '周邊設定模版編號' },
+    { field: 'EOS_KBLevel', header: '鍵盤編號-機台回傳' },
+    { field: 'ECR_KBLevel', header: '機台鍵盤等級' },
+    { field: 'EOS_MstSysVer', header: '收銀系統主程式' },
+    { field: 'ECR_GrpNo', header: '機台群組編號' },
+    { field: 'ECR_GrpName', header: '機台群組名稱' },
   ];
   constructor(
     private readonly dropdown: DropdownApiService,
@@ -65,12 +71,12 @@ export class TLS46050Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS46050', '/tls/tls46050cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
-    // this.handleSubmit(frm, () => {
-    //   this.tls46050Service.queryTLS57050(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-    //     this.data = res.data;
-    //     this.totalRecords = res.totalRecords;
-    //     this.historyRequestBody = frm.getRawValue();
-    //   });
-    // });
+    this.handleSubmit(frm, () => {
+      this.tls46050Service.queryTLS57050(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.historyRequestBody = frm.getRawValue();
+      });
+    });
   }
 }
