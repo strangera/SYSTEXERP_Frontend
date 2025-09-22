@@ -381,8 +381,93 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 直接切換標籤
     this.selectedSettingTab = tab;
 
+    // 重要：更新每個 commission item 的顯示資料
+    this.commissionData.forEach(item => {
+      this.updateItemDisplayData(item);
+    });
+
     // 觸發變更檢測，讓表格重新渲染
     this.cdr.detectChanges();
+  }
+
+  /**
+ * 更新單個項目的顯示資料
+ */
+  private updateItemDisplayData(commissionItem: ChargeSettingBusinessModel): void {
+    const currentTab = this.selectedSettingTab;
+
+    // 根據當前標籤設定對應的資料到 detailItems（如果表格有使用這個屬性）
+    switch (currentTab) {
+      case 'discount':
+        // 確保有預設的8個折扣選項
+        if (!commissionItem.ChargeDetails || commissionItem.ChargeDetails.length === 0) {
+          commissionItem.ChargeDetails = this.createDefaultDiscountItems(commissionItem);
+        }
+        break;
+
+      case 'level':
+        // 確保有預設的8個層級選項
+        if (!commissionItem.LevelChargeDetails || commissionItem.LevelChargeDetails.length === 0) {
+          commissionItem.LevelChargeDetails = this.createDefaultLevelItems(commissionItem);
+        }
+        break;
+
+      case 'annual':
+        // annual 不需要預設項目，直接使用 API 回來的資料
+        if (!commissionItem.YearChargeDetails) {
+          commissionItem.YearChargeDetails = [];
+        }
+        break;
+    }
+  }
+
+  /**
+ * 建立預設的 discount 項目（8個折扣選項）
+ */
+  private createDefaultDiscountItems(parentItem: ChargeSettingBusinessModel): any[] {
+    if (!this.discountOptions || this.discountOptions.length === 0) {
+      return [];
+    }
+
+    return this.discountOptions.map(option => ({
+      id: null,
+      apply_no: parentItem.apply_no,
+      tlt_id: parentItem.tlt_id,
+      cag_barcode: option.value,
+      tlt_bdate: null,
+      tlt_edate: null,
+      cag_charge_rate: 0,
+      barcode_desc: option.label || '',
+      is_configured: false,
+      is_enabled: false,
+      _status: 'new',
+      _isSelected: false  // 預設不勾選
+    }));
+  }
+
+  /**
+   * 建立預設的 level 項目（8個折扣選項）
+   */
+  private createDefaultLevelItems(parentItem: ChargeSettingBusinessModel): any[] {
+    if (!this.discountOptions || this.discountOptions.length === 0) {
+      return [];
+    }
+
+    return this.discountOptions.map((option, index) => ({
+      id: null,
+      apply_no: parentItem.apply_no,
+      tlt_id: parentItem.tlt_id,
+      seq_no: index + 1,
+      cag_barcode: option.value,
+      level_bmount: 0,
+      level_eamount: 0,
+      level_charge_rate: 0,
+      barcode_desc: option.label || '',
+      is_configured: false,
+      is_enabled: false,
+      _status: 'new',
+      _isSelected: false  // 預設不勾選
+    }));
   }
 
   /**
@@ -516,7 +601,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   // 原有的事件處理方法保持不變
-  onDetailTabChange(event: { rowData: any, tabId: string }) { }
+  onDetailTabChange(event: { rowData: any, tabId: string }): void {
+    console.log('內層標籤切換事件:', event);
+
+    // 直接呼叫 changeSettingTab 來統一處理
+    this.changeSettingTab(event.tabId);
+  }
 
   onItemEdit(item: any): void { }
 
@@ -661,45 +751,94 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   getDetailKey(): string {
-    switch (this.selectedSettingTab) {
-      case 'discount':
-        return 'ChargeDetails';
-      case 'annual':
-        return 'YearChargeDetails';
-      case 'level':
-        return 'LevelChargeDetails';
-      default:
-        return 'ChargeDetails';
-    }
+    return 'detailItems';  // 固定使用這個屬性名稱
   }
 
   onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
+    const { fieldName, newValue, rowData } = event;
+
     // 判斷是主檔還是明細
     const isDetail = this.isDetailItem(event.rowData);
 
     if (isDetail) {
-      // 明細欄位變更
-      const parentData = this.findParentOfDetail(event.rowData);
-      if (parentData) {
-        this.dataFlowService.updateField(
-          event.rowData.id,
-          this.getDetailItemType(event.rowData),
-          event.fieldName,
-          event.newValue,
-          parentData.id
-        );
-      }
+      // 明細欄位變更 - 需要同步回正確的資料陣列
+      this.handleDetailFieldChange(event);
     } else {
       // 主檔欄位變更
       this.dataFlowService.updateField(
-        event.rowData.id,
+        rowData.id,
         'master',
-        event.fieldName,
-        event.newValue
+        fieldName,
+        newValue
       );
     }
   }
 
+  /**
+ * 處理明細資料的欄位變更
+ */
+  private handleDetailFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
+    const { fieldName, newValue, rowData } = event;
+
+    // 找到這個明細項目屬於哪個主檔
+    const parentData = this.findParentOfDetail(rowData);
+    if (!parentData) {
+      console.error('找不到明細項目的父資料');
+      return;
+    }
+
+    // 更新明細項目的值
+    rowData[fieldName] = newValue;
+
+    // 同步回正確的原始資料陣列
+    this.syncDetailBackToSource(rowData, parentData);
+
+    // 通知資料流服務
+    this.dataFlowService.updateField(
+      rowData.id,
+      this.getDetailItemType(rowData),
+      fieldName,
+      newValue,
+      parentData.id
+    );
+  }
+
+  /**
+   * 將明細變更同步回原始資料陣列
+   */
+  private syncDetailBackToSource(detailData: any, parentData: ChargeSettingBusinessModel): void {
+    const detailId = detailData.id;
+
+    // 根據當前標籤決定要更新哪個陣列
+    switch (this.selectedSettingTab) {
+      case 'discount':
+        if (parentData.ChargeDetails) {
+          const index = parentData.ChargeDetails.findIndex(item => item.id === detailId);
+          if (index > -1) {
+            parentData.ChargeDetails[index] = { ...detailData };
+          }
+        }
+        break;
+
+      case 'level':
+        if (parentData.LevelChargeDetails) {
+          const index = parentData.LevelChargeDetails.findIndex(item => item.id === detailId);
+          if (index > -1) {
+            parentData.LevelChargeDetails[index] = { ...detailData };
+          }
+        }
+        break;
+
+      case 'annual':
+        if (parentData.YearChargeDetails) {
+          const index = parentData.YearChargeDetails.findIndex(item => item.id === detailId);
+          if (index > -1) {
+            parentData.YearChargeDetails[index] = { ...detailData };
+          }
+        }
+        break;
+    }
+  }
 
   private findParentOfDetail(detailData: any): ChargeSettingBusinessModel | null {
     // 在所有主檔中搜尋包含此明細的父項目
@@ -736,5 +875,47 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       case 'level': return 'levelChargeDetail';
       default: return 'chargeDetail';
     }
+  }
+
+  get processedCommissionData(): ChargeSettingBusinessModel[] {
+    return this.visibleCommissionData.map(item => {
+      // 建立一個新的物件，包含動態的 detailItems
+      const processedItem = { ...item };
+
+      // 根據當前選中的標籤，設定對應的資料到一個統一的屬性名稱
+      switch (this.selectedSettingTab) {
+        case 'discount':
+          // 確保有 8 個折扣選項
+          if (!processedItem.ChargeDetails || processedItem.ChargeDetails.length === 0) {
+            processedItem.ChargeDetails = this.createDefaultDiscountItems(processedItem);
+          }
+          // 將資料複製到統一的 detailItems 屬性
+          processedItem.detailItems = processedItem.ChargeDetails.filter(detail => detail._status !== 'deleted');
+          break;
+
+        case 'level':
+          // 確保有 8 個層級選項
+          if (!processedItem.LevelChargeDetails || processedItem.LevelChargeDetails.length === 0) {
+            processedItem.LevelChargeDetails = this.createDefaultLevelItems(processedItem);
+          }
+          // 將資料複製到統一的 detailItems 屬性
+          processedItem.detailItems = processedItem.LevelChargeDetails.filter(detail => detail._status !== 'deleted');
+          break;
+
+        case 'annual':
+          // annual 直接使用 API 資料，不需要預設項目
+          if (!processedItem.YearChargeDetails) {
+            processedItem.YearChargeDetails = [];
+          }
+          // 將資料複製到統一的 detailItems 屬性
+          processedItem.detailItems = processedItem.YearChargeDetails.filter(detail => detail._status !== 'deleted');
+          break;
+
+        default:
+          processedItem.detailItems = [];
+      }
+
+      return processedItem;
+    });
   }
 }

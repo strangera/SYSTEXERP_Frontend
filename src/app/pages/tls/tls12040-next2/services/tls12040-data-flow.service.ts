@@ -310,7 +310,10 @@ export class TLS12040DataFlowService {
     const defaultEndDate = contractEndDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
 
     return businessData.map(commissionItem => {
-      // 增強 ChargeDetails (折扣設定)
+      // 關鍵修正：只對 discount 和 level 標籤增強折扣選項
+      // annual 標籤完全不處理，直接使用 API 回來的原始資料
+
+      // 增強 ChargeDetails (折扣設定標籤) - 使用8個折扣選項
       commissionItem.ChargeDetails = this.buildCompleteDiscountItems(
         commissionItem.ChargeDetails || [],
         discountOptions,
@@ -320,7 +323,7 @@ export class TLS12040DataFlowService {
         commissionItem
       );
 
-      // 增強 LevelChargeDetails (層級抽成)
+      // 增強 LevelChargeDetails (層級抽成標籤) - 使用8個折扣選項
       commissionItem.LevelChargeDetails = this.buildCompleteDiscountItems(
         commissionItem.LevelChargeDetails || [],
         discountOptions,
@@ -330,10 +333,21 @@ export class TLS12040DataFlowService {
         commissionItem
       );
 
+      // YearChargeDetails (年度總業績抽成標籤) 完全不處理
+      // 保持 API 原始資料，不套用任何折扣選項邏輯
+      // commissionItem.YearChargeDetails 維持從 TLS12040DataTransformer.apiToBusinessModel 來的原始狀態
+
+      console.log('TLS12040 增強完成:', {
+        tlt_id: commissionItem.tlt_id,
+        ChargeDetails_count: commissionItem.ChargeDetails?.length || 0,
+        LevelChargeDetails_count: commissionItem.LevelChargeDetails?.length || 0,
+        YearChargeDetails_count: commissionItem.YearChargeDetails?.length || 0,
+        YearChargeDetails_原始資料: commissionItem.YearChargeDetails
+      });
+
       return commissionItem;
     });
   }
-
   /**
    * 建立完整的折扣項目列表（包含所有選項）
    */
@@ -345,23 +359,32 @@ export class TLS12040DataFlowService {
     itemType: 'chargeDetail' | 'levelChargeDetail',
     parentItem: ChargeSettingBusinessModel
   ): any[] {
+    console.log('buildCompleteDiscountItems 開始:', {
+      itemType,
+      existingCount: existingDetails.length,
+      optionsCount: discountOptions.length,
+      parentTltId: parentItem.tlt_id
+    });
+
     const result: any[] = [];
 
     discountOptions?.forEach((option, index) => {
       const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
 
       if (existingItem) {
-        // 已設定的項目
+        // 重要：從 API 回來的資料，應該要勾選
         result.push({
           ...existingItem,
           barcode_desc: existingItem.barcode_desc || option.label,
-          _status: existingItem._status || 'original'
+          _status: existingItem._status || 'original',
+          _isSelected: true,  // API 有資料的項目一定勾選
+          is_configured: true,
+          is_enabled: true
         });
+        console.log(`找到已存在項目: ${option.value} (${option.label}) - 預設勾選`);
       } else {
-        // 未設定的項目 - 根據類型建立
-        const isFirstOption = index === 0;
-        const shouldSelectByDefault = isFirstOption &&
-          (option.value === '000' || option.label?.includes('正品'));
+        // 未設定的項目 - 預設不勾選
+        // 注意：這裡不再預設勾選第一個正品項目，完全依據 API 資料
 
         if (itemType === 'chargeDetail') {
           result.push({
@@ -373,10 +396,10 @@ export class TLS12040DataFlowService {
             tlt_edate: contractEndDate,
             cag_charge_rate: 0,
             barcode_desc: option.label || '',
-            is_configured: shouldSelectByDefault,
-            is_enabled: shouldSelectByDefault,
+            is_configured: false,
+            is_enabled: false,
             _status: 'new',
-            _isSelected: shouldSelectByDefault
+            _isSelected: false  // 全部預設不勾選，只有 API 有資料的才勾選
           });
         } else if (itemType === 'levelChargeDetail') {
           result.push({
@@ -389,13 +412,20 @@ export class TLS12040DataFlowService {
             level_eamount: 0,
             level_charge_rate: 0,
             barcode_desc: option.label || '',
-            is_configured: shouldSelectByDefault,
-            is_enabled: shouldSelectByDefault,
+            is_configured: false,
+            is_enabled: false,
             _status: 'new',
-            _isSelected: shouldSelectByDefault
+            _isSelected: false  // 全部預設不勾選，只有 API 有資料的才勾選
           });
         }
+        console.log(`新增未設定項目: ${option.value} (${option.label}) - 預設不勾選`);
       }
+    });
+
+    console.log('buildCompleteDiscountItems 完成:', {
+      itemType,
+      resultCount: result.length,
+      selectedCount: result.filter(item => item._isSelected).length
     });
 
     return result;

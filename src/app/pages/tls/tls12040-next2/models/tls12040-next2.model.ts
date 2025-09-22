@@ -128,6 +128,9 @@ export interface ChargeSettingBusinessModel extends ChargeSettingAPIModel {
   ChargeDetails: ChargeDetailBusinessModel[];
   YearChargeDetails: YearChargeDetailBusinessModel[];
   LevelChargeDetails: LevelChargeDetailBusinessModel[];
+
+  // 新增：統一的明細資料屬性（用於表格顯示）
+  detailItems?: any[];  // 動態設定，根據當前標籤顯示對應的資料
 }
 
 /**

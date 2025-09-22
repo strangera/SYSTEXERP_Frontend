@@ -71,10 +71,10 @@
           <!-- 修改：直接顯示表格，無論是否有資料 -->
           <div *ngIf="dataLoaded">
             <app-expandable-edit-table
-              [data]="visibleCommissionData"
+              [data]="processedCommissionData"
               [mainColumns]="commissionColumns"
               [detailColumns]="getCurrentColumns()"
-              [detailKey]="'detailItems'"
+              [detailKey]="getDetailKey()"
               [dataKey]="'id'"
               [showPaginator]="false"
               [showCheckBox]="true"
@@ -102,7 +102,6 @@
               (addDetailItem)="onAddDetailItem($event)"
               (dropdownChange)="onDropdownChange($event)"
               (detailButtonClick)="onDetailButtonClick($event)"
-              [detailKey]="getDetailKey()"
               (fieldChange)="onFieldChange($event)"
               [forceEditMode]="true"
               [showActionColumn]="false"
