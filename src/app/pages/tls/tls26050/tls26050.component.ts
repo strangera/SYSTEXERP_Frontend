@@ -23,6 +23,7 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 import { DropdownOption } from '@shared/constants/business.constants';
 import { CounterNameService } from '@service/basic/counter-name.service';
 import { BusinessClassificationService } from '../tls12040-cru/services/business-classification.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls26050',
@@ -149,6 +150,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     private sharedDropdownService: SharedDropdownService,
     private counterNameService: CounterNameService,
     private businessClassificationService: BusinessClassificationService,
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -228,14 +230,13 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         })) || [];
     });
     // 活動下拉選項
-    // this.sharedDropdownService.getActivityOptions(1001, 'A01', [], '').subscribe({
-    //   next: (options) => {
-    //     this.EventIDOptions = options.map((item: any) => ({
-    //       value: item.No,
-    //       label: `${item.No}-${item.Name}`
-    //     }));
-    //   },
-    // });
+    this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: ["1"], pod_status: '' }).subscribe((res) => {
+      this.EventIDOptions = (res?.Data || []).map((item: any) => ({
+        ...item,
+        value: item.pod_no,
+        label: `${item.pod_no}-${item.pod_desc}`
+      }));
+    });
   }
 
   // 根據銷售金額是否含稅設定顯示Header
@@ -358,11 +359,31 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     this.queryForm.controls['enddate'].disable();
     this.queryForm.controls['startdate_c'].disable();
     this.queryForm.controls['enddate_c'].disable();
+    this.queryForm.controls['event_startdate'].disable();
+    this.queryForm.controls['event_enddate'].disable();
+    this.queryForm.controls['event_startdate_c'].disable();
+    this.queryForm.controls['event_enddate_c'].disable();
   }
 
   onBusinessTypeChange(event: any) {
     this.businessClassificationService.getBusClassOptions(event).subscribe(data => {
       this.busClassOptions = data;
     });
+  }
+
+  // 活動下拉改變
+  queryEvent(event: any, baseOrCompare: 'base' | 'compare') {
+    console.log(event);
+    console.log(this.EventIDOptions);
+    switch (baseOrCompare) {
+      case 'base':
+        this.queryForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_sdate ?? null);
+        this.queryForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_edate ?? null);
+        break;
+      case 'compare':
+        this.queryForm.controls['event_startdate_c'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_sdate ?? null);
+        this.queryForm.controls['event_enddate_c'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_edate ?? null);
+        break;
+    }
   }
 }
