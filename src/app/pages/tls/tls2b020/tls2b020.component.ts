@@ -236,12 +236,12 @@ onSubmit(form: FormGroup): void {
   // ✅ 平行呼叫主資料 + 關帳日
   forkJoin({
     reportData: this.tls2b020Service.queryTLS2B020(payload),
-    closeDateRes: this.tls2b020Service.queryCloseDate(payload),
+    // closeDateRes: this.tls2b020Service.queryCloseDate(payload),
   }).subscribe({
-    next: ({ reportData, closeDateRes }) => {
+    next: ({ reportData}) => {
       this.data = reportData?.Data ?? [];
       this.totalRecords = reportData?.TotalCount ?? this.data.length;
-      this.closeDate = closeDateRes?.Data ?? '-';
+      // this.closeDate = closeDateRes?.Data ?? '-';
 
       this.queryStateService.setQueryState(this.ProgNo, payload);
 
