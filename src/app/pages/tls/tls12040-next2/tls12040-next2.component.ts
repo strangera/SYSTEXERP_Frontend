@@ -257,101 +257,6 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log('合約資訊:', this.contractInfoData);
   }
-
-  /**
-    * 增強 ChargeDetails - 與折扣選項合併
-    */
-  private enhanceChargeDetails(
-    existingDetails: ChargeDetailBusinessModel[],
-    commissionItem: ChargeSettingBusinessModel
-  ): ChargeDetailBusinessModel[] {
-    console.log('增強 ChargeDetails:', existingDetails);
-
-    const result: ChargeDetailBusinessModel[] = [];
-
-    this.discountOptions.forEach(option => {
-      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
-
-      if (existingItem) {
-        // 已有資料的項目，補充描述
-        result.push({
-          ...existingItem,
-          barcode_desc: existingItem.barcode_desc || option.label,
-          _status: existingItem._status || 'original'
-        });
-      } else {
-        // 新建項目 - 預設勾選正品 (000)
-        const isDefaultSelected = option.value === '000' || option.label?.includes('正品');
-
-        result.push({
-          id: null,
-          apply_no: commissionItem.apply_no,
-          tlt_id: commissionItem.tlt_id,
-          cag_barcode: option.value,
-          tlt_bdate: null,
-          tlt_edate: null,
-          cag_charge_rate: 0,
-          barcode_desc: option.label || '',
-          is_configured: isDefaultSelected,
-          is_enabled: isDefaultSelected,
-          _status: 'new',
-          _isSelected: isDefaultSelected
-        });
-      }
-    });
-
-    console.log('增強後的 ChargeDetails:', result);
-    return result;
-  }
-
-  /**
-   * 增強 LevelChargeDetails - 與折扣選項合併
-   */
-  private enhanceLevelChargeDetails(
-    existingDetails: LevelChargeDetailBusinessModel[],
-    commissionItem: ChargeSettingBusinessModel
-  ): LevelChargeDetailBusinessModel[] {
-    console.log('增強 LevelChargeDetails:', existingDetails);
-
-    const result: LevelChargeDetailBusinessModel[] = [];
-
-    this.discountOptions.forEach((option, index) => {
-      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
-
-      if (existingItem) {
-        // 已有資料的項目
-        result.push({
-          ...existingItem,
-          barcode_desc: existingItem.barcode_desc || option.label,
-          seq_no: existingItem.seq_no || (index + 1),
-          _status: existingItem._status || 'original'
-        });
-      } else {
-        // 新建項目 - 預設勾選正品 (000)
-        const isDefaultSelected = option.value === '000' || option.label?.includes('正品');
-
-        result.push({
-          id: null,
-          apply_no: commissionItem.apply_no,
-          tlt_id: commissionItem.tlt_id,
-          seq_no: index + 1,
-          cag_barcode: option.value,
-          level_bmount: 0,
-          level_eamount: 0,
-          level_charge_rate: 0,
-          barcode_desc: option.label || '',
-          is_configured: isDefaultSelected,
-          is_enabled: isDefaultSelected,
-          _status: 'new',
-          _isSelected: isDefaultSelected
-        });
-      }
-    });
-
-    console.log('增強後的 LevelChargeDetails:', result);
-    return result;
-  }
-
   /**
    * 取得當前標籤頁對應的資料
    * 這個方法會被 expandable-edit-table 呼叫
@@ -624,9 +529,59 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   onBatchDelete(selectedItems: any[]): void { }
 
-  onDetailBatchDelete(event: { selectedDetails: any[], parentData: any, rowIndex: number }): void { }
+  onDetailBatchDelete(event: { selectedDetails: any[], parentData: any }): void {
+    // if (this.isReadOnlyMode) {
+    //   this.notificationService.infoBubble('檢視模式下無法刪除項目');
+    //   return;
+    // }
+    // const { selectedDetails, parentData } = event;
 
-  onAddCommissionItem(): void { }
+    // // 處理刪除邏輯
+    // selectedDetails.forEach(detail => {
+    //   if (detail._status === 'new' || !this.hasValidId(detail)) {
+    //     // 新項目直接從數組移除
+    //     this.removeDetailFromArrays(detail, parentData);
+    //   } else {
+    //     // 現有項目標記為 deleted
+    //     detail._status = 'deleted';
+    //     this.syncDetailToParentArray(detail, parentData);
+    //   }
+    // });
+
+    // // 重新刷新顯示
+    // this.refreshItemDetailDisplay(parentData);
+    // this.updateMainArray(parentData);
+    // this.saveToWorkflow();
+  }
+
+  onAddCommissionItem(): void {
+    if (this.isReadOnlyMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增明細項目');
+      return;
+    }
+
+    // const result = this.tableService.addCommissionItem(
+    //   this.commissionData,
+    //   this.getContractDate('start'),
+    //   this.getContractDate('end'),
+    //   this.discountOptions
+    // );
+
+    // if (result.success) {
+    //   // 關鍵：新增後立即確保與 step1 同步
+    //   const step1Data = this.contractFlowService.getStep1Data();
+    //   if (step1Data) {
+    //     result.newItem.cap_saletype1 = Boolean(step1Data.cap_saletype1);
+    //     result.newItem.cap_saletype2 = Boolean(step1Data.cap_saletype2);
+    //   }
+
+    //   this.commissionData = [...this.commissionData, result.newItem];
+    //   this.saveToWorkflow();
+    //   this.notificationService.infoBubble('新增完成');
+    // } else {
+    //   this.notificationService.warnBubble(result.message || '新增失敗');
+    // }
+  }
 
   onAddDetailItem(parentData: ChargeSettingBusinessModel): void {
     if (this.isReadOnlyMode) {

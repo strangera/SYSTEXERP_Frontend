@@ -675,8 +675,15 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         return;
       }
 
+      const navigationExtras: NavigationExtras = {
+        state: {
+          crudstatus: this.crudstatus, // 確保這裡有設定現有狀態
+          fromRoute: this.router.url
+        }
+      };
+
+      this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
       console.log(`✅ 已選擇 ${selectedCount} 個扣款項目，前往下一步`);
-      this.router.navigate(['account/tls/tls12040next2']);
 
     } catch (error) {
       console.error('❌ 前往下一步時發生錯誤:', error);
