@@ -207,6 +207,15 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
           value: x.value,
         })) || [];
     });
+    // 活動下拉選項
+    // this.sharedDropdownService.getActivityOptions(1001, 'A01', [], '').subscribe({
+    //   next: (options) => {
+    //     this.EventIDOptions = options.map((item: any) => ({
+    //       value: item.No,
+    //       label: `${item.No}-${item.Name}`
+    //     }));
+    //   },
+    // });
   }
 
   // 根據銷售金額是否含稅設定顯示Header

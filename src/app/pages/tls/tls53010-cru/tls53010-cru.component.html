@@ -18,7 +18,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"
           [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
 
-        <!-- 盤點基準日期（起訖） -->
+        <!-- 盤點基準日期 -->
         <app-calendar class="col-12 md:col-6 lg:col-4" label="盤點基準日期" calendarType="dateOne"
           [control]="dataForm.controls.PST_Date" [submitted]="submitted"></app-calendar>
 
@@ -27,14 +27,18 @@
           [control]="dataForm.controls.PST_Remark" [submitted]="submitted"></app-input-textarea>
       </div>
 
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button label="新增全品項" (clickEvent)="insertTLS53010(dataForm)"></app-button>
+      </div>
+
       <!-- 明細table -->
       <app-table-edit class="col-12" tableKey="TLS53010Detail" [columns]="editColumns" [data]="data"
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
-        [disabled]="isFormReadable" (insert)="dialogVisible = true" [showInsert]="isFormCreateable"
-        [canInsert]="false" />
+        [disabled]="isFormReadable" (insert)="dialogVisible = true" [showInsert]="isFormCreateable" [canInsert]="false"
+        [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true" (dataChange)="data = $event" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="clearDetail()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>

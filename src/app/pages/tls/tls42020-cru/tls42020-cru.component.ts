@@ -258,7 +258,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       .subscribe({
         next: () => {
           this.messageService.successBubble('新增成功');
-          this.onCancel();
+          this.dataForm.reset();
         }
       });
   }

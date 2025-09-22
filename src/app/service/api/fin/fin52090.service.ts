@@ -16,6 +16,8 @@ export class FIN52090Service {
   public readonly FIN52090Data = signal<FIN52090Data[]>([]);
   public readonly accNo = signal<AccNoDropdown[]>([]);
 
+  public accNoMap: Map<string, string> = new Map<string, string>();
+
   private readonly tableCancel$ = new Subject<void>();
   private readonly accNoCancel$ = new Subject<void>();
 
@@ -53,6 +55,7 @@ export class FIN52090Service {
       take(1),
       takeUntil(this.accNoCancel$),
       tap(res => this.accNo.set(res.Data)),
+      tap(() => this.accNoMap = new Map(this.accNo().map(item => [item.AccNo, item.AccCName]))),
       tap(() => this.logger.debug('查詢AccNo結果:', [this.accNo()])),
       finalize(() => this.accNoLoading = !1)
     ).subscribe();

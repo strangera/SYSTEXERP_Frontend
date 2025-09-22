@@ -83,6 +83,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
   ];
 
+  isRowSelectable = (rowData: any) => rowData.check_status === 'N';
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
@@ -168,25 +169,40 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
 
-    this.dropDownListService.queryPOS1006_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.paymentToolOptions = res.Data.map(x => {
-          this.payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
-          return {
-            label: `${x.No ?? ''}-${x.Name ?? ''}`,
-            value: x.No,   // 這裡保持字串，因為下拉選單通常用字串當 value
-            Name: x.Name,
-            No: x.No,
-            PAY_Type: x.PAY_Type ?? ''
-          };
-        }).filter(opt => ['0', '1', '6', 'B', 'C', 'M'].includes(opt.PAY_Type));  // <<== 過濾這些值
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'FIN_PAY_Type' })
+    .pipe(untilDestroyed(this))
+    .subscribe(sysRes => {
+      // 從 querySYS1000_DropDownList 取得下拉選單資料
+      const sysOptions = sysRes.Data.map(item => ({
+        label: `${item.No ?? ''}-${item.Name ?? ''}`,
+        value: item.No,
+        Name: item.Name,
+        No: item.No
+      }));
 
+      // 呼叫 queryPOS1006_DropDownList 來取得 PAY_Type 對應
+      this.dropDownListService.queryPOS1006_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(posRes => {
+        // 建立 payNo 到 PAY_Type 的映射
+        const payNoToTypeMap = new Map<string, string>();
+        posRes.Data.forEach(x => {
+          payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
+        });
+
+        // 將 PAY_Type 加入 sysOptions
+        this.paymentToolOptions = sysOptions.map(opt => ({
+          ...opt,
+          PAY_Type: payNoToTypeMap.get(opt.No) ?? ''
+        }));
+
+        // 處理初始 payNo
         const payNo = this.queryForm.value.PAY_NO;
         if (payNo) {
           this.onPayNoChange(payNo);
         }
       });
+    });
 
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
@@ -257,6 +273,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             check_usr_name: item.check_usr_name
           };
         });
+        this.onPayNoChange(payload.PAY_NO);
 
         this.footerData = [...response.Data.totalData]; // table總計那列的資料
 
