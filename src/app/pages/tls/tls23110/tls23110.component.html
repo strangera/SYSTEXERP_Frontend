@@ -12,6 +12,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 銷售日期區間（限制同月份） -->
+                <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar
+  label="銷售月份"
+  calendarType="dateMonthOne"
+  [control]="queryForm.controls.TXN_Month"
+  [submitted]="submitted">
+</app-calendar>
+</div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
               calendarType="dateRange"
