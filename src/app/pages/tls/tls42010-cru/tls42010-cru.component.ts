@@ -316,10 +316,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem) {
-    if (this.selected) {
-      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
-    }
-    this.selected = k;
+  // 先把上一顆存起來
+  if (this.selected) {
+    Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+  }
+  this.selected = k;
+  const hasConfig =
+    k.KB_Func || k.KB_Display1 || k.KB_Display2 ||
+    k.KB_Arg1 || k.KB_Arg2 || k.KB_Arg3;
+  if (hasConfig) {
     this.selectedKeyForm.patchValue({
       KB_Func: k.KB_Func ?? '',
       KB_Switch: k.KB_Switch ?? 'Y',
@@ -335,7 +340,25 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       KB_Arg2: k.KB_Arg2 ?? '',
       KB_Arg3: k.KB_Arg3 ?? ''
     });
+  } else {
+    this.selectedKeyForm.reset({
+      KB_Func: '',
+      KB_Switch: 'Y',
+      KB_Display1: '',
+      KB_Display2: '',
+      KB_Color: 'RGB:0,0,0',
+      KB_Style: '1',
+      KB_Font: 'Microsoft JhengHei',
+      KB_Size: 14,
+      KB_FontColor: 'RGB:0,0,0',
+      KB_Fonttyped: 'NNN',
+      KB_Arg1: '',
+      KB_Arg2: '',
+      KB_Arg3: ''
+    });
   }
+}
+
 
   // ---------------- Submit ----------------
   onSubmit(frm: FormGroup) {
@@ -383,7 +406,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         USR_Level: frm.value.USR_Level,
         ECR_KBDesc: frm.value.ECR_KBDesc,
         TSB_Name: frm.value.TSB_Name,
-        POS1004: POS1004Disc
+        POS1004Disc: POS1004Disc
       };
 
       const save$ =

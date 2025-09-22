@@ -30,21 +30,21 @@
             <p-divider layout="horizontal" styleClass="flex md:hidden" [align]="'center'" />
           </div>
           <div class="w-full grid p-fluid align-content-start py-5">
-            <app-calendar class="col-12" label="預算年月" controlName="budget_yymm" calendarType="dateMonthOne"
-              [control]="queryForm.controls.budget_yymm" [submitted]="submitted" />
-            <app-multi-select class="col-12 md:col-6" label="館別" controlName="building_no"
-              [control]="queryForm.controls.building_no" [options]="buildingOptions | async" optionLabel="Name"
+            <app-calendar class="col-12" label="預算年月" controlName="BudgetYYMM" calendarType="dateMonthOne"
+              [control]="queryForm.controls.BudgetYYMM" [submitted]="submitted" />
+            <app-multi-select class="col-12 md:col-6" label="館別" controlName="BuildingNos"
+              [control]="queryForm.controls.BuildingNos" [options]="buildingOptions | async" optionLabel="Name"
               optionValue="No" [submitted]="submitted" />
-            <app-multi-select class="col-12 md:col-6" label="樓層" controlName="FLOOR_NO"
-              [control]="queryForm.controls.FLOOR_NO" [options]="floorOptions | async" optionLabel="Name"
+            <app-multi-select class="col-12 md:col-6" label="樓層" controlName="FloorNos"
+              [control]="queryForm.controls.FloorNos" [options]="floorOptions | async" optionLabel="Name"
               optionValue="No" [submitted]="submitted" />
-            <app-multi-select class="col-12" label="組織代碼/名稱" controlName="section_no"
-              [control]="queryForm.controls.section_no" [options]="sectionOptions | async" optionLabel="label"
+            <app-multi-select class="col-12" label="組織代碼/名稱" controlName="SectionNos"
+              [control]="queryForm.controls.SectionNos" [options]="sectionOptions | async" optionLabel="label"
               optionValue="value" [submitted]="submitted" />
             <div class="col-12 grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-              <app-button label="組織範本下載" [loading]="loading" />
-              <app-button label="空白範本下載" [loading]="loading" />
-              <app-button label="產生匯出檔" [loading]="loading" />
+              <app-button label="組織範本下載" [loading]="loading" (click)="onDownloadTemplate(queryForm)" />
+              <app-button label="空白範本下載" [loading]="loading" (click)="onDownloadBlankTemplate()" />
+              <app-button label=" 產生匯出檔" [loading]="loading" (click)="onSubmit(queryForm)" />
             </div>
           </div>
         </div>
