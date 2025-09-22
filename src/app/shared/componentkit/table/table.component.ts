@@ -20,129 +20,244 @@ import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEdi
   imports: [COMMON_IMPORTS],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnChanges {
-  @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
+  /** table 元件 */
+  @ViewChild('dt', { static: false }) dt!: Table;
+
   // 基本設置
-  @Input() dataKey = 'ID';                                                      // table 資料key
-  @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
-  @Input() apiUrl?: string;                                                     // table API URL (可選)
-  @Input() title: string | undefined = undefined;                               // table 標題
-  @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
-  originalColumns!: Column[];                                                   // table 原始欄位
-  selectedColumns!: Column[];                                                   // table 預設顯示欄位
-  @Input() data: any[] = [];                                                    // table 資料 (必填)
-  @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
-  @Input() loading = false;                                                     // 是否顯示 loading
-  @Input() disabled = false;                                                    // 是否禁用 table
+  /** table 資料key @default 'ID' */
+  @Input() dataKey = 'ID';
+  /** table 唯一標識 (必填) @default undefined */
+  @Input() tableKey: string | undefined = undefined;
+  /** table API URL (可選) */
+  @Input() apiUrl?: string;
+  /** table 標題 @default undefined */
+  @Input() title: string | undefined = undefined;
+  /** table 欄位配置 (必填) */
+  @Input() columns!: Column[];
+  /** table 原始欄位 */
+  originalColumns!: Column[];
+  /** table 預設顯示欄位 */
+  selectedColumns!: Column[];
+  /** table 資料 (必填) @default [] */
+  @Input() data: any[] = [];
+  /** table 資料改變 (事件) */
+  @Output() dataChange = new EventEmitter<any[]>();
+  /** 是否顯示 loading @default false */
+  @Input() loading = false;
+  /** 是否禁用 table @default false */
+  @Input() disabled = false;
+
   // select 選擇Row相關
-  @Input() showCheckBox = false;                                                // 是否顯示 checkbox
-  @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
-  @Input() selectedItems: any = [];                                             // table 已勾選資料
-  @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
-  @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
-  @Output() selectedItemsChange = new EventEmitter<any>();                      // 資料變更(雙向綁定用)
-  @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料勾選(事件)
-  @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
-  @Output() itemClick = new EventEmitter<any>();                                // 資料點選(事件)
+  /** 是否顯示 checkbox @default false */
+  @Input() showCheckBox = false;
+  /** table 勾選 Mode (預設多選) @default 'multiple' */
+  @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';
+  /** table 已勾選資料 @default [] */
+  @Input() selectedItems: any = [];
+  /** 可選擇(條件) @default () => true */
+  @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
+  /** 資料變更(事件) */
+  @Output() selectionChange = new EventEmitter<any>();
+  /** 資料變更(雙向綁定用) */
+  @Output() selectedItemsChange = new EventEmitter<any>();
+  /** 資料勾選(事件) */
+  @Output() select = new EventEmitter<TableRowSelectEvent>();
+  /** 資料取消勾選(事件) */
+  @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();
+  /** 資料點選(事件) */
+  @Output() itemClick = new EventEmitter<any>();
+
   // Header 相關
-  @Input() showCaption = true;                                                  // 是否顯示 Caption
-  // Header(左) 相關
-  @Input() showHeader = true;                 // 是否顯示 Header
-  @Input() showFilter = true;                 // 是否顯示 Filter
-  @Input() showReportMode = true;             // 是否顯示 匯出按鈕
-  @Input() showReportPDF = true;             // 是否顯示 匯出PDF按鈕
-  @Input() showReportExcel = true;             // 是否顯示 匯出Excel按鈕
-  @Input() customReport = false;               // 是否自訂報表
-  @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
-  @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
-  @Output() insert = new EventEmitter<any>(); // 新增事件
-  @Input() insertDisabled = false;            // 新增按鈕是否禁用
-  @Input() deleteData = false;                // 預先刪除資料 (關聯：需要加入dataKey, dataChange)
-  @Output() delete = new EventEmitter<any>(); // 刪除事件
-  @Input() showDelete = true;                    // 是否顯示刪除按鈕
-  @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
-  @Input() deletepTooltip = '刪除';              // 刪除按鈕提示
+  /** 是否顯示 Caption @default true */
+  @Input() showCaption = true;
+
+  // Header(左)
+  /** 是否顯示 Header @default true */
+  @Input() showHeader = true;
+  /** 是否顯示 Filter @default true */
+  @Input() showFilter = true;
+  /** 是否顯示 匯出按鈕 @default true */
+  @Input() showReportMode = true;
+  /** 是否顯示 匯出PDF按鈕 @default true */
+  @Input() showReportPDF = true;
+  /** 是否顯示 匯出Excel按鈕 @default true */
+  @Input() showReportExcel = true;
+  /** 是否自訂報表 @default false */
+  @Input() customReport = false;
+  /** 自訂報表 事件 */
+  @Output() exportEvent = new EventEmitter<string>();
+  /** 是否顯示 Insert新增按鈕 @default false */
+  @Input() showInsert = false;
+  /** 新增事件 */
+  @Output() insert = new EventEmitter<any>();
+  /** 新增按鈕是否禁用 @default false */
+  @Input() insertDisabled = false;
+  /** 預先刪除資料 (關聯：需要加入dataKey, dataChange) @default false */
+  @Input() deleteData = false;
+  /** 刪除事件 */
+  @Output() delete = new EventEmitter<any>();
+  /** 是否顯示刪除按鈕 @default true */
+  @Input() showDelete = true;
+  /** 刪除按鈕圖示 @default 'pi pi-trash' */
+  @Input() deleteIcon = 'pi pi-trash';
+  /** 刪除按鈕提示 @default '刪除' */
+  @Input() deletepTooltip = '刪除';
+
   // Header(右) 相關
-  @Input() showExcel = false;                      // 是否顯示 匯出Excel
-  @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
-  @Input() showExcelImport = true;                 // 是否顯示 匯入Excel按鈕
-  @Input() showCustomExcelImport = false;         // 是否顯示 自訂匯入Excel按鈕
-  @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
-  @Input() exportExcelLoading = false;             // 匯出 Excel loading
-  @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
-  @Input() showPage = true;                        // 是否顯示 下拉選單分頁器
+  /** 是否顯示 匯出Excel @default false */
+  @Input() showExcel = false;
+  /** 是否顯示 匯出Excel按鈕 @default true */
+  @Input() showExcelExport = true;
+  /** 是否顯示 匯入Excel按鈕 @default true */
+  @Input() showExcelImport = true;
+  /** 是否顯示 自訂匯入Excel按鈕 @default false */
+  @Input() showCustomExcelImport = false;
+  /** 匯出 Excel 事件 */
+  @Output() exportExcel = new EventEmitter<any>();
+  /** 匯出 Excel loading @default false */
+  @Input() exportExcelLoading = false;
+  /** 匯入 Excel 事件 */
+  @Output() importExcel = new EventEmitter<FileSelectEvent>();
+  /** 是否顯示 下拉選單分頁器 @default true */
+  @Input() showPage = true;
+
   // Sort 相關
-  @Input() showSort = true;                                                     // 是否顯示排序
-  @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )
-  // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
+  /** 是否顯示排序 @default true */
+  @Input() showSort = true;
+  /** table 排序依據 (多重排序 {field欄位、order排序方向} ) @default [{ field: this.dataKey, order: 1 }] */
+  @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];
+  /** 欄位群組 */
+  @Input() columnGroup?: ColumnGroup[];
+
   // 資料小計
-  @Input() groupRowsBy = '';                                                    // table 群組資料
-  groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
-  @Input() showSubTotal = false;                                                // 是否顯示群組小計
+  /** table 群組資料 @default '' */
+  @Input() groupRowsBy = '';
+  /** 用於緩存已分組的數據 @default new Map() */
+  groupedDataCache = new Map();
+  /** 是否顯示群組小計 @default false */
+  @Input() showSubTotal = false;
+
   // 資料總計
-  @Input() showTotal = false;                                                   // 是否顯示總計
+  /** 是否顯示總計 @default false */
+  @Input() showTotal = false;
+
   // rowEdit 相關
-  @Input() showRowEdit = false;                                                 // 是否顯示 Row編輯按鈕
-  @Input() rowEditing = false;                                                  // 是否正在編輯Row
-  @Input() rowEditCanSave = true;                                            // Row編輯 是否可以儲存 給欄位驗證用
-  @Output() rowEditingChange = new EventEmitter<boolean>(); // Row編輯 改變(雙向綁定用)
-  clonedProducts: Record<string, any> = {};                                     // 儲存編輯前資料
-  @Output() rowEditInit = new EventEmitter<any>();                              // Row 編輯初始化事件
-  @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
-  @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
-  @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Input() alwaysEdit = false;                                                  // 是否總是編輯
-  @Input() alwaysBlurValidate = false;                                         // 是否總是驗證欄位 (true:總是驗證、false:只在送出時驗證)
-  @Input() insertRowData = false;                   // 預設新增模式 (關聯：需要加入dataKey, dataChange)
-  @Input() defaultInsertData: any = {};             // 預設新增資料 (可選，預設為所有資料為null)
-  @Input() dataStatusField: string | undefined;     // 資料狀態 (如果有值增加狀態欄位；如果沒有值不增加狀態欄位)
-  @Input() dataStatusValue = {                      // 預設 original/new/modified/deleted (可選)
+  /** 是否顯示 Row編輯按鈕 @default false */
+  @Input() showRowEdit = false;
+  /** 是否正在編輯Row @default false */
+  @Input() rowEditing = false;
+  /** Row編輯 是否可以儲存 給欄位驗證用 @default true */
+  @Input() rowEditCanSave = true;
+  /** Row編輯 改變(雙向綁定用) */
+  @Output() rowEditingChange = new EventEmitter<boolean>();
+  /** 儲存編輯前資料 @default {} */
+  clonedProducts: Record<string, any> = {};
+  /** Row 編輯初始化事件 */
+  @Output() rowEditInit = new EventEmitter<any>();
+  /** Row 編輯保存事件 */
+  @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();
+  /** Row 編輯取消事件 */
+  @Output() rowEditCancel = new EventEmitter<any>();
+  /** Row禁止編輯條件 @default () => false */
+  @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;
+  /** 是否總是編輯 @default false */
+  @Input() alwaysEdit = false;
+  /** 是否總是驗證欄位 (true:總是驗證、false:只在送出時驗證) @default false */
+  @Input() alwaysBlurValidate = false;
+  /** 預設新增模式 (關聯：需要加入dataKey, dataChange) @default false */
+  @Input() insertRowData = false;
+  /** 預設新增資料 (可選，預設為所有資料為null) @default {} */
+  @Input() defaultInsertData: any = {};
+  /** 資料狀態 (如果有值增加狀態欄位；如果沒有值不增加狀態欄位) */
+  @Input() dataStatusField: string | undefined;
+  /** 預設 original/new/modified/deleted (可選) @default { Original: 'original', New: 'new', Modified: 'modified', Deleted: 'deleted' } */
+  @Input() dataStatusValue = {
     Original: 'original',
     New: 'new',
     Modified: 'modified',
     Deleted: 'deleted'
   };
+
   // expansion 收合展開
-  @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
-  @Input() expansionDataKey = 'details';            // 收合展開 資料key(expansion必需配置)
-  @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)
-  @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
-  @Input() expansionRows = 20;               // expansion 每頁顯示行數
-  @Input() expansionRowsPerPageOptions = [20, 40, 60, 80, 100]; // expansion 分頁選項
-  @Input() expansionScrollHeight = '300px';  // expansion 表格高度
-  @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
-  expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
+  /** 收合展開 欄位配置(expansion必需配置) @default [] */
+  @Input() expansionColumns: Column[] = [];
+  /** 收合展開 資料key(expansion必需配置) @default 'details' */
+  @Input() expansionDataKey = 'details';
+  /** 收合展開 排序欄位(單一排序) @default [{ field: this.expansionDataKey, order: 1 }] */
+  @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
+  /** expansion 是否顯示分頁器 @default false */
+  @Input() expansionShowPaginator = false;
+  /** expansion 每頁顯示行數 @default 20 */
+  @Input() expansionRows = 20;
+  /** expansion 分頁選項 @default [20, 40, 60, 80, 100] */
+  @Input() expansionRowsPerPageOptions = [20, 40, 60, 80, 100];
+  /** expansion 表格高度 @default '300px' */
+  @Input() expansionScrollHeight = '300px';
+  /** 屬性來接收父層傳來的載入函數 */
+  @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
+  /** 收合展開 已展開資料 @default {} */
+  expandedRows: Record<string, boolean> = {};
+
   // 管理 欄位
-  @Input() showManage = true;                // 是否顯示 管理欄位
-  @Input() showDetail = true;                // 是否顯示 管理欄位(明細按鈕)
-  @Output() detail = new EventEmitter<any>();// 明細事件
-  @Input() showEdit = true;                  // 是否顯示 管理欄位(編輯按鈕)
-  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Output() edit = new EventEmitter<any>();  // 編輯事件
-  @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
-  @Input() buttonsLoading = false;           // 按鈕們 loading
+  /** 是否顯示 管理欄位 @default true */
+  @Input() showManage = true;
+  /** 是否顯示 管理欄位(明細按鈕) @default true */
+  @Input() showDetail = true;
+  /** 明細事件 */
+  @Output() detail = new EventEmitter<any>();
+  /** 是否顯示 管理欄位(編輯按鈕) @default true */
+  @Input() showEdit = true;
+  /** Row禁止編輯條件 @default () => false */
+  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;
+  /** 編輯事件 */
+  @Output() edit = new EventEmitter<any>();
+  /** 自定義 管理按鈕 @default [] */
+  @Input() addButton: AddButton[] = [];
+  /** 按鈕們 loading @default false */
+  @Input() buttonsLoading = false;
+
   // body
-  @Input() showReorder = false;              // 是否顯示 排序欄位
-  @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
-  @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
-  @Output() filterChange = new EventEmitter<{ rowData: any, value: string; }>(); // autoComplete 過濾事件
+  /** 是否顯示 排序欄位 @default false */
+  @Input() showReorder = false;
+  /** input 變更事件 */
+  @Output() fieldChange = new EventEmitter<FieldChangeEvent>();
+  /** 選擇 按鈕事件 */
+  @Output() selectButton = new EventEmitter<any>();
+  /** autoComplete 過濾事件 */
+  @Output() filterChange = new EventEmitter<{ rowData: any, value: string; }>();
+
   // Footer
-  @Input() showFooter = false;                      // 是否顯示 Footer
-  // 分頁器
-  @Input() scrollHeight = '867px';                  // table 高度
-  @Input() scrollable = true;                        // 是否要滾輪
-  @Input() showPaginator = true;                    // 是否顯示 分頁器
-  @Input() totalRecords = 0;                        // 記錄總數
-  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];// 分頁選項
-  totalPages = 0;                                   // 共幾頁數
-  @Input() rows = 20;                                         // 每頁顯示的行數
-  first = 0;                                        // 當前表格的起始索引
-  pages: { label: string, value: number; }[] = [];   // (右上)下拉選單 頁數選項
-  selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
-  @Input() lazy = false;                                      // 是否啟用 Lazy 加載
-  @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
+  /** 是否顯示 Footer @default false */
+  @Input() showFooter = false;
+  /** 分頁器 @default n/a */
+  /** table 高度 @default '867px' */
+  @Input() scrollHeight = '867px';
+  /** 是否要滾輪 @default true */
+  @Input() scrollable = true;
+  /** 是否顯示 分頁器 @default true */
+  @Input() showPaginator = true;
+  /** 記錄總數 @default 0 */
+  @Input() totalRecords = 0;
+  /** 分頁選項 @default [20, 40, 60, 80, 100] */
+  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];
+  /** 共幾頁數 @default 0 */
+  totalPages = 0;
+  /** 每頁顯示的行數 @default 20 */
+  @Input() rows = 20;
+  /** 當前表格的起始索引 @default 0 */
+  first = 0;
+  /** (右上)下拉選單 頁數選項 @default [] */
+  pages: { label: string, value: number; }[] = [];
+  /** (右上)下拉選單 當前選擇的頁數 @default 1 */
+  selectedPage: number | null = 1;
+  /** 是否啟用 Lazy 加載 @default false */
+  @Input() lazy = false;
+  /** Lazy 加載事件 */
+  @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
+
   // 其他
-  @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
+  /** table 無資料時顯示文字 @default '查無資料' */
+  @Input() emptyMessage = '查無資料';
 
   constructor(
     private readonly sanitizer: DomSanitizer,
