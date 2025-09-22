@@ -179,7 +179,26 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls26060Service.queryTLS26060(frm.getRawValue())
+      const formValue = frm.getRawValue();
+      const payload = {
+        ...formValue,
+        // 週營業報表 - 年度格式化 (yyyy)
+        onedateyy: this.datePipe.transform(formValue.onedateyy, 'yyyy'),
+        onedateyy_c: this.datePipe.transform(formValue.onedateyy_c, 'yyyy'),
+
+        // 月營業報表 - 年月格式化 (yyyyMM)
+        onedatemm: this.datePipe.transform(formValue.onedatemm, 'yyyyMM'),
+        onedatemm_c: this.datePipe.transform(formValue.onedatemm_c, 'yyyyMM'),
+
+        // 半年營業報表 - 年度格式化 (yyyy)
+        halfyear_onedateyy: this.datePipe.transform(formValue.halfyear_onedateyy, 'yyyy'),
+        halfyear_onedateyy_c: this.datePipe.transform(formValue.halfyear_onedateyy_c, 'yyyy'),
+
+        // 年營業報表 - 年度格式化 (yyyy)
+        year_onedateyy: this.datePipe.transform(formValue.year_onedateyy, 'yyyy'),
+        year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy')
+      };
+      this.tls26060Service.queryTLS26060(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
