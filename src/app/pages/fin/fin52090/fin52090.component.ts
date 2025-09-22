@@ -68,6 +68,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
 
+    this.service.accNo.set([]);
     this.service.getAccNo();
 
     this.logger.debug(`init:`, [this.service.accNo()]);
