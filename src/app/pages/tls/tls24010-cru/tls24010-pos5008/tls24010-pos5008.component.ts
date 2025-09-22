@@ -153,11 +153,11 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
       PAY_Name: [{ value: row.PAY_Name, disabled: true }],
       PAY_No: [{ value: row.PAY_No, disabled: true }],
       TXN_PayAmt: [{ value: null, disabled: isDisabled }],
-      CRD_Type: [{ value: '', disabled: isDisabled }],
-      CRD_No: [{ value: '', disabled: isDisabled }, [Validators.maxLength(20)]],
-      TXN_CouponNo: [{ value: '', disabled: isDisabled }, [Validators.maxLength(50)]],
-      TXN_PayDesc: [{ value: '', disabled: isDisabled }, [Validators.maxLength(100)]],
-      TERM_No: [{ value: '', disabled: isDisabled }]
+      CRD_Type: [{ value: null, disabled: isDisabled }],
+      CRD_No: [{ value: null, disabled: isDisabled }, [Validators.maxLength(20)]],
+      TXN_CouponNo: [{ value: null, disabled: isDisabled }, [Validators.maxLength(50)]],
+      TXN_PayDesc: [{ value: null, disabled: isDisabled }, [Validators.maxLength(100)]],
+      TERM_No: [{ value: null, disabled: isDisabled }]
     });
   }
 

@@ -83,6 +83,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
   ];
 
+  isRowSelectable = (rowData: any) => rowData.check_status === 'N';
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）

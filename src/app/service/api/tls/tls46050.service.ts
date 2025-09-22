@@ -1,19 +1,41 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@service/system/auth.service';
+import { SortMeta } from 'primeng/api';
+import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
+
+export interface Tls46050Request {
+  PageSize: number,
+  PageIndex: number,
+  SortBy: SortMeta[],
+  ECR_No_Start: string,
+  ECR_No_End: string,
+  ShowTypes: string,
+  ECR_GrpNos: string[]
+}
+
+export interface Tls46050Response {
+  ID: number,
+  ECR_No: string,
+  EOS_TmplNo: string,
+  ECR_TmplNo: string,
+  EOS_KBLevel: string,
+  ECR_KBLevel: string,
+  EOS_MstSysVer: string,
+  ECR_GrpNo: string,
+  ECR_GrpName: string
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class Tls46050Service {
+  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS4000`;
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
-  queryTLS57050(requestBody: any) {
-    // Implement the API call logic here
-    console.log('Querying TLS57050 with request body:', requestBody);
-    // Return a mock response for demonstration purposes
-    return Promise.resolve({
-      data: [],
-      totalRecords: 0
-    });
+  queryTLS57050(requestBody: Tls46050Request): Observable<ApiResponse<Tls46050Response[]>> {
+    return this.http.post<ApiResponse<Tls46050Response[]>>(`${this.apiUrl}/queryTLS46050`, requestBody);
   }
 }

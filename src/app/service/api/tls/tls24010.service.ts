@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 import { POS2004Item } from '../../utility/dropDownList.service';
@@ -244,7 +244,18 @@ export class Tls24010Service {
    * @returns 包含 ITLS24010Data 陣列的 API 響應
    */
   queryTLS24010(params: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> {
-    return this.http.post<ApiResponse<TLS24010Data[]>>(`${this.apiUrl}/queryTLS24010`, params);
+    return this.http.post<ApiResponse<TLS24010Data[]>>(`${this.apiUrl}/queryTLS24010`, params)
+      .pipe(
+        map(res => {
+          if (res.Data) {
+            res.Data = res.Data.map(item => ({
+              ...item,
+              TXN_No: item.TXN_No.toString(),
+            }));
+          }
+          return res;
+        })
+      );
   }
   /**
    * 查詢 POS2007 POS2008 資料表

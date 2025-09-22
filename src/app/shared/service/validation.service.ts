@@ -436,17 +436,30 @@ export class ValidationService {
   // 字串範圍 驗證器 - 起號不能大於迄號
   textRangeValidator(startControlName: string, endControlName: string): ValidatorFn {
     return (formGroup: AbstractControl): ValidationErrors | null => {
+      // 確保傳入的是 FormGroup
       if (!(formGroup instanceof FormGroup)) {
         return null;
       }
+
       const startControl = formGroup.get(startControlName);
       const endControl = formGroup.get(endControlName);
-      if (!startControl || !endControl) {
+
+      // 如果任何一個控制項不存在，或是兩者皆為空，則不驗證
+      // 這樣可以讓 `required` 驗證器來處理必填邏輯
+      const startValue = startControl?.value;
+      const endValue = endControl?.value;
+
+      // 如果起號或迄號其中一個沒有值，則不執行此驗證
+      if (!startValue || !endValue) {
         return null;
       }
-      if (startControl.value > endControl.value) {
+
+      // 進行值比較，並返回錯誤
+      if (startValue > endValue) {
         return { textRange: true };
       }
+
+      // 驗證通過
       return null;
     };
   }

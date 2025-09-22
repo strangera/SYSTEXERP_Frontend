@@ -1,5 +1,5 @@
 import { DecimalPipe, NgIf } from '@angular/common';
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DividerModule } from 'primeng/divider';
@@ -30,7 +30,7 @@ import { STORE_WAY } from '../tls24010-cru.model';
   templateUrl: './tls24010-pos5007.component.html',
   styleUrls: ['./tls24010-pos5007.component.scss']
 })
-export class Tls24010Pos5007Component implements OnInit, OnChanges {
+export class Tls24010Pos5007Component implements OnChanges {
   @Input() type?: string;
   @Input() TXN_GUIPaper?: string // 補登類別 補原機台='E' 手開二聯式發票='2'
   @Input() TLT_No?: string//專櫃編號
@@ -52,47 +52,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly messageService: NotificationService
-  ) {
-  }
-  ngOnInit(): void {
-    switch (this.store_way) {
-      case STORE_WAY.自營:// 自營櫃位
-        if (this.TLT_No) {
-          this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
-            if (data.Data.length > 0) {
-              this.POS2004Options = data.Data.map((item) => ({
-                ...item,
-                label: `${item.PLU_MagNo} - ${item.PLU_Name}`
-              }));
-            } else {
-              this.messageService.errorBubble('此專櫃無銷售商品', '無法新增');
-            }
-          })
-        }
-        break;
-      case STORE_WAY.專櫃:// 專櫃櫃位
-        this.POS2004Options = [
-          {
-            PLU_MagNo: this.TLT_No || '',
-            PLU_No: this.TLT_No || '',
-            PLU_Name: this.TLT_Name || '',
-            label: `${this.TLT_No || ''} - ${this.TLT_Name || ''}`,
-          }
-        ];
-        this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
-          this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
-          this.insertRow();
-        })
-        if (this.TXN_Date) {
-          this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(this.TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {
-            this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-          });
-        }
-        break;
-      default: break;
-    }
-  }
-
+  ) { }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && changes['data'].currentValue.length > 0 && !this.isFormCreateable) {
       this.POS5007Data = [...this.data.map((item, index) => ({
@@ -109,6 +69,44 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
         tlt_id: item.tlt_id ? item.tlt_id : undefined
       }))];
       this.calculateLastYearTotal();
+    }
+    if (changes['store_way']) {
+      switch (this.store_way) {
+        case STORE_WAY.自營:// 自營櫃位
+          if (this.TLT_No) {
+            this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
+              if (data.Data.length > 0) {
+                this.POS2004Options = data.Data.map((item) => ({
+                  ...item,
+                  label: `${item.PLU_MagNo} - ${item.PLU_Name}`
+                }));
+              } else {
+                this.messageService.errorBubble('此專櫃無銷售商品', '無法新增');
+              }
+            })
+          }
+          break;
+        case STORE_WAY.專櫃:// 專櫃櫃位
+          this.POS2004Options = [
+            {
+              PLU_MagNo: this.TLT_No || '',
+              PLU_No: this.TLT_No || '',
+              PLU_Name: this.TLT_Name || '',
+              label: `${this.TLT_No || ''} - ${this.TLT_Name || ''}`,
+            }
+          ];
+          this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
+            this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
+            this.insertRow();
+          })
+          if (this.TXN_Date) {
+            this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(this.TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {
+              this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+            });
+          }
+          break;
+        default: break;
+      }
     }
   }
 

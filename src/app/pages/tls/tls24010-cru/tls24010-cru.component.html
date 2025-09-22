@@ -49,7 +49,8 @@
       <div class="grid p-fluid">
         <!-- 收銀員編號 → POS2001.USR_No -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀員編號" [control]="dataForm.controls.USR_No"
-          [submitted]="submitted" [options]="USR_NoOptions" optionLabel="label" optionValue="No" controlName="USR_No" />
+          [submitted]="submitted" [options]="USR_NoOptions | async" optionLabel="label" optionValue="No"
+          controlName="USR_No" />
         <div class="flex col-12 md:col-6 lg:col-3">
           <!-- 預售 → POS5006.TXN_PreOrder -->
           <app-radiobutton-yn class="flex-1" controlName="TXN_PreOrder" label="預售"
@@ -92,14 +93,14 @@
           [submitted]="submitted" [options]="TXN_GUI_CarrTypeOptions" optionLabel="label" optionValue="value"
           controlName="TXN_GUI_CarrType" />
         <!-- 電子發票載具卡號 → POS5006.TXN_GUIVehicle -->
-        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具卡號" [control]="dataForm.controls.TXN_GUIVehicle"
-          [submitted]="submitted" controlName="TXN_GUIVehicle" />
+        <!-- <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具卡號" [control]="dataForm.controls.TXN_GUIVehicle"
+          [submitted]="submitted" controlName="TXN_GUIVehicle" /> -->
         <!-- 載具編號顯碼 → POS5006.TXN_GUI_CarrIdEx -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號顯碼" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
           [submitted]="submitted" controlName="TXN_GUI_CarrIdEx" />
         <!-- 載具編號隠碼 → POS5006.TXN_GUI_CarrId -->
-        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"
-          [submitted]="submitted" controlName="TXN_GUI_CarrId" />
+        <!-- <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"
+          [submitted]="submitted" controlName="TXN_GUI_CarrId" /> -->
         <!-- 電子發票防葦隨機碼 → POS5006.TXN_GUIRemark -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票防偽隨機碼" [control]="dataForm.controls.TXN_GUIRemark"
           [submitted]="submitted" controlName="TXN_GUIRemark" />
