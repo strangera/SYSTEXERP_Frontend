@@ -57,7 +57,7 @@
     [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [addButton]="addButtons" [showDelete]="false" [showDetail]="false" [showEdit]="false" [showTotal]="true"
-    [footerData]="footerData">
+    [footerData]="footerData" [isRowSelectable]="isRowSelectable">
     <header>
       <div class="flex align-items-center mb-4">
         <p-button label="審核完成" severity="success" (click)="onReview(selectedItems)" [disabled]="selectedCount === 0"
