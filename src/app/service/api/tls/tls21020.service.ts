@@ -7,6 +7,7 @@ import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Sysb400Service } from '../sys/sysb400.service';
+import { Option } from '@service/utility/dropdown-api.model';
 
 const apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000/';
 
@@ -16,7 +17,7 @@ export class TLS21020Service {
   public readonly TLS21020Data = signal<TLS21020Data[]>([]);
   public readonly TLS21020GLS1005Data = signal<TLS21020GLS1005Data[]>([]);
   public readonly SYS3100Data = signal<any[]>([]);
-  public readonly GLS1005Data = signal<DropdownOption[]>([]);
+  public readonly GLS1005Data = signal<Option[]>([]);
   public readonly POS2013Data = signal<POS2013[]>([]);
 
   private readonly GLS1005QuerySignal = signal<TLS21020GLS1005Query | null>(null);
@@ -100,7 +101,7 @@ export class TLS21020Service {
     this.dropdownApi.queryGls1005()
       .pipe(
         take(1),
-        // tap(res => res && this.GLS1005Data.set(res ?? [])), // !! 幫我修正一下這段，DropdownApiService還在調整中 先使用DropDownListService
+        tap(res => res && this.GLS1005Data.set(res ?? [])), // !! 方法調整，型態改為Options
         finalize(() => this.logger.debug(`GLS1005 Data:`, [this.GLS1005Data()])),
       ).subscribe();
   }
