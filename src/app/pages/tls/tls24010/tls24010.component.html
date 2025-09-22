@@ -20,7 +20,7 @@
             [submitted]="submitted" [maxDate]="today"></app-calendar>
           <!-- 收銀機號 → POS5006.ECR_No -->
           <app-dropdown class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
-            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No"
+            [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value"
             (changeEvent)="onECRNoChange($event)" />
           <!-- 專櫃編號 → POS5006.TLT_No -->
           <app-dropdown class="col-12 md:col-6" label="專櫃編號" [control]="queryForm.controls.TLT_No"
@@ -38,9 +38,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS24010Table" dataKey="TXN_No" [data]="data" [columns]="columns" (detail)="onDetailData($event)"
-    [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [totalRecords]="totalRecords" [showDetail]="!isTXN_GUIPaper"
-    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [loading]="loading"
-    [addButton]="addButton" [showEdit]="false"></app-table>
+  <app-table-report dataKey="TXN_No" tableKey="TLS24010Table" [lastQueryBody]="historyRequestBody" [data]="data"
+    [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showReportMode]="false" [showEdit]="false"
+    [queryFunction]="tls24010Service.queryTLS24010.bind(tls24010Service)" groupRowsBy="ODM_No" [loading]="loading"
+    [addButton]="addButton" (detail)="onDetailData($event)">
+  </app-table-report>
 </div>
 <p-menu #menu [model]="items" [popup]="true" styleClass="w-auto" />

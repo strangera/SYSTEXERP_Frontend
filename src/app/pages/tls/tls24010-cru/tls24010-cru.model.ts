@@ -11,7 +11,6 @@ export const TXN_GUI_CarrTypeOptions = [
   { label: '自然人憑證', value: 'CQ0001' },
   { label: '一卡通載具', value: '1H0001' },
   { label: '信用卡載具', value: 'EK0002' },
-  { label: '取消載具', value: '#' },
 ]
 // 付款信用卡卡別，V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡、O=其他
 export const CRD_TypeOptions = [
