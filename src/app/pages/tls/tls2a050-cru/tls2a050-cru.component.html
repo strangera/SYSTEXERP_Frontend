@@ -8,11 +8,14 @@
     <p-table
       [value]="detailData"
       rowGroupMode="rowspan"
-      groupRowsBy="representative.PAY_Name"
-      sortField="representative.PAY_Name"
+      groupRowsBy="PAY_Name"
+      sortField="PAY_Name"
       sortMode="single"
       [tableStyle]="{ 'min-width': '60rem' }"
+      class="p-datatable-gridlines"
+      tableStyleClass="p-datatable-gridlines"
     >
+      <!-- 表頭 -->
       <ng-template pTemplate="header">
         <tr>
           <th>付款別</th>
@@ -24,22 +27,32 @@
         </tr>
       </ng-template>
 
+      <!-- 明細 + 小計 -->
       <ng-template
         pTemplate="body"
         let-rowData
         let-rowgroup="rowgroup"
         let-rowspan="rowspan"
       >
-        <tr>
-          <td *ngIf="rowgroup" [attr.rowspan]="rowspan">
-            {{ rowData.PAY_Name }}
-          </td>
-          <td>{{ rowData.ECR_No }}</td>
-          <td>{{ rowData.TXN_No }}</td>
-          <td>{{ rowData.BOOK_PayAmt | number }}</td>
-          <td>{{ rowData.ACT_PayAmt | number }}</td>
-          <td>{{ rowData.OVER_PayAmt | number }}</td>
-        </tr>
+       <!-- 明細列 -->
+<tr *ngIf="!rowData.isTotal"
+    [ngClass]="{ 'row-negative': rowData.OVER_PayAmt < 0 && !rowData.isTotal }">
+  <td *ngIf="rowgroup" [attr.rowspan]="rowspan">{{ rowData.PAY_Name }}</td>
+  <td>{{ rowData.ECR_No || "--" }}</td>
+  <td>{{ rowData.TXN_No || "--" }}</td>
+  <td class="align-right">{{ rowData.BOOK_PayAmt | number }}</td>
+  <td class="align-right">{{ rowData.ACT_PayAmt | number }}</td>
+  <td class="align-right">{{ rowData.OVER_PayAmt | number }}</td>
+</tr>
+
+<!-- 小計列 -->
+<tr *ngIf="rowData.isTotal" class="font-bold bg-gray-100">
+  <td colspan="2" class="text-center">小計</td>
+  <td class="align-right">{{ rowData.BOOK_PayAmt | number }}</td>
+  <td class="align-right">{{ rowData.ACT_PayAmt | number }}</td>
+  <td class="align-right">{{ rowData.OVER_PayAmt | number }}</td>
+</tr>
+
       </ng-template>
     </p-table>
   </div>
