@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -20,6 +16,7 @@ import { TagModule } from 'primeng/tag';
 @Component({
   selector: 'app-tls2a050-cru',
   templateUrl: './tls2a050-cru.component.html',
+  styleUrls: ['./tls2a050-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -43,7 +40,9 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-  detailData: any[] = [];
+
+  detailData: any[] = []; // 明細
+  totals: any[] = [];     // 各付款別小計
 
   columns: Column[] = [
     { field: 'PAY_Name', header: '付款別', visible: true },
@@ -79,7 +78,6 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('TLS2A050', this.dataForm);
     this.onSubmit(this.dataForm);
   }
-
   onSubmit(frm: FormGroup) {
     const raw = frm.value;
     this.tls2A050Service.queryTLS22050(raw).subscribe({
@@ -88,23 +86,28 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
           this.detailData = [];
 
           (res.Data || []).forEach((group: any) => {
-            // 明細列
-            (group._DetailList || []).forEach((d: any) => {
+            const list = group._DetailList && group._DetailList.length > 0
+              ? group._DetailList
+              : [{ ECR_No: null, TXN_No: null, BOOK_PayAmt: 0, ACT_PayAmt: 0, OVER_PayAmt: 0 }];
+
+            // 加入明細列
+            list.forEach((d: any) => {
               this.detailData.push({
                 ...d,
                 PAY_Name: group.PAY_Name,
-                isDetail: true
+                isTotal: false
               });
             });
 
-            // 小計列
             this.detailData.push({
-              PAY_Name: group.PAY_Name,
+              PAY_Name: group.PAY_Name,  // 保持分組歸屬
               isTotal: true,
               BOOK_PayAmt: group.BOOK_PayCnt_Sum ?? 0,
               ACT_PayAmt: group.ACT_PayAmt_Sum ?? 0,
               OVER_PayAmt: group.OVER_PayAmt_Sum ?? 0
             });
+
+
           });
 
           console.log('展平後 detailData:', this.detailData);
@@ -114,4 +117,5 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
       },
     });
   }
+
 }
