@@ -527,60 +527,144 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   onDetailCancel(item: ChargeSettingBusinessModel): void { }
 
-  onBatchDelete(selectedItems: any[]): void { }
-
-  onDetailBatchDelete(event: { selectedDetails: any[], parentData: any }): void {
-    // if (this.isReadOnlyMode) {
-    //   this.notificationService.infoBubble('檢視模式下無法刪除項目');
-    //   return;
-    // }
-    // const { selectedDetails, parentData } = event;
-
-    // // 處理刪除邏輯
-    // selectedDetails.forEach(detail => {
-    //   if (detail._status === 'new' || !this.hasValidId(detail)) {
-    //     // 新項目直接從數組移除
-    //     this.removeDetailFromArrays(detail, parentData);
-    //   } else {
-    //     // 現有項目標記為 deleted
-    //     detail._status = 'deleted';
-    //     this.syncDetailToParentArray(detail, parentData);
-    //   }
-    // });
-
-    // // 重新刷新顯示
-    // this.refreshItemDetailDisplay(parentData);
-    // this.updateMainArray(parentData);
-    // this.saveToWorkflow();
-  }
-
-  onAddCommissionItem(): void {
+  onBatchDelete(selectedItems: any[]): void {
     if (this.isReadOnlyMode) {
-      this.notificationService.infoBubble('檢視模式下無法新增明細項目');
+      this.notificationService.infoBubble('檢視模式下無法刪除項目');
       return;
     }
 
-    // const result = this.tableService.addCommissionItem(
-    //   this.commissionData,
-    //   this.getContractDate('start'),
-    //   this.getContractDate('end'),
-    //   this.discountOptions
-    // );
+    if (!confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
+      return;
+    }
 
-    // if (result.success) {
-    //   // 關鍵：新增後立即確保與 step1 同步
-    //   const step1Data = this.contractFlowService.getStep1Data();
-    //   if (step1Data) {
-    //     result.newItem.cap_saletype1 = Boolean(step1Data.cap_saletype1);
-    //     result.newItem.cap_saletype2 = Boolean(step1Data.cap_saletype2);
-    //   }
+    selectedItems.forEach(item => {
+      if (this.hasValidId(item)) {
+        // 現有項目標記為 deleted
+        item._status = 'deleted';
+        this.dataFlowService.updateField(item.id, 'master', '_status', 'deleted');
+      } else {
+        // 新項目直接從數組移除
+        const index = this.commissionData.findIndex(commission => commission.id === item.id);
+        if (index > -1) {
+          this.commissionData.splice(index, 1);
+        }
+      }
+    });
 
-    //   this.commissionData = [...this.commissionData, result.newItem];
-    //   this.saveToWorkflow();
-    //   this.notificationService.infoBubble('新增完成');
-    // } else {
-    //   this.notificationService.warnBubble(result.message || '新增失敗');
-    // }
+    this.saveToWorkflow();
+    this.notificationService.infoBubble(`已刪除 ${selectedItems.length} 個項目`);
+  }
+
+  onDetailBatchDelete(event: { selectedDetails: any[], parentData: any }): void {
+    if (this.isReadOnlyMode) {
+      this.notificationService.infoBubble('檢視模式下無法刪除項目');
+      return;
+    }
+
+    const { selectedDetails, parentData } = event;
+
+    if (!confirm(`確定要刪除選取的 ${selectedDetails.length} 個明細項目嗎？`)) {
+      return;
+    }
+
+    // 處理刪除邏輯
+    selectedDetails.forEach(detail => {
+      const originalType = detail._originalType || this.selectedSettingTab;
+
+      if (detail._status === 'new' || !this.hasValidId(detail)) {
+        // 新項目直接從數組移除
+        this.removeDetailFromArrays(detail, parentData);
+      } else {
+        // 現有項目標記為 deleted
+        detail._status = 'deleted';
+        this.syncDetailToParentArray(detail, parentData);
+
+        // 通知資料流服務
+        this.dataFlowService.updateField(
+          detail.id,
+          this.getDetailItemType(detail),
+          '_status',
+          'deleted',
+          parentData.id
+        );
+      }
+    });
+
+    // 重新刷新顯示
+    this.refreshItemDetailDisplay(parentData);
+
+    // 關鍵：強制觸發變更檢測，確保 UI 更新
+    this.cdr.detectChanges();
+
+    this.updateMainArray(parentData);
+    this.saveToWorkflow();
+
+    this.notificationService.infoBubble(`已刪除 ${selectedDetails.length} 個明細項目`);
+  }
+
+
+  onAddCommissionItem(): void {
+    if (this.isReadOnlyMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
+
+    const cruData = this.flowService.getCruData<CruData>();
+    if (!cruData?.apply_no) {
+      this.notificationService.errorBubble('缺少申請編號，無法新增項目');
+      return;
+    }
+
+    const newItem: ChargeSettingBusinessModel = {
+      id: this.generateTempId(),
+      apply_no: cruData.apply_no,
+      tlt_id: this.generateNewTltId(),
+      tlt_id_desc: '新抽成類別',
+      cag_bdate: this.getContractDate('start'),
+      cag_edate: this.getContractDate('end'),
+      cag_taxtype: '1',
+      sst_amount: null,
+      sst_rate: null,
+      cap_saletype1: 'N',
+      cap_saletype2: 'N',
+      cag_remark: '',
+      _status: 'new',
+      ChargeDetails: this.createDefaultDiscountItems({
+        apply_no: cruData.apply_no,
+        tlt_id: this.generateNewTltId()
+      } as ChargeSettingBusinessModel),
+      YearChargeDetails: [],
+      LevelChargeDetails: this.createDefaultLevelItems({
+        apply_no: cruData.apply_no,
+        tlt_id: this.generateNewTltId()
+      } as ChargeSettingBusinessModel)
+    };
+
+    this.commissionData = [...this.commissionData, newItem];
+    this.saveToWorkflow();
+    this.notificationService.infoBubble('新增完成');
+  }
+
+  private generateNewTltId(): string {
+    // 取得所有現有的 tlt_id，轉換為數字
+    const existingIds = this.commissionData
+      .filter(item => item._status !== 'deleted')
+      .map(item => parseInt(item.tlt_id))
+      .filter(id => !isNaN(id)) // 過濾掉無效的數字
+      .sort((a, b) => a - b); // 排序
+
+    console.log('現有的 tlt_id:', existingIds);
+
+    // 從 0 開始找第一個可用的數字
+    for (let i = 0; i <= 9; i++) {
+      if (!existingIds.includes(i)) {
+        console.log(`分配新的 tlt_id: ${i}`);
+        return i.toString();
+      }
+    }
+    this.notificationService.errorBubble('已達到最大抽成項目數量限制（10個）');
+    // 如果 0-9 都被使用了，拋出錯誤
+    throw new Error('已達到最大抽成項目數量限制（10個）');
   }
 
   onAddDetailItem(parentData: ChargeSettingBusinessModel): void {
@@ -631,7 +715,62 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  onSubmitNext(): void { }
+  onSubmitNext(): void {
+    // 基本驗證
+    if (!this.hasCommissionData()) {
+      this.notificationService.warnBubble('請至少設定一個抽成項目');
+      return;
+    }
+
+    if (this.isReadOnlyMode) {
+      this.navigateToNext();
+      return;
+    }
+
+    // 執行進階驗證
+    const validationResult = this.validateAllData();
+    if (!validationResult.isValid) {
+      this.notificationService.errorBubble(validationResult.errors[0] || '資料驗證失敗');
+      return;
+    }
+
+    if (this.isGeneralCommissionMode) {
+      this.showConfirmDialog = true;
+    } else {
+      this.navigateToNext();
+    }
+  }
+
+  private validateAllData(): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    // 驗證主檔
+    this.commissionData.forEach((item, index) => {
+      if (item._status === 'deleted') return;
+
+      if (!item.tlt_id || !item.tlt_id_desc) {
+        errors.push(`第 ${index + 1} 個抽成項目缺少必要資訊`);
+      }
+
+      if (!item.cag_bdate || !item.cag_edate) {
+        errors.push(`第 ${index + 1} 個抽成項目缺少日期設定`);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  private navigateToNext(): void {
+    if (this.isGeneralCommissionMode) {
+      this.router.navigate(['account/tls/tls12040']);
+    } else {
+      // 根據你的路由結構調整
+      this.router.navigate(['account/tls/tls12040next3']);
+    }
+  }
 
   onClearAndExit(): void {
     console.log('清空並離開');
@@ -673,12 +812,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           _isSelected: false
         };
       case 'annual':
+        // 關鍵修正：實現智能日期接續邏輯
+        const dateRange = this.calculateAnnualDateRange(parentData);
         return {
           id: tempId,
           apply_no: parentData.apply_no,
           tlt_id: parentData.tlt_id,
-          tlt_bdate: '',
-          tlt_edate: '',
+          tlt_bdate: dateRange.startDate,
+          tlt_edate: dateRange.endDate,
           year_amount: 0,
           extra_rate: 0,
           _status: 'new',
@@ -703,6 +844,61 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       default:
         return {};
     }
+  }
+
+  /**
+   * 計算 Annual 項目的智能日期範圍
+   */
+  private calculateAnnualDateRange(parentData: ChargeSettingBusinessModel): { startDate: string; endDate: string } {
+    const contractStartDate = this.getContractDate('start'); // 2025-07-29
+    const contractEndDate = this.getContractDate('end');     // 2027-07-28
+
+    // 取得現有的年度業績項目，按結束日期排序
+    const existingAnnualItems = (parentData.YearChargeDetails || [])
+      .filter(item => item._status !== 'deleted')
+      .sort((a, b) => new Date(a.tlt_edate).getTime() - new Date(b.tlt_edate).getTime());
+
+    console.log('現有年度業績項目:', existingAnnualItems);
+    console.log('契約起訖日期:', { contractStartDate, contractEndDate });
+
+    if (existingAnnualItems.length === 0) {
+      // 第一筆：使用契約起訖日期
+      console.log('第一筆年度業績，使用契約起訖日期');
+      return {
+        startDate: contractStartDate,
+        endDate: contractEndDate
+      };
+    }
+
+    // 找到最後一筆項目的結束日期
+    const lastItem = existingAnnualItems[existingAnnualItems.length - 1];
+    const lastEndDate = new Date(lastItem.tlt_edate);
+
+    console.log('最後一筆項目結束日期:', lastItem.tlt_edate);
+
+    // 新項目的開始日期 = 最後一筆的結束日期 + 1天
+    const newStartDate = new Date(lastEndDate);
+    newStartDate.setDate(newStartDate.getDate() + 1);
+
+    // 新項目的結束日期 = 契約結束日期
+    const newEndDate = new Date(contractEndDate);
+
+    // 檢查日期是否合理（新開始日期不能超過契約結束日期）
+    if (newStartDate > newEndDate) {
+      console.warn('日期範圍已超過契約期限，使用契約結束日期');
+      return {
+        startDate: this.formatLocalDateString(newEndDate),
+        endDate: this.formatLocalDateString(newEndDate)
+      };
+    }
+
+    const result = {
+      startDate: this.formatLocalDateString(newStartDate),
+      endDate: this.formatLocalDateString(newEndDate)
+    };
+
+    console.log('計算出的新日期範圍:', result);
+    return result;
   }
 
   getDetailKey(): string {
@@ -735,68 +931,89 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private handleDetailFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
 
-    // 找到這個明細項目屬於哪個主檔
-    const parentData = this.findParentOfDetail(rowData);
-    if (!parentData) {
-      console.error('找不到明細項目的父資料');
-      return;
-    }
-
-    // 更新明細項目的值
-    rowData[fieldName] = newValue;
-
-    // 同步回正確的原始資料陣列
-    this.syncDetailBackToSource(rowData, parentData);
-
-    // 通知資料流服務
-    this.dataFlowService.updateField(
-      rowData.id,
-      this.getDetailItemType(rowData),
+    console.log('📄 處理明細欄位變更:', {
       fieldName,
       newValue,
-      parentData.id
-    );
+      itemId: rowData.id,
+      currentStatus: rowData._status
+    });
+
+    // 更新明細項目的欄位值
+    rowData[fieldName] = newValue;
+
+    // 特殊處理：selected 欄位的狀態變更
+    if (fieldName === '_isSelected' || fieldName === 'selected') {
+      this.handleSelectedFieldChange(rowData, newValue);
+    } else {
+      // 其他欄位變更的狀態處理
+      this.updateItemStatus(rowData);
+    }
+
+    // 找到父項目並同步數據
+    const parentItem = this.findParentOfDetailItem(rowData);
+    if (parentItem) {
+      this.syncDetailToParentArray(rowData, parentItem);
+      this.updateItemStatus(parentItem);
+      this.updateMainArray(parentItem);
+    }
+
+    this.saveToWorkflow();
   }
+
+  private handleSelectedFieldChange(rowData: any, newValue: boolean): void {
+    const originalType = rowData._originalType || this.selectedSettingTab;
+
+    console.log('處理 selected 變更:', {
+      itemId: rowData.id,
+      originalType,
+      newValue,
+      currentStatus: rowData._status,
+      hasValidId: this.hasValidId(rowData)
+    });
+
+    if (newValue === false) {
+      // 取消勾選的處理邏輯
+      if (originalType === 'annual') {
+        // 年度業績：直接設為 deleted，會從顯示中移除
+        rowData._status = 'deleted';
+        console.log('年度業績項目設為 deleted');
+      } else if (originalType === 'discount' || originalType === 'level') {
+        // 折扣和層級：根據是否有有效ID決定處理方式
+        if (this.hasValidId(rowData)) {
+          // 現有項目：設為 deleted 狀態（會在最終清理時進入 toDelete）
+          rowData._status = 'deleted';
+          console.log(`${originalType} 現有項目設為 deleted (ID: ${rowData.id})`);
+        } else {
+          // 新項目：直接從數組移除（不需要發送到後端）
+          console.log(`${originalType} 新項目將被移除 (臨時ID: ${rowData.id})`);
+          rowData._status = 'deleted';
+        }
+      } else {
+        // 其他類型的通用處理
+        rowData._status = 'deleted';
+        console.log('其他項目設為 deleted');
+      }
+    } else if (newValue === true) {
+      // 重新勾選的處理邏輯
+      if (rowData._status === 'deleted') {
+        // 從 deleted 狀態恢復
+        rowData._status = this.hasValidId(rowData) ? 'original' : 'new';
+        console.log(`項目從 deleted 恢復為 ${rowData._status}`);
+      } else {
+        // 一般的勾選變更
+        this.updateItemStatus(rowData);
+        console.log('一般勾選變更處理');
+      }
+    }
+
+    console.log('selected 處理完成，最終狀態:', rowData._status);
+  }
+
 
   /**
-   * 將明細變更同步回原始資料陣列
-   */
-  private syncDetailBackToSource(detailData: any, parentData: ChargeSettingBusinessModel): void {
-    const detailId = detailData.id;
-
-    // 根據當前標籤決定要更新哪個陣列
-    switch (this.selectedSettingTab) {
-      case 'discount':
-        if (parentData.ChargeDetails) {
-          const index = parentData.ChargeDetails.findIndex(item => item.id === detailId);
-          if (index > -1) {
-            parentData.ChargeDetails[index] = { ...detailData };
-          }
-        }
-        break;
-
-      case 'level':
-        if (parentData.LevelChargeDetails) {
-          const index = parentData.LevelChargeDetails.findIndex(item => item.id === detailId);
-          if (index > -1) {
-            parentData.LevelChargeDetails[index] = { ...detailData };
-          }
-        }
-        break;
-
-      case 'annual':
-        if (parentData.YearChargeDetails) {
-          const index = parentData.YearChargeDetails.findIndex(item => item.id === detailId);
-          if (index > -1) {
-            parentData.YearChargeDetails[index] = { ...detailData };
-          }
-        }
-        break;
-    }
-  }
-
-  private findParentOfDetail(detailData: any): ChargeSettingBusinessModel | null {
-    // 在所有主檔中搜尋包含此明細的父項目
+ * 找到明細項目的父項目
+ */
+  private findParentOfDetailItem(detailData: any): ChargeSettingBusinessModel | null {
     for (const commissionItem of this.commissionData) {
       // 檢查 ChargeDetails
       if (commissionItem.ChargeDetails?.some(item => item.id === detailData.id)) {
@@ -812,15 +1029,20 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       if (commissionItem.LevelChargeDetails?.some(item => item.id === detailData.id)) {
         return commissionItem;
       }
-    }
 
+      // 檢查 detailItems
+      if (commissionItem.detailItems?.some(item => item.id === detailData.id)) {
+        return commissionItem;
+      }
+    }
     return null;
   }
 
+
   private isDetailItem(rowData: any): boolean {
-    // 根據你的資料結構判斷是否為明細項目
     return !this.commissionData.some(item => item.id === rowData.id);
   }
+
 
   private getDetailItemType(rowData: any): 'chargeDetail' | 'yearChargeDetail' | 'levelChargeDetail' {
     // 根據當前標籤或資料特徵判斷類型
@@ -858,11 +1080,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           break;
 
         case 'annual':
-          // annual 直接使用 API 資料，不需要預設項目
           if (!processedItem.YearChargeDetails) {
             processedItem.YearChargeDetails = [];
           }
-          // 將資料複製到統一的 detailItems 屬性
+          // 關鍵：annual 要過濾掉 deleted 的項目
           processedItem.detailItems = processedItem.YearChargeDetails.filter(detail => detail._status !== 'deleted');
           break;
 
@@ -872,5 +1093,447 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
       return processedItem;
     });
+  }
+
+  private hasValidId(item: any): boolean {
+    const result = item.id &&
+      !String(item.id).startsWith('temp_') &&
+      !isNaN(Number(item.id)) &&
+      Number(item.id) > 0;
+
+    console.log('hasValidId 檢查:', {
+      id: item.id,
+      result: result,
+      詳細檢查: {
+        有id: !!item.id,
+        不是temp開頭: !String(item.id).startsWith('temp_'),
+        是數字: !isNaN(Number(item.id)),
+        大於0: Number(item.id) > 0
+      }
+    });
+
+    return result;
+  }
+
+  /**
+  * 從所有相關數組中移除明細項目
+  */
+  private removeDetailFromArrays(detail: any, parentData: ChargeSettingBusinessModel): void {
+    const detailId = detail.id;
+
+    // 從 detailItems 移除
+    if (parentData.detailItems) {
+      const detailIndex = parentData.detailItems.findIndex((item: any) => item.id === detailId);
+      if (detailIndex > -1) {
+        parentData.detailItems.splice(detailIndex, 1);
+      }
+    }
+
+    // 修正：使用 selectedSettingTab 而不是 currentTab，使用正確的 TLS12040 屬性名稱
+    const currentTab = this.selectedSettingTab; // 使用組件的 selectedSettingTab
+    switch (currentTab) {
+      case 'discount':
+        {
+          // 修正：使用 ChargeDetails 而不是 discountSettingItems
+          if (parentData.ChargeDetails) {
+            const discountIndex = parentData.ChargeDetails.findIndex((item: any) => item.id === detailId);
+            if (discountIndex > -1) {
+              parentData.ChargeDetails.splice(discountIndex, 1);
+            }
+          }
+          break;
+        }
+      case 'annual':
+        {
+          // 修正：使用 YearChargeDetails 而不是 annualPerformanceItems
+          if (parentData.YearChargeDetails) {
+            const annualIndex = parentData.YearChargeDetails.findIndex((item: any) => item.id === detailId);
+            if (annualIndex > -1) {
+              parentData.YearChargeDetails.splice(annualIndex, 1);
+            }
+          }
+          break;
+        }
+      case 'level':
+        {
+          // 修正：使用 LevelChargeDetails 而不是 discountLevelItems
+          if (parentData.LevelChargeDetails) {
+            const levelIndex = parentData.LevelChargeDetails.findIndex((item: any) => item.id === detailId);
+            if (levelIndex > -1) {
+              parentData.LevelChargeDetails.splice(levelIndex, 1);
+            }
+          }
+          break;
+        }
+    }
+  }
+
+  /**
+     * 同步明細到父項目數組
+     */
+  private syncDetailToParentArray(detailData: any, parentItem: ChargeSettingBusinessModel): void {
+    const currentTab = this.selectedSettingTab;
+    const detailId = detailData.id;
+    const originalType = detailData._originalType;
+
+    console.log('🔗 同步明細到父項目:', {
+      detailId,
+      originalType,
+      currentTab,
+      status: detailData._status,
+      selected: detailData._isSelected
+    });
+
+    // 根據 originalType 而不是 currentTab 來決定更新哪個數組
+    switch (originalType) {
+      case 'discount':
+        this.updateItemInArray(parentItem.ChargeDetails, detailId, detailData);
+        break;
+      case 'annual':
+        this.updateItemInArray(parentItem.YearChargeDetails, detailId, detailData);
+        break;
+      case 'level':
+        this.updateItemInArray(parentItem.LevelChargeDetails, detailId, detailData);
+        break;
+      default:
+        // 如果沒有 originalType，回退到使用 currentTab
+        switch (currentTab) {
+          case 'discount':
+            this.updateItemInArray(parentItem.ChargeDetails, detailId, detailData);
+            break;
+          case 'annual':
+            this.updateItemInArray(parentItem.YearChargeDetails, detailId, detailData);
+            break;
+          case 'level':
+            this.updateItemInArray(parentItem.LevelChargeDetails, detailId, detailData);
+            break;
+        }
+    }
+
+    // 同時更新 detailItems（用於顯示）
+    if (parentItem.detailItems) {
+      this.updateItemInArray(parentItem.detailItems, detailId, detailData);
+    }
+  }
+
+  /**
+* 更新數組中的項目
+*/
+  private updateItemInArray(array: any[], itemId: string, newData: any): void {
+    if (!Array.isArray(array)) return;
+
+    const index = array.findIndex(item => item.id === itemId);
+    if (index > -1) {
+      array[index] = { ...newData };
+    }
+  }
+
+  onDetailFieldChange(event: any): void {
+    // 直接委託給統一的 onFieldChange 處理
+    this.onFieldChange({
+      fieldName: event.fieldName,
+      newValue: event.newValue,
+      rowData: event.detailData
+    });
+  }
+
+  private updateItemStatus(item: any): any {
+    if (item._status === 'new') {
+      return item;
+    }
+
+    if (item._status === 'original' || !item._status) {
+      item._status = 'modified';
+    }
+
+    return item;
+  }
+
+  private refreshItemDetailDisplay(commissionItem: ChargeSettingBusinessModel): void {
+    const currentTab = this.selectedSettingTab;
+    let sourceArray: any[] = [];
+
+    switch (currentTab) {
+      case 'discount':
+        sourceArray = commissionItem.ChargeDetails || [];
+        break;
+      case 'annual':
+        sourceArray = commissionItem.YearChargeDetails || [];
+        break;
+      case 'level':
+        sourceArray = commissionItem.LevelChargeDetails || [];
+        break;
+    }
+
+    // 關鍵修正：annual 項目的 deleted 狀態要從顯示中完全移除
+    commissionItem.detailItems = sourceArray
+      .filter(item => {
+        // annual 類型的 deleted 項目完全從顯示中移除
+        if (currentTab === 'annual' && item._status === 'deleted') {
+          console.log(`Annual 項目 ${item.id} 因為 deleted 狀態被過濾掉`);
+          return false;
+        }
+        return true;
+      })
+      .map(item => ({
+        ...item,
+        _originalType: currentTab
+      }));
+
+    console.log(`刷新顯示完成，當前標籤: ${currentTab}, 顯示項目數: ${commissionItem.detailItems?.length || 0}`);
+  }
+
+  private updateMainArray(modifiedItem: any): void {
+    const index = this.commissionData.findIndex(item => item.id === modifiedItem.id);
+    if (index > -1) {
+      this.commissionData[index] = { ...modifiedItem };
+    }
+  }
+
+  private getContractDate(type: 'start' | 'end'): string {
+    const cruData = this.flowService.getCruData<CruData>();
+    const fieldName = type === 'start' ? 'tlt_bdate' : 'tlt_edate';
+
+    if (cruData?.[fieldName]) {
+      return this.formatDateString(cruData[fieldName]);
+    }
+
+    // 修正預設日期計算
+    const defaultDate = new Date();
+    if (type === 'end') {
+      // 使用更精確的日期計算，避免月份邊界問題
+      defaultDate.setFullYear(defaultDate.getFullYear() + 1);
+      defaultDate.setDate(defaultDate.getDate() - 1); // 確保是前一天
+    }
+    return this.formatLocalDateString(defaultDate);
+  }
+
+  private formatLocalDateString(date: Date): string {
+    // 使用本地時間格式化，避免時區問題
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private formatDateString(dateInput: any): string {
+    if (!dateInput) return this.formatLocalDateString(new Date());
+
+    if (typeof dateInput === 'string' && dateInput.includes('T')) {
+      return dateInput.split('T')[0];
+    }
+
+    try {
+      // 修正：使用本地時間而非 UTC 時間
+      if (dateInput instanceof Date) {
+        return this.formatLocalDateString(dateInput);
+      }
+
+      const date = new Date(dateInput);
+      return this.formatLocalDateString(date);
+    } catch {
+      return this.formatLocalDateString(new Date());
+    }
+  }
+
+  hasCommissionData(): boolean {
+    return this.dataLoaded && this.commissionData.filter(item => item._status !== 'deleted').length > 0;
+  }
+
+  getCommissionItemCount(): number {
+    return this.commissionData.filter(item => item._status !== 'deleted').length;
+  }
+
+  /**
+ * 確保日期格式正確
+ */
+  private ensureValidDate(dateInput: any): Date {
+    if (!dateInput) {
+      return new Date();
+    }
+
+    if (dateInput instanceof Date) {
+      return new Date(dateInput);
+    }
+
+    try {
+      const date = new Date(dateInput);
+      return isNaN(date.getTime()) ? new Date() : date;
+    } catch {
+      return new Date();
+    }
+  }
+
+  /**
+   * 強制同步當前標籤的數據（避免數據遺失）
+   */
+  private forceSyncCurrentTabData(commissionItem: ChargeSettingBusinessModel): void {
+    const currentTab = this.selectedSettingTab;
+
+    if (!commissionItem.detailItems || commissionItem.detailItems.length === 0) {
+      return;
+    }
+
+    // 過濾出屬於當前標籤的項目
+    const currentTabItems = commissionItem.detailItems.filter(item =>
+      !item._originalType || item._originalType === currentTab
+    );
+
+    // 根據標籤類型同步到對應數組
+    switch (currentTab) {
+      case 'discount':
+        commissionItem.ChargeDetails = currentTabItems.map(item => ({
+          id: item.id,
+          apply_no: item.apply_no || commissionItem.apply_no,
+          tlt_id: item.tlt_id || commissionItem.tlt_id,
+          cag_barcode: item.cag_barcode || '',
+          tlt_bdate: this.ensureValidDate(item.tlt_bdate),
+          tlt_edate: this.ensureValidDate(item.tlt_edate),
+          cag_charge_rate: item.cag_charge_rate || 0,
+          barcode_desc: item.barcode_desc || '',
+          is_configured: item.is_configured || false,
+          is_enabled: item.is_enabled || false,
+          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+          _isSelected: item._isSelected || false
+        }));
+        break;
+
+      case 'annual':
+        commissionItem.YearChargeDetails = currentTabItems.map(item => ({
+          id: item.id,
+          apply_no: item.apply_no || commissionItem.apply_no,
+          tlt_id: item.tlt_id || commissionItem.tlt_id,
+          tlt_bdate: this.formatDateString(item.tlt_bdate),
+          tlt_edate: this.formatDateString(item.tlt_edate),
+          year_amount: item.year_amount || 0,
+          extra_rate: item.extra_rate || 0,
+          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+          _isSelected: item._isSelected || false
+        }));
+        break;
+
+      case 'level':
+        commissionItem.LevelChargeDetails = currentTabItems.map(item => ({
+          id: item.id,
+          apply_no: item.apply_no || commissionItem.apply_no,
+          tlt_id: item.tlt_id || commissionItem.tlt_id,
+          seq_no: item.seq_no || 1,
+          cag_barcode: item.cag_barcode || '',
+          level_bmount: item.level_bmount || 0,
+          level_eamount: item.level_eamount || 0,
+          level_charge_rate: item.level_charge_rate || 0,
+          barcode_desc: item.barcode_desc || '',
+          is_configured: item.is_configured || false,
+          is_enabled: item.is_enabled || false,
+          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+          _isSelected: item._isSelected || false
+        }));
+        break;
+    }
+  }
+
+  /**
+ * 複製詳細項目（插入到下一行）
+ */
+  private copyDetailItem(sourceItem: any, parentData: ChargeSettingBusinessModel): void {
+    if (this.isReadOnlyMode) {
+      this.notificationService.infoBubble('檢視模式下無法複製項目');
+      return;
+    }
+
+    console.log('開始複製項目:', sourceItem);
+
+    // 取得當前標籤
+    const currentTab = this.selectedSettingTab;
+
+    // 只處理 discount 和 level
+    if (currentTab !== 'discount' && currentTab !== 'level') {
+      console.log('此標籤類型不支援複製功能');
+      return;
+    }
+
+    // 建立複製的項目
+    const copiedItem = this.createCopiedItem(sourceItem, currentTab, parentData);
+
+    // 找出原項目的索引位置
+    let targetArray: any[] = [];
+    let sourceIndex = -1;
+
+    switch (currentTab) {
+      case 'discount':
+        targetArray = parentData.ChargeDetails || [];
+        sourceIndex = targetArray.findIndex(item => item.id === sourceItem.id);
+        break;
+
+      case 'level':
+        targetArray = parentData.LevelChargeDetails || [];
+        sourceIndex = targetArray.findIndex(item => item.id === sourceItem.id);
+        break;
+    }
+
+    // 插入到原項目的下一個位置
+    if (sourceIndex !== -1) {
+      targetArray.splice(sourceIndex + 1, 0, copiedItem);
+      console.log(`已在索引 ${sourceIndex + 1} 位置插入複製項目`);
+    } else {
+      // 如果找不到原項目位置，就加到最後
+      targetArray.push(copiedItem);
+      console.log('找不到原項目位置，將複製項目加到最後');
+    }
+
+    // 更新顯示
+    this.refreshItemDetailDisplay(parentData);
+
+    // 強制觸發變更檢測
+    this.cdr.detectChanges();
+
+    // 儲存到工作流程
+    this.saveToWorkflow();
+
+    // 顯示成功訊息
+    this.notificationService.successBubble('項目複製成功');
+  }
+
+  /**
+   * 建立複製的項目（只處理 discount 和 level）
+   */
+  private createCopiedItem(sourceItem: any, itemType: string, parentData: ChargeSettingBusinessModel): any {
+    const tempId = this.generateTempId();
+
+    // 基礎複製物件
+    const copiedItem: any = {
+      id: tempId,
+      apply_no: parentData.apply_no,
+      tlt_id: parentData.tlt_id,
+      _status: 'new',
+      _isSelected: false,  // 複製的項目預設不勾選
+      is_configured: false,
+      is_enabled: false
+    };
+
+    // 根據類型處理特定欄位
+    switch (itemType) {
+      case 'discount':
+        // 折扣設定複製
+        copiedItem.cag_barcode = sourceItem.cag_barcode || '';
+        copiedItem.cag_charge_rate = sourceItem.cag_charge_rate || 0;
+        copiedItem.tlt_bdate = sourceItem.tlt_bdate ? new Date(sourceItem.tlt_bdate) : new Date();
+        copiedItem.tlt_edate = sourceItem.tlt_edate ? new Date(sourceItem.tlt_edate) : new Date();
+        copiedItem.barcode_desc = sourceItem.barcode_desc || '';
+        break;
+
+      case 'level':
+        // 層級抽成複製
+        copiedItem.cag_barcode = sourceItem.cag_barcode || '';
+        copiedItem.level_bmount = sourceItem.level_bmount || 0;
+        copiedItem.level_eamount = sourceItem.level_eamount || 0;
+        copiedItem.level_charge_rate = sourceItem.level_charge_rate || 0;
+        copiedItem.barcode_desc = sourceItem.barcode_desc || '';
+        copiedItem.seq_no = (parentData.LevelChargeDetails?.length || 0) + 1;
+        break;
+    }
+
+    console.log('複製完成的項目:', copiedItem);
+    return copiedItem;
   }
 }
