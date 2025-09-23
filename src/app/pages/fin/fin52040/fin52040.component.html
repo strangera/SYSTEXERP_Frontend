@@ -21,12 +21,12 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="建立者" controlName="CRT_USR_No" [control]="queryForm.controls.CRT_USR_No"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown label="建立者" controlName="CRT_USR_No" [options]="tblUserOptions" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="修改者" controlName="UPD_USR_No" [control]="queryForm.controls.UPD_USR_No"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown label="修改者" controlName="UPD_USR_No" [options]="tblUserOptions" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.UPD_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
 
@@ -40,7 +40,7 @@
 </div>
 <div class="card">
     <app-table tableKey="FIN52040" dataKey="field" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)" [showCheckBox]="false" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
+        (detail)="onDetail($event)" [showCheckBox]="true" [multiSortMeta]="[{ field: 'UniformNo', order: 1 }]"
         [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
         [lazy]="true" [loading]="loading">
     </app-table>

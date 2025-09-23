@@ -52,4 +52,10 @@ export class FIN52040Service {
   queryVendorList(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryVendorList`, data);
   }
+
+  // ---共用下拉---
+  // 建立/變更 人員 下拉選單
+  queryTBLUSER_DropDownList(data: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTBLUSER_DropDownList`, data);
+  }
 }

@@ -47,7 +47,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() dialogColumns: Column[] = [];       // 下拉table 的欄位配置 必填
   @Output() formValueChanged = new EventEmitter<any>(); // 表單改變事件
   @Input() totalRecords = 0;             // 總筆數
-
+  @Output() select = new EventEmitter<any>(); // 選擇事件
   // 新增一個 Subject 來處理 debounce
   private inputChangeSubject = new Subject<Record<string, string>>();
 
@@ -117,8 +117,9 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     return '';
   }
 
-  onSelectionChange(event: TableRowSelectEvent) {
+  onSelectionChange(event: TableRowSelectEvent) {    
     this.selectedItems = event.data;
+    this.select.emit(event.data);
     this.suggestions = [...this.dialogData]
     this.control.setValue(this.optionValue ? this.selectedItems[this.optionValue] : this.selectedItems);
     this.op?.hide();

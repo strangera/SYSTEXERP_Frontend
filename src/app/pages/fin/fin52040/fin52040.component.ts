@@ -1,3 +1,4 @@
+import { Label } from './../../tls/tls51070-os/tls51070-os.component';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -14,7 +15,8 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { Fin52040Request, Fin52040Response, FIN52040Service } from '@service/api/fin/fin52040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
+import { apiOption } from '@shared/models/sys/sysb000.model';
 
 
 @Component({
@@ -52,12 +54,13 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Fin52040Response[] = [];
   selectedRows: Fin52040Response[] = [];
+
+  tblUserOptions: apiOption[] = []; // 人員 下拉選單
               
   columns: Column[] = [ //先放可視範圍內的
-    // { field: 'CompNo', header: '公司代號', visible: true }, // 公司代號
+    { field: 'UniformNo', header: '統一編號', visible: true }, // 統一編號
     { field: 'RefCode', header: '對象別代碼', visible: true }, // 對象別代碼
     { field: 'RefName', header: '對象別名稱', visible: true }, // 對象別名稱
-    { field: 'UniformNo', header: '統一編號', visible: true }, // 統一編號
       
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
     { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
@@ -76,6 +79,7 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
         
   ngOnInit(): void {
     this.initializePage('FIN52040', '/FIN/FIN52040cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
         
   onSubmit(frm: FormGroup) {
@@ -97,18 +101,30 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
   // 刪除控制_Grace 9/9: 
   // GLS6002 GLS3002若有對象別編號不可刪除
   onDelete(selectedRows: Fin52040Response[]) {
-    // const ids = selectedRows.map(row => row.id);
-    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-    //   next: () => {
-    //     this.onSubmit(this.queryForm);
-    //     this.selectedRows = [];
-    //   },
-    //   error: () => { this.loading = false; },
-    // });
+    const RefCodes = selectedRows.map(row => row.RefCode);
+    this.fin52040Service.deleteFIN52040(RefCodes).pipe(untilDestroyed(this)).subscribe({
+      next: () => {
+        this.onSubmit(this.queryForm);
+        this.selectedRows = [];
+      },
+      error: () => { this.loading = false; },
+    });
   }
         
   isRowSelectable(row: Fin52040Response) {
     // return row.CanDel;
     return true
+  }
+
+  // 讀取下拉選單
+  loadOptions() {
+    this.fin52040Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe(res => {
+      this.tblUserOptions = res.Data.map((item: { No: string; Name: string; Label: string }) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '_' + item.Name
+      }));
+      console.log('人員下拉選單', this.tblUserOptions);
+    });
   }
 }
