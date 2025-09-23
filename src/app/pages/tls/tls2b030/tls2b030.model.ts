@@ -16,10 +16,16 @@ export interface TLS2B030Request {
 }
 
 export interface TLS2B030Row {
-  ECR_No: string;
-  TLT_No: string;
-  TLT_Name: string;
-  [k: `Pay_Dif_${string}`]: number;
+  ECR_No: string | null;
+  TLT_No: string | null;
+  TLT_Name: string | null;
+
+  /** 後端帶回的動態付款欄位（巢狀） */
+  PayDiffs?: Record<`Pay_Dif_${string}`, number>;
+
+  /** 為了 table 直接吃，把 PayDiffs 攤平成同層（仍保留索引型別） */
+  [k: `Pay_Dif_${string}`]: number | any;
+
   PPay_Dif_sum: number;
 }
 
@@ -29,4 +35,9 @@ export interface ApiResponse<T> {
   Data: T;
   TotalCount?: number;
   TotalPage?: number;
+}
+
+export interface PayTypeItem {
+  No: string;   // 例如 "10"
+  Name: string; // 例如 "現金"
 }

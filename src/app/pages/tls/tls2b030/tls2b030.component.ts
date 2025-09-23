@@ -6,7 +6,7 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { startWith, distinctUntilChanged, finalize, map } from 'rxjs/operators';
+import { startWith, distinctUntilChanged } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
@@ -32,6 +32,9 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 
+// Models
+import { PayTypeItem, TLS2B030Row } from './tls2b030.model';
+
 type SortItem = { field: string; order: 1 | -1 };
 
 @Component({
@@ -56,9 +59,20 @@ type SortItem = { field: string; order: 1 | -1 };
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
   // ===== 狀態 =====
-  data: any[] = [];
+  data: TLS2B030Row[] = [];
   totalRecords = 0;
-  selectedItems: any[] = [];
+  selectedItems: TLS2B030Row[] = [];
+
+  // 動態付款清單（No/Name）
+  payTypes: PayTypeItem[] = [];
+
+  // 下拉資料
+  floorOptions: any[] = [];
+  regionOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  cahserTypeOptions: any[] = [];
+  ECRNoOptions: any[] = [];
+  CounterOptions: any[] = [];
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -67,15 +81,14 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  // ✓ 金額格式化
+  // 金額格式
   moneyFormat = (value: number): string =>
     value != null ? Number(value || 0).toLocaleString('en-US') : '0';
 
-  // ===== 排序（維持你原本預設）=====
+  // 預設排序
   readonly defaultSort: SortItem[] = [{ field: 'TLT_Name', order: 1 }];
 
   // ===== 表單 =====
-  // 改成：TXN_Month + TXN_DateStart/End（和 TLS23070 一致做法）
   queryForm = this.formBuilder.group({
     TXN_Month: [null as Date | null],
     TXN_DateStart: [this.yesterday as Date, [Validators.required]],
@@ -93,58 +106,8 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig(this.defaultSort),
   });
 
-  // ===== 下拉資料 =====
-  floorOptions: any[] = [];
-  regionOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [];
-  cahserTypeOptions: any[] = [];
-  ECRNoOptions: any[] = [];
-  CounterOptions: any[] = [];
-
-  // ===== 欄位 =====
-  columns: any[] = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TLT_No', header: '專櫃編號', visible: true },
-    { field: 'TLT_Name', header: '櫃位名稱', visible: true, style: 'text-left' },
-
-    { field: 'Pay_Dif_10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_41', header: '聯信連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_42', header: '聯信離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_12', header: '聯信紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_81', header: '中信-停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_56', header: 'iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Pay_Dif_60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-
-    { field: 'PPay_Dif_sum', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-  ];
+  // 表格欄位（動態）
+  columns: any[] = [];
 
   constructor(
     private tls2b030Service: TLS2B030Service,
@@ -157,13 +120,14 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   ) {
     super();
   }
-private toYMDOrUndef(d: Date | string | null | undefined): string | undefined {
-  if (d == null) return undefined; // 同時擋掉 null/undefined
-  const s = formatDateToYYYY_MM_DD(d as Date | string) as string | null | undefined;
-  return s == null || s === '' ? undefined : s;
-}
 
   // ===== 工具 =====
+  private toYMDOrUndef(d: Date | string | null | undefined): string | undefined {
+    if (d == null) return undefined;
+    const s = formatDateToYYYY_MM_DD(d as Date | string) as string | null | undefined;
+    return s == null || s === '' ? undefined : s;
+  }
+
   private getMonthRange(d: Date) {
     const year = d.getFullYear();
     const month = d.getMonth(); // 0-based
@@ -172,7 +136,7 @@ private toYMDOrUndef(d: Date | string | null | undefined): string | undefined {
     return { start, end };
   }
 
-  /** 若目前銷售日期不是「完整整月」，就把 TXN_Month 清空（避免顯示誤會） */
+  /** 若目前銷售日期不是完整整月，就把 TXN_Month 清空（避免顯示誤會） */
   private clearMonthIfNotExactRange() {
     const start: Date | null = this.queryForm.value.TXN_DateStart ?? null;
     const end: Date | null = this.queryForm.value.TXN_DateEnd ?? null;
@@ -192,10 +156,7 @@ private toYMDOrUndef(d: Date | string | null | undefined): string | undefined {
     const asArr = Array.isArray(input) ? input : [];
     const cleaned = asArr
       .filter(
-        (x) =>
-          x &&
-          typeof x.field === 'string' &&
-          (x.order === 1 || x.order === -1)
+        (x) => x && typeof x.field === 'string' && (x.order === 1 || x.order === -1)
       )
       .map((x) => ({ field: String(x.field), order: x.order as 1 | -1 }));
     return cleaned.length ? cleaned : fallback;
@@ -213,8 +174,8 @@ private toYMDOrUndef(d: Date | string | null | undefined): string | undefined {
     }
 
     const payload: any = {
-TXN_DateStart: this.toYMDOrUndef(dateStart),
-TXN_DateEnd:   this.toYMDOrUndef(dateEnd),
+      TXN_DateStart: this.toYMDOrUndef(dateStart),
+      TXN_DateEnd: this.toYMDOrUndef(dateEnd),
 
       // 篩選條件
       TLT_No_List:
@@ -260,11 +221,52 @@ TXN_DateEnd:   this.toYMDOrUndef(dateEnd),
     return payload;
   }
 
+  /** 用付款清單動態建欄 */
+  private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
+    const baseCols = [
+      { field: 'ECR_No', header: '收銀機號', visible: true },
+      { field: 'TLT_No', header: '專櫃編號', visible: true },
+      { field: 'TLT_Name', header: '櫃位名稱', visible: true, style: 'text-left' },
+    ];
+
+    const payCols = payTypes.map((pt) => ({
+      field: `Pay_Dif_${pt.No}`,
+      header: pt.Name,
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    }));
+
+    const totalCol = [
+      {
+        field: 'PPay_Dif_sum',
+        header: '總金額',
+        visible: true,
+        style: 'text-right',
+        format: this.moneyFormat,
+        isTotal: true,
+      },
+    ];
+
+    this.columns = [...baseCols, ...payCols, ...totalCol];
+  }
+
   // ===== Init =====
   ngOnInit(): void {
-    this.initializePage('TLS2B030', 'tls/tls2B030cru', this.queryForm, (form) =>
-      this.onSubmit(form)
+    this.initializePage(
+      'TLS2B030',
+      'tls/tls2B030cru',
+      this.queryForm,
+      (form) => this.onSubmit(form)
     );
+
+    // 1) 先把付款清單抓回來，建欄
+    this.tls2b030Service.getPayTypes().subscribe((list) => {
+      // 依 No 字串排序（或沿用 API 順序）
+      this.payTypes = [...list].sort((a, b) => a.No.localeCompare(b.No, 'zh-Hant'));
+      this.buildColumnsFromPayTypes(this.payTypes);
+    });
 
     // 月份變更 -> 同步日期（不 emit）
     this.queryForm.controls.TXN_Month.valueChanges
@@ -279,12 +281,10 @@ TXN_DateEnd:   this.toYMDOrUndef(dateEnd),
       });
 
     // 日期變更 -> 若不是完整整月，清空 TXN_Month
-    this.queryForm.controls.TXN_DateStart.valueChanges
-      .subscribe(() => this.clearMonthIfNotExactRange());
-    this.queryForm.controls.TXN_DateEnd.valueChanges
-      .subscribe(() => this.clearMonthIfNotExactRange());
+    this.queryForm.controls.TXN_DateStart.valueChanges.subscribe(() => this.clearMonthIfNotExactRange());
+    this.queryForm.controls.TXN_DateEnd.valueChanges.subscribe(() => this.clearMonthIfNotExactRange());
 
-    // 下拉資料
+    // 下拉資料載入
     this.ecrNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x: any) => ({
@@ -311,7 +311,6 @@ TXN_DateEnd:   this.toYMDOrUndef(dateEnd),
   onSubmit(frm: FormGroup) {
     this.submitted = true;
 
-    // 基本 required 在 DateStart/End 上，若用月份會同步成整月後再組 payload
     if (this.queryForm.invalid) {
       this.queryForm.markAllAsTouched();
       this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
@@ -326,7 +325,19 @@ TXN_DateEnd:   this.toYMDOrUndef(dateEnd),
       this.tls2b030Service.queryTLS2B030(payload).subscribe({
         next: (response) => {
           if (response?.Status === '0000') {
-            this.data = response.Data || [];
+            const rows = (response.Data || []) as TLS2B030Row[];
+
+            // ★ 把 PayDiffs 攤平成同層（field: Pay_Dif_XX），配合動態 columns 顯示
+            this.data = rows.map((r) => {
+              const flat: any = { ...r };
+              if (r.PayDiffs) {
+                Object.entries(r.PayDiffs).forEach(([k, v]) => {
+                  flat[k] = v ?? 0;
+                });
+              }
+              return flat as TLS2B030Row;
+            });
+
             this.totalRecords =
               typeof response?.TotalCount === 'number'
                 ? response.TotalCount
@@ -336,6 +347,8 @@ TXN_DateEnd:   this.toYMDOrUndef(dateEnd),
             this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
           } else {
             console.error('API error:', response?.Status, response?.Message);
+            this.data = [];
+            this.totalRecords = 0;
           }
           this.loading = false;
         },
