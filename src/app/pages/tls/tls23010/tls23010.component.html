@@ -260,6 +260,44 @@
 
 <div class="card">
   <div class="col-12">
+    <app-table-report
+    *ngIf="!showSummary"
+  tableKey="TLS23010"
+  [lastQueryBody]="historyRequestBody"
+  [data]="data"
+  [columns]="columns"
+  [totalRecords]="totalRecords"
+  [showDelete]="false"
+  [showManage]="false"
+  [showReportMode]="false"
+  [queryFunction]="queryTLS23010ForReport"
+  [footerData]="buildFooterFromTotals()"
+  groupRowsBy="ODM_No"
+
+>
+  <header>
+    <div class="flex justify-content-end align-items-center gap-2">
+      <p-button
+        styleClass="p-2"
+        label="產出型態別報表.PDF"
+        [loading]="btnLoading"
+        icon="pi pi-file"
+        (click)="onExportPDF()"
+        [disabled]="data.length === 0"
+        [loading]="btnLoading"
+      ></p-button>
+      <p-button
+        styleClass="p-2"
+        label="產出型態別報表.XLSX"
+        [loading]="btnLoading"
+        icon="pi pi-file"
+        (click)="onExportXLSX()"
+        [disabled]="data.length === 0"
+        [loading]="btnLoading"
+      ></p-button>
+    </div>
+  </header>
+</app-table-report>
     <!-- ✅ 明細表 -->
     <!-- <app-table2
   *ngIf="!showSummary"
@@ -358,40 +396,4 @@
 >
   <div *ngFor="let line of pdfSummary">{{ line }}</div>
 </div>
-<app-table-report
-  tableKey="TLS23010"
-  [lastQueryBody]="historyRequestBody"
-  [data]="data"
-  [columns]="columns"
-  [totalRecords]="totalRecords"
-  [showDelete]="false"
-  [showManage]="false"
-  [showReportMode]="false"
-  [queryFunction]="queryTLS23010ForReport"
-  [footerData]="buildFooterFromTotals()"
-  groupRowsBy="ODM_No"
 
->
-  <header>
-    <div class="flex justify-content-end align-items-center gap-2">
-      <p-button
-        styleClass="p-2"
-        label="產出型態別報表.PDF"
-        [loading]="btnLoading"
-        icon="pi pi-file"
-        (click)="onExportPDF()"
-        [disabled]="data.length === 0"
-        [loading]="btnLoading"
-      ></p-button>
-      <p-button
-        styleClass="p-2"
-        label="產出型態別報表.XLSX"
-        [loading]="btnLoading"
-        icon="pi pi-file"
-        (click)="onExportXLSX()"
-        [disabled]="data.length === 0"
-        [loading]="btnLoading"
-      ></p-button>
-    </div>
-  </header>
-</app-table-report>
