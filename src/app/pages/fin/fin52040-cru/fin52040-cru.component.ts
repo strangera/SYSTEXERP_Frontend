@@ -35,24 +35,24 @@ export interface GLS1016 {
 }
 
 @Component({
-    selector: 'app-fin52040-cru',
-    templateUrl: './fin52040-cru.component.html',
-    styleUrl: './fin52040-cru.component.scss',
-    standalone: true,
-    imports: [
-      MenubarComponent,
-      ButtonComponent,
-      PanelModule,
-      FormsModule,
-      ReactiveFormsModule,
-      InputTextComponent,
-      DropdownComponent,
-      DropdownTableComponent,
-      DialogComponent,
-      NgIf, 
-      TranslateModule,
-      TableComponent
-    ]
+  selector: 'app-fin52040-cru',
+  templateUrl: './fin52040-cru.component.html',
+  styleUrl: './fin52040-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    DropdownTableComponent,
+    DialogComponent,
+    NgIf,
+    TranslateModule,
+    TableComponent
+  ]
 })
 // 對象及對帳維護作業 CRU
 export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> implements OnInit {
@@ -110,31 +110,31 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
       this.messageService.unblockUi();
       return;
     }
-    
+
     // 送出前檢查 RefCode(對象別代碼) 不可重複
     const formValue = {
       RefCode: frm.get('RefCode')?.value,
       RefName: frm.get('RefName')?.value,
-      VEN_Uniform: frm.get('VEN_Uniform')?.value
+      UniformNo: frm.get('UniformNo')?.value
     }
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
           console.log('insert', formValue);
-          // this.fin52040Service.insertFIN52040(formValue).subscribe(() => {
-          //   this.messageService.successBubble('新增成功');
-          //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-          //   this.dataForm.reset(); // 重置表單
-          // });
+          this.fin52040Service.insertFIN52040(formValue).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            this.dataForm.reset(); // 重置表單
+          });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update', formValue);
-          // this.fin52040Service.updateFIN52040(formValue).subscribe(() => {
-          //   // this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.fin52040Service.updateFIN52040(formValue).subscribe(() => {
+            // this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }
@@ -152,86 +152,79 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   }
 
   // 廠商編號
-    opLoading = false;
-    opForm = this.formBuilder.group({
-      VEN_Uniform: ['', [Validators.maxLength(20)]], // 統一標號
-      VEN_Name: ['', [Validators.maxLength(60)]], // 廠商名稱
-      ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]), // 分頁和排序參數
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    VEN_Uniform: ['', [Validators.maxLength(20)]], // 統一標號
+    VEN_Name: ['', [Validators.maxLength(60)]], // 廠商名稱
+    ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions: any[] = [];
+  fieldsConfig: any[] = [
+    { field: 'VEN_No', header: '廠商編號', mainDataField: true },
+  ];
+  opData: any[] = [];// overlayPanel 裡面的table
+
+  opColumns: Column[] = [
+    { field: 'VEN_No', header: '廠商編號' },
+    // { field: 'brand', header: '品牌' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'VEN_Uniform', header: '統一標號' },
+    { field: 'VEN_ShortName', header: '簡稱' },
+  ];
+
+  onAutoCompleteInputChange(event: any) {
+    this.opData = this.opData2.filter((item:any) => {
+      return (!event || item.VEN_Uniform.includes(event)) &&
+        (!event || item.VEN_Name.includes(event));
     });
-    suggestions: any[] = [];
-    fieldsConfig: any[] = [
-      { field: 'VEN_No', header: '廠商編號', mainDataField: true },
-    ];
-    opData: any[] = [];// overlayPanel 裡面的table
-    opColumns: Column[] = [
-      { field: 'VEN_No', header: '廠商編號' },
-      // { field: 'brand', header: '品牌' },
-      { field: 'VEN_Name', header: '廠商名稱' },
-      { field: 'VEN_Uniform', header: '統一標號' },
-      { field: 'VEN_ShortName', header: '簡稱' },
-    ];
-    opTotalRecords = 0;
+  }
+  opData2: any = []
+  onformValueChanged(event: any) {
+    console.log('formValueChanged', event);
+    this.opData = this.opData2.filter((item:any) => {
+      return (!event.VEN_Uniform || item.VEN_Uniform.includes(event.VEN_Uniform)) &&
+        (!event.VEN_Name || item.VEN_Name.includes(event.VEN_Name));
+    });
+    console.log('filter 後的 opData', this.opData);
+    console.log('filter 後的 opData', this.opData2);
+    
+  }
+  onSelect(event: any) {
+    // console.log('選取的廠商資料', event);
+    this.dataForm.patchValue({
+      RefCode: event.VEN_No,
+      RefName: event.VEN_Name,
+      UniformNo: event.VEN_Uniform
+    });
 
-    onAutoCompleteInputChange(event: any) {
-      this.fin52040Service.queryVendorList({}).pipe(untilDestroyed(this)).subscribe((results) => {
-        this.suggestions = [...results.Data.map((item: { VEN_No: string; VEN_Name: string; VEN_ShortName: string; VEN_Uniform: string; }) => ({
-          ...item,
-          label: item.VEN_No + ' - ' + item.VEN_Name + ' - ' + item.VEN_ShortName + ' - ' + item.VEN_Uniform,
-        }))];
+    console.log('after patchValue', this.dataForm.value);
+  }
 
-        console.log('廠商編號 autoComplete', this.suggestions);
-      });
-    }
-    onformValueChanged(event: any) {
-      this.opLoading = true;
-
-      this.opTotalRecords = this.opData.length;
-      this.opLoading = false;
-      this.fin52040Service.queryVendorList({}).pipe(untilDestroyed(this)).subscribe((results) => {
-        // 把 API 的欄位轉成 RefCode / RefName / UniformNo
-        this.opData = results.Data.map((item: any) => ({
-          ...item,
-          RefCode: item.VEN_No,       // 對象別代碼
-          RefName: item.VEN_Name,     // 對象別名稱
-          UniformNo: item.VEN_Uniform // 統一編號
-        }));
-        this.opTotalRecords = results.TotalCount;
-        this.opLoading = false;
-      });
-    }
-    onSelect(event: any) {
-      console.log('選取的廠商資料', event);
-
-      this.dataForm.patchValue({
-        RefCode: event.VEN_No,
-        RefName: event.VEN_Name,
-        UniformNo: event.VEN_Uniform
-      });
-
-      console.log('after patchValue', this.dataForm.value);
-    }
-
-    // 讀取下拉選單
-      loadOptions() {
-        // 讀取人員下拉選單
-        this.fin52040Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe(res => {
-          this.tblUserOptions = res.Data.map((item: { No: string; Name: string; Label: string }) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '_' + item.Name
-          }));
-          console.log('人員 下拉選單', this.tblUserOptions);
-        });
-
-        // 讀取統一編號清單
-        this.fin52040Service.queryVendorList({}).pipe(untilDestroyed(this)).subscribe(res => {
-          this.tblUserOptions = res.Data.map((item: { No: string; Name: string; Label: string }) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '_' + item.Name
-          }));
-          console.log('統一編號 清單', this.tblUserOptions);
-        });
-
-      }
+  // 讀取下拉選單
+  loadOptions() {
+    // 讀取統一編號清單
+    // this.fin52040Service.queryVendorList({}).pipe(untilDestroyed(this)).subscribe(res => {
+    //   this.tblUserOptions = res.Data.map((item: { No: string; Name: string; Label: string }) => ({
+    //     No: item.No,
+    //     Name: item.Name,
+    //     Label: item.No + '_' + item.Name
+    //   }));
+    //   console.log('統一編號 清單', this.tblUserOptions);
+    // });
+    this.fin52040Service.queryVendorList({}).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData2 = results.Data.map((item: any) => ({
+        ...item,
+        RefCode: item.VEN_No,       // 對象別代碼
+        RefName: item.VEN_Name,     // 對象別名稱
+        UniformNo: item.VEN_Uniform // 統一編號
+      }));
+      // 把 API 的欄位轉成 RefCode / RefName / UniformNo
+      // this.opData = results.Data.map((item: any) => ({
+      //   ...item,
+      //   RefCode: item.VEN_No,       // 對象別代碼
+      //   RefName: item.VEN_Name,     // 對象別名稱
+      //   UniformNo: item.VEN_Uniform // 統一編號
+      // }));
+    });
+  }
 }

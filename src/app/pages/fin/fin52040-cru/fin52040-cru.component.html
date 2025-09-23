@@ -11,8 +11,8 @@
                         [submitted]="submitted" optionLabel="RefName" optionValue="RefCode"
                         [fieldsConfig]="fieldsConfig" (select)="onSelect($event)"
                         (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-                        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-                        [totalRecords]="opTotalRecords">
+                        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" 
+                         [lazy]="false">
                         <app-input-text class="col-12 md:col-6" label="統一編號" controlName="VEN_Uniform"
                         [control]="opForm.controls.VEN_Uniform" />
                         <app-input-text class="col-12 md:col-6" label="廠商名稱" controlName="VEN_Name"

@@ -48,6 +48,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Output() formValueChanged = new EventEmitter<any>(); // 表單改變事件
   @Input() totalRecords = 0;             // 總筆數
   @Output() select = new EventEmitter<any>(); // 選擇事件
+  @Input() lazy = true;                  // 是否啟用分頁
   // 新增一個 Subject 來處理 debounce
   private inputChangeSubject = new Subject<Record<string, string>>();
 
