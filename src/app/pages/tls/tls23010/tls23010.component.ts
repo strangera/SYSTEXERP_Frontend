@@ -693,7 +693,20 @@ onExportXLSX() {
     this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
     this.onSubmit(this.queryForm);
   }
+// ✅ footer-safe：undefined/null/'' 一律回空白字串
+pToYesNoSafe = (val: unknown): string => {
+  const v = String(val ?? '').trim().toUpperCase();
+  if (!v) return '';                // for footer/empty
+  return v === 'P' ? '是' : '否';    // 保持原邏輯
+};
 
+nullpToYesNoSafe = (val: unknown): string => {
+  const v = String(val ?? '').trim().toUpperCase();
+  if (!v) return '';                // for footer/empty（原本會顯示「否」）
+  if (v === 'Y') return '是';
+  if (v === 'N') return '否';
+  return '是';                      // 保持你原本非 Y/N 視為「是」的語意
+};
   // ========= 欄位 =========
   columns = [
     { field: 'TXN_Date',       header: '銷售日期',      visible: true, format: this.formatYMD },
@@ -710,8 +723,8 @@ onExportXLSX() {
     { field: 'TXN_TotOver',    header: '溢收金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
 
     { field: 'TXN_VIP',        header: '外交官零稅',    visible: true, format: this.nyToYesNo },
-    { field: 'TXN_Mode',       header: '事後登錄',      visible: true, format: this.pToYesNo },
-    { field: 'TXN_PreOrder',   header: '預售',          visible: true, format: this.nullpToYesNo },
+{ field: 'TXN_Mode',     header: '事後登錄', visible: true, format: this.pToYesNoSafe,   noTotal: true },
+{ field: 'TXN_PreOrder', header: '預售',     visible: true, format: this.nullpToYesNoSafe, noTotal: true },
 
     { field: 'TXN_StatusName',   header: '交易型態',     visible: true },
     { field: 'TXN_TaxFreeCertNo',header: '外交官免稅卡號',visible: true },
@@ -842,5 +855,7 @@ buildFooterFromTotals(): Record<string, any> | undefined {
    TXN_PayAmt:     this.detailTotals['Total_TXN_PayAmt'] ?? 0,
   };
 }
+
+
   
 }
