@@ -9,53 +9,116 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="館別"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="銷售日期" [control]="queryForm.controls.TXN_Date"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateOne"
+              label="銷售日期"
+              [control]="queryForm.controls.TXN_Date"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_No_List" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No_List"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
-              optionValue="value" [control]="queryForm.controls.TLT_No_List" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.TLT_No_List"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收銀機類型" controlName="ECR_Type" [options]="ECR_TypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_Type" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="收銀機類型"
+              controlName="ECR_Type"
+              [options]="ECR_TypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_Type"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="顯示欄位" controlName="reimbursementType" [options]="reimbursementOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.reimbursementType"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="顯示欄位"
+              controlName="reimbursementType"
+              [options]="reimbursementOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.reimbursementType"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="顯示方式" groupname="systemtyperadio" [control]="queryForm.controls.cashShowUp"
-              [options]="CashShowupByOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              label="顯示方式"
+              groupname="systemtyperadio"
+              [control]="queryForm.controls.cashShowUp"
+              [options]="CashShowupByOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="報表格式" groupname="reportradio" [control]="queryForm.controls.reporttype"
-              [options]="reporttypeOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              label="報表格式"
+              groupname="reportradio"
+              [control]="queryForm.controls.reporttype"
+              [options]="reporttypeOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
         <h6>最近關帳日期：{{ closeDate }}</h6>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -67,29 +130,53 @@
   <div class="mb-2 text-sm">
     銷售日期：
     {{
-    queryForm.controls.TXN_Date.value
-    ? (queryForm.controls.TXN_Date.value | date: "yyyy/MM/dd")
-    : "未選擇"
+      queryForm.controls.TXN_Date.value
+        ? (queryForm.controls.TXN_Date.value | date: "yyyy/MM/dd")
+        : "未選擇"
     }}
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 1">
-    <app-table tableKey="TLS2B010" [data]="data" [columns]="columns" dataKey="TXN_Date"
-      [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-      [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
-      [showCheckBox]="false" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+    <app-table
+      tableKey="TLS2B010"
+      [data]="data"
+      [columns]="columns"
+      dataKey="ID"
+      [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      [loading]="loading"
+      (edit)="onEdit($event)"
+      [showManage]="false"
+      [showDelete]="false"
+      [showCheckBox]="false"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    ></app-table>
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
-    <app-report-table-group [columns]="simplecolumns" [data]="simpleData" [subtotalFields]="[
+    <app-report-table-group
+      [columns]="simplecolumns"
+      [data]="simpleData"
+      [subtotalFields]="[
         'BOOK_PayAmt',
         'SELF_PayAmt',
         'ACT_PayAmt',
         'OVER_PayAmt',
         'SOVER_PayAmt',
-      ]" [groupByField]="'ECR_No'" [groupByLabel]="'收銀機號'" [enableGrouping]="true" [reportTitle]="'支付別溢欠簡表'"
-      [defaultMergedView]="false" [currentPage]="1" [dateStart]="formattedTXNDate" [dateEnd]="formattedTXNDate"
-      [printedAt]="printedAt" [showTotalOnly]="true" [allowMergeToggle]="false" [showBackButton]="false"
-      [showGrandTotal]="false" [showGroupedBody]="true"></app-report-table-group>
-
-
-
+      ]"
+      [groupByField]="'ECR_No'"
+      [groupByLabel]="'收銀機號'"
+      [enableGrouping]="true"
+      [reportTitle]="'支付別溢欠簡表'"
+      [defaultMergedView]="false"
+      [currentPage]="1"
+      [dateStart]="formattedTXNDate"
+      [dateEnd]="formattedTXNDate"
+      [printedAt]="printedAt"
+      [showTotalOnly]="true"
+      [allowMergeToggle]="false"
+      [showBackButton]="false"
+      [showGrandTotal]="false"
+      [showGroupedBody]="true"
+    ></app-report-table-group>
   </div>
+</div>

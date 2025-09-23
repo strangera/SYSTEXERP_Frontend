@@ -14,6 +14,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 
 
 
@@ -33,9 +34,11 @@ import { PanelModule } from 'primeng/panel';
     InputTextComponent,
     CalendarComponent,
     PanelModule,
-    InputTextareaComponent
-  ],
+    InputTextareaComponent,
+    InputNumberComponent
+],
 })
+
 export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.fb.nonNullable.group({
     vendorUID: ['', [Validators.required]], // 廠商統一編號（必填）
@@ -43,10 +46,10 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     brand: ['', [Validators.maxLength(30)]], // 品牌
     bus_type: [''], // 業腫
-    VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 聯絡人
+    VEN_Boss: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
     VEN_BossTitle: ['', [Validators.maxLength(15)]], // 聯絡人稱謂
-    VEN_BossMobile: ['', [Validators.maxLength(18)]], // 聯絡人手機
+    VEN_BossMobile: ['', [Validators.maxLength(15)]], // 聯絡人手機
     VEN_BossEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
 
@@ -86,7 +89,10 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS12020', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
+    if (this.rowdata) {
+      const mapped = this.mapRowDataToForm(this.rowdata);
+      this.dataForm.patchValue(mapped);
+    }
     this.loadDropdownOptions();
     //訪談人員api
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
@@ -100,16 +106,16 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         value: item.No     // 實際值
       }));
     });
-      //業種API
-      this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-        if (res?.Status === '0000') {
-          this.industryCodeOptions = res.Data.map(item => ({
-            ...item,
-            label: item.Name,
-            value: item.No
-          }));
-        }
-      });
+    //業種API
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      if (res?.Status === '0000') {
+        this.industryCodeOptions = res.Data.map(item => ({
+          ...item,
+          label: item.Name,
+          value: item.No
+        }));
+      }
+    });
     //館別
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
@@ -190,6 +196,30 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     return null;
   }
 
+  private mapRowDataToForm(row: any) {
+    return {
+      vendorUID: row.ven_uniform,          // 廠商統一編號
+      vendorCName: row.VEN_Name,           // 廠商名稱(中文)
+      vendorEName: row.VEN_EngName,        // 廠商名稱(英文)
+      brand: row.tlt_name,                 // 品牌
+      bus_type: row.bus_type,              // 業種
+      VEN_Boss: row.VEN_ContactPerson,     // 聯絡人
+      VEN_BossTel: row.VEN_BossTel,        // 聯絡人電話
+      VEN_BossTitle: row.VEN_BossTitle,    // 聯絡人稱謂
+      VEN_BossMobile: row.VEN_BossMobile,  // 聯絡人手機
+      VEN_BossEmail: row.VEN_BossEmail,    // 聯絡人電子郵件
+      VEN_Addr: row.VEN_Addr,              // 公司地址
+      contact_Date: row.contact_Date,      // 訪談日期
+      contact_Time: row.contact_Time,      // 訪談時間
+      building_no: row.building_no,        // 館別
+      willing_level: row.willing_level,    // 意願等級
+      FLOOR_NO: row.FLOOR_NO,              // 樓層編號
+      LOCATION_No: row.LOCATION_No,        // 位置編號
+      contact_record: row.contact_record,  // 洽談重點
+      contact_remarks: row.contact_remarks,// 備註
+      contact_USR_Name: row.contact_USR_Name, // 訪談人員
+    };
+  }
 
 
 

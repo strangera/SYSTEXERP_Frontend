@@ -69,7 +69,7 @@ export class TLS41020CRUComponent
     ],
     EDC_IP2: ['', [Validators.maxLength(20)]],
     EDC_IP3: ['', [Validators.maxLength(20)]],
-    EDC_TmID1: ['', [Validators.required, Validators.maxLength(8)]], // ✅ 必填
+    EDC_TmID1: ['', [Validators.required, Validators.maxLength(8)]],
     EDC_TmID2: ['', [Validators.maxLength(8)]],
     EDC_TmID3: ['', [Validators.maxLength(8)]],
   });
@@ -136,7 +136,7 @@ export class TLS41020CRUComponent
     this.handleSubmit(form, () => {
       let payload = form.getRawValue();
 
-      // ✅ 從 localStorage 取得門市代號
+      //  從 localStorage 取得門市代號
       const userInfoStr = localStorage.getItem('UserInfo');
       const storeNo = userInfoStr ? JSON.parse(userInfoStr)?.SYS_StoreNo : null;
 
@@ -144,7 +144,7 @@ export class TLS41020CRUComponent
         payload.SYS_StoreNo = storeNo;
       }
 
-      // ✅ 將日期轉為 ISO 字串（去除毫秒部分）
+      //  將日期轉為 ISO 字串（去除毫秒部分）
       const toISOStringWithoutMs = (value: any): string =>
         value ? new Date(value).toISOString().split('.')[0] : '';
 
@@ -160,7 +160,7 @@ export class TLS41020CRUComponent
                 this.dataForm.reset();
               },
               error: () => {
-                // ✅ 所有錯誤統一顯示成收銀機號重複
+                //  所有錯誤統一顯示成收銀機號重複
                 this.messageService.errorBubble('新增失敗：收銀機號重複');
               },
             });
