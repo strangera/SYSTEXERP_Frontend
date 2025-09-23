@@ -12,8 +12,9 @@
               [control]="queryForm.controls.budget_yy" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="業種" controlName="bus_type" [options]="bus_typeOptions | async" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="大分類代碼/名稱" controlName="bus_type" [options]="bus_typeOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.bus_type"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
@@ -30,6 +31,7 @@
 </div>
 <div class="card">
   <app-table-report tableKey="TLS2G030" dataKey="tlt_no" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [columnGroup]="columnGroup" [loading]="loading" [showManage]="false" [showDelete]="false"
-    [showReportMode]="false"></app-table-report>
+    [columnGroup]="columnGroup" [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"
+    [lastQueryBody]="lastQueryFormValue"
+    [queryFunction]="tls2g030Service.queryTLS2G030.bind(tls2g030Service)"></app-table-report>
 </div>
