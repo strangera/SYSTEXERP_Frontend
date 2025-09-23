@@ -30,7 +30,7 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
-            [useGrouping]="false"
+            [useGrouping]="true"
             label="預算"
             controlName="BUDGET"
             [control]="dataForm.controls.BUDGET"
@@ -40,25 +40,14 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
-            [useGrouping]="false"
+            [useGrouping]="true"
             label="成本"
             controlName="BUDGET_Cost"
             [control]="dataForm.controls.BUDGET_Cost"
             [submitted]="submitted"
           ></app-input-number>
         </div>
-<!--
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="審核狀態"
-            controlName="BUD_Status"
-            [options]="BUD_Status_Option"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.BUD_Status"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div> -->
+
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text

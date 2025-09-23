@@ -14,8 +14,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="年度"
-            controlName="budget_yymm"
-            [control]="dataForm.controls.budget_yymm"
+            controlName="dateYearOne"
+            [control]="dataForm.controls.dateYearOne"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -23,7 +23,7 @@
           <app-dropdown
             label="專櫃編號"
             controlName="TLT_NoList"
-            [control]="dataForm.controls.tlt_no_tlt_name"
+            [control]="dataForm.controls.tlt_no"
             [submitted]="submitted"
             [options]="tltNoOptions"
             optionLabel="label"
@@ -34,7 +34,7 @@
           <app-input-text
             label="月份"
             controlName="budget_mm"
-            [control]="dataForm.controls.budget_yymm"
+            [control]="dataForm.controls.budget_yy"
             [submitted]="submitted"
           ></app-input-text>
         </div>

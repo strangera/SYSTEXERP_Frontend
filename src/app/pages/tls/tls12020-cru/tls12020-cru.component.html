@@ -74,14 +74,15 @@
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-input-number
               label="聯絡人電話(O)"
               controlName="VEN_BossTel"
               [control]="dataForm.controls.VEN_BossTel"
               [submitted]="submitted"
+              [useGrouping]="false"
             >
               >
-            </app-input-text>
+            </app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -94,26 +95,27 @@
             </app-input-text>
           </div>
             <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-input-number
               label="聯絡人電話(F)"
               controlName="VEN_BossTel"
               [control]="dataForm.controls.VEN_BossTel"
-              [submitted]="submitted"
+              [submitted]="submitted"[useGrouping]="false"
             >
               >
-            </app-input-text>
+            </app-input-number>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-input-number
               label="聯絡人行動電話"
               controlName="VEN_BossMobile"
               [control]="dataForm.controls.VEN_BossMobile"
               [submitted]="submitted"
+              [useGrouping]="false"
             >
               >
-            </app-input-text>
+            </app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
