@@ -58,6 +58,12 @@ export interface TLS2G030DataResponse {
   CommAmount12: number;
 }
 
+export interface QueryTLS2G030Result extends ApiResponse<TLS2G030DataResponse[]> {
+  Data: TLS2G030DataResponse[];
+  TotalCount: number;
+  FooterTotal: TLS2G030DataResponse;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -71,7 +77,7 @@ export class Tls2g030Service {
    * @param params 查詢條件
    * @returns 包含 TLS2G030DataResponse 陣列的 Observable
    */
-  public queryTLS2G030(params: QueryTLS2G030Params): Observable<ApiResponse<TLS2G030DataResponse[]>> {
+  public queryTLS2G030(params: QueryTLS2G030Params): Observable<QueryTLS2G030Result> {
     const body = {
       ...params,
       budget_yy: convertDateToYYYY(params.budget_yy ? new Date(params.budget_yy) : new Date()), // 年
@@ -80,6 +86,38 @@ export class Tls2g030Service {
       SortBy: [{ field: 'tlt_no', order: 1 }],
     }
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS2G030`;
-    return this.http.post<ApiResponse<TLS2G030DataResponse[]>>(url, body);
+    return this.http.post<QueryTLS2G030Result>(url, body);
+  }
+  /**
+  * 匯出專櫃預算日報表為PDF
+  * @param params 查詢條件
+  * @returns Observable of a Blob (PDF file)
+  */
+  public exportTLS2G030Pdf(params: QueryTLS2G030Params): Observable<any> {
+    const body = {
+      ...params,
+      budget_yy: convertDateToYYYY(params.budget_yy ? new Date(params.budget_yy) : new Date()), // 年
+      SortBy: [{ field: 'tlt_no', order: 1 }],
+    }
+    return this.http.post(`${this.apiUrl}/TLS0000/TLS2000/exportTLS2G030Pdf`, body, {
+      responseType: 'blob',
+      observe: 'response'
+    });
+  }
+  /**
+  * 匯出專櫃預算日報表為Excel
+  * @param params 查詢條件
+  * @returns Observable of a Blob (Excel file)
+  */
+  public exportTLS2G030Excel(params: QueryTLS2G030Params): Observable<any> {
+    const body = {
+      ...params,
+      budget_yy: convertDateToYYYY(params.budget_yy ? new Date(params.budget_yy) : new Date()), // 年
+      SortBy: [{ field: 'tlt_no', order: 1 }],
+    }
+    return this.http.post(`${this.apiUrl}/TLS0000/TLS2000/exportTLS2G030Excel`, body, {
+      responseType: 'blob',
+      observe: 'response'
+    });
   }
 }
