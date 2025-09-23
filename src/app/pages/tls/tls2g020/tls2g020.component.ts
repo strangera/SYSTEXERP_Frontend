@@ -33,7 +33,7 @@ import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 export class TLS2G020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     TLT_NoList: [[]],
-    budget_yymm: [new Date()],
+    budget_yy: [new Date()],
     ...createPaginationConfig([{ field: 'TLT_NoList', order: 1 }]),
   });
 
@@ -47,8 +47,11 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
   expansionColumns: Column[] = [
-    { field: 'Month', header: '月' },
-    { field: 'budget', header: '月預算', visible: true },
+    {
+      field: 'Month',
+      header: '月',
+      format: (value: string) => value ? value.slice(-2) : ''
+    }, { field: 'budget', header: '月預算', visible: true },
     { field: 'avg_cag_charge_rate', header: '抽成額' },
   ];
 
@@ -77,28 +80,23 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
         }
       });
   }
- onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup) {
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
 
     const raw = frm.getRawValue();
     const payload = {
-      budget_yy: raw.budget_yymm
-        ? new Date(raw.budget_yymm).getFullYear().toString()
+      budget_yy: raw.budget_yy
+        ? new Date(raw.budget_yy).getFullYear().toString()
         : '',
       tlt_no: raw.TLT_NoList || [],
-      PageSize: raw.PageSize,
-      PageIndex: raw.PageIndex,
-      Offset: raw.Offset,
-      SortBy: raw.SortBy
     };
 
     this.tls2g020Service.queryTLS2G020(payload).subscribe({
       next: (res) => {
         this.data = (res?.Data || []).map((item: any) => ({
           ...item,
-          details: item.Mdeatil ?? []
         }));
         this.totalRecords = res?.TotalCount || 0;
       },
@@ -110,6 +108,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
   }
 
 
+
   // 展開行時查明細
   onRowExpand(event: any) {
     const row = event.data;
@@ -118,7 +117,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       tlt_no: [row.tlt_no]
     };
 
-    this.tls2g020Service.queryTLS2G020Detail(payload).subscribe({
+    this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
       next: (res) => {
         row.details = res?.Data || [];
       },
