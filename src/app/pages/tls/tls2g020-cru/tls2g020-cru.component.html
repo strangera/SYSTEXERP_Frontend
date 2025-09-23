@@ -14,8 +14,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="年度"
-            controlName="dateYearOne"
-            [control]="dataForm.controls.dateYearOne"
+            controlName="budget_yy"
+            [control]="dataForm.controls.budget_yy"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -52,14 +52,14 @@
           [submitted]="submitted"
         ></app-input-text>
       </div>
-      </div>
+    </div>
 
     <ng-container *ngIf="editMode === 'month'">
       <app-table
-        tableKey="id"
+        tableKey="TLS2G020Details"
         [data]="data"
-        (edit)="onMonthEdit($event)"
         [columns]="columns"
+        (edit)="onMonthEdit($event)"
         [loading]="loading"
         [showCheckBox]="false"
         [showDetail]="false"

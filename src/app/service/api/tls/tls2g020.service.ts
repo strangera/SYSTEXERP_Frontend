@@ -17,12 +17,12 @@ export class Tls2g020Service {
   }
 
   // 查詢預估業績管理作業明細
-  queryTLS2G020Detail(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS2G020Detail`, data);
+  queryTLS2G020Deatil(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2G020Deatil`, data);
   }
 
   // 更新預估業績管理作業明細
-  updateTLS2G020Detail(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/updateTLS2G020Detail`, data);
+  updateTLS2G020Deatil(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS2G020Deatil`, data);
   }
 }
