@@ -15,40 +15,38 @@
             id="queryForm"
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="保管人代碼"
-                          controlName="usercode"
-                          [options]="usercode"
-                          optionLabel="label"
-                          optionValue="value"
-                          [control]="queryForm.controls.usercode"
-                          [submitted]="submitted"></app-dropdown>
-          </div> -->
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="應付費用"
-              controlName="Feespayable"
-              [options]="Feespayable"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Feespayable"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div> -->
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="零用金額度"
-                                    [startControl]="queryForm.controls.SPettyamount"
-                                    [endControl]="queryForm.controls.EPettyamount"
-                                    [submitted]="submitted"></app-input-number-range>
-          </div> -->
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-editor-text label="說明"
-                             controlName="description"
-                             [control]="queryForm.controls.description"
-                             [style]="{ height: '100px' }"
-                             [submitted]="submitted"></app-editor-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="保管人代碼"
+                        controlName="keepUsrNo"
+                        [options]="service.keepUsrNo()"
+                        optionLabel="label"
+                        optionValue="value"
+                        [control]="qf().keepUsrNo"
+                        [submitted]="submitted"></app-dropdown>
 
-          </div> -->
+          <app-input-number-range class="col-12 md:col-6 lg:col-4"
+                                  [startLabel]="'零用金額度'"
+                                  [startControl]="qf().SKeepQuotaAmt"
+                                  [endControl]="qf().EKeepQuotaAmt"
+                                  [minFractionDigits]="0"
+                                  [maxFractionDigits]="0"
+                                  [submitted]="submitted"></app-input-number-range>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="保管單位"
+                        controlName="keepOrgId"
+                        [options]="service.keepOrgId()"
+                        optionLabel="label"
+                        optionValue="value"
+                        [control]="qf().keepOrgId"
+                        [submitted]="submitted"></app-dropdown>
+
+          <app-input-textarea class="col-12 md:col-6 lg:col-4"
+                              label="說明"
+                              controlName="keepRemark"
+                              [control]="qf().keepRemark"
+                              [styleClass]="'h-10rem'"
+                              [submitted]="submitted"></app-input-textarea>
         </div>
 
 

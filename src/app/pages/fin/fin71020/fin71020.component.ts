@@ -1,5 +1,5 @@
 import { Component, OnInit, computed } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71020Service } from '@service/api/fin/fin71020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -8,6 +8,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -27,14 +28,19 @@ import { finalize } from 'rxjs';
     DropdownComponent,
     EditorTextComponent,
     InputNumberRangeComponent,
+    InputTextareaComponent,
     MenubarComponent,
   ]
 })
 export class FIN71020Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-
-  });
+    keepUsrNo: this.formBuilder.control<string | void>(void 0),
+    SKeepQuotaAmt: this.formBuilder.control<number | void>(void 0),
+    EKeepQuotaAmt: this.formBuilder.control<number | void>(void 0),
+    keepRemark: this.formBuilder.control<string | void>(void 0),
+    keepOrgId: this.formBuilder.control<string | void>(void 0),
+  }, { validators: this.requireAtLeastOneInput() });
   public readonly qf = computed(() => this.queryForm.controls);
 
   public readonly filteredData = computed(() => {
@@ -46,7 +52,10 @@ export class FIN71020Component extends BasicQueryPageComponent<unknown> implemen
   public readonly totalRecords = computed(() => this.filteredData().length);
 
   public readonly columns: Column[] = [
-
+    { field: 'keepUsrNo', header: '使用者代碼' },
+    { field: 'keepUsrName', header: '使用者名稱' },
+    { field: 'keepOrgId', header: '組織代碼' },
+    { field: 'keepOrgName', header: '組織名稱' },
   ];
 
   // Dropdown options
@@ -97,9 +106,7 @@ export class FIN71020Component extends BasicQueryPageComponent<unknown> implemen
   //   { field: 'pettyCashAmount', header: '零用金額度', visible: true },
   //   { field: 'description', header: '說明', visible: true }
   // ];
-
-
-  vendorOptions: any[] = [];
+  // vendorOptions: any[] = [];
 
   constructor(
     public readonly service: FIN71020Service,
@@ -108,7 +115,7 @@ export class FIN71020Component extends BasicQueryPageComponent<unknown> implemen
     super();
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.initializePage('FIN71020', '/FIN/FIN71020CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
@@ -132,7 +139,7 @@ export class FIN71020Component extends BasicQueryPageComponent<unknown> implemen
     //   .subscribe((data) => (this.usercode = data));
   }
 
-  onSubmit(): void {
+  public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
 
       this.service.loadFIN71020({
@@ -156,5 +163,39 @@ export class FIN71020Component extends BasicQueryPageComponent<unknown> implemen
 
     // this.loading = false;
     // this.notificationService.unblockUi();
+  }
+
+
+  private requireAtLeastOneInput(): ValidatorFn {
+    const controlHasValue = (value: unknown): boolean => {
+      if (value === void 0 || value === null) {
+        return !1;
+      }
+      if (typeof value === 'string') {
+        return value.trim().length > 0;
+      }
+      if (typeof value === 'boolean') {
+        return value;
+      }
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      if (value instanceof Date) {
+        return !Number.isNaN(value.valueOf());
+      }
+      if (typeof value === 'object') {
+        return Object.keys(value).length > 0;
+      }
+      return !0;
+    };
+
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!(control instanceof FormGroup)) {
+        return null;
+      }
+
+      const hasValue = Object.values(control.controls).some(ctrl => controlHasValue(ctrl.value));
+      return hasValue ? null : { requireAtLeastOne: !0 };
+    };
   }
 }
