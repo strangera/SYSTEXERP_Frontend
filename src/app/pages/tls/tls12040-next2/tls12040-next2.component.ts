@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, inject, OnDestroy, OnInit } from '@angular/core';
 import { MenubarComponent } from "@shared/component/menubar/menubar.component";
 import { ButtonComponent } from "@shared/componentkit/button/button.component";
 import { ProgressSpinnerModule } from "primeng/progressspinner";
@@ -111,7 +111,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     private tls12040Service: TLS12040Service,
     private cdr: ChangeDetectorRef,
     private locationOptionsService: LocationOptionsService,
-    private dataFlowService: TLS12040DataFlowService,
+    @Inject(TLS12040DataFlowService) private dataFlowService: TLS12040DataFlowService,
 
   ) {
     super();
@@ -334,20 +334,33 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    return this.discountOptions.map(option => ({
-      id: null,
-      apply_no: parentItem.apply_no,
-      tlt_id: parentItem.tlt_id,
-      cag_barcode: option.value,
-      tlt_bdate: null,
-      tlt_edate: null,
-      cag_charge_rate: 0,
-      barcode_desc: option.label || '',
-      is_configured: false,
-      is_enabled: false,
-      _status: 'new',
-      _isSelected: false  // 預設不勾選
-    }));
+    console.log('🔧 TLS12040 創建預設折扣項目 (參考 TLS13010)');
+
+    return this.discountOptions.map((option, index) => {
+      // 🔧 學習 TLS13010：只有第一個且為正品的才預選
+      const isFirstOption = index === 0;
+      const shouldSelectByDefault = isFirstOption &&
+        (option.value === '000' || option.label?.includes('正品'));
+
+      const item = {
+        id: this.generateTempId(),
+        apply_no: parentItem.apply_no,
+        tlt_id: parentItem.tlt_id,
+        cag_barcode: option.value,
+        tlt_bdate: null,
+        tlt_edate: null,
+        cag_charge_rate: 0,
+        barcode_desc: option.label || '',
+        is_configured: shouldSelectByDefault,
+        is_enabled: shouldSelectByDefault,
+        _status: 'new',
+        _isSelected: shouldSelectByDefault, // 學習 TLS13010
+        _originalType: 'discount'
+      };
+
+      console.log(`創建項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
+      return item;
+    });
   }
 
   /**
@@ -358,22 +371,36 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    return this.discountOptions.map((option, index) => ({
-      id: null,
-      apply_no: parentItem.apply_no,
-      tlt_id: parentItem.tlt_id,
-      seq_no: index + 1,
-      cag_barcode: option.value,
-      level_bmount: 0,
-      level_eamount: 0,
-      level_charge_rate: 0,
-      barcode_desc: option.label || '',
-      is_configured: false,
-      is_enabled: false,
-      _status: 'new',
-      _isSelected: false  // 預設不勾選
-    }));
+    console.log('🔧 TLS12040 創建預設層級項目 (參考 TLS13010)');
+
+    return this.discountOptions.map((option, index) => {
+      // 🔧 學習 TLS13010：只有第一個且為正品的才預選
+      const isFirstOption = index === 0;
+      const shouldSelectByDefault = isFirstOption &&
+        (option.value === '000' || option.label?.includes('正品'));
+
+      const item = {
+        id: this.generateTempId(),
+        apply_no: parentItem.apply_no,
+        tlt_id: parentItem.tlt_id,
+        seq_no: index + 1,
+        cag_barcode: option.value,
+        level_bmount: 0,
+        level_eamount: 0,
+        level_charge_rate: 0,
+        barcode_desc: option.label || '',
+        is_configured: shouldSelectByDefault,
+        is_enabled: shouldSelectByDefault,
+        _status: 'new',
+        _isSelected: shouldSelectByDefault, // 學習 TLS13010
+        _originalType: 'level'
+      };
+
+      console.log(`創建層級項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
+      return item;
+    });
   }
+
 
   /**
    * 取得當前標籤對應的欄位配置
@@ -908,14 +935,28 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
 
+    // 🔧 新增：保護 cag_barcode 不被意外修改
+    if (fieldName === 'cag_barcode' && rowData.cag_barcode && rowData.cag_barcode !== newValue) {
+      console.warn('⚠️ 嘗試修改 cag_barcode，這可能不是預期的行為:', {
+        itemId: rowData.id,
+        originalValue: rowData.cag_barcode,
+        newValue: newValue,
+        stackTrace: new Error().stack
+      });
+
+      // 如果不是明確的用戶操作，則阻止修改
+      if (fieldName === 'cag_barcode' && this.selectedSettingTab !== 'annual') {
+        console.log('阻止 cag_barcode 的意外修改');
+        return;
+      }
+    }
+
     // 判斷是主檔還是明細
     const isDetail = this.isDetailItem(event.rowData);
 
     if (isDetail) {
-      // 明細欄位變更 - 需要同步回正確的資料陣列
       this.handleDetailFieldChange(event);
     } else {
-      // 主檔欄位變更
       this.dataFlowService.updateField(
         rowData.id,
         'master',
@@ -968,47 +1009,56 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       originalType,
       newValue,
       currentStatus: rowData._status,
-      hasValidId: this.hasValidId(rowData)
+      hasValidId: this.hasValidId(rowData),
+      currentCagBarcode: rowData.cag_barcode  // 🔧 新增：記錄當前的 cag_barcode
     });
+
+    // 🔧 修正：在處理選擇狀態變更時，確保不會意外修改 cag_barcode
+    const originalCagBarcode = rowData.cag_barcode;
 
     if (newValue === false) {
       // 取消勾選的處理邏輯
       if (originalType === 'annual') {
-        // 年度業績：直接設為 deleted，會從顯示中移除
         rowData._status = 'deleted';
         console.log('年度業績項目設為 deleted');
       } else if (originalType === 'discount' || originalType === 'level') {
-        // 折扣和層級：根據是否有有效ID決定處理方式
         if (this.hasValidId(rowData)) {
-          // 現有項目：設為 deleted 狀態（會在最終清理時進入 toDelete）
           rowData._status = 'deleted';
           console.log(`${originalType} 現有項目設為 deleted (ID: ${rowData.id})`);
         } else {
-          // 新項目：直接從數組移除（不需要發送到後端）
           console.log(`${originalType} 新項目將被移除 (臨時ID: ${rowData.id})`);
           rowData._status = 'deleted';
         }
       } else {
-        // 其他類型的通用處理
         rowData._status = 'deleted';
         console.log('其他項目設為 deleted');
       }
     } else if (newValue === true) {
       // 重新勾選的處理邏輯
       if (rowData._status === 'deleted') {
-        // 從 deleted 狀態恢復
         rowData._status = this.hasValidId(rowData) ? 'original' : 'new';
         console.log(`項目從 deleted 恢復為 ${rowData._status}`);
       } else {
-        // 一般的勾選變更
         this.updateItemStatus(rowData);
         console.log('一般勾選變更處理');
       }
     }
 
-    console.log('selected 處理完成，最終狀態:', rowData._status);
-  }
+    // 🔧 重要：確保 cag_barcode 值不會被意外修改
+    if (rowData.cag_barcode !== originalCagBarcode) {
+      console.warn('⚠️ 發現 cag_barcode 被意外修改，正在還原:', {
+        original: originalCagBarcode,
+        modified: rowData.cag_barcode
+      });
+      rowData.cag_barcode = originalCagBarcode;
+    }
 
+    console.log('selected 處理完成，最終狀態:', {
+      status: rowData._status,
+      cag_barcode: rowData.cag_barcode,
+      selected: rowData._isSelected
+    });
+  }
 
   /**
  * 找到明細項目的父項目

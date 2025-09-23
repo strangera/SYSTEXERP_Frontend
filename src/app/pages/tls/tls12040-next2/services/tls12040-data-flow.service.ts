@@ -305,17 +305,26 @@ export class TLS12040DataFlowService {
     contractStartDate?: string,
     contractEndDate?: string
   ): ChargeSettingBusinessModel[] {
-
     const defaultStartDate = contractStartDate || new Date().toISOString().split('T')[0];
     const defaultEndDate = contractEndDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
 
-    return businessData.map(commissionItem => {
-      // 關鍵修正：只對 discount 和 level 標籤增強折扣選項
-      // annual 標籤完全不處理，直接使用 API 回來的原始資料
+    console.log('🔧 TLS12040 增強資料 (學習 TLS13010):', {
+      businessDataCount: businessData.length,
+      discountOptionsCount: discountOptions.length,
+      startDate: defaultStartDate,
+      endDate: defaultEndDate
+    });
 
-      // 增強 ChargeDetails (折扣設定標籤) - 使用8個折扣選項
+    return businessData.map((commissionItem, index) => {
+      console.log(`處理抽成項目 ${index + 1}:`, commissionItem.tlt_id);
+
+      // 增強 ChargeDetails (折扣設定標籤)
+      const originalChargeDetails = commissionItem.ChargeDetails || [];
+      console.log(`  原始 ChargeDetails 數量: ${originalChargeDetails.length}`);
+      this.debugCagBarcodeIntegrity(originalChargeDetails, `原始 ChargeDetails - 項目 ${index + 1}`);
+
       commissionItem.ChargeDetails = this.buildCompleteDiscountItems(
-        commissionItem.ChargeDetails || [],
+        originalChargeDetails,
         discountOptions,
         defaultStartDate,
         defaultEndDate,
@@ -323,9 +332,15 @@ export class TLS12040DataFlowService {
         commissionItem
       );
 
-      // 增強 LevelChargeDetails (層級抽成標籤) - 使用8個折扣選項
+      this.debugCagBarcodeIntegrity(commissionItem.ChargeDetails, `增強後 ChargeDetails - 項目 ${index + 1}`);
+
+      // 增強 LevelChargeDetails (層級抽成標籤)
+      const originalLevelDetails = commissionItem.LevelChargeDetails || [];
+      console.log(`  原始 LevelChargeDetails 數量: ${originalLevelDetails.length}`);
+      this.debugCagBarcodeIntegrity(originalLevelDetails, `原始 LevelChargeDetails - 項目 ${index + 1}`);
+
       commissionItem.LevelChargeDetails = this.buildCompleteDiscountItems(
-        commissionItem.LevelChargeDetails || [],
+        originalLevelDetails,
         discountOptions,
         defaultStartDate,
         defaultEndDate,
@@ -333,20 +348,36 @@ export class TLS12040DataFlowService {
         commissionItem
       );
 
-      // YearChargeDetails (年度總業績抽成標籤) 完全不處理
-      // 保持 API 原始資料，不套用任何折扣選項邏輯
-      // commissionItem.YearChargeDetails 維持從 TLS12040DataTransformer.apiToBusinessModel 來的原始狀態
+      this.debugCagBarcodeIntegrity(commissionItem.LevelChargeDetails, `增強後 LevelChargeDetails - 項目 ${index + 1}`);
 
-      console.log('TLS12040 增強完成:', {
-        tlt_id: commissionItem.tlt_id,
-        ChargeDetails_count: commissionItem.ChargeDetails?.length || 0,
-        LevelChargeDetails_count: commissionItem.LevelChargeDetails?.length || 0,
-        YearChargeDetails_count: commissionItem.YearChargeDetails?.length || 0,
-        YearChargeDetails_原始資料: commissionItem.YearChargeDetails
-      });
+      // YearChargeDetails 完全不處理，保持原狀
+      console.log(`  YearChargeDetails 保持原狀，數量: ${commissionItem.YearChargeDetails?.length || 0}`);
 
       return commissionItem;
     });
+  }
+
+  private debugCagBarcodeIntegrity(items: any[], context: string): void {
+    console.log(`🔍 檢查 cag_barcode 完整性 - ${context}:`);
+
+    items.forEach((item, index) => {
+      if (item.cag_barcode === '000') {
+        console.log(`  項目 ${index}: 000 項目狀態`, {
+          id: item.id,
+          cag_barcode: item.cag_barcode,
+          _isSelected: item._isSelected,
+          _status: item._status,
+          barcode_desc: item.barcode_desc
+        });
+      }
+    });
+
+    const uniqueBarcodes = [...new Set(items.map(item => item.cag_barcode))];
+    console.log(`  唯一的 cag_barcode 值:`, uniqueBarcodes);
+
+    if (uniqueBarcodes.length !== items.length) {
+      console.warn(`⚠️ 發現重複的 cag_barcode 值`);
+    }
   }
   /**
    * 建立完整的折扣項目列表（包含所有選項）
@@ -359,73 +390,114 @@ export class TLS12040DataFlowService {
     itemType: 'chargeDetail' | 'levelChargeDetail',
     parentItem: ChargeSettingBusinessModel
   ): any[] {
-    console.log('buildCompleteDiscountItems 開始:', {
+    console.log('🔧 TLS12040 建立完整折扣項目 (參考 TLS13010):', {
       itemType,
       existingCount: existingDetails.length,
       optionsCount: discountOptions.length,
-      parentTltId: parentItem.tlt_id
+      parentTltId: parentItem.tlt_id,
+      現有項目: existingDetails.map(d => ({
+        id: d.id,
+        cag_barcode: d.cag_barcode,
+        status: d._status
+      }))
     });
 
     const result: any[] = [];
+    const isNewContractWithoutData = existingDetails.length === 0;
 
     discountOptions?.forEach((option, index) => {
-      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
+      // 🔧 修正：使用 filter 處理同一折扣別的多筆資料 (學習 TLS13010)
+      const existingItems = existingDetails.filter(detail =>
+        detail.cag_barcode === option.value && detail._status !== 'deleted'
+      );
 
-      if (existingItem) {
-        // 重要：從 API 回來的資料，應該要勾選
-        result.push({
-          ...existingItem,
-          barcode_desc: existingItem.barcode_desc || option.label,
-          _status: existingItem._status || 'original',
-          _isSelected: true,  // API 有資料的項目一定勾選
-          is_configured: true,
-          is_enabled: true
+      if (existingItems.length > 0) {
+        // 為每個既有項目創建一筆記錄，並確保選中狀態
+        existingItems.forEach(existingItem => {
+          // 根據項目類型創建不同結構的物件
+          const enhancedItem = itemType === 'levelChargeDetail' ? {
+            ...existingItem,
+            cag_barcode: existingItem.cag_barcode,
+            barcode_desc: existingItem.barcode_desc || option.label,
+            _status: existingItem._status || 'original',
+            _isSelected: true,
+            is_configured: true,
+            is_enabled: true,
+            tlt_bdate: existingItem.tlt_bdate || contractStartDate,
+            tlt_edate: existingItem.tlt_edate || contractEndDate,
+            seq_no: existingItem.seq_no || (index + 1),
+            level_bmount: existingItem.level_bmount || 0,
+            level_eamount: existingItem.level_eamount || 0,
+            level_charge_rate: existingItem.level_charge_rate || 0
+          } : {
+            ...existingItem,
+            cag_barcode: existingItem.cag_barcode,
+            barcode_desc: existingItem.barcode_desc || option.label,
+            _status: existingItem._status || 'original',
+            _isSelected: true,
+            is_configured: true,
+            is_enabled: true,
+            tlt_bdate: existingItem.tlt_bdate || contractStartDate,
+            tlt_edate: existingItem.tlt_edate || contractEndDate,
+            cag_charge_rate: existingItem.cag_charge_rate || 0
+          };
+
+          result.push(enhancedItem);
+          console.log(`✅ 保持既有項目: ${existingItem.cag_barcode} (${option.label}) - 預設勾選`);
         });
-        console.log(`找到已存在項目: ${option.value} (${option.label}) - 預設勾選`);
       } else {
-        // 未設定的項目 - 預設不勾選
-        // 注意：這裡不再預設勾選第一個正品項目，完全依據 API 資料
+        // 🔧 學習 TLS13010：未設定的項目處理邏輯
+        const isFirstOption = index === 0;
+        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
+          (option.value === '000' || option.label?.includes('正品'));
 
-        if (itemType === 'chargeDetail') {
-          result.push({
-            id: null,
-            apply_no: parentItem.apply_no,
-            tlt_id: parentItem.tlt_id,
-            cag_barcode: option.value,
-            tlt_bdate: contractStartDate,
-            tlt_edate: contractEndDate,
-            cag_charge_rate: 0,
-            barcode_desc: option.label || '',
-            is_configured: false,
-            is_enabled: false,
-            _status: 'new',
-            _isSelected: false  // 全部預設不勾選，只有 API 有資料的才勾選
-          });
-        } else if (itemType === 'levelChargeDetail') {
-          result.push({
-            id: null,
-            apply_no: parentItem.apply_no,
-            tlt_id: parentItem.tlt_id,
-            seq_no: index + 1,
-            cag_barcode: option.value,
-            level_bmount: 0,
-            level_eamount: 0,
-            level_charge_rate: 0,
-            barcode_desc: option.label || '',
-            is_configured: false,
-            is_enabled: false,
-            _status: 'new',
-            _isSelected: false  // 全部預設不勾選，只有 API 有資料的才勾選
-          });
-        }
-        console.log(`新增未設定項目: ${option.value} (${option.label}) - 預設不勾選`);
+        // 根據項目類型建立不同結構的物件
+        const newItem = itemType === 'levelChargeDetail' ? {
+          id: this.generateTempId(),
+          apply_no: parentItem.apply_no,
+          tlt_id: parentItem.tlt_id,
+          cag_barcode: option.value,
+          barcode_desc: option.label || '',
+          tlt_bdate: contractStartDate,
+          tlt_edate: contractEndDate,
+          is_configured: shouldSelectByDefault,
+          is_enabled: shouldSelectByDefault,
+          _status: shouldSelectByDefault ? 'new' : 'new',
+          _isSelected: shouldSelectByDefault,
+          seq_no: index + 1,
+          level_bmount: 0,
+          level_eamount: 0,
+          level_charge_rate: shouldSelectByDefault ? 0 : 0
+        } : {
+          id: this.generateTempId(),
+          apply_no: parentItem.apply_no,
+          tlt_id: parentItem.tlt_id,
+          cag_barcode: option.value,
+          barcode_desc: option.label || '',
+          tlt_bdate: contractStartDate,
+          tlt_edate: contractEndDate,
+          is_configured: shouldSelectByDefault,
+          is_enabled: shouldSelectByDefault,
+          _status: shouldSelectByDefault ? 'new' : 'new',
+          _isSelected: shouldSelectByDefault,
+          cag_charge_rate: shouldSelectByDefault ? 0 : 0
+        };
+
+        result.push(newItem);
+        console.log(`➕ 新增未設定項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預設勾選' : '預設不勾選'}`);
       }
     });
 
-    console.log('buildCompleteDiscountItems 完成:', {
+    console.log('✅ TLS12040 建立完整折扣項目完成:', {
       itemType,
       resultCount: result.length,
-      selectedCount: result.filter(item => item._isSelected).length
+      selectedCount: result.filter(item => item._isSelected).length,
+      最終結果: result.map(r => ({
+        id: r.id,
+        cag_barcode: r.cag_barcode,
+        selected: r._isSelected,
+        status: r._status
+      }))
     });
 
     return result;
