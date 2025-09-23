@@ -3,7 +3,6 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
-import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -16,6 +15,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { FIN52040Service } from '@service/api/fin/fin52040.service';
 
 /** GLS1016 對象別設定檔 */
 export interface GLS1016 {
@@ -25,12 +25,12 @@ export interface GLS1016 {
   UniformNo: string, // VARCHAR(30)      null, /*統一編號*/
 
   //---可能也會需要下面這些---
-  CRT_Date?: Date,
-  CRT_USR_No?: string,
-  CRT_USR_Name?: string,
-  UPD_Date?: Date,
-  UPD_USR_No?: string,
-  UPD_USR_Name?: string,
+  // CRT_Date?: Date,
+  // CRT_USR_No?: string,
+  // CRT_USR_Name?: string,
+  // UPD_Date?: Date,
+  // UPD_USR_No?: string,
+  // UPD_USR_Name?: string,
 }
 
 
@@ -58,14 +58,14 @@ export interface GLS1016 {
 export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
-    // RefCode: ['', [Validators.required, Validators.maxLength(20)]], // 對象別代碼
-    RefCode: ['', [Validators.required]], // 對象別代碼 (不可重複)
-    RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
-    UniformNo: ['', [Validators.maxLength(30)]], // 統一編號
+    // CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
 
-    CRT_USR_Name: [{ value: null, disabled: true }], //  建立人員姓名
-    UPD_USR_Name: [{ value: null, disabled: true }], //  變更人員姓名
+    RefCode: ['', [Validators.required, Validators.maxLength(30)]], // 對象別代碼 (不可重複)
+    RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
+    UniformNo: ['', [Validators.maxLength(10)]], // 統一編號
+
+    CRT_USR_No: [{ value: null, disabled: true }], //  建立人員姓名 (下拉)
+    UPD_USR_No: [{ value: null, disabled: true }], //  變更人員姓名 (下拉)
   });
   //
   GLS1001_Options: apiOption[] = [
@@ -95,7 +95,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   dialogLoading = false;
   // ----------------------------------------------------------------
   constructor(
-    private tls51080Service: Tls51080Service,
+    private fin52040Service: FIN52040Service,
     private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
