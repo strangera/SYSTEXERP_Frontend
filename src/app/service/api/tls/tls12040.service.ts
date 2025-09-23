@@ -11,6 +11,11 @@ interface TLS12040FareRequest {
   showAll: boolean;
 }
 
+interface TLS12040CommissionRequest {
+  apply_no: string;
+  CurrentTltTermType: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -60,12 +65,15 @@ export class TLS12040Service {
       catchError(this.errorHandler.handleError)
     );
   }
-  // queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
-  //   return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
-  //     tap((res) => console.log('統一抽成設定查詢結果:', res)),
-  //     catchError(this.errorHandler.handleError)
-  //   );
-  // }
+
+  /** 查詢契約書租金設定資料 - Next3 使用 */
+  queryTLS12040Commission(request: TLS12040CommissionRequest) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040Commission`, request).pipe(
+      tap((res) => console.log('查詢租金設定資料結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
 
   // 提交最終契約資料（清理後格式）
   /**

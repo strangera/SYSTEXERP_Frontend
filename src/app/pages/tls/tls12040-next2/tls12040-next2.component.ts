@@ -19,6 +19,7 @@ import { TLS12040Next2ColumnsConfig } from './services/tls12040-next2-columns.co
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { TLS12040DataFlowService } from './services/tls12040-data-flow.service';
+import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
 interface CategoryItem {
   id: number;
 }
@@ -131,7 +132,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return this.contractInfoData[0].tlt_term_type || '3';
     }
 
-    const step1Data = this.flowService.getCruData<CruData>();
+    const step1Data = this.flowService.getCruData<TLS12040DetailModel>();
     if (step1Data?.tlt_term_type) {
       return step1Data.tlt_term_type.toString();
     }
@@ -266,7 +267,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private async loadWorkflowData(): Promise<void> {
     console.log('開始載入工作流程資料...');
 
-    const cruData = this.flowService.getCruData<CruData>();
+    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
     console.log('CRU 資料:', cruData);
 
     if (!cruData?.apply_no) {
@@ -313,7 +314,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  private prepareContractInfoDisplay(cruData: CruData): void {
+  private prepareContractInfoDisplay(cruData: TLS12040DetailModel): void {
     console.log('準備合約資訊顯示');
 
     this.contractInfoData = [{
@@ -795,7 +796,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    const cruData = this.flowService.getCruData<CruData>();
+    const cruData = this.flowService.getCruData<SimpleContractInfo>();
     if (!cruData?.apply_no) {
       this.notificationService.errorBubble('缺少申請編號，無法新增項目');
       return;
@@ -1515,7 +1516,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private getContractDate(type: 'start' | 'end'): string {
-    const cruData = this.flowService.getCruData<CruData>();
+    const cruData = this.flowService.getCruData<SimpleContractInfo>();
     const fieldName = type === 'start' ? 'tlt_bdate' : 'tlt_edate';
 
     if (cruData?.[fieldName]) {

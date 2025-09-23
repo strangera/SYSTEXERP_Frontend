@@ -427,7 +427,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('載入合約資訊...');
 
     // 指定型別
-    const cruData = this.flowService.getCruData<CruData>();
+    const cruData = this.flowService.getCruData<SimpleContractInfo>();
     console.log('CRU 資料:', cruData);
 
     if (cruData) {
