@@ -138,7 +138,7 @@ export interface ChargeSettingBusinessModel extends ChargeSettingAPIModel {
  */
 export interface ChargeDetailBusinessModel extends ChargeDetailAPIModel {
   _status: DataStatus;
-  _isSelected?: boolean;
+  is_selected?: boolean;
   _validationErrors?: ValidationError[];
 }
 
@@ -147,7 +147,7 @@ export interface ChargeDetailBusinessModel extends ChargeDetailAPIModel {
  */
 export interface YearChargeDetailBusinessModel extends YearChargeDetailAPIModel {
   _status: DataStatus;
-  _isSelected?: boolean;
+  is_selected?: boolean;
   _validationErrors?: ValidationError[];
 }
 
@@ -156,7 +156,7 @@ export interface YearChargeDetailBusinessModel extends YearChargeDetailAPIModel 
  */
 export interface LevelChargeDetailBusinessModel extends LevelChargeDetailAPIModel {
   _status: DataStatus;
-  _isSelected?: boolean;
+  is_selected?: boolean;
   _validationErrors?: ValidationError[];
 }
 

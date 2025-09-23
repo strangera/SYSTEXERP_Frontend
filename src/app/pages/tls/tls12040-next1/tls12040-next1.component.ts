@@ -694,19 +694,26 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   override onCancel(): void {
     console.log('⬅️ 返回上一步');
 
+    const navigationExtras: NavigationExtras = {
+      state: {
+        crudstatus: this.crudstatus,
+        fromRoute: this.router.url
+      }
+    };
+
     try {
       // 確保資料已儲存
       this.saveFareDataToWorkflow();
 
       // 等待一下確保儲存完成
       setTimeout(() => {
-        this.router.navigate(['account/tls/tls12040cru']);
+        this.router.navigate(['account/tls/tls12040cru'], navigationExtras);
       }, 100);
 
     } catch (error) {
       console.error('❌ 返回上一步時發生錯誤:', error);
-      // 即使儲存失敗也要導航回去
-      this.router.navigate(['account/tls/tls12040cru']);
+      // 即使儲存失敗也要導航回去且帶上狀態
+      this.router.navigate(['account/tls/tls12040cru'], navigationExtras);
     }
   }
 

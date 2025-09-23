@@ -143,33 +143,41 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     this.initializePage('TLS12040', this.dataForm);
 
     try {
-      // 1. 先訂閱資料狀態變更
+      // 1. 先檢查是否有暫存的 Next2 資料
+      const savedNext2Data = this.flowService.getNext2Data();
+      console.log('🔍 檢查暫存的 Next2 資料:', savedNext2Data);
+
+      // 2. 先訂閱資料狀態變更
       this.dataFlowService.state$.subscribe(state => {
         this.commissionData = state.currentEditData;
         this.loading = state.uiState.loading;
         this.dataLoaded = state.uiState.dataLoaded;
         this.hasUnsavedChanges = state.uiState.hasUnsavedChanges;
-
-        // 加入這行：當有資料載入完成時，設定 commissionDataLoaded
         this.commissionDataLoaded = state.uiState.dataLoaded && state.currentEditData.length >= 0;
-
         this.cdr.detectChanges();
       });
 
-      // 2. 初始化欄位配置
+      // 3. 初始化欄位配置
       this.initializeColumns();
 
-      // 3. 載入折扣選項（這個還是用原本的服務）
+      // 4. 載入折扣選項
       this.discountOptions = await this.dataFlowService.loadDiscountOptions();
       if (this.discountOptions.length === 0) {
         console.warn('沒有載入到折扣選項');
       }
       this.updateDiscountColumnOptions();
 
-      // 4. 載入工作流程資料
-      await this.loadWorkflowData();
+      // 5. 優先檢查暫存資料，如果有則使用暫存資料
+      if (savedNext2Data && this.isValidSavedData(savedNext2Data)) {
+        console.log('📦 發現有效的暫存 Next2 資料，優先使用暫存資料');
+        await this.loadFromSavedData(savedNext2Data);
+      } else {
+        console.log('🆕 沒有暫存資料或資料無效，從工作流程載入');
+        // 載入工作流程資料
+        await this.loadWorkflowData();
+      }
 
-      // 5. 設定自動儲存 (僅編輯模式)
+      // 6. 設定自動儲存 (僅編輯模式)
       if (!this.isReadOnlyMode) {
         this.setupAutoSave();
       }
@@ -177,6 +185,74 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     } catch (error) {
       console.error('初始化失敗:', error);
       this.notificationService.errorBubble('頁面初始化失敗');
+    }
+  }
+
+  // 4. 新增檢查暫存資料有效性的方法
+  private isValidSavedData(savedData: any): boolean {
+    if (!savedData) return false;
+
+    const hasCommissionData = savedData.commissionData && Array.isArray(savedData.commissionData);
+    const hasApplyNo = savedData.currentApplyNo && savedData.currentApplyNo.trim() !== '';
+
+    console.log('🔍 檢查暫存資料有效性:', {
+      hasCommissionData,
+      hasApplyNo,
+      commissionDataLength: savedData.commissionData?.length || 0,
+      applyNo: savedData.currentApplyNo
+    });
+
+    return hasCommissionData && hasApplyNo;
+  }
+
+  // 5. 新增從暫存資料載入的方法
+  private async loadFromSavedData(savedData: any): Promise<void> {
+    try {
+      console.log('🔄 開始從暫存資料載入...');
+
+      // 恢復基本狀態
+      this.currentApplyNo = savedData.currentApplyNo || '';
+      this.selectedSettingTab = savedData.selectedSettingTab || 'discount';
+      this.contractInfoData = savedData.contractInfoData || [];
+
+      console.log('🔧 恢復基本狀態:', {
+        currentApplyNo: this.currentApplyNo,
+        selectedSettingTab: this.selectedSettingTab,
+        contractInfoDataLength: this.contractInfoData.length
+      });
+
+      // 恢復抽成資料 - 透過 dataFlowService 設定
+      if (savedData.commissionData && Array.isArray(savedData.commissionData)) {
+        console.log('📊 恢復抽成資料:', savedData.commissionData.length, '筆');
+
+        // 直接更新 dataFlowService 的狀態
+        this.dataFlowService['stateManager'].currentEditData = savedData.commissionData;
+        this.dataFlowService['stateManager'].uiState.dataLoaded = true;
+        this.dataFlowService['stateManager'].uiState.hasUnsavedChanges = false;
+
+        // 通知狀態變更
+        this.dataFlowService['notifyStateChange']();
+
+        // 同步到組件
+        this.commissionData = savedData.commissionData;
+        this.dataLoaded = true;
+        this.commissionDataLoaded = true;
+      }
+
+      // 恢復額外設定
+      if (savedData.additionalSettings) {
+        this.hasUnsavedChanges = savedData.additionalSettings.hasUnsavedChanges || false;
+      }
+
+      console.log('✅ 暫存資料載入完成');
+
+      // 觸發變更檢測
+      this.cdr.detectChanges();
+
+    } catch (error) {
+      console.error('❌ 從暫存資料載入失敗:', error);
+      // 如果載入失敗，回退到正常流程
+      await this.loadWorkflowData();
     }
   }
 
@@ -283,18 +359,24 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   changeSettingTab(tab: string): void {
     console.log('切換標籤，從', this.selectedSettingTab, '到', tab);
 
-    // 直接切換標籤
-    this.selectedSettingTab = tab;
+    if (this.selectedSettingTab === tab) {
+      return;
+    }
 
-    // 重要：更新每個 commission item 的顯示資料
+    this.selectedSettingTab = tab;
+    // this.clearProcessedDataCache();
+
     this.commissionData.forEach(item => {
       this.updateItemDisplayData(item);
     });
 
-    // 觸發變更檢測，讓表格重新渲染
     this.cdr.detectChanges();
-  }
 
+    // 標籤切換後儲存
+    setTimeout(() => {
+      this.saveToWorkflow();
+    }, 100);
+  }
   /**
  * 更新單個項目的顯示資料
  */
@@ -337,10 +419,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('🔧 TLS12040 創建預設折扣項目 (參考 TLS13010)');
 
     return this.discountOptions.map((option, index) => {
-      // 🔧 學習 TLS13010：只有第一個且為正品的才預選
-      const isFirstOption = index === 0;
-      const shouldSelectByDefault = isFirstOption &&
-        (option.value === '000' || option.label?.includes('正品'));
+      // 🔧 修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
+      const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
       const item = {
         id: this.generateTempId(),
@@ -354,7 +434,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         is_configured: shouldSelectByDefault,
         is_enabled: shouldSelectByDefault,
         _status: 'new',
-        _isSelected: shouldSelectByDefault, // 學習 TLS13010
+        is_selected: shouldSelectByDefault, // 關鍵：確保勾選狀態正確
         _originalType: 'discount'
       };
 
@@ -362,6 +442,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return item;
     });
   }
+
 
   /**
    * 建立預設的 level 項目（8個折扣選項）
@@ -374,10 +455,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('🔧 TLS12040 創建預設層級項目 (參考 TLS13010)');
 
     return this.discountOptions.map((option, index) => {
-      // 🔧 學習 TLS13010：只有第一個且為正品的才預選
-      const isFirstOption = index === 0;
-      const shouldSelectByDefault = isFirstOption &&
-        (option.value === '000' || option.label?.includes('正品'));
+      // 🔧 修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
+      const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
       const item = {
         id: this.generateTempId(),
@@ -392,7 +471,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         is_configured: shouldSelectByDefault,
         is_enabled: shouldSelectByDefault,
         _status: 'new',
-        _isSelected: shouldSelectByDefault, // 學習 TLS13010
+        is_selected: shouldSelectByDefault, // 關鍵：確保勾選狀態正確
         _originalType: 'level'
       };
 
@@ -467,7 +546,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         is_configured: shouldSelectByDefault,
         is_enabled: shouldSelectByDefault,
         _status: 'new',
-        _isSelected: shouldSelectByDefault
+        is_selected: shouldSelectByDefault
       };
     });
   }
@@ -494,7 +573,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         is_configured: shouldSelectByDefault,
         is_enabled: shouldSelectByDefault,
         _status: 'new',
-        _isSelected: shouldSelectByDefault
+        is_selected: shouldSelectByDefault
       };
     });
   }
@@ -513,23 +592,103 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    const formSubscription = this.dataForm.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(() => {
-      this.saveToWorkflow();
+    // 監聽 commissionData 變更
+    const dataSubscription = this.dataFlowService.state$.pipe(
+      debounceTime(500), // 500ms 防抖
+      distinctUntilChanged((prev, curr) => {
+        // 比較關鍵資料是否有變更
+        const prevData = JSON.stringify(prev.currentEditData);
+        const currData = JSON.stringify(curr.currentEditData);
+        return prevData === currData;
+      })
+    ).subscribe((state) => {
+      if (state.currentEditData.length > 0) {
+        console.log('📊 資料狀態變更，觸發自動儲存');
+        this.saveToWorkflow();
+      }
     });
-    this.subscriptions.push(formSubscription);
+    this.subscriptions.push(dataSubscription);
+
+    // 監聽標籤切換
+    let lastTab = this.selectedSettingTab;
+    const tabCheckInterval = setInterval(() => {
+      if (this.selectedSettingTab !== lastTab) {
+        console.log('🏷️ 標籤變更，觸發自動儲存');
+        lastTab = this.selectedSettingTab;
+        this.saveToWorkflow();
+      }
+    }, 1000);
+
+    // 清理定時器
+    this.subscriptions.push({
+      unsubscribe: () => clearInterval(tabCheckInterval)
+    } as any);
   }
+
 
   private saveToWorkflow(): void {
     if (this.isReadOnlyMode) {
-      console.log('唯讀模式，跳過資料儲存');
+      console.log('🔒 唯讀模式，跳過資料儲存');
       return;
     }
 
-    // 這裡可以加入變更檢查邏輯
-    this.flowService.setNext2Data(this.commissionData);
+    // 新增：檢查資料是否已載入
+    if (!this.dataLoaded || !this.commissionData || this.commissionData.length === 0) {
+      console.log('資料尚未載入完成，跳過儲存:', {
+        dataLoaded: this.dataLoaded,
+        commissionDataLength: this.commissionData?.length || 0
+      });
+      return;
+    }
+
+    // // 新增：檢查申請編號
+    // if (!this.currentApplyNo) {
+    //   console.log('缺少申請編號，跳過儲存');
+    //   return;
+    // }
+
+
+    // 準備要儲存的資料 - 使用與 Next2DataCleaner 相匹配的格式
+    const dataToSave = {
+      // 主要資料
+      commissionData: this.commissionData || [],
+
+      // UI 狀態
+      selectedSettingTab: this.selectedSettingTab,
+      currentCommissionType: this.currentCommissionType,
+      currentApplyNo: this.currentApplyNo,
+
+      // 合約資訊
+      contractInfoData: this.contractInfoData || [],
+
+      // 額外設定
+      additionalSettings: {
+        hasUnsavedChanges: this.hasUnsavedChanges,
+        dataLoaded: this.dataLoaded,
+        commissionDataLoaded: this.commissionDataLoaded
+      }
+    };
+
+    console.log('💾 準備儲存 Next2 資料:', {
+      commissionDataLength: dataToSave.commissionData.length,
+      selectedTab: dataToSave.selectedSettingTab,
+      applyNo: dataToSave.currentApplyNo,
+      hasContractInfo: dataToSave.contractInfoData.length > 0
+    });
+
+    // 呼叫 flowService 儲存資料
+    const success = this.flowService.setNext2Data(dataToSave);
+
+    if (success) {
+      console.log('✅ Next2 資料儲存成功');
+      this.hasUnsavedChanges = false;
+
+      // 立即驗證儲存結果
+      const savedData = this.flowService.getNext2Data();
+      console.log('🔍 驗證儲存結果:', savedData);
+    } else {
+      console.error('❌ Next2 資料儲存失敗');
+    }
   }
 
   // 原有的事件處理方法保持不變
@@ -735,6 +894,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }): void { }
 
   ngOnDestroy(): void {
+    // 最後一次儲存
+    if (!this.isReadOnlyMode && this.commissionData.length > 0) {
+      console.log('🔚 組件銷毀前最後儲存');
+      this.saveToWorkflow();
+    }
+
     this.subscriptions.forEach(sub => sub.unsubscribe());
 
     if (this.viewModeSubscription) {
@@ -809,11 +974,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   onConfirmDialogResult(confirmed: boolean): void { }
 
   override onCancel(): void {
-    if (this.crudstatus === CRUDStatus.Read) {
-      this.router.navigate(['account/tls/tls12040next1']);
-      return;
-    }
-    this.router.navigate(['account/tls/tls12040next1']);
+    const navigationExtras: NavigationExtras = {
+      state: {
+        crudstatus: this.crudstatus,
+        fromRoute: this.router.url
+      }
+    };
+
+    this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
   }
 
   /**
@@ -836,7 +1004,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           is_configured: false,
           is_enabled: false,
           _status: 'new',
-          _isSelected: false
+          is_selected: false
         };
       case 'annual':
         // 關鍵修正：實現智能日期接續邏輯
@@ -850,7 +1018,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           year_amount: 0,
           extra_rate: 0,
           _status: 'new',
-          _isSelected: false
+          is_selected: false
         };
       case 'level':
         return {
@@ -866,7 +1034,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           is_configured: false,
           is_enabled: false,
           _status: 'new',
-          _isSelected: false
+          is_selected: false
         };
       default:
         return {};
@@ -964,6 +1132,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         newValue
       );
     }
+
+    setTimeout(() => {
+      if (this.commissionData.length > 0) {
+        this.saveToWorkflow();
+      }
+    }, 200);
   }
 
   /**
@@ -983,7 +1157,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     rowData[fieldName] = newValue;
 
     // 特殊處理：selected 欄位的狀態變更
-    if (fieldName === '_isSelected' || fieldName === 'selected') {
+    if (fieldName === 'is_selected' || fieldName === 'selected') {
       this.handleSelectedFieldChange(rowData, newValue);
     } else {
       // 其他欄位變更的狀態處理
@@ -1056,7 +1230,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('selected 處理完成，最終狀態:', {
       status: rowData._status,
       cag_barcode: rowData.cag_barcode,
-      selected: rowData._isSelected
+      selected: rowData.is_selected
     });
   }
 
@@ -1231,7 +1405,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       originalType,
       currentTab,
       status: detailData._status,
-      selected: detailData._isSelected
+      selected: detailData.is_selected
     });
 
     // 根據 originalType 而不是 currentTab 來決定更新哪個數組
@@ -1444,7 +1618,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           is_configured: item.is_configured || false,
           is_enabled: item.is_enabled || false,
           _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          _isSelected: item._isSelected || false
+          is_selected: item.is_selected || false
         }));
         break;
 
@@ -1458,7 +1632,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           year_amount: item.year_amount || 0,
           extra_rate: item.extra_rate || 0,
           _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          _isSelected: item._isSelected || false
+          is_selected: item.is_selected || false
         }));
         break;
 
@@ -1476,7 +1650,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           is_configured: item.is_configured || false,
           is_enabled: item.is_enabled || false,
           _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          _isSelected: item._isSelected || false
+          is_selected: item.is_selected || false
         }));
         break;
     }
@@ -1556,7 +1730,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       apply_no: parentData.apply_no,
       tlt_id: parentData.tlt_id,
       _status: 'new',
-      _isSelected: false,  // 複製的項目預設不勾選
+      is_selected: false,  // 複製的項目預設不勾選
       is_configured: false,
       is_enabled: false
     };

@@ -365,7 +365,7 @@ export class TLS12040DataFlowService {
         console.log(`  項目 ${index}: 000 項目狀態`, {
           id: item.id,
           cag_barcode: item.cag_barcode,
-          _isSelected: item._isSelected,
+          is_selected: item.is_selected,
           _status: item._status,
           barcode_desc: item.barcode_desc
         });
@@ -394,12 +394,7 @@ export class TLS12040DataFlowService {
       itemType,
       existingCount: existingDetails.length,
       optionsCount: discountOptions.length,
-      parentTltId: parentItem.tlt_id,
-      現有項目: existingDetails.map(d => ({
-        id: d.id,
-        cag_barcode: d.cag_barcode,
-        status: d._status
-      }))
+      parentTltId: parentItem.tlt_id
     });
 
     const result: any[] = [];
@@ -420,7 +415,7 @@ export class TLS12040DataFlowService {
             cag_barcode: existingItem.cag_barcode,
             barcode_desc: existingItem.barcode_desc || option.label,
             _status: existingItem._status || 'original',
-            _isSelected: true,
+            is_selected: true, // 既有項目一律設為已選中
             is_configured: true,
             is_enabled: true,
             tlt_bdate: existingItem.tlt_bdate || contractStartDate,
@@ -434,7 +429,7 @@ export class TLS12040DataFlowService {
             cag_barcode: existingItem.cag_barcode,
             barcode_desc: existingItem.barcode_desc || option.label,
             _status: existingItem._status || 'original',
-            _isSelected: true,
+            is_selected: true, // 既有項目一律設為已選中
             is_configured: true,
             is_enabled: true,
             tlt_bdate: existingItem.tlt_bdate || contractStartDate,
@@ -446,10 +441,8 @@ export class TLS12040DataFlowService {
           console.log(`✅ 保持既有項目: ${existingItem.cag_barcode} (${option.label}) - 預設勾選`);
         });
       } else {
-        // 🔧 學習 TLS13010：未設定的項目處理邏輯
-        const isFirstOption = index === 0;
-        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
-          (option.value === '000' || option.label?.includes('正品'));
+        // 🔧 修正：新增項目的預選邏輯 - 只要是 000 或包含正品就預選
+        const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
         // 根據項目類型建立不同結構的物件
         const newItem = itemType === 'levelChargeDetail' ? {
@@ -463,7 +456,7 @@ export class TLS12040DataFlowService {
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault,
           _status: shouldSelectByDefault ? 'new' : 'new',
-          _isSelected: shouldSelectByDefault,
+          is_selected: shouldSelectByDefault,
           seq_no: index + 1,
           level_bmount: 0,
           level_eamount: 0,
@@ -479,7 +472,7 @@ export class TLS12040DataFlowService {
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault,
           _status: shouldSelectByDefault ? 'new' : 'new',
-          _isSelected: shouldSelectByDefault,
+          is_selected: shouldSelectByDefault,
           cag_charge_rate: shouldSelectByDefault ? 0 : 0
         };
 
@@ -491,11 +484,11 @@ export class TLS12040DataFlowService {
     console.log('✅ TLS12040 建立完整折扣項目完成:', {
       itemType,
       resultCount: result.length,
-      selectedCount: result.filter(item => item._isSelected).length,
-      最終結果: result.map(r => ({
+      selectedCount: result.filter(item => item.is_selected).length,
+      正品項目檢查: result.filter(r => r.cag_barcode === '000').map(r => ({
         id: r.id,
         cag_barcode: r.cag_barcode,
-        selected: r._isSelected,
+        selected: r.is_selected,
         status: r._status
       }))
     });
