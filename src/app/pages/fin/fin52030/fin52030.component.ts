@@ -59,21 +59,11 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
     return data.filter(item => {
       let matches = !0;
 
-      if (hasTypeCode) {
-        matches = matches && item['typeCode'] === this.qf().typeCode.value;
-      }
-      if (hasSubpoenaName) {
-        matches = matches && item['subpoenaName'] && item['subpoenaName'].includes(this.qf().subpoenaName.value);
-      }
-      if (hasSubpoenaType) {
-        matches = matches && item['subpoenaType'] === this.qf().subpoenaType.value;
-      }
-      if (hasCreator) {
-        matches = matches && item['creator'] === this.qf().creator.value;
-      }
-      if (hasModifier) {
-        matches = matches && item['modifier'] === this.qf().modifier.value;
-      }
+      if (hasTypeCode) matches = matches && item.typeCode === this.qf().typeCode.value;
+      if (hasSubpoenaName) matches = matches && !!item.subpoenaName && item.subpoenaName.includes(this.qf().subpoenaName.value!);
+      if (hasSubpoenaType) matches = matches && item.subpoenaType === this.qf().subpoenaType.value;
+      if (hasCreator) matches = matches && item.creator === this.qf().creator.value;
+      if (hasModifier) matches = matches && item.modifier === this.qf().modifier.value;
 
       return matches;
     });

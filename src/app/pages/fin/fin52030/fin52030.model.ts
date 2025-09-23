@@ -4,4 +4,8 @@ export interface FIN52030Data {
   subpoenaNumber?: string;
   subpoenaName?: string;
   detailCount?: number;
+  typeCode?: string;
+  subpoenaType?: string;
+  creator?: string;
+  modifier?: string;
 }

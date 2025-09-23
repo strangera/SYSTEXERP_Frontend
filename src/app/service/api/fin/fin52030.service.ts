@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
+import { FIN52030Data } from '@pages/fin/fin52030/fin52030.model';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
@@ -12,7 +13,7 @@ export class FIN52030Service {
 
   public readonly test = !0;
 
-  public readonly FIN52030Data = signal<Record<string, any>[]>([]);
+  public readonly FIN52030Data = signal<FIN52030Data[]>([]);
   public readonly FIN52030DetailData = signal<Record<string, any>[]>([]);
   public readonly subpoenaTypes = signal<DropdownOption[]>([]);
   public readonly creators = signal<DropdownOption[]>([]);
