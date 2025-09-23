@@ -246,7 +246,7 @@ export class Table2Component
   ngOnInit(): void {
     this.ensureInitialGroupingSort();
     this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
-    this.columns = (this.columns || []).map(col => ({ ...col, headerRow: col.headerRow ?? 1 }));
+   
 
     this.currentPageService.currentPageProgNo$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -888,4 +888,52 @@ getColMinWidth(col: any): string {
   const ch = Math.max(6, Math.min(40, len + 2)); // 6ch~40ch
   return `calc(${ch}ch + 1.25rem)`; // 多 1.25rem 做左右 padding / icon 空間
 }
+
+
+get bodyColumnsOrdered(): any[] {
+  if (this.hasTwoHeaderRows) {
+    return [
+      ...this.leftFixedHeaderColumns,
+      ...this.headerRow1Columns,
+      ...this.headerRow2Columns,
+    ];
+  } else {
+    return [
+      ...this.leftFixedHeaderColumns,
+      ...this.headerRow1Columns,
+    ];
+  }
+}
+
+
+
+// -----------------------------------------------------
+/** 取得目前可見欄位（selectedColumns 優先，其次 columns） */
+private get visibleCols() {
+  const cols = this.selectedColumns?.length ? this.selectedColumns : this.columns || [];
+  return cols.filter(c => c.visible !== false && c.hidden !== true);
+}
+
+/** 沒有 headerRow（= undefined/null）的欄位：固定放最左邊，且表頭要 rowspan=2 */
+get leftFixedHeaderColumns() {
+  return this.visibleCols.filter(c => c.headerRow == null);
+}
+
+/** 表頭第 1 列欄位（headerRow = 1） */
+get headerRow1Columns() {
+  return this.visibleCols.filter(c => c.headerRow === 1);
+}
+
+/** 表頭第 2 列欄位（headerRow = 2） */
+get headerRow2Columns() {
+  return this.visibleCols.filter(c => c.headerRow === 2);
+}
+
+
+/** 是否需要兩列表頭：只要有任一個 row2 欄位就需要；或你也可強制兩列 */
+get hasTwoHeaderRows(): boolean {
+  return this.headerRow2Columns.length > 0;
+}
+
+
 }
