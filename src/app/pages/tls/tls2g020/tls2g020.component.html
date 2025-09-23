@@ -49,7 +49,6 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
   <div class="col-12">
     <app-table
@@ -63,12 +62,13 @@
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
       dataKey="id"
-      [data]="data7"
-      [columns]="columns7"
-      expansionDataKey="details"
-      [expansionColumns]="expansionColumns7"
+      [data]="data"
+      [columns]="columns"
+      (rowExpand)="onRowExpand($event)"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
+      expansionDataKey="Mdeatil"
+      [expansionColumns]="expansionColumns"
     ></app-table>
   </div>
 </div>

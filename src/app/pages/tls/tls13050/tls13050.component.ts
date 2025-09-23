@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Tls13050Service } from '../../../service/api/tls/tls13050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -40,7 +40,7 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     tlt_edate_end: [(new Date()), [Validators.required]],
     check_day_start: [null],
     check_day_end: [null],
-    Building_No:  [[]],
+    Building_No: [[]],
     org_idList: [[]],
     ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
   });
@@ -62,13 +62,13 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'cag_bdate', header: '起始日期', visible: true },
     { field: 'cag_edate', header: '結束日期', visible: true },
-    { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true },
-    { field: 'limit_amt', header: '(B)年度包底金額', visible: true },
-    { field: 'finishedrate', header: '(A-B)累積差額', visible: true },
+    { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true, format: formatAmount },
+    { field: 'limit_amt', header: '(B)年度包底金額', visible: true, format: formatAmount },
+    { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount },
     { field: 'commissionRate', header: '抽成率', visible: true },
-    { field: 'underLimitCommission', header: '包底不足抽成額(含稅)', visible: true },
-    { field: 'completionRate', header: '年度包底營業額完成率', visible: true },
-    { field: 'check_day', header: '月結天數', visible: true },
+    { field: 'underLimitCommission', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount },
+    { field: 'completionRate', header: '年度包底營業額完成率', visible: true},
+    { field: 'check_day', header: '月結天數', visible: true},
   ];
   buildingNoOptions: IDropdownItem[] = [];
 
@@ -90,17 +90,17 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     this.locationOptionsService.getFloorOptions().subscribe({
       next: (res) => this.floorOptions = res,
     });
-     // 館別
-        this.dropDownListService.querySYS3800_DropDownList()
-          .pipe(untilDestroyed(this))
-          .subscribe(res => {
-            this.buildingNoOptions = res.Data.map(x => ({
-              label: x.Name,
-              value: x.No,
-              Name: x.Name,
-              No: x.No
-            }));
-          });
+    // 館別
+    this.dropDownListService.querySYS3800_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.buildingNoOptions = res.Data.map(x => ({
+          label: x.Name,
+          value: x.No,
+          Name: x.Name,
+          No: x.No
+        }));
+      });
     // 組織代碼/名稱
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
@@ -111,6 +111,21 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
           value: item.No
         }));
       });
+    const startCtrl = this.queryForm.get('check_day_start');
+    const endCtrl = this.queryForm.get('check_day_end');
+
+    startCtrl?.disable();
+
+    // 當「迄」有值時，才開放「起」
+    endCtrl?.valueChanges.subscribe(val => {
+      if (val) {
+        startCtrl?.enable();
+      } else {
+        startCtrl?.setValue(null, { emitEvent: false });
+        startCtrl?.disable();
+      }
+    });
+
   }
 
   onSubmit(form: any): void {

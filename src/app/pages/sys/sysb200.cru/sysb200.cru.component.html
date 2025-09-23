@@ -78,7 +78,7 @@
       </div>
 
       <div class="grid p-fluid">
-        <div class="col-12">
+        <div class="col-12  mt-5">
           <h5>公 司 資 料</h5>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -208,6 +208,7 @@
           [showRowEdit]="!isReadonly"
           (selectionChange)="selectedRows = $event"
           [deleteData]="!isReadonly"
+           (dataChange)="onDataChange($event)"
           [selectedItems]="selectedRows"
           [showCaption]="!isFormReadable"
           [showManage]="!isReadonly"

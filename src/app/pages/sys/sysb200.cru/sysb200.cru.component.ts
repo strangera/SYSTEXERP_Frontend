@@ -20,6 +20,19 @@ import { NgIf, AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+function safeValidator(
+  validator: (value: any, ...args: any[]) => { isValid: boolean; errorMessage: string[] }
+) {
+  return (value: any, rowData: any, data: any[], field: string, header: string) => {
+    if (value == null) {
+      return { isValid: true, errorMessage: [] }; // 空值直接過
+    }
+    return validator(value, rowData, data, field, header); // 交給共通處理
+  };
+}
+
+
+
 
 @Component({
   selector: 'app-sysb200-cru',
@@ -28,7 +41,9 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule, InputNumberComponent]
 })
+
 export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> implements OnInit {
+
   dataForm = this.formBuilder.nonNullable.group({
     // 基本資料
     VEN_No: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(14)]],
@@ -68,13 +83,14 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   isReadonly = false;
 
   columns: Column[] = [
-    { field: 'VEN_Boss', header: '聯絡人', type: 'input', validate: [validateMaxLength(12)] },
-    { field: 'VEN_BossTitle', header: '職稱', type: 'input', validate: [validateMaxLength(16)] },
-    { field: 'VEN_BossID', header: '身份證字號', type: 'input', validate: [validateMaxLength(10), validateNoChinese()] },
-    { field: 'VEN_BossTel', header: '電話', type: 'input', validate: [validateMaxLength(15), validateNoChinese()] },
-    { field: 'VEN_BossAddr', header: '地址', type: 'input', validate: [validateMaxLength(100)] },
-    { field: 'VEN_BossEmail', header: '電子郵件', type: 'input', validate: [validateMaxLength(60), validateNoChinese()] },
+    { field: 'VEN_Boss', header: '聯絡人', type: 'input', validate: [safeValidator(validateMaxLength(12))] },
+    { field: 'VEN_BossTitle', header: '職稱', type: 'input', validate: [safeValidator(validateMaxLength(16))] },
+    { field: 'VEN_BossID', header: '身份證字號', type: 'input', validate: [safeValidator(validateMaxLength(10)), safeValidator(validateNoChinese())] },
+    { field: 'VEN_BossTel', header: '電話', type: 'input', validate: [safeValidator(validateMaxLength(15)), safeValidator(validateNoChinese())] },
+    { field: 'VEN_BossAddr', header: '地址', type: 'input', validate: [safeValidator(validateMaxLength(100))] },
+    { field: 'VEN_BossEmail', header: '電子郵件', type: 'input', validate: [safeValidator(validateMaxLength(60)), safeValidator(validateNoChinese())] },
   ];
+
 
   venderOptions: { label: string; value: string }[] = [];
 
@@ -197,8 +213,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-
-    });
     console.log("表單 valid 狀態：", form.valid);
     if (!form.valid) {
       this.messageService.warnBubble("請確認所有必填欄位皆已正確填寫");
@@ -206,6 +220,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     }
 
     this.loading = true;
+    });
+
 
     // 處理 VEN_Uniform
     const flag = form.get('VEN_Flag')?.value;
@@ -215,11 +231,12 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     if (flag === '1') {
       const regex = /^[0-9]{8}$/;
       if (!regex.test(uniformTrimmed)) {
-        this.messageService.warnBubble("統一編號格式錯誤，需為 8 碼數字");
+        this.messageService.warnBubble("統一編號格式錯誤（需為 8 碼數字）");
         this.loading = false;
         return;
       }
     }
+
 
     if (flag === '2') {
       const regex = /^[A-Z]{1}[0-9]{9}$/i;
@@ -262,8 +279,9 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
         VEN_BossTel: item.VEN_BossTel,
         VEN_BossAddr: item.VEN_BossAddr,
         VEN_BossEmail: item.VEN_BossEmail,
-        id: item.id ?? 0
+        id: typeof item.id === 'number' ? item.id : 0
       }))
+
     };
 
     // 呼叫 API
@@ -288,5 +306,10 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
         }
       });
   }
+  onDataChange(event: any) {
+    console.log('dataChange 觸發', event);
+    this.contacts = event;
+  }
+
 
 }
