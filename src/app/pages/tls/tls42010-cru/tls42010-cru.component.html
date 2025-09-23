@@ -222,17 +222,16 @@
               </div>
             </div>
             <div class="col-12" *ngIf="selectedTab === 'font'">
-              <label>字型樣式</label>
+              <label for="KB_Fonttyped">字型樣式</label>
               <div class="flex flex-row gap-3">
                 <p-checkbox
                   *ngFor="let opt of KB_FonttypedOptions"
                   [binary]="true"
                   [inputId]="'ft-' + opt.index"
                   [label]="opt.label"
-                  [ngModel]="
-                    getControl('KB_Fonttyped').value[opt.index] === 'Y'
-                  "
+                  [ngModel]="getControl('KB_Fonttyped').value[opt.index] === 'Y'"
                   (onChange)="toggleFonttyped(opt.index, $event.checked)"
+                  [ngModelOptions]="{ standalone: true }"
                 ></p-checkbox>
               </div>
             </div>

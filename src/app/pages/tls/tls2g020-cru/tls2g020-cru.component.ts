@@ -14,6 +14,8 @@ import { TableModule } from 'primeng/table';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { NgIf, NgFor } from '@angular/common';
+import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
+
 import { InputNumberModule } from 'primeng/inputnumber';
 @Component({
   selector: 'app-tls2g020-cru',
@@ -47,8 +49,10 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   leftLabels: string[] = ['預算別', '日期', '實際預算', '抽成率', '抽成額'];
 
   dataForm = this.formBuilder.nonNullable.group({
-    budget_yymm: [{ value: null, disabled: true }],
-    tlt_no_tlt_name: [{ value: null, disabled: true }],
+    dateYearOne: [null],
+    budget_yy: [{ value: null, disabled: true }],
+    tlt_no: [{ value: null, disabled: true }],
+    tlt_name: [{ value: null, disabled: true }],
     BUDGET_Mbudget: [{ value: null, disabled: true }],
     cag_charge_rate: [{ value: null, disabled: true }],
     charge_amt: [{ value: null, disabled: true }],
@@ -57,7 +61,7 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   tltNoOptions: IDropdownItem[] = [];
 
   data: any[] = Array.from({ length: 12 }, (_, i) => ({
-    budget_yymm: `${i + 1}月`,
+    budget_yy: `${i + 1}月`,
     budget: null,
     cag_charge_rate: null,
     charge_amt: null
@@ -72,12 +76,25 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private route: ActivatedRoute,
     private dropDownListService: DropDownListService,
+    private tls2g020Service: Tls2g020Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2G020', this.dataForm);
+    const stateRaw = history.state.raw;
+    if (stateRaw) {
+      // 表單帶值
+      this.dataForm.patchValue({
+        budget_yy: stateRaw.budget_yy,
+        tlt_no: stateRaw.tlt_no,
+        tlt_name: stateRaw.tlt_name,
+        // 其他共通欄位...
+      });
+      // this.details = stateRaw.Mdeatil ?? [];
+    }
+
     const year = 2024;
     const month = 9; // 9月 (注意：JS 月份 0=1月, 所以這裡放 9 表示 10 月)
 
@@ -161,9 +178,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     this.editMode = 'month';
     this.currentMonthData = null;
   }
+
   onSubmit(frm: FormGroup): void {
-    if (frm.valid) {
-      // Handle form submission
-    }
+
   }
 }
