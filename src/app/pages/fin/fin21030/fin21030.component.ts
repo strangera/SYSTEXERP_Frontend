@@ -1,17 +1,6 @@
-import { ApprovalStatusService } from './../../../service/basic/approval-status.service';
-import { SystemTypeService } from './../../../service/basic/system-type.service';
-import { PaymentMethodService } from './../../../service/basic/payment-method.service';
-import { WhetherService } from './../../../service/basic/whether.service';
-import { PostageChargeService } from './../../../service/basic/postage-charge.service';
+
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
@@ -20,7 +9,9 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+
 
 //1.2.1.3 廠客資料維護
 @Component({
@@ -28,10 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
     templateUrl: './fin21030.component.html',
     styleUrl: './fin21030.component.scss',
     standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+    imports: [MenubarComponent, DropdownComponent,
+     AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class FIN21030Component extends BasicQpageComponent implements OnInit {
-  //
+
+export class FIN21030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     vendorCode: [, [Validators.maxLength(14)]], // 廠客代號
     vendorName: ['', [Validators.maxLength(64)]], // 廠客名稱
@@ -40,9 +32,9 @@ export class FIN21030Component extends BasicQpageComponent implements OnInit {
     postAddress: ['', [Validators.maxLength(100)]], // 郵寄地址
     contactPerson: ['', [Validators.maxLength(20)]], // 聯絡人
     phone: ['', [Validators.maxLength(20)]], // 電話
-    fax: [, [Validators.maxLength(20)]], // 	傳真
-    uId: [, [Validators.maxLength(10)]], // 統一編號
-    postBelong: [[] as number[]], // 郵電費負擔
+    fax: ['', [Validators.maxLength(20)]], // 	傳真
+    uId: ['', [Validators.maxLength(10)]], // 統一編號
+    VEN_RemitFeeMode: ['', Validators.required],
     payoutVendor: [[] as number[]], // 貼現廠商
     noTransfer: [[] as number[]], // 禁止背書轉讓
     paymentMethod: [[] as number[]], // 付款方式
@@ -52,22 +44,24 @@ export class FIN21030Component extends BasicQpageComponent implements OnInit {
     payoutLimit: [, [Validators.maxLength(3)]], // 付款期限
     ticketTitle: ['', [Validators.maxLength(20)]], // 票據抬頭
     systemType: [[] as number[]], // 系統別
-    status: [[] as number[]], // 審核狀態
+    VEN_Status: [[] as number[]], // 審核狀態
   });
-  // 下拉資料多個呈現
+  data: any[] = [];
+  totalRecords = 0;
   // ----------------------------------------------------------------
   roles: any[] = [
     { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
     { id: 2, roleCode: 'USER', roleName: 'User' },
     { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
+    remitFeeOptions = [
+    { value: '1', label: '廠商負擔' },
+    { value: '2', label: '公司負擔' }
+  ];
+  // ====== Table / Options ======
+  approvalOptions: { label: string; value: string }[] = [
+    { label: '未審核', value: '0' },
+    { label: '已審核', value: '1' },
   ];
   columns: any[] = [
     { field: 'col1', header: '廠客代號', visible: true },
@@ -94,123 +88,24 @@ export class FIN21030Component extends BasicQpageComponent implements OnInit {
   statusOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private postageChargeService: PostageChargeService,
-    private whetherService: WhetherService,
-    private paymentMethodService: PaymentMethodService,
-    private systemTypeService: SystemTypeService,
-    private approvalStatusService: ApprovalStatusService,
+
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120003';
-    this.cruPage = '/FIN2000/FIN21030CRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.postageChargeService.getSystemTypes().subscribe(data => {
-      this.postBelongOptions = data;
+    this.initializePage('FIN21030', 'fin/fin21030cru', this.queryForm, form => this.onSubmit(form));
 
-      // 全選填入
-      // let allSystemValues = this.postBelongOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   postBelong: allSystemValues
-      // });
-    });
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   payoutVendor: allSystemValues,
-      //   noTransfer: allSystemValues
-      // });
-    });
-    //
-    this.paymentMethodService.getSystemTypes().subscribe(data => {
-      this.paymentMethodOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.paymentMethodOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   paymentMethod: allSystemValues
-      // });
-    });
-    //
-    this.systemTypeService.getSystemTypes().subscribe(data => {
-      this.systemTypeOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.systemTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   systemType: allSystemValues
-      // });
-    });
-    //
-    this.approvalStatusService.getSystemTypes().subscribe(data => {
-      this.statusOptions = data;
-      // 全選填入
-      // let allSystemValues = this.statusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   status: allSystemValues
-      // });
-    });
-    // ----------------------------------------------------------------
   }
-
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
 
     this.loading = false;
     this.messageService.unblockUi();
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
 }

@@ -78,11 +78,10 @@
       </div>
 
       <div class="grid p-fluid">
-        <div class="col-12 mt-5">
+        <div class="col-12">
           <h5>公 司 資 料</h5>
         </div>
-        <div class="col-12 flex flex-row gap-4">
-          <div class="flex-1">
+        <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="公司登記地址"
               controlName="VEN_Address"
@@ -91,7 +90,7 @@
             ></app-input-text>
           </div>
 
-          <div class="flex-1">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商發票地址"
               controlName="VEN_GUIAddr"
@@ -100,7 +99,7 @@
             ></app-input-text>
           </div>
 
-          <div class="flex-none" style="align-self: flex-end">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-button
               label="同公司登記地址"
               icon="pi pi-plus"
@@ -108,7 +107,7 @@
               (clickEvent)="copyAddress()"
             ></app-button>
           </div>
-        </div>
+
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -143,7 +142,6 @@
           ></app-input-text>
         </div>
       </div>
-
       <div class="grid p-fluid">
         <div class="col-12 mt-5">
           <h5>付 款 資 料</h5>
@@ -250,7 +248,7 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
   </p-panel>
