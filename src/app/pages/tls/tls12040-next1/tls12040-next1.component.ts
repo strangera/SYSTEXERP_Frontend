@@ -742,9 +742,69 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 重新載入資料
   reloadData(): void {
     if (confirm('確定要重新載入資料嗎？未儲存的變更將會遺失。')) {
-      this.loadFareDataFromAPI();
+      console.log('重新載入資料，當前模式:', this.crudstatus);
+
+      // 🆕 根據模式決定載入方式
+      if (this.isCreateMode) {
+        console.log('新增模式：重新載入預設扣款項目');
+        // 新增模式下，應該載入預設扣款項目範本
+        this.loadDefaultFareItems();
+      } else {
+        // 編輯/檢視模式，載入該申請的扣款資料
+        this.loadFareDataFromAPI();
+      }
+
       this.messageService.infoBubble('已重新載入資料');
     }
+  }
+
+  private loadDefaultFareItems(): void {
+    console.log('載入預設扣款項目範本...');
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    // 新增模式下的 API 查詢參數（不帶 apply_no）
+    const queryParams = {
+      showAll: true,
+      loadDefaults: true  // 或其他 API 需要的參數來表示要載入預設項目
+    };
+
+    console.log('載入預設範本的 API 查詢參數:', queryParams);
+
+    const subscription = this.tls12040Service.queryTLS12040Fare(queryParams).subscribe({
+      next: (response) => {
+        console.log('API 回傳預設扣款範本:', response);
+
+        try {
+          if (response?.Data?.FaresByType) {
+            this.processAPIData(response.Data.FaresByType);
+            console.log('預設扣款範本處理完成');
+            this.saveFareDataToWorkflow();
+          } else {
+            console.log('API 沒有回傳預設扣款範本，初始化空資料');
+            this.initializeEmptyData();
+          }
+        } catch (error) {
+          console.error('處理預設扣款範本時發生錯誤:', error);
+          this.messageService.warnBubble('處理扣款資料時發生錯誤');
+          this.initializeEmptyData();
+        }
+
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.verifyDataIntegrity();
+      },
+      error: (error) => {
+        console.error('載入預設扣款範本失敗:', error);
+        this.messageService.warnBubble('載入預設扣款項目失敗，請稍後重試');
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.initializeEmptyData();
+      }
+    });
+
+    this.subscriptions.push(subscription);
   }
 
   // 除錯用
