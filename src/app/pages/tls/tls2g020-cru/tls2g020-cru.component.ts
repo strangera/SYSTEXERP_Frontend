@@ -49,7 +49,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
 
   dataForm = this.formBuilder.nonNullable.group({
     budget_yymm: [null],
-    budget_yy: [{ value: null, disabled: true }],
+    budget_mm: [{ value: null as string | null, disabled: true }],
+    budget_yy: [{ value: null as string | null, disabled: true }],
     tlt_no: [{ value: null, disabled: true }],
     tlt_name: [{ value: null, disabled: true }],
     BUDGET_Mbudget: [{ value: null, disabled: true }],
@@ -90,8 +91,10 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
         budget_yy: this.rowdata.budget_yy,
         tlt_no: this.rowdata.tlt_no,
         tlt_name: this.rowdata.tlt_name,
+        talent_id: this.rowdata.talent_id
       });
     }
+
 
 
     // 下拉選單
@@ -109,7 +112,6 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
-  /** 切換到日畫面編輯 */
   onMonthEdit(row: any): void {
     this.editMode = 'day';
     this.currentMonthData = row;
@@ -121,38 +123,45 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
 
     const month = Number(row.Month?.slice(-2)) || 1;
 
-    const payload = {
-      talent_id: row.talent_id ?? 0,
-      budget_yymm: `${year}${month.toString().padStart(2, '0')}`,
-    };
+    // 更新表單月份
+    this.dataForm.patchValue({
+      budget_mm: month.toString().padStart(2, '0')
+    });
 
+    const payload = {
+      talent_id: this.dataForm.controls['talent_id'].value,
+      budget_yymm: `${year}${month.toString().padStart(2, '0')}`
+    };
 
     this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
       next: (res) => {
-        const apiData = res?.Data?.[0]?.Data || [];
+        const apiData = res?.Data || [];
 
-        // 把每日資料轉成 currentMonthData.days
+        // 初始化 days
         this.currentMonthData.days = {};
+
         apiData.forEach((d: any) => {
-          const day = new Date(d.budget_date).getDate(); // 從日期取日
+          const day = new Date(d.budget_date).getDate();
           this.currentMonthData.days[day] = {
-            budget: d.budget || 0,
-            rate: 0, // 後端沒給，先補 0
+            budget: d.budget ?? 0,
+            rate: 0,
             commission: 0
           };
         });
 
-        // 繪製月曆表格
+
         this.generateCalendar(year, month);
       },
     });
+
   }
 
-
   private generateCalendar(year: number, month: number) {
+    // 計算當月天數
     const days = new Date(year, month, 0).getDate();
     this.daysInMonth = Array.from({ length: days }, (_, i) => i + 1);
 
+    // 計算第一天是星期幾，生成週陣列
     const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
     const weeks: (number | null)[][] = [];
     let week: (number | null)[] = new Array(firstDayOfWeek).fill(null);
@@ -170,14 +179,21 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     }
     this.weeks = weeks;
 
-    // 初始化缺失的天
-    if (!this.currentMonthData.days) this.currentMonthData.days = {};
+    // 初始化缺失的天：只補沒有 API 資料的日期
+    if (!this.currentMonthData.days) {
+      this.currentMonthData.days = {};
+    }
     for (let d = 1; d <= days; d++) {
       if (!this.currentMonthData.days[d]) {
-        this.currentMonthData.days[d] = { budget: 0, rate: 0, commission: 0 };
+        this.currentMonthData.days[d] = {
+          budget: 0,
+          rate: 0,
+          commission: 0
+        };
       }
     }
   }
+
 
 
   /** 當月回日編輯 */

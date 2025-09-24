@@ -4,7 +4,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -27,7 +26,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
-    CalendarRangeComponent,
     DropdownModule,
     ButtonComponent,
     TableComponent,
@@ -41,9 +39,8 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     POS_TypeList: [['']],
     VOU_CheckList: [null],
-    salesDate: [null as Date | null, { disabled: true }],
-    TXN_DateStart: [null as Date | null],
-    TXN_DateEnd: [null as Date | null],
+    salesDate: [new Date() as Date | null],
+    TXN_Date: [new Date() as Date | null],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
@@ -119,44 +116,57 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
       if (val instanceof Date) {
         const year = val.getFullYear();
         const month = val.getMonth();
+
         this.salesMinDate = new Date(year, month, 1);
         this.salesMaxDate = new Date(year, month + 1, 0);
 
         this.queryForm.patchValue({
-          TXN_DateStart: this.salesMinDate,
-          TXN_DateEnd: this.salesMaxDate,
-        });
-        setTimeout(() => {
-          this.queryForm.patchValue({
-            TXN_DateStart: this.salesMinDate,
-            TXN_DateEnd: this.salesMaxDate,
-          });
-        });
+          TXN_Date: this.salesMinDate
+        }, { emitEvent: false }); // 避免死循環
       }
     });
-    this.queryForm.patchValue({ salesDate: new Date() });
-  }
 
+
+    // 預設當月
+    const today = new Date();
+    this.queryForm.patchValue({ salesDate: today, TXN_Date: today });
+    this.salesMinDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.salesMaxDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  }
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
-      console.log(raw.TXN_DateStart?.toISOString().split('T'));
+
       const payload = {
-        ...raw,
-        TXN_DateStart: raw.TXN_DateStart
-          ? `${raw.TXN_DateStart.getFullYear()}-${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
+        PageSize: raw.PageSize ?? 20,
+        PageIndex: raw.PageIndex ?? 1,
+        OrderBy: raw.OrderBy ?? '',
+        Offset: raw.Offset ?? 0,
+        SortBy: raw.SortBy ?? [],
+
+        // 只送 TXN_Date，格式 yyyy-MM-dd
+        TXN_Date: raw.TXN_Date
+          ? `${raw.TXN_Date.getFullYear()}-${(raw.TXN_Date.getMonth() + 1)
+            .toString()
+            .padStart(2, '0')}-${raw.TXN_Date.getDate()
+              .toString()
+              .padStart(2, '0')}`
           : null,
-        TXN_DateEnd: raw.TXN_DateEnd
-          ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
-          : null,
+
+        POS_TypeList: raw.POS_TypeList ?? [],
+        VOU_CheckList: raw.VOU_CheckList ?? []
       };
+
+      console.log('送出 payload:', payload);
 
       this.tls22050Service.queryTLS22050(payload).subscribe({
         next: (res: { Data: any[]; TotalCount: number }) => {
           this.data = (res.Data ?? []).flatMap((group: any) =>
-            (group._DetailList ?? []).map((detail: any) => ({ PAY_Name: group.PAY_Name, ...detail }))
+            (group._DetailList ?? []).map((detail: any) => ({
+              PAY_Name: group.PAY_Name,
+              ...detail,
+            }))
           );
-
           this.filteredData = [...this.data];
           this.totalRecords = res.TotalCount ?? this.data.length;
           this.loading = false;
@@ -176,11 +186,8 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
       ReportTitle: "string",
       queryTLS22050Request: {
         ...raw,
-        TXN_DateStart: raw.TXN_DateStart
-          ? `${raw.TXN_DateStart.getFullYear()}-${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
-          : null,
-        TXN_DateEnd: raw.TXN_DateEnd
-          ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
+        TXN_Date: raw.TXN_Date
+          ? `${raw.TXN_Date.getFullYear()}-${(raw.TXN_Date.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_Date.getDate().toString().padStart(2, '0')}`
           : null,
       },
     }

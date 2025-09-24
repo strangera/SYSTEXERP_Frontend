@@ -24,13 +24,14 @@
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
+            <app-calendar
+              calendarType="dateOne"
               label="查詢日期"
-              [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd"
+              [control]="queryForm.controls.TXN_Date"
+              [minDate]="salesMinDate"
+              [maxDate]="salesMaxDate"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label for="status1">POS類型</label>

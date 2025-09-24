@@ -16,6 +16,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service'; // ★ 引入 Service
 import { DropDownListService, IDropdownItem, IAPS1003Request } from './../../../service/utility/dropDownList.service';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { format } from 'crypto-js';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -72,7 +73,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         return `${yyyy}-${mm}-${dd}`;
       }
     },
-    { field: 'GUI_FLAG', header: '是否開立發票', visible: true },
+    { field: 'GUI_FLAG', header: '是否開立發票', visible: true ,format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : ''},
     { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount },
     { field: 'remarks', header: '備註', visible: true },
   ];

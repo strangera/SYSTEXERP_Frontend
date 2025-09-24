@@ -97,6 +97,11 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         this.data = (res?.Data || []).map((item: any) => ({
           ...item,
+          Mdeatil: (item.Mdeatil || []).map((m: any) => ({
+            ...m,
+            talent_id: item.talent_id,
+            budget_yy: item.budget_yy
+          }))
         }));
         this.totalRecords = res?.TotalCount || 0;
       },
@@ -109,12 +114,11 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
 
 
 
-  // 展開行時查明細
   onRowExpand(event: any) {
     const row = event.data;
     const payload = {
-      budget_yy: row.budget_yy,
-      tlt_no: [row.tlt_no]
+      talent_id: row.talent_id,
+      budget_yymm: row.Month
     };
 
     this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
@@ -123,6 +127,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       },
     });
   }
+
 
   onClearForm() {
     this.queryForm.reset();
