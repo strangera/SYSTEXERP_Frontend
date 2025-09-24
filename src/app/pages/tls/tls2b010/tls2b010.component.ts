@@ -32,6 +32,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { ReimbursementYypeService } from './../../../service/basic/reimbursement-yype.service';
+import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-table/tls2b010table.component';
 
 
 
@@ -51,13 +52,14 @@ import { ReimbursementYypeService } from './../../../service/basic/reimbursement
     MultiSelectComponent,
     RadiobuttonComponent,
     ButtonComponent,
-    TableComponent,
+    // TableComponent,
     TableModule, // ✅ PrimeNG 原生 p-table 用於簡表
     ButtonModule, // ✅ row expansion toggle 按鈕
     TranslateModule,
     ReportTableGroupComponent,
     DatePipe,
     NgIf,
+   tls2b010tableComponent,
 
 
   ],

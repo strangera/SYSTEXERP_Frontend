@@ -7,7 +7,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { NgIf } from '@angular/common';
 import { Button } from 'primeng/button';
 
-export interface TableExport2 {
+export interface TLS2B010TableExport {
   print_reportTitle?: string;
   print_reportTitle_per_page?: string;
   print_eject?: string;
@@ -21,19 +21,19 @@ export interface TableExport2 {
 }
 
 @Component({
-    selector: 'app-table-export2',
-    templateUrl: './table-export2.component.html',
-    styleUrl: './table-export2.component.scss',
+    selector: 'app-tls2b010table-export',
+    templateUrl: './tls2b010table-export.component.html',
+    styleUrl: './tls2b010table-export.component.scss',
     standalone: true,
     imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
 })
-export class TableExport2Component implements OnInit, OnDestroy {
+export class TLS2B010TableExportComponent implements OnInit, OnDestroy {
   @Input() visible = true;
   @Input() header = 'header';
   @Input() disable = false;
   @Input() exportStatus: 'PDF' | 'Excel' = 'PDF';
   @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() save = new EventEmitter<TableExport2>();
+  @Output() save = new EventEmitter<TLS2B010TableExport>();
 
   private destroy$ = new Subject<void>();
 
@@ -125,7 +125,7 @@ export class TableExport2Component implements OnInit, OnDestroy {
       this.form.markAllAsTouched();
       return;
     }
-    const tableExportData: TableExport2 = {
+    const tableExportData: TLS2B010TableExport = {
       print_reportTitle: this.form.value.print_reportTitle || 'Y',
       print_reportTitle_per_page: this.form.value.print_reportTitle_per_page || 'N',
       print_eject: this.form.value.print_eject || 'Y',
