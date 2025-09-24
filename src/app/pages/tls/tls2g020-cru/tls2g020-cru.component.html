@@ -39,138 +39,144 @@
           ></app-input-text>
         </div>
       </div>
+
+      <hr class="my-4" />
+
+      <div class="grid p-fluid my-4" *ngIf="editMode === 'day'">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="預估營業額"
+            controlName="budget"
+            [control]="dataForm.controls.budget"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+
+      <ng-container *ngIf="editMode === 'month'">
+        <app-table
+          tableKey="TLS2G020Details"
+          [data]="data"
+          [columns]="columns"
+          (edit)="onMonthEdit($event)"
+          [loading]="loading"
+          [showCheckBox]="false"
+          [showDetail]="false"
+          [showCaption]="false"
+        ></app-table>
+      </ng-container>
+
+      <ng-container *ngIf="editMode === 'day'">
+        <p-table
+          [value]="weeks"
+          class="calendar-table p-datatable"
+          [tableStyle]="{
+            'border-collapse': 'collapse',
+            width: '100%',
+            'table-layout': 'fixed',
+          }"
+        >
+          <!-- 表頭 -->
+          <ng-template pTemplate="header">
+            <tr class="calendar-header-row">
+              <th class="sticky-col sticky-header">項目</th>
+              <th
+                class="sticky-header"
+                *ngFor="let w of ['日', '一', '二', '三', '四', '五', '六']"
+              >
+                {{ w }}
+              </th>
+            </tr>
+          </ng-template>
+
+          <!-- 內容 -->
+          <ng-template pTemplate="body" let-week>
+            <!-- 日期 -->
+            <tr class="row-date">
+              <td class="sticky-col">日期</td>
+              <td *ngFor="let day of week">
+                <span *ngIf="day">{{ day }}</span>
+              </td>
+            </tr>
+
+            <!-- 實際預算（可編輯） -->
+            <tr class="row-budget">
+              <td class="sticky-col">實際預算</td>
+              <td *ngFor="let day of week">
+                <ng-container *ngIf="day && currentMonthData?.days?.[day]">
+                  <p-inputNumber
+                    type="number"
+                    class="num-input w-full"
+                    inputStyleClass="w-full p-1"
+                    [(ngModel)]="currentMonthData.days[day].budget"
+                    [disabled]="currentMonthData.days[day]?.disabled"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="onBudgetChange(day)"
+                  ></p-inputNumber>
+                </ng-container>
+              </td>
+            </tr>
+
+            <!-- 抽成率 -->
+            <tr class="row-rate">
+              <td class="sticky-col">抽成率</td>
+              <td *ngFor="let day of week">
+                <span
+                  *ngIf="day && currentMonthData?.days?.[day]"
+                  class="text-center"
+                >
+                  {{ currentMonthData.days[day].rate }}
+                </span>
+              </td>
+            </tr>
+
+            <!-- 抽成額 -->
+            <tr class="row-commission week-separator">
+              <td class="sticky-col">抽成額</td>
+              <td *ngFor="let day of week">
+                <span
+                  *ngIf="day && currentMonthData?.days?.[day]"
+                  class="text-center"
+                >
+                  {{ currentMonthData.days[day].commission }}
+                </span>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </ng-container>
+
+      <div class="grid p-fluid my-4" *ngIf="editMode === 'day'">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="本月預算營業額合計"
+            controlName="BUDGET_Mbudget"
+            [control]="dataForm.controls.BUDGET_Mbudget"
+            [submitted]="submitted"
+            [useGrouping]="true"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="本月平均抽成率"
+            controlName="avg_cag_charge_rate"
+            [control]="dataForm.controls.avg_cag_charge_rate"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="本月抽成額合計"
+            controlName="charge_amt"
+            [control]="dataForm.controls.charge_amt"
+            [submitted]="submitted"
+          />
+        </div>
+      </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
     </form>
-
-    <hr class="my-4" />
-
-    <div class="grid p-fluid my-4" *ngIf="editMode === 'day'">
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text
-          label="預估營業額"
-          controlName="BUDGET_Mbudget"
-          [control]="dataForm.controls.BUDGET_Mbudget"
-          [submitted]="submitted"
-        ></app-input-text>
-      </div>
-    </div>
-
-    <ng-container *ngIf="editMode === 'month'">
-      <app-table
-        tableKey="TLS2G020Details"
-        [data]="data"
-        [columns]="columns"
-        (edit)="onMonthEdit($event)"
-        [loading]="loading"
-        [showCheckBox]="false"
-        [showDetail]="false"
-        [showCaption]="false"
-      ></app-table>
-    </ng-container>
-
-    <ng-container *ngIf="editMode === 'day'">
-      <p-table
-        [value]="weeks"
-        class="calendar-table p-datatable"
-        [tableStyle]="{
-          'border-collapse': 'collapse',
-          width: '100%',
-          'table-layout': 'fixed',
-        }"
-      >
-        <!-- 表頭 -->
-        <ng-template pTemplate="header">
-          <tr class="calendar-header-row">
-            <th class="sticky-col sticky-header">項目</th>
-            <th
-              class="sticky-header"
-              *ngFor="let w of ['日', '一', '二', '三', '四', '五', '六']"
-            >
-              {{ w }}
-            </th>
-          </tr>
-        </ng-template>
-
-        <!-- 內容 -->
-        <ng-template pTemplate="body" let-week>
-          <!-- 日期 -->
-          <tr class="row-date">
-            <td class="sticky-col">日期</td>
-            <td *ngFor="let day of week">
-              <span *ngIf="day">{{ day }}</span>
-            </td>
-          </tr>
-
-          <!-- 實際預算（可編輯） -->
-          <tr class="row-budget">
-            <td class="sticky-col">實際預算</td>
-            <td *ngFor="let day of week">
-              <p-inputNumber
-                *ngIf="day"
-                type="number"
-                class="num-input w-full"
-                inputStyleClass="w-full p-1"
-                [(ngModel)]="currentMonthData.days[day].budget"
-                (ngModelChange)="onBudgetChange(day)"
-                [disabled]="false"
-              ></p-inputNumber>
-            </td>
-          </tr>
-
-          <!-- 抽成率（只顯示） -->
-          <tr class="row-rate">
-            <td class="sticky-col">抽成率</td>
-            <td *ngFor="let day of week">
-              <span *ngIf="day" class="text-center">
-                {{ currentMonthData.days[day].rate }}
-              </span>
-            </td>
-          </tr>
-
-          <!-- 抽成額（只顯示） -->
-          <tr class="row-commission week-separator">
-            <td class="sticky-col">抽成額</td>
-            <td *ngFor="let day of week">
-              <span *ngIf="day" class="text-center">
-                {{ currentMonthData.days[day].commission }}
-              </span>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </ng-container>
-
-    <div class="grid p-fluid my-4" *ngIf="editMode === 'day'">
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text
-          label="本月預算營業額合計"
-          controlName="BUDGET_Mbudget"
-          [control]="dataForm.controls.BUDGET_Mbudget"
-          [submitted]="submitted"
-        ></app-input-text>
-      </div>
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text
-          label="本月平均抽成率"
-          controlName="TLT_NoList"
-          [control]="dataForm.controls.cag_charge_rate"
-          [submitted]="submitted"
-        />
-      </div>
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text
-          label="本月抽成額合計"
-          controlName="charge_amt"
-          [control]="dataForm.controls.charge_amt"
-          [submitted]="submitted"
-        />
-      </div>
-    </div>
   </p-panel>
-  <!-- 底部按鈕 -->
-  <div
-    class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-  >
-    <app-button btnType="cancel" [form]="dataForm"></app-button>
-    <app-button btnType="submit" [loading]="loading"></app-button>
-  </div>
 </div>
