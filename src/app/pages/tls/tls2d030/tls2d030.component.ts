@@ -1,16 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -18,157 +7,58 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { AsyncPipe } from '@angular/common';
+import { Tls2d030Service } from '@service/api/tls/tls2d030.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 // 2.2.13.3 專櫃代扣款結算作業
 @Component({
-    selector: 'app-tls2d030',
-    templateUrl: './tls2d030.component.html',
-    styleUrl: './tls2d030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2d030',
+  templateUrl: './tls2d030.component.html',
+  standalone: true,
+  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TableComponent, TranslateModule]
 })
-export class TLS2D030Component {
-  ProgNo: string = '220065';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    onedatemm: [, [Validators.required]], // 試算年月
-    caluculateMethod: [, [Validators.required]], // 結算方式
-    counterID: [], // 專櫃編號
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+export class TLS2D030Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    sam_yyymm: [null, [Validators.required]], // 試算年月
+    money_type: [null, [Validators.required]], // 試算方式
+    tlt_no: [null], // 專櫃編號
+    floor_no: [null],
+    ...createPaginationConfig([{ field: 'TLT_NO', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '結算年月', visible: true },
-    { field: 'contactDate', header: '結帳方式', visible: true },
-    { field: 'UID', header: '帳次', visible: true },
+  money_typeOptions = getSYS1000Options('money_type')
+  tlt_noOptions = this.dropdown.queryTltTalent();
+  totalRecords = 0;
+  data: any[] = [];
+  columns: Column[] = [
+    { field: 'sam_yyymm', header: '結算年月', visible: true },
+    { field: 'money_type', header: '結帳方式', visible: true },
+    { field: 'term_no', header: '帳次', visible: true },
     { field: 'industryType', header: '費用型態', visible: true },
     { field: 'category', header: '關帳時間', visible: true },
     { field: 'version', header: '關帳時間', visible: true },
     { field: 'rentNumber', header: '關帳者', visible: true },
-    // 其他欄位
   ];
-  // ----------------------------------------------------------------
-  caluculateMethodOptions: any[] = [];
-  counterIDOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private settlementMethodService: SettlementMethodService,
-    private counterCodeService: CounterCodeService,
-  ) {
-  }
+    private readonly dropdown: DropdownApiService,
+    private readonly tls2d030Service: Tls2d030Service
+  ) { super(); }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.settlementMethodService.getSettlementMethods().subscribe(data => {
-      this.caluculateMethodOptions = data;
-    });
-    //
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterIDOptions = data;
-    });
+    this.initializePage('TLS2D030', 'tls/tls2d030cru', this.queryForm, (form) => this.onSubmit(form));
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2D030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2D030CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2D030CRU'], extras);
+    this.handleSubmit(frm, () => {
+      // this.tls2d030Service.queryTLS2D030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+      //   this.totalRecords = res.totalRecords;
+      //   this.data = res.data;
+      // })
+    })
   }
 }
