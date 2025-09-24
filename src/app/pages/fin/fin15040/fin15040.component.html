@@ -15,10 +15,10 @@
             [submitted]="submitted">
           </app-calendar-range>
           <!-- 發票格式 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="PUR_VoucherType"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="PUR_VoucherType"
             [options]="invoiceFormatOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.PUR_VoucherType" [submitted]="submitted">
-          </app-multi-select>
+          </app-dropdown>
           <!-- 申報年月 (必填) -->
           <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
             [control]="queryForm.controls.INV_YM2" [submitted]="submitted"
