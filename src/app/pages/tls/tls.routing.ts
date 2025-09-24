@@ -53,6 +53,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls12040next1', loadComponent: () => import('./tls12040-next1/tls12040-next1.component').then(m => m.TLS12040Next1Component) },
   // 專櫃要約書維護 next2
   { path: 'tls12040next2', loadComponent: () => import('./tls12040-next2/tls12040-next2.component').then(m => m.TLS12040Next2Component) },
+  // 專櫃要約書維護 next3
+  { path: 'tls12040next3', loadComponent: () => import('./tls12040-next3/tls12040-next3.component').then(m => m.TLS12040Next3Component) },
 
   // 專櫃位置圖 CRU
   { path: 'tls12050cru', loadComponent: () => import('./tls12050-cru/tls12050-cru.component').then(m => m.TLS12050CRUComponent) },

@@ -48,7 +48,7 @@ export interface TLS12040ChargeQueryResponse {
  * API 回傳的抽成設定模型（不含 UI 狀態）
  */
 export interface ChargeSettingAPIModel {
-  id: number;
+  id: string;
   apply_no: string;
   tlt_id: string;
   tlt_id_desc: string;
@@ -75,8 +75,8 @@ export interface ChargeDetailAPIModel {
   apply_no: string;
   tlt_id: string;
   cag_barcode: string;
-  tlt_bdate?: string | null; // YYYY-MM-DD
-  tlt_edate?: string | null; // YYYY-MM-DD
+  tlt_bdate?: string | null | Date; // YYYY-MM-DD
+  tlt_edate?: string | null | Date; // YYYY-MM-DD
   cag_charge_rate?: number | null;
   barcode_desc: string;
   is_configured: boolean;
@@ -128,6 +128,9 @@ export interface ChargeSettingBusinessModel extends ChargeSettingAPIModel {
   ChargeDetails: ChargeDetailBusinessModel[];
   YearChargeDetails: YearChargeDetailBusinessModel[];
   LevelChargeDetails: LevelChargeDetailBusinessModel[];
+
+  // 新增：統一的明細資料屬性（用於表格顯示）
+  detailItems?: any[];  // 動態設定，根據當前標籤顯示對應的資料
 }
 
 /**
@@ -135,7 +138,7 @@ export interface ChargeSettingBusinessModel extends ChargeSettingAPIModel {
  */
 export interface ChargeDetailBusinessModel extends ChargeDetailAPIModel {
   _status: DataStatus;
-  _isSelected?: boolean;
+  is_selected?: boolean;
   _validationErrors?: ValidationError[];
 }
 
@@ -144,7 +147,7 @@ export interface ChargeDetailBusinessModel extends ChargeDetailAPIModel {
  */
 export interface YearChargeDetailBusinessModel extends YearChargeDetailAPIModel {
   _status: DataStatus;
-  _isSelected?: boolean;
+  is_selected?: boolean;
   _validationErrors?: ValidationError[];
 }
 
@@ -153,7 +156,7 @@ export interface YearChargeDetailBusinessModel extends YearChargeDetailAPIModel 
  */
 export interface LevelChargeDetailBusinessModel extends LevelChargeDetailAPIModel {
   _status: DataStatus;
-  _isSelected?: boolean;
+  is_selected?: boolean;
   _validationErrors?: ValidationError[];
 }
 
@@ -163,7 +166,7 @@ export interface LevelChargeDetailBusinessModel extends LevelChargeDetailAPIMode
  * 抽成主檔表單資料
  */
 export interface ChargeSettingFormData {
-  id?: number;
+  id?: string;
   apply_no: string;
   tlt_id: string;
   tlt_id_desc: string;
@@ -253,7 +256,7 @@ export interface ChargeSettingOperations {
 export interface MasterOperations {
   toInsert: CleanChargeSettingData[];
   toUpdate: CleanChargeSettingData[];
-  toDelete: { id: number }[];
+  toDelete: { id: string }[];
 }
 
 /**
@@ -269,7 +272,7 @@ export interface DetailOperations {
  * 清理後的抽成設定資料（提交用）
  */
 export interface CleanChargeSettingData {
-  id?: number;
+  id?: string;
   apply_no: string;
   tlt_id: string;
   tlt_id_desc: string;

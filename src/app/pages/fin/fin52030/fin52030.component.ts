@@ -31,7 +31,7 @@ import { FIN52030Data } from './fin52030.model';
     TableComponent,
   ],
 })
-export class FIN52030Component extends BasicQueryPageComponent<unknown> implements OnInit {
+export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> implements OnInit {
   public readonly queryForm = this.formBuilder.group({
     typeCode: new FormControl<string | void>(void 0),
     subpoenaName: new FormControl<string | void>(void 0),
@@ -59,21 +59,11 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
     return data.filter(item => {
       let matches = !0;
 
-      if (hasTypeCode) {
-        matches = matches && item['typeCode'] === this.qf().typeCode.value;
-      }
-      if (hasSubpoenaName) {
-        matches = matches && item['subpoenaName'] && item['subpoenaName'].includes(this.qf().subpoenaName.value);
-      }
-      if (hasSubpoenaType) {
-        matches = matches && item['subpoenaType'] === this.qf().subpoenaType.value;
-      }
-      if (hasCreator) {
-        matches = matches && item['creator'] === this.qf().creator.value;
-      }
-      if (hasModifier) {
-        matches = matches && item['modifier'] === this.qf().modifier.value;
-      }
+      // if (hasTypeCode) matches = matches && item.typeCode === this.qf().typeCode.value;
+      // if (hasSubpoenaName) matches = matches && !!item.subpoenaName && item.subpoenaName.includes(this.qf().subpoenaName.value!);
+      // if (hasSubpoenaType) matches = matches && item.subpoenaType === this.qf().subpoenaType.value;
+      // if (hasCreator) matches = matches && item.creator === this.qf().creator.value;
+      // if (hasModifier) matches = matches && item.modifier === this.qf().modifier.value;
 
       return matches;
     });
@@ -81,13 +71,13 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
-    { field: 'isDeleted', header: '是否刪除', format: v => v === 'Y' ? '是' : '否' },
-    { field: 'subpoenaCode', header: '常用傳票代號' },
-    { field: 'subpoenaNumber', header: '常用傳票號碼' },
-    { field: 'subpoenaName', header: '常用傳票名稱' },
-    { field: 'detailCount', header: '明細筆數' },
-  ];
+  // public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
+  //   { field: 'isDeleted', header: '是否刪除', format: v => v === 'Y' ? '是' : '否' },
+  //   { field: 'subpoenaCode', header: '常用傳票代號' },
+  //   { field: 'subpoenaNumber', header: '常用傳票號碼' },
+  //   { field: 'subpoenaName', header: '常用傳票名稱' },
+  //   { field: 'detailCount', header: '明細筆數' },
+  // ];
 
   constructor(
     public service: FIN52030Service,
@@ -101,8 +91,8 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
 
-    this.service.loadCreators();
-    this.service.loadModifiers();
+    // this.service.loadCreators();
+    // this.service.loadModifiers();
 
     this.logger.debug(`init:`, [this.service.creators(), this.service.modifiers()]);
   }
@@ -113,12 +103,12 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
       this.logger.debug(`onSubmit:`, [payload]);
       this.service.FIN52030Data.set([]);
 
-      this.service.loadFIN52030(payload).pipe(
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.filteredData()]);
-        }),
-      ).subscribe();
+      // this.service.loadFIN52030(payload).pipe(
+      //   finalize(() => {
+      //     this.loading = !1;
+      //     this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.filteredData()]);
+      //   }),
+      // ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }

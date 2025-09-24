@@ -1,59 +1,96 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <!-- <div>
-            <app-button btnType="cancel" (click)="onCancel()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="back"
+                (click)="onCancel()"></app-button>
+  </div>
+
+  <p-panel [header]="formTitle | translate"
+           class="line-height-3 m-0">
+    <form [formGroup]="dataForm"
+          id="dataForm"
+          (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="保管人代碼"
+                      controlName="usrNo"
+                      [options]="service.UsrNos()"
+                        optionLabel="Keep_UsrName"
+                        optionValue="Keep_UsrNo"
+                      [control]="df().usrNo"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-input-number class="col-12 md:col-6 lg:col-4"
+                          label="零用金額度"
+                          controlName="quotaAmt"
+                          [minFractionDigits]="0"
+                          [maxFractionDigits]="0"
+                          [control]="df().quotaAmt"
+                          [submitted]="submitted"></app-input-number>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="保管單位"
+                      controlName="orgId"
+                      [options]="service.OrgIds()"
+                      optionLabel="org_Name"
+                      optionValue="org_No"
+                      [control]="df().orgId"
+                      [submitted]="submitted"></app-dropdown>
+
+        <app-input-textarea class="col-12 md:col-6 lg:col-4"
+                            label="說明"
+                            controlName="remark"
+                            [control]="df().remark"
+                            [styleClass]="'h-10rem'"
+                            [submitted]="submitted"></app-input-textarea>
+      </div>
+
+
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel"
+                    [form]="dataForm"></app-button>
+        <app-button btnType="submit"
+                    [loading]="service.tableLoading"></app-button>
+      </div>
+      }
+    </form>
+  </p-panel>
+</div>
+
+
+<div class="card">
+  <div class="grid p-fluid">
+    <div class="col-12">
+      <p-panel header="資料"
+               class="line-height-3 m-0 mb-3">
+        <!-- <app-table [showDetail]="false"
+                   [showEdit]="false"
+                   [alwaysEdit]="true"
+                   [alwaysBlurValidate]="true"
+                   [showCheckBox]="!isFormReadable"
+                   [showRowEdit]="true"
+                   [showManage]="true"
+                   [showHeader]="true"
+                   [showReorder]="true"
+                   [showInsert]="!isFormReadable"
+                   [insertRowData]="true"
+                   (fieldChange)="onFieldChange($event)"
+                   (rowEditInit)="onRowEditInit($event)"
+                   (rowEditSave)="onRowEditSave($event)"
+                   (rowEditCancel)="onRowEditCancel($event)"
+                   (delete)="onDelete($event)"
+                   (insert)="onInsert($event)"
+                   (itemClick)="onItemClick($event)"
+                   [data]="filteredData()"
+                   [totalRecords]="totalRecords()"
+                   [loading]="service.tableLoading"
+                   [dataKey]="'id'"
+                   [tableKey]="'FIN52030_detail'"
+                   [columns]="columns">
+        </app-table> -->
+      </p-panel>
     </div>
-
-    <!-- Panel for Form -->
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-
-                <!-- 保管人代碼 -->
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="保管人代碼" controlName="usercode" [options]="usercodeOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.usercode"
-                        [submitted]="submitted"></app-dropdown>
-                </div>
-
-                <!-- 應付費用 -->
-                <!-- <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown
-                      label="應付費用"
-                      controlName="feespayable"
-                      [options]="feespayableOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="dataForm.controls.feespayable"
-                      [submitted]="submitted"
-                    ></app-dropdown>
-                </div> -->
-
-                <!-- 零用金額度 -->
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="零用金額度" [control]="dataForm.controls.PettyAmount"
-                        [submitted]="submitted"></app-input-text>
-                </div>
-
-                <!-- 說明 -->
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-editor-text label="說明" controlName="description" [control]="dataForm.controls.description"
-                        [style]="{ height: '100px' }" [submitted]="submitted"></app-editor-text>
-                </div>
-
-            </div>
-        </form>
-
-        <!-- Action Buttons -->
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
-        </div>
-    </p-panel>
+  </div>
 </div>

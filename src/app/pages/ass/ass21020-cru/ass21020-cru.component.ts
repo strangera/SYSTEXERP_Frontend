@@ -55,7 +55,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     y_coord: new FormControl<string | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
-  public readonly totalRecords = computed(() => this.filteredData().length);
 
   private readonly tltByFlagMap = computed(() => this.service.tltByFlagMap);
 
@@ -105,6 +104,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       };
     });
   });
+
+  public readonly totalRecords = computed(() => this.filteredData().length);
 
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges, { initialValue: void 0 });
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges, { initialValue: void 0 });

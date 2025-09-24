@@ -1,30 +1,38 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { POS2013, TLS21020Data, TLS21020GLS1005Data, TLS21020GLS1005Query, TLS21020Query, TLS21020UpdateQuery } from '@pages/tls/tls21020/tls21020.model';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, Observable, take, tap } from 'rxjs';
+import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Sysb400Service } from '../sys/sysb400.service';
-import { Option } from '@service/utility/dropdown-api.model';
 
-const apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000/';
+const apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
 
 @Injectable({ providedIn: 'root' })
 export class TLS21020Service {
 
   public readonly TLS21020Data = signal<TLS21020Data[]>([]);
   public readonly TLS21020GLS1005Data = signal<TLS21020GLS1005Data[]>([]);
-  public readonly SYS3100Data = signal<any[]>([]);
+  public readonly SYS3100Data = signal<Option[]>([]);
   public readonly GLS1005Data = signal<Option[]>([]);
   public readonly POS2013Data = signal<POS2013[]>([]);
 
-  private readonly GLS1005QuerySignal = signal<TLS21020GLS1005Query | null>(null);
+  public readonly entryTypeMap = new Map<string, string>([
+    ['SD', '銷售日傳票'],
+    ['MR', '租金傳票'],
+    ['MD', '代扣傳票'],
+    ['PR', '抽成傳票'],
+    ['PN', '進貨帳款-暫估應付'],
+    ['PNC', '進貨帳款-成本結轉'],
+    ['PT', '進貨請款'],
+  ]);
 
-  public dataLoading = !1;
+  private readonly tableCancel$ = new Subject<void>();
 
-  public readonly totalRecords = signal<number>(0);
+  public tableLoading = !1;
 
   constructor(
     private readonly http: HttpClient,
@@ -33,24 +41,32 @@ export class TLS21020Service {
     private readonly dropdownApi: DropdownApiService,
   ) { }
 
-  public getEntryTypes(): DropdownOption[] {
+  public getEntryTypes(): Option[] {
     return [
-      { No: 'SD', Name: '銷售日傳票' },
-      { No: 'MR', Name: '租金傳票' },
-      { No: 'MD', Name: '代扣傳票' },
-      { No: 'PR', Name: '抽成傳票' },
-      { No: 'PN', Name: '進貨帳款-暫估應付' },
-      { No: 'PNC', Name: '進貨帳款-成本結轉' },
-      { No: 'PT', Name: '進貨請款' },
+      { value: 'SD', label: '銷售日傳票' },
+      { value: 'MR', label: '租金傳票' },
+      { value: 'MD', label: '代扣傳票' },
+      { value: 'PR', label: '抽成傳票' },
+      { value: 'PN', label: '進貨帳款-暫估應付' },
+      { value: 'PNC', label: '進貨帳款-成本結轉' },
+      { value: 'PT', label: '進貨請款' },
     ];
   }
 
-  public queryTLS21020(query: TLS21020Query): void {
-    if (this.dataLoading) return void (this.dataLoading = !1);
-    this.dataLoading = !0;
-    this.http.post<BaseQueryResponse<TLS21020Data>>(apiUrl + 'queryTLS21020', query)
+  public getYNOptions(): Option[] {
+    return [
+      { value: 'Y', label: '是' },
+      { value: 'N', label: '否' },
+    ];
+  }
+
+  public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
+    this.tableCancel$.next();
+    this.tableLoading = !0;
+    return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, query)
       .pipe(
         take(1),
+        takeUntil(this.tableCancel$),
         map(res => {
           res.Data = res.Data?.map(item => ({
             ...item,
@@ -59,19 +75,12 @@ export class TLS21020Service {
           return res;
         }),
         tap(res => this.TLS21020Data.set(res.Data ?? [])),
-        tap(res => this.totalRecords.set(res.Data?.length)),
-        finalize(() => this.logger.debug(`TLS21020 Data:`, [this.TLS21020Data()])),
-        finalize(() => this.dataLoading = !1),
-      ).subscribe();
+        finalize(() => this.tableLoading = !1),
+      );
   }
 
   public queryTLS21020_GLS1005(query: TLS21020GLS1005Query): void {
-    const lastQuery = this.GLS1005QuerySignal();
-    if (lastQuery && lastQuery.AccDC === query.AccDC) return;
-
-    this.GLS1005QuerySignal.set(query);
-
-    this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(apiUrl + 'queryTLS21020_GLS1005', query)
+    this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(`${apiUrl}/queryTLS21020_GLS1005`, query)
       .pipe(
         take(1),
         tap(res => this.TLS21020GLS1005Data.set(res.Data ?? [])),
@@ -80,7 +89,7 @@ export class TLS21020Service {
   }
 
   public updateTLS21020(query: TLS21020UpdateQuery[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(apiUrl + 'updateTLS21020', { GLS1020Datas: query })
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/updateTLS21020`, { GLS1020Datas: query })
       .pipe(
         take(1),
         tap(res => { }),
@@ -92,7 +101,8 @@ export class TLS21020Service {
     this.sysb400.querySYS3100_DropDownList()
       .pipe(
         take(1),
-        tap(res => this.SYS3100Data.set(res.Data ?? [])),
+        map(res => res.Data?.map(item => ({ label: `${item.No} - ${item.Name || ''}`, value: item.No })) ?? []),
+        tap(res => this.SYS3100Data.set(res)),
         finalize(() => this.logger.debug(`SYS3100 Data:`, [this.SYS3100Data()])),
       ).subscribe();
   }
@@ -101,7 +111,7 @@ export class TLS21020Service {
     this.dropdownApi.queryGls1005()
       .pipe(
         take(1),
-        tap(res => res && this.GLS1005Data.set(res ?? [])), // !! 方法調整，型態改為Options
+        tap(res => res && this.GLS1005Data.set(res)),
         finalize(() => this.logger.debug(`GLS1005 Data:`, [this.GLS1005Data()])),
       ).subscribe();
   }
