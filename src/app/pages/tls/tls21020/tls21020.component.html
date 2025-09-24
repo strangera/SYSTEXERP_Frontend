@@ -41,7 +41,7 @@
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="!canSave"
+                    [disabled]="!canSave()"
                     [loading]="service.tableLoading"></app-button>
       </div>
     </form>

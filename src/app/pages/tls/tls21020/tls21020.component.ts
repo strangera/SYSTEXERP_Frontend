@@ -11,7 +11,6 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
-import { isValid } from 'js-base64';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, mergeMap } from 'rxjs';
@@ -42,6 +41,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public readonly totalRecords = computed(() => this.service.TLS21020Data().length);
 
   private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
+  public canSave = signal(!1);
 
   /** entryType 改變時，取得table 資料 */
   public readonly entryTypeEffect = effect(() => {
@@ -56,7 +56,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   }, { allowSignalWrites: !0 });
 
   public selectedItems: TLS21020Data[] = [];
-  public canSave = !1;
   private AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
   private ABATYN = (v: any) => v?.ABAT_YN === 'N';
 
@@ -190,7 +189,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   }
 
   public validateEntireRow = (rowData: TLS21020Data): { isValid: boolean, errorMessage: string; } => {
-    const baseRequiredFields: (keyof TLS21020Data)[] = ['Org_ID', 'ObjectNo'];
+    // const baseRequiredFields: (keyof TLS21020Data)[] = ['Org_ID', 'ObjectNo'];
+    const result = (errorMessage: string) => {
+      this.canSave.set(!1);
+      return { isValid: !1, errorMessage };
+    };
 
     // 必填欄位檢查
     // const objectNoFormatValid = rowData.ObjectNo === 'Y' || rowData.ObjectNo === 'N';
@@ -204,61 +207,41 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     // if (!baseFieldsValid) return { isValid: !1, errorMessage: '必要欄位未填寫' };
 
     // Org_ID 必填
-    if (rowData.Org_ID === void 0 || rowData.Org_ID === null || String(rowData.Org_ID).trim() === '') {
-      return { isValid: !1, errorMessage: '組織代碼必須填寫' };
-    }
+    if (this.validateValue(rowData.Org_ID)) return result('組織代碼必須填寫');
 
     // ABAT_YN 為 Y 時，VEN_No 與 PAY_days 必填
     if (rowData.ABAT_YN !== 'N') {
-      const venNoValid = rowData.VEN_No !== void 0 && rowData.VEN_No !== null && String(rowData.VEN_No).trim() !== '';
-      const payDaysValid = rowData.PAY_days !== void 0 && rowData.PAY_days !== null && String(rowData.PAY_days).trim() !== '';
-      if (!venNoValid) return { isValid: !1, errorMessage: '應收廠商必須填寫' };
-      if (!payDaysValid) return { isValid: !1, errorMessage: '付款天數必須填寫' };
+      const venNoValid = !String(rowData.VEN_No ?? '').trim();
+      const payDaysValid = !String(rowData.PAY_days ?? '').trim();
+      if (!venNoValid) return result('應收廠商必須填寫');
+      if (!payDaysValid) return result('付款天數必須填寫');
     }
 
     // 可選欄位檢查
-    let optionalFieldsValid = { isValid: !0, errorMessage: '' };
+    let optionalFieldsValid = '';
 
     // PAY_days 必須為大於等於0的整數
-    if (rowData.PAY_days !== void 0 && rowData.PAY_days !== null) {
-      const payDaysValid = Number.isInteger(rowData.PAY_days) && rowData.PAY_days >= 0;
-      if (!payDaysValid) optionalFieldsValid = { isValid: !1, errorMessage: '付款天數必須為大於等於0的整數' };
-    }
-
+    if (this.validateValue(rowData.PAY_days)) optionalFieldsValid = '付款天數必須為大於等於0的整數';
     // PAY_No 不可為空字串
-    if (rowData.PAY_No !== void 0 && rowData.PAY_No !== null && rowData.PAY_No !== '') {
-      const payNoValid = String(rowData.PAY_No).trim().length > 0;
-      if (!payNoValid) optionalFieldsValid = { isValid: !1, errorMessage: '付款別編號必須填寫' };
-    }
-
+    if (this.validateValue(rowData.PAY_No)) optionalFieldsValid = '付款別編號必須填寫';
     // AccNotes 不可為空字串
-    if (rowData.AccNotes !== void 0 && rowData.AccNotes !== null && rowData.AccNotes !== '') {
-      const accNotesValid = String(rowData.AccNotes).trim().length > 0;
-      if (!accNotesValid) optionalFieldsValid = { isValid: !1, errorMessage: '傳票備註必須填寫' };
-    }
-
+    if (this.validateValue(rowData.AccNotes)) optionalFieldsValid = '傳票備註必須填寫';
     // AccNo 必填且不可為空字串
-    if (rowData.AccNo !== void 0 && rowData.AccNo !== null && rowData.AccNo !== '') {
-      const accNoValid = String(rowData.AccNo).trim().length > 0;
-      if (!accNoValid) optionalFieldsValid = { isValid: !1, errorMessage: '會計科目必須填寫' };
-    }
-
+    if (this.validateValue(rowData.AccNo)) optionalFieldsValid = '會計科目必須填寫';
     // RelatedPartyAccNo 不可為空字串
-    if (rowData.RelatedPartyAccNo !== void 0 && rowData.RelatedPartyAccNo !== null && rowData.RelatedPartyAccNo !== '') {
-      const relatedPartyAccNoValid = String(rowData.RelatedPartyAccNo).trim().length > 0;
-      if (!relatedPartyAccNoValid) optionalFieldsValid = { isValid: !1, errorMessage: '區分關係人會科必須填寫' };
-    }
-    if (!optionalFieldsValid.isValid) return optionalFieldsValid;
+    if (this.validateValue(rowData.RelatedPartyAccNo)) optionalFieldsValid = '區分關係人會科必須填寫';
+
+    // if (optionalFieldsValid.length > 0) return { isValid: !1, errorMessage: optionalFieldsValid };
 
     // 檢查是否有重複的組合 (AccDC, ItemDesc, AccNo)
-    const rowIndex = this.service.TLS21020Data().findIndex(item => item === rowData);
-    if (rowIndex === -1) return { isValid: !1, errorMessage: '找不到該列資料' };
-    const isOverlapping = this.service.TLS21020Data().some((item, idx) => {
-      if (idx === rowIndex) return !1;
-      return item.AccDC === rowData.AccDC && item.ItemDesc === rowData.ItemDesc && item.AccNo === rowData.AccNo;
-    });
-    if (isOverlapping) return { isValid: !1, errorMessage: '會計科目與項目描述必須唯一' };
+    const rows = this.service.TLS21020Data();
+    if (!rows.includes(rowData)) return result('找不到該列資料');
 
+    const { AccDC, ItemDesc, AccNo } = rowData;
+    const duplicate = rows.some(item => item !== rowData && item.AccDC === AccDC && item.ItemDesc === ItemDesc && item.AccNo === AccNo);
+    if (duplicate) return result('會計科目與項目描述必須唯一');
+
+    this.canSave.set(!0);
     return { isValid: !0, errorMessage: '' };
   };
 
@@ -286,5 +269,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
+  }
+
+  private validateValue(value: unknown): boolean {
+    if (typeof value === 'string') return !value.trim();
+    if (typeof value === 'number') return !Number.isInteger(value) || value < 0;
+    return !String(value ?? '').trim();
   }
 }
