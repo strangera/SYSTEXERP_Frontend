@@ -70,8 +70,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls13050cru', loadComponent: () => import('./tls13050-cru/tls13050-cru.component').then(m => m.TLS13050CRUComponent) },
   // 櫃位營運事項明細查詢作業 CRU
   { path: 'tls13060cru', loadComponent: () => import('./tls13060-cru/tls13060-cru.component').then(m => m.TLS13060CRUComponent) },
-  // 調整櫃位合約一覽表 CRU
-  { path: 'tls13070cru', loadComponent: () => import('./tls13070-cru/tls13070-cru.component').then(m => m.TLS13070CRUComponent) },
   // 合約狀態清單 CRU
   { path: 'tls14010cru', loadComponent: () => import('./tls14010-cru/tls14010-cru.component').then(m => m.TLS14010CRUComponent) },
   // 專櫃契約書列印 CRU
