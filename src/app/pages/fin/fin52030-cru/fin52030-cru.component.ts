@@ -14,6 +14,7 @@ import { NGXLogger } from 'ngx-logger';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
+import { FIN52030Data, FIN52030Detail } from '../fin52030/fin52030.model';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -34,7 +35,7 @@ import { finalize, tap } from 'rxjs';
     TableComponent,
   ],
 })
-export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
+export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Detail> implements OnInit {
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
     typeCode: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(8)]),
@@ -107,9 +108,9 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
         this.df().modifyDate.setValue(new Date());
       }
       this.service.getSubpoenaTypes();
-      this.service.loadFIN52030Detail({
-        /** payload */
-      });
+      // this.service.loadFIN52030Detail({
+      //   /** payload */
+      // });
     }
 
     this.logger.debug(`init:`, [this.rowdata, vendorEmployeeTable]);
@@ -120,15 +121,15 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
       const payload = { ...this.dataForm.getRawValue() };
       this.logger.debug(`FIN52030CRU request:`, [payload, this.filteredData()]);
 
-      this.service.updateFIN52030Data(payload).pipe(
-        tap(() => {
-          // 更新FIN52090
-        }),
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug(`onSubmit:`, [this.dataForm.getRawValue(), this.filteredData()]);
-        }),
-      ).subscribe();
+      // this.service.updateFIN52030Data(payload).pipe(
+      //   tap(() => {
+      //     // 更新FIN52090
+      //   }),
+      //   finalize(() => {
+      //     this.loading = !1;
+      //     this.logger.debug(`onSubmit:`, [this.dataForm.getRawValue(), this.filteredData()]);
+      //   }),
+      // ).subscribe();
     });
   }
 
