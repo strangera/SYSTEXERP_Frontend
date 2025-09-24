@@ -34,6 +34,15 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TLS2B010TableExportComponent } from './tls2b010table-export/tls2b010table-export.component';
 import { BlockUIModule } from 'primeng/blockui';
+import { Pipe, PipeTransform } from '@angular/core';
+@Pipe({ name: 'filterMerged', standalone: true })
+export class FilterMergedPipe implements PipeTransform {
+  transform(columns: any[], merged: string[]): any[] {
+    if (!Array.isArray(columns)) return [];
+    if (!Array.isArray(merged) || merged.length === 0) return columns;
+    return columns.filter(c => !merged.includes(c.field));
+  }
+}
 
 @Component({
   selector: 'app-tls2b010table',
@@ -47,6 +56,7 @@ import { BlockUIModule } from 'primeng/blockui';
     FileUploadModule, DropdownModule, RippleModule, InputTextModule, InputNumberModule,
     CalendarModule, CheckboxModule, SkeletonModule, BlockUIModule,
     FormsModule,
+    FilterMergedPipe,
     TLS2B010TableExportComponent
   ],
 })
@@ -188,6 +198,8 @@ export class tls2b010tableComponent
 @Output() serverError = new EventEmitter<unknown>();
 @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
 
+@Input() mergedColumns: string[] = [];  // ✅ 外部元件可指定要合併顯示的欄位
+
   // =====（已刪除）所有 externalTotals / externalSubtotals / Total/Subtotal Inputs =====
 
   /* ===== 內部旗標 ===== */
@@ -196,6 +208,7 @@ export class tls2b010tableComponent
   private _suppressNextLazy = false;
   private lastEmitKey: string | null = null;
   private lastSortSig = '';
+  rowGroupMeta: Record<string, { index: number; size: number }> = {};
 
   ngOnInit(): void {
     this.ensureInitialGroupingSort();
@@ -224,6 +237,7 @@ export class tls2b010tableComponent
         this.selectionChange.emit(this.selectedItems);
         this.selectedItemsChange.emit(this.selectedItems);
         this.calculateTotalPages();
+         this.updateRowGroupMeta();   // ✅ 重算群組
       });
     }
 
@@ -308,12 +322,6 @@ export class tls2b010tableComponent
     if (!this.lazy) this.calculateTotalPages();
   }
 
-  onSort(event: any) {
-    const raw = event.multisortmeta ?? event.multiSortMeta ?? [];
-    const next = this.ensureGroupFirst(raw);
-    this.multiSortMeta = next;
-    this.queryStateService.setQueryState(this.tableKey + 'Sort', next);
-  }
 
   loadDataLazy(event: TableLazyLoadEvent, force = false) {
     if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
@@ -327,10 +335,10 @@ export class tls2b010tableComponent
     const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
     let pageIndex  = (event.first ?? 0) / pageSize + 1;
 
-    const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
-      (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-
-    const sort    = this.ensureGroupFirst(sortRaw);
+  const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
+    (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+  const normalized = this.normalizeSortMeta(sortRaw);
+  const sort = this.ensureGroupFirst(normalized);
     const sortSig = JSON.stringify(sort);
 
     if (!this.lastSortSig) {
@@ -348,7 +356,8 @@ export class tls2b010tableComponent
     this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
 
-    const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+      const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+  this.lazyLoadData.emit(payload);
     const key = `${pageIndex}|${pageSize}|${sortSig}`;
     if (!force && key === this.lastEmitKey) return;
     this.lastEmitKey = key;
@@ -359,6 +368,7 @@ if (this.serverFetch) {
     next: (res: { rows: any[]; totalRecords: number }) => {
       const rows = Array.isArray(res?.rows) ? res.rows : [];
       this.data = rows;
+      this.updateRowGroupMeta();  // ✅
       this.dataChange.emit(this.data);
 
       this.totalRecords = Number(res?.totalRecords ?? rows.length) || 0;
@@ -629,13 +639,14 @@ this.lazyLoadData.emit(payload);
     return cols.filter(c => c.visible !== false && c.hidden !== true);
   }
 
-  get leftFixedHeaderColumns() {
-    return this.visibleCols.filter(c => c.headerRow == null);
-  }
+get leftFixedHeaderColumns() {
+  // 只有凍結欄位（左側固定），沒有就回空陣列
+  return this.visibleCols.filter(c => c.frozen === true);
+}
 
 get headerRow1Columns() {
-  // headerRow = 1 或 未指定（單表頭）
-  return this.visibleCols.filter(c => c.headerRow === 1 || c.headerRow == null);
+  // 其餘一般欄位（未凍結），若沒有多表頭就允許 headerRow 為 null 或 1
+  return this.visibleCols.filter(c => (c.headerRow === 1 || c.headerRow == null) && c.frozen !== true);
 }
 
 
@@ -645,6 +656,66 @@ export(type: 'PDF' | 'Excel') {
   this.exportStatus = type;
   this.exportDialog = true;
 }
+getHeaderByField(field: string): string {
+  const col = this.columns?.find(c => c.field === field);
+  return col?.header ?? field;
+}
+onSort(event: any) {
+  const raw = event.multisortmeta ?? event.multiSortMeta ?? [];
+  const normalized = this.normalizeSortMeta(raw);
+  const next = this.ensureGroupFirst(normalized);
+  this.multiSortMeta = next;
+  this.queryStateService.setQueryState(this.tableKey + 'Sort', next);
+}
 
+
+
+
+private normalizeSortMeta(list: any[] | undefined): SortMeta[] {
+  if (!Array.isArray(list)) return [];
+  const seen = new Set<string>();
+  const cleaned = list
+    .map((s: any) => {
+      const f = Array.isArray(s?.field) ? s.field[0] : s?.field;
+      const ord = s?.order === -1 ? -1 : 1;
+      return f ? ({ field: String(f), order: ord } as SortMeta) : null;
+    })
+    .filter(Boolean) as SortMeta[];
+
+  // 去重（依 field）
+  const unique: SortMeta[] = [];
+  for (const s of cleaned) {
+    if (!seen.has(s.field)) {
+      seen.add(s.field);
+      unique.push(s);
+    }
+  }
+  return unique;
+}
+
+// 依 ECR_No（或你想要的 key）建立群組資訊
+private updateRowGroupMeta() {
+  this.rowGroupMeta = {};
+  let lastKey: string | null = null;
+  this.data.forEach((row, i) => {
+    const key = String(row?.ECR_No ?? '');
+    if (!key) return;
+
+    if (lastKey === key) {
+      this.rowGroupMeta[key].size++;
+    } else {
+      this.rowGroupMeta[key] = { index: i, size: 1 };
+      lastKey = key;
+    }
+  });
+}
+
+// 幫手：判斷該列是否是群組第一筆、取 rowspan 數
+isFirstInGroup(index: number, key: string): boolean {
+  return this.rowGroupMeta[key]?.index === index;
+}
+getGroupSize(key: string): number {
+  return this.rowGroupMeta[key]?.size || 1;
+}
 
 }

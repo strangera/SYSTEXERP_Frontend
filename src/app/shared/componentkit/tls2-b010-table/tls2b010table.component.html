@@ -46,8 +46,6 @@
 
   paginatorDropdownAppendTo="body"
   editMode="row"
-  [groupRowsBy]="groupRowsByArray.length ? groupRowsByArray : undefined"
-  [rowGroupMode]="groupRowsByArray.length ? 'subheader' : undefined"
 >
   <!-- ===== Caption / 工具列 ===== -->
   <ng-template pTemplate="caption">
@@ -235,14 +233,7 @@
     </tr>
   </ng-template>
 
-  <!-- ===== 群組列頭占位（保留群組功能） ===== -->
-  <ng-template pTemplate="rowgroupheader" let-rowData let-columns="columns">
-    <tr class="p-rowgroup-header">
-      <td [attr.colspan]="getVisibleHeaderCount"></td>
-    </tr>
-  </ng-template>
-
-  <!-- ===== 單列 BODY ===== -->
+  <!-- ===== 單列 BODY（含 rowspan 合併） ===== -->
   <ng-template
     pTemplate="body"
     let-rowIndex="rowIndex"
@@ -285,21 +276,42 @@
         </span>
       </td>
 
-      <!-- 其他欄位 -->
-      <td
-        *ngFor="let col of headerRow1Columns; trackBy: trackByCol"
-        class="text-center"
-        [ngClass]="col.style"
-        [alignFrozen]="col.alignFrozen || 'right'"
-        pFrozenColumn
-        [frozen]="IsPrint && (col.frozen ?? false)"
-        [style.minWidth]="getColMinWidth(col)"
-        (click)="editing ? $event.stopPropagation() : null"
-        (dblclick)="detailRow(rowData)">
-        <span *ngIf="!col.type">
-          {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
-        </span>
-      </td>
+      <!-- 其他欄位（一般 + 合併欄位） -->
+      <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
+
+        <!-- 非合併欄位：每列都顯示 -->
+        <td *ngIf="!mergedColumns.includes(col.field)"
+            class="text-center"
+            [ngClass]="col.style"
+            [alignFrozen]="col.alignFrozen || 'right'"
+            pFrozenColumn
+            [frozen]="IsPrint && (col.frozen ?? false)"
+            [style.minWidth]="getColMinWidth(col)"
+            (click)="editing ? $event.stopPropagation() : null"
+            (dblclick)="detailRow(rowData)">
+          <span *ngIf="!col.type">
+            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+          </span>
+        </td>
+
+        <!-- 合併欄位：只在該組第一筆輸出，並加 rowspan -->
+        <td *ngIf="mergedColumns.includes(col.field)
+                   && isFirstInGroup(rowIndex, rowData['ECR_No'])"
+            [attr.rowspan]="getGroupSize(rowData['ECR_No'])"
+            class="text-center"
+            [ngClass]="col.style"
+            [alignFrozen]="col.alignFrozen || 'right'"
+            pFrozenColumn
+            [frozen]="IsPrint && (col.frozen ?? false)"
+            [style.minWidth]="getColMinWidth(col)"
+            (click)="editing ? $event.stopPropagation() : null"
+            (dblclick)="detailRow(rowData)">
+          <span *ngIf="!col.type">
+            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+          </span>
+        </td>
+
+      </ng-container>
 
       <!-- 管理欄 -->
       <td
