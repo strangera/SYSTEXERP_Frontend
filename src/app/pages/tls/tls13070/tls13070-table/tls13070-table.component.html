@@ -8,7 +8,7 @@
       inline: true,
       trackBy: trackByFn,
       onScroll: onScroll,
-  }" rowGroupMode="subheader">
+  }" rowGroupMode="rowspan" groupRowsBy="talent_id">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [dataKey]="dataKey" [tableKey]="tableKey" [showPage]="false"
       [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl">
@@ -32,54 +32,65 @@
       <th class="w-1rem text-center" rowspan="3">備註</th>
     </tr>
     <tr>
-      <th rowspan="2">品牌名稱</th>
-      <th rowspan="2">專櫃編號</th>
-      <th rowspan="2">秤數</th>
-      <th rowspan="2">POS機號</th>
-      <th rowspan="2">營運期間(起)</th>
-      <th rowspan="2">營運期間(迄)</th>
-      <th rowspan="2">簽約年限</th>
-      <th rowspan="2">履約保證金</th>
-      <th colspan="7">抽成</th>
-      <th colspan="3">包底營業額</th>
-      <th colspan="3">固定租金</th>
-      <th rowspan="2">目標營業額</th>
-      <th rowspan="2">備註</th>
+      <th class="text-center" rowspan="2">品牌名稱</th>
+      <th class="text-center" rowspan="2">專櫃編號</th>
+      <th class="text-center" rowspan="2">秤數</th>
+      <th class="text-center" rowspan="2">POS機號</th>
+      <th class="text-center" rowspan="2">營運期間(起)</th>
+      <th class="text-center" rowspan="2">營運期間(迄)</th>
+      <th class="text-center" rowspan="2">簽約年限</th>
+      <th class="text-center" rowspan="2">履約保證金</th>
+      <th class="text-center" colspan="7">抽成</th>
+      <th class="text-center" colspan="3">包底營業額</th>
+      <th class="text-center" colspan="3">固定租金</th>
+      <th class="text-center" rowspan="2">目標營業額</th>
+      <th class="text-center" rowspan="2">備註</th>
     </tr>
     <tr>
-      <th>帳務起</th>
-      <th>帳務迄</th>
-      <th>月階梯起</th>
-      <th>月階梯迄</th>
-      <th>區間階梯起</th>
-      <th>區間階梯迄</th>
-      <th>單一抽成</th>
-      <th>年包底</th>
-      <th>區間包底</th>
-      <th>月包底</th>
-      <th>帳務起</th>
-      <th>帳務迄</th>
-      <th>租金</th>
-      <th>BO4(POS)</th>
-      <th>維護費</th>
-      <th>一般</th>
-      <th>D02-六期</th>
-      <th>30%</th>
-      <th>40%</th>
-      <th>一般</th>
-      <th>1.5%</th>
-      <th>一般</th>
-      <th>2.5%</th>
+      <th class="text-center">帳務起</th>
+      <th class="text-center">帳務迄</th>
+      <th class="text-center">月階梯起</th>
+      <th class="text-center">月階梯迄</th>
+      <th class="text-center">區間階梯起</th>
+      <th class="text-center">區間階梯迄</th>
+      <th class="text-center">單一抽成</th>
+      <th class="text-center">年包底</th>
+      <th class="text-center">區間包底</th>
+      <th class="text-center">月包底</th>
+      <th class="text-center">帳務起</th>
+      <th class="text-center">帳務迄</th>
+      <th class="text-center">租金</th>
+      <th class="text-center">BO4(POS)</th>
+      <th class="text-center">維護費</th>
+      <th class="text-center">一般</th>
+      <th class="text-center">D02-六期</th>
+      <th class="text-center">30%</th>
+      <th class="text-center">40%</th>
+      <th class="text-center">一般</th>
+      <th class="text-center">1.5%</th>
+      <th class="text-center">一般</th>
+      <th class="text-center">2.5%</th>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-index="rowIndex">
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-index="rowIndex" let-rowgroup="rowgroup"
+    let-rowspan="rowspan">
     <tr [pSelectableRow]="rowData" [style]="{'height': '24px'}" [pSelectableRowIndex]="rowIndex">
       <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
-      <td class="text-center">{{rowData.apply_no}}</td>
-      <td class="text-center">{{rowData.upd_date | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center"></td>
-      <td class="text-center">{{rowData.VEN_Name}}</td>
-      <td class="text-center">{{rowData.ven_uniform}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.apply_no}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.upd_date | date:'yyyy/MM/dd'}}</td>
+      <td class="text-center">{{rowData.location_no}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.VEN_Name}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.ven_uniform}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_name}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_no}}</td>
+      <td class="text-center">{{rowData.tlt_space}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{ rowData.posList.length }}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_contract_bdate |
+        date:'yyyy/MM/dd'}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_contract_edate |
+        date:'yyyy/MM/dd'}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{ getContractYear(rowData) }}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.expiration_fees}}</td>
     </tr>
   </ng-template>
   <ng-template pTemplate="summary">

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { SortMeta } from 'primeng/api';
 import { ApiResponse } from '@service/system/auth.service';
@@ -98,6 +98,8 @@ export interface Tls13070Response {
   total_amt: number | null,
   check_day: number,
   tlt_remark: string | null,
+  location_no?: string,
+  tlt_space?: number,
   locationList:
   {
     talent_id: number,
@@ -136,6 +138,40 @@ export class Tls13070Service {
   constructor(private http: HttpClient) { }
 
   queryTLS13070(params: Tls13070QueryRequest): Observable<ApiResponse<Tls13070Response[]>> {
-    return this.http.post<ApiResponse<Tls13070Response[]>>(`${this.apiUrl}/queryTLS13070`, params);
+    return this.http.post<ApiResponse<Tls13070Response[]>>(`${this.apiUrl}/queryTLS13070`, params).pipe(
+      map(response => {
+        // 如果 response.Data 存在，則進行資料處理
+        if (response.Data) {
+          const flatData = this.flattenData(response.Data);
+          // 將處理後的新陣列賦予給 response.Data
+          response.Data = flatData;
+          // 確保總數也與新陣列長度一致，以正確分頁
+          response.TotalCount = flatData.length;
+        }
+        return response; // 回傳處理後的回應物件
+      })
+    );
+  }
+
+  private flattenData(data: Tls13070Response[]): Tls13070Response[] {
+    const flatArray: Tls13070Response[] = [];
+    data.forEach(item => {
+      // 檢查 locationList 是否存在且長度大於0
+      if (item.locationList && item.locationList.length > 0) {
+        item.locationList.forEach(location => {
+          // 淺複製原始物件
+          const newItem = { ...item };
+          // 用 location_no 覆蓋原本的 tlt_no，並清空 locationList
+          newItem.location_no = location.location_no;
+          newItem.tlt_space = location.tlt_space;
+          newItem.locationList = [];
+          flatArray.push(newItem);
+        });
+      } else {
+        // 如果沒有 locationList，則直接將原始物件加入
+        flatArray.push(item);
+      }
+    });
+    return flatArray;
   }
 }

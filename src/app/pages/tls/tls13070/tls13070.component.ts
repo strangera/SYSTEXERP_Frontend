@@ -119,6 +119,8 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
     this.handleSubmit(frm, () => {
       this.tls13070Service.queryTLS13070(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
         this.lastQueryBody = frm.value;
+        console.log('response', response.Data);
+
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

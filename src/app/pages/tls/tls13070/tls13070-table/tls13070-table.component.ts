@@ -151,4 +151,63 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
       }
     });
   }
+
+  // 回傳幾年幾個月又幾天，不要用moment方法，tlt_contract_edate 減 tlt_contract_bdate
+  getContractYear(rowData: any): string {
+    // 檢查日期是否存在
+    if (!rowData.tlt_contract_bdate || !rowData.tlt_contract_edate) {
+      return '';
+    }
+
+    // 將日期字串轉換成 Date 物件
+    const startDate = new Date(rowData.tlt_contract_bdate);
+    const endDate = new Date(rowData.tlt_contract_edate);
+
+    // 檢查日期是否有效
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return '';
+    }
+
+    // 確保結束日期大於或等於起始日期
+    if (startDate > endDate) {
+      return '結束日期早於起始日期';
+    }
+
+    let years = endDate.getFullYear() - startDate.getFullYear();
+    let months = endDate.getMonth() - startDate.getMonth();
+    let days = endDate.getDate() - startDate.getDate();
+
+    // 調整月份和年份
+    if (days < 0) {
+      months--;
+      // 取得上個月的最後一天，用來計算剩餘天數
+      const lastDayOfLastMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate();
+      days = days + lastDayOfLastMonth;
+    }
+
+    // 調整年份
+    if (months < 0) {
+      years--;
+      months = months + 12;
+    }
+
+    // 建構回傳字串
+    let result = '';
+    if (years > 0) {
+      result += `${years}年`;
+    }
+    if (months > 0) {
+      result += `${months}個月`;
+    }
+    if (days > 0) {
+      result += `${days}天`;
+    }
+
+    // 如果所有值都是 0，回傳「0天」
+    if (result === '') {
+      return '0天';
+    }
+
+    return result;
+  }
 }
