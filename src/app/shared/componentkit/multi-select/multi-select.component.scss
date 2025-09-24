@@ -33,3 +33,68 @@
     background: #949494;
   }
 }
+
+// === 新增的 readonly 相關樣式 ===
+
+// readonly multiselect 容器樣式
+.readonly-multiselect {
+  position: relative;
+  width: 100%;
+
+  input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+}
+
+// readonly 樣式 - 與其他組件保持一致
+.readonly-field {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  color: #6c757d !important;
+  cursor: text !important;
+  font-weight: 500;
+
+  &:focus {
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15) !important;
+    outline: none !important;
+  }
+
+  &:hover {
+    border-color: #adb5bd !important;
+  }
+
+  // 確保文字可以被選取
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+// 針對 readonly 模式下的 p-multiselect 樣式調整（如果需要直接在 multiselect 上使用 readonly）
+::ng-deep .readonly-field.p-multiselect {
+  .p-multiselect-label {
+    background-color: #f8f9fa !important;
+    border-color: #e9ecef !important;
+    color: #6c757d !important;
+    cursor: text !important;
+  }
+
+  .p-multiselect-trigger {
+    display: none !important; // 隱藏下拉箭頭
+  }
+
+  &:not(.p-disabled):hover .p-multiselect-label {
+    border-color: #adb5bd !important;
+  }
+
+  &:not(.p-disabled).p-focus .p-multiselect-label {
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15) !important;
+  }
+}

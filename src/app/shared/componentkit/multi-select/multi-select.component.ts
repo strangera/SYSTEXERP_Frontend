@@ -21,6 +21,8 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
 })
 export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @ViewChild('multiSelect') multiSelect!: MultiSelect;
+  // 新增：唯讀模式
+  @Input() readonly = false;
   @Input() override label = '';
   @Input() override controlName = '';
   @Input() set options(value: any[] | null) {
@@ -52,7 +54,9 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
 
   ngOnInit(): void {
     this.ensureControl();
-    if (!this.control.disabled) {
+    if (this.readonly) {
+      this.control.disable();
+    } else if (!this.control.disabled) {
       this.updateControlState(this.control);
     }
   }
@@ -60,5 +64,66 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
     if (!this.control) {
       this.control = new FormControl();
     }
+  }
+  // 新增：取得選中項目的顯示文字
+  get selectedItemsDisplayText(): string {
+    const selectedValues = this.control.value;
+
+    if (!selectedValues || !Array.isArray(selectedValues) || selectedValues.length === 0) {
+      return '';
+    }
+
+    if (!this.options || this.options.length === 0) {
+      return selectedValues.join(', ');
+    }
+
+    const selectedLabels: string[] = [];
+
+    // 處理分組選項
+    if (this.group) {
+      this.options.forEach(group => {
+        const groupItems = group[this.optionGroupChildren] || [];
+        groupItems.forEach((item: any) => {
+          const itemValue = this.optionValue ? item[this.optionValue] : item;
+          if (selectedValues.includes(itemValue)) {
+            const itemLabel = this.optionLabel ? item[this.optionLabel] : item;
+            selectedLabels.push(itemLabel);
+          }
+        });
+      });
+    } else {
+      // 處理一般選項
+      selectedValues.forEach(value => {
+        const selectedOption = this.options.find(option => {
+          const optionValue = this.optionValue ? option[this.optionValue] : option;
+          return optionValue === value;
+        });
+
+        if (selectedOption) {
+          const label = this.optionLabel ? selectedOption[this.optionLabel] : selectedOption;
+          selectedLabels.push(label);
+        } else {
+          // 如果找不到對應的選項，直接使用值
+          selectedLabels.push(value?.toString() || '');
+        }
+      });
+    }
+
+    return selectedLabels.join(', ');
+  }
+
+  // 新增：取得 multi-select 的 CSS 類別
+  get multiSelectClasses(): string {
+    const classes = ['w-full'];
+
+    if (this.readonly) {
+      classes.push('readonly-field');
+    }
+
+    if (this.submitted && this.control.errors) {
+      classes.push('ng-dirty', 'ng-invalid');
+    }
+
+    return classes.join(' ');
   }
 }

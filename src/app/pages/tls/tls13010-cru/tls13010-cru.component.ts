@@ -41,6 +41,9 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
 import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
+import { TLS13010ValidationService } from './validation/tls13010-validation.service';
+import { DateValidationService } from './validation/date-validation.service';
+import { EmailValidationService } from './validation/email-validation.service';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -71,6 +74,7 @@ import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiato
 })
 export class TLS13010CRUComponent implements OnInit, OnDestroy {
   // ========== 核心屬性（取代繼承的部分） ==========
+  isFormReadonly = false;
   ProgNo = 'TLS13010';
   formTitle = '';
   submitted = false;
@@ -342,6 +346,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     private tls13010Service: TLS13010Service,
     private vendorCategoryService: VendorCategoryOptionsService,
     private negotiatorService: NegotiatorOptionsService,
+    private validationService: TLS13010ValidationService,
+    private dateValidationService: DateValidationService,
+    private emailValidationService: EmailValidationService
   ) { }
 
   // ==========  生命週期方法 ==========
@@ -386,29 +393,38 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }, 100);
   }
 
+
   /**
  * 檢查特定欄位的 readonly 狀態（供 UI 參考）
  */
   isFieldReadonly(fieldName: string): boolean {
-    // 永遠 readonly 的欄位
-    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'ven_no'];
+    // 檢視模式下所有欄位都是 readonly
+    if (this.isViewMode) {
+      return true;
+    }
+
+    // 系統自動產生或自動帶入的欄位永遠是 readonly
+    const alwaysReadonlyFields = [
+      'apply_no',        // 專櫃招募編號 - 系統自動產生
+      'tlt_no',          // 專櫃編號 - 系統自動產生
+      'contract_subno',  // 版次 - 系統自動產生
+      'approve_status',  // 審核狀態 - 系統控制
+      'VEN_Name',        // 廠商名稱 - 自動帶入
+      'ven_no'           // 廠商編號 - 自動帶入
+    ];
 
     if (alwaysReadonlyFields.includes(fieldName)) {
       return true;
     }
 
-    // 檢視模式下全部 readonly
-    if (this.isViewMode) {
-      return true;
-    }
-
-    // 營運狀況的特殊邏輯
+    // 特殊邏輯：營運狀況在新增模式下 readonly
     if (fieldName === 'tlt_openflag') {
-      return this.contractFlowService.isNewContractMode(); // 新增模式下 readonly
+      return this.contractFlowService.isNewContractMode();
     }
 
     return false;
   }
+
 
   private initializeViewMode(): void {
     // 從服務取得檢視模式狀態
@@ -714,14 +730,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
 
   /**
-   * 統一設定表單欄位的 disabled 狀態
+   * 統一設定表單欄位的 readonly 狀態
    */
   private setFormControlsState(): void {
+    // 設定整體 readonly 狀態
+    this.isFormReadonly = this.isViewMode;
 
-    const isNewMode = this.contractFlowService.isNewContractMode();
-    const isViewMode = this.isViewMode;
-
-    // 第一步：先啟用所有欄位
+    // 確保所有欄位都是 enabled 狀態（移除所有 disabled）
     Object.keys(this.dataForm.controls).forEach(key => {
       const control = this.dataForm.get(key);
       if (control && control.disabled) {
@@ -729,46 +744,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }
     });
 
-    // 第二步：設定永遠 readonly 的欄位
-    const alwaysReadonlyFields = [
-      'apply_no',                    // 專櫃招募編號
-      'tlt_no',                      // 專櫃編號
-      'VEN_Name',                    // 廠商名稱
-      'contract_subno',              // 版次
-      'approve_status',
-      'ven_no'                       // 廠商編號
-    ];
-
-    alwaysReadonlyFields.forEach(fieldName => {
-      const control = this.dataForm.get(fieldName);
-      if (control) {
-        control.disable();
-      }
-    });
-
-    // 第三步：處理條件 readonly - 營運狀況
+    // 特殊處理：營運狀況在新增模式下設為固定值
     const tltOpenflagControl = this.dataForm.get('tlt_openflag');
-    if (tltOpenflagControl) {
-      if (isNewMode) {
-        // 新增模式：設定為 '9' 且 readonly
-        tltOpenflagControl.setValue('9');
-        tltOpenflagControl.disable();
-      } else if (!isViewMode) {
-        // 編輯模式：可以編輯
-        tltOpenflagControl.enable();
-      }
-    }
-
-    // 第四步：檢視模式 - 全部 readonly
-    if (isViewMode) {
-      Object.keys(this.dataForm.controls).forEach(key => {
-        const control = this.dataForm.get(key);
-        if (control) {
-          control.disable();
-        }
-      });
+    if (tltOpenflagControl && this.contractFlowService.isNewContractMode()) {
+      tltOpenflagControl.setValue('9'); // 設定為未生效
     }
   }
+
 
   private initializeEmptyForm(): void {
     // 設定預設值 - 根據 constants 檔案的正確值
@@ -2084,14 +2066,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private handleViewModeChange(isViewMode: boolean): void {
-    console.log('🔄 處理檢視模式變更:', isViewMode);
+    this.isFormReadonly = isViewMode;
 
+    // 更新標題
     if (isViewMode) {
-      this.formTitle = '檢視契約資料';
-      console.log('🔒 切換到檢視模式');
+      this.formTitle = '檢視合約資料';
     } else {
-      this.formTitle = this.contractFlowService.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
-      console.log('🔓 切換到編輯模式');
+      this.formTitle = this.contractFlowService.isNewContractMode() ? '新增合約資料' : '編輯合約資料';
     }
 
     // 重新設定控制狀態
@@ -2270,39 +2251,38 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    * 新增：設定動態驗證器
    */
   private setupDynamicValidators(): void {
-    console.log('🔧 設定動態驗證器...');
-
     // 設定抽成別變更監聽
     this.dataForm.get('tlt_term_type')?.valueChanges.subscribe(() => {
-      this.updateFieldValidators();
+      this.validationService.updateFieldValidators(this.dataForm);
     });
 
     // 設定付款方式變更監聽
     this.dataForm.get('paytype')?.valueChanges.subscribe(() => {
-      this.updatePaymentValidators();
+      this.validationService.updatePaymentValidators(this.dataForm);
     });
 
     // 設定會員卡配合變更監聽
     this.dataForm.get('vip_yn')?.valueChanges.subscribe(() => {
-      this.updateCreditCardValidators();
+      this.validationService.updateCreditCardValidators(this.dataForm);
     });
 
-    // 修改：設定預收租金相關監聽
-    this.setupRentAheadCalculation();
+    // 設定日期驗證器
+    this.dateValidationService.setupDateValidators(this.dataForm, this.messageService);
 
-    this.setupDateValidators();
+    // 設定預收租金相關監聽
+    this.setupRentAheadCalculation();
 
     // 設定保證金付款方式變更監聽
     ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
       this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
-        this.updateDepositValidators();
+        this.validationService.updateDepositValidators(this.dataForm);
       });
     });
 
     // 初始驗證器設定
-    this.updateFieldValidators();
-    this.updateInitialRequiredFields();
+    this.validationService.updateAllValidators(this.dataForm);
   }
+
 
   // 新增：設定預收租金計算邏輯
   private setupRentAheadCalculation(): void {
@@ -2721,23 +2701,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    */
   getFieldErrorMessage(fieldName: string): string {
     const field = this.dataForm.get(fieldName);
-    if (field && field.errors) {
-      if (field.errors['required']) {
-        return this.getRequiredErrorMessage(fieldName);
-      }
-      if (field.errors['email']) return '請輸入正確的 Email 格式';
-      if (field.errors['maxlength']) {
-        return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
-      }
-      if (field.errors['min']) {
-        return `最小值為 ${field.errors['min'].min}`;
-      }
-      if (field.errors['max']) {
-        return `最大值為 ${field.errors['max'].max}`;
-      }
-      if (field.errors['depositRequired']) {
-        return '付款方式有值時此欄位為必填';
-      }
+    if (field) {
+      return this.validationService.getFieldErrorMessage(fieldName, field);
     }
     return '';
   }
@@ -2787,21 +2752,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
  * 觸發所有動態驗證器（用於初始化和資料載入後）
  */
   private triggerAllDynamicValidators(): void {
-    console.log('🔥 觸發所有動態驗證器');
-
-    // 付款方式相關驗證
-    this.updatePaymentValidators();
-
-    // 抽成別相關驗證
-    this.updateFieldValidators();
-
-    // 會員卡相關驗證
-    this.updateCreditCardValidators();
-
-    // 保證金相關驗證
-    this.updateDepositValidators();
-
-    console.log('✅ 所有動態驗證器觸發完成');
+    this.validationService.updateAllValidators(this.dataForm);
   }
 
   onClearAndExit(): void {
@@ -2817,35 +2768,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
  * 格式化 email 欄位（當使用者離開輸入框時觸發）
  */
   formatEmailField(fieldName: string, value: string): void {
-    console.log(`格式化 ${fieldName} 欄位:`, value);
-
-    if (!value || value.trim() === '') {
-      return;
-    }
-
-    // 檢查是否包含分隔符號，如果沒有就不需要格式化
-    if (!value.includes(',') && !value.includes(';')) {
-      // 單一 email，只需要驗證格式
-      this.validateSingleEmail(fieldName, value.trim());
-      return;
-    }
-
-    // 格式化多個 email
-    const formattedValue = this.formatMultipleEmails(value);
-
-    // 如果格式有改變，更新表單值
-    if (formattedValue !== value) {
-      const control = this.dataForm.get(fieldName);
-      control?.setValue(formattedValue);
-
-      this.messageService.infoBubble(`已自動格式化 ${this.getFieldDisplayName(fieldName)}`);
-
-      // 自動儲存
-      this.saveToWorkflow();
-    }
-
-    // 驗證格式化後的 email
-    this.validateMultipleEmails(fieldName, formattedValue);
+    this.emailValidationService.formatEmailField(this.dataForm, fieldName, value, this.messageService);
+    this.saveToWorkflow();
   }
 
   /**

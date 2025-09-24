@@ -766,6 +766,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 新增模式下的 API 查詢參數（不帶 apply_no）
     const queryParams = {
+      apply_no: '', // 新增模式不帶 apply_no
       showAll: true,
       loadDefaults: true  // 或其他 API 需要的參數來表示要載入預設項目
     };
