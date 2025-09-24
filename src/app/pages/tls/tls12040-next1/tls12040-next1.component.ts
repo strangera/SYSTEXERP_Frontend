@@ -190,22 +190,19 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private loadWorkflowDataWithRetry(retryCount: number = 0): void {
     console.log('開始載入工作流程資料，重試次數:', retryCount);
+    console.log('當前 CRUD 狀態:', this.crudstatus);
 
-    // 直接從 SessionStorage 取得正確的 applyNo
+    // 從 SessionStorage 獲得正確的 applyNo
     const saved = sessionStorage.getItem('TLS12040_FLOW');
     let realApplyNo = '';
 
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        console.log('SessionStorage 原始資料:', parsed);
-
-        // 從 stepData 中找到 cru 資料
         if (parsed.stepData && Array.isArray(parsed.stepData)) {
           const cruEntry = parsed.stepData.find(([key]: [string, any]) => key === 'cru');
           if (cruEntry && cruEntry[1]?.data?.apply_no) {
             realApplyNo = cruEntry[1].data.apply_no;
-            console.log('從 SessionStorage 取得真實 applyNo:', realApplyNo);
           }
         }
       } catch (error) {
@@ -213,31 +210,34 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
     }
 
-    // 如果有真實的 applyNo，直接使用
+    // 檢查工作流程服務狀態
+    const currentState = this.flowService.getCurrentState();
+
     if (realApplyNo) {
       this.currentApplyNo = realApplyNo;
       console.log('設定 applyNo:', this.currentApplyNo);
-
-      // 載入合約資訊和扣款資料
       this.loadContractInfo();
       this.loadFareDataWithPriority();
       return;
-    }
-
-    // 如果沒有 applyNo，檢查工作流程服務狀態
-    const currentState = this.flowService.getCurrentState();
-    console.log('工作流程狀態:', currentState);
-
-    if (currentState.applyNo) {
+    } else if (currentState.applyNo) {
       this.currentApplyNo = currentState.applyNo;
       this.loadContractInfo();
       this.loadFareDataWithPriority();
       return;
     }
 
-    // 重試機制
+    // 🆕 新增：根據 CRUD 狀態處理
+    if (this.isCreateMode) {
+      console.log('🆕 新增模式：載入合約資訊但不載入扣款資料');
+      // 新增模式下，只載入合約資訊，扣款資料初始化為空
+      this.loadContractInfo();
+      this.initializeEmptyData();
+      return;
+    }
+
+    // 編輯/檢視模式下才需要 applyNo
     if (retryCount < 2) {
-      console.warn('沒有取得 applyNo，等待後重試');
+      console.warn('編輯/檢視模式但沒有 applyNo，等待後重試');
       setTimeout(() => {
         this.loadWorkflowDataWithRetry(retryCount + 1);
       }, 300);
@@ -245,18 +245,24 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     // 最後手段：導航回列表頁
-    console.error('無法取得有效的 applyNo，導航回列表頁');
+    console.error('編輯/檢視模式無法取得有效的 applyNo，導航回列表頁');
     this.router.navigate(['account/tls/tls12040']);
   }
 
   private loadFareDataWithPriority(): void {
     console.log('開始優先級載入扣款資料...');
 
+    // 🆕 新增模式直接初始化空資料
+    if (this.isCreateMode) {
+      console.log('新增模式：直接初始化空扣款資料');
+      this.initializeEmptyData();
+      return;
+    }
+
     // 1. 優先檢查 Next1 步驟的暫存資料
     const savedNext1Data = this.flowService.getNext1Data<Next1Data>();
     console.log('檢查 Next1 暫存資料:', savedNext1Data);
 
-    // 修改判斷邏輯：只要有暫存資料就用暫存，不管 applyNo 是否匹配
     if (savedNext1Data?.fareData && this.hasValidFareData(savedNext1Data.fareData)) {
       console.log('✅ 使用 Next1 暫存的扣款資料');
       this.originalFareData = { ...savedNext1Data.fareData };
@@ -455,9 +461,18 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 從 API 載入扣款資料
   private loadFareDataFromAPI(): void {
     console.log('從 API 載入扣款資料，apply_no:', this.currentApplyNo);
+    console.log('當前模式:', this.crudstatus);
 
+    // 🆕 新增模式處理
+    if (this.isCreateMode) {
+      console.log('新增模式：直接初始化空扣款資料');
+      this.initializeEmptyData();
+      return;
+    }
+
+    // 編輯/檢視模式需要 apply_no
     if (!this.currentApplyNo) {
-      console.error('申請編號為空，無法載入資料');
+      console.error('編輯/檢視模式但申請編號為空，無法載入資料');
       this.messageService.warnBubble('申請編號無效，無法載入扣款資料');
       this.initializeEmptyData();
       return;

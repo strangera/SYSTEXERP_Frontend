@@ -18,8 +18,6 @@ import { DialogModule } from 'primeng/dialog';
 import { PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { BaseCommissionCondition, BaseRentHigherCondition, BaseTierCondition, ConditionItem, FixedRentCondition, GeneralCommissionCondition, GraduatedCommissionCondition } from './models/tls12040.table.model';
-import { TLS13010Service } from '@service/api/tls/tls13010.service';
-import { TLS14020Service } from '@service/api/tls/tls14020.service';
 import { TLS12040SmartDateSegmentationService } from './services/smart-date-manager.service';
 import { TLS12040ConditionDataManager } from './services/condition-data-manager.service';
 import { TLS12040UpConditionDataManager } from './services/updated-condition-data-manager.service';
@@ -27,6 +25,7 @@ import { TLS12040EventHandlerManager } from './services/event-handler-manager.se
 import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 工作流程步驟定義
 enum WorkflowStep {
@@ -71,6 +70,21 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
   // ===== 狀態管理 =====
   isViewMode = false;
+
+
+  // 使用 CRUDStatus 判斷模式
+  get isReadOnlyMode(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
+
+  get isEditMode(): boolean {
+    return this.crudstatus === CRUDStatus.Edit;
+  }
+
+  get isCreateMode(): boolean {
+    return this.crudstatus === CRUDStatus.Create;
+  }
+
   dataLoaded = false;
   conditionDataLoaded = false;
   showConfirmDialog = false;
@@ -171,7 +185,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     console.log('Next3 組件初始化開始');
 
     this.setupViewModeUI();
-    this.initializePage('TLS13010', this.dataForm);
+    this.initializePage('TLS12040', this.dataForm);
     this.initializeTableConfigs();
 
     this.loadDiscountOptions().then(() => {
@@ -182,7 +196,8 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   ngOnDestroy(): void {
     console.log('Next3 組件銷毀前暫存資料');
 
-    if (!this.isViewMode) {
+    if (!this.isReadOnlyMode && this.allConditionItems.length > 0) {
+      console.log('組件銷毀前最後儲存');
       this.saveConditionDataToWorkflow();
     }
 
@@ -635,6 +650,10 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   // ===== 事件處理方法 =====
 
   onTableSave(event: any, commissionType: string): void {
+    if (this.isReadOnlyMode) {
+      this.notificationService.infoBubble('檢視模式下無法儲存');
+      return;
+    }
     // 根據 commissionType 轉換為對應的類型標識
     const typeMap: { [key: string]: string } = {
       '1': 'fixedRent',
@@ -684,6 +703,10 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   }
 
   onBatchDelete(selectedItems: any[], commissionType: string): void {
+    if (this.isReadOnlyMode) {
+      this.notificationService.infoBubble('檢視模式下無法刪除項目');
+      return;
+    }
     const typeMap: { [key: string]: string } = {
       '1': 'fixedRent',
       '2': 'baseRentHigher',
@@ -773,7 +796,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   }
 
   onAddFixedRentItem(): void {
-    if (this.isViewMode) {
+    if (this.isReadOnlyMode) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
@@ -1046,6 +1069,10 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   // ===== 數據保存方法 =====
 
   private saveConditionDataToWorkflow(): void {
+    if (this.isReadOnlyMode) {
+      console.log('唯讀模式，跳過資料儲存');
+      return;
+    }
     // 重新組合所有條件項目（包括標記為刪除的項目）
     this.allConditionItems = [
       ...this.fixedRentItems,
@@ -1083,8 +1110,8 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   // ===== 提交相關方法 =====
 
   onSubmitNext(): void {
-    if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010']);
+    if (this.isReadOnlyMode) {
+      this.router.navigate(['account/tls/tls12040']);
       this.notificationService.infoBubble('已結束檢視');
       return;
     }
@@ -1295,7 +1322,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     this.contractFlowService.onSubmitSuccess();
 
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls13010']);
+      this.router.navigate(['account/tls/tls12040']);
     }, 3000);
   }
 
@@ -1319,14 +1346,19 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   // ===== 導航方法 =====
 
   override onCancel(): void {
-    if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010next2']);
-      return;
+    if (!this.isReadOnlyMode) {
+      console.log('Next3 返回前一頁，先暫存資料');
+      this.saveConditionDataToWorkflow();
     }
 
-    console.log('Next3 返回前一頁，先暫存資料');
-    this.saveConditionDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010next2']);
+    const navigationExtras: NavigationExtras = {
+      state: {
+        crudstatus: this.crudstatus,
+        fromRoute: this.router.url
+      }
+    };
+
+    this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
   }
 
   onClearAndExit(): void {
@@ -1334,7 +1366,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls12040'], extras);
     this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 
