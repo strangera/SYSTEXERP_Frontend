@@ -1,11 +1,10 @@
 import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
+import { TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { finalize } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
@@ -22,7 +21,9 @@ import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.mode
 import { yesterday } from '@shared/models/system/query-form.model';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { TLS41010Service } from '@service/api/tls/tls41010.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -40,7 +41,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     InputNumberComponent,
     MenuModule,
     TranslateModule,
-    TableComponent
+    TableReportComponent,
+    AsyncPipe
   ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
@@ -54,15 +56,15 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
     talent_id: [0], /*專櫃代號 → talent_id */
-    color: ['#ffffff'], /*顏色 */
-    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]), // 分頁和排序參數
   });
+  historyRequestBody?: TLS24010Request;
   color: string | undefined;
   totalRecords = 0;
+  isTXN_GUIPaper!: boolean;
   today = new Date(); // 獲取當前日期
   TXN_GUIPaperOptions = TXN_GUIPaperOptions
   txnStatusOptions = txnStatusOptions
-  ECR_NoOptions: IDropdownItem[] = [];
+  ECR_NoOptions = this.dropDown.queryPos1002();
   TLT_NoOptions: IDropdownItem[] = [];
   data: TLS24010Data[] = [];
   selectedRowData?: TLS24010Data;
@@ -70,15 +72,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   addButton: AddButton[] = []
   constructor(
     private readonly dropDownList: DropDownListService,
-    private readonly tls24010Service: Tls24010Service,
+    private readonly dropDown: DropdownApiService,
+    public readonly tls24010Service: Tls24010Service,
     private readonly tLS41010Service: TLS41010Service,
-    private readonly cdr: ChangeDetectorRef
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(yesterday.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
@@ -110,40 +109,87 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       const body = {
         ...frm.value,
         TXN_Date: frm.value.TXN_Date ? formatDateToYYYY_MM_DD(frm.value.TXN_Date) : '',
+        pageSize: 30,
+        pageIndex: 1,
+        SortBy: [{ field: 'TXN_Date', order: -1 }],
       }
       this.tls24010Service.queryTLS24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data.map(item => ({
-          ...item, TXN_No: item.TXN_No.toString(),
-        }));
+        this.historyRequestBody = body;
+        this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.updateData(frm);
+        this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
+        this.addButton = [
+          {
+            label: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? '取消作廢' : '修正交易資料',
+            icon: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-undo' : 'pi pi-ellipsis-h',
+            action: (rowdata: TLS24010Data, event) => {
+              const data = this.TLT_NoOptions.find(option => option.No === rowdata.TLT_No);
+              if (data?.store_way && data?.Name && data?.talent_id) {
+                rowdata.store_way = data.store_way;
+                rowdata.TLT_Name = data?.Name;
+                rowdata.talent_id = data?.talent_id;
+              }
+              if (frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C') {
+                this.onCancel(rowdata)
+              } else {
+                this.openModal(rowdata, event);
+              }
+            },
+            disabled: (rowData: TLS24010Data) => rowData.TXN_Status === 'D'
+          }
+        ]
+        this.updateItems(frm);
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
-  isTXN_GUIPaper!: boolean;
-  updateData(frm: FormGroup): void {
-    const TLT_No = frm.get('TLT_No')?.value;
-    const data = this.TLT_NoOptions.find(option => option.No === TLT_No);
-    if (data?.store_way && data?.Name && data?.talent_id) {
-      this.queryForm.get('store_way')?.setValue(data.store_way);
-      this.queryForm.get('TLT_Name')?.setValue(data?.Name);
-      this.queryForm.get('talent_id')?.setValue(data?.talent_id);
+  // 查看補登資料
+  onDetailData(rowdata: TLS24010Data): void {
+    this.onDetail(rowdata);
+  }
+  // 編輯補登資料
+  onEditData(rowData: TLS24010Data, type: string): void {
+    if (type === FIX_TYPE.交易資料作廢) {
+      this.messageService.confirm({
+        header: '作廢交易資料',
+        message: '確定要作廢交易資料嗎?',
+        accept: () => {
+          const data = {
+            Store_way: rowData.store_way || '',
+            SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+            TXN_Date: formatDateToYYYY_MM_DD(rowData.TXN_Date) || '',
+            ECR_No: rowData.ECR_No || '',
+            TXN_No: Number(rowData.TXN_No) || 0,
+            POS5006_ID: rowData.ID || 0,
+            TXN_Remark: rowData.TXN_Remark || '',
+            EditType: TLS24010_EDIT_TYPE.交易資料作廢,
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+            this.onSubmit(this.queryForm);
+          });
+        },
+        extraButtons: [
+          {
+            label: '確認資料',
+            severity: 'info',
+            action: () => {
+              this.onEdit({
+                ...rowData,
+                type,
+                TXN_GUIPaper: this.queryStateService.getQueryStateValue(this.ProgNo)?.TXN_GUIPaper,
+              });
+            }
+          }
+        ]
+      });
+    } else {
+      this.onEdit({
+        ...rowData,
+        type,
+        TXN_GUIPaper: this.queryStateService.getQueryStateValue(this.ProgNo)?.TXN_GUIPaper,
+      });
     }
-    const txn_no = frm.get('TXN_No')?.value;
-    if (txn_no) {
-      this.queryForm.get('TXN_No')?.setValue(txn_no);
-    }
-    this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
-    this.queryStateService.setQueryState(this.ProgNo, frm.value);
-    this.addButton = [
-      {
-        label: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? '取消作廢' : '修正交易資料',
-        icon: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-undo' : 'pi pi-ellipsis-h',
-        action: (rowdata: TLS24010Data, event) => frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? this.onCancel(rowdata) : this.openModal(rowdata, event),
-        disabled: (rowData: TLS24010Data) => rowData.TXN_Status === 'D'
-      }
-    ]
-    this.updateItems(frm);
   }
   items: MenuItem[] = [];
   updateItems(frm: FormGroup): void {
@@ -166,6 +212,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
   // 補登資料
   onCreateData(frm: FormGroup): void {
+    this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
     if (frm?.value.TXN_GUIPaper === 'R' || frm?.value.TXN_GUIPaper === 'C') { return; }
     if (!frm || !frm.get('ECR_No')?.value) {
       this.messageService.errorBubble('請選擇收銀機號');
@@ -177,75 +224,18 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     }
     this.submitted = true;
     if (!this.queryForm.valid) { return; }
-    this.updateData(frm);
+    const TLT_No = frm.get('TLT_No')?.value;
+    const data = this.TLT_NoOptions.find(option => option.No === TLT_No);
+    if (data?.store_way && data?.Name && data?.talent_id) {
+      this.queryForm.get('store_way')?.setValue(data.store_way);
+      this.queryForm.get('TLT_Name')?.setValue(data?.Name);
+      this.queryForm.get('talent_id')?.setValue(data?.talent_id);
+    }
     const inertData = {
       ...frm.value,
       TXN_No: '系統自動產生',
     };
     this.onCreate(inertData);
-  }
-  // 查看補登資料
-  onDetailData(rowdata: TLS24010Data): void {
-    if (this.isTXN_GUIPaper) { return; }
-    const history = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail({
-      ...rowdata,
-      TXN_GUIPaper: history?.TXN_GUIPaper,
-      store_way: history?.store_way,
-      talent_id: history?.talent_id
-    });
-  }
-  // 編輯補登資料
-  onEditData(rowData: TLS24010Data, type: string): void {
-    const history = this.queryStateService.getQueryState(this.ProgNo);
-    if (type === FIX_TYPE.交易資料作廢) {
-      this.messageService.confirm({
-        header: '作廢交易資料',
-        message: '確定要作廢交易資料嗎?',
-        accept: () => {
-          const body = {
-            Store_way: history?.value.store_way || '',
-            SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-            TXN_Date: formatDateToYYYY_MM_DD(rowData.TXN_Date) || '',
-            ECR_No: rowData.ECR_No || '',
-            TXN_No: Number(rowData.TXN_No) || 0,
-            POS5006_ID: rowData.ID || 0,
-            TXN_Remark: rowData.TXN_Remark || '',
-          }
-          const data = {
-            ...body,
-            EditType: TLS24010_EDIT_TYPE.交易資料作廢,
-          }
-          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-            this.messageService.successBubble(res.Message);
-            this.onSubmit(this.queryForm);
-          });
-        },
-        extraButtons: [
-          {
-            label: '確認資料',
-            severity: 'info',
-            action: () => {
-              this.onEdit({
-                ...rowData,
-                type,
-                TXN_GUIPaper: history?.value.TXN_GUIPaper,
-                store_way: history?.value.store_way,
-                talent_id: history?.value.talent_id
-              });
-            }
-          }
-        ]
-      });
-    } else {
-      this.onEdit({
-        ...rowData,
-        type,
-        TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
-        store_way: this.queryForm.value.store_way,
-        talent_id: this.queryForm.value.talent_id
-      });
-    }
   }
 
   onCancel(rowdata: TLS24010Data): void {

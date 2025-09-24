@@ -79,11 +79,18 @@
                     [ngClass]="'type-' + (k.type || 'normal')"
                     (click)="selectKey(k)"
                   >
-                    <!-- 按鈕顯示 KB_Display1 優先，沒填才顯示代碼 -->
-                    <div class="kb-label">{{ k.KB_Display1 || k.code }}</div>
+                    <!-- 第一行 -->
+                    <div class="kb-line" *ngIf="k.KB_Display1">
+                      {{ k.KB_Display1 }}
+                    </div>
+                    <!-- 第二行 -->
+                    <div class="kb-line" *ngIf="k.KB_Display2">
+                      {{ k.KB_Display2 }}
+                    </div>
+                    <!-- ScanCode：只有兩行都沒文字才顯示 -->
                     <div
                       class="kb-sub"
-                      *ngIf="k.KB_Display1 && k.KB_Display1 !== k.code"
+                      *ngIf="!k.KB_Display1 && !k.KB_Display2"
                     >
                       {{ k.code }}
                     </div>
@@ -215,17 +222,16 @@
               </div>
             </div>
             <div class="col-12" *ngIf="selectedTab === 'font'">
-              <label>字型樣式</label>
+              <label for="KB_Fonttyped">字型樣式</label>
               <div class="flex flex-row gap-3">
                 <p-checkbox
                   *ngFor="let opt of KB_FonttypedOptions"
                   [binary]="true"
                   [inputId]="'ft-' + opt.index"
                   [label]="opt.label"
-                  [ngModel]="
-                    getControl('KB_Fonttyped').value[opt.index] === 'Y'
-                  "
+                  [ngModel]="getControl('KB_Fonttyped').value[opt.index] === 'Y'"
                   (onChange)="toggleFonttyped(opt.index, $event.checked)"
+                  [ngModelOptions]="{ standalone: true }"
                 ></p-checkbox>
               </div>
             </div>

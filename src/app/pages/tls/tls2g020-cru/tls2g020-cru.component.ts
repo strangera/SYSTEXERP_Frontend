@@ -14,7 +14,9 @@ import { TableModule } from 'primeng/table';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { NgIf, NgFor } from '@angular/common';
+import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 import { InputNumberModule } from 'primeng/inputnumber';
+
 @Component({
   selector: 'app-tls2g020-cru',
   templateUrl: './tls2g020-cru.component.html',
@@ -36,7 +38,6 @@ import { InputNumberModule } from 'primeng/inputnumber';
     NgFor
   ],
 })
-
 export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   editMode: 'month' | 'day' = 'month';
   currentMonthData: any = null;
@@ -47,65 +48,57 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   leftLabels: string[] = ['預算別', '日期', '實際預算', '抽成率', '抽成額'];
 
   dataForm = this.formBuilder.nonNullable.group({
-    budget_yymm: [{ value: null, disabled: true }],
-    tlt_no_tlt_name: [{ value: null, disabled: true }],
+    budget_yymm: [null],
+    budget_yy: [{ value: null, disabled: true }],
+    tlt_no: [{ value: null, disabled: true }],
+    tlt_name: [{ value: null, disabled: true }],
     BUDGET_Mbudget: [{ value: null, disabled: true }],
     cag_charge_rate: [{ value: null, disabled: true }],
     charge_amt: [{ value: null, disabled: true }],
+    talent_id: [null],
   });
 
   tltNoOptions: IDropdownItem[] = [];
 
-  data: any[] = Array.from({ length: 12 }, (_, i) => ({
-    budget_yymm: `${i + 1}月`,
-    budget: null,
-    cag_charge_rate: null,
-    charge_amt: null
-  }));
+  // /** 月畫面明細 */
+  data: any[] = [];
 
+  /** 月份欄位設定 */
   columns: Column[] = [
-    { field: 'budget_yymm', header: '月份' },
+    { field: 'Month', header: '月', format: (v: string) => v ? v.slice(-2) : '' },
     { field: 'budget', header: '月預算' },
-    { field: 'cag_charge_rate', header: '平均抽成' },
-    { field: 'charge_amt', header: '抽成額' },
+    { field: 'avg_cag_charge_rate', header: '平均抽成' },
   ];
+
   constructor(
     private route: ActivatedRoute,
     private dropDownListService: DropDownListService,
+    private tls2g020Service: Tls2g020Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2G020', this.dataForm);
-    const year = 2024;
-    const month = 9; // 9月 (注意：JS 月份 0=1月, 所以這裡放 9 表示 10 月)
 
-    const totalDays = new Date(year, month, 0).getDate(); // 當月天數
-    const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 1號星期幾
+    console.log('rowdata', this.rowdata);
 
-    this.weeks = [];
-    let week: (number | null)[] = new Array(firstDayOfWeek).fill(null);
+    this.data = this.rowdata?.Mdeatil ?? [];
 
-    for (let d = 1; d <= totalDays; d++) {
-      week.push(d);
-      if (week.length === 7) {
-        this.weeks.push(week);
-        week = [];
-      }
+    if (this.rowdata) {
+      this.dataForm.patchValue({
+        budget_yy: this.rowdata.budget_yy,
+        tlt_no: this.rowdata.tlt_no,
+        tlt_name: this.rowdata.tlt_name,
+      });
     }
 
-    if (week.length > 0) {
-      while (week.length < 7) {
-        week.push(null); // 補滿 7 格
-      }
-      this.weeks.push(week);
-    }
 
+    // 下拉選單
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        if (res && res.Data) {
+        if (res?.Data) {
           this.tltNoOptions = res.Data.map(item => ({
             label: `${item.No} ${item.Name}`,
             value: item.No,
@@ -116,18 +109,54 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
+  /** 切換到日畫面編輯 */
   onMonthEdit(row: any): void {
     this.editMode = 'day';
     this.currentMonthData = row;
-    const year = new Date().getFullYear(); // 或根據 row 帶入年份
-    const month = Number(row.budget_yymm.replace('月', ''));
+
+    const year =
+      Number(this.dataForm.controls['budget_yy'].value) ||
+      Number(row.budget_yy) ||
+      new Date().getFullYear();
+
+    const month = Number(row.Month?.slice(-2)) || 1;
+
+    const payload = {
+      talent_id: row.talent_id ?? 0,
+      budget_yymm: `${year}${month.toString().padStart(2, '0')}`,
+    };
+
+
+    this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
+      next: (res) => {
+        const apiData = res?.Data?.[0]?.Data || [];
+
+        // 把每日資料轉成 currentMonthData.days
+        this.currentMonthData.days = {};
+        apiData.forEach((d: any) => {
+          const day = new Date(d.budget_date).getDate(); // 從日期取日
+          this.currentMonthData.days[day] = {
+            budget: d.budget || 0,
+            rate: 0, // 後端沒給，先補 0
+            commission: 0
+          };
+        });
+
+        // 繪製月曆表格
+        this.generateCalendar(year, month);
+      },
+    });
+  }
+
+
+  private generateCalendar(year: number, month: number) {
     const days = new Date(year, month, 0).getDate();
     this.daysInMonth = Array.from({ length: days }, (_, i) => i + 1);
 
-    // 星期排版
     const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
     const weeks: (number | null)[][] = [];
     let week: (number | null)[] = new Array(firstDayOfWeek).fill(null);
+
     for (let d = 1; d <= days; d++) {
       week.push(d);
       if (week.length === 7) {
@@ -136,14 +165,12 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
       }
     }
     if (week.length > 0) {
-      while (week.length < 7) {
-        week.push(null); // 補滿 7 格
-      }
+      while (week.length < 7) week.push(null);
       weeks.push(week);
     }
     this.weeks = weeks;
 
-    // 初始化每一天的資料
+    // 初始化缺失的天
     if (!this.currentMonthData.days) this.currentMonthData.days = {};
     for (let d = 1; d <= days; d++) {
       if (!this.currentMonthData.days[d]) {
@@ -151,19 +178,21 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
       }
     }
   }
-  // 預算改變時即時計算抽成額
+
+
+  /** 當月回日編輯 */
+  onBackToMonthTable() {
+    this.editMode = 'month';
+    this.currentMonthData = null;
+  }
+
+  /** 預算變更即時計算抽成額 */
   onBudgetChange(day: number) {
     const data = this.currentMonthData.days[day];
     data.commission = data.budget * (data.rate / 100);
   }
 
-  onBackToMonthTable() {
-    this.editMode = 'month';
-    this.currentMonthData = null;
-  }
   onSubmit(frm: FormGroup): void {
-    if (frm.valid) {
-      // Handle form submission
-    }
+
   }
 }

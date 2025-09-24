@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Tls22050Component } from './tls22050.component';
+import { TableExport2Component } from './table-export2.component';
 
-describe('Tls22050Component', () => {
-  let component: Tls22050Component;
-  let fixture: ComponentFixture<Tls22050Component>;
+describe('TableExportComponent', () => {
+  let component: TableExport2Component;
+  let fixture: ComponentFixture<TableExport2Component>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Tls22050Component]
+      imports: [TableExport2Component]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Tls22050Component);
+    fixture = TestBed.createComponent(TableExport2Component);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

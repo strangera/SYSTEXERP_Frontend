@@ -64,4 +64,16 @@ export class FIN13050Service {
         
       );
   }
+ deleteFIN13050(idList: number[]): Observable<any> {
+    return this.http
+      .post<any>(`${this.apiUrl}/FIN0000/INV1000/deleteFIN13050`, { idList })
+      .pipe(tap((res) => console.log('刪除結果:', res)));
+  }
+  queryVendorList(): Observable<any> {
+    return this.http
+      .post<any>(`${this.apiUrl}/FIN0000/GLS1000/queryVendorList`, {})
+      .pipe(
+        tap(res => console.log('VendorList:', res)),
+      );
+  }
 }

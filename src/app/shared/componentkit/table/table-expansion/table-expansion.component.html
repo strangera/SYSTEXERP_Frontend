@@ -4,7 +4,8 @@
     [paginator]="showPaginator" [rows]="rows" [totalRecords]="totalRecords" [(first)]="first"
     (onPage)="onPageChange($event)" [rowsPerPageOptions]="rowsPerPageOptions" [showCurrentPageReport]="true"
     currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
-    paginatorStyleClass="p-paginator-sm" styleClass="p-datatable-sm p-datatable-gridlines">
+    paginatorStyleClass="p-paginator-sm" styleClass="p-datatable-sm p-datatable-gridlines p-2"
+    paginatorDropdownAppendTo="body">
 
     <!-- 表頭 -->
     <ng-template pTemplate="header" let-columns>

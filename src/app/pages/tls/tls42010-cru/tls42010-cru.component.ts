@@ -274,7 +274,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       const key = this.keys.find(k => k.code === scanCode);
       if (key) {
         Object.assign(key, {
-          ID: d.ID ?? 0,   // ⚠️ 每筆保留自己的 ID
+          ID: d.ID && d.ID > 0 ? d.ID : 0,       // 明細自己的 ID，沒有就設 0
+          MID: this.rowdata?.ID ?? 0,            // 每筆綁主檔 ID
           KB_Func: d.KB_Func,
           KB_Switch: d.KB_Switch,
           KB_Display1: d.KB_Display1,
@@ -314,27 +315,50 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
+
   // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem) {
+    // 先把上一顆存起來
     if (this.selected) {
       Object.assign(this.selected, this.selectedKeyForm.getRawValue());
     }
     this.selected = k;
-    this.selectedKeyForm.patchValue({
-      KB_Func: k.KB_Func ?? '',
-      KB_Switch: k.KB_Switch ?? 'Y',
-      KB_Display1: k.KB_Display1 ?? '',
-      KB_Display2: k.KB_Display2 ?? '',
-      KB_Color: k.KB_Color ?? 'RGB:0,0,0',
-      KB_Style: k.KB_Style ?? '1',
-      KB_Font: k.KB_Font ?? 'Microsoft JhengHei',
-      KB_Size: k.KB_Size ?? 14,
-      KB_FontColor: k.KB_FontColor ?? 'RGB:0,0,0',
-      KB_Fonttyped: k.KB_Fonttyped ?? 'NNN',
-      KB_Arg1: k.KB_Arg1 ?? '',
-      KB_Arg2: k.KB_Arg2 ?? '',
-      KB_Arg3: k.KB_Arg3 ?? ''
-    });
+    const hasConfig =
+      k.KB_Func || k.KB_Display1 || k.KB_Display2 ||
+      k.KB_Arg1 || k.KB_Arg2 || k.KB_Arg3;
+    if (hasConfig) {
+      this.selectedKeyForm.patchValue({
+        KB_Func: k.KB_Func ?? '',
+        KB_Switch: k.KB_Switch ?? 'Y',
+        KB_Display1: k.KB_Display1 ?? '',
+        KB_Display2: k.KB_Display2 ?? '',
+        KB_Color: k.KB_Color ?? 'RGB:0,0,0',
+        KB_Style: k.KB_Style ?? '1',
+        KB_Font: k.KB_Font ?? 'Microsoft JhengHei',
+        KB_Size: k.KB_Size ?? 14,
+        KB_FontColor: k.KB_FontColor ?? 'RGB:0,0,0',
+        KB_Fonttyped: k.KB_Fonttyped ?? 'NNN',
+        KB_Arg1: k.KB_Arg1 ?? '',
+        KB_Arg2: k.KB_Arg2 ?? '',
+        KB_Arg3: k.KB_Arg3 ?? ''
+      });
+    } else {
+      this.selectedKeyForm.reset({
+        KB_Func: '',
+        KB_Switch: 'Y',
+        KB_Display1: '',
+        KB_Display2: '',
+        KB_Color: 'RGB:0,0,0',
+        KB_Style: '1',
+        KB_Font: 'Microsoft JhengHei',
+        KB_Size: 14,
+        KB_FontColor: 'RGB:0,0,0',
+        KB_Fonttyped: 'NNN',
+        KB_Arg1: '',
+        KB_Arg2: '',
+        KB_Arg3: ''
+      });
+    }
   }
 
   // ---------------- Submit ----------------
@@ -346,14 +370,17 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         Object.assign(this.selected, this.selectedKeyForm.getRawValue());
       }
 
-      const POS1004Disc = this.keys.map(k => {
+      // 先組明細
+      const detailList = this.keys.map(k => {
         const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
         const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
 
         return {
-          ID: k.ID ?? 0,  // ⚠️ 每筆保留自己的 ID
+          ID: this.crudstatus === CRUDStatus.Create ? 0 : (k.ID ?? 0),
           ECR_KBType: frm.value.ECR_KBType,
-          USR_Level: frm.value.USR_Level,
+          USR_Level: this.crudstatus === CRUDStatus.Create
+            ? frm.value.USR_Level              // 新增用表單
+            : this.rowdata?.USR_Level || frm.value.USR_Level, // 修改用 DB 值
           KB_ScanCode: k.code,
           KB_Func: hasConfig ? k.KB_Func : '',
           KB_Arg1: hasConfig ? k.KB_Arg1 : '',
@@ -377,28 +404,80 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         };
       });
 
-      const payload = {
-        ID: this.rowdata?.ID ?? 0,  // ⚠️ 主檔 ID 要用查回來的，不要硬塞 0
-        ECR_KBType: frm.value.ECR_KBType,
-        USR_Level: frm.value.USR_Level,
-        ECR_KBDesc: frm.value.ECR_KBDesc,
-        TSB_Name: frm.value.TSB_Name,
-        POS1004: POS1004Disc
-      };
+      // === Create 模式 ===
+      if (this.crudstatus === CRUDStatus.Create) {
+        const payload = {
+          ECR_KBType: frm.value.ECR_KBType,
+          USR_Level: frm.value.USR_Level,
+          ECR_KBDesc: frm.value.ECR_KBDesc,
+          TSB_Name: frm.value.TSB_Name,
+          POS1004Disc: detailList   // ⚠️ 新增用 POS1004Disc
+        };
 
-      const save$ =
-        this.crudstatus === CRUDStatus.Create
-          ? this.tls42010Service.insertTLS42010M(payload)
-          : this.tls42010Service.updateTLS42010M(payload);
+        this.tls42010Service.insertTLS42010M(payload).subscribe({
+          next: (res) => {
+            this.loading = false;
+            console.log('Create 成功:', res);
+          },
+          error: () => (this.loading = false)
+        });
+      }
 
-      save$.subscribe({
-        next: (res) => {
-          this.loading = false;
-          console.log(`${this.crudstatus} 成功:`, res);
-        },
-      });
+      else if (this.crudstatus === CRUDStatus.Edit) {
+        const masterId = this.rowdata?.ID ?? 0;
+
+        const detailList = this.keys.map(k => {
+          const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
+          const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
+
+          return {
+            ID: k.ID && k.ID > 0 ? k.ID : 0,
+            ECR_KBType: frm.value.ECR_KBType,
+            USR_Level: frm.value.USR_Level,
+            KB_ScanCode: k.code,
+            KB_Func: hasConfig ? k.KB_Func : '',
+            KB_Arg1: hasConfig ? k.KB_Arg1 : '',
+            KB_Arg2: hasConfig ? k.KB_Arg2 : '',
+            KB_Arg3: hasConfig ? k.KB_Arg3 : '',
+            KB_Display1: hasConfig ? k.KB_Display1 : '',
+            KB_Display2: hasConfig ? k.KB_Display2 : '',
+            KB_Font: hasConfig ? k.KB_Font : 'Microsoft JhengHei',
+            KB_Size: hasConfig ? k.KB_Size : 14,
+            KB_Fonttyped: hasConfig
+              ? (Array.isArray(k.KB_Fonttyped) ? k.KB_Fonttyped.join(',') : (k.KB_Fonttyped || 'NNN'))
+              : 'NNN',
+            KB_Style: hasConfig ? (k.KB_Style || '1') : '1',
+            KB_Switch: hasConfig ? (k.KB_Switch || 'Y') : 'Y',
+            KB_Width: pos1008.width,
+            KB_Height: pos1008.height,
+            KB_Merge: k.code,
+            KB_Color: hasConfig ? k.KB_Color : 'RGB:0,0,0',
+            KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
+            KG_KeyPage: frm.value.activePage + 1
+          };
+        });
+
+
+        const payload = {
+          ID: masterId, // 主檔 ID
+          ECR_KBType: frm.value.ECR_KBType,
+          USR_Level: frm.value.USR_Level,
+          ECR_KBDesc: frm.value.ECR_KBDesc,
+          TSB_Name: frm.value.TSB_Name,
+          POS1004: detailList
+        };
+
+        this.tls42010Service.updateTLS42010M(payload).subscribe({
+          next: (res) => {
+            this.loading = false;
+            console.log('Edit 成功:', res);
+          },
+          error: () => (this.loading = false)
+        });
+      }
     });
   }
+
 
   // ---------------- 其他 ----------------
   onTabChange(event: any) {

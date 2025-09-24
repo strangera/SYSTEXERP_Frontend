@@ -193,7 +193,8 @@
               <!-- 基準活動 -->
               <div class="col-12">
                 <app-dropdown label="基準活動" controlName="eventID" [options]="EventIDOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.eventID" [submitted]="submitted"></app-dropdown>
+                  optionValue="value" [control]="queryForm.controls.eventID" [submitted]="submitted"
+                  (valueChange)="queryEvent($event,'base')"></app-dropdown>
               </div>
               <!-- 基準日期範圍 -->
               <div class="col-12">
@@ -208,7 +209,8 @@
               <!-- 比較活動 -->
               <div class="col-12">
                 <app-dropdown label="比較活動" controlName="eventID_c" [options]="EventIDOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.eventID_c" [submitted]="submitted"></app-dropdown>
+                  optionValue="value" [control]="queryForm.controls.eventID_c" [submitted]="submitted"
+                  (valueChange)="queryEvent($event,'compare')"></app-dropdown>
               </div>
               <!-- 比較日期範圍 -->
               <div class="col-12">

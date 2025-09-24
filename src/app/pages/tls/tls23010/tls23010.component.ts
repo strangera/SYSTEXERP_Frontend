@@ -43,6 +43,7 @@ import { HttpResponse } from '@angular/common/http';
 import { CheckboxModule } from 'primeng/checkbox';
 import { CommonModule } from '@angular/common';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @UntilDestroy()
 // 型態別報表
@@ -70,7 +71,8 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
     TableComponent,
     ButtonModule,
     CheckboxModule,
-    Table2Component,
+    // Table2Component,
+    TableReportComponent
   ],
 })
 export class TLS23010Component
@@ -140,6 +142,7 @@ export class TLS23010Component
       { field: 'ECR_No',   order:  1 },
       { field: 'TXN_No',   order:  1 },
     ]),
+    pageSize: [null],  // 覆蓋 util 內建的 pageSize
   });
 
   // 下拉選單
@@ -175,6 +178,7 @@ export class TLS23010Component
     private cashierService: CashierService,
   ) {
     super();
+   
   }
 
   ngOnInit(): void {
@@ -249,7 +253,7 @@ fetchTLS23010 = (evt: LazyLoadEvent) => {
     return s ? s : undefined;
   };
 
-  // 僅帶必要條件 + 分頁/排序（與 onSubmit 一致：PageIndex/PageSize 大寫）
+  // 僅帶必要條件 + 分頁/排序（與 onSubmit 一致：pageIndex/pageSize 大寫）
   const payload: any = {
     TXN_DateStart: toIso(val?.TXN_DateStart, false),
     TXN_DateEnd:   toIso(val?.TXN_DateEnd,   true),
@@ -283,8 +287,8 @@ fetchTLS23010 = (evt: LazyLoadEvent) => {
     TXN_Subtype:   val?.TXN_Subtype ? String(val.TXN_Subtype) : undefined,
 
     // 分頁/排序（從 Table2 的事件帶入）
-    PageIndex: evt.pageIndex ?? 1,
-    PageSize:  evt.pageSize  ?? 20,
+    pageIndex: evt.pageIndex ?? 1,
+    pageSize:  evt.pageSize  ?? 30,
     SortBy:    Array.isArray((evt as any)?.SortBy)
                  ? (evt as any).SortBy
                  : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort),
@@ -348,7 +352,7 @@ onSubmit(frm: FormGroup) {
     };
 
     // ======== 分頁/排序（不再計算 Offset / OrderBy）========
-    const pageSize  = Number.isFinite(val?.pageSize)  ? Number(val.pageSize)  : 10;
+    const pageSize  = Number.isFinite(val?.pageSize)  ? Number(val.pageSize)  : 30;
     const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
 
     const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
@@ -366,8 +370,8 @@ onSubmit(frm: FormGroup) {
     if (this.includePagingAndSorting && !this.showSummary) {
       // 明細查詢才需要分頁（彙總通常不分頁）
       Object.assign(payload, {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
+        pageSize: pageSize,
+        pageIndex: pageIndex,
         SortBy: sortByArr,
       });
     } else {
@@ -462,6 +466,17 @@ this.updatePdfSummary();
     }
   });
 }
+// 在 imports/constructor 下方、class 內加入（建議放在 fetchTLS23010 上方或下方都可）：
+public queryTLS23010ForReport = (body: any) =>
+  this.tls23010Service.queryTLS23010(body).pipe(
+    map((res: any) => ({
+      Data: Array.isArray(res?.Data?.QueryData)
+        ? res.Data.QueryData
+        : (Array.isArray(res?.Data) ? res.Data : []),
+      TotalCount: Number(res?.TotalCount ?? res?.Data?.TotalCount ?? 0),
+      GrandTotal: res?.Data?.TotalSummary ?? null,
+    }))
+  );
 
 
   isRowSelectable(_row: TLS23010Data): boolean {
@@ -678,7 +693,20 @@ onExportXLSX() {
     this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
     this.onSubmit(this.queryForm);
   }
+// ✅ footer-safe：undefined/null/'' 一律回空白字串
+pToYesNoSafe = (val: unknown): string => {
+  const v = String(val ?? '').trim().toUpperCase();
+  if (!v) return '';                // for footer/empty
+  return v === 'P' ? '是' : '否';    // 保持原邏輯
+};
 
+nullpToYesNoSafe = (val: unknown): string => {
+  const v = String(val ?? '').trim().toUpperCase();
+  if (!v) return '';                // for footer/empty（原本會顯示「否」）
+  if (v === 'Y') return '是';
+  if (v === 'N') return '否';
+  return '是';                      // 保持你原本非 Y/N 視為「是」的語意
+};
   // ========= 欄位 =========
   columns = [
     { field: 'TXN_Date',       header: '銷售日期',      visible: true, format: this.formatYMD },
@@ -695,8 +723,8 @@ onExportXLSX() {
     { field: 'TXN_TotOver',    header: '溢收金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
 
     { field: 'TXN_VIP',        header: '外交官零稅',    visible: true, format: this.nyToYesNo },
-    { field: 'TXN_Mode',       header: '事後登錄',      visible: true, format: this.pToYesNo },
-    { field: 'TXN_PreOrder',   header: '預售',          visible: true, format: this.nullpToYesNo },
+{ field: 'TXN_Mode',     header: '事後登錄', visible: true, format: this.pToYesNoSafe,   noTotal: true },
+{ field: 'TXN_PreOrder', header: '預售',     visible: true, format: this.nullpToYesNoSafe, noTotal: true },
 
     { field: 'TXN_StatusName',   header: '交易型態',     visible: true },
     { field: 'TXN_TaxFreeCertNo',header: '外交官免稅卡號',visible: true },
@@ -817,6 +845,17 @@ private updatePdfSummary(): void {
     `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
   ];
 }
+buildFooterFromTotals(): Record<string, any> | undefined {
+  if (!this.detailTotals) return undefined;
+  return {
+ TXN_TotGUI:     this.detailTotals['Total_TXN_TotGUI'] ?? 0,
+   TXN_TotSaleAmt: this.detailTotals['Total_TXN_TotSaleAmt'] ?? 0,
+   TXN_TotOver:    this.detailTotals['Total_TXN_TotOver'] ?? 0,
+   TXN_TotDisc:    this.detailTotals['Total_TXN_TotDisc'] ?? 0,
+   TXN_PayAmt:     this.detailTotals['Total_TXN_PayAmt'] ?? 0,
+  };
+}
+
 
   
 }

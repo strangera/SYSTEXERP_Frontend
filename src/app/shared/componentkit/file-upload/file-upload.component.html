@@ -22,24 +22,17 @@
       let-clearCallback="clearCallback">
       <div
         class="flex flex-wrap align-items-center justify-content-between gap-2 p-3 surface-0 border-bottom-1 surface-border border-round-top">
-        <div class="flex align-items-center gap-2">
-          <button type="button" (click)="chooseCallback()"
-            class="p-button p-component p-button-primary p-button-sm max-w-max">
-            <i [class]="chooseIcon || 'pi pi-plus'" class="mr-2"></i>
-            {{ chooseLabel || '選擇檔案' }}
-          </button>
-          <button *ngIf="showUploadButton" type="button" (click)="uploadCallback()"
-            [disabled]="!files || files.length === 0"
-            class="p-button p-component p-button-success p-button-sm max-w-max">
-            <i [class]="uploadIcon || 'pi pi-upload'" class="mr-2"></i>
-            {{ uploadLabel || '上傳' }}
-          </button>
-          <button *ngIf="showCancelButton" type="button" (click)="clearCallback(); remove.emit()"
-            [disabled]="!files || files.length === 0"
-            class="p-button p-component p-button-danger p-button-sm max-w-max">
-            <i [class]="cancelIcon || 'pi pi-times'" class="mr-2"></i>
-            {{ cancelLabel || '取消' }}
-          </button>
+        <div class="grid">
+          <div class="col-12 grid gap-2 m-0">
+            <app-button [icon]="chooseIcon || 'pi pi-plus'" [label]="chooseLabel || '選擇檔案'" [loading]="loading"
+              (click)="chooseCallback()" severity="primary" />
+            <app-button *ngIf="showUploadButton" [icon]="uploadIcon || 'pi pi-upload'" [label]="uploadLabel || '上傳'"
+              [loading]="loading" (click)="uploadCallback()" severity="success"
+              [disabled]="!files || files.length === 0" />
+            <app-button *ngIf="showCancelButton" [icon]="cancelIcon || 'pi pi-times'" [label]="cancelLabel || '取消'"
+              [loading]="loading" (click)="clearCallback(); remove.emit()" severity="danger"
+              [disabled]="!files || files.length === 0" [loading]="loading" />
+          </div>
         </div>
         <span class="text-sm text-600">
           {{ files ? files.length : 0 }} 個檔案已選擇

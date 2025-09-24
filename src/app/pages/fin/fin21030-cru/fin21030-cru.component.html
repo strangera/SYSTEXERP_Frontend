@@ -1,1 +1,217 @@
-<p>fin21030-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="廠客代號"
+              controlName="vendorCode"
+              [control]="dataForm.controls.vendorCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠客名稱"
+              controlName="vendorName"
+              [control]="dataForm.controls.vendorName"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商簡稱"
+              controlName="vendorSName"
+              [control]="dataForm.controls.vendorSName"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="郵遞區號"
+              controlName="postCode"
+              [control]="dataForm.controls.postCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="郵寄地址"
+              controlName="postAddress"
+              [control]="dataForm.controls.postAddress"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="聯絡人"
+              controlName="contactPerson"
+              [control]="dataForm.controls.contactPerson"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="電話"
+              controlName="phone"
+              [control]="dataForm.controls.phone"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="傳真"
+              controlName="fax"
+              [control]="dataForm.controls.fax"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="統一編號"
+              controlName="uId"
+              [control]="dataForm.controls.uId"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="郵電負擔模式"
+              controlName="VEN_RemitFeeMode"
+              [control]="dataForm.controls.VEN_RemitFeeMode"
+              [options]="remitFeeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="貼現廠商"
+              controlName="payoutVendor"
+              [options]="whetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.payoutVendor"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="禁止背書轉讓"
+              controlName="noTransfer"
+              [options]="whetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.noTransfer"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="付款方式"
+              controlName="paymentMethod"
+              [options]="paymentMethodOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.paymentMethod"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="廠商匯款銀行代號"
+              controlName="vendorTransferAccount"
+              [control]="dataForm.controls.vendorTransferAccount"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="廠商銀行帳號"
+              controlName="vendorAccount"
+              [control]="dataForm.controls.vendorAccount"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商帳戶名稱"
+              controlName="vendorAccountName"
+              [control]="dataForm.controls.vendorAccountName"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="付款期限"
+              controlName="payoutLimit"
+              [control]="dataForm.controls.payoutLimit"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="票據抬頭"
+              controlName="ticketTitle"
+              [control]="dataForm.controls.ticketTitle"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="系統別"
+              controlName="systemType"
+              [options]="systemTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.systemType"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="審核狀態"
+              controlName="VEN_Status"
+              [options]="approvalOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.VEN_Status"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
+</div>

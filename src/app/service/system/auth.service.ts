@@ -74,14 +74,19 @@ export class AuthService {
     }
     this.jwtHelper = new JwtHelperService();
     const ipClient = new HttpClient(this.httpBackend);
-    ipClient.get<{ ip: string }>('https://api.ipify.org/?format=json').pipe(map(res => res.ip),
+
+    // 修正: 不再需要判斷 userStorage，直接取得 IP 並存入 localStorage
+    ipClient.get<{ ip: string }>('https://api.ipify.org/?format=json').pipe(
+      map(res => res.ip),
       catchError(() => { return ['0.0.0.0']; })
     ).subscribe(ip => {
       this.client_ip = ip;
-      if (userStorage) {
-        userStorage.client_ip = this.client_ip;
-        this.userSubject.next(userStorage); // 更新 userSubject
-        localStorage.setItem('UserInfo', JSON.stringify(userStorage));
+      // 檢查 localStorage 是否已經存在 'UserInfo' key
+      if (localStorage.getItem('UserInfo')) {
+        const userInfo = JSON.parse(localStorage.getItem('UserInfo') as string);
+        userInfo.client_ip = this.client_ip;
+        localStorage.setItem('UserInfo', JSON.stringify(userInfo));
+        this.userSubject.next(userInfo);
       }
     });
   }
@@ -103,9 +108,11 @@ export class AuthService {
     return this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, data).pipe(
       map((response: ApiResponse<UserInfo>) => {
         if (response.Status === '0000') {
-          this.userSubject.next(response.Data);
           localStorage.setItem('UserInfo', JSON.stringify(response.Data));
-
+          const userInfo = JSON.parse(localStorage.getItem('UserInfo') as string);
+          userInfo.client_ip = this.client_ip;
+          localStorage.setItem('UserInfo', JSON.stringify(userInfo));
+          this.userSubject.next(userInfo);
           if (!this.inactivityService) {
             this.inactivityService = this.injector.get(InactivityService);
           }
@@ -210,7 +217,6 @@ export class AuthService {
     }
   }
   // 改 getOuterToken 回傳型別
-
   getOuterToken(): Observable<OuterTokenResponse> {
     return this.http.get<OuterTokenResponse>(
       `${this.apiUrl}/SSOLogin/getOuterToken`,

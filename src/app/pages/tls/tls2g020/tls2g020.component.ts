@@ -11,83 +11,53 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 
-// 2.2.16.2 專櫃預估業績維護作業
 @Component({
   selector: 'app-tls2g020',
   templateUrl: './tls2g020.component.html',
   styleUrl: './tls2g020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, MultiSelectComponent, TranslateModule, TableComponent]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    MultiSelectComponent,
+    TranslateModule,
+    TableComponent
+  ]
 })
-
 export class TLS2G020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    TLT_NoList: [''],
-    budget_yymm: [new Date()],
-
+    TLT_NoList: [[]],
+    budget_yy: [new Date()],
     ...createPaginationConfig([{ field: 'TLT_NoList', order: 1 }]),
   });
 
-  // 表格
-  data7 = [
-    {
-      budget_yymm: '2025', // 年
-      tlt_no: 'A001',
-      tlt_name: '威秀影城',
-      details: [
-        { budget_yymm: '01', M_budget: '500000', cag_charge_rate: '20000', M_bud: '30000' },
-        { budget_yymm: '02', M_budget: '480000', cag_charge_rate: '19000', M_bud: '28000' },
-        { budget_yymm: '03', M_budget: '510000', cag_charge_rate: '21000', M_bud: '32000' },
-      ]
-    },
-    {
-      budget_yymm: '2025',
-      tlt_no: 'B002',
-      tlt_name: 'Lucky Girl',
-      details: [
-        { budget_yymm: '01', M_budget: '400000', cag_charge_rate: '20000', M_bud: '25000' },
-        { budget_yymm: '02', M_budget: '420000', cag_charge_rate: '21000', M_bud: '26000' },
-      ]
-    },
-    {
-      budget_yymm: '2025',
-      tlt_no: 'C003',
-      tlt_name: '川島之味',
-      details: [] // 沒有月資料
-    },
-    {
-      budget_yymm: '2025',
-      tlt_no: 'D004',
-      tlt_name: 'POLLY GRACE',
-      details: [
-        { budget_yymm: '01', M_budget: '300000', cag_charge_rate: '20000' ,M_bud:'15000'},
-        { budget_yymm: '02', M_budget: '310000', cag_charge_rate: '21000' ,M_bud:'16000'},
-        { budget_yymm: '03', M_budget: '290000', cag_charge_rate: '19000' ,M_bud:'14000'},
-        { budget_yymm: '04', M_budget: '320000', cag_charge_rate: '22000' ,M_bud:'17000'},
-      ]
-    },
-  ];
+  data: any[] = [];
+  totalRecords = 0;
+  tltNoOptions: IDropdownItem[] = [];
 
-
-  columns7: Column[] = [
-    { field: 'budget_yymm', header: '年', visible: true },
+  columns: Column[] = [
+    { field: 'budget_yy', header: '年度', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
-  expansionColumns7: Column[] = [
-    { field: 'budget_yymm', header: '月' },
-    { field: 'M_budget', header: '月預算', visible: true },
-    { field: 'cag_charge_rate', header: '抽成額' },
-    { field: 'M_bud', header: '抽成額' },
-
+  expansionColumns: Column[] = [
+    {
+      field: 'Month',
+      header: '月',
+      format: (value: string) => value ? value.slice(-2) : ''
+    }, { field: 'budget', header: '月預算', visible: true },
+    { field: 'avg_cag_charge_rate', header: '抽成額' },
   ];
-  // ----------------------------------------------------------------
-  counterOptions: any[] = [];
-  totalRecords = 0;
-  tltNoOptions: IDropdownItem[] = [];
+
   constructor(
     private dropDownListService: DropDownListService,
+    private tls2g020Service: Tls2g020Service
   ) {
     super();
   }
@@ -96,41 +66,65 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS2G020', '/TLS/TLS2G020CRU', this.queryForm, (form) =>
       this.onSubmit(form)
     );
+
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        if (res && res.Data) {
+        if (res?.Data) {
           this.tltNoOptions = res.Data.map(item => ({
-            label: `${item.No} ${item.Name}`,   // 假設 item 有 Name 欄位
-            value: item.No,     // 假設 item 有 No 欄位
-            No: item.No,        // 確保包含 No 屬性
-            Name: item.Name     // 確保包含 Name 屬性
+            label: `${item.No} ${item.Name}`,
+            value: item.No,
+            No: item.No,
+            Name: item.Name
           }));
         }
       });
   }
-
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
 
+    const raw = frm.getRawValue();
+    const payload = {
+      budget_yy: raw.budget_yy
+        ? new Date(raw.budget_yy).getFullYear().toString()
+        : '',
+      tlt_no: raw.TLT_NoList || [],
+    };
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.tls2g020Service.queryTLS2G020(payload).subscribe({
+      next: (res) => {
+        this.data = (res?.Data || []).map((item: any) => ({
+          ...item,
+        }));
+        this.totalRecords = res?.TotalCount || 0;
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      }
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+
+
+  // 展開行時查明細
+  onRowExpand(event: any) {
+    const row = event.data;
+    const payload = {
+      budget_yy: row.budget_yy,
+      tlt_no: [row.tlt_no]
+    };
+
+    this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
+      next: (res) => {
+        row.details = res?.Data || [];
+      },
+    });
   }
 
   onClearForm() {
-    this.queryForm.reset();  // 重置表單
+    this.queryForm.reset();
   }
-
-
-
 }

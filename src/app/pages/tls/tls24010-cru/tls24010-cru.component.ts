@@ -8,7 +8,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { InputTextareaComponent } from "../../../shared/componentkit/input-textarea/input-textarea.component";
 import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
@@ -31,6 +31,7 @@ import { Tls24010TltidComponent } from './tls24010-tltid/tls24010-tltid.componen
 import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.component';
 import { FIX_TYPE, FIX_TYPE_LABEL } from '../tls24010/tls24010.model';
 import { Tls24010DiscodeComponent } from './tls24010-discode/tls24010-discode.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
@@ -44,6 +45,7 @@ import { Tls24010DiscodeComponent } from './tls24010-discode/tls24010-discode.co
     CalendarComponent,
     InputNumberComponent,
     NgIf,
+    AsyncPipe,
     TranslateModule,
     InputTextComponent,
     InputTextareaComponent,
@@ -88,19 +90,19 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUIBegNo: ['', [Validators.maxLength(8), Validators.minLength(8), this.validationService.numberValidator]], //起始發票號碼
     TXN_GUIEndNo: [''], //結束發票號碼
     TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]], //來客數
-    TXN_MemCard: ['', [Validators.maxLength(30)]], //會員編號，若有資料需要串接環友
+    TXN_MemCard: ['', [Validators.maxLength(30), this.validationService.alphanumericValidator]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
-    TXN_Time: [null], //銷售時段
-    TXN_GUI_CarrType: [''], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
+    TXN_Time: [new Date()], //銷售時段今日的時間
+    TXN_GUI_CarrType: [null as string | null], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
     TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
     TXN_GUI_CarrId: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
-    TXN_GUIRemark: [{ value: '系統自動產生', disabled: true }], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
+    TXN_GUIRemark: ['', [Validators.maxLength(4), this.validationService.alphanumericValidator]], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
     TXN_PrintTimes: [null], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
     TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
     TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
   });
-  USR_NoOptions: IDropdownItem[] = []; //下拉選單 收銀員編號
+  USR_NoOptions = this.dropDown.queryPos2001();
   txnStatusOptions = txnStatusOptions //下拉選單 交易型態
   TXN_GUI_CarrTypeOptions = TXN_GUI_CarrTypeOptions;//下拉選單 電子載具種類
   TLT_NoOptions: IDropdownItem[] = [];
@@ -108,6 +110,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     private readonly dropDownListService: DropDownListService,
     private readonly validationService: ValidationService,
     private readonly tls24010Service: Tls24010Service,
+    private readonly dropDown: DropdownApiService,
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
@@ -146,10 +149,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         this.PaymentDetailsList = data.Data[0].PaymentDetailsList;
       })
     }
-    // 查詢收銀員設定檔(POS2001)
-    this.dropDownListService.queryPOS2001_DropDownList().pipe(untilDestroyed(this)).subscribe((data) => {
-      this.USR_NoOptions = data.Data.map((item) => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
     this.listenForChanges();
     if (this.type === FIX_TYPE.專櫃編號修正) {
       if (this.store_way === STORE_WAY.專櫃) {
@@ -186,7 +185,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       txnGuiCarrIdExControl?.disable();
       txnGuiCarrIdControl?.setValue(null, { emitEvent: false });
       txnGuiCarrIdExControl?.setValue(null, { emitEvent: false });
-      txnGuiVehicleControl?.disable();
       txnGuiVehicleControl?.setValue(null, { emitEvent: false });
     })).subscribe(carrType => {
       if (carrType && carrType.trim() !== '') {
@@ -198,7 +196,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
     // 監聽 載具編號顯碼 的變化
     txnGuiCarrIdExControl?.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
-      txnGuiCarrIdControl?.setValue(val, { emitEvent: false });
+      txnGuiCarrIdControl?.setValue(val, { emitEvent: false });//!! 隱碼不要的話可以刪掉
+      if (this.dataForm.get('TXN_GUI_CarrType')?.value === '3J0002') {
+        txnGuiVehicleControl?.setValue(val, { emitEvent: false });
+      }
     });
     // 監聽 發票捐贈狀態 的變化
     txnGuiDonateControl?.valueChanges.pipe(untilDestroyed(this)).subscribe(donateValue => {
@@ -226,22 +227,20 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       return;
     }
     this.handleSubmit(frm, () => {
+      this.loading = false;
       this.pos5007Comp?.POS5007Data.forEach(item => {
         if (item.TXN_Qty === null || item.TXN_Qty === undefined || item.TXN_Qty <= 0) {
           this.messageService.errorBubble('請輸入正確的銷售數量', '銷售數量必須大於1');
-          this.loading = false;
           return
         }
       });
       if (this.pos5008Comp?.POS5008SelectedItems.length === 0) {
         this.messageService.errorBubble('請至少選擇一筆支付工具', '支付工具必須選擇');
-        this.loading = false;
         return
       }
       const childValid = this.pos5008Comp?.validate();
       if (!childValid) {
         this.messageService.errorBubble('支付工具資料不完整', '請檢查支付工具資料');
-        this.loading = false;
         return;
       }
       // 計算TXN_SaleAmt總計
@@ -257,7 +256,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       const pos5008total = pos5008Data.reduce((total, item) => total + (item.TXN_PayAmt ? item.TXN_PayAmt : 0), 0);
       if (pos5008total !== pos5007total) {
         this.messageService.errorBubble('支付工具資料與商品總金額不符', '請檢查支付工具資料');
-        this.loading = false;
         return
       }
       this.messageService.confirm({
@@ -268,9 +266,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             Store_way: this.store_way,
             TXN_GUIPaper: this.TXN_GUIPaper,
             ...frm.getRawValue(),
-            TXN_GUIRemark: undefined,
+            GUI_Track: frm.getRawValue().GUI_Track || '00',
+            TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
+            TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
-            TXN_Time: formatTimeToHHMMSS(frm.getRawValue().TXN_Time),
+            TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : null,
             POS5007_INFO: pos5007Data.map((item) => {
               if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
                 return {

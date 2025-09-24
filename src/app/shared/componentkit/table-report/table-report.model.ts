@@ -1,4 +1,3 @@
-import { SortMeta } from 'primeng/api';
 import { TableTypes } from '../table/table.model';
 
 export interface ReportColumn {

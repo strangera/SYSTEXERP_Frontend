@@ -152,8 +152,8 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
 
   // ✅ 初始化固定雙列欄位
 this.columns = [
-  { field: 'tlt_building', header: '館別', visible: true, rowspan: true },
-  { field: 'tlt_floor', header: '樓層', visible: true, rowspan: true },
+  { field: 'building_desc', header: '館別', visible: true, rowspan: true },
+  { field: 'floor_desc', header: '樓層', visible: true, rowspan: true },
   { field: 'USR_No', header: '收銀員代號', visible: true, rowspan: true },
 
   // 第1列：1~16

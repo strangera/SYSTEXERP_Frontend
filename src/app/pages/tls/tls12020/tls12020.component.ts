@@ -37,7 +37,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
   industryCodeOptions: IDropdownItem[] = [];
   queryForm = this.formBuilder.group({
-    location_no: [''], // 原本 ECR_LocNo
+    location_no: [''],
     ven_uniform: ['', [Validators.required]], // 原本 vendorUID, 廠商統一編號（必填）
     VEN_Name: ['', Validators.maxLength(60)], // 原本 ven_name
     VEN_EngName: ['', Validators.maxLength(60)],
@@ -54,7 +54,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
   data: any[] = [];
   columns: Column[] = [
-    { header: '位置編號', field: 'location_no' },
+    { header: '位置編號', field: 'LOCATION_No' },
     { header: '廠商統一編號', field: 'ven_uniform' },
     { header: '廠商名稱(中文)', field: 'VEN_Name' },
     { header: '廠商名稱(英文)', field: 'VEN_EngName' },
@@ -132,13 +132,14 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
+
     this.willinglevelOptions = [
-      { No: '?', Name: '未確認' },
-      { No: 'A', Name: '交涉中(基本條件合意)' },
-      { No: 'B', Name: '交涉中(反應良好)' },
-      { No: 'C', Name: '交涉中(反應不好)' },
-      { No: 'D', Name: '保留' },
-      { No: 'F', Name: '無意進駐' },
+      { No: '?', Name: '?', label: '未確認' },
+      { No: 'A', Name: 'A', label: '交涉中(基本條件合意)' },
+      { No: 'B', Name: 'B', label: '交涉中(反應良好)' },
+      { No: 'C', Name: 'C', label: '交涉中(反應不好)' },
+      { No: 'D', Name: 'D', label: '保留' },
+      { No: 'F', Name: 'F', label: '無意進駐' },
     ];
 
 
@@ -177,7 +178,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
             ...row,
             building_no_name: this.buildingNoOptions.find(opt => opt.value === row.building_no)?.label || row.building_no,
             bus_type_name: this.industryCodeOptions.find(opt => opt.value === row.bus_type || opt.No === row.bus_type)?.label || row.bus_type,
-            willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.Name || row.willing_level
+            willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.label || row.willing_level
           }));
           this.data = data;
           this.totalRecords = res.TotalCount ?? 0;

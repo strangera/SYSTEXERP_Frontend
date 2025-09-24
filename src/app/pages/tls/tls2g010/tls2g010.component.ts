@@ -1,5 +1,5 @@
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -11,11 +11,15 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { DividerModule } from 'primeng/divider';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import { Option } from '@service/utility/dropdown-api.model';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TLS2G010Service } from '@service/api/tls/tls2g010.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { environment } from 'src/environments/environment';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 
 // 2.2.16.1 專櫃預估業績轉入作業
 @Component({
@@ -27,10 +31,10 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 export class TLS2G010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     worksheetName: [{ value: '系統帶入(excel檔名)', disabled: true }], // 工作表名稱
-    budget_yymm: [null, [Validators.required]],
-    building_no: [null],
-    FLOOR_NO: [null],
-    section_no: [null],
+    BudgetYYMM: [null, [Validators.required]],
+    BuildingNos: [null],
+    FloorNos: [null],
+    SectionNos: [null],
   });
   // 館別 樓層 組織代碼 下拉
   buildingOptions?: Observable<IDropdownItem[] | null>;
@@ -40,7 +44,8 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
   files: File[] = [];
 
   constructor(
-    private readonly dropdownApiService: DropdownApiService
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly tls2g010Service: TLS2G010Service
   ) {
     super();
   }
@@ -53,8 +58,16 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-
-    })
+      const body = {
+        ...frm.value,
+        BudgetYYMM: convertDateToYYYYMM(frm.value.BudgetYYMM),
+      }
+      this.loading = true;
+      this.tls2g010Service.generateExportFile(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        const url = `${environment.ApiUrl}${res.Data.PrintBudgetURL}`;
+        window.open(url, '_blank');
+      });
+    });
   }
   onFileSelect(event: FileSelectEvent) {
     this.files = event.files
@@ -64,8 +77,44 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
     this.queryForm.get('worksheetName')?.setValue('系統帶入(excel檔名)');
     this.files = [];
   }
+  @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
   handleCustomUpload(event: FileUploadHandlerEvent) {
+    this.loading = true;
     if (event.files && event.files.length > 0) {
+      this.tls2g010Service.importBudget(event.files[0]).pipe(untilDestroyed(this)).subscribe(res => {
+        if (res.Data.IsImportSuccess) {
+          this.messageService.successBubble('上傳成功');
+          this.files = [];
+          this.queryForm.get('worksheetName')?.setValue('系統帶入(excel檔名)');
+          this.fileUploadComponent.clearFiles();
+        } else {
+          this.messageService.errorBubble(res.Data.ErrorMsg || '上傳失敗');
+        }
+        this.loading = false;
+      });
     }
+  }
+  // 組織範本下載
+  onDownloadTemplate(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        BudgetYYMM: convertDateToYYYYMM(frm.value.BudgetYYMM),
+      }
+      this.loading = true;
+      this.tls2g010Service.downloadOrgTemplate(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
+        window.open(url, '_blank');
+      });
+    });
+  }
+
+  // 空白範本下載
+  onDownloadBlankTemplate() {
+    this.loading = true;
+    this.tls2g010Service.downloadEmptyTemplate().pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
+      window.open(url, '_blank');
+    });
   }
 }

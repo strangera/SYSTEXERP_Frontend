@@ -3,6 +3,7 @@ import { FileUploadModule, FileUploadEvent, FileRemoveEvent, FileSelectEvent, Fi
 import { PrimeTemplate } from 'primeng/api';
 import { NgIf, NgFor } from '@angular/common';
 import { HttpHeaders } from '@angular/common/http'; // 引入 HttpHeaders
+import { ButtonComponent } from '../button/button.component';
 
 @Component({
   selector: 'app-file-upload',
@@ -13,6 +14,7 @@ import { HttpHeaders } from '@angular/common/http'; // 引入 HttpHeaders
     PrimeTemplate,
     NgIf,
     NgFor,
+    ButtonComponent
   ],
 })
 export class FileUploadComponent {

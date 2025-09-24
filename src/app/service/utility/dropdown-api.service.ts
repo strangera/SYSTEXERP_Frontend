@@ -395,8 +395,10 @@ export class DropdownApiService {
   }
 
   /** 查詢收銀員設定檔(POS2001) */
-  queryPos2001(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS2001_DropDownList');
+  queryPos2001(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS2001_DropDownList', 'No', 'Name').pipe(
+      shareReplay(1)// 避免重複查詢
+    );
   }
 
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004) */

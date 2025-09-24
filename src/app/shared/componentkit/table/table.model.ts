@@ -293,6 +293,13 @@ export const formatAmountWithFraction = (val: number | string): string => {
   return num.toLocaleString(undefined, { maximumFractionDigits: 0 }); // eg. 1,000,000.00
 };
 
+// 將時間轉換成YYYY
+export const convertDateToYYYY = (date: Date): string => {
+  if (!date) return '';
+  const year = date.getFullYear();
+  return String(year);
+};
+
 
 export type TableTypes =
   'input' |
