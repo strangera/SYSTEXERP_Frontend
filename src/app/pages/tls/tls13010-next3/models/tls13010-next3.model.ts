@@ -12,10 +12,8 @@ export interface TableConfiguration {
   emptyMessage: string;
   visible: boolean;
   forceEditMode?: boolean;
-  readonly?: boolean;
   showAddButton?: boolean;
   showBatchDelete?: boolean;
-  showCheckBox?: boolean;
   showActionColumn?: boolean;
   autoAddRowOnTab?: boolean;
   showSequenceNumber?: boolean;
@@ -37,10 +35,8 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     emptyMessage: '尚未設定固定租金項目',
     visible: true,
     forceEditMode: true, // 統一控制
-    readonly: false,
     showAddButton: true,
     showBatchDelete: true,
-    showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
   },
@@ -58,10 +54,8 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     emptyMessage: '尚未設定底租抽成取高者項目',
     visible: true,
     forceEditMode: true,
-    readonly: false,
     showAddButton: true,
     showBatchDelete: true,
-    showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
 
@@ -80,10 +74,8 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     emptyMessage: '尚未設定包底抽成項目',
     visible: true,
     forceEditMode: true,
-    readonly: false,
     showAddButton: true,
     showBatchDelete: true,
-    showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
 
@@ -102,10 +94,8 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     emptyMessage: '尚未設定階梯式抽成項目',
     visible: true,
     forceEditMode: true,
-    readonly: false,
     showAddButton: true,
     showBatchDelete: true,
-    showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
     showSequenceNumber: false
@@ -124,10 +114,8 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     emptyMessage: '尚未設定包底加階梯項目',
     visible: true,
     forceEditMode: true,
-    readonly: false,
     showAddButton: true,
     showBatchDelete: true,
-    showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
     showSequenceNumber: false
