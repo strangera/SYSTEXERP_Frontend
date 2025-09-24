@@ -1,24 +1,25 @@
 import { Component, OnInit, computed } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71020Service } from '@service/api/fin/fin71020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { FIN71020Data } from './fin71020.model';
 
 @Component({
   selector: 'app-fin71020',
   templateUrl: './fin71020.component.html',
   styleUrl: './fin71020.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
     AccordionModule,
     FormsModule,
@@ -26,36 +27,34 @@ import { finalize } from 'rxjs';
     TranslateModule,
     ButtonComponent,
     DropdownComponent,
-    EditorTextComponent,
     InputNumberRangeComponent,
     InputTextareaComponent,
     MenubarComponent,
+    TableComponent,
   ]
 })
-export class FIN71020Component extends BasicQueryPageComponent<unknown> implements OnInit {
+export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    keepUsrNo: this.formBuilder.control<string | void>(void 0),
+    usrNo: this.formBuilder.control<string | void>(void 0),
     SKeepQuotaAmt: this.formBuilder.control<number | void>(void 0),
     EKeepQuotaAmt: this.formBuilder.control<number | void>(void 0),
-    keepRemark: this.formBuilder.control<string | void>(void 0),
-    keepOrgId: this.formBuilder.control<string | void>(void 0),
-  }, { validators: this.requireAtLeastOneInput() });
+    remark: this.formBuilder.control<string | void>(void 0),
+    orgId: this.formBuilder.control<string | void>(void 0),
+    ...createPaginationConfig([{ field: 'Keep_UsrNo', order: 1 }]),
+  });
   public readonly qf = computed(() => this.queryForm.controls);
 
   public readonly filteredData = computed(() => {
-    {
-      return this.service.FIN71020Data();
-    }
+    return this.service.FIN71020Data();
   });
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
   public readonly columns: Column[] = [
-    { field: 'keepUsrNo', header: '使用者代碼' },
-    { field: 'keepUsrName', header: '使用者名稱' },
-    { field: 'keepOrgId', header: '組織代碼' },
-    { field: 'keepOrgName', header: '組織名稱' },
+    { field: 'Keep_UsrNo', header: '保管人代碼' },
+    { field: 'Keep_QuotaAmt', header: '零用金額度' },
+    { field: 'Keep_Remark', header: '說明' },
   ];
 
   // Dropdown options
@@ -120,6 +119,10 @@ export class FIN71020Component extends BasicQueryPageComponent<unknown> implemen
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
 
+    this.service.getKeepUsrNo();
+    this.service.getKeepOrgId();
+
+    this.logger.debug(`init:`, []);
 
 
     // this.ProgNo = '170002';
@@ -163,39 +166,5 @@ export class FIN71020Component extends BasicQueryPageComponent<unknown> implemen
 
     // this.loading = false;
     // this.notificationService.unblockUi();
-  }
-
-
-  private requireAtLeastOneInput(): ValidatorFn {
-    const controlHasValue = (value: unknown): boolean => {
-      if (value === void 0 || value === null) {
-        return !1;
-      }
-      if (typeof value === 'string') {
-        return value.trim().length > 0;
-      }
-      if (typeof value === 'boolean') {
-        return value;
-      }
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      }
-      if (value instanceof Date) {
-        return !Number.isNaN(value.valueOf());
-      }
-      if (typeof value === 'object') {
-        return Object.keys(value).length > 0;
-      }
-      return !0;
-    };
-
-    return (control: AbstractControl): ValidationErrors | null => {
-      if (!(control instanceof FormGroup)) {
-        return null;
-      }
-
-      const hasValue = Object.values(control.controls).some(ctrl => controlHasValue(ctrl.value));
-      return hasValue ? null : { requireAtLeastOne: !0 };
-    };
   }
 }

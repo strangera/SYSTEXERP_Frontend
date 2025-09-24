@@ -1,33 +1,33 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
+import { FIN71020Data, FIN71020Insert, FIN71020OrgNo, FIN71020Update, FIN71020UsrNo } from '@pages/fin/fin71020/fin71020.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
+const apiUrl = environment.ApiUrl + '/FIN0000/CSH1000';
 
 @Injectable({ providedIn: 'root' })
 export class FIN71020Service {
 
-  public readonly test = !0;
-
-  public readonly FIN71020Data = signal<unknown[]>([]);
-  public readonly keepUsrNo = signal<unknown[]>([]);
-  public readonly keepOrgId = signal<unknown[]>([]);
+  public readonly FIN71020Data = signal<FIN71020Data[]>([]);
+  public readonly UsrNos = signal<FIN71020UsrNo[]>([]);
+  public readonly OrgIds = signal<FIN71020OrgNo[]>([]);
 
   private readonly tableCancel$ = new Subject<void>();
 
   public tableLoading = !1;
+
   constructor(
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,
   ) { }
 
-  public loadFIN71020(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
+  public loadFIN71020(payload: unknown): Observable<BaseQueryResponse<FIN71020Data>> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/queryFIN71020`, payload).pipe(
+    return this.http.post<BaseQueryResponse<FIN71020Data>>(`${apiUrl}/queryFIN71020`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN71020Data.set(res.Data)),
@@ -36,30 +36,29 @@ export class FIN71020Service {
     );
   };
 
-  public getKeepUsrNo(): void {
-    if (this.test) return (this.keepUsrNo.set([
-      { value: 'A001', label: '王小明' },
-      { value: 'A002', label: '陳大文' },
-      { value: 'A003', label: '林小華' },
-    ]), void 0);
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/queryKeepUsrNoDropdown`, {}).pipe(
+  public saveFIN71020(payload: FIN71020Insert | FIN71020Update, type: 'insert' | 'update' = 'insert'): Observable<BaseQueryResponse<unknown>> {
+    payload = type === 'insert' ? payload as FIN71020Insert : payload as FIN71020Update;
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/${type}`, payload).pipe(
       take(1),
-      tap(res => this.keepUsrNo.set(res.Data)),
-      tap(() => this.logger.debug('查詢KeepUsrNo結果:', [this.keepUsrNo()])),
+      tap(res => this.logger.debug('FIN71020新增/修改結果:', [res])),
+      finalize(() => { }),
+    );
+  }
+
+  public getKeepUsrNo(): void {
+    this.http.post<BaseQueryResponse<FIN71020UsrNo>>(`${apiUrl}/queryFIN71020KeepUsrNoDropdownList`, {}).pipe(
+      take(1),
+      tap(res => this.UsrNos.set(res.Data)),
+      tap(() => this.logger.debug('查詢UsrNo結果:', [this.UsrNos()])),
       finalize(() => { }),
     ).subscribe();
   }
 
   public getKeepOrgId(): void {
-    if (this.test) return (this.keepOrgId.set([
-      { value: '01', label: '總公司' },
-      { value: '02', label: '台北分公司' },
-      { value: '03', label: '高雄分公司' },
-    ]), void 0);
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/queryKeepOrgIdDropdown`, {}).pipe(
+    this.http.post<BaseQueryResponse<FIN71020OrgNo>>(`${apiUrl}/queryFIN71020KeepOrgNoDropdownList`, {}).pipe(
       take(1),
-      tap(res => this.keepOrgId.set(res.Data)),
-      tap(() => this.logger.debug('查詢KeepOrgId結果:', [this.keepOrgId()])),
+      tap(res => this.OrgIds.set(res.Data)),
+      tap(() => this.logger.debug('查詢OrgNo結果:', [this.OrgIds()])),
       finalize(() => { }),
     ).subscribe();
   }

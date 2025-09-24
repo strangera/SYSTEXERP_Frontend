@@ -17,11 +17,11 @@
         <div class="grid p-fluid">
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="保管人代碼"
-                        controlName="keepUsrNo"
-                        [options]="service.keepUsrNo()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="qf().keepUsrNo"
+                        controlName="usrNo"
+                        [options]="service.UsrNos()"
+                        optionLabel="Keep_UsrName"
+                        optionValue="Keep_UsrNo"
+                        [control]="qf().usrNo"
                         [submitted]="submitted"></app-dropdown>
 
           <app-input-number-range class="col-12 md:col-6 lg:col-4"
@@ -34,17 +34,17 @@
 
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="保管單位"
-                        controlName="keepOrgId"
-                        [options]="service.keepOrgId()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="qf().keepOrgId"
+                        controlName="orgId"
+                        [options]="service.OrgIds()"
+                        optionLabel="Org_Name"
+                        optionValue="Org_No"
+                        [control]="qf().orgId"
                         [submitted]="submitted"></app-dropdown>
 
           <app-input-textarea class="col-12 md:col-6 lg:col-4"
                               label="說明"
-                              controlName="keepRemark"
-                              [control]="qf().keepRemark"
+                              controlName="remark"
+                              [control]="qf().remark"
                               [styleClass]="'h-10rem'"
                               [submitted]="submitted"></app-input-textarea>
         </div>
@@ -64,16 +64,16 @@
 
 <div class="card">
   <div class="col-12">
-    <!-- <app-table [data]="filteredData()"
+    <app-table [data]="filteredData()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [loading]="service.tableLoading"
-               [tableKey]="'FIN52090'"
-               [dataKey]="'AccNo'"
+               [tableKey]="'FIN71020'"
+               [dataKey]="'id'"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
-               [loading]="service.tableLoading"></app-table> -->
+               [loading]="service.tableLoading"></app-table>
   </div>
 </div>
