@@ -1,0 +1,99 @@
+<p-table #dt [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true" [dataKey]="dataKey"
+  scrollHeight="700px" [rows]="30" sortMode="multiple" (onSort)="onSort($event)" [rowTrackBy]="trackByFn"
+  [resizableColumns]="true" [reorderableColumns]="true" [loading]="isLoading" [totalRecords]="totalRecords"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [virtualScrollItemSize]="24"
+  [lazy]="totalRecords < 30 ? false : true" [virtualScrollOptions]="{
+      delay: 50,
+      inline: true,
+      trackBy: trackByFn,
+      onScroll: onScroll,
+  }" rowGroupMode="subheader">
+  <ng-template pTemplate="caption">
+    <app-table-caption [data]="data" [dataKey]="dataKey" [tableKey]="tableKey" [showPage]="false"
+      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl">
+      <header><ng-content select="header"></ng-content></header>
+    </app-table-caption>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th class="w-1rem text-center" rowspan="3" pFrozenColumn>序號</th>
+      <th class="w-1rem text-center" rowspan="3">招募編號</th>
+      <th class="w-1rem text-center" rowspan="3">更新時間</th>
+      <th class="w-1rem text-center" rowspan="3">位置編號</th>
+      <th class="w-1rem text-center" rowspan="3">廠商名稱</th>
+      <th class="w-1rem text-center" rowspan="3">廠商統一編號</th>
+      <th class="w-1rem text-center" colspan="8">店櫃資料</th>
+      <th class="w-1rem text-center" colspan="14">租賃條件</th>
+      <th class="w-1rem text-center" colspan="16">一次扣款</th>
+      <th class="w-1rem text-center" colspan="48">每月扣款</th>
+      <th class="w-1rem text-center" colspan="4">平均分攤</th>
+      <th class="w-1rem text-center" colspan="24">比率分攤</th>
+      <th class="w-1rem text-center" rowspan="3">備註</th>
+    </tr>
+    <tr>
+      <th rowspan="2">品牌名稱</th>
+      <th rowspan="2">專櫃編號</th>
+      <th rowspan="2">秤數</th>
+      <th rowspan="2">POS機號</th>
+      <th rowspan="2">營運期間(起)</th>
+      <th rowspan="2">營運期間(迄)</th>
+      <th rowspan="2">簽約年限</th>
+      <th rowspan="2">履約保證金</th>
+      <th colspan="7">抽成</th>
+      <th colspan="3">包底營業額</th>
+      <th colspan="3">固定租金</th>
+      <th rowspan="2">目標營業額</th>
+      <th rowspan="2">備註</th>
+    </tr>
+    <tr>
+      <th>帳務起</th>
+      <th>帳務迄</th>
+      <th>月階梯起</th>
+      <th>月階梯迄</th>
+      <th>區間階梯起</th>
+      <th>區間階梯迄</th>
+      <th>單一抽成</th>
+      <th>年包底</th>
+      <th>區間包底</th>
+      <th>月包底</th>
+      <th>帳務起</th>
+      <th>帳務迄</th>
+      <th>租金</th>
+      <th>BO4(POS)</th>
+      <th>維護費</th>
+      <th>一般</th>
+      <th>D02-六期</th>
+      <th>30%</th>
+      <th>40%</th>
+      <th>一般</th>
+      <th>1.5%</th>
+      <th>一般</th>
+      <th>2.5%</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-index="rowIndex">
+    <tr [pSelectableRow]="rowData" [style]="{'height': '24px'}" [pSelectableRowIndex]="rowIndex">
+      <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
+      <td class="text-center">{{rowData.apply_no}}</td>
+      <td class="text-center">{{rowData.upd_date | date:'yyyy/MM/dd'}}</td>
+      <td class="text-center"> 沒給 </td>
+      <td class="text-center">{{rowData.VEN_Name}}</td>
+      <td class="text-center">{{rowData.ven_uniform}}</td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
+    <div class="flex align-items-center justify-content-end p-2">
+      總筆數: {{ totalRecords }} 筆
+    </div>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="10">
+        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+          查無資料
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
