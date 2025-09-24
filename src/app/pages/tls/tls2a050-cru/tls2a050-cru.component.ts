@@ -35,6 +35,7 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
   dataForm = this.formBuilder.nonNullable.group({
     TXN_Date: [null],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    // pageSize: [5000]
   });
 
   data: any[] = [];

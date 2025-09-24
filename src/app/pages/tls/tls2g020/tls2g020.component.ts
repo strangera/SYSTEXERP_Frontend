@@ -51,8 +51,10 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       field: 'Month',
       header: '月',
       format: (value: string) => value ? value.slice(-2) : ''
-    }, { field: 'budget', header: '月預算', visible: true },
-    { field: 'avg_cag_charge_rate', header: '抽成額' },
+    },
+    { field: 'budget', header: '月預算', visible: true },
+    { field: 'avg_cag_charge_rate', header: '平均抽成' },
+    { field: 'avg_cag_charge_nurate', header: '抽成額' },
   ];
 
   constructor(
@@ -97,6 +99,12 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         this.data = (res?.Data || []).map((item: any) => ({
           ...item,
+          avg_cag_charge_rate: item.avg_cag_charge_rate,
+          Mdeatil: (item.Mdeatil || []).map((m: any) => ({
+            ...m,
+            talent_id: item.talent_id,
+            budget_yy: item.budget_yy
+          }))
         }));
         this.totalRecords = res?.TotalCount || 0;
       },
@@ -109,12 +117,11 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
 
 
 
-  // 展開行時查明細
   onRowExpand(event: any) {
     const row = event.data;
     const payload = {
-      budget_yy: row.budget_yy,
-      tlt_no: [row.tlt_no]
+      talent_id: row.talent_id,
+      budget_yymm: row.Month
     };
 
     this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
@@ -123,6 +130,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       },
     });
   }
+
 
   onClearForm() {
     this.queryForm.reset();

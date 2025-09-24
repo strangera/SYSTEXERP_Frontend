@@ -1,5 +1,7 @@
 :host ::ng-deep .calendar-table {
   font-size: 14px;
+  table-layout: fixed;   //  固定欄位排版
+  width: 100%;
 
   th, td {
     border: 1px solid #ddd;
@@ -7,6 +9,8 @@
     vertical-align: middle;
     padding: 6px;
     background: var(--surface-a);
+    min-width: 100px;   // 統一每格最小寬度
+    box-sizing: border-box;
   }
 
   /* 星期表頭 */
@@ -22,13 +26,13 @@
   /* 左側固定欄 */
   .sticky-col {
     background: inherit !important;
-    color:  rgba(0, 0, 0, 0.9)!important;
+    color: rgba(0, 0, 0, 0.9)!important;
     font-weight: bold;
     text-align: left;
     position: sticky;
     left: 0;
     z-index: 3;
-    min-width: 80px;
+    min-width: 120px;   // 左側固定欄要給死寬度，不然會跑版
   }
 
   /* 日期列 */
@@ -39,18 +43,18 @@
 
   /* 實際預算列 */
   .row-budget td {
-    background-color: var(--sidebar-item-bg-active)!important; // 白色
+    background-color: var(--sidebar-item-bg-active)!important;
   }
 
   /* 其他列 (抽成率 / 抽成額) */
   .row-rate td,
   .row-commission td {
-    background-color: var(--blue-50) !important; // 統一淺灰色
+    background-color: var(--blue-50) !important;
   }
 
   /* hover 整行高亮 */
   .p-datatable-tbody > tr:hover > td {
-    background-color: #e6f2ff !important; // 淺藍色高亮
+    background-color: #e6f2ff !important;
   }
 
   /* 每週區塊分隔線 */
@@ -58,7 +62,9 @@
     border-bottom: 1px solid #bbb !important;
   }
 
+  /* 數字輸入統一靠右 + 填滿格子 */
   .num-input {
+    width: 100% !important;
     text-align: right;
   }
 
