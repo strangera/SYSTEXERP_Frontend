@@ -266,6 +266,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             Store_way: this.store_way,
             TXN_GUIPaper: this.TXN_GUIPaper,
             ...frm.getRawValue(),
+            GUI_Track: frm.getRawValue().GUI_Track || '00',
+            TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
+            TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
             TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : null,
             POS5007_INFO: pos5007Data.map((item) => {

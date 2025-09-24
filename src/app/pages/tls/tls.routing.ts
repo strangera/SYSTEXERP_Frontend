@@ -390,12 +390,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls2f020cru', loadComponent: () => import('./tls2f020-cru/tls2f020-cru.component').then(m => m.TLS2F020CRUComponent) },
   // 專櫃進項發票未開立查詢作業 CRU
   { path: 'tls2f030cru', loadComponent: () => import('./tls2f030-cru/tls2f030-cru.component').then(m => m.TLS2F030CRUComponent) },
-  // 專櫃預估業績轉入作業 CRU
-  { path: 'tls2g010cru', loadComponent: () => import('./tls2g010-cru/tls2g010-cru.component').then(m => m.TLS2G010CRUComponent) },
   // 專櫃預估業績維護作業 CRU
   { path: 'tls2g020cru', loadComponent: () => import('./tls2g020-cru/tls2g020-cru.component').then(m => m.TLS2G020CRUComponent) },
-  // 專櫃預估業績報表 CRU
-  { path: 'tls2g030cru', loadComponent: () => import('./tls2g030-cru/tls2g030-cru.component').then(m => m.TLS2G030CRUComponent) },
   // 租金發票套印作業 CRU
   { path: 'tls2h010cru', loadComponent: () => import('./tls2h010-cru/tls2h010-cru.component').then(m => m.TLS2H010CRUComponent) },
   // 專櫃代扣款發票套印作業 CRU

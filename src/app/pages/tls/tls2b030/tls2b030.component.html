@@ -133,6 +133,7 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     [totalRecords]="totalRecords"
+    [showManage]="false"
     [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
   </app-table>

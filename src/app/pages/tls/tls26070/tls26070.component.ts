@@ -33,6 +33,7 @@ import { CounterNameService } from '@service/basic/counter-name.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { BusinessClassificationService } from '../tls12040-cru/services/business-classification.service';
 import { DropdownOption } from '../tls13010/tls13010.dropdown';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls26070',
@@ -166,6 +167,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     private sharedDropdownService: SharedDropdownService,
     private counterNameService: CounterNameService,
     private businessClassificationService: BusinessClassificationService,
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -175,11 +177,31 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     this.loadOptions();
     this.setColumns(true);
     this.onReportTypeChange('1');
+    this.setReadOnlyFields();
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls26070Service.queryTLS26070(frm.getRawValue())
+      const formValue = frm.getRawValue();
+      const payload = {
+        ...formValue,
+        // 週營業報表 - 年度格式化 (yyyy)
+        onedateyy: this.datePipe.transform(formValue.onedateyy, 'yyyy'),
+        onedateyy_c: this.datePipe.transform(formValue.onedateyy_c, 'yyyy'),
+
+        // 月營業報表 - 年月格式化 (yyyyMM)
+        onedatemm: this.datePipe.transform(formValue.onedatemm, 'yyyyMM'),
+        onedatemm_c: this.datePipe.transform(formValue.onedatemm_c, 'yyyyMM'),
+
+        // 半年營業報表 - 年度格式化 (yyyy)
+        halfyear_onedateyy: this.datePipe.transform(formValue.halfyear_onedateyy, 'yyyy'),
+        halfyear_onedateyy_c: this.datePipe.transform(formValue.halfyear_onedateyy_c, 'yyyy'),
+
+        // 年營業報表 - 年度格式化 (yyyy)
+        year_onedateyy: this.datePipe.transform(formValue.year_onedateyy, 'yyyy'),
+        year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy')
+      };
+      this.tls26070Service.queryTLS26070(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
@@ -222,6 +244,14 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
           label: `${x.value} - ${x.label}`,
           value: x.value,
         })) || [];
+    });
+    // 活動下拉選項
+    this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: ["1"], pod_status: '' }).subscribe((res) => {
+      this.EventIDOptions = (res?.Data || []).map((item: any) => ({
+        ...item,
+        value: item.pod_no,
+        label: `${item.pod_no}-${item.pod_desc}`
+      }));
     });
   }
 
@@ -350,11 +380,31 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     this.queryForm.controls['enddate'].disable();
     this.queryForm.controls['startdate_c'].disable();
     this.queryForm.controls['enddate_c'].disable();
+    this.queryForm.controls['event_startdate'].disable();
+    this.queryForm.controls['event_enddate'].disable();
+    this.queryForm.controls['event_startdate_c'].disable();
+    this.queryForm.controls['event_enddate_c'].disable();
   }
 
   onBusinessTypeChange(event: any) {
     this.businessClassificationService.getBusClassOptions(event).subscribe(data => {
       this.busClassOptions = data;
     });
+  }
+
+  // 活動下拉改變
+  queryEvent(event: any, baseOrCompare: 'base' | 'compare') {
+    console.log(event);
+    console.log(this.EventIDOptions);
+    switch (baseOrCompare) {
+      case 'base':
+        this.queryForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_sdate ?? null);
+        this.queryForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_edate ?? null);
+        break;
+      case 'compare':
+        this.queryForm.controls['event_startdate_c'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_sdate ?? null);
+        this.queryForm.controls['event_enddate_c'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_edate ?? null);
+        break;
+    }
   }
 }

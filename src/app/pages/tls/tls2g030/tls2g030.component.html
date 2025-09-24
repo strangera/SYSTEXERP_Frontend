@@ -32,6 +32,20 @@
 <div class="card">
   <app-table-report tableKey="TLS2G030" dataKey="tlt_no" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [columnGroup]="columnGroup" [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"
-    [lastQueryBody]="lastQueryFormValue"
-    [queryFunction]="tls2g030Service.queryTLS2G030.bind(tls2g030Service)"></app-table-report>
+    [lastQueryBody]="lastQueryFormValue" [queryFunction]="tls2g030Service.queryTLS2G030.bind(tls2g030Service)"
+    [footerData]="footerTotal">
+    <header>
+      <div class="flex align-items-center justify-content-between">
+        <span class="font-bold">
+          {{ yyyy ? ('專櫃預估業績報表 年度: ' + yyyy) : '' }}
+        </span>
+        <div class="flex gap-2">
+          <p-button styleClass="p-2" label="產出PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+            [disabled]="data.length === 0"></p-button>
+          <p-button styleClass="p-2" label="產出XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
+            [disabled]="data.length === 0"></p-button>
+        </div>
+      </div>
+    </header>
+  </app-table-report>
 </div>
