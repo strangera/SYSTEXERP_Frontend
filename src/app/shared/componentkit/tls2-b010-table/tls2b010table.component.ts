@@ -54,7 +54,7 @@ import { tls2b010tableUtilityService } from './tls2b010table-utility.service';
     FileUploadModule, DropdownModule, RippleModule, InputTextModule, InputNumberModule,
     CalendarModule, CheckboxModule, SkeletonModule, BlockUIModule,
     // 自家元件
-    tls2b010tableExpansionComponent, TableExport2Component,
+    TableExport2Component,
     // Angular
     FormsModule, ImageModule,
   ],
