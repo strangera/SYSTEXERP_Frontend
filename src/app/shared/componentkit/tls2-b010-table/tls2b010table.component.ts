@@ -56,7 +56,7 @@ export class FilterMergedPipe implements PipeTransform {
     FileUploadModule, DropdownModule, RippleModule, InputTextModule, InputNumberModule,
     CalendarModule, CheckboxModule, SkeletonModule, BlockUIModule,
     FormsModule,
-    FilterMergedPipe,
+   
     TLS2B010TableExportComponent
   ],
 })
