@@ -162,64 +162,47 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return cleaned.length ? cleaned : fallback;
   }
 
-  private buildPayload(base: any): any {
-    // 先決定要送出的日期範圍
-    let dateStart: Date | null = base?.TXN_DateStart ?? null;
-    let dateEnd: Date | null = base?.TXN_DateEnd ?? null;
+ private buildPayload(base: any): any {
+  // 先決定要送出的日期範圍（若有選月份，就把日期設為整月）
+  let dateStart: Date | null = base?.TXN_DateStart ?? null;
+  let dateEnd: Date | null = base?.TXN_DateEnd ?? null;
 
-    if (base?.TXN_Month instanceof Date) {
-      const { start, end } = this.getMonthRange(base.TXN_Month);
-      dateStart = start;
-      dateEnd = end;
-    }
-
-    const payload: any = {
-      TXN_DateStart: this.toYMDOrUndef(dateStart),
-      TXN_DateEnd: this.toYMDOrUndef(dateEnd),
-
-      // 篩選條件
-      TLT_No_List:
-        Array.isArray(base?.TLT_No_List) && base.TLT_No_List.length
-          ? base.TLT_No_List
-          : undefined,
-      ECR_No_List:
-        Array.isArray(base?.ECR_No_List) && base.ECR_No_List.length
-          ? base.ECR_No_List
-          : undefined,
-      tlt_floor:
-        Array.isArray(base?.tlt_floor) && base.tlt_floor.length
-          ? base.tlt_floor
-          : undefined,
-      area_no:
-        Array.isArray(base?.area_no) && base.area_no.length
-          ? base.area_no
-          : undefined,
-      ECR_Type: base?.ECR_Type || undefined,
-      tlt_building: base?.tlt_building || undefined,
-
-      // 其它
-      OnlyShowOverAmount: !!base?.OnlyShowOverAmount,
-
-      // 分頁 / 排序
-      pageIndex:
-        Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
-          ? base.pageIndex
-          : 1,
-      pageSize:
-        Number.isFinite(base?.pageSize) && base.pageSize > 0
-          ? base.pageSize
-          : 10,
-      SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
-    };
-
-    // 刪空字串/空陣列/null/undefined
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v == null) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
-    return payload;
+  if (base?.TXN_Month instanceof Date) {
+    const { start, end } = this.getMonthRange(base.TXN_Month);
+    dateStart = start;
+    dateEnd = end;
   }
+
+  const payload: any = {
+    // ✅ 與後端 DTO 對齊（有底線）
+    TXN_Date_Start: this.toYMDOrUndef(dateStart),
+    TXN_Date_End:   this.toYMDOrUndef(dateEnd),
+
+    // 篩選條件
+    TLT_No_List: Array.isArray(base?.TLT_No_List) && base.TLT_No_List.length ? base.TLT_No_List : undefined,
+    ECR_No_List: Array.isArray(base?.ECR_No_List) && base.ECR_No_List.length ? base.ECR_No_List : undefined,
+    tlt_floor:   Array.isArray(base?.tlt_floor)   && base.tlt_floor.length   ? base.tlt_floor   : undefined,
+    area_no:     Array.isArray(base?.area_no)     && base.area_no.length     ? base.area_no     : undefined,
+    ECR_Type:    base?.ECR_Type || undefined,
+    tlt_building:base?.tlt_building || undefined,
+
+    OnlyShowOverAmount: !!base?.OnlyShowOverAmount,
+
+    // 分頁 / 排序
+    pageIndex: Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1,
+    pageSize:  Number.isFinite(base?.pageSize) && base.pageSize > 0  ? base.pageSize  : 10,
+    SortBy:    this.normalizeSort(base?.SortBy, this.defaultSort),
+  };
+
+  // 刪空字串/空陣列/null/undefined
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === '' || v == null) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+  return payload;
+}
+
 
   /** 用付款清單動態建欄 */
   private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
