@@ -358,10 +358,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2c050cru', loadComponent: () => import('./tls2c050-cru/tls2c050-cru.component').then(m => m.TLS2C050CRUComponent) },
   // 代扣款補登作業 CRU
   { path: 'tls2d010cru', loadComponent: () => import('./tls2d010-cru/tls2d010-cru.component').then(m => m.TLS2D010CRUComponent) },
-  // 專櫃代扣款試算作業 CRU
-  { path: 'tls2d020cru', loadComponent: () => import('./tls2d020-cru/tls2d020-cru.component').then(m => m.TLS2D020CRUComponent) },
-  // 專櫃代扣款結算作業 CRU
-  { path: 'tls2d030cru', loadComponent: () => import('./tls2d030-cru/tls2d030-cru.component').then(m => m.TLS2D030CRUComponent) },
   // 專櫃代扣款明細表 CRU
   { path: 'tls2d040cru', loadComponent: () => import('./tls2d040-cru/tls2d040-cru.component').then(m => m.TLS2D040CRUComponent) },
   // 部門使用券類設定作業 CRU

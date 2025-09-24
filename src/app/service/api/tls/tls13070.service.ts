@@ -100,13 +100,14 @@ export interface Tls13070Response {
   tlt_remark: string | null,
   location_no?: string,
   tlt_space?: number,
-  locationList:
+  locationList?:
   {
     talent_id: number,
     location_no: string,
     tlt_space: number
   }[],
-  posList:
+  ECR_No: string,
+  posList?:
   {
     ECR_No: string,
     ECR_TLT_No: string,
@@ -156,21 +157,18 @@ export class Tls13070Service {
   private flattenData(data: Tls13070Response[]): Tls13070Response[] {
     const flatArray: Tls13070Response[] = [];
     data.forEach(item => {
+      const newItem = { ...item };
       // 檢查 locationList 是否存在且長度大於0
       if (item.locationList && item.locationList.length > 0) {
-        item.locationList.forEach(location => {
-          // 淺複製原始物件
-          const newItem = { ...item };
-          // 用 location_no 覆蓋原本的 tlt_no，並清空 locationList
-          newItem.location_no = location.location_no;
-          newItem.tlt_space = location.tlt_space;
-          newItem.locationList = [];
-          flatArray.push(newItem);
-        });
-      } else {
-        // 如果沒有 locationList，則直接將原始物件加入
-        flatArray.push(item);
+        newItem.location_no = item.locationList[0].location_no;
+        newItem.tlt_space = item.locationList[0].tlt_space;
+        newItem.locationList = undefined;
       }
+      if (item.posList && item.posList.length > 0) {
+        newItem.ECR_No = item.posList?.[0].ECR_No ?? '';
+        newItem.posList = undefined;
+      }
+      flatArray.push(newItem);
     });
     return flatArray;
   }

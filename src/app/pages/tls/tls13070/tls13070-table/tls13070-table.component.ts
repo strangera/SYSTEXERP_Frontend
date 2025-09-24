@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
-import { ColumnGroup, data } from './tls13070-table.model';
+import { ColumnGroup } from './tls13070-table.model';
 import { TableReportUtilityService } from './tls13070-table.service';
 import { ImageModule } from 'primeng/image';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -26,7 +26,7 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   @ViewChild('dt') private dt!: Table;
   @Input() lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
   @Input() totalRecords = 0;                               // 用來儲存總筆數
-  @Input() data = data;                                    // 用來儲存查詢結果
+  @Input() data: any;                                    // 用來儲存查詢結果
   @Input() dataKey: string | undefined;                                 // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   @Input() loading = false;

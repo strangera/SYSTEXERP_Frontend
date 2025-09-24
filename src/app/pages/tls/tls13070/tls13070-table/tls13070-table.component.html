@@ -78,13 +78,13 @@
       <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.apply_no}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.upd_date | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.location_no}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.location_no}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.VEN_Name}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.ven_uniform}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_name}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_no}}</td>
-      <td class="text-center">{{rowData.tlt_space}}</td>
-      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{ rowData.posList.length }}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_space}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.ECR_No}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_contract_bdate |
         date:'yyyy/MM/dd'}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_contract_edate |

@@ -18,7 +18,6 @@ import { Tls13070QueryRequest, Tls13070Response, Tls13070Service } from '@servic
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Tls13070TableComponent } from './tls13070-table/tls13070-table.component';
-import { data } from './tls13070-table/tls13070-table.model';
 
 @Component({
   selector: 'app-tls13070',
@@ -106,7 +105,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   rece_ynOptions = getSYS1000Options('YES_NO');
   pos_ynOptions = getSYS1000Options('YES_NO');
   cash_ynOptions = getSYS1000Options('YES_NO');
-  data: Tls13070Response[] = data;
+  data: Tls13070Response[] = [];
   constructor(
     private readonly dropdown: DropdownApiService,
     public readonly tls13070Service: Tls13070Service,
