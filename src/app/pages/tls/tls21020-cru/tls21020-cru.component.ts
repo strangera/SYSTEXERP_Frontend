@@ -1,19 +1,17 @@
-import { NgFor, NgIf } from '@angular/common';
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21020Service } from '@service/api/tls/tls21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonDynamicallyaddComponent } from '@shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
-import { ButtonDynamicallydeleteComponent } from '@shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { TLS21020Data } from '../tls21020/tls21020.model';
+import { finalize, tap } from 'rxjs';
+import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 
 @Component({
   selector: 'app-tls21020-cru',
@@ -21,57 +19,110 @@ import { TLS21020Data } from '../tls21020/tls21020.model';
   styleUrls: ['./tls21020-cru.component.scss'],
   standalone: true,
   imports: [
-    NgFor,
-    NgIf,
     FormsModule,
     PanelModule,
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
-    ButtonDynamicallyaddComponent,
-    ButtonDynamicallydeleteComponent,
     DropdownComponent,
-    InputTextComponent,
     MenubarComponent,
+    TableEditComponent,
   ],
 })
-export class TLS21020CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
+export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> implements OnInit {
   public dataForm = this.formBuilder.nonNullable.group({
-    items: this.formBuilder.array([this.createItem()]),
+    ENTRY_TYPE: new FormControl<string | void>(void 0),
+    // items: this.formBuilder.array([this.createItem()]),
   });
-  public readonly df = computed(() => this.dataForm.valueChanges);
+  public readonly df = computed(() => this.dataForm.controls);
+  public readonly canSave = computed(() => this.dataForm.valid);
 
-  public SDcolumn: (Omit<Column, 'field'> & { field: keyof TLS21020Data; })[] = [
-    { field: 'AccDC', header: '借/貸' },
-    { field: 'ItemDesc', header: '項目名稱' },
-    { field: 'AccNo_Name', header: '會計科目' },
-    { field: 'Org_ID', header: '組織代碼' },
-    { field: 'AccNotes', header: '傳票備註' },
-    { field: 'ObjectNo', header: '是否依合約拆立組織' },
-    { field: 'RelatedPartyAccNo_Name', header: '區分關係人會科' },
-    { field: 'VEN_No', header: '應收廠商' },
-    { field: 'PAY_days', header: '付款天數' },
+  public selectedItems: TLS21020Data[] = [];
+
+  private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
+  private readonly ABATYN = (v: any) => v?.ABAT_YN === 'N';
+
+  public readonly columns: EditColumn[] = [
+    {
+      field: 'AccDC',
+      header: '借/貸',
+      format: v => this.AccDCMap.get(v) || v,
+    },
+    {
+      field:
+        'ItemDesc',
+      header: '項目名稱',
+    },
+    {
+      field: 'AccNo',
+      header: '會計科目',
+      type: 'dropdown',
+      options: this.service.GLS1005Data,
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
+    {
+      field: 'Org_ID',
+      header: '組織代碼',
+      type: 'dropdown',
+      options: this.service.SYS3100Data,
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
+    {
+      field: 'AccNotes',
+      header: '傳票備註',
+      type: 'input',
+    },
+    {
+      field: 'ObjectNo',
+      header: '是否依合約拆立組織',
+      type: 'dropdown',
+      options: this.service.getYNOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: !1,
+    },
+    {
+      field: 'RelatedPartyAccNo',
+      header: '區分關係人會科',
+      groupField: 'RelatedPartyAcc',
+      type: 'dropdown',
+      options: this.service.GLS1005Data,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: !1,
+      disabled: this.ABATYN,
+    },
+    {
+      field: 'VEN_No',
+      header: '應收廠商',
+      groupField: 'Vendor',
+      type: 'dropdown',
+      options: this.service.POS2013Data,
+      optionLabel: 'Name',
+      optionValue: 'VEN_No',
+      disabled: this.ABATYN,
+      templateLabel: 'ShortName',
+    },
+    {
+      field: 'PAY_days',
+      header: '付款天數',
+      type: 'inputNumber',
+      disabled: this.ABATYN,
+    },
+    {
+      field: 'PAY_No',
+      header: '付款別編號',
+      type: 'input',
+      disabled: this.ABATYN,
+    },
   ];
 
-  // CashRegisterTypeItems: any[] = [
-  //   { label: '業主', value: '1' },
-  //   { label: '非業主', value: '2' },
-  // ];
-
-  // receivableVendorItems: any[] = [
-  //   { label: '南紡流通服務台', value: 'A' },
-  //   { label: '南紡流通-特殊交易', value: 'B' },
-  // ];
-
-  // organizationCodeItems: any[] = [
-  //   { label: '全公司', value: '1' },
-  //   { label: '稽核室', value: '2' },
-  // ];
-
-  // accountingSubjectItems: any[] = [
-  //   { label: '應收帳款-現金', value: '1' },
-  //   { label: '應收帳款-一卡通', value: '2' },
-  // ];
+  public readonly defaultInsertData: Partial<TLS21020Data> = {
+    AccDC: 'D',
+    ABAT_YN: 'N',
+  };
 
   constructor(
     public readonly service: TLS21020Service,
@@ -82,107 +133,130 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   ngOnInit(): void {
     this.initializePage('TLS21020', this.dataForm);
+    this.rowdata && (this.rowdata.ENTRY_TYPE = this.rowdata.ENTRY_TYPE.trim());
 
-    this.service.queryTLS21020_GLS1005({ AccDC: 'D' });
-    this.service.getOrgIDs();
     this.service.getGLS1005s();
+    this.service.getPOS2013s('1');
+    this.service.getOrgIDs();
+    this.service.queryTLS21020({ ENTRY_TYPE: this.rowdata?.ENTRY_TYPE! }).pipe(
+      tap(),
+      finalize(() => this.loading = !1),
+    ).subscribe();
+
+    // this.service.queryTLS21020_GLS1005({ AccDC: this.rowdata?.AccDC! });
 
     this.logger.debug(`init:`, [this.rowdata]);
   }
 
-  // Get FormArray for items
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  // Get FormControl based on index and controlName
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-
-  // Create new form group for item
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      AccDC: new FormControl<string | undefined>(void 0, [Validators.required]),
-      ItemDesc: new FormControl<string | undefined>(void 0),
-      AccNo_Name: new FormControl<string | undefined>(void 0),
-      Org_ID: new FormControl<string | undefined>(void 0),
-      AccNotes: new FormControl<string | undefined>(void 0),
-      ObjectNo: new FormControl<string | undefined>(void 0),
-      RelatedPartyAccNo_Name: new FormControl<string | undefined>(void 0),
-      VEN_No: new FormControl<string | undefined>(void 0),
-      PAY_days: new FormControl<string | undefined>(void 0, [Validators.pattern('^[0-9]*$')]),
-
-      // itemName: [], // 項目名稱
-      // accountingSubject: [], // 會計科目
-      // organizationCode: [], // 組織代碼
-      // voucherRemarks: ['', Validators.maxLength(100)], // 傳票備註
-      // contractOrganizationSplit: [], // 是否依合約拆立組織
-      // relatedPartyAccounting: [], // 區分關係人會科
-      // receivableVendor: [], // 應收廠商
-      // paymentDays: ['', [Validators.pattern('^[0-9]*$')]], // 付款天數
-    });
-  }
-
-  // Remove an item from FormArray
-  onRemoveItem(index: number): void {
-    this.items.removeAt(index);
-  }
-
-  // Add a new item to FormArray
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  // Edit the form with provided rowdata
-  Edit(rowdata: any): void {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  // Read the form with provided rowdata
-  Read(rowdata: any): void {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  // Submit the form
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-
-      // this.messageService.blockUi();
-      // this.submitted = true;
-
-      // if (this.dataForm.invalid) {
-      //   this.messageService.errorBubble(this.translate.instant('form_invalid'));
-      //   this.messageService.unblockUi();
-      //   return;
-      // }
-
-      // switch (this.crudstatus) {
-      //   case CRUDStatus.Create:
-      //     if (this.canAdd()) {
-      //       // Implement add logic here
-      //       this.messageService.successBubble(this.translate.instant('success_message'));
-      //     }
-      //     break;
-      //   case CRUDStatus.Edit:
-      //     if (this.canEdit()) {
-      //       // Implement update logic here
-      //       this.messageService.successBubble(this.translate.instant('updated-successfully'));
-      //     }
-      //     break;
-      // }
-
-      // this.messageService.unblockUi();
-      // this.submitted = false;
-
-      this.submitted = !1;
-      this.loading = !1;
+      this.logger.debug(`onSubmit:`, [this.service.TLS21020Data()]);
+      const entryType = this.rowdata!.ENTRY_TYPE;
+      if (!entryType) return;
+      const data = this.service.TLS21020Data();
+      const payload: TLS21020UpdateQuery[] = data.map(v => ({
+        ABAT_YN: v.ABAT_YN,
+        AccNo: v.AccNo,
+        AccNotes: v.AccNotes,
+        ObjectNo: v.ObjectNo,
+        Org_ID: v.Org_ID,
+        PAY_No: v.PAY_No,
+        PAY_days: v.PAY_days,
+        RelatedPartyAccNo: v.RelatedPartyAccNo,
+        VEN_No: v.VEN_No,
+        id: v.id,
+      }));
+      this.logger.debug(`onSubmit:`, [data, payload]);
+      this.service.updateTLS21020(payload).pipe(
+        tap(res => res.Status === '2000' && this.onCancel()),
+        finalize(() => this.loading = !1),
+      ).subscribe();
     });
   }
 
-  // Submit the form on button click
-  submitForm(): void {
-    this.onSubmit();
+  public rowEditValid(row: TLS21020Data, index: number, data: TLS21020Data[]): boolean {
+    return index === data.length - 2;
   }
+
+  public validateEntireRow = (rowData: TLS21020Data): { isValid: boolean, errorMessage: string; } => {
+    if ((rowData.ObjectNo === 'Y' || rowData.ObjectNo === 'N') && (rowData.Org_ID === void 0 || rowData.Org_ID === null || String(rowData.Org_ID).trim() === '')) {
+      return { isValid: !1, errorMessage: '必要欄位未填寫' };
+    }
+
+    if (rowData.ABAT_YN === 'Y') {
+      const venNoValue = rowData.VEN_No;
+      return {
+        isValid: venNoValue !== void 0 && venNoValue !== null && String(venNoValue).trim() !== '',
+        errorMessage: '應收廠商必須填寫'
+      };
+    }
+
+    if (rowData.PAY_days !== void 0 && rowData.PAY_days !== null) {
+      const payDaysValid = Number.isInteger(rowData.PAY_days) && rowData.PAY_days >= 0;
+      if (!payDaysValid) return { isValid: !1, errorMessage: '付款天數必須為大於等於0的整數' };
+    }
+
+    if (rowData.PAY_No !== void 0 && rowData.PAY_No !== null && rowData.PAY_No !== '') {
+      const payNoValid = String(rowData.PAY_No).trim().length > 0;
+      if (!payNoValid) return { isValid: !1, errorMessage: '付款別編號必須填寫' };
+    }
+
+    if (rowData.AccNotes !== void 0 && rowData.AccNotes !== null && rowData.AccNotes !== '') {
+      const accNotesValid = String(rowData.AccNotes).trim().length > 0;
+      if (!accNotesValid) return { isValid: !1, errorMessage: '傳票備註必須填寫' };
+    }
+
+    if (rowData.AccNo !== void 0 && rowData.AccNo !== null && rowData.AccNo !== '') {
+      const accNoValid = String(rowData.AccNo).trim().length > 0;
+      if (!accNoValid) return { isValid: !1, errorMessage: '會計科目必須填寫' };
+    }
+
+    if (rowData.RelatedPartyAccNo !== void 0 && rowData.RelatedPartyAccNo !== null && rowData.RelatedPartyAccNo !== '') {
+      const relatedPartyAccNoValid = String(rowData.RelatedPartyAccNo).trim().length > 0;
+      if (!relatedPartyAccNoValid) return { isValid: !1, errorMessage: '區分關係人會科必須填寫' };
+    }
+
+    // 檢查是否有重複的組合 (AccDC, ItemDesc, AccNo)
+    const rowIndex = this.service.TLS21020Data().findIndex(item => item === rowData);
+    if (rowIndex === -1) return { isValid: !1, errorMessage: '找不到該列資料' };
+    const isOverlapping = this.service.TLS21020Data().some((item, idx) => {
+      if (idx === rowIndex) return !1;
+      return item.AccDC === rowData.AccDC && item.ItemDesc === rowData.ItemDesc && item.AccNo === rowData.AccNo;
+    });
+    return { isValid: !isOverlapping, errorMessage: `` };
+  };
+
+  // Get FormArray for items
+  // get items(): FormArray {
+  //   return this.dataForm.get('items') as FormArray;
+  // }
+
+  // Get FormControl based on index and controlName
+  // getFormControl(index: number, controlName: string): FormControl {
+  //   return this.items.at(index).get(controlName) as FormControl;
+  // }
+
+  // Create new form group for item
+  // createItem(): FormGroup {
+  //   return this.formBuilder.group({
+  //     AccDC: new FormControl<string | undefined>(void 0, [Validators.required]),
+  //     ItemDesc: new FormControl<string | undefined>(void 0),
+  //     AccNo_Name: new FormControl<string | undefined>(void 0),
+  //     Org_ID: new FormControl<string | undefined>(void 0),
+  //     AccNotes: new FormControl<string | undefined>(void 0),
+  //     ObjectNo: new FormControl<string | undefined>(void 0),
+  //     RelatedPartyAccNo_Name: new FormControl<string | undefined>(void 0),
+  //     VEN_No: new FormControl<string | undefined>(void 0),
+  //     PAY_days: new FormControl<string | undefined>(void 0, [Validators.pattern('^[0-9]*$')]),
+
+  // itemName: [], // 項目名稱
+  // accountingSubject: [], // 會計科目
+  // organizationCode: [], // 組織代碼
+  // voucherRemarks: ['', Validators.maxLength(100)], // 傳票備註
+  // contractOrganizationSplit: [], // 是否依合約拆立組織
+  // relatedPartyAccounting: [], // 區分關係人會科
+  // receivableVendor: [], // 應收廠商
+  // paymentDays: ['', [Validators.pattern('^[0-9]*$')]], // 付款天數
+  //   });
+  // }
 }

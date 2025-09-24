@@ -7,17 +7,20 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, createPaginationConfig, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
+import { isValid } from 'js-base64';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
-import { TLS21020Data, TLS21020GLS1005Data, TLS21020UpdateQuery } from './tls21020.model';
+import { finalize, mergeMap } from 'rxjs';
+import { TLS21020Data, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
   selector: 'app-tls21020',
   templateUrl: './tls21020.component.html',
-  standalone: true,
+  standalone: !0,
   imports: [
     AccordionModule,
     FormsModule,
@@ -26,7 +29,7 @@ import { TLS21020Data, TLS21020GLS1005Data, TLS21020UpdateQuery } from './tls210
     ButtonComponent,
     DropdownComponent,
     MenubarComponent,
-    TableComponent,
+    TableEditComponent,
   ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
@@ -36,64 +39,76 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
+  public readonly totalRecords = computed(() => this.service.TLS21020Data().length);
 
   private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
 
-  private readonly selectedStatus = signal<TLS21020GLS1005Data | void>(void 0);
-
-  public readonly rowEditValidSignal = signal<boolean>(!1);
-
-  public readonly totalRecord = signal(this.service.TLS21020Data().length);
-
-  public readonly canSave = !this.qf().ENTRY_TYPE.value?.length;
-
   /** entryType 改變時，取得table 資料 */
   public readonly entryTypeEffect = effect(() => {
-    const entryType = this.entryTypeSignal();
-    if (!entryType) return;
-    const { SortBy, ...field } = this.queryForm.getRawValue();
-    if (!SortBy) return;
-    this.service.queryTLS21020({ SortBy, ...field, ENTRY_TYPE: entryType });
-    this.logger.debug(`entryType changed:`, [entryType]);
+    const ENTRY_TYPE = this.entryTypeSignal();
+    if (!ENTRY_TYPE) return;
+
+    this.service.queryTLS21020({ ENTRY_TYPE }).pipe(
+      finalize(() => this.loading = !1),
+    ).subscribe();
+    this.logger.debug(`entryType changed:`, [ENTRY_TYPE]);
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
   }, { allowSignalWrites: !0 });
 
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS21020Data; })[] = [
+  public selectedItems: TLS21020Data[] = [];
+  public canSave = !1;
+  private AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
+  private ABATYN = (v: any) => v?.ABAT_YN === 'N';
+
+  public readonly columns: EditColumn[] = [
     {
-      field: 'AccDC', header: '借/貸',
-      format: v => v === 'D' ? '借' : v === 'C' ? '貸' : v
-    },
-    { field: 'ItemDesc', header: '項目名稱' },
-    {
-      field: 'AccNo',
-      header: '',
-      groupField: 'Acc',
-      showSort: !1,
-    },
-    {
-      field: 'AccNo',
-      header: '',
-      groupField: 'Acc',
+      field: 'AccDC',
+      header: '借/貸',
       type: 'dropdown',
-      showSort: !1,
-      // format: v => `${v} ${this.selectedStatus()!.AccCName}`,
-      options: () => this.service.GLS1005Data(),
-      optionLabel: 'Name',
-      optionValue: 'No',
+      format: v => this.AccDCMap.get(v) || v,
+      options: [{ label: '借', value: 'D' }, { label: '貸', value: 'C' }],
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: !1,
+      validate: [validateRequired],
+      width: '6em',
     },
-    // {
-    //   field: 'AccNo',
-    //   header: '立沖科目',
-    //   format: v => this.service.TLS21020GLS1005Data()?.find(i => i.No === v?.trim())?.Name || v,
-    // },
+    {
+      field: 'ItemDesc',
+      header: '項目名稱',
+      type: 'input',
+    },
+    {
+      field: 'ABAT_YN',
+      header: '是否專案應收',
+      type: 'dropdown',
+      format: v => Maps.YN.get(v) || v,
+      options: this.service.getYNOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: !1,
+      validate: [validateRequired],
+      width: '8em',
+    },
+    {
+      field: 'AccNo',
+      header: '會計科目',
+      type: 'dropdown',
+      options: this.service.GLS1005Data,
+      optionLabel: 'label',
+      optionValue: 'value',
+      validate: [validateRequired],
+      showClear: !1,
+    },
     {
       field: 'Org_ID',
       header: '組織代碼',
       type: 'dropdown',
-      required: !0,
-      options: () => this.service.SYS3100Data(),
-      optionLabel: 'Name',
-      optionValue: 'No',
+      options: this.service.SYS3100Data,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: !1,
+      validate: [validateRequired],
     },
     {
       field: 'AccNotes',
@@ -104,73 +119,53 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       field: 'ObjectNo',
       header: '是否依合約拆立組織',
       type: 'dropdown',
-      showSort: !1,
-      required: !0,
-      format: v => v === 'Y' ? '是' : v === 'N' ? '否' : '否',
-      options: () => [
-        { No: 'Y', Name: '是' },
-        { No: 'N', Name: '否' },
-      ],
-      optionLabel: 'Name',
-      optionValue: 'No',
+      options: this.service.getYNOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: !1,
     },
     {
       field: 'RelatedPartyAccNo',
-      header: '',
-      groupField: 'RelatedPartyAcc',
-      showSort: !1,
-    },
-    {
-      field: 'RelatedPartyAccNo',
-      header: '',
+      header: '區分關係人會科',
       groupField: 'RelatedPartyAcc',
       type: 'dropdown',
-      showSort: !1,
-      format: v => this.service.TLS21020GLS1005Data()?.find(i => i.AccNo === v?.trim())?.AccCName || v,
-      options: () => this.service.GLS1005Data(),
+      options: this.service.GLS1005Data,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: !1,
+      disabled: this.ABATYN,
+    },
+    {
+      field: 'VEN_No',
+      header: '應收廠商',
+      groupField: 'Vendor',
+      type: 'dropdown',
+      options: this.service.POS2013Data,
       optionLabel: 'Name',
-      optionValue: 'No',
-      disabled: v => v?.ABAT_YN === 'N',
-    },
-    {
-      field: 'VEN_No',
-      header: '',
-      groupField: 'Vendor',
-      showSort: !1,
-    },
-    {
-      field: 'VEN_No',
-      header: '',
-      groupField: 'Vendor',
-      type: 'dropdown',
-      showSort: !1,
-      required: !0,
-      // format: v => `${v} ${this.service.POS2013Data()?.find(i => i.VEN_No === v?.trim())?.ShortName}`,
-      options: () => this.service.POS2013Data(),
-      optionLabel: 'ShortName',
       optionValue: 'VEN_No',
-      disabled: v => v?.ABAT_YN === 'N',
-      templateLabel: 'Name',
+      disabled: this.ABATYN,
+      templateLabel: 'ShortName',
+      showClear: !1,
     },
     {
       field: 'PAY_days',
       header: '付款天數',
       type: 'inputNumber',
-      disabled: v => v?.ABAT_YN === 'N',
+      disabled: this.ABATYN,
+      validate: [validateNumber],
     },
     {
       field: 'PAY_No',
       header: '付款別編號',
       type: 'input',
-      disabled: v => v?.ABAT_YN === 'N',
+      disabled: this.ABATYN,
     },
   ];
 
-  public readonly tableGroup: ColumnGroup[] = [
-    { field: 'Acc', header: '會計科目' },
-    { field: 'Vendor', header: '應收廠商' },
-    { field: 'RelatedPartyAcc', header: '區分關係人會科' },
-  ];
+  public readonly defaultInsertData: Partial<TLS21020Data> = {
+    AccDC: 'D',
+    ABAT_YN: 'N',
+  };
 
   constructor(
     public readonly service: TLS21020Service,
@@ -180,7 +175,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   }
 
   public ngOnInit(): void {
-    this.initializePage('TLS21020', 'TLS/TLS21020', this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('TLS21020', '/TLS/TLS21020CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState('TLS21020');
     if (store?.value) this.queryForm.setValue(store.value);
 
@@ -190,130 +185,89 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.logger.debug(`init:`, []);
   }
 
-  public onRowEditInit(event: any): void {
-    this.logger.debug(`onRowEditInit:`, [event]);
-    this.service.queryTLS21020_GLS1005({ AccDC: event.AccDC });
-    this.selectedStatus.set(event);
-
-    if (!event.ObjectNo || event.ObjectNo === '') event.ObjectNo = 'N';
-    this.rowEditValidSignal.set(!1);
-
-    if (event) {
-      const isValid = this.validateRequiredFields(event);
-      this.rowEditValidSignal.set(isValid);
-    }
+  public rowEditValid(row: TLS21020Data, index: number, data: TLS21020Data[]): boolean {
+    return index === data.length - 2;
   }
 
-  public onRowEditSave(event: RowEditSaveEvent<TLS21020Data>): void {
-    this.logger.debug(`onRowEditSave:`, [event]);
-    if (!event.newData) return;
-    // const payload = {
-    //   ABAT_YN: event.newData.ABAT_YN,
-    //   AccNo: event.newData.AccNo,
-    //   AccNotes: event.newData.AccNotes,
-    //   ObjectNo: event.newData.ObjectNo || 'N',
-    //   Org_ID: event.newData.Org_ID,
-    //   PAY_No: event.newData.PAY_No,
-    //   PAY_days: event.newData.PAY_days,
-    //   RelatedPartyAccNo: event.newData.RelatedPartyAccNo,
-    //   VEN_No: event.newData.VEN_No,
-    //   id: event.newData.id,
-    // };
-    // this.service.updateTLS21020([payload]);
-    this.selectedStatus.set(void 0);
-  }
-
-  public onRowEditCancel(event: RowEditSaveEvent<TLS21020Data>): void {
-    this.logger.debug(`onRowEditCancel:`, [event]);
-    this.selectedStatus.set(void 0);
-  }
-
-  public onFieldChange(event: FieldChangeEvent<TLS21020Data>): void {
-    this.logger.debug(`onFieldChange:`, [event?.rowData]);
-
-    if (event.rowData) {
-      const isValid = this.validateRequiredFields(event.rowData);
-      this.rowEditValidSignal.set(isValid);
-      this.logger.debug(`validate ${isValid ? 'success' : 'fail'}`);
-    }
-  }
-
-  private validateRequiredFields(data: TLS21020Data): boolean {
+  public validateEntireRow = (rowData: TLS21020Data): { isValid: boolean, errorMessage: string; } => {
     const baseRequiredFields: (keyof TLS21020Data)[] = ['Org_ID', 'ObjectNo'];
 
-    const objectNoFormatValid = data.ObjectNo === 'Y' || data.ObjectNo === 'N';
-    const baseFieldsValid = baseRequiredFields.every(field => {
-      const value = data[field];
-      return value !== void 0 && value !== null && String(value).trim() !== '';
+    // 必填欄位檢查
+    // const objectNoFormatValid = rowData.ObjectNo === 'Y' || rowData.ObjectNo === 'N';
+    // if (!objectNoFormatValid) return { isValid: !1, errorMessage: '對象別編號格式錯誤' };
+
+    // 基本必填欄位
+    // const baseFieldsValid = baseRequiredFields.every(field => {
+    //   const value = rowData[field];
+    //   return value !== void 0 && value !== null && String(value).trim() !== '';
+    // });
+    // if (!baseFieldsValid) return { isValid: !1, errorMessage: '必要欄位未填寫' };
+
+    // Org_ID 必填
+    if (rowData.Org_ID === void 0 || rowData.Org_ID === null || String(rowData.Org_ID).trim() === '') {
+      return { isValid: !1, errorMessage: '組織代碼必須填寫' };
+    }
+
+    // ABAT_YN 為 Y 時，VEN_No 與 PAY_days 必填
+    if (rowData.ABAT_YN !== 'N') {
+      const venNoValid = rowData.VEN_No !== void 0 && rowData.VEN_No !== null && String(rowData.VEN_No).trim() !== '';
+      const payDaysValid = rowData.PAY_days !== void 0 && rowData.PAY_days !== null && String(rowData.PAY_days).trim() !== '';
+      if (!venNoValid) return { isValid: !1, errorMessage: '應收廠商必須填寫' };
+      if (!payDaysValid) return { isValid: !1, errorMessage: '付款天數必須填寫' };
+    }
+
+    // 可選欄位檢查
+    let optionalFieldsValid = { isValid: !0, errorMessage: '' };
+
+    // PAY_days 必須為大於等於0的整數
+    if (rowData.PAY_days !== void 0 && rowData.PAY_days !== null) {
+      const payDaysValid = Number.isInteger(rowData.PAY_days) && rowData.PAY_days >= 0;
+      if (!payDaysValid) optionalFieldsValid = { isValid: !1, errorMessage: '付款天數必須為大於等於0的整數' };
+    }
+
+    // PAY_No 不可為空字串
+    if (rowData.PAY_No !== void 0 && rowData.PAY_No !== null && rowData.PAY_No !== '') {
+      const payNoValid = String(rowData.PAY_No).trim().length > 0;
+      if (!payNoValid) optionalFieldsValid = { isValid: !1, errorMessage: '付款別編號必須填寫' };
+    }
+
+    // AccNotes 不可為空字串
+    if (rowData.AccNotes !== void 0 && rowData.AccNotes !== null && rowData.AccNotes !== '') {
+      const accNotesValid = String(rowData.AccNotes).trim().length > 0;
+      if (!accNotesValid) optionalFieldsValid = { isValid: !1, errorMessage: '傳票備註必須填寫' };
+    }
+
+    // AccNo 必填且不可為空字串
+    if (rowData.AccNo !== void 0 && rowData.AccNo !== null && rowData.AccNo !== '') {
+      const accNoValid = String(rowData.AccNo).trim().length > 0;
+      if (!accNoValid) optionalFieldsValid = { isValid: !1, errorMessage: '會計科目必須填寫' };
+    }
+
+    // RelatedPartyAccNo 不可為空字串
+    if (rowData.RelatedPartyAccNo !== void 0 && rowData.RelatedPartyAccNo !== null && rowData.RelatedPartyAccNo !== '') {
+      const relatedPartyAccNoValid = String(rowData.RelatedPartyAccNo).trim().length > 0;
+      if (!relatedPartyAccNoValid) optionalFieldsValid = { isValid: !1, errorMessage: '區分關係人會科必須填寫' };
+    }
+    if (!optionalFieldsValid.isValid) return optionalFieldsValid;
+
+    // 檢查是否有重複的組合 (AccDC, ItemDesc, AccNo)
+    const rowIndex = this.service.TLS21020Data().findIndex(item => item === rowData);
+    if (rowIndex === -1) return { isValid: !1, errorMessage: '找不到該列資料' };
+    const isOverlapping = this.service.TLS21020Data().some((item, idx) => {
+      if (idx === rowIndex) return !1;
+      return item.AccDC === rowData.AccDC && item.ItemDesc === rowData.ItemDesc && item.AccNo === rowData.AccNo;
     });
+    if (isOverlapping) return { isValid: !1, errorMessage: '會計科目與項目描述必須唯一' };
 
-    let venNoValid = !0;
-    if (data.ABAT_YN !== 'N') {
-      const venNoValue = data.VEN_No;
-      venNoValid = venNoValue !== void 0 && venNoValue !== null && String(venNoValue).trim() !== '';
-    }
-
-    let optionalFieldsValid = !0;
-    if (data.PAY_days !== void 0 && data.PAY_days !== null) {
-      const payDaysValid = Number.isInteger(data.PAY_days) && data.PAY_days >= 0;
-      if (!payDaysValid) optionalFieldsValid = !1;
-    }
-
-    if (data.PAY_No !== void 0 && data.PAY_No !== null && data.PAY_No !== '') {
-      const payNoValid = String(data.PAY_No).trim().length > 0;
-      if (!payNoValid) optionalFieldsValid = !1;
-    }
-
-    if (data.AccNotes !== void 0 && data.AccNotes !== null && data.AccNotes !== '') {
-      const accNotesValid = String(data.AccNotes).trim().length > 0;
-      if (!accNotesValid) optionalFieldsValid = !1;
-    }
-
-    if (data.AccNo !== void 0 && data.AccNo !== null && data.AccNo !== '') {
-      const accNoValid = String(data.AccNo).trim().length > 0;
-      if (!accNoValid) optionalFieldsValid = !1;
-    }
-
-    if (data.RelatedPartyAccNo !== void 0 && data.RelatedPartyAccNo !== null && data.RelatedPartyAccNo !== '') {
-      const relatedPartyAccNoValid = String(data.RelatedPartyAccNo).trim().length > 0;
-      if (!relatedPartyAccNoValid) optionalFieldsValid = !1;
-    }
-
-    const finalValid = baseFieldsValid && objectNoFormatValid && venNoValid && optionalFieldsValid;
-    if (!finalValid) this.logger.debug(`Validation fail:`, [{
-      baseFieldsValid,
-      objectNoFormatValid,
-      venNoValid,
-      optionalFieldsValid,
-      finalValid,
-      data,
-    }]);
-
-    return finalValid;
-  }
+    return { isValid: !0, errorMessage: '' };
+  };
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.logger.debug(`onSubmit:`, [this.service.TLS21020Data()]);
-      const entryType = this.entryTypeSignal();
-      if (!entryType) return;
-      const { SortBy, ...field } = this.queryForm.getRawValue();
-      if (!SortBy) return;
+      const ENTRY_TYPE = this.entryTypeSignal();
+      if (!ENTRY_TYPE) return;
 
-      const data = this.service.TLS21020Data();
-      const invalidData = data.filter(item => !this.validateRequiredFields(item));
-
-      if (invalidData.length > 0) {
-        this.messageService.errorBubble(
-          `有 ${invalidData.length} 筆資料驗證失敗，請確認必填欄位皆已填入`,
-          '驗證失敗'
-        );
-        this.submitted = !1;
-        this.loading = !1;
-        return;
-      }
-
-      const payload: TLS21020UpdateQuery[] = data.map(v => ({
+      const payload: TLS21020UpdateQuery[] = this.service.TLS21020Data().map(v => ({
         ABAT_YN: v.ABAT_YN,
         AccNo: v.AccNo,
         AccNotes: v.AccNotes,
@@ -325,9 +279,9 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         VEN_No: v.VEN_No,
         id: v.id,
       }));
-      this.logger.debug(`onSubmit:`, [data, payload]);
+      this.logger.debug(`onSubmit:`, [payload]);
       this.service.updateTLS21020(payload).pipe(
-        tap(() => this.service.queryTLS21020({ SortBy, ...field, ENTRY_TYPE: entryType })),
+        mergeMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
         finalize(() => this.loading = !1),
       ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
