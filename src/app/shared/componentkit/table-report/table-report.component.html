@@ -33,6 +33,9 @@
         <th class="w-1rem group-header text-center" rowspan="2" *ngIf="showCheckBox">
           <p-tableHeaderCheckbox />
         </th>
+        <th class="w-1rem group-header" rowspan="2" *ngIf="expansionColumns.length">
+          收合/展開
+        </th>
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 如果是第一次出現這個群組 -->
           <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
@@ -75,6 +78,9 @@
         <th class="w-1rem text-center" *ngIf="showCheckBox">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
+        <th class="w-1rem" *ngIf="expansionColumns.length">
+          收合/展開
+        </th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn [pSortableColumn]="col.field"
           [pSortableColumnDisabled]="col.showSort === false" class="text-center wrap-header" pFrozenColumn
           [frozen]="col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
@@ -98,7 +104,7 @@
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
           [value]="rowData" [disabled]="!rowSelectableWrapper(rowData) || disabled" />
       </td>
-      <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
+      <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
           [raised]="!expandedRows[rowData[dataKey ?? 'id']]" [icon]="
               rowData.expansionLoading
