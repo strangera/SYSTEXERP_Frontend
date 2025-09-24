@@ -14,6 +14,8 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit {
+
+  @Input() readonly = false;  // 新增：唯讀模式
   // 必填
   @Input() override label = '';
   @Input() showLabel = true;
@@ -49,7 +51,9 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
 
   ngOnInit() {
     this.initControl(this.control);
-    if (this.disabled) this.control.disable();
+    if (this.disabled || this.readonly) {
+      this.control.disable();
+    }
     const config = this.calendarConfig[this.calendarType];
     if (config) {
       this.timeOnly = config.timeOnly;
@@ -64,10 +68,12 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     }
   }
   onClose() {
+    if (this.readonly) return; // 唯讀模式下不處理事件
     this.calendarEvent.emit(this.control.value);
   }
   // dateTimeOne
   onInput(event: any) {
+    if (this.readonly) return; // 唯讀模式下不處理事件
     if (this.calendarType === 'timeOne') {
       if (event.target.value.length === 2 && event.data && event.target.value.indexOf(':') === -1) {
         event.target.value = event.target.value + ':';
@@ -95,5 +101,39 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
       }
     }
     this.inputChange.emit(event.target.value);
+  }
+
+  getDisplayValue(): string {
+    if (!this.control.value) return '';
+
+    const date = this.control.value;
+    if (!(date instanceof Date)) return date.toString();
+
+    switch (this.calendarType) {
+      case 'dateOne':
+        return date.toLocaleDateString('zh-TW'); // 會是 2014/12/28 格式
+      case 'timeOne':
+        return date.toLocaleTimeString('zh-TW', { hour12: false });
+      case 'dateTimeOne':
+        return `${date.toLocaleDateString('zh-TW')} ${date.toLocaleTimeString('zh-TW', { hour12: false })}`;
+      default:
+        return date.toLocaleDateString('zh-TW');
+    }
+  }
+
+
+  // 新增：取得 calendar 的 CSS 類別
+  get calendarClasses(): string {
+    const classes = ['w-full'];
+
+    if (this.readonly) {
+      classes.push('readonly-field');
+    }
+
+    if (this.submitted && this.control.errors) {
+      classes.push('ng-dirty', 'ng-invalid');
+    }
+
+    return classes.join(' ');
   }
 }

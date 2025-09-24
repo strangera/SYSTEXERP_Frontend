@@ -164,15 +164,44 @@ class Next1DataCleaner implements TLS12040DataCleaner {
 
 class Next2DataCleaner implements TLS12040DataCleaner {
   clean(data: any) {
+    console.log('🧹 Next2DataCleaner 清理資料:', data);
+
     return {
-      commissionSettings: data.commissionSettings || [],
-      commissionType: data.commissionType || '',
-      additionalSettings: data.additionalSettings || {}
+      // 主要的抽成設定資料
+      commissionData: Array.isArray(data.commissionData) ? data.commissionData : (data.commissionSettings || []),
+
+      // 當前選擇的標籤
+      selectedSettingTab: data.selectedSettingTab || 'discount',
+
+      // 當前的抽成類型
+      currentCommissionType: data.currentCommissionType || data.commissionType || '3',
+
+      // 合約資訊
+      contractInfoData: data.contractInfoData || data.contractInfo || [],
+
+      // 當前申請編號
+      currentApplyNo: data.currentApplyNo || data.apply_no || '',
+
+      // 額外設定
+      additionalSettings: data.additionalSettings || {},
+
+      // 儲存時間戳
+      savedAt: new Date().toISOString()
     };
   }
 
   validate(data: any): boolean {
-    return !!(data.commissionType);
+    // 檢查是否有基本的抽成資料
+    const hasCommissionData = data.commissionData && Array.isArray(data.commissionData);
+    const hasApplyNo = data.currentApplyNo && data.currentApplyNo.trim() !== '';
+
+    console.log('📋 Next2DataCleaner 驗證結果:', {
+      hasCommissionData,
+      hasApplyNo,
+      dataLength: data.commissionData?.length || 0
+    });
+
+    return hasCommissionData || hasApplyNo; // 至少要有其中一個
   }
 }
 

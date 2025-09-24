@@ -3,6 +3,9 @@ import { Injectable } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 import { ReportColumn } from './table-report.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize, Observable, tap } from 'rxjs';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +13,8 @@ import { ReportColumn } from './table-report.model';
 export class TableReportUtilityService {
 
   constructor(
-    private readonly sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer,
+    private readonly messageService: NotificationService,
   ) { }
 
   // 判斷欄位是否可見
@@ -99,5 +103,47 @@ export class TableReportUtilityService {
     }, 0);
     // 4. 回傳加總後的數值
     return col.format ? col.format(total) : total;
+  }
+  /**
+     * 處理單一行的展開/收合邏輯。
+     * @param rowData 該行資料
+     * @param dataKey 唯一識別鍵
+     * @param expansionDataKey 展開資料的鍵名
+     * @param expansionLoadFn 載入展開資料的函數
+     * @param expandedRows 已展開行的映射表
+     * @param hostComponent 用來處理 `untilDestroyed` 的元件
+     */
+  toggleRowExpansionLogic(
+    rowData: any,
+    dataKey: string,
+    expansionDataKey: string,
+    expansionLoadFn: ((data: any) => Observable<any>) | undefined,
+    expandedRows: Record<string, boolean>,
+    hostComponent: any
+  ): void {
+    const rowKey = rowData[dataKey];
+    const hasDetails = rowData[expansionDataKey] && rowData[expansionDataKey]?.length > 0;
+    if (hasDetails) {
+      // 如果已經有資料，直接切換狀態
+      if (expandedRows[rowKey]) {
+        delete expandedRows[rowKey]; // 收合
+      } else {
+        expandedRows[rowKey] = true; // 展開
+      }
+    } else if (expansionLoadFn) {
+      // 第一次展開，沒有資料，才呼叫 API 載入
+      rowData.expansionLoading = true;
+      expansionLoadFn(rowData).pipe(untilDestroyed(hostComponent), finalize(() => {
+        rowData.expansionLoading = false;
+      }), tap(response => {
+        const responseData = response.Data;
+        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
+          rowData[expansionDataKey] = responseData;
+          expandedRows[rowKey] = true;
+        } else {
+          this.messageService.infoBubble('查無詳細資料。');
+        }
+      })).subscribe();
+    }
   }
 }

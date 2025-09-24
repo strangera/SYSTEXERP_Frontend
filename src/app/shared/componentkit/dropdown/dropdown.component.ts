@@ -20,6 +20,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
   ]
 })
 export class DropdownComponent extends BasicKitComponent implements OnInit {
+  @Input() readonly = false; // 新增：唯讀模式
   // 必填
   @Input() override label = '';
   @Input() showLabel = true;
@@ -62,7 +63,41 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
     this.initControl(this.control);
   }
   onDropdownChange(event: DropdownChangeEvent) {
+    if (this.readonly) return;
     this.changeEvent.emit(event);
     this.valueChange.emit(event.value);  // 同時 emit 純值
+  }
+
+  get selectedOptionLabel(): string {
+    if (!this.control.value || !this.options || this.options.length === 0) {
+      return '';
+    }
+
+    const selectedOption = this.options.find(option =>
+      option[this.optionValue] === this.control.value
+    );
+
+    if (selectedOption) {
+      return this.templateLabel !== '' ?
+        selectedOption[this.templateLabel] :
+        selectedOption[this.optionLabel];
+    }
+
+    return this.control.value?.toString() || '';
+  }
+
+  // 新增：取得 dropdown 的 CSS 類別
+  get dropdownClasses(): string {
+    const classes = ['w-full'];
+
+    if (this.readonly) {
+      classes.push('readonly-field');
+    }
+
+    if (this.submitted && this.control.errors) {
+      classes.push('ng-dirty', 'ng-invalid');
+    }
+
+    return classes.join(' ');
   }
 }

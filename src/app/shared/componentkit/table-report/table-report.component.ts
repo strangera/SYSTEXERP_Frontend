@@ -16,11 +16,12 @@ import { TableCaptionComponent } from '../table/table-caption/table-caption.comp
 import { FileSelectEvent } from 'primeng/fileupload';
 import { ActivatedRoute } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 
 @Component({
   selector: 'app-table-report',
   standalone: true,
-  imports: [SkeletonModule, TableModule, NgFor, NgIf, NgClass, NgStyle, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
+  imports: [TableExpansionComponent, SkeletonModule, TableModule, NgFor, NgIf, NgClass, NgStyle, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss']
 })
@@ -81,6 +82,18 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() groupRowsBy?: string;              // (小計)群組欄位
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Input() disabled = false;
+  // 展開
+  // expansion 收合展開
+  /** 收合展開 欄位配置(expansion必需配置) @default [] */
+  @Input() expansionColumns: ReportColumn[] = [];
+  /** 收合展開 資料key(expansion必需配置) @default 'details' */
+  @Input() expansionDataKey = 'details';
+  /** 收合展開 排序欄位(單一排序) @default [{ field: this.expansionDataKey, order: 1 }] */
+  @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
+  /** 屬性來接收父層傳來的載入函數 */
+  @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
+  /** 收合展開 已展開資料 @default {} */
+  expandedRows: Record<string, boolean> = {};
   //
   private = true;            // 用來判斷是否為第一次載入
   virtualData: any = [];
@@ -221,5 +234,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       return ''; // 1. 基本檢查：如果沒有分組依據，或不是小計欄位，直接回傳空字串。
     }
     return this.tableUtility.getGroupSubtotal(rowData, col, this.groupRowsBy, this.data);
+  }
+  // 切換行展開
+  toggleRowExpansion(rowData: any) {
+    this.tableUtility.toggleRowExpansionLogic(rowData, this.dataKey ?? 'id', this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
 }

@@ -29,6 +29,7 @@ import { InputTextService } from './input-text.service';
   ],
 })
 export class InputTextComponent extends BasicKitComponent implements OnInit {
+  @Input() readonly = false; // 新增：唯讀模式
   @Input() override label = '';
   @Input() showLabel = true;
   @Input() override controlName = '';
@@ -84,7 +85,7 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   }
 
   onInput(event: Event): void {
-    if (this.isComposing) return;
+    if (this.readonly || this.isComposing) return;
 
     const inputElement = event.target as HTMLInputElement;
     let value = inputElement.value;
@@ -131,6 +132,10 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
 
   // 新增：處理失焦事件
   onBlur(event: FocusEvent): void {
+    if (this.readonly) {
+      this.blurEvent.emit((event.target as HTMLInputElement).value);
+      return;
+    }
     const inputElement = event.target as HTMLInputElement;
     let value = inputElement.value.trim();
 
@@ -156,5 +161,20 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
       return value.padStart(this.padLength, '0');
     }
     return value;
+  }
+
+  // 新增：取得 input 的 CSS 類別
+  get inputClasses(): string {
+    const classes = ['w-full'];
+
+    if (this.readonly) {
+      classes.push('readonly-field');
+    }
+
+    if ((this.submitted && this.control.errors) || (this.errorForGroup && this.control.parent?.errors)) {
+      classes.push('ng-invalid', 'ng-dirty');
+    }
+
+    return classes.join(' ');
   }
 }
