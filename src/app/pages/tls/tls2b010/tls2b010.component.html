@@ -155,30 +155,18 @@
     ></app-tls2b010table>
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
-    <app-report-table-group
+    <app-table
       [columns]="simplecolumns"
       [data]="simpleData"
-      [subtotalFields]="[
-        'BOOK_PayAmt',
-        'SELF_PayAmt',
-        'ACT_PayAmt',
-        'OVER_PayAmt',
-        'SOVER_PayAmt',
-      ]"
-      [groupByField]="'ECR_No'"
-      [groupByLabel]="'收銀機號'"
-      [enableGrouping]="true"
-      [reportTitle]="'支付別溢欠簡表'"
-      [defaultMergedView]="false"
-      [currentPage]="1"
-      [dateStart]="formattedTXNDate"
-      [dateEnd]="formattedTXNDate"
-      [printedAt]="printedAt"
-      [showTotalOnly]="true"
-      [allowMergeToggle]="false"
-      [showBackButton]="false"
-      [showGrandTotal]="false"
-      [showGroupedBody]="true"
-    ></app-report-table-group>
+
+      tableKey="TLS2B010simple"
+      dataKey="ID"
+        [lazy]="true"
+      [loading]="loading"
+            [showDelete]="false"
+      [showCheckBox]="false"
+     [showManage]="false"
+
+    ></app-table>
   </div>
 </div>
