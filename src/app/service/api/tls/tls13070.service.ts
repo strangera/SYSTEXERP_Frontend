@@ -98,15 +98,9 @@ export interface Tls13070Response {
   total_amt: number | null,
   check_day: number,
   tlt_remark: string | null,
-  location_no?: string,
-  tlt_space?: number,
-  locationList?:
-  {
-    talent_id: number,
-    location_no: string,
-    tlt_space: number
-  }[],
-  ECR_No: string,
+  tlt_space: number,
+  location_no: string,
+  ECR_No?: string,
   posList?:
   {
     ECR_No: string,
@@ -120,14 +114,7 @@ export interface Tls13070Response {
     cag_edate: string,
     base_rent: number
   }[],
-  fareList:
-  {
-    CAP_Item: string,
-    CAP_Name: string,
-    tpy_amount: number,
-    tpy_totalamt: number,
-    down_payment: number
-  }[]
+  fareList: Record<string, number | null | object>
 }
 
 @Injectable({
@@ -158,12 +145,6 @@ export class Tls13070Service {
     const flatArray: Tls13070Response[] = [];
     data.forEach(item => {
       const newItem = { ...item };
-      // 檢查 locationList 是否存在且長度大於0
-      if (item.locationList && item.locationList.length > 0) {
-        newItem.location_no = item.locationList[0].location_no;
-        newItem.tlt_space = item.locationList[0].tlt_space;
-        newItem.locationList = undefined;
-      }
       if (item.posList && item.posList.length > 0) {
         newItem.ECR_No = item.posList?.[0].ECR_No ?? '';
         newItem.posList = undefined;

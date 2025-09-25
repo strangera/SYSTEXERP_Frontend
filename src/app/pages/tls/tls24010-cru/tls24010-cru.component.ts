@@ -92,7 +92,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]], //來客數
     TXN_MemCard: ['', [Validators.maxLength(30), this.validationService.alphanumericValidator]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
-    TXN_Time: [new Date()], //銷售時段今日的時間
+    TXN_Time: [null as Date | null], //銷售時段今日的時間
     TXN_GUI_CarrType: [null as string | null], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
     TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
@@ -270,7 +270,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
             TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
-            TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : null,
+            TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : '00:00:00',
             POS5007_INFO: pos5007Data.map((item) => {
               if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
                 return {
