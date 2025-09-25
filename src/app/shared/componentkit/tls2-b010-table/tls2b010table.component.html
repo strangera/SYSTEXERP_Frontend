@@ -17,25 +17,21 @@
   [reorderableColumns]="true"
   (onColReorder)="onColReorder($event)"
   [paginator]="showPaginator && IsPrint && !rowEditing && !loading"
-  [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint && showPaginator"
   [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions"
-  [scrollHeight]="scrollHeight"
   [rows]="rows"
   [first]="first"
   (onPage)="onPageChange($event)"
   (onLazyLoad)="loadDataLazy($event)"
   [lazy]="lazy || !IsPrint"
 
-  tableStyleClass="h-full"
-  [styleClass]="'p-datatable-sm p-datatable-striped' 
-                + (IsPrint ? ' p-datatable-gridlines' : '') 
-                + ' table-font-md'"
+ [totalRecords]="totalRecords && totalRecords > 0 ? totalRecords : (data.length || 0)"
 
-  [virtualScroll]="!IsPrint && groupRowsByArray.length === 0"
-  [virtualScrollItemSize]="35"
-  [virtualScrollDelay]="250"
+  tableStyleClass="h-full"
+  [styleClass]="'p-datatable-sm p-datatable-striped'
+                + (IsPrint ? ' p-datatable-gridlines' : '')
+                + ' table-font-md'"
 
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)"
@@ -45,8 +41,8 @@
   [loading]="loading && data.length === 0"
 
   paginatorDropdownAppendTo="body"
-  editMode="row"
->
+  editMode="row">
+
   <!-- ===== Caption / 工具列 ===== -->
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption && !rowEditing">
@@ -60,8 +56,8 @@
           dropdownIcon="pi pi-cog"
           pTooltip="過濾欄位"
           tooltipPosition="top"
-          (onChange)="onHeaderFilterChange($event)"
-        />
+          (onChange)="onHeaderFilterChange($event)" />
+
         <!-- 報表模式 -->
         <p-button
           [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'"
@@ -71,8 +67,8 @@
           [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'"
           tooltipPosition="top"
           [outlined]="!IsPrint"
-          [disabled]="!canPerformAction('50')"
-        />
+          [disabled]="!canPerformAction('50')" />
+
         <!-- 報表/匯出（非報表模式） -->
         <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
           <p-button
@@ -105,6 +101,7 @@
           class="p-button-rounded p-button-text"
           [disabled]="insertDisabled">
         </p-button>
+
         <p-button
           *ngIf="IsPrint && showDelete && !rowEditing && !disabled"
           (click)="deleteRow(selectedItems)"
@@ -114,7 +111,7 @@
           severity="danger"
           class="p-button-text"
           [rounded]="true"
-          [disabled]="selectedItems?.length <= 0">
+          [disabled]="selectedItems.length === 0">
         </p-button>
       </div>
 
@@ -125,15 +122,13 @@
 
       <!-- 右側：匯出/分頁下拉 -->
       <div *ngIf="IsPrint" class="flex gap-2 py-2">
-        <!-- 匯出 / 匯入 Excel -->
         <div *ngIf="showExcel" class="flex gap-2 align-items-center">
           <p-button
             *ngIf="showExcelExport"
             label="匯出excel範本"
             severity="success"
             [icon]="exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'"
-            (click)="onExportExcel()"
-          />
+            (click)="onExportExcel()" />
           <p-fileUpload
             *ngIf="showExcelImport"
             #fileUpload
@@ -144,18 +139,17 @@
             severity="info"
             (onSelect)="onImportExcel($event)"
             [auto]="true"
-            chooseLabel="Excel匯入"
-          />
+            chooseLabel="Excel匯入">
+          </p-fileUpload>
           <p-button
             *ngIf="showCustomExcelImport"
             severity="info"
             label="Excel匯入"
             [icon]="'pi pi-file-import'"
-            (click)="onImportExcel()"
-          />
+            (click)="onImportExcel()">
+          </p-button>
         </div>
 
-        <!-- 右上分頁下拉（與 paginator 同步） -->
         <p-dropdown
           *ngIf="showPage && IsPrint && dt.totalRecords > 0"
           [options]="pages"
@@ -166,14 +160,13 @@
           [virtualScroll]="true"
           [virtualScrollItemSize]="40"
           [filter]="true"
-          [style]="{ minWidth: '10rem' }"
-        />
+          [style]="{ minWidth: '10rem' }" />
       </div>
     </div>
   </ng-template>
 
   <!-- ===== 單列表頭 ===== -->
-  <ng-template pTemplate="header" let-columns>
+  <ng-template pTemplate="header">
     <tr>
       <th class="w-1rem">序號</th>
 
@@ -182,15 +175,12 @@
         <p-tableHeaderCheckbox [disabled]="disabled"></p-tableHeaderCheckbox>
       </th>
 
-      <!-- Left 固定欄 -->
+      <!-- Left 固定欄（不再凍結，僅保留渲染迴圈） -->
       <th
         *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol"
         class="text-center wrap-header"
         pReorderableColumn
         pResizableColumn
-        pFrozenColumn
-        [frozen]="IsPrint && (col.frozen ?? false)"
-        [alignFrozen]="col.alignFrozen || 'right'"
         [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
         [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false"
         [style.minWidth]="getColMinWidth(col)">
@@ -207,9 +197,6 @@
         class="text-center wrap-header"
         pReorderableColumn
         pResizableColumn
-        pFrozenColumn
-        [frozen]="IsPrint && (col.frozen ?? false)"
-        [alignFrozen]="col.alignFrozen || 'right'"
         [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
         [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false"
         [style.minWidth]="getColMinWidth(col)">
@@ -224,21 +211,17 @@
       <th
         *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
         [hidden]="!IsPrint || !showManage"
-        class="w-1rem text-center"
-        alignFrozen="right"
-        pFrozenColumn
-        [frozen]="IsPrint">
+        class="w-1rem text-center">
         管理
       </th>
     </tr>
   </ng-template>
 
-  <!-- ===== 單列 BODY（含 rowspan 合併） ===== -->
+  <!-- ===== 單列 BODY（含真正的 rowspan 合併） ===== -->
   <ng-template
     pTemplate="body"
     let-rowIndex="rowIndex"
     let-rowData
-    let-columns="columns"
     let-editing="editing">
 
     <tr
@@ -259,33 +242,28 @@
           class="flex justify-content-center pointer-events-none"
           [pSelectableRow]="rowData"
           [value]="rowData"
-          [disabled]="!isRowSelectable(rowData) || disabled"/>
+          [disabled]="!isRowSelectable(rowData) || disabled">
+        </p-tableCheckbox>
       </td>
 
-      <!-- Left 固定欄 -->
+      <!-- Left 固定欄（不再凍結） -->
       <td
         *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol"
         class="text-center"
         [ngClass]="col.style"
-        [alignFrozen]="col.alignFrozen || 'right'"
-        pFrozenColumn
-        [frozen]="IsPrint && (col.frozen ?? false)"
         [style.minWidth]="getColMinWidth(col)">
         <span *ngIf="!col.type">
           {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
         </span>
       </td>
 
-      <!-- 其他欄位（一般 + 合併欄位） -->
+      <!-- 其他欄位（一般 + 真的合併） -->
       <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
 
-        <!-- 非合併欄位：每列都顯示 -->
+        <!-- 非合併欄位 -->
         <td *ngIf="!mergedColumns.includes(col.field)"
             class="text-center"
             [ngClass]="col.style"
-            [alignFrozen]="col.alignFrozen || 'right'"
-            pFrozenColumn
-            [frozen]="IsPrint && (col.frozen ?? false)"
             [style.minWidth]="getColMinWidth(col)"
             (click)="editing ? $event.stopPropagation() : null"
             (dblclick)="detailRow(rowData)">
@@ -294,22 +272,20 @@
           </span>
         </td>
 
-        <!-- 合併欄位：只在該組第一筆輸出，並加 rowspan -->
-        <td *ngIf="mergedColumns.includes(col.field)
-                   && isFirstInGroup(rowIndex, rowData['ECR_No'])"
-            [attr.rowspan]="getGroupSize(rowData['ECR_No'])"
-            class="text-center"
-            [ngClass]="col.style"
-            [alignFrozen]="col.alignFrozen || 'right'"
-            pFrozenColumn
-            [frozen]="IsPrint && (col.frozen ?? false)"
-            [style.minWidth]="getColMinWidth(col)"
-            (click)="editing ? $event.stopPropagation() : null"
-            (dblclick)="detailRow(rowData)">
-          <span *ngIf="!col.type">
-            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
-          </span>
-        </td>
+        <!-- 合併欄位：只在“本頁群組首列”輸出，rowspan 用本頁長度 -->
+        <ng-container *ngIf="mergedColumns.includes(col.field)">
+<td *ngIf="isFirstInGroupOnPage(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+    [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+              class="text-center"
+              [ngClass]="col.style"
+              [style.minWidth]="getColMinWidth(col)"
+              (click)="editing ? $event.stopPropagation() : null"
+              (dblclick)="detailRow(rowData)">
+            <span *ngIf="!col.type">
+              {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+            </span>
+          </td>
+        </ng-container>
 
       </ng-container>
 
@@ -319,9 +295,6 @@
         [hidden]="!IsPrint || !showManage"
         [ngClass]="{'flex justify-content-center gap-2': IsPrint && showManage}"
         class="no-wrap icon-button"
-        alignFrozen="right"
-        pFrozenColumn
-        [frozen]="IsPrint"
         [style.text-align]="'center'">
         <p-button *ngIf="showDetail" icon="pi pi-search" text pTooltip="檢視" tooltipPosition="top"
                   (click)="detailRow(rowData)"></p-button>
@@ -337,10 +310,10 @@
   </ng-template>
 
   <!-- ===== 載入中骨架 ===== -->
-  <ng-template pTemplate="loadingbody" let-columns="columns">
+  <ng-template pTemplate="loadingbody">
     <tr style="height: 35px">
       <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
-        <p-skeleton />
+        <p-skeleton></p-skeleton>
       </td>
     </tr>
   </ng-template>
@@ -356,7 +329,7 @@
     </tr>
   </ng-template>
 
-  <!-- ===== Summary Slot（純顯示，不含合計） ===== -->
+  <!-- ===== Summary Slot ===== -->
   <ng-template pTemplate="summary">
     <div *ngIf="showFooter && IsPrint" class="p-2 font-semibold table-footer">
       <ng-content select="footer"></ng-content>
