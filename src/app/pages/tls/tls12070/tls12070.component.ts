@@ -17,6 +17,8 @@ import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { apiOption } from '@shared/models/tls/tls000.model';
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { CommonModule } from '@angular/common';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 export interface Customer_interview {
   id: number; // ID
@@ -44,7 +46,7 @@ export interface Customer_interview {
 }
 
 // 意願報表內容
-export interface Willing_data{
+export interface Willing_data {
   id: number; // 主鍵，自動編號
 
   contact_USR_No: string; // 接洽人員代碼
@@ -91,7 +93,6 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   contact_USR_Option: apiOption[] = []; // 訪談人員
-  willingLevelMap: Record<string, string> = {}; // 意願等級對應表
 
   interview_data: Customer_interview[] = []; //意願報表
   intervew_columns: Column[] = [
@@ -99,8 +100,15 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: 'contact_USR_Name', header: '訪談人員姓名', visible: true },
     { field: 'contact_Date', header: '訪談日期', visible: true, format: formatDate },
     { field: 'contact_Time', header: '訪談時間', visible: true },
-    { field: 'willing_level', header: '意願等級', visible: true, format: (val: string) => this.willingLevelMap[val] || val  }, // SYS1000.T116 //中
-
+    {
+      field: 'willing_level',
+      header: '意願等級',
+      visible: true,
+      format: (val: string) => getSYS1000Options('T116').find(item => item.value === val)?.label || val,
+      exportFormat: transformOptionsForExport(getSYS1000Options('T116'), 'value', 'label')
+      // exportFormat: [{'1':'廠商1'},{'2':'廠商2'},{'3':'廠商3'}]
+    },
+    // SYS1000.T116 //中
     { field: 'ven_uniform', header: '廠商統一編號', visible: true }, // POS2013
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // POS2013.name
     { field: 'tlt_name', header: '品牌(專櫃名稱)', visible: true },
@@ -171,9 +179,9 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   // 查詢 一般報表
   onQueryClick(frm: FormGroup) {
-  this.activeReport = 'query';
-  this.onSubmit(frm);
-}
+    this.activeReport = 'query';
+    this.onSubmit(frm);
+  }
 
   // 查詢 意願報表
   onWillingClick(frm: FormGroup) {
@@ -201,7 +209,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
         },
       });
     });
-    
+
   }
 
   // 刪除項目
@@ -245,13 +253,10 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
       console.log('接待人員代號:', this.contact_USR_Option);
     });
 
-    // 查詢 意願等級
-    this.tls12070Service.querySYS1000_DropDownList({ SYS_Type: 'T116' })
-    .subscribe((response) => {
-      this.willingLevelMap = {};
-      (response.Data || []).forEach((item: any) => {
-        this.willingLevelMap[item.No] = item.Name;
-      });
-    });
+    // // 查詢 意願等級
+    // this.tls12070Service.querySYS1000_DropDownList({ SYS_Type: 'T116' })
+    //   .subscribe((response) => {
+    //     this.willingLevelMap = response.Data;
+    //   });
   }
 }
