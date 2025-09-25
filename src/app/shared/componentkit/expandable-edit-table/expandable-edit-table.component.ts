@@ -1,3 +1,4 @@
+import { validateMaxLength } from '@shared/componentkit/table-edit/validate-field.model';
 import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef, ContentChild, ElementRef, OnInit, OnChanges } from '@angular/core';
 import { Table, TableModule } from 'primeng/table';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
@@ -18,6 +19,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { Observable } from 'rxjs';
 import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
 import { TableValidationService } from './table-validation.service';
+import { TableWidthCalculatorService } from './services/table-width-calculator.service';
 
 export interface DisplayFieldConfig {
   fieldName: string;
@@ -156,16 +158,6 @@ export interface ColumnDef {
   // 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
   placeholder?: string;
-
-  // 輸入長度限制
-  maxLength?: number;
-  minLength?: number;
-
-  // 🔧 寬度控制參數
-  width?: string;
-  minWidth?: string;
-  maxWidth?: string;
-  flex?: number;
   responsiveWidth?: {
     desktop?: string;
     tablet?: string;
@@ -173,6 +165,8 @@ export interface ColumnDef {
   };
   autoWidth?: boolean;
   readonly?: boolean;
+  maxLength?: number;  // 最大字元數（自動鉗制）
+  minLength?: number;  // 最小字元數（自動鉗制）
   maxValue?: number;  // 最大數值（自動鉗制）
   minValue?: number;  // 最小數值（自動鉗制）
 
@@ -194,41 +188,46 @@ export interface ColumnDef {
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
-  @Input() showSequenceNumber: boolean = true; //外層序號是否顯示
-  @Input() showDetailSequenceNumber: boolean = true; //內層序號是否顯示
+  @Input() showSequenceNumber = true; //外層序號是否顯示
+  @Input() showDetailSequenceNumber = true; //內層序號是否顯示
   @Input() forceEditMode = false; // 強制編輯模式
   @Input() showActionColumn = true;  // 新增控制操作欄的屬性
   @Input() showDetailActionColumn = true;  // 控制詳細資料表格的操作欄
-  @Input() title: string = '';
+  @Input() title = '';
   @Input() mainColumns: ColumnDef[] = [];
   @Input() detailColumns: ColumnDef[] = [];
   @Input() data: any[] = [];
-  @Input() detailKey: string = 'details';
-  @Input() dataKey: string = 'id';
-  @Input() showCheckBox: boolean = true;
-  @Input() showPaginator: boolean = true;
+  @Input() detailKey = 'details';
+  @Input() dataKey = 'id';
+  @Input() showCheckBox = true;
+  @Input() showPaginator = true;
   @Input() selectionMode: 'multiple' | 'single' | null = 'multiple';
-  @Input() loading: boolean = false;
-  @Input() emptyMessage: string = '查無資料';
-  @Input() readonly: boolean = false;
+  @Input() loading = false;
+  @Input() emptyMessage = '查無資料';
+  @Input() readonly = false;
   @Input() expandedContentTemplate: TemplateRef<any> | null = null;
 
-  @Input() showAddButton: boolean = true;
-  @Input() showDetailAddButton: boolean = true;
-  @Input() showBatchDelete: boolean = true;
+  @Input() showAddButton = true;
+  @Input() showDetailAddButton = true;
+  @Input() showBatchDelete = true;
   @Input() defaultNewItem: any = {};
   @Input() defaultNewDetailItem: any = {};
 
-  @Input() showDetailTabs: boolean = false;
+  @Input() showDetailTabs = false;
   @Input() detailTabOptions: { id: string, label: string, allowAdd: boolean, allowBatchDelete: boolean, showCheckbox: boolean }[] = [];
-  @Input() defaultDetailTab: string = '';
+  @Input() defaultDetailTab = '';
   @Input() detailColumnsMap: { [tabId: string]: ColumnDef[] } = {};
-  @Input() showDetailBatchDelete: boolean = true;
+  @Input() showDetailBatchDelete = true;
 
   //新增：自動編輯相關屬性
-  @Input() autoEditOnAdd: boolean = true; // 新增項目時是否自動進入編輯狀態
-  @Input() autoAddDetailRowOnTab: boolean = false;
-  @Input() autoAddRowOnTab: boolean = false; // 控制是否啟用 Tab 自動新增行功能
+  @Input() autoEditOnAdd = true; // 新增項目時是否自動進入編輯狀態
+  @Input() autoAddDetailRowOnTab = false;
+  @Input() autoAddRowOnTab = false; // 控制是否啟用 Tab 自動新增行功能
+
+  //自動寬度處理
+  @Input() enableDynamicWidth = false;
+  @Input() minColumnWidth = 60;
+  @Input() maxColumnWidth = 300;
 
   detailSelectedTabs: { [key: string]: string } = {};
   detailSelectedItems: { [mainRowKey: string]: any[] } = {};
@@ -310,13 +309,16 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   private userInputValues: Map<string, string> = new Map();
 
   private debounceTimers: Map<string, any> = new Map();
+
+  private computedColumnWidths: { [field: string]: number } = {};
   private readonly DEBOUNCE_DELAY = 300; // 300ms 防抖延遲
 
   constructor(
     private cdr: ChangeDetectorRef,
     private messageService: NotificationService,
     private fb: FormBuilder,
-    private validationService: TableValidationService
+    private validationService: TableValidationService,
+    private widthCalculator: TableWidthCalculatorService
   ) { }
 
   ngOnInit() {
@@ -324,6 +326,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     this.initializeDetailArrays();
     // 初始化預設值
     this.initializeDefaultValues();
+    if (this.enableDynamicWidth) {
+      setTimeout(() => this.calculateDynamicWidths(), 100);
+    }
   }
 
   ngOnChanges() {
@@ -342,6 +347,50 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         });
       }
     }
+
+    if (this.enableDynamicWidth && this.data) {
+      this.widthCalculator.clearCache();
+      setTimeout(() => this.calculateDynamicWidths(), 50);
+    }
+  }
+
+  private calculateDynamicWidths(): void {
+    const containerWidth = this.getTableContainerWidth();
+    if (containerWidth <= 0) return;
+
+    const fixedWidth = this.calculateFixedColumnsWidth();
+
+    this.computedColumnWidths = this.widthCalculator.calculateOptimalWidths(
+      this.data,
+      this.mainColumns,
+      containerWidth,
+      {
+        minColumnWidth: this.minColumnWidth,
+        maxColumnWidth: this.maxColumnWidth,
+        fixedColumnsWidth: fixedWidth
+      }
+    );
+
+    this.cdr.detectChanges();
+  }
+
+
+  private getTableContainerWidth(): number {
+    const container = document.querySelector('.expandable-edit-table-container');
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      return Math.max(rect.width - 60, 800);
+    }
+    return Math.max(window.innerWidth - 100, 800);
+  }
+
+  private calculateFixedColumnsWidth(): number {
+    let fixedWidth = 0;
+    if (this.showSequenceNumber) fixedWidth += 60;
+    if (this.showCheckBox && !this.readonly) fixedWidth += 60;
+    if (this.detailKey) fixedWidth += 60;
+    if (!this.readonly && this.showActionColumn) fixedWidth += 120;
+    return fixedWidth;
   }
 
   ngOnDestroy(): void {
@@ -1392,120 +1441,36 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   // 🔧 寬度控制相關方法
   getColumnStyle(col: ColumnDef): any {
     const styles: any = {};
-    const screenWidth = window.innerWidth;
 
-    if (col.responsiveWidth) {
-      if (screenWidth < 768 && col.responsiveWidth.mobile) {
-        styles.width = col.responsiveWidth.mobile;
-        styles.minWidth = col.responsiveWidth.mobile;
-      } else if (screenWidth < 1024 && col.responsiveWidth.tablet) {
-        styles.width = col.responsiveWidth.tablet;
-        styles.minWidth = col.responsiveWidth.tablet;
-      } else if (col.responsiveWidth.desktop) {
-        styles.width = col.responsiveWidth.desktop;
-        styles.minWidth = col.responsiveWidth.desktop;
-      }
-    }
-    else if (col.width) {
-      styles.width = col.width;
-      styles.minWidth = col.width;
-    }
-    else if (col.autoWidth) {
-      const defaultWidth = this.getTypeDefaultWidth(col.type, screenWidth);
-      styles.width = defaultWidth;
-      styles.minWidth = defaultWidth;
-    }
-    else if (col.flex) {
-      styles.flex = col.flex;
-      if (col.minWidth) {
-        styles.minWidth = col.minWidth;
-      }
+    // 只處理動態寬度
+    if (this.enableDynamicWidth && this.computedColumnWidths[col.field]) {
+      const width = Math.ceil(this.computedColumnWidths[col.field]);
+      styles.width = `${width}px`;
+      styles.minWidth = `${Math.max(this.minColumnWidth, width - 20)}px`;
     }
 
-    if (col.maxWidth) {
-      styles.maxWidth = col.maxWidth;
-    }
-
+    // 只保留 style 字符串解析
     if (col.style) {
-      if (typeof col.style === 'string') {
-        const styleArray = col.style.split(';');
-        styleArray.forEach(style => {
-          if (style.trim()) {
-            const [property, value] = style.split(':').map(s => s.trim());
-            if (property && value) {
-              styles[this.camelCase(property)] = value;
-            }
+      const styleArray = col.style.split(';');
+      styleArray.forEach(style => {
+        if (style.trim()) {
+          const [property, value] = style.split(':').map(s => s.trim());
+          if (property && value) {
+            styles[this.camelCase(property)] = value;
           }
-        });
-      }
+        }
+      });
     }
 
     return styles;
   }
 
-  private getTypeDefaultWidth(type: string = 'text', screenWidth: number): string {
-    const widthMap: { [key: string]: { desktop: string, tablet: string, mobile: string } } = {
-      'checkbox': { desktop: '60px', tablet: '50px', mobile: '45px' },
-      'date': { desktop: '150px', tablet: '130px', mobile: '120px' },
-      'number': { desktop: '110px', tablet: '100px', mobile: '90px' },
-      'dropdown': { desktop: '130px', tablet: '120px', mobile: '110px' },
-      'text': { desktop: '120px', tablet: '110px', mobile: '100px' }
-    };
 
-    const typeWidth = widthMap[type] || widthMap['text'];
-
-    if (screenWidth < 768) {
-      return typeWidth.mobile;
-    } else if (screenWidth < 1024) {
-      return typeWidth.tablet;
-    } else {
-      return typeWidth.desktop;
-    }
-  }
-
-  getResponsiveColumnStyle(col: ColumnDef): any {
-    const baseStyle = this.getColumnStyle(col);
-    const screenWidth = window.innerWidth;
-
-    if (screenWidth < 768) {
-      if (baseStyle.width && typeof baseStyle.width === 'string' && baseStyle.width.includes('px')) {
-        const widthValue = parseInt(baseStyle.width);
-        baseStyle.width = Math.max(60, widthValue * 0.8) + 'px';
-      }
-    } else if (screenWidth < 1024) {
-      if (baseStyle.width && typeof baseStyle.width === 'string' && baseStyle.width.includes('px')) {
-        const widthValue = parseInt(baseStyle.width);
-        baseStyle.width = Math.max(80, widthValue * 0.9) + 'px';
-      }
-    }
-
-    return baseStyle;
-  }
 
   private camelCase(str: string): string {
     return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
   }
 
-  getDefaultColumnWidth(col: ColumnDef): string {
-    if (col.width || col.minWidth) {
-      return '';
-    }
-
-    switch (col.type) {
-      case 'checkbox':
-        return '80px';
-      case 'date':
-        return '140px';
-      case 'number':
-        return '110px';
-      case 'dropdown':
-        return '120px';
-      case 'text':
-        return col.field.includes('name') || col.field.includes('title') ? '200px' : '120px';
-      default:
-        return '120px';
-    }
-  }
 
   hasCaptionContent(): boolean {
     return (
@@ -2157,27 +2122,27 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     });
   }
 
-  private debouncedCalculation(
-    fieldKey: string,
-    callback: () => void,
-    delay: number = this.DEBOUNCE_DELAY
-  ): void {
-    // 清除現有計時器
-    if (this.debounceTimers.has(fieldKey)) {
-      clearTimeout(this.debounceTimers.get(fieldKey));
-      console.log(`🔄 清除舊的防抖計時器: ${fieldKey}`);
-    }
+  // private debouncedCalculation(
+  //   fieldKey: string,
+  //   callback: () => void,
+  //   delay: number = this.DEBOUNCE_DELAY
+  // ): void {
+  //   // 清除現有計時器
+  //   if (this.debounceTimers.has(fieldKey)) {
+  //     clearTimeout(this.debounceTimers.get(fieldKey));
+  //     console.log(`🔄 清除舊的防抖計時器: ${fieldKey}`);
+  //   }
 
-    // 設置新的計時器
-    const timer = setTimeout(() => {
-      console.log(`⏰ 防抖延遲結束，執行計算: ${fieldKey}`);
-      callback();
-      this.debounceTimers.delete(fieldKey);
-    }, delay);
+  //   // 設置新的計時器
+  //   const timer = setTimeout(() => {
+  //     console.log(`⏰ 防抖延遲結束，執行計算: ${fieldKey}`);
+  //     callback();
+  //     this.debounceTimers.delete(fieldKey);
+  //   }, delay);
 
-    this.debounceTimers.set(fieldKey, timer);
-    console.log(`⏱️ 設置防抖計時器: ${fieldKey} (${delay}ms)`);
-  }
+  //   this.debounceTimers.set(fieldKey, timer);
+  //   console.log(`⏱️ 設置防抖計時器: ${fieldKey} (${delay}ms)`);
+  // }
 
   // 🔄 重構數字欄位處理 - 使用 input 事件 + 防抖
   onNumberInputChange(event: any, fieldName: string, rowData: any, isDetail: boolean = false): void {

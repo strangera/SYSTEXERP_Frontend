@@ -117,7 +117,6 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px',
 
       },
       {
@@ -133,7 +132,6 @@ export class FareColumnDefinitions {
         header: '起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
         dateFormat: 'year-month',
         required: true,
 
@@ -153,7 +151,6 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
-        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         required: true,
 
@@ -163,7 +160,6 @@ export class FareColumnDefinitions {
         header: '單價',
         type: 'number',
         editable: true,
-        width: '90px',
         required: true,
 
         validators: [TableValidators.positive('單價必須大於0')]
@@ -173,7 +169,6 @@ export class FareColumnDefinitions {
         header: '數量',
         type: 'number',
         editable: true,
-        width: '70px',
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
         defaultValue: 1,
@@ -195,7 +190,6 @@ export class FareColumnDefinitions {
         header: '組織',
         type: 'dropdown',
         editable: true,
-        width: '90px',
         options: [], // 需要動態設定
         required: true,
 
@@ -227,7 +221,6 @@ export class FareColumnDefinitions {
         header: '是否新增',
         type: 'checkbox',
         editable: true,
-        width: '5px',
 
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
@@ -236,7 +229,6 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        width: '60px',
         buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
@@ -248,7 +240,6 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px',
       },
       {
         field: 'cap_name',
@@ -256,7 +247,6 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2
       },
       {
         field: 'tpy_bdate',
@@ -265,7 +255,6 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         dateFormat: 'year-month',
-        width: '130px',
         required: true,
 
         defaultValueFunction: () => {
@@ -284,7 +273,6 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '130px',
         dateFormat: 'year-month',
         required: true,
 
@@ -304,7 +292,6 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
-        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -315,7 +302,6 @@ export class FareColumnDefinitions {
         header: '單價',
         type: 'number',
         editable: true,
-        width: '90px',
         required: true,
         validators: [TableValidators.positive('單價必須大於0')],
         defaultValue: 0,
@@ -327,7 +313,6 @@ export class FareColumnDefinitions {
         type: 'number',
         allowDecimal: true,
         editable: true,
-        width: '70px',
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
         defaultValue: 1,
@@ -338,7 +323,6 @@ export class FareColumnDefinitions {
         header: '扣款金額(未稅)',
         type: 'number',
         editable: false,
-        width: '20px',
         defaultValue: 0,
 
       },
@@ -347,7 +331,6 @@ export class FareColumnDefinitions {
         header: '是否開立發票',
         type: 'dropdown',
         editable: true,
-        width: '80px',
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
@@ -361,7 +344,6 @@ export class FareColumnDefinitions {
         header: '是否以日計算',
         type: 'dropdown',
         editable: true,
-        width: '50px',
         options: [
           { label: '是', value: 'Y' },
           { label: '否', value: 'N' }
@@ -375,7 +357,6 @@ export class FareColumnDefinitions {
         header: '扣款週期數(月)',
         type: 'number',
         editable: true,
-        width: '30px',
         required: true,
         defaultValue: 1,
 
@@ -393,7 +374,6 @@ export class FareColumnDefinitions {
         header: '是否新增',
         type: 'checkbox',
         editable: true,
-        width: '5px',
 
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
@@ -402,7 +382,6 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        width: '60px',
         buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
@@ -413,7 +392,6 @@ export class FareColumnDefinitions {
         field: 'auto_calc',
         header: '自動計算',
         type: 'button',
-        width: '5px',
         buttonLabel: '自動計算',
         buttonIcon: 'pi pi-calculator',
         buttonClass: 'p-button-sm p-button-info',
@@ -425,7 +403,6 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px',
 
       },
       {
@@ -434,7 +411,6 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2,
 
       },
       {
@@ -442,7 +418,6 @@ export class FareColumnDefinitions {
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
         dateFormat: 'year-month',
         required: true,
 
@@ -459,7 +434,6 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '130px',
         dateFormat: 'year-month',
         required: true,
 
@@ -485,7 +459,6 @@ export class FareColumnDefinitions {
         header: '期數',
         type: 'number',
         editable: false, // 設為不可編輯，因為要自動計算
-        width: '70px',
         // 關鍵：為期數添加動態預設值函數
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
@@ -545,7 +518,6 @@ export class FareColumnDefinitions {
         header: '首期金額',
         type: 'number',
         editable: false,
-        width: '100px',
         required: true,
       },
       {
@@ -553,7 +525,6 @@ export class FareColumnDefinitions {
         header: '組織',
         type: 'dropdown',
         editable: true,
-        width: '90px',
         options: [], // 需要動態設定
         required: true,
 
@@ -563,7 +534,6 @@ export class FareColumnDefinitions {
         header: '是否開立發票',
         type: 'dropdown',
         editable: true,
-        width: '110px',
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
@@ -585,7 +555,6 @@ export class FareColumnDefinitions {
         header: '是否新增',
         type: 'checkbox',
         editable: true,
-        width: '5px',
 
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
@@ -594,7 +563,6 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        width: '60px',
         buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
@@ -606,7 +574,6 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px'
       },
       {
         field: 'cap_name',
@@ -614,7 +581,6 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2,
 
       },
       {
@@ -623,7 +589,6 @@ export class FareColumnDefinitions {
         type: 'date',
         editable: true,
         autoWidth: true,
-        width: '120px',
         dateFormat: 'year-month',
         required: true,
 
@@ -640,7 +605,6 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '120px',
         dateFormat: 'year-month',
         required: true,
 
@@ -657,7 +621,6 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
-        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -668,7 +631,6 @@ export class FareColumnDefinitions {
         header: '比率',
         type: 'number',
         editable: true,
-        width: '100px',
         required: true,
         allowDecimal: true,  // 是否允許小數點
         decimalPlaces: 3,
@@ -680,7 +642,6 @@ export class FareColumnDefinitions {
         header: '組織',
         type: 'dropdown',
         editable: true,
-        width: '90px',
         options: [], // 需要動態設定
         required: true,
 
@@ -690,7 +651,6 @@ export class FareColumnDefinitions {
         header: '是否開立發票',
         type: 'dropdown',
         editable: true,
-        width: '110px',
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
@@ -712,7 +672,6 @@ export class FareColumnDefinitions {
         header: '是否新增',
         type: 'checkbox',
         editable: true,
-        width: '5px',
 
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
@@ -721,7 +680,6 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        width: '60px',
         buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
@@ -733,7 +691,6 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px'
       },
       {
         field: 'cap_name',
@@ -741,14 +698,12 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2
       },
       {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '110px',
         dateFormat: 'year-month',
         required: true,
 
@@ -765,7 +720,6 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '110px',
         dateFormat: 'year-month',
         required: true,
 
@@ -782,7 +736,6 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
-        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -793,7 +746,6 @@ export class FareColumnDefinitions {
         header: '比率',
         type: 'number',
         editable: true,
-        width: '100px',
         required: true,
         allowDecimal: true,
         decimalPlaces: 3,
@@ -804,7 +756,6 @@ export class FareColumnDefinitions {
         header: '組織',
         type: 'dropdown',
         editable: true,
-        width: '90px',
         options: [], // 需要動態設定
         required: true,
 
@@ -814,7 +765,6 @@ export class FareColumnDefinitions {
         header: '是否開立發票',
         type: 'dropdown',
         editable: true,
-        width: '110px',
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
