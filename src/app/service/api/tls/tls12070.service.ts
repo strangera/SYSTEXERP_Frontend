@@ -24,5 +24,10 @@ export class Tls12070Service {
   // 查詢 潛在客戶
   queryTBLUSER_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryTBLUSER_DropDownList`, body);
-  }  
+  }
+
+  // 查詢 意願等級
+  querySYS1000_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS1000_DropDownList`, body);
+  }
 }

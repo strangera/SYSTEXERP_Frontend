@@ -89,6 +89,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       if (this.data.length === 0) {
+        this.loading = false;
         return this.messageService.errorBubble('請選擇收銀機');
       }
       const guiYymmDate: Date = frm.value.GUI_YYMM;

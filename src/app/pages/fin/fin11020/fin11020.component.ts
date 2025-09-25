@@ -79,13 +79,19 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   }
   onDelete(selectedRows: MainInvoiceData[]) {
     const ids = selectedRows.map(row => row.ID);
-    this.fin11020Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedRows = [];
-      },
-      error: () => { this.loading = false; },
-    });
+    this.confirmationService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        this.fin11020Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+          next: () => {
+            this.onSubmit(this.queryForm);
+            this.selectedRows = [];
+          },
+          error: () => { this.loading = false; },
+        });
+      }
+    })
   }
 
   onFileUpload(event: FileSelectEvent) {

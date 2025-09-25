@@ -17,59 +17,82 @@
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <tr>
-      <th class="w-1rem text-center" rowspan="3" pFrozenColumn>序號</th>
-      <th class="w-1rem text-center" rowspan="3">招募編號</th>
-      <th class="w-1rem text-center" rowspan="3">更新時間</th>
-      <th class="w-1rem text-center" rowspan="3">位置編號</th>
-      <th class="w-1rem text-center" rowspan="3">廠商名稱</th>
-      <th class="w-1rem text-center" rowspan="3">廠商統一編號</th>
-      <th class="w-1rem text-center" colspan="8">店櫃資料</th>
-      <th class="w-1rem text-center" colspan="14">租賃條件</th>
-      <th class="w-1rem text-center" colspan="16">一次扣款</th>
-      <th class="w-1rem text-center" colspan="48">每月扣款</th>
-      <th class="w-1rem text-center" colspan="4">平均分攤</th>
-      <th class="w-1rem text-center" colspan="24">比率分攤</th>
-      <th class="w-1rem text-center" rowspan="3">備註</th>
+      <th class="break-word text-center" rowspan="3" pFrozenColumn>序號</th>
+      <th class="break-word text-center" rowspan="3">招募編號</th>
+      <th class="break-word text-center" rowspan="3">更新時間</th>
+      <th class="break-word text-center" rowspan="3">位置編號</th>
+      <th class="break-word text-center" rowspan="3">廠商名稱</th>
+      <th class="break-word text-center" rowspan="3">廠商統一編號</th>
+      <!-- 店櫃資料 -->
+      <th class="break-word text-center" colspan="8">店櫃資料</th>
+      <!-- 租賃條件 -->
+      <!-- <th class="w-1rem text-center" colspan="14">租賃條件</th> -->
+      <th class="break-word text-center" colspan="4">租賃條件</th>
+      <!-- A 一次扣款 -->
+      <th class="break-word text-center" [attr.colspan]="(aps1003_A | async)?.length">一次扣款</th>
+      <!-- B 每月扣款 -->
+      <th class="break-word text-center" [attr.colspan]="(aps1003_B | async)?.length">每月扣款</th>
+      <!-- C 平均分攤 -->
+      <th class="break-word text-center" [attr.colspan]="((aps1003_C | async)?.length ?? 0) * 4">平均分攤</th>
+      <!-- D 比率分攤 -->
+      <th class="break-word text-center" [attr.colspan]="(aps1003_D | async)?.length">比率分攤</th>
+
+      <th class="break-word text-center" rowspan="3">結帳後幾天匯款</th>
+      <th class="w-5rem break-word text-center" rowspan="3">備註</th>
     </tr>
     <tr>
-      <th class="text-center" rowspan="2">品牌名稱</th>
-      <th class="text-center" rowspan="2">專櫃編號</th>
-      <th class="text-center" rowspan="2">秤數</th>
-      <th class="text-center" rowspan="2">POS機號</th>
-      <th class="text-center" rowspan="2">營運期間(起)</th>
-      <th class="text-center" rowspan="2">營運期間(迄)</th>
-      <th class="text-center" rowspan="2">簽約年限</th>
-      <th class="text-center" rowspan="2">履約保證金</th>
-      <th class="text-center" colspan="7">抽成</th>
-      <th class="text-center" colspan="3">包底營業額</th>
-      <th class="text-center" colspan="3">固定租金</th>
-      <th class="text-center" rowspan="2">目標營業額</th>
-      <th class="text-center" rowspan="2">備註</th>
+      <!-- 店櫃資料 -->
+      <th class="break-word text-center" rowspan="2">品牌名稱</th>
+      <th class="break-word text-center" rowspan="2">專櫃編號</th>
+      <th class="break-word text-center" rowspan="2">秤數</th>
+      <th class="break-word text-center" rowspan="2">POS機號</th>
+      <th class="break-word text-center" rowspan="2">營運期間(起)</th>
+      <th class="break-word text-center" rowspan="2">營運期間(迄)</th>
+      <th class="break-word text-center" rowspan="2">簽約年限</th>
+      <th class="break-word text-center" rowspan="2">履約保證金</th>
+      <!-- 租賃條件 -->
+      <!-- <th class="break-word text-center" colspan="7">抽成</th>
+      <th class="break-word text-center" colspan="3">包底營業額</th> -->
+      <th class="break-word text-center" colspan="3">固定租金</th>
+      <th class="break-word text-center" rowspan="2">目標營業額</th>
+      <!-- A 一次扣款 -->
+      <ng-container *ngFor="let item of aps1003_A | async">
+        <th class="break-word text-center" rowspan="2"> {{item.No}} {{item.Name}} </th>
+      </ng-container>
+      <!-- B 每月扣款 -->
+      <ng-container *ngFor="let item of aps1003_B | async">
+        <th class="break-word text-center" rowspan="2">{{item.No}} {{item.Name}}</th>
+      </ng-container>
+      <!-- C 平均分攤 -->
+      <ng-container *ngFor="let item of aps1003_C | async">
+        <th class="break-word text-center" colspan="4">{{item.No}} {{item.Name}}</th>
+      </ng-container>
+      <!-- D 比率分攤 -->
+      <ng-container *ngFor="let item of aps1003_D | async">
+        <th class="break-word text-center" rowspan="2">{{item.No}} {{item.Name}}</th>
+      </ng-container>
     </tr>
     <tr>
-      <th class="text-center">帳務起</th>
-      <th class="text-center">帳務迄</th>
-      <th class="text-center">月階梯起</th>
-      <th class="text-center">月階梯迄</th>
-      <th class="text-center">區間階梯起</th>
-      <th class="text-center">區間階梯迄</th>
-      <th class="text-center">單一抽成</th>
-      <th class="text-center">年包底</th>
-      <th class="text-center">區間包底</th>
-      <th class="text-center">月包底</th>
-      <th class="text-center">帳務起</th>
-      <th class="text-center">帳務迄</th>
-      <th class="text-center">租金</th>
-      <th class="text-center">BO4(POS)</th>
-      <th class="text-center">維護費</th>
-      <th class="text-center">一般</th>
-      <th class="text-center">D02-六期</th>
-      <th class="text-center">30%</th>
-      <th class="text-center">40%</th>
-      <th class="text-center">一般</th>
-      <th class="text-center">1.5%</th>
-      <th class="text-center">一般</th>
-      <th class="text-center">2.5%</th>
+      <!-- <th class="break-word text-center">帳務起</th>
+      <th class="break-word text-center">帳務迄</th>
+      <th class="break-word text-center">月階梯起</th>
+      <th class="break-word text-center">月階梯迄</th>
+      <th class="break-word text-center">區間階梯起</th>
+      <th class="break-word text-center">區間階梯迄</th> -->
+      <!-- <th class="break-word text-center">單一抽成</th> -->
+      <!-- <th class="break-word text-center">年包底</th>
+      <th class="break-word text-center">區間包底</th>
+      <th class="break-word text-center">月包底</th> -->
+      <th class="break-word text-center">帳務起</th>
+      <th class="break-word text-center">帳務迄</th>
+      <th class="break-word text-center">租金</th>
+      <!-- C 平均分攤 -->
+      <ng-container *ngFor="let item of aps1003_C | async">
+        <th class="break-word text-center">總金額</th>
+        <th class="break-word text-center">預收款</th>
+        <th class="break-word text-center">每月</th>
+        <th class="break-word text-center">首期</th>
+      </ng-container>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-index="rowIndex" let-rowgroup="rowgroup"
@@ -79,7 +102,7 @@
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.apply_no}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.upd_date | date:'yyyy/MM/dd'}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.location_no}}</td>
-      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.VEN_Name}}</td>
+      <td class="text-center break-word" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.VEN_Name}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.ven_uniform}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_name}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_no}}</td>
@@ -90,7 +113,33 @@
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.tlt_contract_edate |
         date:'yyyy/MM/dd'}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{ getContractYear(rowData) }}</td>
-      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.expiration_fees}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.expiration_fees| number}}</td>
+      <td class="text-center">{{rowData['cag_bdate'] | date:'yyyy/MM/dd'}}</td>
+      <td class="text-center">{{rowData['cag_edate'] | date:'yyyy/MM/dd'}}</td>
+      <td class="text-center">{{rowData['base_rent']| number}}</td>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.total_amt | number}}</td>
+      <ng-container *ngFor="let item of aps1003_A | async">
+        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No] | number}}</td>
+      </ng-container>
+      <ng-container *ngFor="let item of aps1003_B | async">
+        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No] | number}}</td>
+      </ng-container>
+      <ng-container *ngFor="let item of aps1003_C | async">
+        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.total | number}}
+        </td>
+        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.down | number}}
+        </td>
+        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.month | number}}
+        </td>
+        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.advance |
+          number}}</td>
+      </ng-container>
+      <ng-container *ngFor="let item of aps1003_D | async">
+        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No] | number}}</td>
+      </ng-container>
+      <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.check_day}}</td>
+      <td class="break-word text-center" [ngStyle]="{'min-width': '100px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+        {{rowData.tlt_remark}}</td>
     </tr>
   </ng-template>
   <ng-template pTemplate="summary">
