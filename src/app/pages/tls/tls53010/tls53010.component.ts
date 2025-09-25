@@ -16,6 +16,8 @@ import { DatePipe } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { HttpResponse } from '@angular/common/http';
+import saveAs from 'file-saver';
 
 @Component({
   selector: 'app-tls53010',
@@ -36,13 +38,19 @@ import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
   ]
 })
 export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> implements OnInit {
+  get sixMonthsAgo(): Date {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 6);
+    return date;
+  }
+
   queryForm = this.formBuilder.group({
-    PST_No: [''],                                           // 盤點單編號
-    HOS_No: [[], Validators.required],                      // 倉別代碼 (改為陣列)
-    LOGO_No: [[]],                                          // 品牌代碼 (改為陣列)
-    PST_DateStart: ['', Validators.required],               // 盤點基準日期(起)
-    PST_DateEnd: ['', Validators.required],                 // 盤點基準日期(迄)
-    PST_Status: [[]],                                       // 盤點狀態 (多選)
+    PST_No: ['', Validators.maxLength(15)],                     // 盤點單編號
+    HOS_No: [[]],                                               // 倉別代碼 (改為陣列)
+    LOGO_No: [[]],                                              // 品牌代碼 (改為陣列)
+    PST_DateStart: [this.sixMonthsAgo, Validators.required],    // 盤點基準日期(起)
+    PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
+    PST_Status: [[]],                                           // 盤點單狀態 (多選)
     ...createPaginationConfig([{ field: 'PST_No', order: -1 }]) // 分頁和排序參數
   });
 
@@ -53,12 +61,12 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   // 下拉選單
   hosOptions: any[] = [];// 倉別選項
   logoOptions: any[] = [];// 品牌選項
-  // 盤點狀態選項
+  // 盤點單狀態選項
   pstStatusOptions: any[] = [
-    { value: '0', label: '盤點單開立,待盤點' },
-    { value: '1', label: '初盤,盤點中' },
-    { value: '2', label: '複盤,盤點完成' },
-    { value: '3', label: '抽盤,小盤結案' },
+    { value: '0', label: '盤點單開立-待盤點' },
+    { value: '1', label: '初盤-盤點中' },
+    { value: '2', label: '複盤-盤點完成' },
+    { value: '3', label: '抽盤-小盤結案' },
     { value: '4', label: '已結案' },
     { value: '9', label: '作廢' }
   ];
@@ -82,34 +90,35 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     },
     {
       field: 'PST_Status',
-      header: '盤點狀態',
+      header: '盤點單狀態',
       visible: true,
-      format: (v) => this.getStatusLabel(v)
+      format: (v) => this.pstStatusOptions.find(opt => opt.value === v)?.label || v,
     },
-    { field: 'PST_Remark', header: '盤點備註', visible: true },
+    { field: 'PST_Remark', header: '盤點備註', visible: false },
   ];
 
+  // TODO: 待新增loading屬性
   addButton: AddButton[] = [
     {
       label: '列印',
-      icon: 'pi pi-print',
+      icon: 'pi pi-print text-red-500',
       action: (rowData: TLS53010Data) => { this.onPrint(rowData); },
     },
     {
       label: '匯出',
-      icon: 'pi pi-file-export',
+      icon: 'pi pi-file-export text-green-500',
       action: (rowData: TLS53010Data) => { this.onExport(rowData); },
     },
   ];
 
   // 展開行設置
   expansionColumns: Column[] = [
-    {
-      field: 'LOGO_No',
-      header: '品牌代碼/名稱',
-      visible: true,
-      format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_CH_NAME}`
-    },
+    // {
+    //   field: 'LOGO_No',
+    //   header: '品牌代碼/名稱',
+    //   hidden: true,
+    //   format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_CH_NAME}`
+    // },
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
@@ -131,14 +140,15 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
       visible: true,
       format: (v, i, r) => `${r.CAT_SNo}-${r.CAT_SName}`
     },
-    { field: 'PLU_Attribute', header: '商品型態', visible: true },
+    // { field: 'PLU_Attribute', header: '商品型態', visible: true },
+    { field: 'PLU_AttributeName', header: '商品型態', visible: true },
     { field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount },
-    {
-      field: 'HOS_No',
-      header: '倉別代碼/名稱',
-      visible: true,
-      format: (v, i, r) => `${r.HOS_No}-${r.HOS_NAME}`
-    }
+    // {
+    //   field: 'HOS_No',
+    //   header: '倉別代碼/名稱',
+    //   hidden: true,
+    //   format: (v, i, r) => `${r.HOS_No}-${r.HOS_NAME}`
+    // }
   ]
 
   constructor(
@@ -188,29 +198,74 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
       });
   }
 
-  // 取得狀態標籤
-  getStatusLabel(status: string): string {
-    const option = this.pstStatusOptions.find(opt => opt.value === status);
-    return option ? option.label : status;
+  private extractFilenameFromResponse(response: HttpResponse<Blob>, defaultFilename: string): string {
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename = defaultFilename;
+
+    if (contentDisposition) {
+      const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.[^.]+)?$|filename="(.+?)(?:\.[^.]+)?"$/;
+      const matches = contentDisposition.match(filenameRegex);
+      if (matches) {
+        filename = matches[1] || matches[2] || filename;
+        filename = decodeURIComponent(filename);
+      }
+      filename = filename.replace(/["']/g, '');
+    }
+
+    return filename;
+  }
+
+  private downloadFile(response: HttpResponse<Blob>, defaultFilename: string, mimeType: string): void {
+    if (!response.body) {
+      console.error('下載失敗：檔案內容為空');
+      return;
+    }
+
+    const filename = this.extractFilenameFromResponse(response, defaultFilename);
+    const blob = new Blob([response.body], { type: mimeType });
+    saveAs(blob, filename);
+    console.log('下載成功:', filename);
   }
 
   // 列印
   onPrint(rowData: TLS53010Data) {
-    // TODO: 實作列印功能
+    this.tls53010Service.printTLS53010(this.createDetailQueryRequest(rowData))
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          this.downloadFile(response, '盤點單報表.pdf', 'application/pdf');
+        },
+        error: (err: any) => {
+          console.error('列印失敗:', err);
+        }
+      });
   }
 
   // 匯出
   onExport(rowData: TLS53010Data) {
-    // TODO: 實作匯出功能
+    this.tls53010Service.exportTLS53010Detail(this.createDetailQueryRequest(rowData))
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          this.downloadFile(response, '盤點單明細報表.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        },
+        error: (err: any) => {
+          console.error('匯出失敗:', err);
+        }
+      });
   }
 
   // 載入明細資料
   loadDetails = (rowData: TLS53010Data): Observable<BaseQueryResponse<TLS53010DetailData>> => {
-    return this.tls53010Service.queryTLS53010Detail({
+    return this.tls53010Service.queryTLS53010Detail(this.createDetailQueryRequest(rowData));
+  }
+
+  private createDetailQueryRequest(rowData: TLS53010Data) {
+    return {
       MID: 0,
-      PST_No: rowData.PST_No,
-      SYS_StoreNo: rowData.SYS_StoreNo,
-      HOS_No: rowData.HOS_No
-    });
+      PST_No: rowData.PST_No || '',
+      SYS_StoreNo: rowData.SYS_StoreNo || '',
+      HOS_No: rowData.HOS_No || ''
+    };
   }
 }
