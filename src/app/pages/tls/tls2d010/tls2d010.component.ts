@@ -73,7 +73,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         return `${yyyy}-${mm}-${dd}`;
       }
     },
-    { field: 'GUI_FLAG', header: '是否開立發票', visible: true ,format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : ''},
+    { field: 'GUI_FLAG', header: '是否開立發票', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : '' },
     { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount },
     { field: 'remarks', header: '備註', visible: true },
   ];
@@ -103,14 +103,16 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2D010', '/TLS/TLS2D010CRU', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((res) => {
+    // 查專櫃下拉
+    this.dropDownListService.queryTLTTALENTDropDownList().subscribe((res) => {
       this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
-        value: item.No ?? item.NO,
-        label: `${item.No ?? item.NO}-${item.Name ?? item.NAME}`,
-        No: item.No ?? item.NO,
-        Name: item.Name ?? item.NAME
+        value: item.talent_id,
+        label: `${item.tlt_no}-${item.tlt_name}`,
+        No: item.tlt_no,
+        Name: item.tlt_name
       }));
     });
+
     this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).subscribe((res) => {
       this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
         value: item.No,

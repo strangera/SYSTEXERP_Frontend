@@ -158,13 +158,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ===== 專櫃 & 活動選單 =====
   private loadTltAndPodOptions(): void {
-    this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((res) => {
+    this.dropDownListService.queryTLTTALENTDropDownList().subscribe((res) => {
       this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
-        value: item.No ?? item.NO,
-        label: `${item.No ?? item.NO}-${item.Name ?? item.NAME}`,
-        No: item.No ?? item.NO,
-        Name: item.Name ?? item.NAME,
-        talent_id: item.talent_id ?? 0,
+        value: item.talent_id,
+        label: `${item.tlt_no}-${item.tlt_name}`,
+        No: item.tlt_no,
+        Name: item.tlt_name
       }));
     });
     this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }).subscribe((res) => {
@@ -254,11 +253,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   // ===== 載入 normal 欄位動態下拉 =====
   private loadAndSetupColumnsNormal(): void {
-    const tltNo$ = this.dropDownListService.queryTLTTALENT_DropDownList().pipe(
+    const tltNo$ = this.dropDownListService.queryTLTTALENTDropDownList().pipe(
       map((res: any) =>
         (res?.Data ?? []).map((x: any) => ({
-          label: `${x.No}-${x.Name}`,
-          value: x.No,
+          label: `${x.tlt_no}-${x.tlt_name}`,
+          value: x.talent_id,
           contract_no: x.contract_no,
           contract_subno: x.contract_subno,
         }))
@@ -268,7 +267,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     const podNo$ = this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }).pipe(
       map((res: any) => (res?.Data ?? []).map((item: any) => ({
         value: item.pod_no,
-        label: `${item.pod_no}-${item.pod_desc}`
+        label: `${item.pod_no}-${item.pod_desc}`,
       })))
     );
 
@@ -293,14 +292,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             header: '契約編號',
             type: 'inputNumber',
             width: '12rem',
-            disabled: () => true, // 自動代入
+            disabled: () => true,
           },
           {
             field: 'contract_subno',
             header: '版次',
             type: 'inputNumber',
             width: '12rem',
-            disabled: () => true, // 自動代入
+            disabled: () => true,
           },
           {
             field: 'pod_no',
@@ -311,27 +310,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             optionLabel: 'label',
             optionValue: 'value',
           },
-          {
-            field: 'tpy_date',
-            header: '扣款日期',
-            type: 'date',
-            width: '12rem',
-          },
-          {
-            field: 'tpy_net',
-            header: '扣款金額(未稅)',
-            type: 'inputNumber',
-            width: '12rem',
-          },
-          {
-            field: 'remarks',
-            header: '備註',
-            type: 'input',
-            width: '12rem',
-          },
+          // 其他欄位照舊...
         ];
       });
   }
+
 
   // ===== 送出 =====
   onSubmit(): void {

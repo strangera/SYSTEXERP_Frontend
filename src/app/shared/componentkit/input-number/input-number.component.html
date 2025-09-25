@@ -10,17 +10,14 @@
       [title]="label"
       [name]="label"
       [formControl]="control"
-      [readonly]="readonly"
-      [placeholder]="
-        control.disabled || readonly ? '' : customPlaceholder || placeholder
-      "
+      [placeholder]="customPlaceholder || placeholder"
       [showButtons]="showButtons"
       [max]="max || maxValue"
       [step]="step"
       [useGrouping]="useGrouping"
       [minFractionDigits]="minFractionDigits"
       [maxFractionDigits]="maxFractionDigits"
-      [ngClass]="inputNumberClasses"
+      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
       [mode]="mode"
       [maxlength]="maxLength"
       (onInput)="onInputChange($event)"
@@ -56,11 +53,30 @@
       tooltipPosition="bottom"
       [pKeyFilter]="keyFilter"
     />
+    <p-inputNumber
+      [inputId]="controlName"
+      [title]="label"
+      [name]="label"
+      [formControl]="control"
+      [placeholder]="customPlaceholder || placeholder"
+      [showButtons]="showButtons"
+      [min]="min || minValue"
+      [max]="max || maxValue"
+      [step]="step"
+      [useGrouping]="useGrouping"
+      [minFractionDigits]="minFractionDigits"
+      [maxFractionDigits]="maxFractionDigits"
+      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
+      [mode]="mode"
+      [maxlength]="maxLength"
+      (onInput)="onInputChange($event)"
+      (onBlur)="onBlur($event)"
+      [pTooltip]="customPlaceholder || placeholder"
+      tooltipPosition="bottom"
+      [pKeyFilter]="keyFilter"
+    />
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>
-<app-control-messages
-  [hidden]="!showErrorMessage"
-  [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"
-></app-control-messages>
+<app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>

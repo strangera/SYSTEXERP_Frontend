@@ -6,12 +6,14 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgIf } from '@angular/common';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { Fin21030Service } from 'src/app/service/api/fin/fin21030.service';
+
 @Component({
   selector: 'app-fin21030-cru',
   templateUrl: './fin21030-cru.component.html',
@@ -26,44 +28,46 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    CalendarComponent,
     AccordionModule,
     InputNumberComponent,
     TranslateModule,
     NgIf,
+    CalendarRangeComponent,
 
   ],
 })
 export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
 
   dataForm = this.formBuilder.nonNullable.group({
-    vendorCode: ['', [Validators.maxLength(14)]], // 廠客代號
-    vendorName: ['', [Validators.maxLength(64)]], // 廠客名稱
-    vendorSName: ['', [Validators.maxLength(20)]], // 廠商簡稱
-    postCode: ['', [Validators.maxLength(5)]], // 郵遞區號
-    postAddress: ['', [Validators.maxLength(100)]], // 郵寄地址
-    contactPerson: ['', [Validators.maxLength(20)]], // 聯絡人
-    phone: ['', [Validators.maxLength(20)]], // 電話
-    fax: ['', [Validators.maxLength(20)]], // 	傳真
-    uId: ['', [Validators.maxLength(10)]], // 統一編號
-    VEN_RemitFeeMode: ['', Validators.required],
-    payoutVendor: [[] as number[]], // 貼現廠商
-    noTransfer: [[] as number[]], // 禁止背書轉讓
-    paymentMethod: [[] as number[]], // 付款方式
-    vendorTransferAccount: ['', [Validators.maxLength(20)]], // 廠商匯款銀行代號
-    vendorAccount: ['', [Validators.maxLength(20)]], // 廠商銀行帳號
-    vendorAccountName: ['', [Validators.maxLength(64)]], // 廠商帳戶名稱
-    payoutLimit: ['', [Validators.maxLength(3)]], // 付款期限
-    ticketTitle: ['', [Validators.maxLength(20)]], // 票據抬頭
-    systemType: [[] as number[]], // 系統別
-    VEN_Status: [[] as number[]], // 審核狀態
+    GUI_ID_WIRE: [''], //匯款統編
+    VEN_DiscDateB: [null],
+    VEN_DiscDateE: [null],
+    VEN_No: ['', [Validators.maxLength(14)]],                              // 廠商編號
+    VEN_Name: ['', [Validators.maxLength(100)]],       // 廠商名稱 (後端有這個)
+    VEN_ShortName: ['', [Validators.maxLength(20)]],                       // 廠商簡稱
+    VEN_Post: ['', [Validators.maxLength(5)]],                            // 郵遞區號
+    VEN_Address: ['', [Validators.maxLength(100)]],                         // 郵寄地址
+    VEN_Boss: ['', [Validators.maxLength(20)]],                            // 聯絡人
+    VEN_Tel: ['', [Validators.maxLength(20)]],                             // 電話
+    VEN_Fax: ['', [Validators.maxLength(20)]],                             // 傳真
+    VEN_Uniform: [''],                         // 統一編號
+    VEN_RemitFeeMode: [''],                    // 郵電負擔模式
+    VEN_DiscYN: [[]],                          // 貼現廠商 (單一字串)
+    VEN_CTRLYN: [[]],                          // 禁止背書轉讓 (單一字串)
+    VEN_PayType: [''],                         // 付款方式 (單一字串)
+    VEN_BNK_No: ['', [Validators.maxLength(5)]],                          // 廠商匯款銀行代號
+    VEN_BankAccountNo: ['', [Validators.maxLength(50)]],                   // 廠商銀行帳號
+    VEN_AccountName: ['', [Validators.maxLength(80)]],                     // 廠商帳戶名稱
+    VEN_PayConditionDay: [null],                  // 付款期限
+    VEN_CheckTitle: [''],                      // 票據抬頭
+    VEN_Status: [''],
   });
-  postBelongOptions: any[] = [];
-  whetherOptions: any[] = [];
-  paymentMethodOptions: any[] = [];
-  systemTypeOptions: any[] = [];
-  statusOptions: any[] = [];
-    remitFeeOptions = [
+  roles: any[] = [
+    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
+    { id: 2, roleCode: 'USER', roleName: 'User' },
+    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  ];
+  remitFeeOptions = [
     { value: '1', label: '廠商負擔' },
     { value: '2', label: '公司負擔' }
   ];
@@ -72,17 +76,67 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
     { label: '未審核', value: '0' },
     { label: '已審核', value: '1' },
   ];
-  constructor(
 
+  VEN_DiscYNOptions: { label: string; value: string }[] = [
+    { label: '是', value: 'Y' },
+    { label: '否', value: 'N' },
+  ];
+  VEN_CTRLYNOptions: { label: string; value: string }[] = [
+    { label: '是', value: 'Y' },
+    { label: '否', value: 'N' }
+  ];
+  VEN_PayTypeOptions: { label: string; value: string }[] = [
+    { label: '電匯', value: '1' },
+    { label: '開票', value: '2' },
+    { label: '現金', value: '3' }
+  ];
+  constructor(
+    private fin21030Service: Fin21030Service,
   ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('FIN21030', this.dataForm);
+    console.log('details', this.rowdata);
+
+    if (this.rowdata) {
+      this.dataForm.patchValue(this.rowdata);
+      this.dataForm.get('VEN_No')?.setValue(
+        `${this.rowdata.VEN_No} - ${this.rowdata.VEN_Name}`
+
+      );
+
+      Object.keys(this.dataForm.controls).forEach(key => {
+        if (!['VEN_Post', 'VEN_DiscYN', 'GUI_ID_WIRE', 'VEN_CTRLYN', 'VEN_DiscDateB', 'VEN_DiscDateE'].includes(key)) {
+          this.dataForm.get(key)?.disable();
+        }
+      });
+    }
+
   }
   onSubmit(frm: FormGroup) {
     if (frm.valid) {
-      // Handle form submission
+      const raw = frm.getRawValue();
+
+      const payload = {
+        id: this.rowdata?.id ?? 0,
+        VEN_No: this.rowdata?.VEN_No ?? '',
+        VEN_Post: raw.VEN_Post || '',
+        VEN_DiscYN: Array.isArray(raw.VEN_DiscYN) ? raw.VEN_DiscYN[0] || '' : raw.VEN_DiscYN || '',
+        VEN_CTRLYN: Array.isArray(raw.VEN_CTRLYN) ? raw.VEN_CTRLYN[0] || '' : raw.VEN_CTRLYN || '',
+        VEN_DiscDateB: raw.VEN_DiscDateB ? new Date(raw.VEN_DiscDateB).toISOString() : null,
+        VEN_DiscDateE: raw.VEN_DiscDateE ? new Date(raw.VEN_DiscDateE).toISOString() : null,
+        GUI_ID_WIRE: raw.GUI_ID_WIRE || '',
+      };
+
+      console.log('送出的 payload:', payload);
+
+      this.fin21030Service.updateFIN21030(payload).subscribe({
+        next: res => {
+          console.log('更新成功', res);
+        },
+
+      });
     }
   }
 }
