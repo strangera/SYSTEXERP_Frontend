@@ -34,6 +34,8 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
   @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false; // 檢查欄位是否標準
+  @Input() readonly = false; // 新增：唯讀模式
+
   // Primeng 相關屬性
   @Input() min: number | null = 0; // 最小值
   @Input() max = 99999999999; // 最大值
@@ -60,5 +62,20 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
   }
   onBlur(event: Event) {
     this.blurEvent.emit(event);
+  }
+
+  // 新增：取得 input number 的 CSS 類別
+  get inputNumberClasses(): string {
+    const classes = [];
+
+    if ((this.submitted && this.control.errors)) {
+      classes.push('ng-dirty', 'ng-invalid');
+    }
+
+    if (this.readonly) {
+      classes.push('readonly-field');
+    }
+
+    return classes.join(' ');
   }
 }

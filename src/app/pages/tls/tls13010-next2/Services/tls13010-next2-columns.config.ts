@@ -34,8 +34,6 @@ export class TLS13010Next2ColumnsConfig {
         editable: true,
         directEdit: true,
         width: '60px',
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -74,8 +72,6 @@ export class TLS13010Next2ColumnsConfig {
         editable: true,
         directEdit: true,
         width: '60px',
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',

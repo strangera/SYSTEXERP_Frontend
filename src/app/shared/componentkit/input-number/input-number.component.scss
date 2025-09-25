@@ -19,5 +19,44 @@
       right: 0;
       border: 0;
     }
+
+    // 新增：readonly 樣式
+    .readonly-field {
+      .p-inputnumber-input {
+        background-color: #f8f9fa !important;
+        border-color: #e9ecef !important;
+        color: #6c757d !important;
+        cursor: default !important;
+
+        &:focus {
+          border-color: #e9ecef !important;
+          box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25) !important;
+        }
+
+        &:hover {
+          border-color: #e9ecef !important;
+        }
+      }
+
+      // 隱藏 readonly 狀態下的按鈕
+      .p-inputnumber-button-group {
+        display: none !important;
+      }
+    }
+
+    // 如果你想要更明顯的 readonly 視覺效果
+    .readonly-field-distinct {
+      .p-inputnumber-input {
+        background-color: #e9ecef !important;
+        border: 1px dashed #adb5bd !important;
+        color: #495057 !important;
+        cursor: not-allowed !important;
+
+        &::placeholder {
+          color: #6c757d !important;
+          font-style: italic;
+        }
+      }
+    }
   }
 }

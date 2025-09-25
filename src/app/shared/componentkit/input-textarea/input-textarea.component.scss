@@ -1,0 +1,28 @@
+.readonly-field {
+  background-color: #f8f9fa !important;
+  border-color: #e9ecef !important;
+  color: #6c757d !important;
+  cursor: default !important;
+
+  &:focus {
+    border-color: #e9ecef !important;
+    box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25) !important;
+  }
+
+  &:hover {
+    border-color: #e9ecef !important;
+  }
+}
+
+// 如果你想要更明顯的 readonly 視覺效果
+.readonly-field-distinct {
+  background-color: #e9ecef !important;
+  border: 1px dashed #adb5bd !important;
+  color: #495057 !important;
+  cursor: not-allowed !important;
+
+  &::placeholder {
+    color: #6c757d !important;
+    font-style: italic;
+  }
+}
