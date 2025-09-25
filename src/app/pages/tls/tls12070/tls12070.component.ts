@@ -148,7 +148,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS12070', 'TLS/TLS12060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS12070', 'TLS/TLS12070cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

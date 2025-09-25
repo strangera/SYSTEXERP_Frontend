@@ -110,7 +110,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     { field: 'vendor_name', header: '統編/廠商', visible: true },
     { field: 'bus_type', header: '大分類', visible: true },
     { field: 'location', header: '位置編號', visible: true },
-    { field: 'contract_type', header: '合約種類', visible: true },
+    { field: 'contact_type', header: '合約種類', visible: true },
     { field: 'contract_subno', header: '版本', visible: true },
     { field: 'rent_space', header: '位置租賃數', visible: true },
     { field: 'approve_desc', header: '合約狀態', visible: true },
