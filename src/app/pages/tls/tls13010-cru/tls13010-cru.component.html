@@ -458,6 +458,7 @@
                 controlName="base_rent"
                 [control]="dataForm.controls.base_rent"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -466,6 +467,7 @@
                 controlName="deposit"
                 [control]="dataForm.controls.deposit"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -584,6 +586,7 @@
                 [minFractionDigits]="0"
                 [maxFractionDigits]="2"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
               <small
                 class="block mt-1 text-blue-600 text-base"
@@ -598,6 +601,7 @@
                 controlName="total_amt"
                 [control]="dataForm.controls.total_amt"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -618,6 +622,7 @@
                 controlName="total_amt_vendor"
                 [control]="dataForm.controls.total_amt_vendor"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -650,6 +655,7 @@
                 controlName="open_fees"
                 [control]="dataForm.controls.open_fees"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -670,6 +676,7 @@
                 controlName="construct_fees"
                 [control]="dataForm.controls.construct_fees"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -690,6 +697,7 @@
                 controlName="expiration_fees"
                 [control]="dataForm.controls.expiration_fees"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -985,6 +993,7 @@
                 controlName="tlt_remark"
                 [control]="dataForm.controls.tlt_remark"
                 [submitted]="submitted"
+                [readonly]="isFormReadonly"
               ></app-input-textarea>
             </div>
           </div>

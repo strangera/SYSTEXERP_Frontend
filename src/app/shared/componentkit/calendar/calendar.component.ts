@@ -109,15 +109,43 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     const date = this.control.value;
     if (!(date instanceof Date)) return date.toString();
 
+    // 輔助函數：補零
+    const padZero = (num: number): string => num.toString().padStart(2, '0');
+
     switch (this.calendarType) {
       case 'dateOne':
-        return date.toLocaleDateString('zh-TW'); // 會是 2014/12/28 格式
+        // 使用手動格式化確保補零：2025/09/01
+        return `${date.getFullYear()}/${padZero(date.getMonth() + 1)}/${padZero(date.getDate())}`;
+
       case 'timeOne':
-        return date.toLocaleTimeString('zh-TW', { hour12: false });
+        // 確保時間格式補零：14:30 或 14:30:00
+        {
+          const hours = padZero(date.getHours());
+          const minutes = padZero(date.getMinutes());
+          const seconds = padZero(date.getSeconds());
+          return this.showSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
+        }
+
       case 'dateTimeOne':
-        return `${date.toLocaleDateString('zh-TW')} ${date.toLocaleTimeString('zh-TW', { hour12: false })}`;
+        // 日期時間組合：2025/09/01 14:30:00
+        {
+          const dateStr = `${date.getFullYear()}/${padZero(date.getMonth() + 1)}/${padZero(date.getDate())}`;
+          const timeStr = this.showSeconds
+            ? `${padZero(date.getHours())}:${padZero(date.getMinutes())}:${padZero(date.getSeconds())}`
+            : `${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+          return `${dateStr} ${timeStr}`;
+        }
+
+      case 'dateMonthOne':
+        // 年月格式：2025/09
+        return `${date.getFullYear()}/${padZero(date.getMonth() + 1)}`;
+
+      case 'dateYearOne':
+        // 年份格式：2025
+        return date.getFullYear().toString();
+
       default:
-        return date.toLocaleDateString('zh-TW');
+        return `${date.getFullYear()}/${padZero(date.getMonth() + 1)}/${padZero(date.getDate())}`;
     }
   }
 
