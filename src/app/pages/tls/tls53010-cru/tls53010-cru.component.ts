@@ -15,7 +15,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { POS2004Info, TLS53010Data, TLS53010DetailQueryRequest, TLS53010InsertManualRequest, TLS53010Service } from '@service/api/tls/tls53010.service';
+import { POS2004Info, TLS53010Data, TLS53010DetailQueryRequest, TLS53010InsertManualRequest, TLS53010Service, TLS53010UpdateRequest } from '@service/api/tls/tls53010.service';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
@@ -23,6 +23,8 @@ import { getSYS1000 } from '@service/system/sys1000.service';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Pos2004LogoItem } from '@service/utility/dropdown-api.model';
 
 @Component({
   selector: 'app-tls53010-cru',
@@ -47,11 +49,17 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
   ]
 })
 export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> implements OnInit {
+  get yesterday(): Date {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date;
+  }
+
   dataForm = this.formBuilder.nonNullable.group({
     PST_No: [''], // 盤點單編號
-    HOS_No: ['', Validators.required], // 倉別代碼 - 必填
-    LOGO_No: ['', Validators.required], // 品牌代碼 - 必填
-    PST_Date: ['', Validators.required], // 盤點基準日期 - 必填
+    HOS_No: [null, Validators.required], // 倉別代碼 - 必填
+    LOGO_No: [null, Validators.required], // 品牌代碼 - 必填
+    PST_Date: [this.yesterday.toString(), Validators.required], // 盤點基準日期 - 必填
     PST_Remark: [''], // 盤點備註
   });
 
@@ -70,11 +78,15 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   data: POS2004Info[] = [];
   selectedItems: POS2004Info[] = [];
 
+  // 欄位mapping用
+  pos2004DropDownList: Pos2004LogoItem[] = [];
+
   constructor(
     private tls53010Service: TLS53010Service,
     private datePipe: DatePipe,
     private validationService: ValidationService,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
   ) {
     super();
   }
@@ -90,18 +102,26 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     }
 
     // 如果是編輯動作 載入明細並帶入表格
-    if (this.crudstatus === CRUDStatus.Edit && this.rowdata) {
-      const payload: TLS53010DetailQueryRequest = {
-        MID: 0,
-        PST_No: this.rowdata.PST_No,
-        SYS_StoreNo: this.rowdata.SYS_StoreNo,
-        HOS_No: this.rowdata.HOS_No
-      };
-      this.tls53010Service.queryTLS53010Detail(payload)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data;
-        });
+    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+      if (this.rowdata) {
+        const payload: TLS53010DetailQueryRequest = {
+          MID: 0,
+          PST_No: this.rowdata.PST_No,
+          SYS_StoreNo: this.rowdata.SYS_StoreNo,
+          HOS_No: this.rowdata.HOS_No
+        };
+        this.tls53010Service.queryTLS53010Detail(payload)
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            this.data = response.Data;
+          });
+        // 取得POS2004下拉選單用於mapping
+        this.dropdownApiService.queryPos2004Logo({ LOGO_No: this.rowdata.LOGO_No })
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            this.pos2004DropDownList = response ?? [];
+          });
+      }
     }
   }
 
@@ -123,7 +143,11 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // TODO: 待後端api完成
+            this.loading = false
+            console.log('rowdata', this.rowdata);
+            console.log('明細資料', this.data);
+            console.log('TLS53010UpdateRequest', this.TLS53010UpdateRequest);
+            console.log('pos2004DropDownList', this.pos2004DropDownList);
           }
           break;
       }
@@ -185,25 +209,16 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     return !this.data.some((item: POS2004Info) => item.PLU_MagNo === event.PLU_MagNo);
   }
 
-  // 新增全品項
+  // 新增全品項 僅新增時可用
   insertTLS53010(form: FormGroup) {
     this.handleSubmit(form, () => {
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.tls53010Service.insertTLS53010(form.getRawValue())
-              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-              .subscribe(() => {
-                this.messageService.successBubble('新增成功');
-                this.dataForm.reset();
-              });
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            // TODO: 待後端api完成
-          }
-          break;
+      if (this.canAdd()) {
+        this.tls53010Service.insertTLS53010(form.getRawValue())
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('新增全品項完成');
+            this.dataForm.reset();
+          });
       }
     });
   }
@@ -275,7 +290,10 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
 
   get TLS53010InsertManualRequest(): TLS53010InsertManualRequest {
     return {
-      ...this.dataForm.getRawValue(),
+      HOS_No: this.dataForm.get('HOS_No')?.value || '',
+      LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
+      PST_Date: this.dataForm.get('PST_Date')?.value || '',
+      PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
       POS2004List: this.data
     };
   }
@@ -283,10 +301,34 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   setReadOnlyFields() {
     // 盤點單編號不能修改
     this.dataForm.get('PST_No')?.disable();
+    // 編輯功能時 倉別代碼/品牌代碼不能修改
+    if (this.crudstatus === CRUDStatus.Edit) {
+      this.dataForm.get('HOS_No')?.disable();
+      this.dataForm.get('LOGO_No')?.disable();
+    }
   }
 
   generatePSTNo() {
     // 產生盤點單編號
     this.dataForm.patchValue({ PST_No: '系統自動產生' });
   }
+
+  get TLS53010UpdateRequest(): TLS53010UpdateRequest {
+    return {
+      POS2033M_ID: this.rowdata!.id,
+      PST_No: this.rowdata!.PST_No,
+      PST_Date: this.rowdata!.PST_Date,
+      PST_Remark: this.rowdata!.PST_Remark,
+      POS2004List: this.data.map(item => ({
+        POS2033_ID: item.id || 0,
+        PLU_MagNo: item.PLU_MagNo,
+        PLU_No: item.PLU_No,
+        PLU_Unit: item.PLU_Unit,
+        PLU_BoxQty: item.PLU_BoxQty,
+        PLU_Name: item.PLU_Name,
+        PLU_PageNum: item.PLU_PageNum,
+        PLU_LocNo: item.PLU_LocNo,
+      }))
+    };
+  };
 }

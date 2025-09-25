@@ -1,164 +1,135 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule, } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { AddButton, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+
+// Component Kit
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+
 // Services
+import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020.service';
 import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { InventoryCategoryService } from '../../../service/basic/inventory-category.service';
 import { StorageInventoryStatusService } from '../../../service/basic/storage-inventory-status.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls53020',
   templateUrl: './tls53020.component.html',
-  styleUrls: ['./tls53020.component.scss'],
+  styleUrl: './tls53020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+    RadiobuttonComponent
+  ],
 })
-export class TLS53020Component {
-
-  ProgNo: string = '250022';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
+export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   queryForm = this.formBuilder.group({
-    storageInventoryNo: [],
-    warehouseCode: [],
-    inventorySerialNo: [],
-    brandCode: [],
-    inventoryCategory: [],
-    inventoryDateFrom: [],
-    inventoryDateTo: [],
-    storageInventoryStatus: [],
+    warehouseCode: [null], // 倉別
+    inventorySerialNo: [null], // 盤點單號
+    brandCode: [null], // 品牌代碼
+    inventoryCategory: [null], // 盤點類別
+    inventoryDateFrom: [null], // 盤點基準開始日期
+    inventoryDateTo: [null], // 盤點基準結束日期
+    storageInventoryStatus: [null], // 盤點單狀態
+    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
   });
 
-  // Dropdown options
+  data: TLS53020Data[] = [];
+  totalRecords = 0;
+  selectedItems: TLS53020Data[] = [];
+
+  // 下拉選單資料
   warehouseOptions: any[] = [];
   brandCodeOptions: any[] = [];
   inventoryCategoryOptions: any[] = [];
   storageInventoryStatusOptions: any[] = [];
 
-  // Table data
-  data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
-    // Other data
+  columns = [
+    { field: 'inventorySerialNo', header: '盤點單號', visible: true },
+    { field: 'brandCode', header: '品牌', visible: true },
+    { field: 'warehouseCode', header: '倉別', visible: true },
+    { field: 'inventoryDate', header: '盤點基準日', visible: true },
+    { field: 'inventoryCategory', header: '盤點類別', visible: true },
+    { field: 'storageInventoryStatus', header: '狀態', visible: true },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'name', header: 'Name', visible: true },
-    { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
-    // Other columns
+
+  addButton: AddButton[] = [
+    {
+      label: '匯入',
+      icon: 'pi pi-file-import',
+      action: (rowData: TLS53020Data) => { this.onImport(rowData); },
+    }
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
     private warehouseService: WarehouseService,
     private brandCodeService: BrandCodeService,
     private inventoryCategoryService: InventoryCategoryService,
     private storageInventoryStatusService: StorageInventoryStatusService,
-    private authService: AuthService,
-  ) { }
+    private tls53020Service: TLS53020Service,
+    public validationService: ValidationService,
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe(data => this.warehouseOptions = data);
-    this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
-    this.inventoryCategoryService.getInventoryCategoryOptions().subscribe(data => this.inventoryCategoryOptions = data);
-    this.storageInventoryStatusService.getStorageInventoryStatusOptions().subscribe(data => this.storageInventoryStatusOptions = data);
+    this.initializePage('TLS53020', '/tls/tls53020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  canQuery(): boolean {
-    return true;
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(this.queryForm, () => {
+      this.tls53020Service.queryTLS53020(frm.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(res => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
+    });
   }
 
-  canAdd(): boolean {
-    return true;
+  loadOptions(): void {
+    this.warehouseService.getWarehouseOptions().subscribe(data => {
+      this.warehouseOptions = data;
+    });
+
+    this.brandCodeService.getSystemTypes().subscribe(data => {
+      this.brandCodeOptions = data;
+    });
+
+    this.inventoryCategoryService.getInventoryCategoryOptions().subscribe(data => {
+      this.inventoryCategoryOptions = data;
+    });
+
+    this.storageInventoryStatusService.getStorageInventoryStatusOptions().subscribe(data => {
+      this.storageInventoryStatusOptions = data;
+    });
   }
 
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS5000/TLS53020CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+  onImport(rowData: TLS53020Data): void {
+    // 處理匯入邏輯
+    console.log('處理匯入邏輯', rowData);
   }
 }
