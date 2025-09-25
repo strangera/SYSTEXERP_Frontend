@@ -317,7 +317,13 @@ updateColumnVisibility(selectedValues: number[]) {
       });
      
   }
-
+handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: FormGroup) {
+  form.patchValue(
+    { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: e.SortBy },
+    { emitEvent: false }
+  );
+  this.onSubmit(form); // 集中在這裡打一次 API
+}
 
 
   get formattedTXNDate(): string {

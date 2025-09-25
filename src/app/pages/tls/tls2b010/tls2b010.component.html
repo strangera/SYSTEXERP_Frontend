@@ -151,7 +151,7 @@
 [mergedColumns]="['building_desc','floor_desc','ECR_No','USR_No']"
       [showDelete]="false"
       [showCheckBox]="false"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+       (lazyLoadData)="handleLazyLoad($event, queryForm)"
     ></app-tls2b010table>
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
