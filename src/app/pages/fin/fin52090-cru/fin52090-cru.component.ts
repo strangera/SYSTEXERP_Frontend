@@ -46,6 +46,7 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
   ngOnInit(): void {
     this.initializePage('FIN52090', this.dataForm);
 
+    this.service.accNo.set([]);
     this.service.getAccNo();
 
     this.logger.debug(`init:`, [this.rowdata, this.crudstatus, this.service.accNo()]);

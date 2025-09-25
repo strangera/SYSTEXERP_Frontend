@@ -76,8 +76,6 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   private readonly accNoSignal = toSignal(this.qf().AccNo.valueChanges);
   private readonly classNoSignal = toSignal(this.qf().ClassNo.valueChanges);
 
-  public readonly totalRecords = computed(() => this.filteredData().length);
-
   public readonly filteredData = computed(() => {
     const formValue = this.queryForm.getRawValue();
     return this.service.FIN52080Data().filter(item => {
@@ -94,6 +92,8 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
         && (!formValue.Input_YN?.length || formValue.Input_YN.includes(item.Input_YN));
     });
   });
+
+  public readonly totalRecords = computed(() => this.filteredData().length);
 
   /** accNo驗證 綁定classNo用 */
   public readonly accNoEffect = effect(() => {

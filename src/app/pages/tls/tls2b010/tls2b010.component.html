@@ -136,7 +136,7 @@
     }}
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 1">
-    <app-table
+    <app-tls2b010table
       tableKey="TLS2B010"
       [data]="data"
       [columns]="columns"
@@ -147,10 +147,12 @@
       [loading]="loading"
       (edit)="onEdit($event)"
       [showManage]="false"
+       [groupRowsBy]="'ECR_No'"
+[mergedColumns]="['building_desc','floor_desc','ECR_No','USR_No']"
       [showDelete]="false"
       [showCheckBox]="false"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    ></app-table>
+    ></app-tls2b010table>
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
     <app-report-table-group

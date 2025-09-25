@@ -313,3 +313,11 @@ export type TableTypes =
   'default' |
   'dropdownTable' |
   'dropdownTableTemplate';
+
+/** 可以用來做轉換的 Map */
+export const Maps = {
+  'YN': new Map<string, string>([
+    ['Y', '是'],
+    ['N', '否'],
+  ]),
+};

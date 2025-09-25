@@ -10,13 +10,14 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AsyncPipe } from '@angular/common';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { RadiobuttonYNComponent } from "@shared/componentkit/radiobutton-yn/radiobutton-yn.component";
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-
+import { Tls13070QueryRequest, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { Tls13070TableComponent } from './tls13070-table/tls13070-table.component';
 
 @Component({
   selector: 'app-tls13070',
@@ -33,55 +34,58 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
     CalendarRangeComponent,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
     AsyncPipe,
     RadiobuttonYNComponent,
-    MultiSelectComponent
+    MultiSelectComponent,
+    Tls13070TableComponent
   ],
 })
-export class TLS13070Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     Apply_No: [null, [Validators.maxLength(12)]], // 專櫃招募編號
-    BUS_Type: [null], // 大分類代號
-    TLT_No: [null, [Validators.maxLength(12)]], // 專櫃編號
-    TLT_Name: [null, [Validators.maxLength(100)]], // 專櫃名稱
-    VEN_Uniform: [null], // 廠商統一編號
-    Contract_SubNo_Start: [null, [Validators.max(9999)]], // 版本編號(起)
-    Contract_SubNo_End: [null, [Validators.max(9999)]], // 版本編號(迄)
-    approve_status: [null], // 合約狀態
-    Area_No: [null], // 區域
-    FLOOR_No: [null], // 樓層
-    contact_USR_No: [null], // 談判者
-    org_id: [null], // 組織
-    tlt_openflagList: [null], // 營運狀態
-    comm_comp_typeList: [null], // 抽成額計算方式
+    bus_typeList: [null], // 大分類代號
+    tlt_noList: [null, [Validators.maxLength(12)]], // 專櫃編號
+    tlt_name: [null, [Validators.maxLength(100)]], // 專櫃名稱
+    ven_uniform_List: [null], // 廠商統一編號
+    contract_subno_Start: [null, [Validators.max(9999)]], // 版本編號(起)
+    contract_subno_End: [null, [Validators.max(9999)]], // 版本編號(迄)
+    approve_status_List: [null], // 合約狀態
+    area_no_List: [null], // 區域
+    tlt_floor_List: [null], // 樓層
+    contact_USR_No_List: [null], // 談判者
+    org_id_List: [null], // 組織
+    tlt_openflag_List: [null], // 營運狀態
+    comm_comp_type_List: [null], // 抽成額計算方式
     feedback_date_Start: [null], // 回函日期(起)
     feedback_date_End: [null], // 回函日期(迄)
     due_date_Start: [null], // 回函期限(起)
     due_date_End: [null], // 回函期限(迄)
     contact_Date_Start: [null], // 談判日期(起)
     contact_Date_End: [null], // 談判日期(迄)
-    paper_typeList: [null], // 營業型態
+    paper_type_List: [null], // 營業型態
     tlt_bdate_Start: [null], // 契約起始日(起)
-    tlt_bdate_End: [null], // 契約起始日(迄)
+    tlt_bdate_End: [null], // 契約截止日(迄)
     tlt_edate_Start: [null], // 契約截止日_起
     tlt_edate_End: [null], // 契約截止日_迄
     tlt_contract_bdate_Start: [null], // 營運起始日(起)
     tlt_contract_bdate_End: [null], // 營運起始日(迄)
     tlt_contract_edate_Start: [null], // 營運截止日(起)
     tlt_contract_edate_End: [null], // 營運截止日(迄)
-    tlt_kindList: [null], // 櫃別
-    deco_typeList: [null], // 裝櫃方式
-    tlt_term_typeList: [null], // 抽成別
-    money_typeList: [null], // 結帳方式
-    paytypeList: [null], // 付款方式
-    store_wayList: [null], // 配合方式
+    tlt_kind_List: [null], // 櫃別
+    deco_type_List: [null], // 裝櫃方式
+    tlt_term_type_List: [null], // 抽成別
+    money_type_List: [null], // 結帳方式
+    paytype_List: [null], // 付款方式
+    store_way_List: [null], // 配合方式
     rece_yn: [null], // 是否開立發票
     pos_yn: [null], // 是否使用業主收銀機
     cash_yn: [null], // 是否為業主收現
-    ...createPaginationConfig([{ field: 'apply_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'apply_No', order: 1 }]],
   });
   totalRecords = 0;
+  lastQueryBody?: Tls13070QueryRequest;
   BUS_TypeOptions = this.dropdown.queryTltBusType();
   VEN_UniformOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   approve_statusOptions = getSYS1000Options('approve_status');
@@ -101,21 +105,25 @@ export class TLS13070Component extends BasicQueryPageComponent<any> implements O
   rece_ynOptions = getSYS1000Options('YES_NO');
   pos_ynOptions = getSYS1000Options('YES_NO');
   cash_ynOptions = getSYS1000Options('YES_NO');
-  data: any[] = [];
-  columns: Column[] = [
-    { field: 'name', header: 'name' },
-    { field: 'age', header: 'age' },
-    { field: 'email', header: 'email' },
-  ];
-
+  data: Tls13070Response[] = [];
   constructor(
     private readonly dropdown: DropdownApiService,
+    public readonly tls13070Service: Tls13070Service,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS13070', '/tls/tls13070cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => { });
+    this.handleSubmit(frm, () => {
+      this.tls13070Service.queryTLS13070(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
+        this.lastQueryBody = frm.value;
+        console.log('response', response.Data);
+
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
+    });
   }
 }

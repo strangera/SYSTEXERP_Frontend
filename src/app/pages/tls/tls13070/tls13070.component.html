@@ -12,58 +12,59 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類代號" controlName="BUS_Type" [options]="BUS_TypeOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.BUS_Type" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="大分類代號" controlName="bus_typeList" [options]="BUS_TypeOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.bus_typeList"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="TLT_No" [control]="queryForm.controls.TLT_No"
+            <app-input-text label="專櫃編號" controlName="tlt_noList" [control]="queryForm.controls.tlt_noList"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="櫃位名稱" controlName="TLT_Name" [control]="queryForm.controls.TLT_Name"
+            <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商統一編號" controlName="VEN_Uniform" [options]="VEN_UniformOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_Uniform"
+            <app-dropdown label="廠商統一編號" controlName="ven_uniform_List" [options]="VEN_UniformOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.ven_uniform_List"
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="版本編號"
-              [startControl]="queryForm.controls.Contract_SubNo_Start"
-              [endControl]="queryForm.controls.Contract_SubNo_End" [submitted]="submitted"></app-input-number-range>
+              [startControl]="queryForm.controls.contract_subno_Start"
+              [endControl]="queryForm.controls.contract_subno_End" [submitted]="submitted"></app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="合約狀態" controlName="approve_status" [options]="approve_statusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.approve_status"
+            <app-dropdown label="合約狀態" controlName="approve_status_List" [options]="approve_statusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.approve_status_List"
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="區域" controlName="Area_No" [options]="Area_NoOptions | async" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.Area_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="區域" controlName="area_no_List" [options]="Area_NoOptions | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.area_no_List" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層" controlName="FLOOR_No" [options]="FLOOR_NoOptions | async" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.FLOOR_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="樓層" controlName="tlt_floor_List" [options]="FLOOR_NoOptions | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.tlt_floor_List" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="洽談者" controlName="contact_USR_No" [options]="contact_USR_NoOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.contact_USR_No"
+            <app-dropdown label="洽談者" controlName="contact_USR_No_List" [options]="contact_USR_NoOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.contact_USR_No_List"
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織" controlName="org_id" [options]="org_idOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="組織" controlName="org_id_List" [options]="org_idOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.org_id_List" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="營運狀況" controlName="tlt_openflagList" [options]="tlt_openflagListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_openflagList"
+            <app-multi-select label="營運狀況" controlName="tlt_openflag_List" [options]="tlt_openflagListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_openflag_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="抽成額計算方式" controlName="comm_comp_typeList" [options]="comm_comp_typeListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.comm_comp_typeList"
+            <app-multi-select label="抽成額計算方式" controlName="comm_comp_type_List" [options]="comm_comp_typeListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.comm_comp_type_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -81,8 +82,8 @@
               [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="營業型態" controlName="paper_typeList" [options]="paper_typeListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.paper_typeList"
+            <app-multi-select label="營業型態" controlName="paper_type_List" [options]="paper_typeListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.paper_type_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -106,32 +107,33 @@
               [endControl]="queryForm.controls.tlt_contract_edate_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="櫃別" controlName="tlt_kindList" [options]="tlt_kindListOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_kindList"
+            <app-multi-select label="櫃別" controlName="tlt_kind_List" [options]="tlt_kindListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_kind_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="裝潢方式" controlName="deco_typeList" [options]="deco_typeListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.deco_typeList"
+            <app-multi-select label="裝潢方式" controlName="deco_type_List" [options]="deco_typeListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.deco_type_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="抽成別" controlName="tlt_term_typeList" [options]="tlt_term_typeListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_term_typeList"
+            <app-multi-select label="抽成別" controlName="tlt_term_type_List" [options]="tlt_term_typeListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_term_type_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="結帳方式" controlName="money_typeList" [options]="money_typeListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.money_typeList"
+            <app-multi-select label="結帳方式" controlName="money_type_List" [options]="money_typeListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.money_type_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="付款方式" controlName="paytypeList" [options]="paytypeListOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.paytypeList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="付款方式" controlName="paytype_List" [options]="paytypeListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.paytype_List"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="配合方式" controlName="store_wayList" [options]="store_wayListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.store_wayList"
+            <app-multi-select label="配合方式" controlName="store_way_List" [options]="store_wayListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.store_way_List"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -156,8 +158,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="apply_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showCheckBox]="true" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false"></app-table>
+  <app-tls13070-table tableKey="FIN21020query" dataKey="id" [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords" [data]="data"
+    [queryFunction]="tls13070Service.queryTLS13070.bind(tls13070Service)"></app-tls13070-table>
 </div>

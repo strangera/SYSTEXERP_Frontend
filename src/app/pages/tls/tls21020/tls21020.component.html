@@ -16,42 +16,34 @@
                       [showClear]="false"
                       controlName="ENTRY_TYPE"
                       [options]="service.getEntryTypes()"
-                      optionLabel="Name"
-                      optionValue="No"
+                      optionLabel="label"
+                      optionValue="value"
                       [control]="qf().ENTRY_TYPE"
                       [submitted]="submitted"></app-dropdown>
+
+        <app-table-edit class="col-12"
+                        title="會計科目明細"
+                        tableKey="TLS21020Detail"
+                        [columns]="columns"
+                        [data]="service.TLS21020Data()"
+                        (selectionChange)="selectedItems = $event"
+                        [selectedItems]="selectedItems"
+                        (dataChange)="service.TLS21020Data.set($event)"
+                        [rowValidate]="validateEntireRow"
+                        [tableRequired]="true"
+                        [showReorder]="false"
+                        [insertDisabled]="!qf().ENTRY_TYPE.value?.length"
+                        [loading]="service.tableLoading"
+                        [defaultInsertData]="defaultInsertData"></app-table-edit>
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear"
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="canSave"
-                    [loading]="service.dataLoading"></app-button>
+                    [disabled]="!canSave()"
+                    [loading]="service.tableLoading"></app-button>
       </div>
     </form>
   </p-accordionTab>
 </p-accordion>
-
-
-<div class="card">
-  <app-table tableKey="tableKey"
-             [dataKey]="'id'"
-             [data]="service.TLS21020Data()"
-             [columns]="columns"
-             (edit)="onEdit($event)"
-             (detail)="onDetail($event)"
-             (rowEditInit)="onRowEditInit($event)"
-             (rowEditSave)="onRowEditSave($event)"
-             (rowEditCancel)="onRowEditCancel($event)"
-             (fieldChange)="onFieldChange($event)"
-             [columnGroup]="tableGroup"
-             [showRowEdit]="true"
-             [showDetail]="false"
-             [rowEditCanSave]="rowEditValidSignal()"
-             [totalRecords]="service.totalRecords()"
-             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-             [lazy]="true"
-             [loading]="service.dataLoading">
-  </app-table>
-</div>
