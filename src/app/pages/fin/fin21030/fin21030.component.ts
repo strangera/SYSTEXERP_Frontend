@@ -43,7 +43,7 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     VEN_BNK_No: ['', [Validators.maxLength(5)]],                          // 廠商匯款銀行代號
     VEN_BankAccountNo: ['', [Validators.maxLength(50)]],                   // 廠商銀行帳號
     VEN_AccountName: ['', [Validators.maxLength(80)]],                     // 廠商帳戶名稱
-    VEN_PayConditionDay: [null],                  // 付款期限
+    VEN_PayConditionDay: [''],                  // 付款期限
     VEN_CheckTitle: [''],                      // 票據抬頭
     VEN_Status: [''],                          // 審核狀態 (dropdown)
     ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
@@ -187,8 +187,11 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
-
-    const payload = frm.getRawValue();
+    const raw = frm.getRawValue();
+    const payload = {
+      ...raw,
+      VEN_PayConditionDay: raw.VEN_PayConditionDay ? Number(raw.VEN_PayConditionDay) : 0
+    };
     this.fin21030Service.queryFIN21030(payload).subscribe({
       next: (res) => {
         this.data = res?.Data || [];

@@ -17,6 +17,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@shared/componentkit/table2/table2.model';
 
 @Component({
   selector: 'app-tls2a050',
@@ -139,11 +140,11 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
           payNames.forEach((name, index) => {
             columns.push(
-              { field: `${index}_BOOK_PayCnt`, header: '系統筆數', visible: true, groupField: name },
-              { field: `${index}_ACT_PayCnt`, header: '實收筆數', visible: true, groupField: name },
-              { field: `${index}_BOOK_PayAmt`, header: '系統金額', visible: true, groupField: name },
-              { field: `${index}_ACT_PayAmt`, header: '實收金額', visible: true, groupField: name },
-              { field: `${index}_OVER_PayAmt`, header: '帳差 (實收-系統)', visible: true, groupField: name }
+              { field: `${index}_BOOK_PayCnt`, header: '系統筆數', visible: true, groupField: name, format: formatAmount },
+              { field: `${index}_ACT_PayCnt`, header: '實收筆數', visible: true, groupField: name, format: formatAmount },
+              { field: `${index}_BOOK_PayAmt`, header: '系統金額', visible: true, groupField: name, format: formatAmount },
+              { field: `${index}_ACT_PayAmt`, header: '實收金額', visible: true, groupField: name, format: formatAmount },
+              { field: `${index}_OVER_PayAmt`, header: '帳差 (實收-系統)', visible: true, groupField: name, format: formatAmount }
             );
             columnGroup.push({ field: name, header: `[${name}] 行動支付` });
           });

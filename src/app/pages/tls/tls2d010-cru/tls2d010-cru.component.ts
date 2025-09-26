@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { Validators, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
@@ -9,18 +8,15 @@ import { NgIf } from '@angular/common';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService, IDropdownItem, IAPS1003Request } from './../../../service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, IAPS1003Item } from './../../../service/utility/dropDownList.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
-import { forkJoin, map } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { formatDate } from '@angular/common';
@@ -36,8 +32,6 @@ import { formatDate } from '@angular/common';
     InputTextComponent,
     DropdownTableComponent,
     RadiobuttonComponent,
-    TableComponent,
-    DialogComponent,
     MenubarComponent,
     PanelModule,
     ReactiveFormsModule,
@@ -51,72 +45,56 @@ import { formatDate } from '@angular/common';
 export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   currentCreateType: 'normal' | 'counter' = 'counter';
 
-  // 共用資料
+  // 資料
   data: any[] = [];
   selectedItems: any[] = [];
-  tlt_noOptions: IDropdownItem[] = [];
-  pod_noOptions: any[] = [];
-
-  // 下拉選項
-  org_idOptions: IDropdownItem[] = [];
-  CAP_TypeOptions = getSYS1000Options('CAP_Type');
-  CAP_ItemOptions: IDropdownItem[] = [];
-  AccNoOptions: IDropdownItem[] = [];
-  OrgOptions: any[] = [];
-  GuiFlagOptions: any[] = [];
-  CapTaxTypeOptions: any[] = [];
-  cap_taxtypeOptions = [
-    { label: '免稅', value: '0' },
-    { label: '應稅', value: '1' },
-  ];
+  // 共用下拉選單
+  tlt_noOptions: IDropdownItem[] = []; // 專櫃
+  pod_noOptions: any[] = []; // 活動
+  org_idOptions: IDropdownItem[] = []; // 組織
+  CAP_TypeOptions = getSYS1000Options('CAP_Type'); // 扣款類型
+  CAP_ItemOptions: IAPS1003Item[] = [];          //原始資料 - 扣款項目
+  FilterCAP_ItemOptions: IAPS1003Item[] = [];   // 篩選後資料 - 扣款項目
+  AccNoOptions: IDropdownItem[] = []; // 會計科目
+  GuiFlagOptions = getSYS1000Options('YES_NO'); // 是否開立發票
+  cap_taxtypeOptions = getSYS1000Options('CAP_TaxType');
   // 欄位設定
   columnsCounter: EditColumn[] = [];
-  columnsNormal: EditColumn[] = [
-    { field: 'tlt_no', header: '專櫃編號/名稱', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
-    { field: 'contract_no', header: '契約編號', type: 'inputNumber', width: '12rem', disabled: () => true },
-    { field: 'contract_subno', header: '版次', type: 'inputNumber', width: '15rem', disabled: () => true },
-    { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code' },
-    { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
-    { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
-    { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
-  ];
+  columnsNormal: EditColumn[] = [];
 
   // 表單
   dataFormCounter = this.formBuilder.group({
-    tlt_no: [''],
+    tlt_no: [null as any],
     CAP_Item: [''],
     AccNo: [''],
-    org_id: [''],
+    org_id: [{ value: null, disabled: true }],
     tpy_date: [null],
     GUI_FLAG: [''],
     tpy_net: [null],
     remarks: [''],
     pod_no: [],
-    totalCash: [{ value: null as string | null, disabled: true }, [Validators.required]],
-    contract_no: [{ value: null as string | null, disabled: true }, [Validators.required]],
-    contract_subno: [{ value: null as string | null, disabled: true }, [Validators.required]],
-    tlt_contract_bdate: [{ value: null as string | null, disabled: true }, [Validators.required]],
-    tlt_contract_edate: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    totalCash: [{ value: null, disabled: true }, [Validators.required]],
+    contract_no: [{ value: null, disabled: true }],
+    contract_subno: [{ value: null, disabled: true }],
+    tlt_contract_bdate: [{ value: null, disabled: true }],
+    tlt_contract_edate: [{ value: null, disabled: true }],
   });
 
   dataFormNormal = this.formBuilder.group({
     tlt_no: [''],
     pod_no: [],
-    remarks: [],
     CAP_Type: [],
     tpy_date: [null as null | Date, [Validators.required]],
     CAP_Item: [],
     tpy_net: [],
-    cap_taxtype: [null],
+    cap_taxtype: [{ value: null, disabled: true }],
     GUI_FLAG: [],
-    AccNo: [],
+    AccNo: [{ value: null, disabled: true }],
     org_id: [],
   });
 
   constructor(
     private dropDownListService: DropDownListService,
-    private route: ActivatedRoute,
-    public sharedDropdownService: SharedDropdownService,
     private tls2d010Service: Tls2d010Service
   ) {
     super();
@@ -127,194 +105,128 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     if (rowdata) {
       this.currentCreateType = rowdata.type;
       if (this.currentCreateType === 'counter') {
-        // 日期轉型
-        if (rowdata.tpy_date) rowdata.tpy_date = new Date(rowdata.tpy_date);
-        this.dataFormCounter.patchValue(rowdata);
-        // 這裡加上
-        this.data = [rowdata];
-      } else {
-        this.dataFormNormal.patchValue(rowdata);
-        this.data = [rowdata];
+        this.initializePage('TLS2D010', this.dataFormCounter);
+        if (rowdata.tpy_date) rowdata.tpy_date = new Date(rowdata.tpy_date);// 日期轉型
+        this.dataFormCounter.patchValue(rowdata); // 之後刪掉看看，因為initializePage做過了
+        this.data = [rowdata]; // 檢查一下
+      } else if (this.currentCreateType === 'normal') {
+        this.initializePage('TLS2D010', this.dataFormNormal);
+        this.dataFormNormal.patchValue(rowdata);// 之後刪掉看看，因為initializePage做過了
+        this.data = [rowdata]; // 檢查一下
       }
     }
-    if (this.currentCreateType === 'counter') {
-      this.initializePage('TLS2D010', this.dataFormCounter);
-    } else {
-      this.initializePage('TLS2D010', this.dataFormNormal);
-    }
-
-    if (this.rowdata) {
-      this.currentCreateType = this.rowdata.type;
-    }
-
     // 載入專櫃 & 活動
     this.loadTltAndPodOptions();
-
-    // 載入 Counter 欄位設定
-    this.loadAndSetupColumnsCounter();
-    // 載入 Normal 欄位設定
-    this.loadAndSetupColumnsNormal();
+    this.loadAndSetupColumns();
+    this.dataFormCounter.get('tlt_no')?.valueChanges.subscribe((selected: any) => {
+      console.log('Selected tlt_no:', selected);
+      if (selected) {
+        this.dataFormCounter.patchValue({
+          contract_no: selected.contract_no,
+          contract_subno: selected.contract_subno,
+          tlt_contract_bdate: selected.tlt_contract_bdate,
+          tlt_contract_edate: selected.tlt_contract_edate,
+          org_id: selected.org_id,
+        });
+      }
+    });
   }
 
   // ===== 專櫃 & 活動選單 =====
   private loadTltAndPodOptions(): void {
-    this.dropDownListService.queryTLTTALENTDropDownList().subscribe((res) => {
-      this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
-        value: item.talent_id,
-        label: `${item.tlt_no}-${item.tlt_name}`,
-        No: item.tlt_no,
-        Name: item.tlt_name
-      }));
-    });
-    this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }).subscribe((res) => {
-      this.pod_noOptions = (res?.Data || []).map((item: any) => ({
-        value: item.pod_no,
-        label: `${item.pod_no}-${item.pod_desc}`
-      }));
-    });
-    this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
-      this.AccNoOptions = (res?.Data || []).map((item: any) => ({
-        value: item.No,
-        label: `${item.No}-${item.Name}`,
-        No: item.No,
-        Name: item.Name
-      }));
-    });
-    this.dropDownListService.querySYS3100_DropDownList().subscribe(
-      (res) => {
-        this.org_idOptions = (res?.Data || []).map((item: any) => ({
-          value: item.No,                // 綁定值
-          label: `${item.No}-${item.Name}`, // 顯示文字
-          No: item.No,
-          Name: item.Name
+    forkJoin({
+      tlt: this.dropDownListService.queryTLTTALENTDropDownList(),
+      pod: this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }),
+      acc: this.dropDownListService.queryGLS1005_DropDownList(),
+      org: this.dropDownListService.querySYS3100_DropDownList(),
+      capItem: this.dropDownListService.queryAPS1003DropDownList({ cap_typeList: [] })
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe(({ tlt, pod, acc, org, capItem }) => {
+        this.tlt_noOptions = tlt.Data.map((item: any) => ({
+          ...item,
+          value: item,
+          label: `${item.tlt_no}-${item.tlt_name}`,
         }));
-      },
-    );
-    this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).subscribe((res) => {
-      this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
-        value: item.No,
-        label: `${item.No}-${item.Name}`,
-        No: item.No,
-        Name: item.Name
-      }));
-    });
-  }
 
+        this.pod_noOptions = (pod?.Data || []).map((item: any) => ({
+          ...item,
+          value: item.pod_no,
+          label: `${item.pod_no}-${item.pod_desc}`
+        }));
+
+        this.AccNoOptions = (acc?.Data || []).map((item: any) => ({
+          ...item,
+          value: item.No,
+          label: `${item.No}-${item.Name}`,
+        }));
+
+        this.org_idOptions = (org?.Data || []).map((item: any) => ({
+          ...item,
+          value: item.No,
+          label: `${item.No}-${item.Name}`,
+        }));
+
+        this.CAP_ItemOptions = (capItem?.Data || []).map((item: any) => ({
+          value: item.CAP_Item,
+          label: `${item.CAP_Item}-${item.CAP_Name}`,
+          CAP_Type: item.CAP_Type,   // 扣款類型
+
+          CAP_Item: item.CAP_Item,  // 扣款項目代碼
+          CAP_Name: item.CAP_Name,    // 顯示名稱
+
+          AccNo: item.AccNo,      // 會計科目
+          GUI_FLAG: item.GUI_FLAG,  // 是否開立發票
+          CAP_TaxType: item.CAP_TaxType,  // 課稅別
+        }));
+
+        // ✅ 等所有 API 都完成後才綁欄位
+        this.loadAndSetupColumns();
+      });
+  }
   // ===== 載入 Counter 欄位動態下拉 =====
-  private loadAndSetupColumnsCounter(): void {
-
-    const capItem$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
-      map((res: any) => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
-    );
-
-    const accNo$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
-      map((res: any) => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
-    );
-
-    const orgId$ = this.dropDownListService.querySYS3100_DropDownList().pipe(
-      map((res: any) => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
-    );
-
-    const guiFlag$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
-      map(() => [
-        { label: '是', value: 'Y' },
-        { label: '否', value: 'N' },
-      ])
-    );
-
-    const capTaxType$ = this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).pipe(
-      map(() => [
-        { label: '免稅', value: '0' },
-        { label: '應稅', value: '1' },
-      ])
-    );
-
-    forkJoin([capItem$, accNo$, orgId$, guiFlag$, capTaxType$])
-      .pipe(untilDestroyed(this))
-      .subscribe(([CAP_ITEM, ACCNO, ORG, GUI, TAX]) => {
-        this.CAP_ItemOptions = CAP_ITEM ?? [];
-        this.AccNoOptions = ACCNO ?? [];
-        this.OrgOptions = ORG ?? [];
-        this.GuiFlagOptions = GUI ?? [];
-        this.CapTaxTypeOptions = TAX ?? [];
-
-        this.columnsCounter = [
-          { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
-          { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', options: this.CAP_TypeOptions, optionLabel: 'label', optionValue: 'value' },
-          { field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', options: this.CAP_ItemOptions, optionLabel: 'label', optionValue: 'value' },
-          { field: 'AccNo', header: '會計科目', type: 'dropdown', width: '10rem', options: this.AccNoOptions, optionLabel: 'label', optionValue: 'value' },
-          { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.OrgOptions, optionLabel: 'label', optionValue: 'value' },
-          { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
-          { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', options: this.CapTaxTypeOptions, optionLabel: 'label', optionValue: 'value' },
-          { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
-          { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
-        ];
-      });
-  }
-  // ===== 載入 normal 欄位動態下拉 =====
-  private loadAndSetupColumnsNormal(): void {
-    const tltNo$ = this.dropDownListService.queryTLTTALENTDropDownList().pipe(
-      map((res: any) =>
-        (res?.Data ?? []).map((x: any) => ({
-          label: `${x.tlt_no}-${x.tlt_name}`,
-          value: x.talent_id,
-          contract_no: x.contract_no,
-          contract_subno: x.contract_subno,
-        }))
-      )
-    );
-
-    const podNo$ = this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }).pipe(
-      map((res: any) => (res?.Data ?? []).map((item: any) => ({
-        value: item.pod_no,
-        label: `${item.pod_no}-${item.pod_desc}`,
-      })))
-    );
-
-    forkJoin([tltNo$, podNo$])
-      .pipe(untilDestroyed(this))
-      .subscribe(([TLT, POD]) => {
-        this.tlt_noOptions = TLT ?? [];
-        this.pod_noOptions = POD ?? [];
-
-        this.columnsNormal = [
-          {
-            field: 'tlt_no',
-            header: '專櫃編號/名稱',
-            type: 'dropdown',
-            width: '12rem',
-            options: this.tlt_noOptions,
-            optionLabel: 'label',
-            optionValue: 'value',
-          },
-          {
-            field: 'contract_no',
-            header: '契約編號',
-            type: 'inputNumber',
-            width: '12rem',
-            disabled: () => true,
-          },
-          {
-            field: 'contract_subno',
-            header: '版次',
-            type: 'inputNumber',
-            width: '12rem',
-            disabled: () => true,
-          },
-          {
-            field: 'pod_no',
-            header: '活動代碼/名稱',
-            type: 'dropdown',
-            width: '12rem',
-            options: this.pod_noOptions,
-            optionLabel: 'label',
-            optionValue: 'value',
-          },
-          // 其他欄位照舊...
-        ];
-      });
+  private loadAndSetupColumns(): void {
+    if (this.currentCreateType === 'counter') {
+      this.columnsCounter = [
+        { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
+        { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', options: this.CAP_TypeOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', options: this.CAP_ItemOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'AccNo', header: '會計科目', type: 'dropdown', width: '10rem', options: this.AccNoOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', options: this.cap_taxtypeOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
+        { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
+      ];
+    } else if (this.currentCreateType === 'normal') {
+      this.columnsNormal = [
+        { field: 'tlt_no', header: '專櫃編號/名稱', type: 'dropdown', options: this.tlt_noOptions, width: '12rem', optionLabel: 'label', optionValue: 'No' },
+        { field: 'contract_no', header: '契約編號', type: 'inputNumber', width: '12rem', disabled: () => true },
+        { field: 'contract_subno', header: '版次', type: 'inputNumber', width: '15rem', disabled: () => true },
+        { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', options: this.pod_noOptions, width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code' },
+        { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
+        { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
+        { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
+      ];
+    }
   }
 
+  onCAP_TypeChange(event: string): void {
+    console.log(this.CAP_ItemOptions);
+    console.log('CAP_Type changed:', event); // A B C ...
+    this.FilterCAP_ItemOptions = this.CAP_ItemOptions.filter(item => item.CAP_Type === event);
+    console.log('Filtered CAP_ItemOptions:', this.FilterCAP_ItemOptions);
+    this.dataFormNormal.patchValue({ CAP_Item: null }); // 清除已選擇的 CAP_Item
+  }
+
+  onCAP_ItemChange(event: string): void {
+    console.log('CAP_Item changed:', event);
+    console.log(this.CAP_ItemOptions);
+    // 要改變的欄位
+    // dataForm.....cap_taxtype
+    // dataForm.....AccNo
+    // dataForm.....GUI_FLAG
+  }
 
   // ===== 送出 =====
   onSubmit(): void {
@@ -322,7 +234,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
     if (this.currentCreateType === 'counter') {
       const counterValue = this.dataFormCounter.getRawValue();
-
+      const tltObj = counterValue.tlt_no;
       const feeList = this.data
         .filter((item) => !item._isAutoInsertCandidate)
         .map((item) => ({
@@ -340,8 +252,13 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const payload = {
         tltList: [
           {
-            tlt_no: counterValue.tlt_no,
-            talent_id: 0,
+            tlt_no: tltObj?.tlt_no || '',
+            talent_id: tltObj?.talent_id || 0,
+            contract_no: tltObj?.contract_no || '',
+            contract_subno: tltObj?.contract_subno || '',
+            tlt_contract_bdate: tltObj?.tlt_contract_bdate || '',
+            tlt_contract_edate: tltObj?.tlt_contract_edate || '',
+            org_id: tltObj?.org_id || '',
             pod_no: counterValue.pod_no,
           },
         ],
@@ -366,7 +283,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           GUI_FLAG: normalValue.GUI_FLAG,
           cap_taxtype: normalValue.cap_taxtype,
           tpy_net: Number(normalValue.tpy_net ?? 0),
-          remarks: normalValue.remarks,
         }));
 
       const payload = {
