@@ -185,24 +185,17 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 updateColumnVisibility(selectedValues: number[]) {
   const reporttype = this.queryForm.controls.reporttype.value;
 
-  // 修正欄位名稱 + 在明細表時固定顯示 PAY_NO
   const alwaysVisibleFields = [
     'building_desc',
     'floor_desc',
     'ECR_No',
-    'USR_No',
-     ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []), 
+    'TLT_NO',                                  // ← 這裡用 TLT_NO
+    ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []),
   ];
   const visibilityMap = new Set(alwaysVisibleFields);
 
-  if (selectedValues.includes(1)) {
-    visibilityMap.add('BOOK_PayAmt');
-  }
-  if (selectedValues.includes(2)) {
-    visibilityMap.add('SELF_PayAmt');
-    visibilityMap.add('SOVER_PayAmt');
-  }
-  if (selectedValues.includes(3)) {
+  if (selectedValues.includes(1)) visibilityMap.add('BOOK_PayAmt');
+  if (selectedValues.includes(3)) {            // 你目前只開放 1,3
     visibilityMap.add('ACT_PayAmt');
     visibilityMap.add('OVER_PayAmt');
   }
@@ -212,6 +205,7 @@ updateColumnVisibility(selectedValues: number[]) {
     visible: visibilityMap.has(col.field),
   }));
 }
+
 
 
   onSubmit(form: FormGroup): void {
@@ -355,11 +349,18 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       header: '收銀機號',
       visible: true,
     },
-    {
-      field: 'USR_No',
-      header: '專櫃編號/櫃位名稱',
-      visible: true,
-    },
+{
+  field: 'TLT_NO',
+  header: '專櫃編號/櫃位名稱',
+  visible: true,
+  },
+  {
+  field: 'TLT_Name',
+  header: '櫃位名稱',
+  visible: true,
+  },
+
+
     // {
     //   field: 'TLT_NO',
     //   header: '專櫃編號',
