@@ -464,13 +464,13 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       format: this.moneyFormat,
     },
         {
-      field: 'PAY_NO',
+      field: 'OVER_Desc',
       header: '溢欠說明',
       visible: true,
     },
     {
-      field: 'sumOVER_PayAmt',
-      header: '溢欠總金額',
+      field: 'Monthly_OVER_PayAmt',
+      header: '月累計溢欠',
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
