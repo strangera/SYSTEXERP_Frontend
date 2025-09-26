@@ -1,191 +1,116 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from '../../../service/basic/region-code.service';
-import { LocationService } from '../../../service/basic/location.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CPM11010Data, InsertCPM11010Request, UpdateCPM11010Request, CPM11010Service } from '../../../service/api/cpm/cpm11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
 
-//5.1.1.1 服務台位置維護作業 CRU
 @Component({
-    selector: 'app-cpm11010-cru',
-    templateUrl: './cpm11010-cru.component.html',
-    styleUrl: './cpm11010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-cpm11010-cru',
+  templateUrl: './cpm11010-cru.component.html',
+  styleUrl: './cpm11010-cru.component.scss',
+  standalone: true,
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TranslateModule
+  ]
 })
-export class CPM11010CRUComponent extends BasicCrupageComponent implements OnInit {
-  // ----------------------------------------------------------------
+export class CPM11010CRUComponent extends BasicCruPageComponent<CPM11010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    BUILDING_NO: [, [Validators.maxLength(2)]], // 館別(sys3800)
-    floor: [], // 營業樓層
-    regionCode: [], // 營業區域
-    positionNumber: [], // 服務台位置編號
-    counterName: ['', [Validators.maxLength(60)]], // 服務台位置名稱
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    building_no: [null, Validators.required],   // 館別
+    FLOOR_NO: [null, Validators.required],      // 營業樓層
+    AREA_NO: [null, Validators.required],       // 營業區域
+    Service_Id: ['系統自動產生'],    // 服務台位置編號
+    Service_Name: ['', [Validators.required, Validators.maxLength(60)]] // 服務台位置名稱
   });
-  // ----------------------------------------------------------------
-  floorOptions: any[] = [];
-  RegionCodeOptions: any[] = [];
-  positionNumberOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [
-    { value: 1, label: '1館' },
-    { value: 2, label: '2館' },
-  ];
+
+  // 下拉選單選項
+  buildingNoOptions: IDropdownItem[] = [];
+  floorNoOptions: IDropdownItem[] = [];
+  areaNoOptions: IDropdownItem[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    //
-    private floorService: FloorService,
-    private RegionService: RegionService,
-    private locationService: LocationService,
+    private cpm11010Service: CPM11010Service,
+    private dropdownApiService: DropdownApiService
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510001';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    //
-    this.RegionService.getRegionOptions().subscribe(data => {
-      this.RegionCodeOptions = data;
-    });
-    //
-    this.locationService.getLocations().subscribe(data => {
-      this.positionNumberOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    this.initializePage('CPM11010', this.dataForm);
+    this.loadOptions();
+    this.dataForm.get('Service_Id')?.disable();
+    if (this.crudstatus === CRUDStatus.Edit) {
+      // 除了 Service_Name 其他欄位皆不可編輯
+      this.dataForm.get('building_no')?.disable();
+      this.dataForm.get('FLOOR_NO')?.disable();
+      this.dataForm.get('AREA_NO')?.disable();
+    }
+  }
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
+  onSubmit(form: FormGroup): void {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      // 新增
+      if (this.crudstatus === CRUDStatus.Create) {
+        const insertRequest: InsertCPM11010Request = {
+          building_no: formValue.building_no || '',
+          FLOOR_NO: formValue.FLOOR_NO || '',
+          AREA_NO: formValue.AREA_NO || '',
+          Service_Name: formValue.Service_Name || ''
+        }
+        this.cpm11010Service.insertCPM11010(insertRequest)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            this.dataForm.reset(); // 重置表單
+          });
+      }
       // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-      // CashRegisterType: ['1', Validators.required], // 收銀機型態
-      // SalesDate: ['', Validators.required], // 銷售日期
-      // CashRegisterCode: ['', Validators.required], // 收銀機號
-      // TransactionSerialNumber: ['', Validators.required], // 交易流水號
-      // CounterNumber: ['', Validators.required], // 專櫃編號
-      // TwoPartInvoiceNumberStart: ['', Validators.required], // 二聯發票號碼(起號)
-      // TwoPartInvoiceNumberEnd: ['', Validators.required], // 二聯發票號碼(迄號)
-      // TaxableAmount: ['', Validators.required], // 應稅金額
-      // TaxFreeAmount: ['', Validators.required], // 免稅金額
+      else if (this.crudstatus === CRUDStatus.Edit) {
+        const updateRequest: UpdateCPM11010Request = {
+          ID: this.rowdata?.ID!,
+          Service_Name: formValue.Service_Name || ''
+        }
+        this.cpm11010Service.updateCPM11010(updateRequest)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('修改成功');
+            this.onCancel();  // 返回查詢頁
+          });
+      }
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/CPM1000/CPM11010']);
+  loadOptions() {
+    // 載入館別選項
+    this.dropdownApiService.querySys3800().subscribe(options => {
+      this.buildingNoOptions = options ?? [];
+    });
+    // 載入營業樓層選項
+    this.dropdownApiService.querySys3900().subscribe(options => {
+      this.floorNoOptions = options ?? [];
+    });
+    // 載入營業區域選項
+    this.dropdownApiService.querySys3A00().subscribe(options => {
+      this.areaNoOptions = options ?? [];
+    });
   }
 }

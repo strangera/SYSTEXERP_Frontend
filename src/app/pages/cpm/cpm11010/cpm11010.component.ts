@@ -1,152 +1,126 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from '../../../service/basic/region-code.service';
-import { LocationService } from '../../../service/basic/location.service';
+import { finalize } from 'rxjs';
+import { CPM11010Service, CPM11010Data } from '../../../service/api/cpm/cpm11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
 
-//5.1.1.1 服務台位置維護作業
 @Component({
-    selector: 'app-cpm11010',
-    templateUrl: './cpm11010.component.html',
-    styleUrl: './cpm11010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-cpm11010',
+  templateUrl: './cpm11010.component.html',
+  styleUrl: './cpm11010.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
-export class CPM11010Component extends BasicQpageComponent implements OnInit {
-  //
+export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    BUILDING_NO: [, [Validators.maxLength(2)]], // 館別(sys3800)
-    floor: [], // 營業樓層
-    regionCode: [], // 營業區域
-    positionNumber: [], // 服務台位置編號
-    counterName: ['', [Validators.maxLength(60)]], // 服務台位置名稱
+    building_no: [[]],    // 館別(多選)
+    FLOOR_NO: [[]],       // 營業樓層(多選)
+    AREA_NO: [[]],        // 營業區域(多選)
+    Service_Id: [[]],     // 位置編號(多選)
+    Service_Name: ['', Validators.maxLength(60)],   // 服務台位置名稱
+    ...createPaginationConfig([])
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { isdelete: false, 'floor': '1F', 'regionCode': 'A區', 'positionNumber': '11A001', 'BUILDING_NO': 1, 'counterName': '服務諮詢台' },
-    { isdelete: false, 'floor': '2F', 'regionCode': 'A區', 'positionNumber': '12A001', 'BUILDING_NO': 1, 'counterName': 'VIP室' },
-    { isdelete: true, 'floor': '3F', 'regionCode': 'A區', 'positionNumber': '12D001', 'BUILDING_NO': 2, 'counterName': '總機' },
-    { isdelete: true, 'floor': '5F', 'regionCode': 'A區', 'positionNumber': '15A001', 'BUILDING_NO': 2, 'counterName': '顧客服務中心' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'BUILDING_NO', header: '館別', visible: true },
-    { field: 'floor', header: '營業樓層', visible: true },
-    { field: 'regionCode', header: '營業區域', visible: true },
-    { field: 'positionNumber', header: '服務台位置編號', visible: true },
-    { field: 'counterName', header: '服務台位置名稱', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  floorOptions: any[] = [];
-  RegionCodeOptions: any[] = [];
-  positionNumberOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [
-    { value: 1, label: '1館' },
-    { value: 2, label: '2館' },
+
+  data: CPM11010Data[] = [];
+  selectedItems: CPM11010Data[] = [];
+  totalRecords = 0;
+
+  // 下拉選單選項
+  buildingNoOptions: IDropdownItem[] = [];
+  floorNoOptions: IDropdownItem[] = [];
+  areaNoOptions: IDropdownItem[] = [];
+  serviceIdOptions: Option[] = [];  // TODO: 等待後端提供api
+
+  columns: Column[] = [
+    { field: 'ID', header: '序號', hidden: true },
+    { field: 'building_no', header: '館別', hidden: true },
+    { field: 'building_desc', header: '館別', visible: true },
+    { field: 'FLOOR_NO', header: '營業樓層', hidden: true },
+    { field: 'FLOOR_desc', header: '營業樓層', visible: true },
+    { field: 'AREA_NO', header: '營業區域', hidden: true },
+    { field: 'AREA_desc', header: '營業區域', visible: true },
+    { field: 'Service_Id', header: '服務台位置編號', visible: true },
+    { field: 'Service_Name', header: '服務台位置名稱', visible: true },
+    { field: 'CRT_Date', header: '建立日期', hidden: true, format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員編號', hidden: true },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', hidden: true },
+    { field: 'UPD_Date', header: '更新日期', hidden: true, format: formatDate },
+    { field: 'UPD_USR_No', header: '更新人員編號', hidden: true },
+    { field: 'UPD_USR_Name', header: '更新人員名稱', hidden: true }
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private floorService: FloorService,
-    private RegionService: RegionService,
-    private locationService: LocationService,
+    private cpm11010Service: CPM11010Service,
+    private dropdownApiService: DropdownApiService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510001';
-    this.cruPage = '/CPM1000/CPM11010CRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
+    this.initializePage('CPM11010', 'cpm/cpm11010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
+  }
+
+  onSubmit(form: FormGroup) {
+    this.cpm11010Service.queryCPM11010(form.getRawValue())
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      .subscribe(response => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+      });
+  }
+
+  onDelete(selectedItems: CPM11010Data[]) {
+    this.confirmationService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const idList = selectedItems.map(item => item.ID);
+        this.cpm11010Service.deleteCPM11010({ idList })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
     });
-    //
-    this.RegionService.getRegionOptions().subscribe(data => {
-      this.RegionCodeOptions = data;
+  }
+
+  loadOptions() {
+    // 載入館別選項
+    this.dropdownApiService.querySys3800().subscribe(options => {
+      this.buildingNoOptions = options ?? [];
     });
-    //
-    this.locationService.getLocations().subscribe(data => {
-      this.positionNumberOptions = data;
+    // 載入營業樓層選項
+    this.dropdownApiService.querySys3900().subscribe(options => {
+      this.floorNoOptions = options ?? [];
     });
-    // ----------------------------------------------------------------
-  }
-
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    // 載入營業區域選項
+    this.dropdownApiService.querySys3A00().subscribe(options => {
+      this.areaNoOptions = options ?? [];
+    });
+    // 載入服務台位置編號選項
+    // TODO: 等待後端提供api
   }
 }

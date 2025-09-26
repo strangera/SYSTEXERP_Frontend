@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 
 export const cpmRoutes: Routes = [
-  // { path: 'cpm11010', loadComponent: () => import('./cpm11010/cpm11010.component').then(m => m.CPM11010Component) }, // 服務台位置維護作業
-  // { path: 'cpm11010cru', loadComponent: () => import('./cpm11010-cru/cpm11010-cru.component').then(m => m.CPM11010CRUComponent) },
+  { path: 'cpm11010', loadComponent: () => import('./cpm11010/cpm11010.component').then(m => m.CPM11010Component) }, // 服務台位置維護作業
+  { path: 'cpm11010cru', loadComponent: () => import('./cpm11010-cru/cpm11010-cru.component').then(m => m.CPM11010CRUComponent) },
   // { path: 'cpm11020', loadComponent: () => import('./cpm11020/cpm11020.component').then(m => m.CPM11020Component) }, // 客服設備資料維護作業
   // { path: 'cpm11020cru', loadComponent: () => import('./cpm11020-cru/cpm11020-cru.component').then(m => m.CPM11020CRUComponent) },
   // { path: 'cpm11030', loadComponent: () => import('./cpm11030/cpm11030.component').then(m => m.CPM11030Component) }, // 設備出借作業
