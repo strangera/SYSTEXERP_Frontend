@@ -185,14 +185,15 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   updateColumnVisibility(selectedValues: number[]) {
     const reporttype = this.queryForm.controls.reporttype.value;
 
-    const alwaysVisibleFields = [
-      'building_desc',
-      'floor_desc',
-      'ECR_No',
-      'TLT_NO',                                  // ← 這裡用 TLT_NO
-      ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []),
-    ];
-    const visibilityMap = new Set(alwaysVisibleFields);
+  const alwaysVisibleFields = [
+    'building_desc',
+    'floor_desc',
+    'ECR_No',
+    'TLT_NO',    
+    'TLT_Name',                               // ← 這裡用 TLT_NO
+    ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []),
+  ];
+  const visibilityMap = new Set(alwaysVisibleFields);
 
     if (selectedValues.includes(1)) visibilityMap.add('BOOK_PayAmt');
     if (selectedValues.includes(3)) {            // 你目前只開放 1,3
@@ -349,16 +350,16 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
       header: '收銀機號',
       visible: true,
     },
-    {
-      field: 'TLT_NO',
-      header: '專櫃編號/櫃位名稱',
-      visible: true,
-    },
-    {
-      field: 'TLT_Name',
-      header: '櫃位名稱',
-      visible: true,
-    },
+{
+  field: 'TLT_NO',
+  header: '專櫃編號',
+  visible: true,
+  },
+  {
+  field: 'TLT_Name',
+  header: '櫃位名稱',
+  visible: true,
+  },
 
 
     // {
