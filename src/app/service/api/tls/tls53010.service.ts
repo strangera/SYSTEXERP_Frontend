@@ -33,13 +33,14 @@ export interface TLS53010InsertRequest {
 // POS2004 商品資料介面
 export interface POS2004Info {
   id?: number;                  // id
-  PLU_MagNo: string;            // 商品管理編號 - 必填
-  PLU_No: string;               // 國際條碼 - 必填
-  PLU_Unit?: string;            // 單位代碼
-  PLU_BoxQty?: number;          // 包裝入數
-  PLU_Name?: string;            // 商品名稱
-  PLU_PageNum?: string;         // 棚割編號
-  PLU_LocNo?: number;           // 棚割序號
+  PLU_MagNo?: string;      // 商品管理編號
+  PLU_No?: string;         // 國際條碼
+  PLU_Unit?: string;       // 單位代碼
+  UNIT_NAME?: string;      // 單位名稱
+  PLU_BoxQty?: number;     // 包裝入數
+  PLU_Name?: string;       // 商品名稱
+  PLU_PageNum?: string;    // 棚割編號
+  PLU_LocNo?: number;      // 棚割序號
 }
 
 // Insert manual request interface for TLS53010 (手動新增品項)
@@ -51,7 +52,6 @@ export interface TLS53010InsertManualRequest {
   POS2004List: POS2004Info[];   // 商品管理編號清單 - 必填
 }
 
-// TODO: 待新增欄位 PLU_BoxQty, PLU_LocNo, PLU_PageNum, PLU_Unit
 // Data result interface for TLS53010 (盤點單資料)
 export interface TLS53010Data {
   id: number;                   // id
@@ -75,23 +75,27 @@ export interface TLS53010Data {
 
 // Detail data result interface for TLS53010 (盤點單明細資料)
 export interface TLS53010DetailData {
-  id: number;                   // id
-  LOGO_No: string;              // 品牌代碼
-  LOGO_CH_NAME: string;         // 品牌中文名稱
-  PLU_MagNo: string;            // 商品管理編號
-  PLU_No: string;               // 國際條碼
-  PLU_Name: string;             // 商品名稱
-  CAT_LNo: string;              // 大分類代碼
-  CAT_LName: string;            // 大分類名稱
-  CAT_MNo: string;              // 中分類代碼
-  CAT_MName: string;            // 中分類名稱
-  CAT_SNo: string;              // 小分類代碼
-  CAT_SName: string;            // 小分類名稱
-  PLU_Attribute: string;        // 商品型態
-  PLU_AttributeName: string;    // 商品型態名稱
-  PLU_SalePrc: string;          // 商品售價
-  HOS_No: string;               // 倉別代碼
-  HOS_NAME: string;             // 倉庫名稱
+  id: number;
+  LOGO_No: string;
+  LOGO_CH_NAME: string;
+  PLU_MagNo: string;
+  PLU_No: string;
+  PLU_Name: string;
+  CAT_LNo: string;
+  CAT_LName: string;
+  CAT_MNo: string;
+  CAT_MName: string;
+  CAT_SNo: string;
+  CAT_SName: string;
+  PLU_Attribute: string;
+  PLU_AttributeName: string;
+  PLU_SalePrc: number;      // 修正型別
+  HOS_No: string;
+  HOS_NAME: string;
+  PLU_Unit: string;         // 新增
+  PLU_BoxQty: number;       // 新增
+  PLU_PageNum: string;      // 新增
+  PLU_LocNo: number;        // 新增
 }
 
 // Update request interface for TLS53010 (更新盤點單)
@@ -109,7 +113,17 @@ export interface TLS53010UpdateRequest {
     PLU_PageNum?: string;           // 棚割編號
     PLU_LocNo?: number;             // 棚割序號
     POS2033_ID?: number;            // POS2033_ID
-  }[]; // 商品管理編號清單 - 必填
+  }[];
+}
+
+// 查詢POS2004資料表 Request
+export interface QueryTLS53010POS2004Request extends BaseQueryRequest {
+  LOGO_No: string;         // 品牌代碼 (必填)
+  PLU_MagNo?: string;      // 商品管理編號
+  PLU_Name?: string;       // 商品名稱
+  CAT_LNo?: string;        // 大分類代碼
+  CAT_MNo?: string;        // 中分類代碼
+  CAT_SNo?: string;        // 小分類代碼
 }
 
 @Injectable({
@@ -167,5 +181,10 @@ export class TLS53010Service {
         responseType: 'blob'
       }
     );
+  }
+
+  // 查詢POS2004資料表
+  queryTLS53010POS2004(data: QueryTLS53010POS2004Request): Observable<BaseQueryResponse<POS2004Info>> {
+    return this.http.post<BaseQueryResponse<POS2004Info>>(`${this.apiUrl}/queryTLS53010_POS2004`, data);
   }
 }

@@ -15,7 +15,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { POS2004Info, TLS53010Data, TLS53010DetailQueryRequest, TLS53010InsertManualRequest, TLS53010Service, TLS53010UpdateRequest } from '@service/api/tls/tls53010.service';
+import { POS2004Info, QueryTLS53010POS2004Request, TLS53010Data, TLS53010DetailQueryRequest, TLS53010InsertManualRequest, TLS53010Service, TLS53010UpdateRequest } from '@service/api/tls/tls53010.service';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
@@ -72,14 +72,11 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位' },
+    { field: 'PLU_Unit', header: '單位', format: (v, i, r) => r.UNIT_NAME },
   ]
 
   data: POS2004Info[] = [];
   selectedItems: POS2004Info[] = [];
-
-  // 欄位mapping用
-  pos2004DropDownList: Pos2004LogoItem[] = [];
 
   constructor(
     private tls53010Service: TLS53010Service,
@@ -98,10 +95,10 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
 
     if (this.crudstatus === 'Create') {
       // 新增時產生盤點單編號
-      this.generatePSTNo();
+      this.dataForm.patchValue({ PST_No: '系統自動產生' });
     }
 
-    // 如果是編輯動作 載入明細並帶入表格
+    // 編輯跟檢視時 帶回明細資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       if (this.rowdata) {
         const payload: TLS53010DetailQueryRequest = {
@@ -115,18 +112,18 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
           .subscribe(response => {
             this.data = response.Data;
           });
-        // 取得POS2004下拉選單用於mapping
-        this.dropdownApiService.queryPos2004Logo({ LOGO_No: this.rowdata.LOGO_No })
-          .pipe(untilDestroyed(this))
-          .subscribe(response => {
-            this.pos2004DropDownList = response ?? [];
-          });
       }
     }
   }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
+      // 檢核 data 至少要有一筆
+      if (this.data.length < 1) {
+        this.messageService.errorBubble('請新增至少一筆明細資料');
+        this.loading = false;
+        return;
+      }
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
@@ -134,20 +131,19 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(() => {
                 this.messageService.successBubble('新增成功');
-                this.dataForm.reset();
-                this.data = [];
-                this.selectedItems = [];
-                this.dialogSelectedItems = [];
+                this.resetForm();
               });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            this.loading = false
-            console.log('rowdata', this.rowdata);
-            console.log('明細資料', this.data);
-            console.log('TLS53010UpdateRequest', this.TLS53010UpdateRequest);
-            console.log('pos2004DropDownList', this.pos2004DropDownList);
+            this.tls53010Service.updateTLS53010(this.TLS53010UpdateRequest)
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+              .subscribe(() => {
+                this.messageService.successBubble('更新成功');
+                this.resetForm();
+                this.onCancel();
+              });
           }
           break;
       }
@@ -205,6 +201,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     });
   }
 
+  // 不可新增重複的商品管理編號
   isRowSelectable(event: POS2004Info): boolean {
     return !this.data.some((item: POS2004Info) => item.PLU_MagNo === event.PLU_MagNo);
   }
@@ -214,10 +211,10 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     this.handleSubmit(form, () => {
       if (this.canAdd()) {
         this.tls53010Service.insertTLS53010(form.getRawValue())
-          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .pipe(untilDestroyed(this))
           .subscribe(() => {
             this.messageService.successBubble('新增全品項完成');
-            this.dataForm.reset();
+            this.resetForm();
           });
       }
     });
@@ -242,7 +239,6 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   totalRecords = 0;
 
   // 分類下拉選項
-  PLU_MagNoOptions: any[] = []; // 商品管理編號/國際條碼/廠商貨號
   CAT_LNoOptions: any[] = [];   // 大分類代碼
   CAT_MNoOptions: any[] = [];   // 中分類代碼
   CAT_SNoOptions: any[] = [];   // 小分類代碼
@@ -254,19 +250,24 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位' },
+    { field: 'PLU_Unit', header: '單位', format: (v, i, r) => r.UNIT_NAME },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_PageNum', header: '棚割編號' },
     { field: 'PLU_LocNo', header: '棚割序號' },
   ];
 
   onQuery(frm: FormGroup) {
-    // TODO: 先用模擬資料
-    this.dialogData = [
-      { PLU_MagNo: '001', PLU_Name: '商品1', PLU_No: '1234567890123', PLU_Unit: '個', PLU_BoxQty: 10, PLU_PageNum: '1', PLU_LocNo: 1 },
-      { PLU_MagNo: '002', PLU_Name: '商品2', PLU_No: '1234567890124', PLU_Unit: '個', PLU_BoxQty: 20, PLU_PageNum: '1', PLU_LocNo: 1 },
-      { PLU_MagNo: '003', PLU_Name: '商品3', PLU_No: '1234567890125', PLU_Unit: '個', PLU_BoxQty: 30, PLU_PageNum: '1', PLU_LocNo: 1 },
-    ];
+    const queryRequest: QueryTLS53010POS2004Request = {
+      ...frm.getRawValue(),
+      LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
+      pageSize: 20,
+      pageIndex: 1,
+      SortBy: [],
+    };
+    this.tls53010Service.queryTLS53010POS2004(queryRequest).pipe(untilDestroyed(this)).subscribe(response => {
+      this.dialogData = response.Data;
+      this.totalRecords = response.TotalCount;
+    });
   }
 
   saveDialog() {
@@ -281,10 +282,11 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   //#endregion
 
   clearDetail() {
+    this.selectedItems = [];
+    this.dialogSelectedItems = [];
     if (this.crudstatus === CRUDStatus.Create) {
       this.data = [];
-      this.selectedItems = [];
-      this.dialogSelectedItems = [];
+      this.dialogData = [];
     }
   }
 
@@ -294,7 +296,15 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
       LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
       PST_Date: this.dataForm.get('PST_Date')?.value || '',
       PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
-      POS2004List: this.data
+      POS2004List: this.data.map(item => ({
+        PLU_MagNo: item.PLU_MagNo,
+        PLU_No: item.PLU_No,
+        PLU_Unit: item.PLU_Unit,
+        PLU_BoxQty: item.PLU_BoxQty,
+        PLU_Name: item.PLU_Name,
+        PLU_PageNum: item.PLU_PageNum,
+        PLU_LocNo: item.PLU_LocNo,
+      }))
     };
   }
 
@@ -308,21 +318,24 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     }
   }
 
-  generatePSTNo() {
-    // 產生盤點單編號
-    this.dataForm.patchValue({ PST_No: '系統自動產生' });
+  resetForm() {
+    this.dataForm.reset();
+    this.data = [];
+    this.dialogData = [];
+    this.selectedItems = [];
+    this.dialogSelectedItems = [];
   }
 
   get TLS53010UpdateRequest(): TLS53010UpdateRequest {
     return {
       POS2033M_ID: this.rowdata!.id,
-      PST_No: this.rowdata!.PST_No,
-      PST_Date: this.rowdata!.PST_Date,
-      PST_Remark: this.rowdata!.PST_Remark,
+      PST_No: this.dataForm.get('PST_No')?.value || '',
+      PST_Date: this.dataForm.get('PST_Date')?.value || '',
+      PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
       POS2004List: this.data.map(item => ({
         POS2033_ID: item.id || 0,
-        PLU_MagNo: item.PLU_MagNo,
-        PLU_No: item.PLU_No,
+        PLU_MagNo: item.PLU_MagNo || '',
+        PLU_No: item.PLU_No || '',
         PLU_Unit: item.PLU_Unit,
         PLU_BoxQty: item.PLU_BoxQty,
         PLU_Name: item.PLU_Name,
@@ -330,5 +343,5 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
         PLU_LocNo: item.PLU_LocNo,
       }))
     };
-  };
+  }
 }
