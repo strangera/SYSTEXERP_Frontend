@@ -51,7 +51,8 @@ export class FareValidationService {
     const requiredFieldsMap: { [key: string]: Array<{ field: string, label: string }> } = {
       'A': [
         { field: 'tpy_bdate', label: '起始年月' },
-        { field: 'tpy_type', label: '單位' },
+        //TODO: 需求變更，暫時不檢查單位
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_unitamt', label: '單價' },
         { field: 'tpy_qty', label: '數量' },
         { field: 'org_id', label: '組織' },
@@ -60,7 +61,8 @@ export class FareValidationService {
       'B': [
         { field: 'tpy_bdate', label: '扣款起始年月' },
         { field: 'tpy_edate', label: '扣款結束年月' },
-        { field: 'tpy_type', label: '單位' },
+        //TODO: 需求變更，暫時不檢查單位
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_unitamt', label: '單價' },
         { field: 'tpy_qty', label: '數量' },
         { field: 'gui_flag', label: '是否開立發票' },
@@ -78,7 +80,8 @@ export class FareValidationService {
       'D': [
         { field: 'tpy_bdate', label: '扣款起始年月' },
         { field: 'tpy_edate', label: '扣款結束年月' },
-        { field: 'tpy_type', label: '單位' },
+        //TODO: 需求變更，暫時不檢查單位
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_rate', label: '比率' },
         { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }
@@ -86,7 +89,8 @@ export class FareValidationService {
       'E': [
         { field: 'tpy_bdate', label: '扣款起始年月' },
         { field: 'tpy_edate', label: '扣款結束年月' },
-        { field: 'tpy_type', label: '單位' },
+        //TODO: 需求變更，暫時不檢查單位
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_rate', label: '比率' },
         { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }

@@ -14,7 +14,7 @@ export class TLS13010ValidationService {
   updateAllValidators(form: FormGroup): void {
     this.updateFieldValidators(form);
     this.updatePaymentValidators(form);
-    this.updateCreditCardValidators(form);
+    // this.updateCreditCardValidators(form);
     this.updateDepositValidators(form);
   }
 

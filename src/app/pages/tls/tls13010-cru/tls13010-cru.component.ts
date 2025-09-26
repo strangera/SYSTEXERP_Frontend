@@ -2261,10 +2261,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.validationService.updatePaymentValidators(this.dataForm);
     });
 
-    // 設定會員卡配合變更監聽
-    this.dataForm.get('vip_yn')?.valueChanges.subscribe(() => {
-      this.validationService.updateCreditCardValidators(this.dataForm);
-    });
+    // 設定信用卡配合變更監聽
+    // this.dataForm.get('vip_yn')?.valueChanges.subscribe(() => {
+    //   this.validationService.updateCreditCardValidators(this.dataForm);
+    // });
 
     // 設定日期驗證器
     this.dateValidationService.setupDateValidators(this.dataForm, this.messageService);
