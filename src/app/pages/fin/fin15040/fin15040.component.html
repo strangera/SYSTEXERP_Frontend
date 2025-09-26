@@ -15,10 +15,10 @@
             [submitted]="submitted">
           </app-calendar-range>
           <!-- 發票格式 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="PUR_VoucherType"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="PUR_VoucherType"
             [options]="invoiceFormatOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.PUR_VoucherType" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
           <!-- 申報年月 (必填) -->
           <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
             [control]="queryForm.controls.INV_YM2" [submitted]="submitted"
@@ -41,8 +41,8 @@
             [submitted]="submitted">
           </app-calendar-range>
 
-          <!-- 統一編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="統一編號" controlName="PUR_Uniform"
+          <!-- 廠商統一編號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="PUR_Uniform"
             [control]="queryForm.controls.PUR_Uniform" [submitted]="submitted">
           </app-input-text>
           <!-- 課稅別 -->
@@ -66,13 +66,13 @@
             [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
           </app-dropdown>
           <!-- 資產註記 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產註記" controlName="Asset_Notation"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產註記" controlName="AssetType"
             [options]="assetNotationOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.Asset_Notation" [submitted]="submitted">
+            [control]="queryForm.controls.AssetType" [submitted]="submitted">
           </app-dropdown>
           <!-- 傳票建立者 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票建立者" controlName="Voucher_no"
-            [control]="queryForm.controls.Voucher_no" [submitted]="submitted">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票建立者" controlName="CrtVouUsrNo"
+            [control]="queryForm.controls.CrtVouUsrNo" [submitted]="submitted">
           </app-input-text>
 
           <!-- 是否有統一編號 -->

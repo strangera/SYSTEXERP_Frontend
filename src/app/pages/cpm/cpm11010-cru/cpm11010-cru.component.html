@@ -1,73 +1,36 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="館別" controlName="building_no" [options]="buildingNoOptions" optionLabel="Name"
+            optionValue="No" [control]="dataForm.controls.building_no" [submitted]="submitted"></app-dropdown>
         </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="館別" controlName="BUILDING_NO" [options]="BUILDING_NO_Options"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.BUILDING_NO"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="營業樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.floor" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="營業區域" controlName="regionCode" [options]="RegionCodeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.regionCode"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="位置編號" controlName="positionNumber" [options]="positionNumberOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.positionNumber"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="服務台位置名稱" controlName="counterName" [control]="dataForm.controls.counterName"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <!---->
-            <!-- <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <p>名稱 {{ i + 1 }}</p>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-6 md:col-4 lg:col-2">
-                            <app-dropdown label="系統別初始" controlName="CashRegisterType" [options]="CashRegisterTypeItems" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'CashRegisterType')" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                    </div>
-                    <hr/>
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-            </div> -->
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="營業樓層" controlName="FLOOR_NO" [options]="floorNoOptions" optionLabel="Name"
+            optionValue="No" [control]="dataForm.controls.FLOOR_NO" [submitted]="submitted"></app-dropdown>
         </div>
-    </p-panel>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="營業區域" controlName="AREA_NO" [options]="areaNoOptions" optionLabel="Name" optionValue="No"
+            [control]="dataForm.controls.AREA_NO" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="服務台位置編號" controlName="Service_Id" [control]="dataForm.controls.Service_Id"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="服務台位置名稱" controlName="Service_Name" [control]="dataForm.controls.Service_Name"
+            [submitted]="submitted"></app-input-text>
+        </div>
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>

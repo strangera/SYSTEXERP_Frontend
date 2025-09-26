@@ -5,27 +5,28 @@ import { environment } from '../../../../environments/environment';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface FIN15040QueryRequest extends BaseQueryRequest {
-  MID?: number;                      // 商場編號 (南紡固定帶0)
-  STO_No?: string;                   // 分店編號
-  TXN_Date_S?: string;               // 發票日期起
-  TXN_Date_E?: string;               // 發票日期訖
-  PUR_VoucherType?: string;          // 發票格式
-  GUI_Track?: string;                // 字軌
-  INV_GUINumber_S?: string;          // 發票號碼起
-  INV_GUINumber_E?: string;          // 發票號碼訖
-  INV_YM1_S?: string;                // 資料所屬年月起 yyyyMM
-  INV_YM1_E?: string;                // 資料所屬年月訖 yyyyMM
-  INV_YM2?: string;                  // 申報年月 yyyyMM
-  PUR_Uniform?: string;              // 廠商統一編號
-  PUR_TaxType?: string;              // 課稅別 1:應稅 2:零稅率 3:免稅 D:作廢及空白未用
-  Source_Doc_No_S?: string;          // 憑證單號起
-  Source_Doc_No_E?: string;          // 憑證單號訖
-  Voucher_No_S?: string;             // 傳票號碼起
-  Voucher_No_E?: string;             // 傳票號碼訖
-  SAL_Type?: string;                 // 系統別
-  Voucher_no?: string;               // 傳票傳票建立者
-  Asset_Notation?: string;           // 資產註記 0:固定資產 1:土地
-  HasUniform?: boolean;              // 是否有統一編號
+  MID?: number;                // 商場編號
+  STO_No?: string;             // 分店編號
+  TXN_Date_S?: string;         // 發票日期起
+  TXN_Date_E?: string;         // 發票日期訖
+  PUR_VoucherType?: string[];  // 發票格式
+  GUI_Track?: string;          // 字軌
+  INV_GUINumber_S?: string;    // 發票號碼起
+  INV_GUINumber_E?: string;    // 發票號碼訖
+  INV_YM1_S?: string;          // 資料所屬年月起 yyyyMM
+  INV_YM1_E?: string;          // 資料所屬年月訖 yyyyMM
+  INV_YM2?: string;            // 申報年月 yyyyMM
+  PUR_Uniform?: string;        // 廠商統一編號
+  PUR_TaxType?: string;        // 課稅別
+  Source_Doc_No_S?: string;    // 憑證單號起
+  Source_Doc_No_E?: string;    // 憑證單號訖
+  Voucher_No_S?: string;       // 傳票號碼起
+  Voucher_No_E?: string;       // 傳票號碼訖
+  SAL_Type?: string;           // 系統別
+  CrtVouUsrNo?: string;        // 傳票建立者
+  AssetType?: string;          // 資產註記
+  HasUniform?: boolean;        // 是否有統一編號
+  PUR_DiscNo?: string;         // 折扣代號
 }
 
 export interface FIN15040PrintRequest extends FIN15040QueryRequest {
@@ -47,6 +48,8 @@ export interface FIN15040Data {
   PLU_TaxType: string;      // 課稅別 0=免稅, 1=應稅
   Voucher_No: string;       // 傳票編號
   SAL_Type: string;         // 系統別
+  Source_Doc_No: string;    // 憑證單號
+  AssetType: string;        // 資產註記
 }
 
 @Injectable({
