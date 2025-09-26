@@ -104,6 +104,8 @@ export class FIN52070Component extends BasicQueryPageComponent<GLS1005> implemen
       const body = {
          ...frm.value,
       }
+
+      console.log('科目三碼代號 body', body);
             
       this.fin52070Service.queryFIN52070(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
