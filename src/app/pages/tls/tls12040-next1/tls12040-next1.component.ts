@@ -216,37 +216,19 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (realApplyNo) {
       this.currentApplyNo = realApplyNo;
       console.log('設定 applyNo:', this.currentApplyNo);
-      this.loadContractInfo();
-      this.loadFareDataWithPriority();
-      return;
     } else if (currentState.applyNo) {
       this.currentApplyNo = currentState.applyNo;
-      this.loadContractInfo();
-      this.loadFareDataWithPriority();
-      return;
+    } else {
+      // 新增模式下 applyNo 為空
+      this.currentApplyNo = '';
+      console.log('新增模式，applyNo 為空');
     }
 
-    // 🆕 新增：根據 CRUD 狀態處理
-    if (this.isCreateMode) {
-      console.log('🆕 新增模式：載入合約資訊但不載入扣款資料');
-      // 新增模式下，只載入合約資訊，扣款資料初始化為空
-      this.loadContractInfo();
-      this.initializeEmptyData();
-      return;
-    }
+    // 載入合約資訊
+    this.loadContractInfo();
 
-    // 編輯/檢視模式下才需要 applyNo
-    if (retryCount < 2) {
-      console.warn('編輯/檢視模式但沒有 applyNo，等待後重試');
-      setTimeout(() => {
-        this.loadWorkflowDataWithRetry(retryCount + 1);
-      }, 300);
-      return;
-    }
-
-    // 最後手段：導航回列表頁
-    console.error('編輯/檢視模式無法取得有效的 applyNo，導航回列表頁');
-    this.router.navigate(['account/tls/tls12040']);
+    // 載入扣款資料（不管有沒有 apply_no 都要呼叫 API）
+    this.loadFareDataFromAPI();
   }
 
   private loadFareDataWithPriority(): void {
@@ -463,26 +445,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('從 API 載入扣款資料，apply_no:', this.currentApplyNo);
     console.log('當前模式:', this.crudstatus);
 
-    // 🆕 新增模式處理
-    if (this.isCreateMode) {
-      console.log('新增模式：直接初始化空扣款資料');
-      this.initializeEmptyData();
-      return;
-    }
-
-    // 編輯/檢視模式需要 apply_no
-    if (!this.currentApplyNo) {
-      console.error('編輯/檢視模式但申請編號為空，無法載入資料');
-      this.messageService.warnBubble('申請編號無效，無法載入扣款資料');
-      this.initializeEmptyData();
-      return;
-    }
-
     this.loading = true;
     this.messageService.blockUi();
 
     const queryParams = {
-      apply_no: this.currentApplyNo,
+      apply_no: this.currentApplyNo || '', // 新增模式時為空字串
       showAll: true
     };
 
@@ -538,16 +505,34 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     capTypes.forEach(capType => {
       if (faresByType[capType] && Array.isArray(faresByType[capType])) {
-        this.originalFareData[capType] = faresByType[capType].map((item: any) => ({
-          ...item,
-          id: item.id || `${capType}_${item.cap_item || Date.now()}`,
-          is_selected: Boolean(item.is_selected), // 確保是布林值
-          cap_type: capType,
-          // 保留原始狀態標記
-          _status: item._status || 'original',
-          _originalData: { ...item },
-          _originalSelected: Boolean(item.is_selected)
-        }));
+        this.originalFareData[capType] = faresByType[capType].map((item: any) => {
+          // 根據模式決定初始狀態
+          let initialStatus: string | undefined = undefined;
+          let isSelected = false;
+
+          if (this.isCreateMode) {
+            // 新增模式：所有項目都是未選擇狀態
+            isSelected = false;
+          } else {
+            // 編輯/檢視模式：保持 API 回傳的選擇狀態
+            isSelected = Boolean(item.is_selected);
+
+            // 如果是合約既有項目且已選擇，設定為 original 狀態
+            if (isSelected && item.data_source === 'CONTRACT_EXISTING') {
+              initialStatus = 'original';
+            }
+          }
+
+          return {
+            ...item,
+            id: item.id || `${capType}_${item.cap_item || Date.now()}`,
+            is_selected: isSelected,
+            cap_type: capType,
+            _status: initialStatus,
+            _originalData: { ...item },
+            _originalSelected: Boolean(item.is_selected) // 保留 API 原始的選擇狀態
+          };
+        });
 
         console.log(`${capType} 類型載入 ${this.originalFareData[capType].length} 筆資料`);
       } else {
@@ -558,6 +543,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 處理完成後執行過濾
     this.filterData();
   }
+
+
 
   // 初始化空資料
   private initializeEmptyData(): void {
@@ -684,11 +671,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.saveFareDataToWorkflow();
 
       // 驗證是否有選中的項目
-      const selectedCount = this.getTotalSelectedCount();
-      if (selectedCount === 0) {
-        this.messageService.warnBubble('請至少選擇一個扣款項目');
-        return;
-      }
+      // const selectedCount = this.getTotalSelectedCount();
+      // if (selectedCount === 0) {
+      //   this.messageService.warnBubble('請至少選擇一個扣款項目');
+      //   return;
+      // }
 
       const navigationExtras: NavigationExtras = {
         state: {
@@ -698,7 +685,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       };
 
       this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
-      console.log(`✅ 已選擇 ${selectedCount} 個扣款項目，前往下一步`);
 
     } catch (error) {
       console.error('❌ 前往下一步時發生錯誤:', error);
@@ -744,15 +730,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (confirm('確定要重新載入資料嗎？未儲存的變更將會遺失。')) {
       console.log('重新載入資料，當前模式:', this.crudstatus);
 
-      // 🆕 根據模式決定載入方式
-      if (this.isCreateMode) {
-        console.log('新增模式：重新載入預設扣款項目');
-        // 新增模式下，應該載入預設扣款項目範本
-        this.loadDefaultFareItems();
-      } else {
-        // 編輯/檢視模式，載入該申請的扣款資料
-        this.loadFareDataFromAPI();
-      }
+      // 直接重新呼叫 API 載入
+      this.loadFareDataFromAPI();
 
       this.messageService.infoBubble('已重新載入資料');
     }
@@ -1262,8 +1241,14 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // A類型金額計算 - 任何相關欄位變更都觸發
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
+      // 🔥 關鍵：確保預設值存在
+      if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
+        rowData.tpy_qty = 1;
+        console.log('A類型計算：自動設定數量預設值為 1');
+      }
+
       const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
-      const quantity = parseFloat(rowData.tpy_qty) || 0;
+      const quantity = parseFloat(rowData.tpy_qty) || 1; // 確保數量至少為 1
 
       if (unitPrice > 0 && quantity > 0) {
         rowData.tpy_amount = unitPrice * quantity;
@@ -1282,7 +1267,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // B類型計算優化
   private handleTypeBCalculation(fieldName: string, newValue: any, rowData: any): void {
-
     if (fieldName === 'tpy_type' && newValue === '01') {
       const totalSpace = this.getTotalLocationSpace();
       if (totalSpace > 0) {
@@ -1291,8 +1275,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
+      // 🔥 同樣確保預設值
+      if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
+        rowData.tpy_qty = 1;
+      }
+
       const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
-      const quantity = parseFloat(rowData.tpy_qty) || 0;
+      const quantity = parseFloat(rowData.tpy_qty) || 1;
 
       if (unitPrice > 0 && quantity > 0) {
         rowData.tpy_amount = unitPrice * quantity;
