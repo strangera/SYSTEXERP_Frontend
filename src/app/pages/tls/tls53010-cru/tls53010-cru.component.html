@@ -32,11 +32,13 @@
       </div>
 
       <!-- 明細table -->
-      <app-table-edit class="col-12" tableKey="TLS53010Detail" [columns]="editColumns" [data]="data"
-        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
-        [disabled]="isFormReadable" (insert)="dialogVisible = true" [showInsert]="isFormCreateable || isFormEditable"
-        [canInsert]="false" [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true"
-        (dataChange)="data = $event" />
+      <div class="col-12">
+        <app-table-edit tableKey="TLS53010Detail" [columns]="editColumns" [data]="data"
+          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
+          [disabled]="isFormReadable" (insert)="dialogVisible = true" [showInsert]="isFormCreateable || isFormEditable"
+          [canInsert]="false" [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true"
+          (dataChange)="data = $event" />
+      </div>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="clearDetail()"></app-button>
@@ -47,13 +49,12 @@
 </div>
 
 <!-- 商品明細選擇dialog -->
-<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+<app-dialog header="選擇商品明細" [visible]="dialogVisible" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="dialogSelectedItems.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-dropdown class="col-12" label="商品管理編號/國際條碼/廠商貨號" controlName="PLU_MagNo"
-        [control]="dialogQueryForm.controls.PLU_MagNo" [options]="PLU_MagNoOptions" optionLabel="label"
-        optionValue="No" />
+      <app-input-text class="col-12" label="商品管理編號" controlName="PLU_MagNo"
+        [control]="dialogQueryForm.controls.PLU_MagNo" />
       <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
       <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
@@ -68,9 +69,7 @@
       <app-button btnType="query" [loading]="dialogLoading"></app-button>
     </div>
   </form>
-
   <hr />
-
   <app-table tableKey="TLS53010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="dialogSelectedItems" [showCaption]="false"
     (selectionChange)="dialogSelectedItems = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
