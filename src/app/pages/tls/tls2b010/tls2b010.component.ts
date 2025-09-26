@@ -189,7 +189,8 @@ updateColumnVisibility(selectedValues: number[]) {
     'building_desc',
     'floor_desc',
     'ECR_No',
-    'TLT_NO',                                  // ← 這裡用 TLT_NO
+    'TLT_NO',    
+    'TLT_Name',                               // ← 這裡用 TLT_NO
     ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []),
   ];
   const visibilityMap = new Set(alwaysVisibleFields);
@@ -351,7 +352,7 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
     },
 {
   field: 'TLT_NO',
-  header: '專櫃編號/櫃位名稱',
+  header: '專櫃編號',
   visible: true,
   },
   {
