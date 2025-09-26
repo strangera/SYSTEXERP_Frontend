@@ -31,62 +31,63 @@ export class TLS23080CRUComponent extends BasicCruPageComponent<any> {
 
   // Table2
   readonly tableKey = 'TLS23080CRU';
-  readonly columns = [
-    { field: 'ECR_No',  header: '收銀機號', visible: true },
-    { field: 'tlt_no',  header: '專櫃代號', visible: true },
-    { field: 'tlt_name',header: '專櫃名稱', visible: true, style: 'text-left' },
+   readonly columns = [
+  { field: 'ECR_No',   header: '收銀機號', visible: true },
+  { field: 'tlt_no',   header: '專櫃代號', visible: true },
+  { field: 'tlt_name', header: '專櫃名稱', visible: true, style: 'text-left' },
 
-    // 現金
-    { field: 'TXN_PayAmt10', header: '現金', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  // 現金
+  { field: 'ACT_PayAmt10', header: '現金', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
 
-    // 聯信
-    { field: 'UnionGeneral', header: '聯信(一般)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'UnionAE',      header: '聯信(AE)',   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'UnionDiner',   header: '聯信(Diners)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  // 聯信（41/42/12）
+  { field: 'UnionGeneral', header: '聯信(一般)',   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'UnionAE',      header: '聯信(AE)',     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'UnionDiner',   header: '聯信(Diners)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
 
-    // 中信
-    { field: 'CTBCGeneral', header: '中信(一般)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'CTBCAE',      header: '中信(AE)',   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'CTBCDiner',   header: '中信(Diners)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  // 中信（43/44/14）
+  { field: 'CTBCGeneral', header: '中信(一般)',   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'CTBCAE',      header: '中信(AE)',     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'CTBCDiner',   header: '中信(Diners)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
 
-    // 中信-停車場
-    { field: 'CTBCParkingGeneral', header: '中信-停車(一般)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'CTBCParkingAE',      header: '中信-停車(AE)',   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'CTBCParkingDiner',   header: '中信-停車(Diners)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  // 中信-停車場（81）
+  { field: 'CTBCParkingGeneral', header: '中信-停車(一般)',   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'CTBCParkingAE',      header: '中信-停車(AE)',     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'CTBCParkingDiner',   header: '中信-停車(Diners)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
 
-    // 其它支付（照你提供的欄位）
-    { field: 'TXN_PayAmt52', header: '一卡通', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt82', header: '一卡通-停車場', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt20', header: '禮券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt62', header: '商品提貨單', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt77', header: '感熱紙抵用券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt71', header: '商品抵用券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt74', header: '活動券(自營)', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt75', header: '折價券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt76', header: '現抵', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt24', header: '禮券餘代卡', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt25', header: '提貨單餘代卡', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt07', header: '會員折抵', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt55', header: 'LINE Pay', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt78', header: 'APP抵用券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt79', header: 'APP提貨單', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt21', header: 'APP禮券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt53', header: '悠遊卡', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt57', header: '台灣Pay', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt58', header: '南紡錢包', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt59', header: '即享券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt60', header: '喜客券', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-    { field: 'TXN_PayAmt23', header: '外來禮券-高夢', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  // 其它支付（與後端欄位一致）
+  { field: 'ACT_PayAmt52', header: '一卡通',                     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt82', header: '一卡通-停車場',              style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt20', header: '禮券',                       style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt62', header: '商品提貨單',                 style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt77', header: '感熱紙抵用券',               style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt71', header: '商品抵用券',                 style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt30', header: '貴賓提貨單(應收帳款)',       style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt73', header: '外來禮券(抵用券)',           style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt72', header: '外來提貨單(抵用券)',         style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt74', header: '活動券(自營)',               style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt75', header: '折價券',                     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt76', header: '現抵',                       style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt24', header: '禮券餘代卡',                 style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt25', header: '提貨單餘代卡',               style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt07', header: '會員折抵',                   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt55', header: 'LINE Pay',                   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt83', header: 'LINE Pay-停車場',            style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt78', header: 'APP抵用券',                  style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt79', header: 'APP提貨單',                  style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt21', header: 'APP禮券',                    style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt53', header: '悠遊卡',                     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt56', header: '一卡通錢包 iPASS MONEY',     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt57', header: '台灣Pay',                    style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt58', header: '南紡錢包',                   style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt59', header: '即享券',                     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt60', header: '喜客券',                     style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt22', header: '外來提貨單-高夢',            style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+  { field: 'ACT_PayAmt23', header: '外來禮券-高夢',              style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
 
-    // 總金額
-    { field: 'TXN_TotPayAmt', header: '總金額', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
-  ];
+  // 總金額
+  { field: 'Tot_ACT_PayAmt', header: '總金額', style: 'text-right', isTotal: true, format: (v:any)=>this.money(v) },
+];
+
 
   constructor(
     private tls23080Service: TLS23080Service,
