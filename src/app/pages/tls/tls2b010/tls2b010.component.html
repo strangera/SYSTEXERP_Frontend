@@ -154,19 +154,26 @@
        (lazyLoadData)="handleLazyLoad($event, queryForm)"
     ></app-tls2b010table>
   </div>
-  <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
-    <app-table
-      [columns]="simplecolumns"
-      [data]="simpleData"
+<div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
+  <app-table
+    [columns]="simplecolumns"
+    [data]="simpleData"
+    tableKey="TLS2B010simple"
+    dataKey="ID"
+    [lazy]="true"
+    [loading]="loading"
+    [showDelete]="false"
+    [showCheckBox]="false"
+    [showManage]="false"
 
-      tableKey="TLS2B010simple"
-      dataKey="ID"
-        [lazy]="true"
-      [loading]="loading"
-            [showDelete]="false"
-      [showCheckBox]="false"
-     [showManage]="false"
 
-    ></app-table>
-  </div>
+    [totalRecords]="totalRecords"
+
+   
+    (lazyLoadData)="handleLazyLoad($event, queryForm)"
+
+
+    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }, { field: 'ECR_No', order: 1 }]"
+  ></app-table>
+</div>
 </div>
