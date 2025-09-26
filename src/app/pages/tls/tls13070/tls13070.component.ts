@@ -18,6 +18,7 @@ import { Tls13070QueryRequest, Tls13070Response, Tls13070Service } from '@servic
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Tls13070TableComponent } from './tls13070-table/tls13070-table.component';
+import { data } from './tls13070-table/tls13070-table.model';
 
 @Component({
   selector: 'app-tls13070',
@@ -55,7 +56,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
     contact_USR_No_List: [null], // 談判者
     org_id_List: [null], // 組織
     tlt_openflag_List: [null], // 營運狀態
-    comm_comp_type_List: [null], // 抽成額計算方式
+    comm_comp_type_List: [['2']], // 抽成額計算方式
     feedback_date_Start: [null], // 回函日期(起)
     feedback_date_End: [null], // 回函日期(迄)
     due_date_Start: [null], // 回函期限(起)
@@ -71,7 +72,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
     tlt_contract_bdate_End: [null], // 營運起始日(迄)
     tlt_contract_edate_Start: [null], // 營運截止日(起)
     tlt_contract_edate_End: [null], // 營運截止日(迄)
-    tlt_kind_List: [null], // 櫃別
+    tlt_kind_List: [['1']], // 櫃別
     deco_type_List: [null], // 裝櫃方式
     tlt_term_type_List: [null], // 抽成別
     money_type_List: [null], // 結帳方式
@@ -105,7 +106,8 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   rece_ynOptions = getSYS1000Options('YES_NO');
   pos_ynOptions = getSYS1000Options('YES_NO');
   cash_ynOptions = getSYS1000Options('YES_NO');
-  data: Tls13070Response[] = [];
+  data: Tls13070Response[] = data;
+
   constructor(
     private readonly dropdown: DropdownApiService,
     public readonly tls13070Service: Tls13070Service,

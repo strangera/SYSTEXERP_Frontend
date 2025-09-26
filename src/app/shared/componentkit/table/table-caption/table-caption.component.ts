@@ -125,6 +125,11 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
       }, 300);
     }
   }
+  // 全收合的邏輯
+  toggleExpandCollapse() {
+    Object.keys(this.expandedRows).forEach(key => delete this.expandedRows[key]);
+  }
+
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
     this.totalPages = Math.ceil(this.totalRecords / this.rows);

@@ -1,13 +1,13 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
 
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
+
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="傳票總類" controlName="subpoenaType" [options]="subpoenaTypeOptions"
@@ -27,8 +27,8 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="結帳單號" controlName="serialnumber"
-              [control]="queryForm.controls.serialnumber" [submitted]="submitted"></app-input-number>
+            <app-input-text label="結帳單號" controlName="serialnumber" [control]="queryForm.controls.serialnumber"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
@@ -44,6 +44,6 @@
 <div class="card">
   <app-table tableKey="TLS2C040" [data]="data" [columns]="columns" dataKey="UID"
     [multiSortMeta]="[{ field: 'UID', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="true" [showDelete]="true" [showCheckBox]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"></app-table>
+    [showManage]="false" [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>

@@ -52,11 +52,11 @@ import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-t
     MultiSelectComponent,
     RadiobuttonComponent,
     ButtonComponent,
-    // TableComponent,
+    TableComponent,
     TableModule, // ✅ PrimeNG 原生 p-table 用於簡表
     ButtonModule, // ✅ row expansion toggle 按鈕
     TranslateModule,
-    ReportTableGroupComponent,
+    
     DatePipe,
     NgIf,
    tls2b010tableComponent,
@@ -90,7 +90,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   floorOptions: any[] = [];
   reimbursementOptions: any[] = [
     { value: 1, label: '系統帳', disabled: true },
-    { value: 2, label: '自我報帳' },
+
     { value: 3, label: '實收帳' },
   ];
   reporttypeOptions: any[] = [
@@ -317,7 +317,13 @@ updateColumnVisibility(selectedValues: number[]) {
       });
      
   }
-
+handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: FormGroup) {
+  form.patchValue(
+    { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: e.SortBy },
+    { emitEvent: false }
+  );
+  this.onSubmit(form); // 集中在這裡打一次 API
+}
 
 
   get formattedTXNDate(): string {
@@ -351,7 +357,7 @@ updateColumnVisibility(selectedValues: number[]) {
     },
     {
       field: 'USR_No',
-      header: '收銀員編號/姓名',
+      header: '專櫃編號/櫃位名稱',
       visible: true,
     },
     // {
@@ -371,21 +377,21 @@ updateColumnVisibility(selectedValues: number[]) {
       style: 'text-right',
       format: this.moneyFormat,
     },
-    {
-      field: 'SELF_PayAmt',
-      header: '自我報帳',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-   {
-  field: 'SOVER_PayAmt',
-  header: '溢欠差異(自我報帳 - 系統帳)',
-  visible: false,
-  style: 'text-right',
-  // 只要是 0（數字或字串）都輸出字串 "0"，其他交給 moneyFormat
-  format: (v: any) => (v === 0 || v === '0') ? '0' : this.moneyFormat(Number(v)),
-},
+//     {
+//       field: 'SELF_PayAmt',
+//       header: '自我報帳',
+//       visible: true,
+//       style: 'text-right',
+//       format: this.moneyFormat,
+//     },
+//    {
+//   field: 'SOVER_PayAmt',
+//   header: '溢欠差異(自我報帳 - 系統帳)',
+//   visible: false,
+//   style: 'text-right',
+//   // 只要是 0（數字或字串）都輸出字串 "0"，其他交給 moneyFormat
+//   format: (v: any) => (v === 0 || v === '0') ? '0' : this.moneyFormat(Number(v)),
+// },
     {
       field: 'ACT_PayAmt',
       header: '實收帳',
@@ -401,8 +407,10 @@ updateColumnVisibility(selectedValues: number[]) {
       format: this.moneyFormat,
     },
   ];
+
+  //館別、樓層、收銀機號、專櫃編號、櫃位名稱、溢欠金額、溢欠說明、月累計溢欠、備註
   simplecolumns: any[] = [
-    {
+     {
       field: 'TXN_Date',
       header: '銷售日期',
       visible: true,
@@ -415,21 +423,23 @@ updateColumnVisibility(selectedValues: number[]) {
           })
           : '',
     },
+    {
+      field: 'building_desc',
+      header: '館別',
+      visible: true,
+    },
+    {
+      field: 'floor_desc',
+      header: '樓層',
+      visible: true,
+    },
+   
     // {
     //   field: 'tlt_floor',
     //   header: '樓層',
     //   visible: true,
     // },
-    {
-      field: 'USR_No',
-      header: '收銀員',
-      visible: true,
-    },
-    {
-      field: 'USR_Name',
-      header: '收銀員名稱',
-      visible: true,
-    },
+
     {
       field: 'ECR_No',
       header: '收銀機號',
@@ -446,25 +456,27 @@ updateColumnVisibility(selectedValues: number[]) {
       header: '櫃位名稱',
       visible: true,
     },
-    {
-      field: 'sumOVER_PayAmt',
-      header: '溢欠總金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'PAY_NO',
-      header: '溢欠說明',
-      visible: true,
-    },
-    {
+     {
       field: 'OVER_PayAmt',
       header: '溢欠金額',
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
     },
+        {
+      field: 'OVER_Desc',
+      header: '溢欠說明',
+      visible: true,
+    },
+    {
+      field: 'Monthly_OVER_PayAmt',
+      header: '月累計溢欠',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+
+   
 
     {
       field: 'Remark',

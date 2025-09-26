@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
-import { ColumnGroup } from './tls13070-table.model';
 import { TableReportUtilityService } from './tls13070-table.service';
 import { ImageModule } from 'primeng/image';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -14,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 @Component({
   selector: 'app-tls13070-table',
@@ -32,15 +32,18 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   @Input() loading = false;
   @Input() apiUrl: string | undefined = undefined;
   tableKey = 'TLS13070Table';                     // 用來儲存 table 狀態的 key
-  // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
 
   private = true;            // 用來判斷是否為第一次載入
   virtualData: any = [];
   isLoading = false;
+  aps1003_A = this.dropdown.queryAps1003({ cap_typeList: ['A'] });
+  aps1003_B = this.dropdown.queryAps1003({ cap_typeList: ['B'] });
+  aps1003_C = this.dropdown.queryAps1003({ cap_typeList: ['C'] });
+  aps1003_D = this.dropdown.queryAps1003({ cap_typeList: ['D'] });
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
@@ -68,15 +71,6 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
 
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;
-  }
-  // 分組欄位對齊
-  getGroupAlignClass(groupField: string): string {
-    const align = this.columnGroup?.find(g => g.field === groupField)?.align;
-    return align ? 'text-' + align : 'text-center';
-  }
-  // 分組標題
-  getGroupHeader(groupField: string): string {
-    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
   }
   onScroll(event: any) {
     if (this.isLoading || this.data.length >= this.totalRecords || this.data.length < 30) {

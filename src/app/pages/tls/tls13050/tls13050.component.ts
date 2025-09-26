@@ -67,8 +67,8 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount },
     { field: 'commissionRate', header: '抽成率', visible: true },
     { field: 'underLimitCommission', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount },
-    { field: 'completionRate', header: '年度包底營業額完成率', visible: true},
-    { field: 'check_day', header: '月結天數', visible: true},
+    { field: 'completionRate', header: '年度包底營業額完成率', visible: true },
+    { field: 'check_day', header: '月結天數', visible: true },
   ];
   buildingNoOptions: IDropdownItem[] = [];
 
@@ -111,47 +111,36 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
           value: item.No
         }));
       });
-    const startCtrl = this.queryForm.get('check_day_start');
-    const endCtrl = this.queryForm.get('check_day_end');
-
-    startCtrl?.disable();
-
-    // 當「迄」有值時，才開放「起」
-    endCtrl?.valueChanges.subscribe(val => {
-      if (val) {
-        startCtrl?.enable();
-      } else {
-        startCtrl?.setValue(null, { emitEvent: false });
-        startCtrl?.disable();
-      }
-    });
-
   }
-
   onSubmit(form: any): void {
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
 
-      const formatYYYYMM = (dateStr: string): string => {
-        if (!dateStr) return '';
-        if (/^\d{6}$/.test(dateStr)) return dateStr; // 已經是 YYYYMM
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return '';
-        const year = date.getFullYear();
-        const month = ('0' + (date.getMonth() + 1)).slice(-2);
-        return `${year}${month}`;
+      // 轉 yyyy-MM-dd
+      const formatDate = (date: any): string => {
+        if (!date) return '';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+        const year = d.getFullYear();
+        const month = ('0' + (d.getMonth() + 1)).slice(-2);
+        const day = ('0' + d.getDate()).slice(-2);
+        return `${year}-${month}-${day}`;
       };
 
-
       const body = {
+        PageSize: formValue.PageSize ?? 0,
+        PageIndex: formValue.PageIndex ?? 0,
+        OrderBy: formValue.OrderBy ?? '',
+        Offset: formValue.Offset ?? 0,
+        SortBy: formValue.SortBy ?? [{ field: 'apply_no', order: 1 }],
+
         tlt_floorList: formValue.tlt_floorList || [],
-        date_start: formatYYYYMM(formValue.date_start),
-        date_end: formatYYYYMM(formValue.date_end),
-        check_day_start: formValue.check_day_start ?? 0,
-        check_day_end: formValue.check_day_end ?? 0,
-        SortBy: [
-          { field: 'apply_no', order: 1 }
-        ]
+        tlt_bdate_start: formatDate(formValue.tlt_bdate_start),
+        tlt_bdate_end: formatDate(formValue.tlt_bdate_end),
+        tlt_edate_start: formatDate(formValue.tlt_edate_start),
+        tlt_edate_end: formatDate(formValue.tlt_edate_end),
+        check_day_start: formValue.check_day_start ?? null,
+        check_day_end: formValue.check_day_end ?? null,
       };
 
       console.log('送出的查詢 body', body);
@@ -164,16 +153,9 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
           this.loading = false;
           this.messageService.unblockUi();
         },
-        error: (err) => {
-          console.error('查詢失敗', err);
-          this.loading = false;
-          this.messageService.errorBubble('查詢失敗，請聯絡系統管理員');
-        },
       });
     });
   }
-
-
 
 
 }

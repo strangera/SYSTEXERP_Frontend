@@ -349,3 +349,23 @@ export interface Pos2013Item extends IDropdownItem {
   VEN_EngName: string;
   VEN_Address: string;
 }
+
+/**
+ * 查詢 POS2004LOGO_NoDropDownList 時的請求 body
+ */
+export interface Pos2004LogoQuery {
+  LOGO_No: string;
+}
+
+/**
+ * 查詢 POS2004LOGO_NoDropDownList 回傳的項目型別
+ */
+export interface Pos2004LogoItem {
+  PLU_MagNo: string | null;
+  PLU_No: string | null;
+  PLU_Unit: string | null;
+  PLU_BoxQty: number | null;
+  PLU_Name: string | null;
+  PLU_PageNum: string | null;
+  PLU_LocNo: number | null;
+}

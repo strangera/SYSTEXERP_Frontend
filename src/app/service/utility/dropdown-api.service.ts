@@ -29,6 +29,8 @@ import {
   TalentByContractDateItem,
   Pos2004Query,
   Pos2004Item,
+  Pos2004LogoQuery,
+  Pos2004LogoItem,
   TalentChargeQuery,
   TalentChargeItem,
   EcrQuery,
@@ -343,6 +345,11 @@ export class DropdownApiService {
   /** 查詢商品資料(POS2004) (依照專櫃編號TLT_No查詢) */
   queryPos2004(body: Pos2004Query): Observable<Pos2004Item[] | null> {
     return this.queryDropdownWithParams<Pos2004Item, Pos2004Query>('/queryPOS2004_DropDownList', body);
+  }
+
+  /** 查詢商品資料(POS2004) (依照品牌編號LOGO_No查詢) */
+  queryPos2004Logo(body: Pos2004LogoQuery): Observable<Pos2004LogoItem[] | null> {
+    return this.queryDropdownWithParams<Pos2004LogoItem, Pos2004LogoQuery>('/queryPOS2004LOGO_NoDropDownList', body);
   }
 
   // --- 專櫃相關 (新增) ---

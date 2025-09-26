@@ -61,6 +61,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
+    ECR_SchNo: [''],
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
     ECR_Name: ['', [Validators.required, Validators.maxLength(20)]],
     ECR_TLT_No: ['', [Validators.maxLength(20)]],
@@ -207,6 +208,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       this.dataForm.get('ECR_No')?.reset('');
       this.dataForm.get('ECR_Status')?.setValue('A');
       this.dataForm.get('ECR_Status')?.disable();
+      this.dataForm.get('ECR_Type')?.setValue('2');
+      this.dataForm.get('ECR_Type')?.disable();
     } else if (this.isFormEditable) {
       this.dataForm.get('ECR_No')?.disable();
     }
@@ -311,7 +314,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           }
           // 這邊幫我有的值再patch
           this.dataForm.patchValue({
-            // ...patchData,
+            ECR_SchNo: patchData.ECR_SchNo ?? '',
           });
 
         }
@@ -381,6 +384,9 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       CRT_Date: rawValue.CRT_Date ?? undefined,
       UPD_Date: rawValue.UPD_Date ?? undefined,
       ECR_SettleHHNN: settleHHNN,
+      ECR_SchNo: this.isFormCreateable
+        ? '自動編號'
+        : (rawValue.ECR_SchNo || this.rowdata?.ECR_SchNo || '自動編號')
     } as TLS41010Item;
   }
 }

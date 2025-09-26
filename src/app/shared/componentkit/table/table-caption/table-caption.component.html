@@ -6,12 +6,12 @@
       (click)="toggleVisibility()" [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'" tooltipPosition="top" [outlined]="!IsPrint"
       [disabled]="!canPerformAction('50')" />
     <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
-      <p-button *ngIf="showReportPDF" pButton tooltipPosition="top" pTooltip="列印PDF" class="p-button-rounded p-button-text p-button-info"
-        icon="fa-regular fa-file-pdf" (click)="customReport ? exportEvent.emit('PDF') : export('PDF')"
-        [disabled]="!canPerformAction('60')" />
-      <p-button *ngIf="showReportExcel" pButton tooltipPosition="top" pTooltip="匯出Excel" class="p-button-rounded p-button-text p-button-info"
-        icon="fa-regular fa-file-lines" (click)="customReport ? exportEvent.emit('Excel') : export('Excel')"
-        [disabled]="!canPerformAction('70')" />
+      <p-button *ngIf="showReportPDF" pButton tooltipPosition="top" pTooltip="列印PDF"
+        class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-pdf"
+        (click)="customReport ? exportEvent.emit('PDF') : export('PDF')" [disabled]="!canPerformAction('60')" />
+      <p-button *ngIf="showReportExcel" pButton tooltipPosition="top" pTooltip="匯出Excel"
+        class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
+        (click)="customReport ? exportEvent.emit('Excel') : export('Excel')" [disabled]="!canPerformAction('70')" />
     </div>
     <p-button *ngIf="IsPrint && showInsert && !rowEditing && !disabled" (click)="insert.emit()" pTooltip="新增"
       tooltipPosition="top" pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
@@ -26,6 +26,9 @@
     <ng-content select="header"></ng-content>
   </div>
   <div *ngIf="IsPrint" class="flex gap-2 py-2">
+    <div *ngIf="expansionColumns.length > 0 && IsPrint" class="flex align-items-center">
+      <p-button [icon]="'pi pi-angle-up'" (onClick)="toggleExpandCollapse()" [label]="'全部收合'" text />
+    </div>
     <div *ngIf="showExcel" class="flex gap-2 align-items-center">
       <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
               exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" (click)="onExportExcel()" />
