@@ -1,7 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
@@ -18,27 +17,22 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="廠客代號"
-              controlName="vendorCode"
-              [control]="queryForm.controls.vendorCode"
+            <app-multi-select
+              label="廠客編號"
+              controlName="VEN_No"
+              [options]="venderOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.VEN_No"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="廠客名稱"
-              controlName="vendorName"
-              [control]="queryForm.controls.vendorName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商簡稱"
-              controlName="vendorSName"
-              [control]="queryForm.controls.vendorSName"
+              label="廠客簡稱"
+              controlName="VEN_ShortName"
+              [control]="queryForm.controls.VEN_ShortName"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -48,54 +42,57 @@
             <app-input-number
               [useGrouping]="false"
               label="郵遞區號"
-              controlName="postCode"
-              [control]="queryForm.controls.postCode"
+              controlName="VEN_Post"
+              [control]="queryForm.controls.VEN_Post"
               [submitted]="submitted"
             ></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="郵寄地址"
-              controlName="postAddress"
-              [control]="queryForm.controls.postAddress"
+              controlName="VEN_Address"
+              [control]="queryForm.controls.VEN_Address"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="聯絡人"
-              controlName="contactPerson"
-              [control]="queryForm.controls.contactPerson"
+              controlName="VEN_Boss"
+              [control]="queryForm.controls.VEN_Boss"
               [submitted]="submitted"
             ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-input-number
+              [useGrouping]="false"
               label="電話"
-              controlName="phone"
-              [control]="queryForm.controls.phone"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="傳真"
-              controlName="fax"
-              [control]="queryForm.controls.fax"
+              controlName="VEN_Tel"
+              [control]="queryForm.controls.VEN_Tel"
               [submitted]="submitted"
             ></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
+              label="廠商傳真"
+              controlName="VEN_Fax"
+              [control]="queryForm.controls.VEN_Fax"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
               label="統一編號"
-              controlName="uId"
-              [control]="queryForm.controls.uId"
+              controlName="VEN_Uniform"
+              [control]="queryForm.controls.VEN_Uniform"
+              [options]="VEN_UniformOptions"
+              optionLabel="label"
+              optionValue="value"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
@@ -113,22 +110,22 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="貼現廠商"
-              controlName="payoutVendor"
-              [options]="whetherOptions"
+              controlName="VEN_DiscYN"
+              [options]="VEN_DiscYNOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.payoutVendor"
+              [control]="queryForm.controls.VEN_DiscYN"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="禁止背書轉讓"
-              controlName="noTransfer"
-              [options]="whetherOptions"
+              controlName="VEN_CTRLYN"
+              [options]="VEN_CTRLYNOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.noTransfer"
+              [control]="queryForm.controls.VEN_CTRLYN"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -137,11 +134,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="付款方式"
-              controlName="paymentMethod"
-              [options]="paymentMethodOptions"
+              controlName="VEN_PayType"
+              [options]="VEN_PayTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.paymentMethod"
+              [control]="queryForm.controls.VEN_PayType"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -149,8 +146,8 @@
             <app-input-number
               [useGrouping]="false"
               label="廠商匯款銀行代號"
-              controlName="vendorTransferAccount"
-              [control]="queryForm.controls.vendorTransferAccount"
+              controlName="VEN_BNK_No"
+              [control]="queryForm.controls.VEN_BNK_No"
               [submitted]="submitted"
             ></app-input-number>
           </div>
@@ -158,8 +155,8 @@
             <app-input-number
               [useGrouping]="false"
               label="廠商銀行帳號"
-              controlName="vendorAccount"
-              [control]="queryForm.controls.vendorAccount"
+              controlName="VEN_BankAccountNo"
+              [control]="queryForm.controls.VEN_BankAccountNo"
               [submitted]="submitted"
             ></app-input-number>
           </div>
@@ -168,8 +165,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商帳戶名稱"
-              controlName="vendorAccountName"
-              [control]="queryForm.controls.vendorAccountName"
+              controlName="VEN_AccountName"
+              [control]="queryForm.controls.VEN_AccountName"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -177,32 +174,21 @@
             <app-input-number
               [useGrouping]="false"
               label="付款期限"
-              controlName="payoutLimit"
-              [control]="queryForm.controls.payoutLimit"
+              controlName="VEN_PayConditionDay"
+              [control]="queryForm.controls.VEN_PayConditionDay"
               [submitted]="submitted"
             ></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據抬頭"
-              controlName="ticketTitle"
-              [control]="queryForm.controls.ticketTitle"
+              controlName="VEN_CheckTitle"
+              [control]="queryForm.controls.VEN_CheckTitle"
               [submitted]="submitted"
             ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="系統別"
-              controlName="systemType"
-              [options]="systemTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.systemType"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="審核狀態"

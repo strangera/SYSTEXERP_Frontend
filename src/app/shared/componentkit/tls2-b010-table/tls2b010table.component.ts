@@ -1,24 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Component, EventEmitter, Input, SimpleChanges, OnChanges, Output,
-  ViewChild, OnDestroy, OnInit,
+  ViewChild, OnDestroy, OnInit
 } from '@angular/core';
+
 import {
   Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent,
-  TableRowUnSelectEvent, TableModule,
+  TableRowUnSelectEvent, TableModule
 } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
+
 import {
   AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent,
-  RowEditSaveEvent, toggleButtons, validateRowData,
+  RowEditSaveEvent, toggleButtons, validateRowData
 } from './tls2b010table.model';
+
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
-import { QueryStateService } from '../../service/query-state.service';
 import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
+
 import { NgIf, NgClass, NgFor } from '@angular/common';
 import { DividerModule } from 'primeng/divider';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -34,15 +36,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TLS2B010TableExportComponent } from './tls2b010table-export/tls2b010table-export.component';
 import { BlockUIModule } from 'primeng/blockui';
-import { Pipe, PipeTransform } from '@angular/core';
-@Pipe({ name: 'filterMerged', standalone: true })
-export class FilterMergedPipe implements PipeTransform {
-  transform(columns: any[], merged: string[]): any[] {
-    if (!Array.isArray(columns)) return [];
-    if (!Array.isArray(merged) || merged.length === 0) return columns;
-    return columns.filter(c => !merged.includes(c.field));
-  }
-}
 
 @Component({
   selector: 'app-tls2b010table',
@@ -56,7 +49,6 @@ export class FilterMergedPipe implements PipeTransform {
     FileUploadModule, DropdownModule, RippleModule, InputTextModule, InputNumberModule,
     CalendarModule, CheckboxModule, SkeletonModule, BlockUIModule,
     FormsModule,
-   
     TLS2B010TableExportComponent
   ],
 })
@@ -64,7 +56,9 @@ export class tls2b010tableComponent
   extends BasicPrintData2Component
   implements OnInit, OnChanges, OnDestroy {
 
-  trackByCol = (index: number, col: any) => col.key ?? col.__uid ?? col.field ?? index;
+  /* ===== Utilities ===== */
+  trackByCol = (_: number, col: any) => col.key ?? col.__uid ?? col.field;
+  trackByRow = (_: number, item: any) => (item as any)?.[this.dataKey] ?? _;
 
   @ViewChild('dt', { static: false }) dt!: Table;
   @ViewChild('fileUpload') fileUpload!: FileUpload;
@@ -73,12 +67,10 @@ export class tls2b010tableComponent
   public funInfo: FunsrightInfo | undefined;
 
   constructor(
-    private readonly queryStateService: QueryStateService,
-    private readonly currentPageService: CurrentPageService,
     private readonly messageService: NotificationService,
   ) { super(); }
 
-  /* ======================= Inputs/Outputs ======================= */
+  /* ======================= Inputs / Outputs ======================= */
   // 基本
   @Input() dataKey = 'ID';
   @Input() tableKey?: string;
@@ -86,26 +78,43 @@ export class tls2b010tableComponent
   @Input() title?: string;
 
   // 欄位 / 資料
-  @Input() columns!: Column[];
+  @Input() columns: Column[] = [];
   originalColumns!: Column[];
-  selectedColumns!: Column[];
-  @Input() data: any[] = [];
+  selectedColumns: Column[] = [];
+
+  private _data: any[] = [];
+  @Input() set data(v: any[]) {
+    this._data = Array.isArray(v) ? v : [];
+    this.rebuildPageGroupMeta();       // data 變更先重建 meta
+    this.dataChange.emit(this._data);
+  }
+  get data(): any[] { return this._data; }
+
   @Output() dataChange = new EventEmitter<any[]>();
   @Input() loading = false;
   @Input() disabled = false;
 
-  // 群組（仍保留群組功能，但無小計）
+  // 群組（僅排序輔助；無小計）
   @Input() columnGroup?: ColumnGroup[];
   @Input() groupRowsBy: string | string[] = '';
-  groupedDataCache = new Map();
 
-  // 選取與勾選
+  // 直向合併
+  /** 群組鍵（資料欄位名稱）預設 'ECR_No' */
+  public groupKey: string = 'ECR_No';
+  /** 需要直向合併的欄位 */
+  @Input() mergedColumns: string[] = [];
+  get hasRowSpan(): boolean {
+    return Array.isArray(this.mergedColumns) && this.mergedColumns.length > 0;
+  }
+
+  // 勾選與選取
   @Input() showCheckBox = false;
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';
-  @Input() selectedItems: any = [];
+  @Input() selectedItems: any[] = [];
+  get hasNoSelection(): boolean { return this.selectedItems.length === 0; }
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
-  @Output() selectionChange = new EventEmitter<any>();
-  @Output() selectedItemsChange = new EventEmitter<any>();
+  @Output() selectionChange = new EventEmitter<any[]>();
+  @Output() selectedItemsChange = new EventEmitter<any[]>();
   @Output() select = new EventEmitter<TableRowSelectEvent>();
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();
   @Output() itemClick = new EventEmitter<any>();
@@ -177,8 +186,6 @@ export class tls2b010tableComponent
   @Input() emptyMessage = '查無資料';
 
   // 分頁
-  @Input() scrollHeight = '450px';
-  @Input() scrollable = true;
   @Input() showPaginator = true;
   @Input() totalRecords = 0;
   @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];
@@ -189,18 +196,10 @@ export class tls2b010tableComponent
   selectedPage: number | null = 1;
   @Input() lazy = false;
 
-  // ===== Lazy 取數（加回這三個） =====
-@Input() serverFetch?: (payload: LazyLoadEvent) => Observable<{
-  rows: any[];
-  totalRecords: number;
-}>;
-
-@Output() serverError = new EventEmitter<unknown>();
-@Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
-
-@Input() mergedColumns: string[] = [];  // ✅ 外部元件可指定要合併顯示的欄位
-
-  // =====（已刪除）所有 externalTotals / externalSubtotals / Total/Subtotal Inputs =====
+  // Lazy 取數（事件往外丟）
+  @Input() serverFetch?: (payload: LazyLoadEvent) => Observable<{ rows: any[]; totalRecords: number }>;
+  @Output() serverError = new EventEmitter<unknown>();
+  @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
 
   /* ===== 內部旗標 ===== */
   private _skipFirstLazy = true;
@@ -208,53 +207,51 @@ export class tls2b010tableComponent
   private _suppressNextLazy = false;
   private lastEmitKey: string | null = null;
   private lastSortSig = '';
-  rowGroupMeta: Record<string, { index: number; size: number }> = {};
 
+  // 本「頁」的群組 meta（rowspan 用）
+  private pageGroupMeta: Record<string, { index: number; size: number }> = {};
+
+  /* ======================= LifeCycle ======================= */
   ngOnInit(): void {
     this.ensureInitialGroupingSort();
     this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
 
-    this.currentPageService.currentPageProgNo$
+    this.currentPage.currentPageProgNo$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(progNo => {
         this.funInfo = progNo ? this.authService.getUserPermissions(progNo) : undefined;
       });
 
-    this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+    this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
 
-    const saved = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
+    const saved = this.queryState.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
     this.selectedColumns = (saved?.length ? saved : this.columns || [])
       .filter(c => c.visible !== false && c.hidden !== true);
+
+    this.rebuildPageGroupMeta();
+    this.calculateTotalPages();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.groupedDataCache.clear();
-
-    if (changes['data']) {
-      setTimeout(() => {
-        this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-        this.selectedItems = [];
-        this.selectionChange.emit(this.selectedItems);
-        this.selectedItemsChange.emit(this.selectedItems);
-        this.calculateTotalPages();
-         this.updateRowGroupMeta();   // ✅ 重算群組
-      });
-    }
-
     if (changes['columns'] && this.columns?.length > 0) {
       this.originalColumns = this.columns;
-
-      const saved = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
+      const saved = this.queryState.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
       this.selectedColumns = (saved?.length ? saved : this.columns)
         .filter(c => c.visible !== false && c.hidden !== true);
 
       if (changes['columns'].firstChange) {
         setTimeout(() => {
-          this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
-          this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
+          this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+          this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
           this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
-        }, 300);
+        }, 0);
       }
+    }
+
+    if (changes['data'] || changes['totalRecords']) {
+      this.rebuildPageGroupMeta();
+      this.calculateTotalPages();
+      this.cdr.detectChanges?.();
     }
   }
 
@@ -265,13 +262,23 @@ export class tls2b010tableComponent
 
   /* ======================= 分頁 / 排序 ======================= */
 
+  private getBoundTotal(): number {
+    return this.totalRecords && this.totalRecords > 0
+      ? this.totalRecords
+      : (this.data?.length ?? 0);
+  }
+
+  private getPageRows(): any[] {
+    if (this.lazy) return this.data ?? []; // lazy: this.data 就是本頁
+    const start = this.first ?? 0;
+    const end = Math.min(start + (this.rows ?? 0), this.data?.length ?? 0);
+    return (this.data ?? []).slice(start, end);
+  }
+
   calculateTotalPages() {
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-    this.pages = Array.from({ length: this.totalPages }, (_, i) => ({
-      label: `第 ${i + 1} 頁`,
-      value: i + 1,
-    }));
+    const total = this.getBoundTotal();
+    this.totalPages = this.rows > 0 ? Math.ceil(total / this.rows) : 0;
+    this.pages = Array.from({ length: this.totalPages }, (_, i) => ({ label: `第 ${i + 1} 頁`, value: i + 1 }));
 
     if (this._skipFirstCalc) {
       this._skipFirstCalc = false;
@@ -297,6 +304,7 @@ export class tls2b010tableComponent
     }
   }
 
+  /** 給右上角頁碼下拉用 */
   goToPage(pageNumber: number) {
     const newFirst = (pageNumber - 1) * this.rows;
     if (this.first === newFirst && this.selectedPage === pageNumber) return;
@@ -304,41 +312,33 @@ export class tls2b010tableComponent
     this.first = newFirst;
     this.selectedPage = pageNumber;
 
-    if (this.lazy) {
-      this._suppressNextLazy = true;
-      this.loadDataLazy({
-        first: this.first,
-        rows: this.rows,
-        multiSortMeta: this.multiSortMeta
-      } as TableLazyLoadEvent, true);
-    }
+    if (!this.lazy) this.rebuildPageGroupMeta();
   }
 
   onPageChange(event: TablePageEvent) {
     this.first = event.first;
-       this.rows = event.rows;
-    this.queryStateService.setQueryState(this.tableKey + 'rows', this.rows);
+    this.rows = event.rows;
+    this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
     this.selectedPage = Math.ceil(event.first / event.rows + 1);
-    if (!this.lazy) this.calculateTotalPages();
-  }
 
+    if (!this.lazy) {
+      this.rebuildPageGroupMeta();
+      this.calculateTotalPages();
+    }
+  }
 
   loadDataLazy(event: TableLazyLoadEvent, force = false) {
     if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
     if (this._suppressNextLazy && !force) { this._suppressNextLazy = false; return; }
-
-    if (force) {
-      this._skipFirstLazy = false;
-      this._suppressNextLazy = false;
-    }
+    if (force) { this._skipFirstLazy = false; this._suppressNextLazy = false; }
 
     const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-    let pageIndex  = (event.first ?? 0) / pageSize + 1;
+    let pageIndex = (event.first ?? 0) / pageSize + 1;
 
-  const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
-    (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-  const normalized = this.normalizeSortMeta(sortRaw);
-  const sort = this.ensureGroupFirst(normalized);
+    const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
+      (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+    const normalized = this.normalizeSortMeta(sortRaw);
+    const sort = this.ensureGroupFirst(normalized);
     const sortSig = JSON.stringify(sort);
 
     if (!this.lastSortSig) {
@@ -353,54 +353,58 @@ export class tls2b010tableComponent
     }
 
     this.selectedPage = pageIndex;
-    this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.queryState.setQueryState(this.tableKey + 'Sort', sort);
 
-      const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
-  this.lazyLoadData.emit(payload);
+    const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+
     const key = `${pageIndex}|${pageSize}|${sortSig}`;
     if (!force && key === this.lastEmitKey) return;
     this.lastEmitKey = key;
 
-if (this.serverFetch) {
-  this.loading = true;
-  this.serverFetch(payload).subscribe({
-    next: (res: { rows: any[]; totalRecords: number }) => {
-      const rows = Array.isArray(res?.rows) ? res.rows : [];
-      this.data = rows;
-      this.updateRowGroupMeta();  // ✅
-      this.dataChange.emit(this.data);
-
-      this.totalRecords = Number(res?.totalRecords ?? rows.length) || 0;
-
-      this.calculateTotalPages();
-      this.loading = false;
-
-      this.selectedItems = [];
-      this.selectionChange.emit(this.selectedItems);
-      this.selectedItemsChange.emit(this.selectedItems);
-    },
-    error: (err: unknown) => {
-      this.loading = false;
-      this.serverError.emit(err);
-    }
-  });
-  return;
-}
-
-this.lazyLoadData.emit(payload);
-
+    this.lazyLoadData.emit(payload);
   }
 
-  /* ======================= Header（原 TableCaption） ======================= */
+  /* ======================= 群組 / RowSpan ======================= */
+
+  /** 統一的群組鍵生成（含空值處理） */
+  private buildGroupKey(raw: any, rowIndex: number): string {
+    return (raw !== undefined && raw !== null && String(raw) !== '')
+      ? String(raw)
+      : `__row_${rowIndex}`;
+  }
+
+
+
+  /** 每次換頁或資料更新都重建本頁的 group meta */
+  private rebuildPageGroupMeta(): void {
+    const rows = this.getPageRows();
+    const meta: Record<string, { index: number; size: number }> = {};
+    let lastKey: string | null = null;
+
+    rows.forEach((row, i) => {
+      const key = this.buildGroupKey(row?.[this.groupKey], i);
+      if (lastKey === key) {
+        meta[key].size++;
+      } else {
+        meta[key] = { index: i, size: 1 };
+        lastKey = key;
+      }
+    });
+
+    this.pageGroupMeta = meta;
+  }
+
+
+
+  /* ======================= Header / Filter ======================= */
 
   onHeaderFilterChange(event: any) {
     this.columns = this.columns.map((col) => ({
       ...col,
       visible: event.value.some((ev: any) => ev.field === col.field),
     }));
-    this.selectedColumns = this.columns.filter((col) => col.visible !== false);
-    this.queryStateService.setQueryState(this.tableKey + 'Filter', this.columns);
+    this.selectedColumns = this.columns.filter((col) => col.visible !== false && col.hidden !== true);
+    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
 
   onExportExcel() { this.exportExcel.emit(); }
@@ -422,15 +426,11 @@ this.lazyLoadData.emit(payload);
       this.columns = arr;
     }
     this.selectedColumns = (this.columns || []).filter(c => c.visible !== false && c.hidden !== true);
-    this.queryStateService.setQueryState(this.tableKey + 'Filter', this.selectedColumns);
+    this.queryState.setQueryState(this.tableKey + 'Filter', this.selectedColumns);
   }
 
-  trackByRow = (index: number, item: any) => (item as any)?.[this.dataKey] || index;
-
   get getVisibleHeaderCount(): number {
-    const visibleCount =
-      this.selectedColumns?.filter(c => c.hidden !== true && c.visible !== false).length ?? 0;
-
+    const visibleCount = this.selectedColumns?.filter(c => c.hidden !== true && c.visible !== false).length ?? 0;
     return 1
       + (this.IsPrint && this.showCheckBox && !this.rowEditing && this.selectionMode === 'multiple' ? 1 : 0)
       + visibleCount
@@ -447,6 +447,8 @@ this.lazyLoadData.emit(payload);
     }));
     this.selectedColumns = this.columns.filter((col) => col.visible !== false);
   }
+
+  /* ======================= Row edit / actions ======================= */
 
   onRowEditInit(rowData: any) {
     this.dt.initRowEdit(rowData);
@@ -502,7 +504,7 @@ this.lazyLoadData.emit(payload);
   }
 
   onSelectionChange(event: any) {
-    const selected = Array.isArray(event) ? event : event ? [event] : [];
+    const selected = Array.isArray(event) ? event : (event ? [event] : []);
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
     this.selectionChange.emit(this.selectedItems);
     this.selectedItemsChange.emit(this.selectedItems);
@@ -562,21 +564,14 @@ this.lazyLoadData.emit(payload);
   }
 
   canPerformAction(action: string): boolean {
-    return (
-      this.funInfo?.PrivilegeBehavior?.some(
-        (behavior) => behavior.function_code === action,
-      ) || false
-    );
+    return this.funInfo?.PrivilegeBehavior?.some(b => b.function_code === action) || false;
   }
 
-  /* ======================= 群組排序（保留） ======================= */
+  /* ======================= 群組排序（讓群組鍵固定優先） ======================= */
 
   getColumnSpan(columns: Column[], groupField: string): number {
     return columns.filter(
-      (col) =>
-        col.groupField === groupField &&
-        col.visible !== false &&
-        col.hidden !== true,
+      (col) => col.groupField === groupField && col.visible !== false && col.hidden !== true,
     ).length;
   }
 
@@ -606,7 +601,6 @@ this.lazyLoadData.emit(payload);
 
   private ensureInitialGroupingSort() {
     const gs = this.groupRowsByArray;
-    if (!gs.length) return;
     const rest = (this.multiSortMeta || []).filter(s => !gs.includes(s.field));
     const lead = gs.map(field => ({ field, order: 1 as 1 | -1 }));
     this.multiSortMeta = [...lead, ...rest];
@@ -625,8 +619,30 @@ this.lazyLoadData.emit(payload);
     return [...lead, ...rest];
   }
 
-  /* ========= 可見欄位 ========= */
+  private normalizeSortMeta(list: any[] | undefined): SortMeta[] {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set<string>();
+    const cleaned = list
+      .map((s: any) => {
+        const f = Array.isArray(s?.field) ? s.field[0] : s?.field;
+        const ord = s?.order === -1 ? -1 : 1;
+        return f ? ({ field: String(f), order: ord } as SortMeta) : null;
+      })
+      .filter(Boolean) as SortMeta[];
 
+    const unique: SortMeta[] = [];
+    for (const s of cleaned) {
+      if (!seen.has(s.field)) {
+        seen.add(s.field);
+        unique.push(s);
+      }
+    }
+    return unique;
+  }
+
+  /* ======================= 補齊樣板使用的輔助（避免 2339） ======================= */
+
+  /** 依欄名長度估算最小寬度，避免標題擠在一起 */
   getColMinWidth(col: any): string {
     const text = (col?.header ?? '').toString();
     const len = [...text].length;
@@ -634,88 +650,59 @@ this.lazyLoadData.emit(payload);
     return `calc(${ch}ch + 1.25rem)`;
   }
 
+  /** 目前可視欄位（selectedColumns > columns），排除 hidden/visible=false */
   private get visibleCols() {
     const cols = this.selectedColumns?.length ? this.selectedColumns : this.columns || [];
     return cols.filter(c => c.visible !== false && c.hidden !== true);
   }
 
-get leftFixedHeaderColumns() {
-  // 只有凍結欄位（左側固定），沒有就回空陣列
-  return this.visibleCols.filter(c => c.frozen === true);
-}
-
-get headerRow1Columns() {
-  // 其餘一般欄位（未凍結），若沒有多表頭就允許 headerRow 為 null 或 1
-  return this.visibleCols.filter(c => (c.headerRow === 1 || c.headerRow == null) && c.frozen !== true);
-}
-
-
-
-// 供模板呼叫
-export(type: 'PDF' | 'Excel') {
-  this.exportStatus = type;
-  this.exportDialog = true;
-}
-getHeaderByField(field: string): string {
-  const col = this.columns?.find(c => c.field === field);
-  return col?.header ?? field;
-}
-onSort(event: any) {
-  const raw = event.multisortmeta ?? event.multiSortMeta ?? [];
-  const normalized = this.normalizeSortMeta(raw);
-  const next = this.ensureGroupFirst(normalized);
-  this.multiSortMeta = next;
-  this.queryStateService.setQueryState(this.tableKey + 'Sort', next);
-}
-
-
-
-
-private normalizeSortMeta(list: any[] | undefined): SortMeta[] {
-  if (!Array.isArray(list)) return [];
-  const seen = new Set<string>();
-  const cleaned = list
-    .map((s: any) => {
-      const f = Array.isArray(s?.field) ? s.field[0] : s?.field;
-      const ord = s?.order === -1 ? -1 : 1;
-      return f ? ({ field: String(f), order: ord } as SortMeta) : null;
-    })
-    .filter(Boolean) as SortMeta[];
-
-  // 去重（依 field）
-  const unique: SortMeta[] = [];
-  for (const s of cleaned) {
-    if (!seen.has(s.field)) {
-      seen.add(s.field);
-      unique.push(s);
-    }
+  /** 舊模板保留的存取子（左側固定欄，但我們已不凍結，只是個分組） */
+  get leftFixedHeaderColumns() {
+    return this.visibleCols.filter(c => c.frozen === true);
   }
-  return unique;
+
+  /** 其他欄位（非 frozen），亦是模板使用的迴圈來源 */
+  get headerRow1Columns() {
+    return this.visibleCols.filter(c => (c.headerRow === 1 || c.headerRow == null) && c.frozen !== true);
+  }
+
+  /* ======================= 匯出 ======================= */
+  export(type: 'PDF' | 'Excel'): void {
+    this.exportStatus = type;
+    this.exportDialog = true;
+  }
+  /** 把 PrimeNG 提供的 rowIndex（可能是全域）換算成本頁索引（0 開始） */
+private toPageIndex(globalIndex: number): number {
+  // lazy 模式：每頁大小就是 this.rows
+  if (this.lazy) return Math.max(0, globalIndex % (this.rows || 1));
+  // 非 lazy：以 this.first（當前頁起始）換算
+  return Math.max(0, globalIndex - (this.first || 0));
 }
 
-// 依 ECR_No（或你想要的 key）建立群組資訊
-private updateRowGroupMeta() {
-  this.rowGroupMeta = {};
-  let lastKey: string | null = null;
-  this.data.forEach((row, i) => {
-    const key = String(row?.ECR_No ?? '');
-    if (!key) return;
-
-    if (lastKey === key) {
-      this.rowGroupMeta[key].size++;
-    } else {
-      this.rowGroupMeta[key] = { index: i, size: 1 };
-      lastKey = key;
-    }
-  });
+/** 樣板用：接受「全域」rowIndex，內部換算成本頁索引再產生群組鍵 */
+getGroupKeyValue(rowData: any, rowIndexGlobal: number): string {
+  const local = this.toPageIndex(rowIndexGlobal);
+  const raw = rowData?.[this.groupKey];
+  return (raw !== undefined && raw !== null && String(raw) !== '')
+    ? String(raw)
+    : `__row_${local}`;
 }
 
-// 幫手：判斷該列是否是群組第一筆、取 rowspan 數
-isFirstInGroup(index: number, key: string): boolean {
-  return this.rowGroupMeta[key]?.index === index;
+/** 判斷是否為「本頁」群組首列：頁首一定畫 rowspan 的首格 */
+isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
+  if (!this.hasRowSpan) return false;
+  const local = this.toPageIndex(rowIndexGlobal);
+  if (local === 0) return true; // 跨頁延續：第二頁也要當作首列畫出
+  const m = this.pageGroupMeta[key];
+  return !!m && m.index === local;
 }
-getGroupSize(key: string): number {
-  return this.rowGroupMeta[key]?.size || 1;
+
+/** 取得本頁的 rowspan；meta 查不到也回 1，避免整欄被吃掉 */
+getPageRowSpan(rowIndexGlobal: number, key: string): number {
+  if (!this.hasRowSpan) return 1;
+  const local = this.toPageIndex(rowIndexGlobal);
+  const m = this.pageGroupMeta[key];
+  return (m && m.index === local) ? m.size : 1;
 }
 
 }

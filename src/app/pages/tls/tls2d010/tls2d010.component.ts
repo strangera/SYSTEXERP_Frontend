@@ -14,7 +14,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service'; // ★ 引入 Service
-import { DropDownListService, IDropdownItem, IAPS1003Request } from './../../../service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, IAPS1003Request, IAPS1003Item } from './../../../service/utility/dropDownList.service';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
 import { format } from 'crypto-js';
 @Component({
@@ -73,7 +73,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         return `${yyyy}-${mm}-${dd}`;
       }
     },
-    { field: 'GUI_FLAG', header: '是否開立發票', visible: true ,format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : ''},
+    { field: 'GUI_FLAG', header: '是否開立發票', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : '' },
     { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount },
     { field: 'remarks', header: '備註', visible: true },
   ];
@@ -83,7 +83,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   AccNoOptions: IDropdownItem[] = [];
   tlt_noOptions: IDropdownItem[] = [];
   org_idOptions: IDropdownItem[] = [];
-  CAP_ItemOptions: IDropdownItem[] = [];
+  CAP_ItemOptions: IAPS1003Item[] = [];
   CRT_USR_NoOptions: IDropdownItem[] = [];
   pod_noOptions: any[] = [];
 
@@ -103,22 +103,32 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2D010', '/TLS/TLS2D010CRU', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((res) => {
+    // 查專櫃下拉
+    this.dropDownListService.queryTLTTALENTDropDownList().subscribe((res) => {
       this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
-        value: item.No ?? item.NO,
-        label: `${item.No ?? item.NO}-${item.Name ?? item.NAME}`,
-        No: item.No ?? item.NO,
-        Name: item.Name ?? item.NAME
+        value: item.talent_id,
+        label: `${item.tlt_no}-${item.tlt_name}`,
+        No: item.tlt_no,
+        Name: item.tlt_name
       }));
     });
-    this.dropDownListService.queryAPS1003_DropDownList({} as IAPS1003Request).subscribe((res) => {
-      this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
-        value: item.No,
-        label: `${item.No}-${item.Name}`,
-        No: item.No,
-        Name: item.Name
-      }));
-    });
+
+    this.dropDownListService.queryAPS1003DropDownList({ cap_typeList: [] }) // 參數照 interface
+      .subscribe((res) => {
+        this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
+          CAP_Item: item.CAP_Item, // 扣款項目代碼
+          CAP_Name: item.CAP_Name, // 顯示名稱
+          value: item.CAP_Item,    // 綁定值
+          label: `${item.CAP_Item}-${item.CAP_Name}`, // 顯示文字
+          No: item.CAP_Item,       // 必須的屬性
+          Name: item.CAP_Name,     // 必須的屬性
+          AccNo: item.AccNo,       // 會計科目
+          GUI_FLAG: item.GUI_FLAG, // 是否開立發票
+          CAP_TaxType: item.CAP_TaxType, // 課稅別
+          CAP_Type: item.CAP_Type,       // 扣款類型
+        }));
+      });
+
     this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
       this.AccNoOptions = (res?.Data || []).map((item: any) => ({
         value: item.No,

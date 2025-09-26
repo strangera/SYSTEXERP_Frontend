@@ -8,29 +8,36 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <!-- 盤點單編號 -->
+            <app-input-text label="盤點單編號" controlName="PST_No" [control]="queryForm.controls.PST_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
 
-          <!-- 盤點單編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="盤點單編號" controlName="PST_No"
-            [control]="queryForm.controls.PST_No" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <!-- 倉別代碼/名稱 -->
+            <app-multi-select label="倉別代碼/名稱" controlName="HOS_No" [options]="hosOptions"
+              [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
+          </div>
 
-          <!-- 倉別代碼/名稱 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No" [options]="hosOptions"
-            [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
+          <div class="col-12 md:col-6 lg:col-4">
+            <!-- 品牌代碼/名稱 -->
+            <app-multi-select label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"
+              [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-multi-select>
+          </div>
 
-          <!-- 品牌代碼/名稱 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
-            [options]="logoOptions" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-multi-select>
+          <div class="col-12 md:col-6 lg:col-4">
+            <!-- 盤點基準日期（起訖） -->
+            <app-calendar-range label="盤點基準日期" calendarType="dateRange"
+              [startControl]="queryForm.controls.PST_DateStart" [endControl]="queryForm.controls.PST_DateEnd"
+              [submitted]="submitted"></app-calendar-range>
+          </div>
 
-          <!-- 盤點基準日期（起訖） -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="盤點基準日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.PST_DateStart" [endControl]="queryForm.controls.PST_DateEnd"
-            [submitted]="submitted"></app-calendar-range>
-
-          <!-- 盤點狀態 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="盤點狀態" controlName="PST_Status"
-            [options]="pstStatusOptions" [control]="queryForm.controls.PST_Status"
-            [submitted]="submitted"></app-multi-select>
-
+          <div class="col-12 md:col-6 lg:col-4">
+            <!-- 盤點狀態 -->
+            <app-multi-select label="盤點狀態" controlName="PST_Status" [options]="pstStatusOptions"
+              [control]="queryForm.controls.PST_Status" [submitted]="submitted"></app-multi-select>
+          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -41,10 +48,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS53010" dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    [showDetail]="false" [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'PST_No', order: -1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [addButton]="addButton" [expansionColumns]="expansionColumns" [expansionLoadFn]="loadDetails">
+  <app-table tableKey="TLS53010" dataKey="PST_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showDelete]="false" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'PST_No', order: -1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [addButton]="addButton" [expansionColumns]="expansionColumns" [expansionLoadFn]="loadDetails"
+    [expansionDataKey]="'PLU_MagNo'">
   </app-table>
 </div>

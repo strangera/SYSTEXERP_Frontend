@@ -17,6 +17,8 @@ import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { apiOption } from '@shared/models/tls/tls000.model';
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { CommonModule } from '@angular/common';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 export interface Customer_interview {
   id: number; // ID
@@ -44,7 +46,7 @@ export interface Customer_interview {
 }
 
 // 意願報表內容
-export interface Willing_data{
+export interface Willing_data {
   id: number; // 主鍵，自動編號
 
   contact_USR_No: string; // 接洽人員代碼
@@ -57,6 +59,7 @@ export interface Willing_data{
   willing_level_F: number; // F/無意進駐
   All_Counts: number; //小計
 }
+
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -97,13 +100,20 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: 'contact_USR_Name', header: '訪談人員姓名', visible: true },
     { field: 'contact_Date', header: '訪談日期', visible: true, format: formatDate },
     { field: 'contact_Time', header: '訪談時間', visible: true },
-    { field: 'willing_level', header: '意願等級', visible: true }, // SYS1000.T116 //中
-
+    {
+      field: 'willing_level',
+      header: '意願等級',
+      visible: true,
+      format: (val: string) => getSYS1000Options('T116').find(item => item.value === val)?.label || val,
+      exportFormat: transformOptionsForExport(getSYS1000Options('T116'), 'value', 'label')
+      // exportFormat: [{'1':'廠商1'},{'2':'廠商2'},{'3':'廠商3'}]
+    },
+    // SYS1000.T116 //中
     { field: 'ven_uniform', header: '廠商統一編號', visible: true }, // POS2013
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // POS2013.name
-    // { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },  // pos2013.EngName
     { field: 'tlt_name', header: '品牌(專櫃名稱)', visible: true },
     { field: 'bus_type', header: '大分類代碼', visible: true }, // tltbustype /中
+    { field: 'bus_type_name', header: '大分類名稱', visible: true }, // tltbustype /中
     { field: 'VEN_ContactPerson', header: '廠商聯絡姓名', visible: true },
     { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
     { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
@@ -111,8 +121,9 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
     { field: 'VEN_Addr', header: '廠商公司地址', visible: true },
     { field: 'FLOOR_NO', header: '接洽樓層', visible: true }, // sys3900 /中
-    { field: 'building_no', header: '接洽館別代碼', visible: true }, // sys3800 /中
-    { field: 'LOCATION_No', header: '接洽店位代碼', visible: true }, //POS2002
+    { field: 'building_no', header: '館別代碼', visible: false }, // sys3800 /中
+    { field: 'building_name', header: '館別名稱', visible: true }, // sys3800 /中
+    { field: 'LOCATION_No', header: '店位代碼', visible: true }, //POS2002
     { field: 'contact_record', header: '洽談重點及交換資料紀錄', visible: true },
     { field: 'contact_remarks', header: '備註', visible: true },
   ];
@@ -131,14 +142,13 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   ];
 
   selectedItems: Customer_interview[] = [];// 多選項目
-
   // ----------------------------------------------------------------
   constructor(private tls12070Service: Tls12070Service) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS12070', 'TLS/TLS12060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS12070', 'TLS/TLS12070cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
@@ -169,9 +179,9 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   // 查詢 一般報表
   onQueryClick(frm: FormGroup) {
-  this.activeReport = 'query';
-  this.onSubmit(frm);
-}
+    this.activeReport = 'query';
+    this.onSubmit(frm);
+  }
 
   // 查詢 意願報表
   onWillingClick(frm: FormGroup) {
@@ -199,7 +209,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
         },
       });
     });
-    
+
   }
 
   // 刪除項目
@@ -242,5 +252,11 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
+
+    // // 查詢 意願等級
+    // this.tls12070Service.querySYS1000_DropDownList({ SYS_Type: 'T116' })
+    //   .subscribe((response) => {
+    //     this.willingLevelMap = response.Data;
+    //   });
   }
 }

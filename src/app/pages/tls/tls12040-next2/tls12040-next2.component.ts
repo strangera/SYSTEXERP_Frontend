@@ -270,28 +270,21 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     const cruData = this.flowService.getCruData<TLS12040DetailModel>();
     console.log('CRU 資料:', cruData);
 
-    if (!cruData?.apply_no) {
-      console.warn('沒有有效的申請編號');
-      this.notificationService.errorBubble('缺少申請編號，請返回上一步');
-      this.router.navigate(['account/tls/tls12040']);
-      return;
-    }
-
-    this.currentApplyNo = cruData.apply_no;
+    // 直接設定 apply_no，不管是否為空
+    this.currentApplyNo = cruData?.apply_no || '';
     console.log('當前申請編號:', this.currentApplyNo);
-
-    // 準備合約資訊顯示
-    this.prepareContractInfoDisplay(cruData);
-
-    // 使用新的資料流服務載入抽成資料
+    if (cruData) {
+      // 準備合約資訊顯示
+      this.prepareContractInfoDisplay(cruData);
+    }
+    // 直接載入資料，API 會根據 apply_no 是否為空回傳對應資料
     try {
       await this.dataFlowService.loadData(
-        this.currentApplyNo,
+        this.currentApplyNo, // 空字串或實際編號都可以
         this.discountOptions,
-        cruData.tlt_contract_bdate || cruData.tlt_bdate,
-        cruData.tlt_contract_edate || cruData.tlt_edate
+        cruData?.tlt_contract_bdate || cruData?.tlt_bdate,
+        cruData?.tlt_contract_edate || cruData?.tlt_edate
       );
-      // 注意：commissionData 會透過 state$ 訂閱自動更新，不需要手動賦值
     } catch (error) {
       console.error('載入抽成資料失敗:', error);
       this.notificationService.errorBubble('載入抽成資料失敗');
@@ -910,10 +903,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   onSubmitNext(): void {
     // 基本驗證
-    if (!this.hasCommissionData()) {
-      this.notificationService.warnBubble('請至少設定一個抽成項目');
-      return;
-    }
+    // if (!this.hasCommissionData()) {
+    //   this.notificationService.warnBubble('請至少設定一個抽成項目');
+    //   return;
+    // }
 
     if (this.isReadOnlyMode) {
       this.navigateToNext();
@@ -960,6 +953,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     if (this.isGeneralCommissionMode) {
       this.router.navigate(['account/tls/tls12040']);
     } else {
+      const navigationExtras: NavigationExtras = {
+        state: {
+          crudstatus: this.crudstatus, // 確保這裡有設定現有狀態
+          fromRoute: this.router.url
+        }
+      };
       // 根據你的路由結構調整
       this.router.navigate(['account/tls/tls12040next3']);
     }

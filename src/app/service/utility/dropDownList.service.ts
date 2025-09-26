@@ -178,6 +178,15 @@ export interface TALPORDERMResponse {
   pod_sdate?: string;
   pod_edate?: string;
 }
+export interface IAPS1003Item {
+  CAP_Item: string;
+  CAP_Name: string;
+  AccNo?: string;
+  GUI_FLAG?: string;
+  CAP_TaxType?: string;
+  CAP_Type: string;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -197,6 +206,7 @@ export class DropDownListService {
   getPOS2034Options(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2034_DropDownList`, {});
   }
+
 
   // 查詢上層組織(SYS3000)資料表下拉選單
   querySYS3000_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -375,6 +385,10 @@ export class DropDownListService {
   queryTLTTALENT__StoreWay2_Approve_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT__StoreWay2_Approve_DropDownList`, {});
   }
+  // 查詢專櫃下拉 (取最新契約，含對應資料，不用傳參數)
+  queryTLTTALENTDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, {});
+  }
 
   // 查詢營業型態(SYS1000)資料表下拉選單
   querySYS1000_DropDownList(params: ISYS1000Request): Observable<ApiResponse<IDropdownItem[]>> {
@@ -441,8 +455,15 @@ export class DropDownListService {
   queryPOS1008DropDownList(): Observable<ApiResponse<{ TSB_Name: string }[]>> {
     return this.http.post<ApiResponse<{ TSB_Name: string }[]>>(`${this.apiUrl}/queryPOS1008DropDownList`, {});
   }
- // 載入活動清單 (TALPORDERM)
+
+  // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
     return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);
   }
+  // 查詢扣款代碼檔(APS1003) 下拉選單
+  queryAPS1003DropDownList(params: IAPS1003Request): Observable<ApiResponse<IAPS1003Item[]>> {
+    return this.http.post<ApiResponse<IAPS1003Item[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryAPS1003DropDownList`, params);
+  }
+
+
 }

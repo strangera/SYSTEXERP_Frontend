@@ -65,8 +65,11 @@ export interface TLS41010QueryParams {
   ECR_IP?: string;
   ECR_SrvIP?: string;
   ECR_TmplNo?: string;
+  ECR_SchNo?: string;
+
 }
 export interface TLS41010Data {
+  ECR_SchNo?: string;
   id: number;
   SYS_StoreNo: string;
   ECR_No: string;
@@ -144,6 +147,8 @@ export interface TLS41010Data {
 
 
 export interface TLS41010Item {
+  ECR_SchNo?: string;
+
   ECR_Group?: string;
   ECR_SubGroup?: string;
   ECR_AreaNo?: string;
@@ -316,7 +321,7 @@ export const columns: Column[] = [
   { field: 'ECR_MaxDisc', header: '單筆交易最大折扣比率限制', visible: true },
   { field: 'ECR_EdcTimeout', header: '信用卡刷卡機連線時限(秒)', visible: true },
   { field: 'ECR_EdcSettle', header: '信用卡刷卡機連動日結', visible: true, format: formatYN },
-  { field: 'ECR_ForceInput', header: '是否強制輸入付款金額', visible: true , format: formatYN},
+  { field: 'ECR_ForceInput', header: '是否強制輸入付款金額', visible: true, format: formatYN },
   { field: 'ECR_CustCntEntry', header: '是否輸入來客數', visible: true, format: formatYN },
   { field: 'ECR_CustTypeEntry', header: '是否輸入客層數', visible: true, format: formatYN },
   { field: 'ECR_ClerkEntry', header: '是否強制輸入營業員', visible: true, format: formatYN },
@@ -333,8 +338,8 @@ export const columns: Column[] = [
   { field: 'ECR_SaleRpt8', header: '是否列印自我報帳(現額報告)帳條', visible: true, format: formatYN },
   { field: 'ECR_SaleRpt9', header: '是否列印保全現金帳條(現金明細表)', visible: true, format: formatYN },
   { field: 'ECR_SaleRpt10', header: '保留', visible: true, format: formatYN },
-  { field: 'ECR_PcashValid', header: '零用金是否需要認證', visible: true , format: formatYN},
-  { field: 'ECR_PickUpValid', header: '中途取現是否需要認證', visible: true , format: formatYN},
+  { field: 'ECR_PcashValid', header: '零用金是否需要認證', visible: true, format: formatYN },
+  { field: 'ECR_PickUpValid', header: '中途取現是否需要認證', visible: true, format: formatYN },
   { field: 'ECR_ReprintGUI', header: '是否允許執行補印發票', visible: true, format: formatYN },
   { field: 'ECR_PrnLogo', header: '是否列印商標', visible: true, format: formatYN },
   { field: 'ECR_Logo1', header: '商標1 (店名)', visible: true },
