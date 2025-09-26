@@ -169,14 +169,18 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
-  WhetherOptions: any[] = [];
+ 
   typeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
-
+  WhetherOptions: any[] = [
+    { value: 'Y', label: '使用業主發票' },
+    { value: 'N', label: '非使用業主發票' },
+    { value: null, label: '全部' },
+  ];
   constructor(
     private tls23060Service: TLS23060Service,
     private typeService: TypeService,
@@ -193,7 +197,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23060', 'tls/tls23060', this.queryForm, (form) => this.onSubmit(form));
     this.sortMeta = this.defaultSort.map(s => ({ ...s }));
 
-    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
+
     this.typeService.getTypeOptions().subscribe(data => this.typeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
 
@@ -490,7 +494,7 @@ fetchTLS23060 = (evt: LazyLoadEvent) => {
     const d = new Date(val); if (isNaN(d.getTime())) return val;
     const yyyy=d.getFullYear(), MM=(d.getMonth()+1).toString().padStart(2,'0'), dd=d.getDate().toString().padStart(2,'0');
     const HH=d.getHours().toString().padStart(2,'0'), mm=d.getMinutes().toString().padStart(2,'0');
-    return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
+    return `${yyyy}/${MM}/${dd}`;
   }
 
   // 金額格式
