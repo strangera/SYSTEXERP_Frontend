@@ -102,7 +102,7 @@ export class FIN52070Component extends BasicQueryPageComponent<GLS1005> implemen
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
-         ...frm.value,
+        ...frm.value,
       }
 
       console.log('科目三碼代號 body', body);
