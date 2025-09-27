@@ -136,7 +136,7 @@ export class TLS12040Service {
       catchError((error) => {
         console.error('❌ TLS12040Service: 提交合約資料失敗:', error);
 
-        // 🔧 修正：提供更詳細的錯誤處理
+        //  修正：提供更詳細的錯誤處理
         let errorMessage = '提交合約資料失敗';
         let errorData = null;
 

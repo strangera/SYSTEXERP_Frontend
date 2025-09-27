@@ -308,7 +308,7 @@ export class TLS12040DataFlowService {
     const defaultStartDate = contractStartDate || new Date().toISOString().split('T')[0];
     const defaultEndDate = contractEndDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
 
-    console.log('🔧 TLS12040 增強資料 (學習 TLS13010):', {
+    console.log(' TLS12040 增強資料 (學習 TLS13010):', {
       businessDataCount: businessData.length,
       discountOptionsCount: discountOptions.length,
       startDate: defaultStartDate,
@@ -390,7 +390,7 @@ export class TLS12040DataFlowService {
     itemType: 'chargeDetail' | 'levelChargeDetail',
     parentItem: ChargeSettingBusinessModel
   ): any[] {
-    console.log('🔧 TLS12040 建立完整折扣項目 (參考 TLS13010):', {
+    console.log(' TLS12040 建立完整折扣項目 (參考 TLS13010):', {
       itemType,
       existingCount: existingDetails.length,
       optionsCount: discountOptions.length,
@@ -401,7 +401,7 @@ export class TLS12040DataFlowService {
     const isNewContractWithoutData = existingDetails.length === 0;
 
     discountOptions?.forEach((option, index) => {
-      // 🔧 修正：使用 filter 處理同一折扣別的多筆資料 (學習 TLS13010)
+      //  修正：使用 filter 處理同一折扣別的多筆資料 (學習 TLS13010)
       const existingItems = existingDetails.filter(detail =>
         detail.cag_barcode === option.value && detail._status !== 'deleted'
       );
@@ -441,7 +441,7 @@ export class TLS12040DataFlowService {
           console.log(`✅ 保持既有項目: ${existingItem.cag_barcode} (${option.label}) - 預設勾選`);
         });
       } else {
-        // 🔧 修正：新增項目的預選邏輯 - 只要是 000 或包含正品就預選
+        //  修正：新增項目的預選邏輯 - 只要是 000 或包含正品就預選
         const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
         // 根據項目類型建立不同結構的物件

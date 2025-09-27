@@ -43,7 +43,7 @@ interface CategoryItem {
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   forceEditMode: boolean = true;
 
-  // 🆕 對話框相關屬性
+  //  對話框相關屬性
   showCalculationDialog: boolean = false;
   calculationResult: any = null;
   currentRowData: any = null;
@@ -106,7 +106,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  // ========== 🆕 欄位定義 getter (取代原有的屬性) ==========
+  // ==========  欄位定義 getter (取代原有的屬性) ==========
   get contractInfoColumns(): ColumnDef[] {
     if (!this._cachedContractInfoColumns || this._lastContractInfoLength !== this.contractInfoData.length) {
       // console.log('🔄 重新生成 contractInfoColumns');
@@ -293,7 +293,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       next: (options) => {
         // console.log('✅ 組織選項載入成功:', options);
         this.orgOptions = options;
-        // 🆕 載入完成後清除快取
+        //  載入完成後清除快取
         this._clearColumnCache();
       },
       error: (error) => {
@@ -367,7 +367,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     if (this.contractFlowService.isNewContractMode()) {
-      // console.log('🆕 新增模式：載入可用扣款項目');
+      // console.log(' 新增模式：載入可用扣款項目');
       this.loadAvailableFareData();
     } else {
       // console.log('🔍 編輯模式：從 API 載入');
@@ -379,7 +379,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // console.log('📦 載入暫存扣款資料:', savedData);
 
     try {
-      // 🆕 使用服務驗證和修復資料
+      //  使用服務驗證和修復資料
       this.originalFareData = this.fareDataService.validateAndFixData(savedData);
       this.filterData();
 
@@ -407,17 +407,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       showAll: true
     }).subscribe({
       next: (response) => {
-        // console.log('🆕 新增模式 API 回傳資料:', response);
+        // console.log(' 新增模式 API 回傳資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
-          // 🆕 使用服務處理新增模式資料
+          //  使用服務處理新增模式資料
           this.originalFareData = this.fareDataService.processNewContractAPIData(response.Data.FaresByType);
           this.filterData();
           this.saveFareDataToWorkflow();
 
-          // console.log('🆕 新增模式：載入可用扣款項目成功');
+          // console.log(' 新增模式：載入可用扣款項目成功');
         } else {
-          // console.log('🆕 新增模式：API 沒有回傳可用扣款項目');
+          // console.log(' 新增模式：API 沒有回傳可用扣款項目');
           this.messageService.infoBubble('目前沒有可用的扣款項目');
           this.initializeEmptyData();
         }
@@ -426,7 +426,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.messageService.unblockUi();
       },
       error: (error) => {
-        console.error('🆕 新增模式載入可用扣款項目失敗:', error);
+        console.error(' 新增模式載入可用扣款項目失敗:', error);
         this.messageService.warnBubble('載入可用扣款項目失敗');
         this.loading = false;
         this.messageService.unblockUi();
@@ -451,7 +451,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         // console.log('API 回傳的扣款資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
-          // 🆕 使用服務處理 API 資料
+          //  使用服務處理 API 資料
           this.originalFareData = this.fareDataService.processAPIData(
             response.Data.FaresByType,
             this.contractFlowService.isNewContractMode()
@@ -460,7 +460,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           this.saveFareDataToWorkflow();
 
           if (this.contractFlowService.isNewContractMode()) {
-            console.log('🆕 新增模式：載入可用扣款項目成功');
+            console.log(' 新增模式：載入可用扣款項目成功');
           } else {
             console.log('🔍 編輯模式：載入既有扣款資料成功');
           }
@@ -510,7 +510,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
 
-    // 🆕 使用資料服務進行過濾
+    //  使用資料服務進行過濾
     this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
 
     // console.log('🔍 過濾後結果:', {
@@ -529,7 +529,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     try {
       // console.log('💾 準備儲存暫存資料...');
 
-      // 🆕 使用資料服務準備儲存資料
+      //  使用資料服務準備儲存資料
       const mergedFareItems = this.fareDataService.prepareSaveData(this.originalFareData);
 
       const totalItems = mergedFareItems.length;
@@ -569,7 +569,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    // 🔧 專門處理 checkbox 勾選
+    //  專門處理 checkbox 勾選
     if (fieldName === 'is_selected') {
       this.updateOriginalData(capType || 'A');
       this.filterData();
@@ -598,12 +598,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         console.warn(`未知的扣款類型: ${capType}`);
     }
 
-    // 🔧 只對關鍵欄位進行即時驗證
+    //  只對關鍵欄位進行即時驗證
     if (rowData.is_selected && capType) {
       this.performRealTimeValidation(rowData, capType);
     }
 
-    // 🔧 關鍵修改：只在重要欄位變更時才觸發完整狀態更新
+    //  關鍵修改：只在重要欄位變更時才觸發完整狀態更新
     const criticalFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount', 'tpy_totalamt', 'tpy_rate'];
 
     if (criticalFields.includes(fieldName)) {
@@ -617,7 +617,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-    * 🆕 即時驗證單一項目
+    *  即時驗證單一項目
     */
   private performRealTimeValidation(rowData: any, capType: string): void {
     const allItemsOfType = this.originalFareData[capType] || [];
@@ -656,7 +656,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       // 🔥 關鍵：確保預設值存在
       if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
         rowData.tpy_qty = 1;
-        console.log('🔧 A類型計算：自動設定數量預設值為 1');
+        console.log(' A類型計算：自動設定數量預設值為 1');
       }
 
       const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
@@ -752,7 +752,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🆕 計算期數的輔助方法
+  //  計算期數的輔助方法
   private updatePeriodNumbers(rowData: any): void {
     // console.log('📊 開始更新期數...', {
     //   開始日期: rowData.tpy_bdate,
@@ -810,7 +810,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🆕 計算兩個日期間的月數
+  //  計算兩個日期間的月數
   private calculateMonthsBetween(startDate: Date, endDate: Date): number {
     console.log('📅 計算期數:', {
       開始: startDate.toISOString().slice(0, 7),
@@ -876,7 +876,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-   * 🆕 增強的表格儲存處理
+   *  增強的表格儲存處理
    */
   onFareTableSave(event: { oldData: any, newData: any }, capType: string): void {
     // console.log(`💾 ${capType}類型表格儲存:`, event.newData);
@@ -982,11 +982,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   selectAllByType(capType: string): void {
     console.log(`🔄 ${capType} 類型全部選擇`);
 
-    // 🆕 使用狀態服務
+    //  使用狀態服務
     this.fareStatusService.selectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
 
-    // 🔧 修正：重新過濾數據
+    //  修正：重新過濾數據
     this.filterData();
 
     this.saveFareDataToWorkflow();
@@ -995,11 +995,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   deselectAllByType(capType: string): void {
     console.log(`🔄 ${capType} 類型取消全部選擇`);
 
-    // 🆕 使用狀態服務
+    //  使用狀態服務
     this.fareStatusService.deselectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
 
-    // 🔧 修正：重新過濾數據
+    //  修正：重新過濾數據
     this.filterData();
 
     this.saveFareDataToWorkflow();
@@ -1182,7 +1182,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private ensureDefaultValues(item: any, capType: string): void {
-    // 🆕 使用資料服務套用預設值
+    //  使用資料服務套用預設值
     this.fareDataService.applyDynamicDefaults(item, this.contractInfoData);
   }
 
@@ -1250,7 +1250,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.closeCalculationDialog();
   }
 
-  // 🆕 關閉對話框
+  //  關閉對話框
   onCalculationDialogClose(visible: boolean): void {
     if (!visible) {
       this.closeCalculationDialog();

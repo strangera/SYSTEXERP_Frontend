@@ -10,7 +10,7 @@ import { ValidationResult, FieldValidationConfig } from './table-validation.inte
 })
 export class TableValidationService {
 
-  // 🆕 儲存每一列的驗證錯誤
+  //  儲存每一列的驗證錯誤
   private validationErrors: Map<string, string[]> = new Map();
 
   /**

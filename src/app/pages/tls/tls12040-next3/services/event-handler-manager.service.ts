@@ -67,7 +67,7 @@ export class TLS12040EventHandlerManager {
 
     // 如果是新增的項目，保持 new 狀態
     if (result._status === 'new') {
-      console.log('🆕 保持新增狀態:', result.id);
+      console.log(' 保持新增狀態:', result.id);
       return result;
     }
 
@@ -235,7 +235,7 @@ export class TLS12040EventHandlerManager {
     const typeName = typeNames[type as keyof typeof typeNames] || type;
     this.notificationService.successBubble(`已新增${typeName}項目`);
 
-    console.log('🆕 新增項目:', {
+    console.log(' 新增項目:', {
       id: newItem.id,
       type: type,
       _status: newItem._status,

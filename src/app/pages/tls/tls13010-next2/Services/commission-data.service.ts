@@ -225,7 +225,7 @@ export class CommissionDataService {
    * 新增合約模式載入
    */
   private loadForNewContract(options: CommissionDataLoadOptions): CommissionDataLoadResult {
-    console.log('🆕 新增合約模式：初始化空資料');
+    console.log(' 新增合約模式：初始化空資料');
 
     return {
       success: true,

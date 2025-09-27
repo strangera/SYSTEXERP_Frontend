@@ -217,7 +217,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
           SortBy: [{ field: this.valuePropertyName, order: 1 }]
         }, { emitEvent: false });
 
-        console.log('🔧 初始化分頁參數:', this.searchForm.value);
+        console.log(' 初始化分頁參數:', this.searchForm.value);
 
         // 立即觸發一次搜尋
         this.triggerSearch(this.searchForm);

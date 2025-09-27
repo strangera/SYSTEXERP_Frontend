@@ -87,7 +87,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
       next: (response) => {
         this.bigCategoryOptions = response;
 
-        // 🔧 修正：大分類載入完成後，檢查是否需要載入中分類
+        //  修正：大分類載入完成後，檢查是否需要載入中分類
         const currentCatLNo = this.queryForm.controls.CAT_LNo.value;
         if (currentCatLNo && Array.isArray(currentCatLNo) && currentCatLNo.length > 0) {
           this.loadMiddleCategoriesByMultipleCatLNo(currentCatLNo);
@@ -112,7 +112,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
       }
     });
 
-    // 🆕 新增：查詢條件恢復機制（像 SYSB920 一樣）
+    //  新增：查詢條件恢復機制（像 SYSB920 一樣）
     this.handleQueryRestore(this.queryForm, 'TLS51030', (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup): void {
@@ -251,7 +251,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
             groupedOptions[catLNo] = [];
           }
 
-          // 🔧 修改：直接使用陣列格式作為 value
+          //  修改：直接使用陣列格式作為 value
           const originalLabel = item.label; // 例如: "001 - 彩妝品"
           const middleCategoryCode = item.value; // 例如: "001"
           const middleCategoryName = originalLabel.includes(' - ')
@@ -261,7 +261,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
           // 顯示格式：001-彩妝品 (不顯示大分類代碼)
           const fullDisplayLabel = `${middleCategoryCode}-${middleCategoryName}`;
 
-          // 🔧 新的 value 格式：使用陣列 [大分類代碼, 中分類代碼]
+          //  新的 value 格式：使用陣列 [大分類代碼, 中分類代碼]
           const arrayValue = [catLNo, middleCategoryCode];
 
           // 加入到對應的分組
@@ -292,7 +292,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
 
         console.log('分組後的中分類選項:', this.middleCategoryOptions);
 
-        // 🔧 選項驗證邏輯需要相應調整
+        //  選項驗證邏輯需要相應調整
         const currentCatMNo = this.queryForm.controls.CAT_MNo.value;
         if (currentCatMNo && Array.isArray(currentCatMNo) && currentCatMNo.length > 0) {
           const allValidOptions = this.middleCategoryOptions.flatMap(group =>

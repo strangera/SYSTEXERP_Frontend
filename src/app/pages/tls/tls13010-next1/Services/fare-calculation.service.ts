@@ -26,7 +26,7 @@ export class FareCalculationService {
   }
 
   /**
-    * 🆕 統一處理坪數單位自動帶入邏輯
+    *  統一處理坪數單位自動帶入邏輯
     * 所有類型當選擇坪數單位時都會自動帶入總坪數
     */
   private handleLocationSpaceCalculation(data: any, capType: string): void {
@@ -69,7 +69,7 @@ export class FareCalculationService {
    * 計算公式：金額 = 單價 × 數量
    */
   private calculateTypeA(data: any): void {
-    // 🆕 統一處理坪數邏輯
+    //  統一處理坪數邏輯
     this.handleLocationSpaceCalculation(data, 'A');
 
     const unitPrice = parseFloat(data.tpy_unitamt) || 0;

@@ -26,7 +26,7 @@ export class Tls51020DropDownService {
     private errorHandler: ErrorHandlerService
   ) { }
 
-  // 🆕 新增：支援多個大分類代碼查詢中分類（後端直接支援陣列）
+  //  新增：支援多個大分類代碼查詢中分類（後端直接支援陣列）
   getSystemTypesByMultipleCatLNo(catLNoArray: string[]): Observable<MiddleCategoryItem[]> {
     if (!catLNoArray || catLNoArray.length === 0) {
       return of([]);
@@ -50,7 +50,7 @@ export class Tls51020DropDownService {
           throw new Error('API 回傳的 Data 不是陣列');
         }
 
-        // 🔧 修改：回傳更完整的資訊
+        //  修改：回傳更完整的資訊
         return data.map((item: any) => ({
           value: item.No || '',                                    // 中分類代碼
           label: `${item.No || ''} - ${item.Name || ''}`,         // 原始格式：001 - 彩妝品

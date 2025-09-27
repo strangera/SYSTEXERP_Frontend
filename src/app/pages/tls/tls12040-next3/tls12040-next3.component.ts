@@ -833,7 +833,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增固定租金項目');
 
-        console.log('🆕 智能新增固定租金:', {
+        console.log(' 智能新增固定租金:', {
           id: newItem.id,
           dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
           totalItems: this.fixedRentItems.length
@@ -883,7 +883,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增底租抽成取高者項目');
 
-        console.log('🆕 智能新增底租抽成取高者:', {
+        console.log(' 智能新增底租抽成取高者:', {
           id: newItem.id,
           dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
           totalItems: this.baseRentHigherItems.length
@@ -933,7 +933,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增包底抽成項目');
 
-        console.log('🆕 智能新增包底抽成:', {
+        console.log(' 智能新增包底抽成:', {
           id: newItem.id,
           dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
           totalItems: this.baseCommissionItems.length
@@ -972,7 +972,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增階梯式抽成項目');
 
-        console.log('🆕 智能新增階梯式抽成:', {
+        console.log(' 智能新增階梯式抽成:', {
           id: graduatedItem.id,
           seqNo: graduatedItem.seq_no,
           dateRange: `${graduatedItem.cag_bdate} ~ ${graduatedItem.cag_edate}`,
@@ -1020,7 +1020,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增包底加階梯項目');
 
-        console.log('🆕 智能新增包底加階梯:', {
+        console.log(' 智能新增包底加階梯:', {
           id: baseTierItem.id,
           seqNo: baseTierItem.seq_no,
           dateRange: `${baseTierItem.cag_bdate} ~ ${baseTierItem.cag_edate}`,
@@ -1208,7 +1208,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     this.notificationService.blockUi();
 
     try {
-      // 🔧 修正：使用 TLS12040 專用的生成方法
+      //  修正：使用 TLS12040 專用的生成方法
       const submitData = this.contractFlowService.generateTLS12040SubmitData();
 
       console.log('Next3: 最終送出的完整資料:');
@@ -1235,7 +1235,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
       console.log('資料驗證通過，開始調用 API...');
 
-      // 🔧 修正：調用 TLS12040 專用的 API
+      //  修正：調用 TLS12040 專用的 API
       this.callTLS12040SubmitAPI(submitData);
 
     } catch (error) {
@@ -1331,7 +1331,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   private callTLS12040SubmitAPI(submitData: any): void {
     console.log('Next3: 調用 TLS12040 API 提交合約資料...');
 
-    // 🔧 修正：使用正確的 service 方法名稱
+    //  修正：使用正確的 service 方法名稱
     this.tls12040Service.submitFinalTLS12040(submitData).subscribe({
       next: (response) => this.handleSubmitSuccess(response),
       error: (error) => this.handleSubmitError(error)
@@ -1352,7 +1352,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       successMessage += '\n' + response.message;
     }
 
-    // 🔧 修正：顯示更詳細的成功資訊
+    //  修正：顯示更詳細的成功資訊
     if (response.success && response.data) {
       const summary = [
         `專櫃編號: ${response.data.talentId || response.talentId || ''}`,
@@ -1392,7 +1392,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       errorMessage += `: ${error.message}`;
     }
 
-    // 🔧 修正：提供更詳細的錯誤資訊
+    //  修正：提供更詳細的錯誤資訊
     if (error?.error?.Data?.errors) {
       const detailErrors = error.error.Data.errors.slice(0, 3).join('; ');
       errorMessage += `\n詳細錯誤: ${detailErrors}`;
@@ -1462,7 +1462,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
     // 如果是新增的資料，保持 new 狀態
     if (modifiedData._status === 'new') {
-      console.log('🆕 保持新增狀態:', modifiedData.id);
+      console.log(' 保持新增狀態:', modifiedData.id);
       return modifiedData;
     }
 

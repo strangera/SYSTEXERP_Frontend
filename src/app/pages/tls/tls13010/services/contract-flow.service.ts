@@ -425,7 +425,7 @@ export class ContractFlowService {
     });
 
     if (isNewMode) {
-      console.log('🆕 初始化新增工作流程');
+      console.log(' 初始化新增工作流程');
       this.initializeNewContractWorkflow(queryRowData);
     } else {
       console.log('📝 初始化編輯工作流程');
@@ -1370,7 +1370,7 @@ export class ContractFlowService {
    */
   getCurrentTalentId(): string {
     if (this.isNewContractMode()) {
-      console.log('🆕 新增模式：talent_id 回傳空字串');
+      console.log(' 新增模式：talent_id 回傳空字串');
       return '';
     }
 
@@ -1415,7 +1415,7 @@ export class ContractFlowService {
    * 新增：完全清空並重新開始（新增模式專用）
    */
   clearAndStartNew(): void {
-    console.log('🆕 清空所有資料並開始新增模式');
+    console.log(' 清空所有資料並開始新增模式');
 
     this.clearTempData();
 

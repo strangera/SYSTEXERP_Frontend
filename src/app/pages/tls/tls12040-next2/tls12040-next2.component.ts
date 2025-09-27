@@ -20,6 +20,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { TLS12040DataFlowService } from './services/tls12040-data-flow.service';
 import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
+import { Button } from "primeng/button";
 interface CategoryItem {
   id: number;
 }
@@ -28,8 +29,7 @@ interface CategoryItem {
   selector: 'app-tls12040-next2',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule,
-    NgIf
-  ],
+    NgIf, Button],
   providers: [
     TLS12040DataFlowService
   ],
@@ -132,15 +132,22 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   get currentCommissionType(): string {
-    if (this.contractInfoData && this.contractInfoData.length > 0) {
-      return this.contractInfoData[0].tlt_term_type || '3';
-    }
-
+    // 1. 優先從 flowService 的 CRU 資料取得（最可靠的來源）
     const step1Data = this.flowService.getCruData<TLS12040DetailModel>();
     if (step1Data?.tlt_term_type) {
+      // console.log('從 flowService CRU 資料取得 tlt_term_type:', step1Data.tlt_term_type);
       return step1Data.tlt_term_type.toString();
     }
 
+    // 2. 如果 CRU 資料沒有，才檢查 contractInfoData
+    if (this.contractInfoData && this.contractInfoData.length > 0) {
+      const termType = this.contractInfoData[0].tlt_term_type;
+      console.log('從 contractInfoData 取得 tlt_term_type:', termType);
+      return termType || '3';
+    }
+
+    // 3. 最後才使用預設值
+    console.log('使用預設 tlt_term_type: 3');
     return '3';
   }
 
@@ -180,7 +187,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         console.log('📦 發現有效的暫存 Next2 資料，優先使用暫存資料');
         await this.loadFromSavedData(savedNext2Data);
       } else {
-        console.log('🆕 沒有暫存資料或資料無效，從工作流程載入');
+        console.log(' 沒有暫存資料或資料無效，從工作流程載入');
         // 載入工作流程資料
         await this.loadWorkflowData();
       }
@@ -246,7 +253,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       this.selectedSettingTab = savedData.selectedSettingTab || 'discount';
       this.contractInfoData = savedData.contractInfoData || [];
 
-      console.log('🔧 恢復基本狀態:', {
+      console.log(' 恢復基本狀態:', {
         currentApplyNo: this.currentApplyNo,
         selectedSettingTab: this.selectedSettingTab,
         contractInfoDataLength: this.contractInfoData.length
@@ -440,10 +447,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    console.log('🔧 TLS12040 創建預設折扣項目 (參考 TLS13010)');
+    console.log(' TLS12040 創建預設折扣項目 (參考 TLS13010)');
 
     return this.discountOptions.map((option, index) => {
-      // 🔧 修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
+      //  修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
       const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
       const item = {
@@ -476,10 +483,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    console.log('🔧 TLS12040 創建預設層級項目 (參考 TLS13010)');
+    console.log(' TLS12040 創建預設層級項目 (參考 TLS13010)');
 
     return this.discountOptions.map((option, index) => {
-      // 🔧 修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
+      //  修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
       const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
       const item = {
@@ -932,12 +939,6 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onSubmitNext(): void {
-    // 基本驗證
-    // if (!this.hasCommissionData()) {
-    //   this.notificationService.warnBubble('請至少設定一個抽成項目');
-    //   return;
-    // }
-
     if (this.isReadOnlyMode) {
       this.navigateToNext();
       return;
@@ -951,8 +952,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     if (this.isGeneralCommissionMode) {
+      // 一般抽成模式：顯示確認對話框
+      console.log('顯示確認對話框');
       this.showConfirmDialog = true;
     } else {
+      // 其他抽成模式：直接導航到下一步
       this.navigateToNext();
     }
   }
@@ -1001,7 +1005,47 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
-  onConfirmDialogResult(confirmed: boolean): void { }
+  onConfirmDialogResult(confirmed: boolean): void {
+    this.showConfirmDialog = false;
+
+    if (confirmed) {
+      this.performSubmit();
+    }
+    // 如果取消，就什麼都不做
+  }
+
+  private async performSubmit(): Promise<void> {
+    try {
+      this.loading = true;
+      this.notificationService.blockUi();
+
+      // 生成提交資料
+      const submitData = this.flowService.generateTLS12040SubmitData();
+      console.log('準備提交的資料:', submitData);
+
+      // 呼叫 API 提交
+      const response = await this.tls12040Service.submitFinalTLS12040(submitData).toPromise();
+
+      if (response.Status === '0000') {
+        this.notificationService.successBubble('契約資料提交成功！');
+        this.flowService.onSubmitSuccess();
+
+        // 延遲導航回列表頁
+        setTimeout(() => {
+          this.router.navigate(['account/tls/tls12040']);
+        }, 2000);
+      } else {
+        throw new Error(response.Message || '提交失敗');
+      }
+
+    } catch (error) {
+      console.error('提交失敗:', error);
+      this.notificationService.errorBubble('契約資料提交失敗，請重試');
+    } finally {
+      this.loading = false;
+      this.notificationService.unblockUi();
+    }
+  }
 
   override onCancel(): void {
     const navigationExtras: NavigationExtras = {
@@ -1133,7 +1177,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
 
-    // 🔧 新增：保護 cag_barcode 不被意外修改
+    //  新增：保護 cag_barcode 不被意外修改
     if (fieldName === 'cag_barcode' && rowData.cag_barcode && rowData.cag_barcode !== newValue) {
       console.warn('⚠️ 嘗試修改 cag_barcode，這可能不是預期的行為:', {
         itemId: rowData.id,
@@ -1214,10 +1258,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       newValue,
       currentStatus: rowData._status,
       hasValidId: this.hasValidId(rowData),
-      currentCagBarcode: rowData.cag_barcode  // 🔧 新增：記錄當前的 cag_barcode
+      currentCagBarcode: rowData.cag_barcode  //  新增：記錄當前的 cag_barcode
     });
 
-    // 🔧 修正：在處理選擇狀態變更時，確保不會意外修改 cag_barcode
+    //  修正：在處理選擇狀態變更時，確保不會意外修改 cag_barcode
     const originalCagBarcode = rowData.cag_barcode;
 
     if (newValue === false) {
@@ -1248,7 +1292,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       }
     }
 
-    // 🔧 重要：確保 cag_barcode 值不會被意外修改
+    //  重要：確保 cag_barcode 值不會被意外修改
     if (rowData.cag_barcode !== originalCagBarcode) {
       console.warn('⚠️ 發現 cag_barcode 被意外修改，正在還原:', {
         original: originalCagBarcode,

@@ -1,7 +1,7 @@
 // tls13010-next2.component.ts - 重構簡化版本
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { lastValueFrom, Subscription } from 'rxjs';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
@@ -916,7 +916,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     try {
       const cleanData = this.contractFlowService.generateCleanSubmitData();
-      const response = await this.tls13010Service.submitFinalTLS13010(cleanData).toPromise();
+      const response = await lastValueFrom(this.tls13010Service.submitFinalTLS13010(cleanData));
 
       this.notificationService.successBubble('契約資料提交成功！');
       this.contractFlowService.onSubmitSuccess();

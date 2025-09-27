@@ -599,7 +599,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   private loadPOS2013Options(): void {
 
-    // 🔧 直接呼叫 API
+    //  直接呼叫 API
     this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
       next: (response: any[]) => {
         this.pos2013Options = response;
@@ -615,7 +615,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   private loadNegotiatorOptions(): void {
 
-    // 🔧 直接呼叫 API
+    //  直接呼叫 API
     this.negotiatorService.getNegotiatorOptions().subscribe({
       next: (response: any[]) => {
         this.negotiatorOptions = response;
@@ -1352,7 +1352,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.router.navigate(['account/tls/tls13010next1']);
     } else {
       // 🚨 臨時解決方案：強制通過
-      console.warn('🔧 強制通過驗證（臨時解決方案）');
+      console.warn(' 強制通過驗證（臨時解決方案）');
       this.saveToWorkflow();
       this.router.navigate(['account/tls/tls13010next1']);
     }
@@ -2045,7 +2045,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    * 新增：設定檢視模式 UI
    */
   private setupViewModeUI(): void {
-    console.log('🔧 設定檢視模式 UI 監聽');
+    console.log(' 設定檢視模式 UI 監聽');
 
     // 先檢查當前狀態
     const currentViewMode = this.contractFlowService.isViewMode();

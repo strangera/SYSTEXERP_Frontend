@@ -127,7 +127,7 @@ export class CommissionTableService {
     const defaultCapSaletype1 = this.convertToYN(step1Data?.cap_saletype1);
     const defaultCapSaletype2 = this.convertToYN(step1Data?.cap_saletype2);
 
-    console.log('🆕 新增抽成項目時的 cap_saletype 預設值:', {
+    console.log(' 新增抽成項目時的 cap_saletype 預設值:', {
       step1原始資料: {
         cap_saletype1: step1Data?.cap_saletype1,
         cap_saletype2: step1Data?.cap_saletype2

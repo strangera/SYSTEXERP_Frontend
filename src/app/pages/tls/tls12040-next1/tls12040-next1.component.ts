@@ -218,7 +218,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     } else if (currentState.applyNo) {
       this.currentApplyNo = currentState.applyNo;
     } else {
-      // 新增模式下 applyNo 為空
       this.currentApplyNo = '';
       console.log('新增模式，applyNo 為空');
     }
@@ -226,14 +225,14 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 載入合約資訊
     this.loadContractInfo();
 
-    // 載入扣款資料（不管有沒有 apply_no 都要呼叫 API）
-    this.loadFareDataFromAPI();
+    //  修正：優先載入暫存資料
+    this.loadFareDataWithPriority();
   }
 
   private loadFareDataWithPriority(): void {
     console.log('開始優先級載入扣款資料...');
 
-    // 🆕 新增模式直接初始化空資料
+    // 新增模式直接初始化空資料
     if (this.isCreateMode) {
       console.log('新增模式：直接初始化空扣款資料');
       this.initializeEmptyData();
@@ -244,72 +243,124 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const savedNext1Data = this.flowService.getNext1Data<Next1Data>();
     console.log('檢查 Next1 暫存資料:', savedNext1Data);
 
-    if (savedNext1Data?.fareData && this.hasValidFareData(savedNext1Data.fareData)) {
-      console.log('✅ 使用 Next1 暫存的扣款資料');
-      this.originalFareData = { ...savedNext1Data.fareData };
-      this.filterData();
-      this.verifyDataIntegrity();
-      return;
+    //  放寬暫存載入條件
+    if (savedNext1Data?.fareData) {
+      // 檢查暫存資料是否有意義
+      const hasAnyFareData = Object.keys(savedNext1Data.fareData).some(capType =>
+        Array.isArray(savedNext1Data.fareData[capType]) &&
+        savedNext1Data.fareData[capType].length > 0
+      );
+
+      if (hasAnyFareData) {
+        console.log('✅ 使用 Next1 暫存的扣款資料');
+        this.originalFareData = this.deepCloneFareData(savedNext1Data.fareData);
+
+        // // 還原顯示模式
+        // if (savedNext1Data.showMode) {
+        //   this.showMode = savedNext1Data.showMode;
+        // }
+
+        this.filterData();
+        this.verifyDataIntegrity();
+
+        //  載入暫存後，檢查是否需要同步最新的 API 資料
+        this.checkAndSyncWithAPI();
+        return;
+      }
     }
 
-    // 2. 真的沒有暫存才從 API 載入
-    console.log('沒有暫存資料，從 API 載入');
+    // 2. 沒有有效暫存才從 API 載入
+    console.log('沒有有效暫存資料，從 API 載入');
     this.loadFareDataFromAPI();
   }
 
   /**
- * 🆕 新增：更嚴格的資料有效性檢查
- */
-  private hasValidAndCompleteData(fareData: any): boolean {
-    if (!fareData || typeof fareData !== 'object') {
-      console.log('扣款資料格式無效');
-      return false;
+   *  新增：檢查暫存資料是否需要與 API 同步
+   */
+  private checkAndSyncWithAPI(): void {
+    // 如果是檢視模式，不需要同步
+    if (this.isReadOnlyMode) {
+      console.log('檢視模式，跳過 API 同步檢查');
+      return;
     }
 
-    const capTypes = ['A', 'B', 'C', 'D', 'E'];
-    let hasAnyData = false;
-    let totalItems = 0;
-    let hasUserModifications = false; // 檢查是否有使用者修改
+    // 檢查暫存資料的時間戳
+    const savedNext1Data = this.flowService.getNext1Data<any>();
+    if (savedNext1Data?.timestamp) {
+      const cacheAge = Date.now() - savedNext1Data.timestamp;
+      const maxCacheAge = 5 * 60 * 1000; // 5分鐘
 
-    for (const capType of capTypes) {
-      if (fareData[capType] && Array.isArray(fareData[capType])) {
-        const items = fareData[capType];
-        totalItems += items.length;
-
-        if (items.length > 0) {
-          hasAnyData = true;
-
-          // 檢查是否有使用者修改的痕跡
-          const hasSelectedItems = items.some(item => item.is_selected);
-          const hasModifiedItems = items.some(item =>
-            item._status === 'new' ||
-            item._status === 'modified' ||
-            item._isCopiedItem
-          );
-
-          if (hasSelectedItems || hasModifiedItems) {
-            hasUserModifications = true;
-          }
-        }
+      if (cacheAge > maxCacheAge) {
+        console.log('暫存資料超過5分鐘，背景同步 API 資料');
+        this.backgroundSyncWithAPI();
+      } else {
+        console.log('暫存資料仍新鮮，無需同步');
       }
     }
-
-    const isValid = hasAnyData && (hasUserModifications || totalItems > 0);
-
-    console.log('扣款資料詳細檢查:', {
-      hasValidStructure: true,
-      hasAnyData,
-      totalItems,
-      hasUserModifications,
-      isValid,
-      dataKeys: Object.keys(fareData)
-    });
-
-    return isValid;
   }
 
   /**
-   * 🆕 新增：深度複製扣款資料，避免引用問題
+   *  新增：背景同步 API 資料（不影響當前顯示）
+   */
+  private backgroundSyncWithAPI(): void {
+    const queryParams = {
+      apply_no: this.currentApplyNo || '',
+      showAll: true
+    };
+
+    console.log('背景同步 API 資料，參數:', queryParams);
+
+    const subscription = this.tls12040Service.queryTLS12040Fare(queryParams).subscribe({
+      next: (response) => {
+        if (response?.Data?.FaresByType) {
+          console.log('背景同步完成，檢查是否有新資料');
+          this.mergeAPIDataWithCache(response.Data.FaresByType);
+        }
+      },
+      error: (error) => {
+        console.warn('背景同步失敗:', error);
+        // 同步失敗不影響現有資料
+      }
+    });
+
+    this.subscriptions.push(subscription);
+  }
+
+  /**
+   *  新增：合併 API 資料與暫存資料
+   */
+  private mergeAPIDataWithCache(apiData: any): void {
+    // 這裡可以實作智能合併邏輯
+    // 例如：保留使用者的修改，但加入新的可選項目
+    console.log('合併 API 資料與暫存資料');
+
+    // 簡單版本：只在沒有使用者修改時才更新
+    const hasUserModifications = this.hasUserModifications();
+    if (!hasUserModifications) {
+      console.log('無使用者修改，更新為 API 最新資料');
+      this.processAPIData(apiData);
+      this.filterData();
+    } else {
+      console.log('有使用者修改，保持現有資料');
+    }
+  }
+
+  /**
+   *  新增：檢查是否有使用者修改
+   */
+  private hasUserModifications(): boolean {
+    return Object.keys(this.originalFareData).some(capType =>
+      this.originalFareData[capType].some(item =>
+        item._status === 'new' ||
+        item._status === 'modified' ||
+        item._status === 'deleted' ||
+        (item.is_selected !== item._originalSelected)
+      )
+    );
+  }
+
+  /**
+   * 新增：深度複製扣款資料，避免引用問題
    */
   private deepCloneFareData(fareData: { [key: string]: TLS12040FareItem[] }): { [key: string]: TLS12040FareItem[] } {
     const cloned: { [key: string]: TLS12040FareItem[] } = {};
@@ -335,7 +386,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-   * 🆕 新增：還原已選擇狀態
+   *  新增：還原已選擇狀態
    */
   private restoreSelectionStates(savedData: Next1Data): void {
     if (!savedData.selectedItems || !Array.isArray(savedData.selectedItems)) {
@@ -385,7 +436,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     return hasAnyData;
   }
   /**
-   * 🆕 新增：資料完整性驗證
+   *  新增：資料完整性驗證
    */
   private verifyDataIntegrity(): void {
     console.log('🔍 驗證資料完整性...');
@@ -559,7 +610,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
 
-    // 🆕 使用資料服務進行過濾
+    //  使用資料服務進行過濾
     this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
 
     console.log('🔍 過濾後結果:', {
@@ -920,7 +971,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   selectAllByType(capType: string): void {
     console.log(`📄 ${capType} 類型全部選擇`);
 
-    // 🆕 使用狀態服務
+    //  使用狀態服務
     this.fareStatusService.selectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
     this.saveFareDataToWorkflow();
@@ -929,7 +980,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   deselectAllByType(capType: string): void {
     console.log(`📄 ${capType} 類型取消全部選擇`);
 
-    // 🆕 使用狀態服務
+    //  使用狀態服務
     this.fareStatusService.deselectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
     this.saveFareDataToWorkflow();
@@ -1028,7 +1079,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  // 🆕 關閉對話框
+  //  關閉對話框
   onCalculationDialogClose(visible: boolean): void {
     if (!visible) {
       this.closeCalculationDialog();
@@ -1343,7 +1394,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🆕 計算期數的輔助方法
+  //  計算期數的輔助方法
   private updatePeriodNumbers(rowData: any): void {
     console.log('📊 開始更新期數...', {
       開始日期: rowData.tpy_bdate,
@@ -1401,7 +1452,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🆕 計算兩個日期間的月數
+  //  計算兩個日期間的月數
   private calculateMonthsBetween(startDate: Date, endDate: Date): number {
     console.log('📅 計算期數:', {
       開始: startDate.toISOString().slice(0, 7),
@@ -1495,7 +1546,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private ensureDefaultValues(item: any, capType: string): void {
-    // 🆕 使用資料服務套用預設值
+    //  使用資料服務套用預設值
     this.fareDataService.applyDynamicDefaults(item, this.contractInfoData);
   }
 

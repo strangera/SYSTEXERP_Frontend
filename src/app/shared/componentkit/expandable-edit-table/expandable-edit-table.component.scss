@@ -1,12 +1,12 @@
 .expandable-edit-table-container {
-  // 整體容器樣式 - 🔧 移除預設 margin，讓使用者自行控制間距
+  // 整體容器樣式 -  移除預設 margin，讓使用者自行控制間距
   margin: 0;
 
-  // 🔧 重要修正：使用智能的 overflow 處理
+  //  重要修正：使用智能的 overflow 處理
   overflow-x: auto;
   overflow-y: visible;
 
-  // 🔧 新增：確保容器能適應內容但不會過度縮小
+  //  新增：確保容器能適應內容但不會過度縮小
   min-width: 0; // 讓 flex 容器能正確縮放
   width: 100%; // 占滿父容器
 
@@ -16,18 +16,18 @@
     font-size: 2rem;
     font-weight: bold;
     color: #495057;
-    margin: 0; // 🔧 移除預設 margin
-    padding: 1rem 1rem 0.5rem 1rem; // 🔧 只在需要時給上 padding
+    margin: 0; //  移除預設 margin
+    padding: 1rem 1rem 0.5rem 1rem; //  只在需要時給上 padding
     margin-bottom: 0.7rem;
 
-    // 🔧 當有 title 時才顯示
+    //  當有 title 時才顯示
     &:empty {
       display: none;
       padding: 0;
     }
   }
 
-  // 🔧 確保 p-table 緊貼容器
+  //  確保 p-table 緊貼容器
   .p-datatable {
     margin: 0;
 
@@ -36,7 +36,7 @@
     }
   }
 
-  // 🔧 當沒有 title 時，讓表格直接貼頂
+  //  當沒有 title 時，讓表格直接貼頂
   &:not(:has(.expandable-table-title:not(:empty))) {
     .p-datatable {
       .p-datatable-header,
@@ -49,7 +49,7 @@
 }
 
 :host ::ng-deep {
-  // 🔧 統一滾動條樣式 - 參考 table.component.scss
+  //  統一滾動條樣式 - 參考 table.component.scss
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -70,7 +70,7 @@
     background: #949494;
   }
 
-  // 🔧 移除固定的容器最小寬度設定
+  //  移除固定的容器最小寬度設定
   .expandable-edit-table-container {
     // 改進的滾動條樣式
     &::-webkit-scrollbar {
@@ -94,21 +94,21 @@
   }
 
   .p-datatable {
-    // 🔧 關鍵修正：讓表格能夠智能調整大小
+    //  關鍵修正：讓表格能夠智能調整大小
     overflow: visible !important;
     width: 100%;
 
-    // 🔧 統一 datatable-sm 樣式
+    //  統一 datatable-sm 樣式
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
 
-    // 🔧 統一錯誤邊框樣式
+    //  統一錯誤邊框樣式
     .error-border {
       border: 1px solid red;
     }
 
-    // 🔧 統一選擇按鈕樣式 - 參考 table.component.scss
+    //  統一選擇按鈕樣式 - 參考 table.component.scss
     .p-selectbutton .p-button {
       width: auto !important;
       padding: 5px 10px !important;
@@ -122,7 +122,7 @@
       }
     }
 
-    // 🔧 統一下拉選單樣式
+    //  統一下拉選單樣式
     .table-dropdown {
       pointer-events: none;
       .p-dropdown-trigger {
@@ -139,14 +139,14 @@
 
     .p-datatable-wrapper {
       overflow: visible !important;
-      // 🔧 移除 min-width: max-content，讓表格能正常縮放
+      //  移除 min-width: max-content，讓表格能正常縮放
       width: 100%;
       border: 1px solid var(--surface-d);
     }
 
     .p-datatable-table {
       width: 100%; // 讓表格填滿容器
-      table-layout: auto; // 🔧 讓瀏覽器自動計算欄位寬度
+      table-layout: auto; //  讓瀏覽器自動計算欄位寬度
     }
 
     // 表格標題行 - 統一樣式
@@ -158,7 +158,7 @@
       top: 0;
       z-index: 2;
 
-      // 🔧 統一 multiselect 樣式 - 參考 table.component.scss
+      //  統一 multiselect 樣式 - 參考 table.component.scss
       p-multiselect {
         width: 35px;
         height: 35px;
@@ -196,19 +196,19 @@
       }
     }
 
-    // 🔧 重要修正：表格頭的響應式處理 - 統一使用 var(--table-header-bg)
+    //  重要修正：表格頭的響應式處理 - 統一使用 var(--table-header-bg)
     .p-datatable-thead > tr > th {
       background: var(--table-header-bg);
       text-align: center;
       border: 1px solid #e9ecef;
       font-weight: 600;
 
-      // 🔧 移除固定的 min-width，改用更智能的方式
+      //  移除固定的 min-width，改用更智能的方式
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
 
-      // 🔧 只對特殊欄位設定最小寬度
+      //  只對特殊欄位設定最小寬度
       &:first-child {
         width: 60px; // 序號欄
         min-width: 60px;
@@ -247,7 +247,7 @@
       background-color: #38a8ff !important;
     }
 
-    // 🔧 統一禁用行樣式
+    //  統一禁用行樣式
     .p-disabled-row {
       // background-color: #ffffffc4 !important;
       color: #495057 !important;
@@ -287,17 +287,17 @@
       }
     }
 
-    // 🔧 重要修正：表格單元格的響應式處理
+    //  重要修正：表格單元格的響應式處理
     .p-datatable-tbody > tr > td {
       padding: 0.6rem 0.5rem;
       border: 1px solid #e9ecef;
       text-align: center;
 
-      // 🔧 移除固定的 min-width，改用更彈性的方式
+      //  移除固定的 min-width，改用更彈性的方式
       white-space: nowrap;
       overflow: visible; // 保持下拉選單可見
 
-      // 🔧 只對特殊欄位設定寬度
+      //  只對特殊欄位設定寬度
       &:first-child {
         width: 60px; // 序號欄
       }
@@ -313,7 +313,7 @@
       }
     }
 
-    // 🔧 新增：響應式斷點處理
+    //  新增：響應式斷點處理
     @media (max-width: 1200px) {
       .p-datatable-thead > tr > th,
       .p-datatable-tbody > tr > td {
@@ -347,7 +347,7 @@
       }
     }
 
-    // 🔧 關鍵修正：內層編輯按鈕樣式 - 參考 table.component.scss 的 .icon-button
+    //  關鍵修正：內層編輯按鈕樣式 - 參考 table.component.scss 的 .icon-button
     .edit-buttons,
     .detail-edit-buttons {
       .p-button {
@@ -390,7 +390,7 @@
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
       margin: 0.5rem;
 
-      // 🔧 詳細資料的響應式處理
+      //  詳細資料的響應式處理
       overflow-x: auto;
       overflow-y: visible;
 
@@ -491,7 +491,7 @@
       margin: 0.5rem 0 1rem 0;
     }
 
-    // 🔧 統一分頁器樣式
+    //  統一分頁器樣式
     .p-paginator {
       background: transparent;
       padding: 0.2rem 0.2rem;
@@ -501,7 +501,7 @@
         color: #ffffff;
       }
     }
-    // 🔧 統一滾動器樣式
+    //  統一滾動器樣式
     .p-scroller .p-scroller-inline {
       background: #cacaca;
     }
@@ -518,14 +518,14 @@
     background-color: #f0f0f0;
   }
 
-  // 🔧 統一表格頁腳樣式
+  //  統一表格頁腳樣式
   .table-footer {
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
     border-width: 0 1px 1px 1px;
   }
 
-  // 🔧 關鍵修正：自定義表格頭部控制欄 - 外層按鈕使用圓形
+  //  關鍵修正：自定義表格頭部控制欄 - 外層按鈕使用圓形
   .table-caption {
     padding: 0.5rem;
     display: flex;
@@ -542,19 +542,19 @@
       align-items: center;
     }
 
-    // 🔧 外層按鈕（新增、刪除、展開收合）保持圓形 - 參考 table.component.scss
+    //  外層按鈕（新增、刪除、展開收合）保持圓形 - 參考 table.component.scss
     .p-button {
       border-radius: 50% !important; // 強制圓形按鈕
     }
 
-    // 🔧 當兩側都沒有可見元素時隱藏整個 caption
+    //  當兩側都沒有可見元素時隱藏整個 caption
     &:has(.table-caption-left:empty + .table-caption-right:empty) {
       display: none;
       padding: 0;
       height: 0;
     }
 
-    // 🔧 備用方案：檢查是否沒有按鈕或其他元素
+    //  備用方案：檢查是否沒有按鈕或其他元素
     &:not(:has(button):has(.p-button):has(ng-content:not(:empty))) {
       &:has(.table-caption-left:not(:has(*))) {
         &:has(.table-caption-right:not(:has(*))) {
@@ -572,7 +572,7 @@
   .p-calendar,
   .p-inputnumber {
     width: 100%;
-    // 🔧 移除固定的 min-width
+    //  移除固定的 min-width
   }
 
   .date-selector-wrapper {
@@ -654,7 +654,7 @@
   }
 }
 
-  // 🔧 統一文字樣式 - 參考 table.component.scss 的 .html-cell
+  //  統一文字樣式 - 參考 table.component.scss 的 .html-cell
   .whitespace-pre-wrap {
     font-size: 14px !important;
     line-height: 1.2 !important;
@@ -688,14 +688,14 @@
     }
   }
 
-  // 🔧 確保不會換行的內容
+  //  確保不會換行的內容
   .nowrap {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  // 🔧 統一 icon-button 樣式 - 參考 table.component.scss
+  //  統一 icon-button 樣式 - 參考 table.component.scss
   .icon-button button {
     background-color: var(--icon-button-bg);
     border-radius: 5px; // 方形按鈕

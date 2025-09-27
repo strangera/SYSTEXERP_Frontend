@@ -937,7 +937,7 @@ export class DataCleaner {
         });
 
         // 使用合約日期作為備援
-        console.log('🔧 使用合約日期作為備援');
+        console.log(' 使用合約日期作為備援');
       }
 
       // 處理主檔

@@ -49,7 +49,7 @@ export class Sysb900DropdownService {
           throw new Error('API 回傳的 Data 不是陣列');
         }
 
-        // 🔧 修改：回傳更完整的資訊
+        //  修改：回傳更完整的資訊
         return data.map((item: any) => ({
           value: item.No || '',                                    // 中分類代碼
           label: `${item.No || ''} - ${item.Name || ''}`,         // 原始格式：001 - 中分類名稱

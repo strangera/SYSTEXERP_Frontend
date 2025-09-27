@@ -895,7 +895,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       setTimeout(() => {
         const lastIndex = this.data.length - 1;
         if (lastIndex >= 0) {
-          console.log('🔧 自動進入新增項目的編輯模式');
+          console.log(' 自動進入新增項目的編輯模式');
           this.onRowEditInit(this.data[lastIndex], lastIndex);
         }
       }, 100);
@@ -1066,7 +1066,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     });
 
     if (pendingDateInputs.length > 0) {
-      console.log(`🔧 保存前處理待驗證的日期輸入:`, pendingDateInputs);
+      console.log(` 保存前處理待驗證的日期輸入:`, pendingDateInputs);
 
       // 強制處理所有待驗證的日期輸入
       pendingDateInputs.forEach(key => {
@@ -1074,7 +1074,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         const column = this.findColumnByField(fieldName);
 
         if (column && column.type === 'date') {
-          console.log(`🔧 強制處理日期欄位: ${fieldName}`);
+          console.log(` 強制處理日期欄位: ${fieldName}`);
           // 觸發 blur 處理
           this.onDateInputBlur(rowData, column, false);
         }
@@ -1337,7 +1337,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         const detailArray = parentData[this.detailKey];
         if (detailArray && detailArray.length > 0) {
           const lastDetailIndex = detailArray.length - 1;
-          console.log('🔧 自動進入新增詳細項目的編輯模式');
+          console.log(' 自動進入新增詳細項目的編輯模式');
           this.onDetailEditInit(
             detailArray[lastDetailIndex],
             parentData,
@@ -1438,7 +1438,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return value;
   }
 
-  // 🔧 寬度控制相關方法
+  //  寬度控制相關方法
   getColumnStyle(col: ColumnDef): any {
     const styles: any = {};
 
@@ -2195,7 +2195,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return column;
   }
 
-  // 🆕 輔助方法：查找父資料
+  //  輔助方法：查找父資料
   private findParentData(detailData: any): any {
     for (const mainItem of this.data) {
       if (mainItem[this.detailKey] && Array.isArray(mainItem[this.detailKey])) {
@@ -2346,7 +2346,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const column = this.findColumnByField(fieldName);
 
     if (column?.directEdit) {
-      console.log(`🔧 直接編輯模式: ${fieldName} = ${newValue}`);
+      console.log(` 直接編輯模式: ${fieldName} = ${newValue}`);
 
       if (isDetail) {
         const parentData = this.findParentData(rowData);
@@ -2431,7 +2431,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       rowData[field] = newValue;
       this.cdr.detectChanges();
 
-      console.log(`🔧 取消勾選完成，${field} = ${newValue}`);
+      console.log(` 取消勾選完成，${field} = ${newValue}`);
     } catch (error) {
       console.error('處理取消勾選時發生錯誤:', error);
       // 容錯：強制設定狀態

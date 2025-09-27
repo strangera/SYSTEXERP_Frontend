@@ -821,7 +821,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增固定租金項目');
 
-        console.log('🆕 智能新增固定租金:', {
+        console.log(' 智能新增固定租金:', {
           id: newItem.id,
           dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
           totalItems: this.fixedRentItems.length
@@ -871,7 +871,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增底租抽成取高者項目');
 
-        console.log('🆕 智能新增底租抽成取高者:', {
+        console.log(' 智能新增底租抽成取高者:', {
           id: newItem.id,
           dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
           totalItems: this.baseRentHigherItems.length
@@ -921,7 +921,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增包底抽成項目');
 
-        console.log('🆕 智能新增包底抽成:', {
+        console.log(' 智能新增包底抽成:', {
           id: newItem.id,
           dateRange: `${newItem.cag_bdate} ~ ${newItem.cag_edate}`,
           totalItems: this.baseCommissionItems.length
@@ -960,7 +960,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增階梯式抽成項目');
 
-        console.log('🆕 智能新增階梯式抽成:', {
+        console.log(' 智能新增階梯式抽成:', {
           id: graduatedItem.id,
           seqNo: graduatedItem.seq_no,
           dateRange: `${graduatedItem.cag_bdate} ~ ${graduatedItem.cag_edate}`,
@@ -1008,7 +1008,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         this.saveConditionDataToWorkflow();
         this.notificationService.successBubble('已新增包底加階梯項目');
 
-        console.log('🆕 智能新增包底加階梯:', {
+        console.log(' 智能新增包底加階梯:', {
           id: baseTierItem.id,
           seqNo: baseTierItem.seq_no,
           dateRange: `${baseTierItem.cag_bdate} ~ ${baseTierItem.cag_edate}`,
@@ -1506,7 +1506,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     // 如果是新增的資料，保持 new 狀態
     if (modifiedData._status === 'new') {
-      console.log('🆕 保持新增狀態:', modifiedData.id);
+      console.log(' 保持新增狀態:', modifiedData.id);
       return modifiedData;
     }
 

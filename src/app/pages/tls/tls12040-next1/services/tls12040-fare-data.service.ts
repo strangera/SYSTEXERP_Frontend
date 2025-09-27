@@ -77,7 +77,7 @@ export class Tls12040FareDataService {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, TLS12040FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('🆕 處理新增模式 API 資料...');
+    console.log(' 處理新增模式 API 資料...');
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {

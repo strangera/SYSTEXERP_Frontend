@@ -345,7 +345,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     * 覆寫父類的 onCreate 方法，實作新增功能
     */
   override onCreate(): void {
-    console.log('🆕 開始新增流程，清空所有暫存資料');
+    console.log(' 開始新增流程，清空所有暫存資料');
 
     // 確保不是檢視模式
     this.contractFlowService.clearViewMode();
