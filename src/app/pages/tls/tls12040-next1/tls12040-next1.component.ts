@@ -121,7 +121,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
+
+    // 先調用父類的初始化，這會設置正確的 crudstatus
     this.initializePage('TLS12040', this.dataForm);
+
+    // 🔥 保護和驗證 CRUD 狀態
+    this.validateAndProtectCrudStatus();
+
     console.log('=== CRUD 狀態調試 ===');
     console.log('當前 CRUD 狀態:', this.crudstatus);
     console.log('路由狀態:', this.router.lastSuccessfulNavigation?.extras?.state);
@@ -132,11 +138,46 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.initializeDataStructure();
     this.contractInfoColumns = TLS12040FareColumnDefinitions.getContractInfoColumns();
 
-    // 加入載入組織選項
+    // 其他初始化邏輯...
     this.loadOrgOptions();
-
-    // 載入工作流程資料
     this.loadWorkflowDataWithRetry();
+  }
+
+  // 🔥 新增方法：驗證和保護 CRUD 狀態
+  private validateAndProtectCrudStatus(): void {
+    const routeState = this.router.lastSuccessfulNavigation?.extras?.state;
+    const flowState = this.flowService.getCurrentState();
+
+    // console.log('🔍 狀態驗證:', {
+    //   當前crudstatus: this.crudstatus,
+    //   路由狀態: routeState?.crudstatus,
+    //   工作流程新合約: flowState.isNewContract,
+    //   工作流程申請號: flowState.applyNo
+    // });
+
+    // 🔥 如果狀態不一致，以工作流程狀態為準
+    if (flowState.isNewContract !== undefined) {
+      const expectedStatus = flowState.isNewContract ? CRUDStatus.Create :
+        (flowState.applyNo ? CRUDStatus.Edit : CRUDStatus.Create);
+
+      if (this.crudstatus !== expectedStatus) {
+        console.warn(`⚠️ 狀態不一致！修正 ${this.crudstatus} -> ${expectedStatus}`);
+        this.crudstatus = expectedStatus;
+        // this.formTitle = this.getFormTitleForNext1(this.crudstatus);
+      }
+    }
+
+    console.log('✅ 最終狀態:', this.crudstatus);
+  }
+
+  // 🔥 新增方法：為 Next1 設置正確的標題
+  private getFormTitleForNext1(crudstatus: CRUDStatus): string {
+    switch (crudstatus) {
+      case CRUDStatus.Create: return '新增專櫃要約書 - 扣款項目';
+      case CRUDStatus.Edit: return '編輯專櫃要約書 - 扣款項目';
+      case CRUDStatus.Read: return '檢視專櫃要約書 - 扣款項目';
+      default: return '專櫃要約書 - 扣款項目';
+    }
   }
 
   private initializeDataStructure(): void {
@@ -744,28 +785,39 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   override onCancel(): void {
     console.log('⬅️ 返回上一步');
+    console.log('當前 CRUD 狀態:', this.crudstatus);
 
+    // 先儲存資料到工作流程
+    try {
+      this.saveFareDataToWorkflow();
+      console.log('✅ 資料已儲存到工作流程');
+    } catch (error) {
+      console.error('❌ 儲存資料到工作流程失敗:', error);
+      // 繼續導航，不要因為儲存失敗而阻止返回
+    }
+
+    // 準備導航狀態
     const navigationExtras: NavigationExtras = {
       state: {
         crudstatus: this.crudstatus,
-        fromRoute: this.router.url
+        fromRoute: this.router.url,
       }
     };
 
-    try {
-      // 確保資料已儲存
-      this.saveFareDataToWorkflow();
+    console.log('🚀 準備導航回上一步，攜帶狀態:', navigationExtras.state);
 
-      // 等待一下確保儲存完成
-      setTimeout(() => {
-        this.router.navigate(['account/tls/tls12040cru'], navigationExtras);
-      }, 100);
-
-    } catch (error) {
-      console.error('❌ 返回上一步時發生錯誤:', error);
-      // 即使儲存失敗也要導航回去且帶上狀態
-      this.router.navigate(['account/tls/tls12040cru'], navigationExtras);
-    }
+    // 直接導航，不需要 setTimeout
+    this.router.navigate(['account/tls/tls12040cru'], navigationExtras)
+      .then(success => {
+        if (success) {
+          console.log('✅ 成功導航回上一步');
+        } else {
+          console.error('❌ 導航失敗');
+        }
+      })
+      .catch(error => {
+        console.error('❌ 導航時發生錯誤:', error);
+      });
   }
 
   onClearAndExit(): void {

@@ -34,6 +34,11 @@ import { TLS12040Response } from '../tls12040/tls12040.component';
 import { BusinessClassificationService } from './services/business-classification.service';
 import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+
+interface CategoryItem {
+  id: number;
+}
 
 // 2.1.2.4 專櫃要約書維護CRU
 @Component({
@@ -43,16 +48,7 @@ import { LocationOptionsService } from '@service/api/dropdownservice/location-op
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, CheckboxModule, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarRangeComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule, InputTextareaComponent, AccordionModule, ExpandableEditTableComponent, RadiobuttonComponent, MultiSelectComponent]
 })
-export class TLS12040CRUComponent implements OnInit {
-  ProgNo = 'TLS12040';
-  formTitle = '';
-  submitted = false;
-  loading = false;
-  crudstatus: CRUDStatus = CRUDStatus.Read;// 固定為 Edit，避免表單被 disable
-
-  // 用戶和權限
-  user: any;
-  funInfo: any;
+export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   locationData: LocationDetails[] = [];
   displayLocationData: LocationDetails[] = [];
 
@@ -303,10 +299,6 @@ export class TLS12040CRUComponent implements OnInit {
   });
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
     private validationService: ValidationService,
     private sharedDropdownService: SharedDropdownService,
@@ -318,9 +310,10 @@ export class TLS12040CRUComponent implements OnInit {
     private flowService: TLS12040FlowService,
     private businessClassificationService: BusinessClassificationService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) { super(); }
 
   ngOnInit() {
+    this.initializePage('TLS12040', this.dataForm);
     // 先處理路由狀態
     this.handleRouterState();
 
@@ -835,7 +828,7 @@ export class TLS12040CRUComponent implements OnInit {
     // 如果需要處理小分類變更的邏輯，可以在這裡添加
   }
 
-  onCancel(): void {
+  override onCancel(): void {
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
@@ -886,22 +879,38 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   onSubmitNext(): void {
-    // 直接保存並導航到下一步，包含位置資料
+    // 確保表單有效性
+    // if (this.dataForm.invalid) {
+    //   this.messageService.warnBubble('請檢查必填欄位');
+    //   this.markFormGroupTouched(this.dataForm);
+    //   return;
+    // }
+
     const completeData = {
       ...this.dataForm.value,
-      locationData: this.locationData  // 加入位置資料
+      locationData: this.locationData
     };
 
-    // 先保存數據
-    this.flowService.setCruData(completeData);
+    // 保存到工作流程
+    const saveResult = this.flowService.setCruData(completeData);
 
-    // 然後導航並傳遞狀態
+    if (!saveResult) {
+      this.messageService.errorBubble('資料儲存失敗，請重試');
+      return;
+    }
+
+    // 確保狀態正確傳遞
     const navigationExtras: NavigationExtras = {
       state: {
-        crudstatus: this.crudstatus, // 確保這裡有設定現有狀態
-        fromRoute: this.router.url
+        crudstatus: this.crudstatus, // 確保這個值是正確的
+        fromRoute: this.router.url,
+        // 添加額外的標識
+        fromCRU: true,
+        applyNo: this.dataForm.get('apply_no')?.value || ''
       }
     };
+
+    console.log('🚀 CRU 導航到 Next1，傳遞狀態:', navigationExtras.state);
 
     this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
   }
