@@ -136,6 +136,19 @@ export const CAG_TAXTYPE_OPTIONS = {
   '1': '應稅',
 } as const;
 
+export const APPLY_TYPE_OPTIONS = {
+  '1': '新設立',
+  '2': '續約',
+  '3': '合約異動',
+  '4': '撤櫃',
+} as const;
+
+export const CONTRACT_TYPE_OPTIONS = {
+  '1': '潛在客戶',
+  '2': '意向書',
+  '3': '要約書',
+} as const;
+
 // ========== 通用格式化函數 ==========
 
 // 多選格式化函數
@@ -247,5 +260,7 @@ export const SHARED_DROPDOWN_OPTIONS = {
   overallStatus: convertToDropdownOptions(OVERALL_STATUS_OPTIONS),
   tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
   cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
+  applyTypeOption: convertToDropdownOptions(APPLY_TYPE_OPTIONS),
+  contractTypeOption: convertToDropdownOptions(CONTRACT_TYPE_OPTIONS),
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }]
 } as const;

@@ -37,7 +37,7 @@ interface CategoryItem {
   styleUrl: './tls12040-next2.component.scss'
 })
 export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
-
+  private routeState: any = null; // 保存路由狀態
   private readonly notificationService = inject(NotificationService);
   private readonly flowService = inject(TLS12040FlowService);
 
@@ -116,6 +116,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   ) {
     super();
+    const navigation = this.router.getCurrentNavigation();
+    this.routeState = navigation?.extras?.state;
+
+    console.log('Constructor 中獲取的路由狀態:', this.routeState);
     this.dataForm = this.formBuilder.group({});
   }
 
@@ -142,7 +146,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   async ngOnInit(): Promise<void> {
     this.initializePage('TLS12040', this.dataForm);
-
+    console.log('當前 CRUD 狀態:', this.crudstatus);
+    console.log('是否為唯讀模式:', this.isReadOnlyMode);
+    console.log('路由狀態:', this.router.getCurrentNavigation()?.extras?.state);
+    this.handleRouterState();
     try {
       // 1. 先檢查是否有暫存的 Next2 資料
       const savedNext2Data = this.flowService.getNext2Data();
@@ -187,6 +194,29 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       console.error('初始化失敗:', error);
       this.notificationService.errorBubble('頁面初始化失敗');
     }
+  }
+
+  private handleRouterState(): void {
+    console.log('=== Next2 狀態處理 ===');
+    console.log('保存的路由狀態:', this.routeState);
+
+    if (this.routeState?.crudstatus) {
+      this.crudstatus = this.routeState.crudstatus;
+      console.log('從路由狀態設定 CRUD 狀態:', this.crudstatus);
+    } else {
+      // 備用方案：從 workflow service 推斷
+      const workflowState = this.flowService.getCurrentState();
+      if (workflowState?.isNewContract !== undefined) {
+        this.crudstatus = workflowState.isNewContract ? CRUDStatus.Create : CRUDStatus.Edit;
+        console.log('從 workflow 推斷 CRUD 狀態:', this.crudstatus);
+      } else {
+        this.crudstatus = CRUDStatus.Edit;
+        console.log('使用預設 CRUD 狀態:', this.crudstatus);
+      }
+    }
+
+    console.log('最終 Next2 CRUD 狀態:', this.crudstatus);
+    console.log('是否為唯讀模式:', this.isReadOnlyMode);
   }
 
   // 4. 新增檢查暫存資料有效性的方法
@@ -955,12 +985,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     } else {
       const navigationExtras: NavigationExtras = {
         state: {
-          crudstatus: this.crudstatus, // 確保這裡有設定現有狀態
+          crudstatus: this.crudstatus,
           fromRoute: this.router.url
         }
       };
-      // 根據你的路由結構調整
-      this.router.navigate(['account/tls/tls12040next3']);
+      // 重要：要使用 navigationExtras
+      this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
     }
   }
 

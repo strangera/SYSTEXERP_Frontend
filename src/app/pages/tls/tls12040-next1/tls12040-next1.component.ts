@@ -122,7 +122,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   ngOnInit(): void {
     window.scrollTo(0, 0);
     this.initializePage('TLS12040', this.dataForm);
-
     console.log('=== CRUD 狀態調試 ===');
     console.log('當前 CRUD 狀態:', this.crudstatus);
     console.log('路由狀態:', this.router.lastSuccessfulNavigation?.extras?.state);

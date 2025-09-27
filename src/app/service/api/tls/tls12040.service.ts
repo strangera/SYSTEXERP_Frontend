@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
 import { TLS12040RequestModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
+import { TLS12040SubmitData } from '@pages/tls/tls12040/models/tls12040submit.model';
 
 interface TLS12040FareRequest {
   apply_no: string;
@@ -74,25 +75,23 @@ export class TLS12040Service {
     );
   }
 
-
-  // 提交最終契約資料（清理後格式）
   /**
    * 提交清理後的契約資料到後端
    * @param cleanData 清理後的提交資料
    * @returns Observable<any>
    */
-  submitFinalTLS13010(cleanData: CleanSubmitData): Observable<any> {
-    console.log('📤 TLS13010Service: 準備提交清理後的契約資料');
+  submitFinalTLS12040(cleanData: TLS12040SubmitData): Observable<any> {
+    console.log('📤 TLS12040Service: 準備提交清理後的合約資料');
     console.log('📋 提交資料預覽:', {
       contractOperation: cleanData.contractInfo.operation,
-      talentId: cleanData.metadata.talentId,
+      applyNo: cleanData.metadata.apply_no,
       contractId: cleanData.metadata.contractId,
       commissionType: cleanData.metadata.commissionType,
       isNewContract: cleanData.metadata.isNewContract,
       totalOperations: cleanData.metadata.totalOperations
     });
 
-    // 對應後端 CleanContractRequest 的完整結構
+    // 對應後端 TLS12040SubmitRequest 的完整結構
     const requestPayload = {
       contractInfo: cleanData.contractInfo,
       deductions: cleanData.deductions,
@@ -101,11 +100,11 @@ export class TLS12040Service {
       metadata: cleanData.metadata
     };
 
-    console.log('🚀 TLS13010Service: 發送 API 請求到:', `${this.apiUrl}/TLS0000/TLS1000/submitFinalTLS13010`);
+    console.log('🚀 TLS12040Service: 發送 API 請求到:', `${this.apiUrl}/TLS0000/TLS1000/submitFinalTLS12040`);
 
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/submitFinalTLS13010`, requestPayload).pipe(
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/submitFinalTLS12040`, requestPayload).pipe(
       tap((res) => {
-        console.log('✅ TLS13010Service: 提交契約資料成功:', res);
+        console.log('✅ TLS12040Service: 提交合約資料成功:', res);
         if (res.Status === '0000') {
           console.log('📊 提交摘要:', {
             成功: true,
@@ -122,7 +121,7 @@ export class TLS12040Service {
         if (response.Status === '0000') {
           return {
             success: true,
-            message: response.Message || '契約資料提交成功',
+            message: response.Message || '合約資料提交成功',
             data: response.Data,
             talentId: response.Data?.TalentId,
             contractNo: response.Data?.ContractNo,
@@ -135,8 +134,36 @@ export class TLS12040Service {
         }
       }),
       catchError((error) => {
-        console.error('❌ TLS13010Service: 提交契約資料失敗:', error);
-        return this.errorHandler.handleError(error);
+        console.error('❌ TLS12040Service: 提交合約資料失敗:', error);
+
+        // 🔧 修正：提供更詳細的錯誤處理
+        let errorMessage = '提交合約資料失敗';
+        let errorData = null;
+
+        if (error?.error) {
+          // API 回傳的結構化錯誤
+          if (error.error.Message) {
+            errorMessage = error.error.Message;
+          }
+          if (error.error.Data) {
+            errorData = error.error.Data;
+          }
+        } else if (error?.message) {
+          // 一般錯誤
+          errorMessage = error.message;
+        }
+
+        // 重新包裝錯誤以包含更多資訊
+        const enhancedError = new Error(errorMessage);
+        (enhancedError as any).originalError = error;
+        (enhancedError as any).errorData = errorData;
+        (enhancedError as any).submittedData = {
+          applyNo: cleanData.metadata.apply_no,
+          contractId: cleanData.metadata.contractId,
+          totalOperations: cleanData.metadata.totalOperations
+        };
+
+        throw enhancedError;
       })
     );
   }

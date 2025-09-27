@@ -159,13 +159,13 @@ export class TLS12040CRUComponent implements OnInit {
 
   get tltopenflagOption() { return this.sharedDropdownService.openflagOptions; }  // 抽成別
 
-  get commCompTypeDropdown() { return this.sharedDropdownService.commCompTypeOptions; }  // 抽成別
+  get commCompTypeDropdown() { return this.sharedDropdownService.commCompTypeOptions; }
 
-  get approveStatusOptions() { return this.sharedDropdownService.approveStatusOptions; }  // 抽成別
+  get approveStatusOptions() { return this.sharedDropdownService.approveStatusOptions; }
 
-  get yesNoOptions() { return this.sharedDropdownService.yesNoOptions; }  // 抽成別
+  get yesNoOptions() { return this.sharedDropdownService.yesNoOptions; }
 
-  get tltTermTypeOptions() { return this.sharedDropdownService.tltTermTypeOptions; }  // 抽成別
+  get tltTermTypeOptions() { return this.sharedDropdownService.tltTermTypeOptions; }
 
   get tltctypemtotalOptions() { return this.sharedDropdownService.tltctypemtotalOptions; }  // 包底類別
 
@@ -177,6 +177,9 @@ export class TLS12040CRUComponent implements OnInit {
 
   get overallStatusOptions() { return this.sharedDropdownService.overallStatusOptions; }
 
+  get applyTypeOptions() { return this.sharedDropdownService.applyTypeOptions; }
+
+  get contractTypeOptions() { return this.sharedDropdownService.contractTypeOptions; }
   // API 選項
   bustypeOptions: any[] = [];
   busClassOptions: any[] = [];
@@ -203,6 +206,10 @@ export class TLS12040CRUComponent implements OnInit {
   dataForm = this.formBuilder.group({
     talent_id: [''], // 必填但系統自動給號
     apply_no: [''], // 必填但系統自動給號
+    apply_type: [''],
+    apply_date: [''],
+    apply_status: [''],
+    contract_type: [''],
     approve_status: ['1', [Validators.required]], // 必填，預設未審核
     tlt_name: ['', [Validators.required, Validators.maxLength(100)]], // 必填
     tlt_no: [''], // 必填但系統自動給號
@@ -434,77 +441,6 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
 
-  private loadCachedFormData(cruData: any): void {
-    console.log('📄 開始載入暫存表單資料 (舊方法)');
-    // 改為調用新方法
-    this.loadCachedDataWithClassifications(cruData);
-  }
-
-  private loadCachedClassifications(cruData: any, onComplete?: () => void): void {
-    console.log('🏷️ 載入暫存分類資料:', {
-      bus_type: cruData.bus_type,
-      bus_class: cruData.bus_class,
-      bus_sclass: cruData.bus_sclass
-    });
-
-    // 1. 先設定大分類
-    this.dataForm.patchValue({ bus_type: cruData.bus_type });
-
-    // 2. 載入中分類選項
-    if (cruData.bus_class) {
-      this.businessClassificationService.getBusClassOptions(cruData.bus_type).subscribe({
-        next: (busClassOptions) => {
-          this.busClassOptions = busClassOptions;
-          console.log('✅ 中分類選項載入完成:', busClassOptions.length);
-
-          // 設定中分類值
-          this.dataForm.patchValue({ bus_class: cruData.bus_class });
-
-          // 3. 載入小分類選項
-          if (cruData.bus_sclass) {
-            this.businessClassificationService.getBusSClassOptions(cruData.bus_type, cruData.bus_class).subscribe({
-              next: (busSClassOptions) => {
-                this.busSClassOptions = busSClassOptions;
-                console.log('✅ 小分類選項載入完成:', busSClassOptions.length);
-
-                // 設定小分類值
-                this.dataForm.patchValue({ bus_sclass: cruData.bus_sclass });
-
-                // 觸發完成回調
-                if (onComplete) {
-                  onComplete();
-                }
-              },
-              error: (error) => {
-                console.error('❌ 載入暫存小分類失敗:', error);
-                if (onComplete) {
-                  onComplete();
-                }
-              }
-            });
-          } else {
-            // 沒有小分類時直接完成
-            if (onComplete) {
-              onComplete();
-            }
-          }
-        },
-        error: (error) => {
-          console.error('❌ 載入暫存中分類失敗:', error);
-          if (onComplete) {
-            onComplete();
-          }
-        }
-      });
-    } else {
-      // 沒有中分類時直接完成
-      if (onComplete) {
-        onComplete();
-      }
-    }
-  }
-
-
   private handleRouterState(): void {
     const state = this.router.lastSuccessfulNavigation?.extras?.state;
 
@@ -696,7 +632,10 @@ export class TLS12040CRUComponent implements OnInit {
       VEN_Name: data.VEN_Name,
       contract_subno: data.contract_subno,
       approve_status: data.approve_status,
-
+      apply_type: data.apply_type,
+      apply_date: data.apply_date,
+      apply_status: data.apply_status,
+      contract_type: data.contract_type,
       // 日期欄位
       tlt_bdate: data.tlt_bdate,
       tlt_edate: data.tlt_edate,

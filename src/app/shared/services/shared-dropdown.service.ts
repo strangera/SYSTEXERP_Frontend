@@ -43,6 +43,9 @@ export class SharedDropdownService {
 
   public readonly overallStatusOptions = [...SHARED_DROPDOWN_OPTIONS.overallStatus];
 
+  public readonly applyTypeOptions = [...SHARED_DROPDOWN_OPTIONS.applyTypeOption];
+
+  public readonly contractTypeOptions = [...SHARED_DROPDOWN_OPTIONS.contractTypeOption];
   constructor(
     private sysb800Service: Sysb800DropdownService,
     private sysb900Service: Sysb900DropdownService,

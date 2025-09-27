@@ -183,6 +183,9 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
   ngOnInit(): void {
     console.log('Next3 組件初始化開始');
+    console.log('當前 CRUD 狀態:', this.crudstatus);
+    console.log('是否為唯讀模式:', this.isReadOnlyMode);
+    console.log('路由狀態:', this.router.getCurrentNavigation()?.extras?.state);
 
     this.setupViewModeUI();
     this.initializePage('TLS12040', this.dataForm);
@@ -1205,28 +1208,14 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     this.notificationService.blockUi();
 
     try {
-      // 最終確認所有步驟的資料都正確
-      const next1Data = this.contractFlowService.getNext1Data();
-      const next2Data = this.contractFlowService.getNext2Data();
-      const conditionData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-
-      const finalVerification = {
-        step1: !!this.contractFlowService.getCruData(),
-        step2Count: Array.isArray(next1Data) ? next1Data.length : (next1Data ? 1 : 0),
-        step3Count: Array.isArray(next2Data) ? next2Data.length : (next2Data ? 1 : 0),
-        step4Count: Array.isArray(conditionData) ? conditionData.length : 0
-      };
-
-      console.log('最終資料驗證:', finalVerification);
-
-      // 生成清理後的提交資料
-      const submitData = this.contractFlowService.generateSubmitData();
+      // 🔧 修正：使用 TLS12040 專用的生成方法
+      const submitData = this.contractFlowService.generateTLS12040SubmitData();
 
       console.log('Next3: 最終送出的完整資料:');
       console.log(JSON.stringify(submitData, null, 2));
 
       // 驗證資料
-      const validation = this.validateSubmitData(submitData);
+      const validation = this.validateTLS12040SubmitData(submitData);
 
       if (!validation.isValid) {
         console.error('Next3: 資料驗證失敗:', validation.errors);
@@ -1246,8 +1235,8 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
       console.log('資料驗證通過，開始調用 API...');
 
-      // 模擬 API 調用（你需要實作真實的 API）
-      this.callSubmitAPI(submitData);
+      // 🔧 修正：調用 TLS12040 專用的 API
+      this.callTLS12040SubmitAPI(submitData);
 
     } catch (error) {
       console.error('Next3: 準備提交資料時發生錯誤:', error);
@@ -1257,7 +1246,10 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     }
   }
 
-  private validateSubmitData(submitData: any): { isValid: boolean; errors: string[]; warnings: string[] } {
+  /**
+  * 驗證 TLS12040 提交資料
+  */
+  private validateTLS12040SubmitData(submitData: any): { isValid: boolean; errors: string[]; warnings: string[] } {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -1268,18 +1260,37 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     }
 
     // 檢查基本合約資料
-    if (!submitData.cru?.apply_no) {
+    if (!submitData.contractInfo?.data?.apply_no) {
       errors.push('缺少申請編號');
     }
 
-    if (!submitData.cru?.tlt_name) {
+    if (!submitData.contractInfo?.data?.tlt_name) {
       errors.push('缺少品牌名稱');
     }
 
-    // 檢查條件資料
-    const conditionData = submitData[WorkflowStep.CONDITION];
-    if (!conditionData || !Array.isArray(conditionData) || conditionData.length === 0) {
-      warnings.push('沒有條件設定資料');
+    // 檢查必要的操作類型
+    if (!submitData.contractInfo?.operation) {
+      errors.push('缺少合約操作類型');
+    }
+
+    // 檢查元數據
+    if (!submitData.metadata?.apply_no) {
+      errors.push('缺少元數據中的申請編號');
+    }
+
+    // 檢查條件資料（根據抽成類型）
+    const commissionType = submitData.metadata?.commissionType;
+    if (commissionType && commissionType !== '3') {
+      const conditionData = submitData.conditions;
+      if (!conditionData) {
+        warnings.push('沒有條件設定資料');
+      } else {
+        // 檢查是否有對應抽成類型的條件設定
+        const hasRelevantConditions = this.checkRelevantConditions(conditionData, commissionType);
+        if (!hasRelevantConditions) {
+          warnings.push(`抽成類型 ${commissionType} 沒有對應的條件設定`);
+        }
+      }
     }
 
     return {
@@ -1289,22 +1300,47 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     };
   }
 
-  private callSubmitAPI(submitData: any): void {
-    console.log('Next3: 調用真實 API 提交合約資料...');
-
-    // 模擬 API 延遲
-    setTimeout(() => {
-      // 這裡應該調用真實的提交 API
-      // this.tls12040Service.submitContract(submitData).subscribe({
-      //   next: (response) => this.handleSubmitSuccess(response),
-      //   error: (error) => this.handleSubmitError(error)
-      // });
-
-      // 目前模擬成功
-      this.handleSubmitSuccess({ message: '提交成功（模擬）' });
-    }, 2000);
+  /**
+   * 檢查是否有對應的條件設定
+   */
+  private checkRelevantConditions(conditionData: any, commissionType: string): boolean {
+    switch (commissionType) {
+      case '1':
+        return conditionData.fixedRents?.toInsert?.length > 0 ||
+          conditionData.fixedRents?.toUpdate?.length > 0;
+      case '2':
+        return conditionData.baseRentHigher?.toInsert?.length > 0 ||
+          conditionData.baseRentHigher?.toUpdate?.length > 0;
+      case '4':
+        return conditionData.baseCommissions?.toInsert?.length > 0 ||
+          conditionData.baseCommissions?.toUpdate?.length > 0;
+      case '5':
+        return conditionData.graduated?.toInsert?.length > 0 ||
+          conditionData.graduated?.toUpdate?.length > 0;
+      case '6':
+        return conditionData.baseTier?.toInsert?.length > 0 ||
+          conditionData.baseTier?.toUpdate?.length > 0;
+      default:
+        return true; // 一般抽成不需要條件設定
+    }
   }
 
+  /**
+   * 調用 TLS12040 提交 API
+   */
+  private callTLS12040SubmitAPI(submitData: any): void {
+    console.log('Next3: 調用 TLS12040 API 提交合約資料...');
+
+    // 🔧 修正：使用正確的 service 方法名稱
+    this.tls12040Service.submitFinalTLS12040(submitData).subscribe({
+      next: (response) => this.handleSubmitSuccess(response),
+      error: (error) => this.handleSubmitError(error)
+    });
+  }
+
+  /**
+   * 處理提交成功
+   */
   private handleSubmitSuccess(response: any): void {
     this.loading = false;
     this.notificationService.unblockUi();
@@ -1314,6 +1350,19 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     let successMessage = '合約資料提交成功！';
     if (response.message) {
       successMessage += '\n' + response.message;
+    }
+
+    // 🔧 修正：顯示更詳細的成功資訊
+    if (response.success && response.data) {
+      const summary = [
+        `專櫃編號: ${response.data.talentId || response.talentId || ''}`,
+        `合約編號: ${response.data.contractNo || response.contractNo || ''}`,
+        `處理項目: ${response.data.totalProcessed || response.totalProcessed || 0} 筆`
+      ].filter(item => item.includes(':') && !item.endsWith(': ')).join('\n');
+
+      if (summary) {
+        successMessage += '\n\n' + summary;
+      }
     }
 
     this.notificationService.successBubble(successMessage);
@@ -1326,6 +1375,9 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     }, 3000);
   }
 
+  /**
+   * 處理提交錯誤
+   */
   private handleSubmitError(error: any): void {
     this.loading = false;
     this.notificationService.unblockUi();
@@ -1338,6 +1390,12 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       errorMessage += `: ${error.error.Message}`;
     } else if (error?.message) {
       errorMessage += `: ${error.message}`;
+    }
+
+    // 🔧 修正：提供更詳細的錯誤資訊
+    if (error?.error?.Data?.errors) {
+      const detailErrors = error.error.Data.errors.slice(0, 3).join('; ');
+      errorMessage += `\n詳細錯誤: ${detailErrors}`;
     }
 
     this.notificationService.errorBubble(errorMessage);

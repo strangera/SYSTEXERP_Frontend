@@ -36,7 +36,11 @@ export interface TLS12040DetailModel {
   ven_no: string;
   VEN_Name: string;
   contract_subno?: string;
+  apply_type: string; // 申請案件內容
+  apply_date: string; // 申請日期
+  contract_type?: string; // 合約類型
 
+  apply_status: string; // 申請案件狀態
   // ========== 日期欄位 ==========
   tlt_bdate: string;              // 契約起始日
   tlt_edate: string;              // 契約截止日
