@@ -12,7 +12,8 @@
 
         <!-- 倉別代碼/名稱 -->
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No" [options]="hosOptions"
-          [control]="dataForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
+          [control]="dataForm.controls.HOS_No" [submitted]="submitted" [optionLabel]="'label'"
+          [optionValue]="'value'"></app-dropdown>
 
         <!-- 品牌代碼/名稱 -->
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"

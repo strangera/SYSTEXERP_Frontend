@@ -36,7 +36,6 @@ export const finRoutes: Routes = [
   { path: 'fin12010cru', loadComponent: () => import('./fin12010-cru/fin12010-cru.component').then(m => m.FIN12010CRUComponent) },
   // 使用完/空白發票繳回作業
   { path: 'fin12020', loadComponent: () => import('./fin12020/fin12020.component').then(m => m.FIN12020Component) },
-  { path: 'fin12020cru', loadComponent: () => import('./fin12020-cru/fin12020-cru.component').then(m => m.FIN12020CRUComponent) },
   // 專櫃發票轉媒體作業
   { path: 'fin13010', loadComponent: () => import('./fin13010/fin13010.component').then(m => m.FIN13010Component) },
   { path: 'fin13010cru', loadComponent: () => import('./fin13010-cru/fin13010-cru.component').then(m => m.FIN13010CRUComponent) },
