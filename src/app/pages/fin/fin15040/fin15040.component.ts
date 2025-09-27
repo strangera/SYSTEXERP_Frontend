@@ -59,6 +59,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     Voucher_No_S: ['', [Validators.maxLength(16)]],         // 傳票號碼起
     Voucher_No_E: ['', [Validators.maxLength(16)]],         // 傳票號碼訖
     SAL_Type: [null],                                       // 系統別
+    SYS_Origin: [null],                                    // 使用別
     CrtVouUsrNo: ['', [Validators.maxLength(20)]],          // 傳票建立者
     AssetType: [null],                                      // 資產註記
     HasUniform: [null],                                     // 是否有統一編號
@@ -92,16 +93,24 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? '' }
   ];
 
-  // 下拉選項
+  //#region 
+  // TDS1007
   invoiceFormatOptions: Option[] = [];   // 發票格式
-  taxTypeOptions = getSYS1000Options('PUR_TaxType');       // 課稅別
-  systemTypeOptions = getSYS1000Options('T205');           // 系統別
-  assetNotationOptions = getSYS1000Options('AssetType');   // 資產註記
   guiTrackOptions: Option[] = [];        // 字軌
+
+  // SYS1000
+  systemTypeOptions = getSYS1000Options('SYS_ORIGIN');      // 系統別 (POS4023.SYS_ORIGIN)
+  salTypeOptions = getSYS1000Options('T205');                 // 使用別 (POS4023.SAL_Type)
+  taxTypeOptions = getSYS1000Options('PLU_TaxType');          // 課稅別 (POS4023.PLU_TaxType)
+  assetNotationOptions = getSYS1000Options('AssetType');   // 資產註記
+
+  // 是否有統一編號
   hasUniformOptions: Option[] = [
     { label: '有', value: true },
     { label: '無', value: false }
   ];
+
+  // 列印方式
   mergeOptions: Option[] = [
     { label: '分開列印', value: '0' },
     { label: '合併列印', value: '1' }
@@ -110,6 +119,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { label: 'PDF', value: '0' },
     { label: 'Excel', value: '1' }
   ];
+  //#endregion
 
   constructor(
     private readonly fin15040Service: FIN15040Service,
@@ -195,9 +205,9 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     // 發票格式
     this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
       this.invoiceFormatOptions = r.Data.INV_GUITypes
-        .filter(item => item.INV_GUIType >= '31' && item.INV_GUIType <= '38')
+        .filter(item => ['31', '32', '35', '36', '37'].includes(item.INV_GUIType))
         .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
-        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }))
+        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
     });
   }
 
