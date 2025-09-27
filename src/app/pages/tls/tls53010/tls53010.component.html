@@ -17,13 +17,15 @@
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 倉別代碼/名稱 -->
             <app-multi-select label="倉別代碼/名稱" controlName="HOS_No" [options]="hosOptions"
-              [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
+              [control]="queryForm.controls.HOS_No" [submitted]="submitted" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 品牌代碼/名稱 -->
             <app-multi-select label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"
-              [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-multi-select>
+              [control]="queryForm.controls.LOGO_No" [submitted]="submitted" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -36,7 +38,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 盤點狀態 -->
             <app-multi-select label="盤點狀態" controlName="PST_Status" [options]="pstStatusOptions"
-              [control]="queryForm.controls.PST_Status" [submitted]="submitted"></app-multi-select>
+              [control]="queryForm.controls.PST_Status" [submitted]="submitted" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

@@ -22,6 +22,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { environment } from '../../../../environments/environment';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 export interface Option {
   label: string;
@@ -57,6 +58,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼_迄
     CRT_USR_Name: ['', [Validators.maxLength(10)]],             // 傳票建立者
     SAL_Type: [null],                                           // 系統別
+    SYS_Origin: [null],                                        // 使用別
     CRT_Date_S: [null],                                         // 建立日期_起
     CRT_Date_D: [null],                                         // 建立日期_迄
     ...createPaginationConfig([])
@@ -95,27 +97,16 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
   ];
 
   //#region 下拉選項
-  invoiceFormatOptions: Option[] = [];        // 發票格式
-  invoiceTypeOptions: Option[] = [             // 類別區分
-    { value: '1', label: '二聯式收銀機發票' },
-    { value: '2', label: '二聯式手開' },
-    { value: '3', label: '三聯式手開' },
-    { value: '4', label: '二聯式電子發票' },
-    { value: '5', label: '電子-丁種字軌' },
-  ];
-  taxTypeOptions: Option[] = [                 // 課稅別
-    { label: '應稅', value: '1' },
-    { label: '零稅率', value: '2' },
-    { label: '免稅', value: '3' }
-  ];
-  discountOptions: Option[] = [                // 扣抵代號
-    { label: '進項可扣抵之進貨及費用', value: '1' },
-    { label: '進項可扣抵之固定資產', value: '2' },
-    { label: '進項不可扣抵之進貨及費用', value: '3' },
-    { label: '進項不可扣抵之固定資產', value: '4' }
-  ];
-  systemTypeOptions: Option[] = [];           // 系統別
-  guiTrackOptions: Option[] = [];             // 字軌
+  // TDS1007
+  invoiceFormatOptions: Option[] = [];   // 發票格式
+  guiTrackOptions: Option[] = [];        // 字軌
+
+  // SYS1000
+  systemTypeOptions: Option[] = getSYS1000Options('SYS_ORIGIN');      // 系統別 (APS2002.SYS_ORIGIN, 下拉選單為SYS1000.SYS_ORIGIN)
+  salTypeOptions: Option[] = getSYS1000Options('T205');               // 使用別 (APS2002.SAL_Type, 下拉選單為SYS1000.T205)
+  taxTypeOptions: Option[] = getSYS1000Options('PUR_TaxType');        // 課稅別 (APS2002.PUR_TaxType, 下拉選單為SYS1000.PUR_TaxType)
+  discountOptions: Option[] = getSYS1000Options('PUR_DiscNo');        // 扣抵代號 (APS2002.PUR_DiscNo, 下拉選單為SYS1000.PUR_DiscNo)
+  invoiceTypeOptions: Option[] = getSYS1000Options('PUR_Type');       // 類別區分 (APS2002.PUR_Type, 下拉選單為SYS1000.PUR_Type)
 
   // 列印方式
   mergeOptions: Option[] = [
@@ -218,13 +209,9 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     // 發票格式
     this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
       this.invoiceFormatOptions = r.Data.INV_GUITypes
-        .filter(item => item.INV_GUIType >= '31' && item.INV_GUIType <= '38')
+        .filter(item => ['21', '22', '25', '26', '27', '28', '29'].includes(item.INV_GUIType))
         .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
-        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }))
-    });
-    // 載入系統別
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'T207' }).subscribe(r => {
-      this.systemTypeOptions = r.Data.map(item => ({ label: item.Name, value: item.No }));
+        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
     });
   }
 
