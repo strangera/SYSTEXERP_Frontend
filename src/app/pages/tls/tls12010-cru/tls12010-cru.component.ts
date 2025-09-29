@@ -182,7 +182,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
   bus_type_Option: apiOption[] = []; // 業種-大分類代碼
   tlt_name_Option: any[] = []; //品牌
-  cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013)
+  // cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013) // 20250926更新: 不採用，並非合約裡的統一編號
   contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
   // ----------------------------------------------------------------
   constructor(
@@ -234,22 +234,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       } else {
         this.dataForm.get('tlt_EngName')?.setValue('');
         // this.messageService.errorBubble('無該廠商名稱資料');
-      }
-    });
-
-
-    this.dataForm.get('cus_uniform_id')?.valueChanges.subscribe(value => {
-      if (this.skipValueChanges) return;
-      if (this.dataForm.get('cus_type')?.value === '1') {
-        const match = this.cus_uniform_Option.find(opt => opt.No === value);
-        if (match) {
-          this.dataForm.get('VEN_Name')?.setValue(match.Name);
-          this.dataForm.get('VEN_EngName')?.setValue(match.VEN_EngName);
-        } else {
-          this.dataForm.get('VEN_Name')?.setValue('');
-          this.dataForm.get('VEN_EngName')?.setValue('');
-          // this.messageService.errorBubble('無該廠商名稱資料');
-        }
       }
     });
 
@@ -355,29 +339,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       console.log('品牌代碼:', this.tlt_name_Option);
     });
 
-    // 查 統編
-    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).subscribe((response) => {
-      // 去除重複的 No，只保留第一筆
-      const uniqueMap = new Map<string, any>();
-      response.Data.forEach((item: any) => {
-        if (!uniqueMap.has(item.No)) {
-          uniqueMap.set(item.No, item);
-        }
-      });
-
-      // 建立 dropdown options
-      this.cus_uniform_Option = Array.from(uniqueMap.values()).map((item: any) => ({
-        No: item.No,
-        Name: item.Name,
-        ShortName: item.ShortName,
-        VEN_No: item.VEN_No,
-        VEN_EngName: item.VEN_EngName,
-        Label: item.No + '/' + item.Name,
-      }));
-
-      console.log('統編代號(去重):', this.cus_uniform_Option);
-    });
-
     // 查 經營方式
     this.tls12010Service.querySYS1000_DropDownList({ "SYS_Type": 'T117' }).subscribe((response) => {
       this.business_type_Option = response.Data.map((item: any) => ({
@@ -436,7 +397,8 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
     switch (type) {
       case '1': // 統編
-        cus_uniform_id.setValidators([Validators.required, Validators.maxLength(16)]);
+        // SA規格更新: 因為這支作業是新的，所以他不適抓，合約裡的統一編號，用輸入框+長度即可
+        cus_uniform_id.setValidators([Validators.required, Validators.maxLength(16), this.validationService.numberValidator]);
         VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
         VEN_EngName.setValidators([Validators.maxLength(100)]);
 

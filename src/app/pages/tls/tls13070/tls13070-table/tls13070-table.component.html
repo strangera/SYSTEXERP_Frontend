@@ -33,7 +33,7 @@
       <!-- B 每月扣款 -->
       <th class="break-word text-center" [attr.colspan]="(aps1003_B | async)?.length">每月扣款</th>
       <!-- C 平均分攤 -->
-      <th class="break-word text-center" [attr.colspan]="((aps1003_C | async)?.length ?? 0) * 4">平均分攤</th>
+      <th class="break-word text-center" [attr.colspan]="((aps1003_C | async)?.length ?? 0) * 3">平均分攤</th>
       <!-- D 比率分攤 -->
       <th class="break-word text-center" [attr.colspan]="(aps1003_D | async)?.length">比率分攤</th>
 
@@ -65,7 +65,7 @@
       </ng-container>
       <!-- C 平均分攤 -->
       <ng-container *ngFor="let item of aps1003_C | async">
-        <th class="break-word text-center" colspan="4">{{item.No}} {{item.Name}}</th>
+        <th class="break-word text-center" colspan="3">{{item.No}} {{item.Name}}</th>
       </ng-container>
       <!-- D 比率分攤 -->
       <ng-container *ngFor="let item of aps1003_D | async">
@@ -89,9 +89,8 @@
       <!-- C 平均分攤 -->
       <ng-container *ngFor="let item of aps1003_C | async">
         <th class="break-word text-center">總金額</th>
-        <th class="break-word text-center">預收款</th>
         <th class="break-word text-center">每月</th>
-        <th class="break-word text-center">首期</th>
+        <th class="break-word text-center">頭期款</th>
       </ng-container>
     </tr>
   </ng-template>
@@ -119,23 +118,30 @@
       <td class="text-center">{{rowData['base_rent']| number}}</td>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.total_amt | number}}</td>
       <ng-container *ngFor="let item of aps1003_A | async">
-        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No] | number}}</td>
+        <td class="text-center" [ngStyle]="{'min-width': '42px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+          {{rowData.fareList[item.No] | number}}</td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_B | async">
-        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No] | number}}</td>
+        <td class="text-center" [ngStyle]="{'min-width': '42px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+          {{rowData.fareList[item.No] | number}}</td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_C | async">
-        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.total | number}}
+        <td class="text-center" [ngStyle]="{'min-width': '42px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+          {{rowData.fareList[item.No]?.total | number}}
         </td>
-        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.down | number}}
+        <td class="text-center" [ngStyle]="{'min-width': '42px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+          {{rowData.fareList[item.No]?.down | number}}
         </td>
-        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.month | number}}
+        <td class="text-center" [ngStyle]="{'min-width': '42px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+          {{rowData.fareList[item.No]?.month | number}}
         </td>
-        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No]?.advance |
+        <td class="text-center" [ngStyle]="{'min-width': '42px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+          {{rowData.fareList[item.No]?.advance |
           number}}</td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_D | async">
-        <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.fareList[item.No] | number}}</td>
+        <td class="text-center" [ngStyle]="{'min-width': '42px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">
+          {{rowData.fareList[item.No] | number}}</td>
       </ng-container>
       <td class="text-center" *ngIf="rowgroup" [attr.rowspan]="rowspan">{{rowData.check_day}}</td>
       <td class="break-word text-center" [ngStyle]="{'min-width': '100px'}" *ngIf="rowgroup" [attr.rowspan]="rowspan">

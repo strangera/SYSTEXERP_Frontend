@@ -56,24 +56,24 @@ import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-t
     TableModule, // ✅ PrimeNG 原生 p-table 用於簡表
     ButtonModule, // ✅ row expansion toggle 按鈕
     TranslateModule,
-    
+
     DatePipe,
     NgIf,
-   tls2b010tableComponent,
+    tls2b010tableComponent,
 
 
   ],
   providers: [CashShowupByService],
 })
 export class TLS2B010Component extends BasicQueryPageComponent<any> {
-    readonly yesterday: Date = (() => {
+  readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
-   CounterOptions: any[] = []; // 專櫃選項
+  CounterOptions: any[] = []; // 專櫃選項
   data: any[] = [];
   closeDate: string = '查詢中...';
   ECR_TypeOptions = [
@@ -85,7 +85,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   CashShowupByOptions: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
- 
+
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   reimbursementOptions: any[] = [
@@ -179,39 +179,34 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 
     this.printedAt =
       this.datePipe.transform(new Date(), 'yyyy/MM/dd HH:mm') || '';
-      this.refreshCloseDate();
+    this.refreshCloseDate();
   }
 
-updateColumnVisibility(selectedValues: number[]) {
-  const reporttype = this.queryForm.controls.reporttype.value;
+  updateColumnVisibility(selectedValues: number[]) {
+    const reporttype = this.queryForm.controls.reporttype.value;
 
-  // 修正欄位名稱 + 在明細表時固定顯示 PAY_NO
   const alwaysVisibleFields = [
     'building_desc',
     'floor_desc',
     'ECR_No',
-    'USR_No',
-     ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []), 
+    'TLT_NO',    
+    'TLT_Name',                               // ← 這裡用 TLT_NO
+    ...(reporttype === 1 ? ['PAY_NO', 'PAY_Name'] : []),
   ];
   const visibilityMap = new Set(alwaysVisibleFields);
 
-  if (selectedValues.includes(1)) {
-    visibilityMap.add('BOOK_PayAmt');
-  }
-  if (selectedValues.includes(2)) {
-    visibilityMap.add('SELF_PayAmt');
-    visibilityMap.add('SOVER_PayAmt');
-  }
-  if (selectedValues.includes(3)) {
-    visibilityMap.add('ACT_PayAmt');
-    visibilityMap.add('OVER_PayAmt');
+    if (selectedValues.includes(1)) visibilityMap.add('BOOK_PayAmt');
+    if (selectedValues.includes(3)) {            // 你目前只開放 1,3
+      visibilityMap.add('ACT_PayAmt');
+      visibilityMap.add('OVER_PayAmt');
+    }
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibilityMap.has(col.field),
+    }));
   }
 
-  this.columns = this.columns.map(col => ({
-    ...col,
-    visible: visibilityMap.has(col.field),
-  }));
-}
 
 
   onSubmit(form: FormGroup): void {
@@ -272,7 +267,7 @@ updateColumnVisibility(selectedValues: number[]) {
         finalize(() => {
           this.loading = false;
           this.messageService.unblockUi();
-           this.refreshCloseDate(); 
+          this.refreshCloseDate();
         }),
       )
       .subscribe({
@@ -304,26 +299,26 @@ updateColumnVisibility(selectedValues: number[]) {
               // ✅ 支付別溢欠明細表
               const responseData = res.Data || {};
               this.data = responseData.QueryData || [];
-            
+
               this.totalRecords = res.TotalCount || 0;
             }
           } else {
-            
+
           }
         },
         error: () => {
-          
+
         },
       });
-     
+
   }
-handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: FormGroup) {
-  form.patchValue(
-    { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: e.SortBy },
-    { emitEvent: false }
-  );
-  this.onSubmit(form); // 集中在這裡打一次 API
-}
+  handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: FormGroup) {
+    form.patchValue(
+      { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: e.SortBy },
+      { emitEvent: false }
+    );
+    this.onSubmit(form); // 集中在這裡打一次 API
+  }
 
 
   get formattedTXNDate(): string {
@@ -355,11 +350,18 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       header: '收銀機號',
       visible: true,
     },
-    {
-      field: 'USR_No',
-      header: '專櫃編號/櫃位名稱',
-      visible: true,
-    },
+{
+  field: 'TLT_NO',
+  header: '專櫃編號',
+  visible: true,
+  },
+  {
+  field: 'TLT_Name',
+  header: '櫃位名稱',
+  visible: true,
+  },
+
+
     // {
     //   field: 'TLT_NO',
     //   header: '專櫃編號',
@@ -377,21 +379,21 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       style: 'text-right',
       format: this.moneyFormat,
     },
-//     {
-//       field: 'SELF_PayAmt',
-//       header: '自我報帳',
-//       visible: true,
-//       style: 'text-right',
-//       format: this.moneyFormat,
-//     },
-//    {
-//   field: 'SOVER_PayAmt',
-//   header: '溢欠差異(自我報帳 - 系統帳)',
-//   visible: false,
-//   style: 'text-right',
-//   // 只要是 0（數字或字串）都輸出字串 "0"，其他交給 moneyFormat
-//   format: (v: any) => (v === 0 || v === '0') ? '0' : this.moneyFormat(Number(v)),
-// },
+    //     {
+    //       field: 'SELF_PayAmt',
+    //       header: '自我報帳',
+    //       visible: true,
+    //       style: 'text-right',
+    //       format: this.moneyFormat,
+    //     },
+    //    {
+    //   field: 'SOVER_PayAmt',
+    //   header: '溢欠差異(自我報帳 - 系統帳)',
+    //   visible: false,
+    //   style: 'text-right',
+    //   // 只要是 0（數字或字串）都輸出字串 "0"，其他交給 moneyFormat
+    //   format: (v: any) => (v === 0 || v === '0') ? '0' : this.moneyFormat(Number(v)),
+    // },
     {
       field: 'ACT_PayAmt',
       header: '實收帳',
@@ -410,7 +412,7 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
 
   //館別、樓層、收銀機號、專櫃編號、櫃位名稱、溢欠金額、溢欠說明、月累計溢欠、備註
   simplecolumns: any[] = [
-     {
+    {
       field: 'TXN_Date',
       header: '銷售日期',
       visible: true,
@@ -433,7 +435,7 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       header: '樓層',
       visible: true,
     },
-   
+
     // {
     //   field: 'tlt_floor',
     //   header: '樓層',
@@ -456,14 +458,14 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       header: '櫃位名稱',
       visible: true,
     },
-     {
+    {
       field: 'OVER_PayAmt',
       header: '溢欠金額',
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
     },
-        {
+    {
       field: 'OVER_Desc',
       header: '溢欠說明',
       visible: true,
@@ -476,7 +478,7 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       format: this.moneyFormat,
     },
 
-   
+
 
     {
       field: 'Remark',
@@ -484,29 +486,29 @@ handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: 
       visible: false,
     },
   ];
- refreshCloseDate(): void {
-  this.closeDate = '查詢中...';
-  this.tls2B010Service.getCloseDate().subscribe({
-    next: (res) => {
-      // 後端回傳範例：
-      // {
-      //   "Status": "0000",
-      //   "Data": { "CLS_DATE": "2025/08/31" },
-      //   ...
-      // }
-      const d = res?.Data ?? res;
-      const close =
-        d?.CLS_DATE ??            // ✅ 你要的欄位
-        d?.LastCloseDate ??       // 兼容舊欄位
-        d?.CloseDate ??
-        d?.closeDate ??
-        (typeof d === 'string' ? d : null);
+  refreshCloseDate(): void {
+    this.closeDate = '查詢中...';
+    this.tls2B010Service.getCloseDate().subscribe({
+      next: (res) => {
+        // 後端回傳範例：
+        // {
+        //   "Status": "0000",
+        //   "Data": { "CLS_DATE": "2025/08/31" },
+        //   ...
+        // }
+        const d = res?.Data ?? res;
+        const close =
+          d?.CLS_DATE ??            // ✅ 你要的欄位
+          d?.LastCloseDate ??       // 兼容舊欄位
+          d?.CloseDate ??
+          d?.closeDate ??
+          (typeof d === 'string' ? d : null);
 
-      this.closeDate = close || '-';
-    },
-    error: () => (this.closeDate = '-'),
-  });
-}
+        this.closeDate = close || '-';
+      },
+      error: () => (this.closeDate = '-'),
+    });
+  }
 
 
 }

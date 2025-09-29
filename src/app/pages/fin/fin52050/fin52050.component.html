@@ -31,7 +31,7 @@
   </p-accordion>
 </div>
 <div class="card">
-    <app-table tableKey="FIN52050" dataKey="field" [data]="data" [columns]="columns"
+    <app-table tableKey="FIN52050" dataKey="ClassAttr" [data]="data" [columns]="columns"
         (detail)="onDetail($event)" [showCheckBox]="false" [showEdit]="false"
          [multiSortMeta]="[{ field: 'ClassAttr', order: 1 }]" apiUrl="queryFIN52050"
         [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"

@@ -1,85 +1,53 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateTimeRange"
-              label="查詢期間"
-              [startControl]="queryForm.controls.startdatetime"
-              [endControl]="queryForm.controls.enddatetime"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="倉別"
-              controlName="warehouseCode"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-calendar-range-quick label="交易日期" controlName="TXN_DateStart"
+              [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品牌"
-              controlName="brandCode"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品牌" controlName="LOGO_No" [options]="LOGO_NoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="顯示名次"
-              controlName="displayCount"
-              [control]="queryForm.controls.displayCount"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="倉別" controlName="HOS_NO" [options]="HOS_NOOptions| async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.HOS_NO" [submitted]="submitted"></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="顯示名次" controlName="RNK_No" [control]="queryForm.controls.RNK_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="排名方式" controlName="RNK_Status" [options]="RNK_StatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.RNK_Status" [submitted]="submitted"></app-dropdown>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report tableKey="tls57050" [lastQueryBody]="lastQueryBody" [data]="data" [columns]="columns"
+    [showEdit]="false" [showDetail]="false" [totalRecords]="totalRecords" [showReportMode]="false"
+    [queryFunction]="tls57130Service.queryTLS57130.bind(tls57130Service)">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="產出銷售排行報表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+          [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+        <p-button styleClass="p-2" label="產出銷售排行報表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportXLSX()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

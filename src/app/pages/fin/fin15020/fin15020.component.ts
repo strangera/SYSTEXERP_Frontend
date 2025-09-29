@@ -21,6 +21,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 export interface Option {
   label: string;
@@ -103,13 +104,13 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   ];
 
   //#region 下拉選項
-  invoiceFormatOptions: Option[] = []  // 發票格式
-  creditTypeOptions: Option[] = [
-    { label: '退出', value: '1' },
-    { label: '折讓', value: '2' }
-  ];  // 區別
-  systemTypeOptions: Option[] = []  // 系統別
-  guiTrackOptions: Option[] = []  // 字軌
+  // TDS1007
+  invoiceFormatOptions: Option[] = [];   // 發票格式
+  guiTrackOptions: Option[] = [];        // 字軌
+
+  // SYS1000
+  systemTypeOptions: Option[] = getSYS1000Options('SYS_ORIGIN');      // 系統別 (APS2002.SYS_ORIGIN, 下拉選單為SYS1000.SYS_ORIGIN)
+  creditTypeOptions: Option[] = getSYS1000Options('Credit_Type');     // 區別 (APS2002.Credit_Type, 下拉選單為SYS1000.Credit_Type)
 
   // 列印方式
   mergeOptions: Option[] = [
@@ -206,11 +207,10 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   private loadDropdownOptions(): void {
     // 載入發票格式
     this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
-      this.invoiceFormatOptions = r.Data.INV_GUITypes.map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }));
-    });
-    // 載入系統別
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'T207' }).subscribe(r => {
-      this.systemTypeOptions = r.Data.map(item => ({ label: item.Name, value: item.No }));
+      this.invoiceFormatOptions = r.Data.INV_GUITypes
+        .filter(item => ['23', '24'].includes(item.INV_GUIType))
+        .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
+        .map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }));
     });
   }
 
