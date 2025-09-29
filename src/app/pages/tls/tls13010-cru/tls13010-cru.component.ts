@@ -2306,7 +2306,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       debounceTime(500) // 延遲觸發，模擬 blur 效果
     ).subscribe(() => {
       console.log('📅 契約起始日變更，檢查是否需要重新計算');
-      this.validateContractDates();
+      this.dateValidationService.validateContractDates(this.dataForm, this.messageService);
       this.calculateRentPeriodIfPossible();
     });
 
@@ -2314,206 +2314,34 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.dataForm.get('tlt_edate')?.valueChanges.pipe(
       debounceTime(500) // 延遲觸發，模擬 blur 效果
     ).subscribe(() => {
-      console.log('📅 契約迄日變更，檢查是否需要重新計算');
-      this.validateContractDates();
       this.calculateRentPeriodIfPossible();
     });
   }
 
-  // 新增：檢查條件並計算預收租金期數
+  // 檢查條件並計算預收租金期數
   private calculateRentPeriodIfPossible(): void {
     const rentAhead = this.dataForm.get('rent_ahead')?.value;
     const startDate = this.dataForm.get('tlt_bdate')?.value;
     const endDate = this.dataForm.get('tlt_edate')?.value;
-
-    console.log('🔍 檢查計算條件:', {
-      預收租金: rentAhead,
-      起始日: startDate,
-      迄日: endDate
-    });
-
-    // 關鍵條件：預收租金必須為"是"
-    if (rentAhead !== 'Y') {
-      console.log('❌ 預收租金不是"是"，不計算期數');
+    if (rentAhead !== 'Y' || !startDate || !endDate) {
       return;
     }
-
-    // 檢查是否有完整的日期
-    if (!startDate || !endDate) {
-      console.log('❌ 缺少契約日期，無法計算期數');
-      return;
-    }
-
-    // 執行計算
-    this.calculateAndSetRentPeriod();
+    // 使用 service 計算
+    this.dateValidationService.calculateAndSetRentPeriod(
+      this.dataForm,
+      this.messageService
+    );
   }
 
-  // 新增：設定日期驗證器
-  private setupDateValidators(): void {
-    // 契約起始日和截止日監聽
-    this.dataForm.get('tlt_bdate')?.valueChanges.subscribe(() => {
-      this.validateContractDates();
-    });
+  // //設定初始必填欄位
+  // private updateInitialRequiredFields(): void {
+  //   // 聯名卡折數 - 預設 vip_yn = 'Y'，所以一開始就設為必填
+  //   this.updateCreditCardValidators();
 
-    this.dataForm.get('tlt_edate')?.valueChanges.subscribe(() => {
-      this.validateContractDates();
-    });
+  //   // 銀行相關欄位 - 預設 paytype = '1' (匯款)，所以一開始就設為必填
+  //   this.updatePaymentValidators();
+  // }
 
-    // 營運起始日和截止日監聽
-    this.dataForm.get('tlt_contract_bdate')?.valueChanges.subscribe(() => {
-      this.validateOperationDates();
-    });
-
-    this.dataForm.get('tlt_contract_edate')?.valueChanges.subscribe(() => {
-      this.validateOperationDates();
-    });
-
-    // 回函日期和截止日監聽
-    this.dataForm.get('feedback_date')?.valueChanges.subscribe(() => {
-      this.validateFeedbackDates();
-    });
-
-    this.dataForm.get('due_date')?.valueChanges.subscribe(() => {
-      this.validateFeedbackDates();
-    });
-  }
-
-  // 新增：驗證契約日期
-  private validateContractDates(): void {
-    const startDate = this.dataForm.get('tlt_bdate')?.value;
-    const endDate = this.dataForm.get('tlt_edate')?.value;
-    const endDateControl = this.dataForm.get('tlt_edate');
-
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-
-      // 改為只檢查結束日期不可早於開始日期（允許同一天）
-      if (start > end) {  // 原本是 start >= end
-        console.warn('⚠️ 合約截止日不可早於起始日');
-        endDateControl?.setValue('');
-        this.messageService.warnBubble('合約截止日不可早於起始日，已清空截止日');
-      }
-    }
-  }
-
-  // 新增：驗證營運日期
-  private validateOperationDates(): void {
-    const startDate = this.dataForm.get('tlt_contract_bdate')?.value;
-    const endDate = this.dataForm.get('tlt_contract_edate')?.value;
-    const endDateControl = this.dataForm.get('tlt_contract_edate');
-
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-
-      // 改為只檢查結束日期不可早於開始日期（允許同一天）
-      if (start > end) {  // 原本是 start >= end
-        console.warn('⚠️ 營運截止日不可早於起始日');
-        endDateControl?.setValue('');
-        this.messageService.warnBubble('營運截止日不可早於起始日，已清空截止日');
-      }
-    }
-
-    // 如果是固定租金或底租抽成取高者，重新計算預收租金期數
-    // const tltTermType = this.dataForm.get('tlt_term_type')?.value;
-    // if (['1', '2'].includes(tltTermType || '')) {
-    //   this.calculateAndSetRentPeriod();
-    // }
-  }
-
-  // 新增：驗證回函日期
-  private validateFeedbackDates(): void {
-    const feedbackDate = this.dataForm.get('feedback_date')?.value;
-    const dueDate = this.dataForm.get('due_date')?.value;
-    const dueDateControl = this.dataForm.get('due_date');
-
-    if (feedbackDate && dueDate) {
-      const feedback = new Date(feedbackDate);
-      const due = new Date(dueDate);
-
-      // 改為只檢查截止日期不可早於回函日期（允許同一天）
-      if (feedback > due) {  // 原本是 feedback >= due
-        console.warn('⚠️ 回函截止日不可早於回函日期');
-        dueDateControl?.setValue('');
-        this.messageService.warnBubble('回函截止日不可早於回函日期');
-      }
-    }
-  }
-
-  // 新增：設定初始必填欄位
-  private updateInitialRequiredFields(): void {
-    // 聯名卡折數 - 預設 vip_yn = 'Y'，所以一開始就設為必填
-    this.updateCreditCardValidators();
-
-    // 銀行相關欄位 - 預設 paytype = '1' (匯款)，所以一開始就設為必填
-    this.updatePaymentValidators();
-  }
-
-  /**
-   * 新增：更新欄位驗證器（根據抽成別）
-   */
-  private updateFieldValidators(): void {
-    const tltTermType = this.dataForm.get('tlt_term_type')?.value;
-    console.log('🔄 更新欄位驗證器，當前抽成別:', tltTermType);
-
-    // 包底類別驗證
-    this.updateBaodiValidators(tltTermType ?? '');
-
-    // 預收租金相關驗證
-    this.updateRentAheadValidators(tltTermType ?? '');
-
-    // 是否為抽成驗證
-    this.updateCommissionValidators(tltTermType ?? '');
-
-    // 超出部份處理方式驗證
-    this.updateOverallStatusValidators(tltTermType ?? '');
-
-    // 觸發表單驗證重新計算
-    this.dataForm.updateValueAndValidity();
-  }
-
-  /**
-   * 新增：更新包底類別驗證器
-   */
-  private updateBaodiValidators(tltTermType: string): void {
-    const baodiControl = this.dataForm.get('tlt_ctype_mtotal');
-
-    if (!baodiControl) return;
-
-    // 清除現有驗證器
-    baodiControl.clearValidators();
-
-    // 包底抽成(4)、包底加階梯(6)、底租抽成取高者(2) 需要包底類別
-    if (['2', '4', '6'].includes(tltTermType)) {
-      baodiControl.setValidators([Validators.required]);
-      console.log('✅ 包底類別設為必填');
-    } else {
-      console.log('❌ 包底類別設為非必填');
-    }
-
-    baodiControl.updateValueAndValidity();
-  }
-
-  /**
-   * 新增：更新預收租金相關驗證器
-   */
-  private updateRentAheadValidators(tltTermType: string): void {
-    const rentAheadControl = this.dataForm.get('rent_ahead');
-
-    // 固定租金(1)、底租抽成取高者(2) 的預設值和驗證
-    if (['1', '2'].includes(tltTermType)) {
-      console.log('🎯 抽成別為固定租金或底租抽成，設定預收租金為"是"');
-
-      // 設定預收租金為是（這會觸發上面的監聽器）
-      if (rentAheadControl?.value !== 'Y') {
-        rentAheadControl?.setValue('Y');
-      }
-    }
-
-    // 更新固定租金驗證器
-    this.updateBaseRentValidators();
-  }
 
   private updateBaseRentValidators(): void {
     const baseRentControl = this.dataForm.get('base_rent');
@@ -2535,168 +2363,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 新增：計算並設定預收租金期數
-   */
-  private calculateAndSetRentPeriod(): void {
-    const startDate = this.dataForm.get('tlt_bdate')?.value;
-    const endDate = this.dataForm.get('tlt_edate')?.value;
-
-    if (startDate && endDate) {
-      try {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        // 計算月數差（包含起始月）
-        const months = this.calculateMonthsDifference(start, end) + 1;
-
-        this.dataForm.get('rent_period')?.setValue(months);
-        console.log('📅 自動計算預收租金期數:', months);
-
-        // 顯示提示訊息
-        this.messageService.infoBubble(`已自動計算預收租金期數：${months} 個月`);
-      } catch (error) {
-        console.warn('❌ 計算預收租金期數失敗:', error);
-        this.messageService.warnBubble('計算預收租金期數失敗，請手動輸入');
-      }
-    }
-  }
-
-  /**
-   * 新增：計算月數差異
-   */
-  private calculateMonthsDifference(startDate: Date, endDate: Date): number {
-    const yearDiff = endDate.getFullYear() - startDate.getFullYear();
-    const monthDiff = endDate.getMonth() - startDate.getMonth();
-    return yearDiff * 12 + monthDiff;
-  }
-
-  /**
-   * 新增：更新是否為抽成
-   */
-  private updateCommissionValidators(tltTermType: string): void {
-    const commYnControl = this.dataForm.get('comm_yn');
-
-    // 包底抽成(4)、底租抽成取高者(2)、一般抽成(3)、階梯式抽成(5) = 是
-    if (['2', '3', '4', '5'].includes(tltTermType)) {
-      commYnControl?.setValue('Y');
-      console.log('✅ 是否為抽成設為：是');
-    } else {
-      commYnControl?.setValue('N');
-      console.log('❌ 是否為抽成設為：否');
-    }
-  }
-
-  /**
-   * 新增：更新付款方式相關驗證器
-   */
-  private updatePaymentValidators(): void {
-    const paytype = this.dataForm.get('paytype')?.value;
-    const checkTitleControl = this.dataForm.get('CHECK_TITLE');
-    const bankIdControl = this.dataForm.get('bank_id');
-    const vendorAcctNameControl = this.dataForm.get('vendor_acct_name');
-    const vendorAcctNoControl = this.dataForm.get('vendor_acct_no');
-
-    // 清除現有驗證器
-    [checkTitleControl, bankIdControl, vendorAcctNameControl, vendorAcctNoControl]
-      .forEach(control => control?.clearValidators());
-
-    if (paytype === '1') { // 匯款
-      bankIdControl?.setValidators([Validators.required]);
-      vendorAcctNameControl?.setValidators([Validators.required, Validators.maxLength(60)]);
-      vendorAcctNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
-      console.log('✅ 匯款付款：銀行相關欄位為必填');
-    } else if (paytype === '2') { // 支票
-      checkTitleControl?.setValidators([Validators.required, Validators.maxLength(100)]);
-      console.log('✅ 支票付款：票據抬頭為必填');
-    }
-
-    // 更新驗證狀態
-    [checkTitleControl, bankIdControl, vendorAcctNameControl, vendorAcctNoControl]
-      .forEach(control => control?.updateValueAndValidity());
-  }
-
-  /**
-   * 新增：更新聯名卡相關驗證器
-   */
-  private updateCreditCardValidators(): void {
-    const vipYn = this.dataForm.get('vip_yn')?.value;
-    const creditCardControl = this.dataForm.get('credit_card');
-
-    if (!creditCardControl) return;
-
-    creditCardControl.clearValidators();
-
-    if (vipYn === 'Y') {
-      creditCardControl.setValidators([
-        Validators.required,
-      ]);
-      console.log('✅ 配合聯名卡：聯名卡折數為必填 (0.01-1.00)');
-    } else {
-      // vip_yn = 'N' 時，清空數值並設為非必填
-      creditCardControl.setValue(null);
-      console.log('❌ 不配合聯名卡：聯名卡折數非必填並清空');
-    }
-
-    creditCardControl.updateValueAndValidity();
-  }
-
-  /**
-   * 新增：更新保證金相關驗證器
-   */
-  private updateDepositValidators(): void {
-    // 履約保證金
-    this.validateDepositPair('open_deposit', 'open_fees', '履約保證金');
-
-    // 施工保證金
-    this.validateDepositPair('construct_deposit', 'construct_fees', '施工保證金');
-
-    // 契約屆滿保證金
-    this.validateDepositPair('expiration_deposit', 'expiration_fees', '契約屆滿保證金');
-  }
-
-  /**
-   * 新增：驗證保證金配對
-   */
-  private validateDepositPair(paymentMethodField: string, amountField: string, displayName: string): void {
-    const paymentMethodControl = this.dataForm.get(paymentMethodField);
-    const amountControl = this.dataForm.get(amountField);
-
-    if (!paymentMethodControl || !amountControl) return;
-
-    const hasPaymentMethod = paymentMethodControl.value && paymentMethodControl.value.trim() !== '';
-
-    amountControl.clearValidators();
-
-    if (hasPaymentMethod) {
-      amountControl.setValidators([Validators.required, Validators.min(1)]);
-      console.log(`✅ ${displayName}付款方式有值：${displayName}必填`);
-    } else {
-      amountControl.setValidators([Validators.min(0)]);
-    }
-
-    amountControl.updateValueAndValidity();
-  }
-
-  /**
-   * 新增：自訂驗證器 - 保證金依賴驗證
-   */
-  private createDepositDependencyValidator(paymentMethodField: string): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      const form = control.parent;
-      if (!form) return null;
-
-      const paymentMethodControl = form.get(paymentMethodField);
-      const hasPaymentMethod = paymentMethodControl?.value && paymentMethodControl.value.trim() !== '';
-
-      if (hasPaymentMethod && (!control.value || control.value <= 0)) {
-        return { depositRequired: { requiredFor: paymentMethodField } };
-      }
-
-      return null;
-    };
-  }
-
-  /**
    * 新增：自訂錯誤訊息處理
    */
   getFieldErrorMessage(fieldName: string): string {
@@ -2705,47 +2371,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       return this.validationService.getFieldErrorMessage(fieldName, field);
     }
     return '';
-  }
-
-  private updateOverallStatusValidators(tltTermType: string): void {
-    const overallStatusControl = this.dataForm.get('overall_status');
-
-    if (!overallStatusControl) return;
-
-    // 清除現有驗證器
-    overallStatusControl.clearValidators();
-
-    // 包底抽成(4)、階梯式抽成(5)、包底加階梯(6) 需要選擇超出部份處理方式
-    if (['4', '5', '6'].includes(tltTermType)) {
-      overallStatusControl.setValidators([Validators.required]);
-      console.log('✅ 超出部份處理方式設為必填');
-    } else {
-      console.log('ℹ️ 超出部份處理方式設為非必填');
-    }
-
-    overallStatusControl.updateValueAndValidity();
-  }
-
-
-  /**
-   * 新增：根據欄位獲取必填錯誤訊息
-   */
-  private getRequiredErrorMessage(fieldName: string): string {
-    const requiredMessages: { [key: string]: string } = {
-      'tlt_ctype_mtotal': '當前抽成別需要選擇包底類別',
-      'overall_status': '當前抽成別需要選擇超出部份處理方式',
-      'base_rent': '預收租金為是時固定租金為必填',
-      'CHECK_TITLE': '支票付款時票據抬頭為必填',
-      'bank_id': '匯款付款時銀行代號為必填',
-      'vendor_acct_name': '匯款付款時帳戶名稱為必填',
-      'vendor_acct_no': '匯款付款時銀行帳號為必填',
-      'credit_card': '配合聯名卡時聯名卡折數為必填',
-      'open_fees': '履約保證金付款方式有值時此欄位為必填',
-      'construct_fees': '施工保證金付款方式有值時此欄位為必填',
-      'expiration_fees': '契約屆滿保證金付款方式有值時此欄位為必填'
-    };
-
-    return requiredMessages[fieldName] || '此欄位為必填';
   }
 
   /**
@@ -2770,66 +2395,5 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   formatEmailField(fieldName: string, value: string): void {
     this.emailValidationService.formatEmailField(this.dataForm, fieldName, value, this.messageService);
     this.saveToWorkflow();
-  }
-
-  /**
-   * 格式化多個 email 字串
-   */
-  private formatMultipleEmails(emailString: string): string {
-    return emailString
-      .split(/[;,]/) // 支援分號和逗號分隔
-      .map(email => email.trim()) // 去除前後空格
-      .filter(email => email !== '') // 過濾空字串
-      .join(';'); // 統一用分號連接
-  }
-
-  /**
-   * 驗證單一 email
-   */
-  private validateSingleEmail(fieldName: string, email: string): void {
-    if (email && !this.isValidEmailFormat(email)) {
-      this.messageService.warnBubble(`${this.getFieldDisplayName(fieldName)} 格式不正確`);
-    }
-  }
-
-  /**
-   * 驗證多個 email
-   */
-  private validateMultipleEmails(fieldName: string, emailString: string): void {
-    if (!emailString) return;
-
-    const emails = emailString.split(';');
-    const invalidEmails: string[] = [];
-
-    emails.forEach(email => {
-      if (email && !this.isValidEmailFormat(email)) {
-        invalidEmails.push(email);
-      }
-    });
-
-    if (invalidEmails.length > 0) {
-      this.messageService.warnBubble(
-        `${this.getFieldDisplayName(fieldName)} 中有無效格式：${invalidEmails.join(', ')}`
-      );
-    }
-  }
-
-  /**
-   * 驗證 email 格式
-   */
-  private isValidEmailFormat(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email.trim());
-  }
-
-  /**
-   * 取得欄位顯示名稱
-   */
-  private getFieldDisplayName(fieldName: string): string {
-    const fieldNames: { [key: string]: string } = {
-      'email': '聯絡信箱',
-      'invoice_email': '發票信箱'
-    };
-    return fieldNames[fieldName] || fieldName;
   }
 }
