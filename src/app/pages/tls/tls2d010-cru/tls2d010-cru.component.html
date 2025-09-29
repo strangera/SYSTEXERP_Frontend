@@ -82,7 +82,7 @@
         [columns]="columnsCounter"
         (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems"
-        (dataChange)="data = $event"
+        (dataChange)="onCounterDataChange($event)"
         dataStatusField="status"
         [loading]="loading"
         [tableRequired]="true"
@@ -101,6 +101,7 @@
       (ngSubmit)="onSubmit()"
     >
       <div class="grid p-fluid">
+        <!-- 扣款類型 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="扣款類型"
@@ -113,6 +114,8 @@
             (valueChange)="onCAP_TypeChange($event)"
           ></app-dropdown>
         </div>
+
+        <!-- 扣款項目 -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="扣款項目"
@@ -125,6 +128,16 @@
           (valueChange)="onCAP_ItemChange($event)"
         ></app-dropdown>
 
+        <!-- 扣款名稱 (唯讀) -->
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="扣款名稱"
+          controlName="CAP_Name"
+          [control]="dataFormNormal.controls.CAP_Name"
+          [submitted]="submitted"
+        ></app-input-text>
+
+        <!-- 扣款日期 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             label="扣款日期"
@@ -134,6 +147,8 @@
             [submitted]="submitted"
           ></app-calendar>
         </div>
+
+        <!-- 扣款金額 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="扣款金額"
@@ -142,6 +157,8 @@
             [submitted]="submitted"
           ></app-input-number>
         </div>
+
+        <!-- 課稅別 (唯讀) -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="課稅別"
@@ -151,18 +168,25 @@
             optionValue="value"
             [control]="dataFormNormal.controls.cap_taxtype"
             [submitted]="submitted"
+            [disabled]="true"
           ></app-dropdown>
         </div>
 
+        <!-- 會計科目 (唯讀) -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="會計科目"
             controlName="AccNo"
+            [options]="AccNoOptions"
+            optionLabel="label"
+            optionValue="value"
             [control]="dataFormNormal.controls.AccNo"
             [submitted]="submitted"
-            [options]="AccNoOptions"
+            [disabled]="true"
           ></app-dropdown>
         </div>
+
+        <!-- 組織代號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="組織代號/名稱"
@@ -172,6 +196,8 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
+        <!-- 是否開立發票 (可修改) -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-radiobutton
             label="是否開立發票"
@@ -185,12 +211,13 @@
           ></app-radiobutton>
         </div>
       </div>
+
+      <!-- table-edit -->
       <app-table-edit
         title="新增扣款"
         tableKey="TLSD010Detail"
         [data]="data"
         class="col-12"
-        [data]="data"
         [columns]="columnsNormal"
         (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems"
@@ -199,6 +226,8 @@
         [loading]="loading"
         [tableRequired]="true"
       ></app-table-edit>
+
+      <!-- 按鈕 -->
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
