@@ -33,6 +33,26 @@ import { TranslateModule } from '@ngx-translate/core';
   ],
 })
 export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  // 新增：table row 關聯 mapping（不影響原有邏輯）
+  private setTableRowMapping(row: any) {
+    if (row.CAP_Item !== undefined && row.CAP_Item !== null && row.CAP_Item !== '') {
+      const selected = this.FilterCAP_ItemOptions.find(opt => opt.value === row.CAP_Item);
+      if (selected) {
+        const item = selected.data;
+        row.AccNo = item.AccNo;
+        row.GUI_FLAG = item.GUI_FLAG;
+        row.cap_taxtype = item.CAP_TaxType;
+      } else {
+        row.AccNo = null;
+        row.GUI_FLAG = null;
+        row.cap_taxtype = null;
+      }
+    } else {
+      row.AccNo = null;
+      row.GUI_FLAG = null;
+      row.cap_taxtype = null;
+    }
+  }
   currentCreateType: 'normal' | 'counter' = 'counter';
 
   data: any[] = [];
@@ -174,7 +194,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       this.columnsCounter = [
         { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
         { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', options: this.CAP_TypeOptions },
-        { field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', options: this.FilterCAP_ItemOptions },
+        {
+          field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem',
+          options: (row: any) => {
+            return this.CAP_ItemOptions
+              .filter(item => item.CAP_Type === row.CAP_Type)
+              .map(item => ({ value: item.CAP_Item, label: `${item.CAP_Item}-${item.CAP_Name}`, data: item }));
+          }
+        },
         { field: 'AccNo', header: '會計科目', type: 'dropdown', width: '10rem', options: this.AccNoOptions, disabled: () => true },
         { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions },
         { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions },
@@ -217,20 +244,25 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // table-edit 的資料有變動時會觸發
   onCounterDataChange(updatedData: any[]): void {
     this.data = updatedData;
-
+    console.log('table-edit dataChange:', this.data);
     this.data.forEach(row => {
-      console.log('row change:', row); // debug
-
-      if (row.CAP_Item) {   // 只要 CAP_Item 有值就做 mapping
-        const selected = this.FilterCAP_ItemOptions.find(opt => opt.value === row.CAP_Item);
-        if (selected) {
-          const item = selected.data;
-          row.AccNo = item.AccNo;
-          row.GUI_FLAG = item.GUI_FLAG;
-          row.cap_taxtype = item.CAP_TaxType;
-        }
-      }
+      this.setTableRowMapping(row);
+      console.log('row after mapping:', row);
     });
+  }
+  // table-edit 欄位選擇時即時關聯
+  onCounterCAPItemChange(row: any, value: string) {
+    const selected = this.FilterCAP_ItemOptions.find(opt => opt.value === value);
+    if (selected) {
+      const item = selected.data;
+      row.AccNo = item.AccNo;
+      row.GUI_FLAG = item.GUI_FLAG;
+      row.cap_taxtype = item.CAP_TaxType;
+    } else {
+      row.AccNo = null;
+      row.GUI_FLAG = null;
+      row.cap_taxtype = null;
+    }
   }
   // ===== 送出 =====
   onSubmit(): void {
