@@ -44,23 +44,23 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     GUI_Track: [null],                                          // 字軌
     InvoiceNo_S: ['', [Validators.maxLength(8)]],               // 發票號碼_起
     InvoiceNo_E: ['', [Validators.maxLength(8)]],               // 發票號碼_迄
-    PUR_RepYYYYMM: [null, [Validators.required, this.validationService.evenMonthValidator]],               // 申報年月 (必填)
-    PUR_GUIDateYYYYMM_S: [null, [Validators.required]],         // 資料所屬年月_起 (必填)
-    PUR_GUIDateYYYYMM_E: [null, [Validators.required]],         // 資料所屬年月_迄 (必填)
+    PUR_RepYYYYMM: [null, [Validators.required, this.validationService.evenMonthValidator]], // 申報年月
+    PUR_GUIDateYYYYMM_S: [null, [Validators.required]],         // 資料所屬年月_起
+    PUR_GUIDateYYYYMM_E: [null, [Validators.required]],         // 資料所屬年月_迄
     PUR_Uniform_S: ['', [Validators.maxLength(10)]],            // 廠商統一編號_起
     PUR_Uniform_E: ['', [Validators.maxLength(10)]],            // 廠商統一編號_迄
-    PUR_DiscNo: [null],                                         // 扣抵代號
+    PUR_DiscNo: [null],                                         // 折扣代號
     PUR_Type: [null],                                           // 類別區分
     PUR_TaxType: [null],                                        // 課稅別
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號_起
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號_迄
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼_起
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼_迄
-    CRT_USR_Name: ['', [Validators.maxLength(10)]],             // 傳票建立者
-    SAL_Type: [null],                                           // 系統別
-    SYS_Origin: [null],                                        // 使用別
+    CRT_USR_Name: [null],                                       // 傳票建立者
+    SAL_Type: [null],                                           // 使用別
     CRT_Date_S: [null],                                         // 建立日期_起
     CRT_Date_D: [null],                                         // 建立日期_迄
+    SYS_ORIGIN: [null],                                         // 系統別
     ...createPaginationConfig([])
   });
 
@@ -76,7 +76,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
 
   columns: Column[] = [
     { field: 'No', header: '序號', hidden: true },
-    { field: 'PUR_VoucherType', header: '格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'PUR_VoucherType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'InvoiceNo', header: '發票號碼', visible: true },
     { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
@@ -85,15 +85,11 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_Uniform', header: '廠商統一編號', visible: true },
     { field: 'PUR_Net', header: '發票金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
     { field: 'PUR_Tax', header: '發票稅額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
-    { field: 'PUR_Amt', header: '總金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
-    { field: 'PUR_Type', header: '類別區分', hidden: true, format: (value: string) => this.invoiceTypeOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
     { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? '' },
-    { field: 'PUR_DiscNo', header: '扣抵代號', hidden: true, format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? '' },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'CRT_USR_Name', header: '傳票建立者', hidden: true },
-    { field: 'SAL_Type', header: '系統別', visible: true },
-    { field: 'CRT_Date', header: '建立日期', hidden: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' }
+    { field: 'Voucher_No', header: '傳票編號', visible: true },
+    { field: 'SAL_Type', header: '系統別', visible: true }
   ];
 
   //#region 下拉選項
@@ -221,7 +217,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
       GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
       MID: 0,
       STO_No: '10',
-      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? ''
+      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? []
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });

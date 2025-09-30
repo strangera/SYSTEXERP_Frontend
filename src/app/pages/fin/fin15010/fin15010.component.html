@@ -52,22 +52,22 @@
           </app-input-text-range>
 
           <!-- 扣抵代號 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="扣抵代號" controlName="PUR_DiscNo"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="扣抵代號" controlName="PUR_DiscNo"
             [options]="discountOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.PUR_DiscNo" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
 
           <!-- 類別區分 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="類別區分" controlName="PUR_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="類別區分" controlName="PUR_Type"
             [options]="invoiceTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.PUR_Type" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
 
           <!-- 課稅別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
             [options]="taxTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.PUR_TaxType" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
 
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
@@ -87,16 +87,16 @@
           </app-input-text>
 
           <!-- 系統別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
             [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
-          </app-dropdown>
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
+          </app-multi-select>
 
           <!-- 使用別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SYS_Origin" [options]="salTypeOptions"
-            [optionLabel]="'label'" [optionValue]="'value'" [control]="queryForm.controls.SYS_Origin"
-            [submitted]="submitted">
-          </app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_Type"
+            [options]="salTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
+          </app-multi-select>
 
           <!-- 建立日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="建立日期"
