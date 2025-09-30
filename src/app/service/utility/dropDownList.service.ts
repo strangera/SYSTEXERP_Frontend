@@ -152,7 +152,7 @@ export interface IPOS1018GUITrackRequest {
   GUI_YYMM: string;
   MID: number;
   STO_No: string;
-  GUI_Type: string;
+  GUI_Type: string[];
 }
 
 export interface IPOS1018GUITrackResponse {
