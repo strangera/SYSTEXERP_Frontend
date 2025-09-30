@@ -39,6 +39,12 @@
             [submitted]="submitted">
           </app-input-text-range>
 
+          <!-- 資料所屬年月起迄 (必填) -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.PUR_GUIDateYYYYMM_S"
+            [endControl]="queryForm.controls.PUR_GUIDateYYYYMM_E" [submitted]="submitted">
+          </app-calendar-range>
+
           <!-- 退出/折讓日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="退出/折讓日期"
             [startControl]="queryForm.controls.PUR_GUIDate_S" [endControl]="queryForm.controls.PUR_GUIDate_E"
@@ -50,13 +56,6 @@
             [options]="creditTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.Credit_Type" [submitted]="submitted">
           </app-multi-select>
-
-
-          <!-- 資料所屬年月起迄 (必填) -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
-            [startControl]="queryForm.controls.PUR_GUIDateYYYYMM_S"
-            [endControl]="queryForm.controls.PUR_GUIDateYYYYMM_E" [submitted]="submitted">
-          </app-calendar-range>
 
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"

@@ -76,7 +76,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
 
   columns: Column[] = [
     { field: 'No', header: '序號', hidden: true },
-    { field: 'PUR_VoucherType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'PUR_VoucherType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'InvoiceNo', header: '發票號碼', visible: true },
     { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: formatDate },
@@ -86,7 +86,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount },
     { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount },
     { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'PUR_TaxType', header: '課稅別', visible: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'SAL_Type', header: '系統別', visible: true }

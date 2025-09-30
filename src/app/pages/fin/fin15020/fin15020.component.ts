@@ -23,6 +23,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { ValidationService } from '@shared/service/validation.service';
 
 export interface Option {
   label: string;
@@ -52,7 +53,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     PUR_GUIDate_S: [null],                                      // 退出/折讓日期起
     PUR_GUIDate_E: [null],                                      // 退出/折讓日期訖
     Credit_Type: [null],                                        // 區別
-    PUR_RepYYYYMM: [null, [Validators.required]],               // 申報年月
+    PUR_RepYYYYMM: [null, [Validators.required, this.validationService.evenMonthValidator]],               // 申報年月
     PUR_GUIDateYYYYMM_S: [null, [Validators.required]],         // 資料所屬年月起
     PUR_GUIDateYYYYMM_E: [null, [Validators.required]],         // 資料所屬年月訖
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起
@@ -77,27 +78,18 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-    {
-      field: 'PUR_VoucherType', header: '格式代號', visible: true,
-      format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? ''
-    },
+    { field: 'PUR_VoucherType', header: '格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'InvoiceNo', header: '發票號碼', visible: true },
     { field: 'PUR_GUIDate', header: '退出折讓日期', visible: true, format: formatDate },
-    {
-      field: 'Credit_Type', header: '區別', visible: true,
-      format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? ''
-    },
+    { field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
     { field: 'PUR_Net', header: '退出折讓單金額', visible: true, format: formatAmount },
     { field: 'PUR_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'SAL_Type', header: '系統別', visible: true },
-    {
-      field: 'PUR_DiscNo', header: '折抵代號', visible: true,
-      format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? ''
-    },
+    { field: 'PUR_DiscNo', header: '折抵代號', visible: true, format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'PUR_Uniform', header: '統一編號', visible: true }
   ];
 
@@ -125,7 +117,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   constructor(
     private readonly fin15020Service: FIN15020Service,
     private readonly datePipe: DatePipe,
-    private readonly dropDownListService: DropDownListService
+    private readonly dropDownListService: DropDownListService,
+    private readonly validationService: ValidationService
   ) {
     super();
   }
