@@ -24,7 +24,8 @@ import {
   CAP_SALE_TYPE_OPTIONS,
   INSTMS_TYPE_OPTIONS,
   EDC_BANK_OPTIONS,
-  CALC_TYPE_OPTIONS
+  CALC_TYPE_OPTIONS,
+  CAP_SALE_TYPE_OPTIONS_E
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -67,7 +68,8 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   applyStatusOptions: convertToDropdownOptions(APPLY_STATUS_OPTIONS),
   total_amt_unit: convertToDropdownOptions(TOTAL_AMT_UNIT_OPTIONS), //目標營業額單位(業主)
   total_amt_vendor_unit: convertToDropdownOptions(TOTAL_AMT_VENDOR_UNIT_OPTIONS),  //目標營業額單位(廠商)
-  capSaletypeOptions: convertToDropdownOptions(CAP_SALE_TYPE_OPTIONS),  //銷售類型
+  capSaletypeOptions: convertToDropdownOptions(CAP_SALE_TYPE_OPTIONS),  //銷售類型D
+  capSaletypeOptionsE: convertToDropdownOptions(CAP_SALE_TYPE_OPTIONS_E),  //銷售類型E
   instmsTypeOptions: convertToDropdownOptions(INSTMS_TYPE_OPTIONS),
   edcBankOptions: convertToDropdownOptions(EDC_BANK_OPTIONS),
   calcTypeOptions: convertToDropdownOptions(CALC_TYPE_OPTIONS),

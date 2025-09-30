@@ -793,6 +793,14 @@ export class FareColumnDefinitions {
         }
       },
       {
+        field: 'cap_saletype',
+        header: '銷售類型',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptionsE,
+      },
+      {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
@@ -811,6 +819,13 @@ export class FareColumnDefinitions {
         allowDecimal: true,
         decimalPlaces: 3,
 
+      },
+      {
+        field: 'pay_no',
+        header: '支付編號',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
       },
       {
         field: 'org_id',
