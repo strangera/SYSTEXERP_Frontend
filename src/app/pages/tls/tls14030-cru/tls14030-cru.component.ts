@@ -62,7 +62,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   storageOptions: apiOption[] = [];
   allquery: Garantee_Ticket[] = [];
 
-  TLTTALENT_Option: apiOption[] = [];
+  TLTTALENT_Option: any[] = [];
 
   ticket_typeOption: option[] = [ //保證票型態
     { value: '1', label: '準時開業保證票' },
@@ -177,6 +177,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         this.TLTTALENT_Option = response.Data.map((item: any) => ({
           No: Number(item.No), // 確保是 number
           Name: item.Name,
+          contract_no: item.contract_no,// 用戶顯示適用這個欄位，還是用talent_id，只是顯示是contract_no合約編號)
         }));
 
         console.log('專櫃主檔(合約編號)明細:', this.TLTTALENT_Option);
