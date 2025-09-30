@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../system/auth.service'; // 假設 ApiResponse 介面在此定義
-
+import { TLS41010Item } from '../../pages/tls/tls41010/tls41010.model';
 // 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
 export interface IDropdownItem {
   value?: string;
@@ -478,5 +478,12 @@ export class DropDownListService {
   // 查詢專屬活動編號(TALPORDERM)資料表下拉選單
   queryTALPORDERM_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTALPORDERM_DropDownList`, {});
+  }
+  // 查詢環境變數模板 (POS1002TML_ALL)
+  queryPOS1002TML_ALL_DropDownList(): Observable<ApiResponse<TLS41010Item[]>> {
+    return this.http.post<ApiResponse<TLS41010Item[]>>(
+      `${this.apiUrl}/queryPOS1002TML_ALL_DropDownList`,
+      {}
+    );
   }
 }
