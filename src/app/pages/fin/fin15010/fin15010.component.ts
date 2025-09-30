@@ -86,10 +86,10 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount },
     { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount },
     { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true },
+    { field: 'PLU_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true }
+    { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value }
   ];
 
   //#region 下拉選項

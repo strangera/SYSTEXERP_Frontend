@@ -46,10 +46,10 @@
             [control]="queryForm.controls.PUR_Uniform" [submitted]="submitted">
           </app-input-text>
           <!-- 課稅別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
             [options]="taxTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.PUR_TaxType" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
             [startControl]="queryForm.controls.Source_Doc_No_S" [endControl]="queryForm.controls.Source_Doc_No_E"
@@ -61,15 +61,15 @@
             [submitted]="submitted">
           </app-input-text-range>
           <!-- 系統別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
             [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
           <!-- 使用別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SYS_Origin" [options]="salTypeOptions"
-            [optionLabel]="'label'" [optionValue]="'value'" [control]="queryForm.controls.SYS_Origin"
-            [submitted]="submitted">
-          </app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SYS_ORIGIN"
+            [options]="salTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
+          </app-multi-select>
           <!-- 資產註記 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產註記" controlName="AssetType"
             [options]="assetNotationOptions" [optionLabel]="'label'" [optionValue]="'value'"

@@ -4,7 +4,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { FIN15040Service, FIN15040QueryRequest, FIN15040PrintRequest, FIN15040Data } from '@service/api/fin/fin15040.service';
 import { environment } from '../../../../environments/environment';
 
@@ -59,7 +59,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     Voucher_No_S: ['', [Validators.maxLength(16)]],         // 傳票號碼起
     Voucher_No_E: ['', [Validators.maxLength(16)]],         // 傳票號碼訖
     SAL_Type: [null],                                       // 系統別
-    SYS_Origin: [null],                                    // 使用別
+    SYS_ORIGIN: [null],                                    // 使用別
     CrtVouUsrNo: ['', [Validators.maxLength(20)]],          // 傳票建立者
     AssetType: [null],                                      // 資產註記
     HasUniform: [null],                                     // 是否有統一編號
@@ -81,13 +81,13 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { field: 'INV_GUIType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'INV_GUITrack', header: '字軌', visible: true },
     { field: 'INV_GUINumber', header: '發票號碼', visible: true },
-    { field: 'TXN_Date', header: '發票日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'TXN_Date', header: '發票日期', visible: true, format: formatDate },
     { field: 'INV_YM1', header: '資料所屬年月', visible: true },
     { field: 'INV_YM2', header: '申報年月', visible: true },
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
-    { field: 'TXN_Net', header: '發票金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
-    { field: 'TXN_Tax', header: '發票稅額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
-    { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'TXN_Net', header: '發票金額', visible: true, format: formatAmount },
+    { field: 'TXN_Tax', header: '發票稅額', visible: true, format: formatAmount },
+    { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: formatAmount },
     { field: 'PLU_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value }
