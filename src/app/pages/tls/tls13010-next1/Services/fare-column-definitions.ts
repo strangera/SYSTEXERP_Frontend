@@ -229,11 +229,12 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
+        // buttonLabel: '',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-
+        style: 'width: 50px;'
       },
       {
         field: 'cap_item',
@@ -382,7 +383,7 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
@@ -392,7 +393,7 @@ export class FareColumnDefinitions {
         field: 'auto_calc',
         header: '自動計算',
         type: 'button',
-        buttonLabel: '自動計算',
+        // buttonLabel: '自動計算',
         buttonIcon: 'pi pi-calculator',
         buttonClass: 'p-button-sm p-button-info',
         buttonTooltip: '根據總金額自動計算',
@@ -563,7 +564,7 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
@@ -581,7 +582,7 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-
+        style: 'white-space: normal; word-break: break-word; line-height: 1.3; max-width: 150px; min-width: 100px;'
       },
       {
         field: 'cap_saletype',
@@ -650,6 +651,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         dateFormat: 'year-month',
+        style: 'min-width: 120px; width: 140px;',
         required: true,
 
         defaultValueFunction: () => {
@@ -667,7 +669,7 @@ export class FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
-
+        style: 'min-width: 120px; width: 140px;',
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -694,8 +696,7 @@ export class FareColumnDefinitions {
         required: true,
         allowDecimal: true,  // 是否允許小數點
         decimalPlaces: 3,
-
-
+        style: 'min-width: 50px; width: 50px;',
       },
       {
         field: 'org_id',
@@ -740,7 +741,7 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',

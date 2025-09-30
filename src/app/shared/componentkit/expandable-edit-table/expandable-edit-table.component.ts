@@ -386,10 +386,10 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   private calculateFixedColumnsWidth(): number {
     let fixedWidth = 0;
-    if (this.showSequenceNumber) fixedWidth += 60;
-    if (this.showCheckBox && !this.readonly) fixedWidth += 60;
-    if (this.detailKey) fixedWidth += 60;
-    if (!this.readonly && this.showActionColumn) fixedWidth += 120;
+    if (this.showSequenceNumber) fixedWidth += 40;
+    if (this.showCheckBox && !this.readonly) fixedWidth += 45;
+    if (this.detailKey) fixedWidth += 40;
+    if (!this.readonly && this.showActionColumn) fixedWidth += 80;
     return fixedWidth;
   }
 

@@ -314,7 +314,7 @@
                   pButton
                   pRipple
                   type="button"
-                  [label]="col.buttonLabel || '按鈕'"
+                  [label]="col.buttonLabel ?? ''"
                   [icon]="col.buttonIcon || ''"
                   [ngClass]="col.buttonClass || 'p-button-sm p-button-info'"
                   [pTooltip]="col.buttonTooltip || ''"
@@ -364,7 +364,7 @@
                   pButton
                   pRipple
                   type="button"
-                  [label]="col.buttonLabel || '按鈕'"
+                  [label]="col.buttonLabel ?? ''"
                   [icon]="col.buttonIcon || ''"
                   [ngClass]="col.buttonClass || 'p-button-sm p-button-info'"
                   [pTooltip]="col.buttonTooltip || ''"
@@ -802,7 +802,7 @@
                             pButton
                             pRipple
                             type="button"
-                            [label]="col.buttonLabel || '按鈕'"
+                            [label]="col.buttonLabel ?? ''"
                             [icon]="col.buttonIcon || ''"
                             [ngClass]="
                               col.buttonClass || 'p-button-sm p-button-info'
