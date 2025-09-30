@@ -169,6 +169,13 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.buildGrid();
     this.loadDropdowns();
 
+    // 只要 form 有變動就同步到 selected key
+    this.selectedKeyForm.valueChanges.subscribe(val => {
+      if (this.selected) {
+        Object.assign(this.selected, val);
+      }
+    });
+
     // 顏色監聽
     this.selectedKeyForm.controls['color'].valueChanges.subscribe(value => {
       if (value) {
@@ -365,6 +372,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
+
+      // log: 送出前 selectedKeyForm 與 keys[0] (KB_ScanCode='0101')
+      const key0101 = this.keys.find(k => k.code === '0101');
+      console.log('送出前 selectedKeyForm:', this.selectedKeyForm.getRawValue());
+      console.log('送出前 keys[0] (KB_ScanCode=0101):', key0101);
 
       if (this.selected) {
         Object.assign(this.selected, this.selectedKeyForm.getRawValue());
