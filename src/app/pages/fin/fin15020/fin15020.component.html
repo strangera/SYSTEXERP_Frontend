@@ -46,10 +46,10 @@
           </app-calendar-range>
 
           <!-- 區別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="區別" controlName="Credit_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="區別" controlName="Credit_Type"
             [options]="creditTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.Credit_Type" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
 
 
           <!-- 資料所屬年月起迄 (必填) -->
@@ -70,11 +70,17 @@
             [submitted]="submitted">
           </app-input-text-range>
 
-          <!-- 系統別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
+          <!-- 使用別 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_Type"
             [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
+
+          <!-- 系統別 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
+            [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
+          </app-multi-select>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

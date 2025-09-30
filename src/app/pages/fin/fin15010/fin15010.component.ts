@@ -18,7 +18,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { environment } from '../../../../environments/environment';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -79,13 +79,13 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_VoucherType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'InvoiceNo', header: '發票號碼', visible: true },
-    { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: formatDate },
     { field: 'PUR_GUIDateYYYYMM', header: '資料所屬年月', visible: true },
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
     { field: 'PUR_Uniform', header: '廠商統一編號', visible: true },
-    { field: 'PUR_Net', header: '發票金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
-    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount },
+    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount },
     { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? '' },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
