@@ -43,8 +43,8 @@ export interface Option {
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    INV_Remark_S: ['', [Validators.maxLength(20)]],             // 退出/折讓單號起 (string(20))
-    INV_Remark_E: ['', [Validators.maxLength(20)]],             // 退出/折讓單號訖 (string(20))
+    INV_Remark_S: ['', [Validators.maxLength(10)]],             // 退出/折讓單號起 (string(10))
+    INV_Remark_E: ['', [Validators.maxLength(10)]],             // 退出/折讓單號訖 (string(20))
     INV_GUIType: [null],                                        // 發票格式 (dropdown)
     GUI_Track: [null],                                          // 字軌 (string(2))
     TXN_GUINo_S: ['', [Validators.maxLength(8)]],               // 發票號碼起 (string(8))
@@ -57,8 +57,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     INV_Data_YM_E: [null, [Validators.required]],                                      // 資料所屬年月訖 (date picker)
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起 (string(16))
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖 (string(16))
-    Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票編號起 (string(16))
-    Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票編號訖 (string(16))
+    Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起 (string(16))
+    Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖 (string(16))
     SAL_Type: [null],           // 使用別 (dropdown)
     SYS_ORIGIN: [null],         // 系統別 (dropdown)
     ...createPaginationConfig([{ field: 'No', order: -1 }])
@@ -76,19 +76,17 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
 
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
-    { field: 'INV_Remark', header: '退出折讓單號', visible: true },
-    { field: 'INV_GUIType', header: '格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'INV_Remark', header: '退出/折讓單號', visible: true },
+    { field: 'INV_GUIType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    { field: 'TXN_Date', header: '退出折讓日期', visible: true, format: formatDate },
-    {
-      field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value
-    },
+    { field: 'TXN_Date', header: '退出/折讓日期', visible: true, format: formatDate },
+    { field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'INV_YM', header: '申報年月', visible: true },
     { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount },
     { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'Voucher_No', header: '傳票編號', visible: true },
+    { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SAL_Type', header: '系統別', visible: true },
     { field: 'TXN_Uniform', header: '統一編號', visible: true }
   ];

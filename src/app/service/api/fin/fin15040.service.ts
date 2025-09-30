@@ -26,7 +26,7 @@ export interface FIN15040QueryRequest extends BaseQueryRequest {
   CrtVouUsrNo?: string;          // 傳票建立者
   AssetType?: string;            // 資產註記
   HasUniform?: boolean;          // 是否有統一編號
-  PUR_DiscNo?: string;           // 折扣代號
+  PUR_DiscNo?: string;           // 扣抵代號
   SYS_ORIGIN?: string[];         // 系統別
 }
 
@@ -47,7 +47,7 @@ export interface FIN15040Data {
   TXN_Tax: number;          // 發票稅額
   TXN_SaleAmt: number;      // 發票總金額
   PLU_TaxType: string;      // 課稅別
-  Voucher_No: string;       // 傳票編號
+  Voucher_No: string;       // 傳票號碼
   SAL_Type: string;         // 系統別
   Source_Doc_No: string;    // 憑證單號
   AssetType: string;        // 資產註記

@@ -19,7 +19,7 @@ export interface FIN15010QueryRequest extends BaseQueryRequest {
   PUR_GUIDateYYYYMM_E?: string;       // 資料所屬年月訖
   PUR_Uniform_S?: string;             // 廠商統一編號起
   PUR_Uniform_E?: string;             // 廠商統一編號訖
-  PUR_DiscNo?: string[];              // 折扣代號
+  PUR_DiscNo?: string[];              // 扣抵代號
   PUR_Type?: string[];                // 類別區分
   PUR_TaxType?: string[];             // 課稅別
   Source_Doc_No_S?: string;           // 憑證單號起
@@ -42,7 +42,7 @@ export interface FIN15010PrintRequest extends FIN15010QueryRequest {
 // --- FIN15010 回應資料 Model 定義 ---
 export interface FIN15010Data {
   No: number;                   // 序號
-  PUR_VoucherType: string;      // 發票格式代號
+  PUR_VoucherType: string;      // 發票格式
   GUI_Track: string;            // 字軌
   InvoiceNo: string;            // 發票號碼
   PUR_GUIDate: string;          // 發票日期
@@ -54,7 +54,7 @@ export interface FIN15010Data {
   PUR_Amt: number;              // 發票總金額
   PUR_TaxType: string;          // 課稅別
   Source_Doc_No: string;        // 憑證單號
-  Voucher_No: string;           // 傳票編號
+  Voucher_No: string;           // 傳票號碼
   SAL_Type: string;             // 系統別
 }
 

@@ -21,7 +21,7 @@
             [control]="queryForm.controls.PUR_VoucherType" [submitted]="submitted">
           </app-multi-select>
 
-          <!-- 申報年月 (必填) -->
+          <!-- 申報年月 -->
           <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
             [control]="queryForm.controls.PUR_RepYYYYMM" [submitted]="submitted"
             (calendarEvent)="loadGuiTrackOptions($event)">
@@ -39,7 +39,7 @@
             [submitted]="submitted">
           </app-input-text-range>
 
-          <!-- 資料所屬年月起迄 (必填) -->
+          <!-- 資料所屬年月起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
             [startControl]="queryForm.controls.PUR_GUIDateYYYYMM_S"
             [endControl]="queryForm.controls.PUR_GUIDateYYYYMM_E" [submitted]="submitted">
@@ -86,12 +86,6 @@
             [control]="queryForm.controls.CRT_USR_Name" [submitted]="submitted">
           </app-input-text>
 
-          <!-- 系統別 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
-            [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
-          </app-multi-select>
-
           <!-- 使用別 -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_Type"
             [options]="salTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
@@ -103,6 +97,12 @@
             [startControl]="queryForm.controls.CRT_Date_S" [endControl]="queryForm.controls.CRT_Date_D"
             [submitted]="submitted">
           </app-calendar-range>
+
+          <!-- 系統別 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
+            [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
+          </app-multi-select>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

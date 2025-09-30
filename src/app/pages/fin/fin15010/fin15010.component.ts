@@ -49,7 +49,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     PUR_GUIDateYYYYMM_E: [null, [Validators.required]],         // 資料所屬年月_迄
     PUR_Uniform_S: ['', [Validators.maxLength(10)]],            // 廠商統一編號_起
     PUR_Uniform_E: ['', [Validators.maxLength(10)]],            // 廠商統一編號_迄
-    PUR_DiscNo: [null],                                         // 折扣代號
+    PUR_DiscNo: [null],                                         // 扣抵代號
     PUR_Type: [null],                                           // 類別區分
     PUR_TaxType: [null],                                        // 課稅別
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號_起
@@ -76,7 +76,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
 
   columns: Column[] = [
     { field: 'No', header: '序號', hidden: true },
-    { field: 'PUR_VoucherType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'PUR_VoucherType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'InvoiceNo', header: '發票號碼', visible: true },
     { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: formatDate },
@@ -88,7 +88,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount },
     { field: 'PLU_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'Voucher_No', header: '傳票編號', visible: true },
+    { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value }
   ];
 
