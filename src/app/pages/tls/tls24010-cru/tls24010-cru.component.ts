@@ -244,7 +244,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         return;
       }
       // 計算TXN_SaleAmt總計
-      const pos5007total = this.pos5007Comp?.POS5007Data.reduce((total, item) => total + (item.TXN_SaleAmt ? item.TXN_SaleAmt : 0), 0);
       const pos5007Data = this.pos5007Comp?.POS5007Data ?? [];
       const pos5008Data = this.pos5008Comp?.POS5008Data.map((item, i) => {
         const formGroup = this.pos5008Comp?.posFormArrayControls[i];
@@ -253,11 +252,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           ...formGroup?.getRawValue()
         };
       }).filter(item => item.selected) ?? [];
-      const pos5008total = pos5008Data.reduce((total, item) => total + (item.TXN_PayAmt ? item.TXN_PayAmt : 0), 0);
-      if (pos5008total !== pos5007total) {
-        this.messageService.errorBubble('支付工具資料與商品總金額不符', '請檢查支付工具資料');
-        return
-      }
       this.messageService.confirm({
         header: '確認',
         message: `確定要新增嗎?`,
