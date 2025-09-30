@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe, NgIf } from '@angular/common';
-import { finalize } from 'rxjs';
+import { debounceTime, finalize } from 'rxjs';
 import { TLS26070Service, TLS26070Data, TLS26070QueryRequest } from '../../../service/api/tls/tls26070.service';
 import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -33,7 +33,7 @@ import { CounterNameService } from '@service/basic/counter-name.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { BusinessClassificationService } from '../tls12040-cru/services/business-classification.service';
 import { DropdownOption } from '../tls13010/tls13010.dropdown';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls26070',
@@ -59,32 +59,34 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
   })();
 
   queryForm = this.formBuilder.group({
-    // 日期查詢條件（單選報表類型）
     reportType: ['1'], // 報表類型
-    floor: [null], // 樓層
-    region: [null], // 區域
-    bus_type: [null], // 大分類
-    bus_class: [null], // 中分類
-    tlt_kind: [null], // 櫃別
-    org_id: [null], // 組織代號
-    tlt_term_type: [null], // 抽成別
+    floor: [[]], // 樓層 string[]
+    region: [[]], // 區域 string[]
+    bus_type: [[] as string[]],//大分類
+    bus_class: [[] as IDropdownItem[]],//中分類
+    tlt_kind: [[]], // 櫃別 string[]
+    tlt_term_type: [[]], // 抽成別 string[]
+    org_id: [[]], // 組織代號 string[]
+    tlt_no: [[]], // 專櫃編號 string[]
+    tax: [true], // 是否含稅 boolean
+
     onedatedd: [this.today], // 日期（日報表）
     onedatedd_c: [this.yesterday], // 比較日期（日報表）
     onedateyy: [null], // 年度（週/半年/年報表）
     weeks: [null], // 週數
-    onedatemm: [null], // 年月（月報表）
-    halfyear_onedateyy: [null], // 半年報表年度
-    halfyear: [null], // 半年別
-    year_onedateyy: [null], // 年報表年度
     startdate: [null as string | null], // 開始日期
     enddate: [null as string | null], // 結束日期
     onedateyy_c: [null], // 比較年度（週報表）
     weeks_c: [null], // 比較週數
     startdate_c: [null as string | null], // 比較開始日期（週報表用）
     enddate_c: [null as string | null], // 比較結束日期（週報表用）
+    onedatemm: [null], // 年月（月報表）
     onedatemm_c: [null], // 比較年月（月報表）
+    halfyear_onedateyy: [null], // 半年報表年度
+    halfyear: [null], // 半年別
     halfyear_onedateyy_c: [null], // 比較半年報表年度
     halfyear_c: [null], // 比較半年別
+    year_onedateyy: [null], // 年報表年度
     year_onedateyy_c: [null], // 比較年報表年度
     sad_startdate: [null], // 區間開始日期
     sad_enddate: [null], // 區間結束日期
@@ -96,8 +98,6 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     eventID_c: [null], // 比較活動ID
     event_startdate_c: [null], // 比較活動開始日期
     event_enddate_c: [null], // 比較活動結束日期
-    tlt_no: [null], // 專櫃編號
-    tax: [true], // 是否含稅
     ...createPaginationConfig([{ field: 'team_name', order: -1 }])
   });
 
@@ -109,27 +109,24 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
   columns: Column[] = [];
 
   //#region 下拉選項定義
-  // 組織選項（從服務載入）
-  organizationOptions: any[] = [];
-  // 區域選項（從服務載入）
-  regionOptions: any[] = [];
-  // 樓層選項（從服務載入）
-  floorOptions: any[] = [];
-  // 大分類選項（從服務載入）
-  businessTypeCodeOptions: any[] = [];
-  // 中分類選項（依大分類變更而變更）
-  busClassOptions: DropdownOption[] = [];
-  // 抽成別選項（從共享下拉服務取得）
+  // 2. 合約查詢條件相關下拉選項
+  // 櫃別選項
+  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
+  // 抽成別選項
   commissionTypeOptions: DropdownOption[] = this.sharedDropdownService.tltTermTypeOptions;
-  // 專櫃編號選項（從服務載入）
-  counterCodeOptions: any[] = [];
+  counterCodeOptions: any[] = []; // 專櫃編號選項
+  tlt_floor_Option: IDropdownItem[] = []; // 樓層
+  area_no_Option: IDropdownItem[] = []; // 區域
+  bus_type_Option: IDropdownItem[] = []; // 大分類
+  bus_class_Option: IDropdownItem[] = []; // 中分類
+  org_id_Option: IDropdownItem[] = []; // 組織
   // 稅別選項（含稅/未稅）
   taxOptions: any[] = [
     { value: true, label: '含稅' },
     { value: false, label: '未稅' }
   ];
-  // 櫃別選項（從共享下拉服務取得）
-  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
+
+  // 1. 日期查詢條件相關下拉選項
   // 報表類型選項（日/週/月/半年/年/區間/活動區間營業報表）
   reportTypeOptions: any[] = [
     { value: '1', label: '日營業報表' },
@@ -140,12 +137,9 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     { value: '6', label: '區間營業報表' },
     { value: '7', label: '活動區間營業報表' },
   ];
-  // 活動ID選項（硬編碼的測試資料）TODO: 無來源
-  EventIDOptions: any[] = [
-    { value: '1', label: '活動1' },
-    { value: '2', label: '活動2' },
-  ];
-  // 半年別選項（上半年/下半年）TODO: value待確認
+  // 活動ID選項（硬編碼的測試資料
+  EventIDOptions: any[] = [];
+  // 半年別選項（上半年/下半年
   halfyearOptions: any[] = [
     { value: '1', label: '上半年' },
     { value: '2', label: '下半年' },
@@ -188,18 +182,17 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
         // 週營業報表 - 年度格式化 (yyyy)
         onedateyy: this.datePipe.transform(formValue.onedateyy, 'yyyy'),
         onedateyy_c: this.datePipe.transform(formValue.onedateyy_c, 'yyyy'),
-
         // 月營業報表 - 年月格式化 (yyyyMM)
         onedatemm: this.datePipe.transform(formValue.onedatemm, 'yyyyMM'),
         onedatemm_c: this.datePipe.transform(formValue.onedatemm_c, 'yyyyMM'),
-
         // 半年營業報表 - 年度格式化 (yyyy)
         halfyear_onedateyy: this.datePipe.transform(formValue.halfyear_onedateyy, 'yyyy'),
         halfyear_onedateyy_c: this.datePipe.transform(formValue.halfyear_onedateyy_c, 'yyyy'),
-
         // 年營業報表 - 年度格式化 (yyyy)
         year_onedateyy: this.datePipe.transform(formValue.year_onedateyy, 'yyyy'),
-        year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy')
+        year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy'),
+        // 中分類 TODO: 待修改
+        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       };
       this.tls26070Service.queryTLS26070(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -215,44 +208,58 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
 
   // 載入下拉選項
   loadOptions() {
-    // 樓層下拉選項
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    // 區域下拉選項
-    this.regionService.getRegionOptions().subscribe(data => {
-      this.regionOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 大分類下拉選項
-    this.businessClassificationService.getBusTypeOptions().subscribe(data => {
-      this.businessTypeCodeOptions = data;
-    });
-    // 組織代號下拉選項
-    this.sharedDropdownService.getOrgOptions().subscribe(data => {
-      this.organizationOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 專櫃編號下拉選項
+    // 獲取專櫃編號選項
     this.counterNameService.getCounters().subscribe((res) => {
-      this.counterCodeOptions =
-        res?.map((x: any) => ({
-          label: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
+      this.counterCodeOptions = res?.map((x: any) => ({
+        label: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
     });
-    // 活動下拉選項
-    this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: ["1"], pod_status: '' }).subscribe((res) => {
-      this.EventIDOptions = (res?.Data || []).map((item: any) => ({
-        ...item,
-        value: item.pod_no,
-        label: `${item.pod_no}-${item.pod_desc}`
-      }));
+    // 獲取樓層下拉選項
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.tlt_floor_Option = res.Data;
+    })
+    // 獲取區域下拉選項
+    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.area_no_Option = res.Data;
+    })
+    // 獲取大分類下拉選項
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
+    // 監聽大分類變化
+    this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[] | null) => {
+      if (value && value.length > 0) {
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
+          const groupedData = response.Data.reduce((accumulator, currentItem) => {
+            const groupKey = currentItem.CAT_LNo || '';
+            if (!accumulator[groupKey]) {
+              accumulator[groupKey] = {
+                CAT_LName: currentItem.CAT_LName,
+                items: []
+              };
+            }
+
+            accumulator[groupKey].items.push({
+              ...currentItem,
+              label: `${currentItem.No} - ${currentItem.Name}`,
+            });
+
+            return accumulator;
+          }, {} as Record<string, any>);
+
+          // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
+          this.bus_class_Option = Object.values(groupedData);
+        });
+      } else {
+        this.bus_class_Option = [];
+        this.queryForm.controls.bus_class.setValue([]);
+      }
+    });
+    // 獲取組織下拉選項
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    })
   }
 
   // 根據銷售金額是否含稅設定顯示Header
@@ -263,7 +270,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       { field: 'team_name', header: 'TEAM', visible: true },
       { field: 'division_name', header: '組別', visible: true },
       { field: 'tlt_kind', header: '櫃別', visible: true },
-      { field: 'bus_class_name', header: '中分類', visible: true },
+      { field: 'bus_class_name', header: '大分類', hidden: true },
       { field: 'bus_sclass_name', header: '小分類', visible: true },
       { field: 'tlt_name', header: '專櫃名稱', visible: true },
       { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
@@ -350,6 +357,8 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       case '4': // 半年營業報表
         this.queryForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
         this.queryForm.get('halfyear_onedateyy_c')?.setValidators([Validators.required]);
+        this.queryForm.get('halfyear')?.setValidators([Validators.required]);
+        this.queryForm.get('halfyear_c')?.setValidators([Validators.required]);
         break;
       case '5': // 年營業報表
         this.queryForm.get('year_onedateyy')?.setValidators([Validators.required]);
@@ -362,10 +371,8 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
         this.queryForm.get('sad_enddate_c')?.setValidators([Validators.required]);
         break;
       case '7': // 活動區間營業報表
-        this.queryForm.get('event_startdate')?.setValidators([Validators.required]);
-        this.queryForm.get('event_enddate')?.setValidators([Validators.required]);
-        this.queryForm.get('event_startdate_c')?.setValidators([Validators.required]);
-        this.queryForm.get('event_enddate_c')?.setValidators([Validators.required]);
+        this.queryForm.get('eventID')?.setValidators([Validators.required]);
+        this.queryForm.get('eventID_c')?.setValidators([Validators.required]);
         break;
     }
 
@@ -384,12 +391,6 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     this.queryForm.controls['event_enddate'].disable();
     this.queryForm.controls['event_startdate_c'].disable();
     this.queryForm.controls['event_enddate_c'].disable();
-  }
-
-  onBusinessTypeChange(event: any) {
-    this.businessClassificationService.getBusClassOptions(event).subscribe(data => {
-      this.busClassOptions = data;
-    });
   }
 
   // 活動下拉改變

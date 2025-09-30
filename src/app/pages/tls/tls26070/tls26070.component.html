@@ -229,23 +229,30 @@
             </span>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
+            <!-- 樓層 -->
+            <app-multi-select label="樓層" controlName="floor" [options]="tlt_floor_Option" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.floor" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="區域" controlName="region" [options]="regionOptions" optionLabel="label"
+            <!-- 區域 -->
+            <app-multi-select label="區域" controlName="region" [options]="area_no_Option" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.region" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類" controlName="bus_type" [options]="businessTypeCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.bus_type" [submitted]="submitted"
-              (valueChange)="onBusinessTypeChange($event)" [editable]="false"></app-dropdown>
+            <app-multi-select label="櫃別" controlName="tlt_kind" [options]="operationsOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_kind" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類" controlName="bus_class" [options]="busClassOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.bus_class" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="大分類" controlName="bus_type" [options]="bus_type_Option" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="中分類" controlName="bus_class" [options]="bus_class_Option" optionLabel="label"
+              [control]="queryForm.controls.bus_class" [submitted]="submitted" [group]="true"
+              optionGroupLabel="CAT_LName" optionGroupChildren="items"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -254,7 +261,7 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織" controlName="org_id" [options]="organizationOptions" optionLabel="label"
+            <app-multi-select label="組織" controlName="org_id" [options]="org_id_Option" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
           </div>
 
