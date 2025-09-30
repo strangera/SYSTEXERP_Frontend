@@ -8,6 +8,14 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-dropdown label="客戶意見來源代碼" controlName="SYS_Code" [options]="SUGG_SOURCE" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.SYS_Code" [showClear]="true"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text label="客戶意見來源名稱" controlName="SYS_Name"
+              [control]="queryForm.controls.SYS_Name"></app-input-text>
+          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -18,9 +26,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- <app-table dataKey="INV_ItemNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-table dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showCheckBox]="true" (delete)="onDelete($event)" (selectionChange)="selectedRows = $event"
     [selectedItems]="selectedRows" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table> -->
+    [loading]="loading"></app-table>
 </div>
