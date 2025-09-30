@@ -4,7 +4,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { FIN15030Data, FIN15030Service, FIN15030QueryRequest, FIN15030PrintRequest } from '@service/api/fin/fin15030.service';
 import { environment } from '../../../../environments/environment';
 
@@ -23,6 +23,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { ValidationService } from '@shared/service/validation.service';
 
 export interface Option {
   label: string;
@@ -51,15 +52,15 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     TXN_Date_S: [null],                                         // 退出/折讓日期起 (date picker)
     TXN_Date_E: [null],                                         // 退出/折讓日期訖 (date picker)
     Credit_Type: [null],                                        // 區別 (dropdown)
-    INV_YM: [null, [Validators.required]],                      // 申報年月 (必填, date picker)
+    INV_YM: [null, [Validators.required, this.validationService.evenMonthValidator]],                      // 申報年月 (必填, date picker)
     INV_Data_YM_S: [null, [Validators.required]],                                      // 資料所屬年月起 (date picker)
     INV_Data_YM_E: [null, [Validators.required]],                                      // 資料所屬年月訖 (date picker)
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起 (string(16))
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖 (string(16))
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票編號起 (string(16))
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票編號訖 (string(16))
-    SAL_Type: [null],                                           // 系統別 (dropdown)
-    SYS_Origin: [null],                                         // 使用別 (dropdown)
+    SAL_Type: [null],           // 使用別 (dropdown)
+    SYS_ORIGIN: [null],         // 系統別 (dropdown)
     ...createPaginationConfig([{ field: 'No', order: -1 }])
   });
 
@@ -79,16 +80,16 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'INV_GUIType', header: '格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    { field: 'TXN_Date', header: '退出折讓日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'TXN_Date', header: '退出折讓日期', visible: true, format: formatDate },
     {
       field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value
     },
     { field: 'INV_YM', header: '申報年月', visible: true },
-    { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
-    { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount },
+    { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'SAL_Type', header: '系統別', visible: true },
     { field: 'TXN_Uniform', header: '統一編號', visible: true }
   ];
 
@@ -115,7 +116,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
   constructor(
     private readonly fin15030Service: FIN15030Service,
     private readonly datePipe: DatePipe,
-    private readonly dropDownListService: DropDownListService
+    private readonly dropDownListService: DropDownListService,
+    private readonly validationService: ValidationService
   ) {
     super();
   }

@@ -38,6 +38,12 @@
             [submitted]="submitted">
           </app-input-text-range>
 
+          <!-- 資料所屬年月起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.INV_Data_YM_S" [endControl]="queryForm.controls.INV_Data_YM_E"
+            [submitted]="submitted">
+          </app-calendar-range>
+
           <!-- 退出/折讓日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="退出/折讓日期"
             [startControl]="queryForm.controls.TXN_Date_S" [endControl]="queryForm.controls.TXN_Date_E"
@@ -45,17 +51,10 @@
           </app-calendar-range>
 
           <!-- 區別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="區別" controlName="Credit_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="區別" controlName="Credit_Type"
             [options]="creditTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.Credit_Type" [submitted]="submitted">
-          </app-dropdown>
-
-
-          <!-- 資料所屬年月起迄 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
-            [startControl]="queryForm.controls.INV_Data_YM_S" [endControl]="queryForm.controls.INV_Data_YM_E"
-            [submitted]="submitted">
-          </app-calendar-range>
+          </app-multi-select>
 
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
@@ -70,15 +69,15 @@
           </app-input-text-range>
 
           <!-- 系統別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
             [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
-          </app-dropdown>
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
+          </app-multi-select>
           <!-- 使用別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SYS_Origin" [options]="salTypeOptions"
-            [optionLabel]="'label'" [optionValue]="'value'" [control]="queryForm.controls.SYS_Origin"
-            [submitted]="submitted">
-          </app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_Type"
+            [options]="salTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
+          </app-multi-select>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
