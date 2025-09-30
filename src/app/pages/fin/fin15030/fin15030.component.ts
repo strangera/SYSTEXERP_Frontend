@@ -22,6 +22,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 export interface Option {
   label: string;
@@ -36,7 +37,7 @@ export interface Option {
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent, CommonModule
+    TranslateModule, DropdownComponent, CalendarComponent, CommonModule, MultiSelectComponent
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
@@ -207,7 +208,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
       GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
       MID: 0,
       STO_No: '10',
-      GUI_Type: this.queryForm.controls.INV_GUIType.value ?? ''
+      GUI_Type: this.queryForm.controls.INV_GUIType.value ?? []
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });

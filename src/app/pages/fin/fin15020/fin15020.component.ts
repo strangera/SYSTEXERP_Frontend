@@ -22,6 +22,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 
 export interface Option {
   label: string;
@@ -36,7 +37,8 @@ export interface Option {
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent, CommonModule
+    TranslateModule, DropdownComponent, CalendarComponent, CommonModule,
+    MultiSelectComponent
   ]
 })
 export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> implements OnInit {
@@ -210,7 +212,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
       this.invoiceFormatOptions = r.Data.INV_GUITypes
         .filter(item => ['23', '24'].includes(item.INV_GUIType))
         .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
-        .map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }));
+        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
     });
   }
 
@@ -220,7 +222,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
       GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
       MID: 0,
       STO_No: '10',
-      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? ''
+      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? []
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });

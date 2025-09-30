@@ -217,7 +217,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
       GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
       MID: 0,
       STO_No: '10',
-      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? ''
+      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? []
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track })) ?? [];
     });
