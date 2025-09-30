@@ -441,6 +441,9 @@ export interface FareItem {
   data_source: string;
   is_selected: boolean;
   is_new_item: boolean;
+  calc_type?: string;
+  rent_plus_rate?: number;
+  over_base_rate?: number;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
   _originalSelected?: boolean;
   _originalData?: Partial<FareItem>;

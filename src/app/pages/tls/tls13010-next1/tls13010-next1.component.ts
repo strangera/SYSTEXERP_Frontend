@@ -507,22 +507,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 資料過濾和儲存 ==========
   filterData(): void {
-    // console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
 
     //  使用資料服務進行過濾
     this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
-
-    // console.log('🔍 過濾後結果:', {
-    //   顯示模式: this.showMode,
-    //   各類型數量: Object.keys(this.fareData).reduce((acc, type) => {
-    //     acc[type] = {
-    //       總數: this.fareData[type].length,
-    //       已勾選: this.fareData[type].filter(item => item.is_selected).length
-    //     };
-    //     return acc;
-    //   }, {} as any)
-    // });
   }
 
   private saveFareDataToWorkflow(): void {

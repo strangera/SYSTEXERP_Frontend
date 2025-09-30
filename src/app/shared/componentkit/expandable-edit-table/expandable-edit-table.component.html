@@ -207,7 +207,7 @@
                         [options]="formField.options"
                         optionLabel="label"
                         optionValue="value"
-                        [showClear]="true"
+                        [showClear]="false"
                         [style]="{ width: '100%', 'min-width': '200px' }"
                       ></p-dropdown>
                     </div>
@@ -256,7 +256,7 @@
                 (keydown)="onFieldKeyDown($event, rowData, col, ri)"
                 [style]="{ width: '100%' }"
                 appendTo="body"
-                [showClear]="true"
+                [showClear]="false"
                 optionLabel="label"
                 optionValue="value"
                 [filter]="true"
@@ -669,7 +669,7 @@
                           "
                           [style]="{ width: '100%' }"
                           appendTo="body"
-                          [showClear]="true"
+                          [showClear]="false"
                           optionLabel="label"
                           optionValue="value"
                           [filter]="true"

@@ -142,6 +142,45 @@ export const TOTAL_AMT_VENDOR_UNIT_OPTIONS = {
   'C': '檔期',
 } as const;
 
+//銷售類型
+export const CAP_SALE_TYPE_OPTIONS = {
+  '1': '銷售額',
+  '2': '信用卡',
+  '3': '信用卡分期',
+  '5': '券類',
+  '6': '滿千送百-發行',
+  '7': '滿千送百-兌回',
+  '8': '會員卡集點-銷售',
+  '9': '會員卡集點-點數',
+  '10': '全館消費滿額集點-銷售',
+  '11': '全館消費滿額集點-點數',
+  '52': '一卡通',
+  '55': 'line pay',
+} as const;
+
+//信用卡期數
+export const INSTMS_TYPE_OPTIONS = {
+  '3': '3',
+  '6': '6',
+  '9': '9',
+  '12': '12',
+  '14': '14',
+} as const;
+
+//收單行
+export const EDC_BANK_OPTIONS = {
+  'N': '聯合信用卡',
+  'C': '中國信託',
+  'S': '中信-停車場',
+} as const;
+
+//收單行
+export const CALC_TYPE_OPTIONS = {
+  '1': '單筆',
+  '2': '單月累積金額',
+  '3': '全租期累計營業額',
+} as const;
+
 // ========== 格式化函數 ==========
 
 // 通用的多選格式化函數
