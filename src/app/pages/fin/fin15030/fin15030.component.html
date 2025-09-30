@@ -16,10 +16,15 @@
           </app-input-text-range>
 
           <!-- 發票格式 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="INV_GUIType"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="INV_GUIType"
             [options]="invoiceFormatOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.INV_GUIType" [submitted]="submitted">
-          </app-dropdown>
+          </app-multi-select>
+
+          <!-- 申報年月 (必填) -->
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
+            [control]="queryForm.controls.INV_YM" [submitted]="submitted" (calendarEvent)="loadGuiTrackOptions($event)">
+          </app-calendar>
 
           <!-- 字軌 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_Track" [options]="guiTrackOptions"
@@ -33,6 +38,12 @@
             [submitted]="submitted">
           </app-input-text-range>
 
+          <!-- 資料所屬年月起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.INV_Data_YM_S" [endControl]="queryForm.controls.INV_Data_YM_E"
+            [submitted]="submitted">
+          </app-calendar-range>
+
           <!-- 退出/折讓日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="退出/折讓日期"
             [startControl]="queryForm.controls.TXN_Date_S" [endControl]="queryForm.controls.TXN_Date_E"
@@ -40,21 +51,10 @@
           </app-calendar-range>
 
           <!-- 區別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="區別" controlName="Credit_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="區別" controlName="Credit_Type"
             [options]="creditTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="queryForm.controls.Credit_Type" [submitted]="submitted">
-          </app-dropdown>
-
-          <!-- 申報年月 (必填) -->
-          <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
-            [control]="queryForm.controls.INV_YM" [submitted]="submitted" (calendarEvent)="loadGuiTrackOptions($event)">
-          </app-calendar>
-
-          <!-- 資料所屬年月起迄 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
-            [startControl]="queryForm.controls.INV_Data_YM_S" [endControl]="queryForm.controls.INV_Data_YM_E"
-            [submitted]="submitted">
-          </app-calendar-range>
+          </app-multi-select>
 
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
@@ -62,22 +62,22 @@
             [submitted]="submitted">
           </app-input-text-range>
 
-          <!-- 傳票編號起迄 -->
-          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="傳票編號"
+          <!-- 傳票號碼起迄 -->
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="傳票號碼"
             [startControl]="queryForm.controls.Voucher_No_S" [endControl]="queryForm.controls.Voucher_No_E"
             [submitted]="submitted">
           </app-input-text-range>
 
           <!-- 系統別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
             [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
-          </app-dropdown>
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
+          </app-multi-select>
           <!-- 使用別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SYS_Origin" [options]="salTypeOptions"
-            [optionLabel]="'label'" [optionValue]="'value'" [control]="queryForm.controls.SYS_Origin"
-            [submitted]="submitted">
-          </app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_Type"
+            [options]="salTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
+          </app-multi-select>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

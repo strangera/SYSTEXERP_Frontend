@@ -178,6 +178,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   CounterOptions: any[] = [];
   CashierOptions: IDropdownItem[] = [];
   LocOptions: IDropdownItem[] = [];
+  tmplDetailList: any[] = [];
+
   constructor(
     public override formBuilder: FormBuilder,
     private tls46110Service: Tls46010Service,
@@ -214,17 +216,17 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       this.dataForm.get('ECR_No')?.disable();
     }
     // 環境變數下拉選單
-    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+    this.dropDownListService.queryPOS1002TML_ALL_DropDownList().subscribe(res => {
       if (res?.Data) {
         this.ECR_TmplNo_Option = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: `${item.No}-${item.Name}`,
-          value: item.No
+          value: item.ECR_TmplNo,
+          label: `${item.ECR_TmplNo}-${item.ECR_TmplDesc}`,
+          No: item.ECR_TmplNo ?? '',
+          Name: item.ECR_TmplDesc,
         }));
+         this.tmplDetailList = res.Data;
       }
     });
-
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
         ...item, label: `${item.No} ${item.Name}`,
@@ -279,12 +281,17 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-      if (tmplNo) this.callTLS41010Api(tmplNo);
-    });
-    if (this.dataForm.get('ECR_TmplNo')?.value && !this.isFormCreateable) {
-      this.callTLS41010Api(this.dataForm.get('ECR_TmplNo')?.value as string);
-
+    if (tmplNo) {
+      const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
+      if (detail) {
+        const patchObj: any = {};
+        Object.keys(this.dataForm.controls).forEach(key => {
+          if (detail[key] !== undefined) patchObj[key] = detail[key];
+        });
+        this.dataForm.patchValue(patchObj);
+      }
     }
+  });
     this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
       this.checkTltNoRequired(value);
     });

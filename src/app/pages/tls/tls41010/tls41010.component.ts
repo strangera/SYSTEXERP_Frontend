@@ -8,6 +8,7 @@ import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOption
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { HttpClient } from '@angular/common/http';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
@@ -21,7 +22,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { QueryTLS41010Request } from '../../../service/api/tls/tls41010.service';
@@ -42,10 +42,10 @@ import { Tls46010Service } from '@service/api/tls/tls46010.service';
     CalendarRangeComponent,
     DropdownComponent,
     MultiSelectComponent,
-    TableComponent,
     TranslateModule,
     DialogComponent,
-    NgIf
+    NgIf,
+    TableReportComponent
   ],
 })
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
@@ -93,7 +93,8 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     Target_ECR_No: ['', [Validators.required]],
   });
   SrvIPOptions: IDropdownItem[] = [];
-
+  lastQueryForm: any;
+  footerTotal: TLS41010Data | null = null;
   CashierOptions: IDropdownItem[] = [];
   dialogSelectItem: TLS41010Data | null = null;
   dialogSelectTargetItem: TLS41010Data | null = null;
@@ -113,7 +114,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   ];
 
   constructor(
-    private tls41010Service: TLS41010Service,
+    public tls41010Service: TLS41010Service,
     private locationOptionsService: LocationOptionsService,
     private tls46020Service: TLS46020Service,
     private tls46010Service: Tls46010Service,
@@ -126,41 +127,24 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     super();
   }
 
-callOtherApi() {
-  const requestData = {
-    queryKey: 'value'
-  };
-
-  this.loading = true;
-  this.tls46010Service.queryTLS0000(requestData)
-    .pipe(finalize(() => this.loading = false))
-    .subscribe({
-      next: (res) => {
-        console.log('呼叫 TLS0000 成功', res.Data);
-      },
-      error: (err) => {
-        console.error('呼叫 TLS46010 失敗', err);
-      }
-    });
-}
-
-  callTLS46020Api(tmplNo: string) {
-    const params = {
-      ECR_TmplNo: tmplNo,
-      PageSize: 10,
-      PageIndex: 1
+  callOtherApi() {
+    const requestData = {
+      queryKey: 'value'
     };
 
     this.loading = true;
-    this.tls46020Service.queryTLS46020(params).pipe(finalize(() => this.loading = false)).subscribe({
-      next: (res) => {
-        console.log('查詢 TLS46020 成功', res.Data);
-      },
-      error: (err) => {
-        console.error('查詢 TLS46020 失敗', err);
-      }
-    });
+    this.tls46010Service.queryTLS0000(requestData)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (res) => {
+          console.log('呼叫 TLS0000 成功', res.Data);
+        },
+        error: (err) => {
+          console.error('呼叫 TLS46010 失敗', err);
+        }
+      });
   }
+
   callTls11010Api(locNo: string) {
     const payload = {
       ECR_LocNo: locNo,
@@ -218,21 +202,14 @@ callOtherApi() {
       }
     });
     // 環境變數下拉選單
-    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+    this.dropDownListService.queryPOS1002TML_ALL_DropDownList().subscribe(res => {
       if (res?.Data) {
         this.ECR_TmplNo_Option = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: `${item.No}-${item.Name}`,
-          value: item.No
+          value: item.ECR_TmplNo,
+          label: `${item.ECR_TmplNo}-${item.ECR_TmplDesc}`,
+          No: item.ECR_TmplNo ?? '',
+          Name: item.ECR_TmplDesc,
         }));
-      }
-    });
-
-
-    this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-      if (tmplNo) {
-        this.callTLS46020Api(tmplNo);
       }
     });
     //收銀員下拉選單
@@ -294,16 +271,25 @@ callOtherApi() {
   //  Submit 查詢
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls41010Service.queryTLS41010(frm.getRawValue())
+      const raw = frm.value;
+      const body = {
+        ...raw,
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: [{ field: 'ECR_No', order: 1 }],
+      };
+
+      this.tls41010Service.queryTLS41010(body)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe((res) => {
+          this.lastQueryForm = body;
+          this.totalRecords = res.TotalCount;
+          this.footerTotal = null;
           this.data = res.Data.map(item => {
             let dateValue: Date | null = null;
-
             if (typeof item.ECR_SettleHHNN === 'string' && item.ECR_SettleHHNN.length === 4) {
               dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
             }
-            // 找對應的櫃位
             const counter = this.CounterOptions.find(c => c.No === item.ECR_TLT_No);
             return {
               ...item,
@@ -311,9 +297,7 @@ callOtherApi() {
               ECR_TLT_Name: counter ? counter.Name : item.ECR_TLT_Name
             };
           });
-
-          this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm);
+          this.queryStateService.setQueryState(this.ProgNo, body);
         });
     });
   }
