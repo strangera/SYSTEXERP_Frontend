@@ -221,7 +221,7 @@
         [columns]="columnsNormal"
         (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems"
-        (dataChange)="data = $event"
+        (dataChange)="onCounterDataChange($event)"
         dataStatusField="status"
         [loading]="loading"
         [tableRequired]="true"

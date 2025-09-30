@@ -49,7 +49,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table
+  <app-table-report
     tableKey="TLS2A020"
     [data]="data"
     [columns]="columns"
@@ -57,13 +57,13 @@
     (detail)="onDetail($event)"
     [showCheckBox]="false"
     dataKey="id"
-    [multiSortMeta]="[{ field: 'USR_Level', order: 1 }]"
     [totalRecords]="totalRecords"
-    [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [showManage]="true"
     [loading]="loading"
     [showDelete]="false"
     [showDetail]="true"
-  ></app-table>
+    [lastQueryBody]="lastQueryForm"
+    [footerData]="footerTotal"
+    [queryFunction]="tls42010Service.queryTLS42010M.bind(tls42010Service)"
+  ></app-table-report>
 </div>
