@@ -152,7 +152,7 @@ export interface IPOS1018GUITrackRequest {
   GUI_YYMM: string;
   MID: number;
   STO_No: string;
-  GUI_Type: string;
+  GUI_Type: string[];
 }
 
 export interface IPOS1018GUITrackResponse {
@@ -474,6 +474,10 @@ export class DropDownListService {
   // 查詢扣款代碼檔(APS1003) 下拉選單
   queryAPS1003DropDownList(params: IAPS1003Request): Observable<ApiResponse<IAPS1003Item[]>> {
     return this.http.post<ApiResponse<IAPS1003Item[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryAPS1003DropDownList`, params);
+  }
+  // 查詢CPM11010 Service_Id資料表下拉選單
+  queryCPM11010_ServiceId_DropDownList(): Observable<ApiResponse<{ Service_Id: string }[]>> {
+    return this.http.post<ApiResponse<{ Service_Id: string }[]>>(`${this.apiUrl}/queryCPM11010_ServiceId_DropDownList`, {});
   }
   // 查詢專屬活動編號(TALPORDERM)資料表下拉選單
   queryTALPORDERM_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {

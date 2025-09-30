@@ -14,6 +14,7 @@ import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-cpm11010',
@@ -50,7 +51,7 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
   buildingNoOptions: IDropdownItem[] = [];
   floorNoOptions: IDropdownItem[] = [];
   areaNoOptions: IDropdownItem[] = [];
-  serviceIdOptions: Option[] = [];  // TODO: 等待後端提供api
+  serviceIdOptions: any[] = [];
 
   columns: Column[] = [
     { field: 'ID', header: '序號', hidden: true },
@@ -72,7 +73,8 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
 
   constructor(
     private cpm11010Service: CPM11010Service,
-    private dropdownApiService: DropdownApiService
+    private dropdownApiService: DropdownApiService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -121,6 +123,8 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
       this.areaNoOptions = options ?? [];
     });
     // 載入服務台位置編號選項
-    // TODO: 等待後端提供api
+    this.dropDownListService.queryCPM11010_ServiceId_DropDownList().subscribe(response => {
+      this.serviceIdOptions = response.Data?.map(item => ({ label: item.Service_Id, value: item.Service_Id })) || [];
+    });
   }
 }
