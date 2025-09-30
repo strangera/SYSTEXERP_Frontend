@@ -47,7 +47,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
     get_ticket_status_List: [[]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
     ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
 
-    ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=行銀保證函 9=其他"
+    ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
 
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
   });
@@ -131,7 +131,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   ticket_kindOption: option[] = [ //票據種類
     { value: '1', label: '本票' },
     { value: '2', label: '支票' },
-    { value: '3', label: '行銀保證函' },
+    { value: '3', label: '銀行保證函' },
     { value: '9', label: '其他' },
   ];
 

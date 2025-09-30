@@ -6,11 +6,110 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-        <div class="grid p-fluid">
+        <!-- <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick label="日期" [startControl]="queryForm.controls.TXN_DateS" [endControl]="queryForm.controls.TXN_DateE"
               [submitted]="submitted"></app-calendar-range-quick>
           </div>
+        </div> -->
+        <!-- 日期查詢條件 -->
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-12">
+            <app-radiobutton groupname="reportType" [control]="queryForm.controls.reportType"
+              [options]="reportTypeOptions" [submitted]="submitted"
+              (valueChange)="onReportTypeChange($event)"></app-radiobutton>
+          </div>
+          <!-- 日營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.reportType.value === '1'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <!-- 日期 -->
+              <div class="col-12">
+                <app-calendar calendarType="dateOne" label="基準日期" [control]="queryForm.controls.onedatedd"
+                  [submitted]="submitted"></app-calendar>
+              </div>
+            </div>
+          </div>
+          <!-- 週營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.reportType.value === '2'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <!-- 年度 -->
+              <div class="col-12">
+                <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.onedateyy"
+                  [submitted]="submitted"></app-calendar>
+              </div>
+              <!-- 週數 -->
+              <div class="col-12">
+                <app-input-text label="週數" controlName="weeks" [control]="queryForm.controls.weeks"
+                  [submitted]="submitted"></app-input-text>
+              </div>
+              <!-- 基準日期範圍 -->
+              <div class="col-12">
+                <app-calendar-range-quick label="日期範圍" [startControl]="queryForm.controls.startdate"
+                  [endControl]="queryForm.controls.enddate" [submitted]="submitted" />
+              </div>
+            </div>
+          </div>
+          <!-- 月營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.reportType.value === '3'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <!-- 年月 -->
+              <div class="col-12">
+                <app-calendar calendarType="dateMonthOne" label="年月" [control]="queryForm.controls.onedatemm"
+                  [submitted]="submitted"></app-calendar>
+              </div>
+            </div>
+          </div>
+          <!-- 半年營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.reportType.value === '4'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <!-- 年度 -->
+              <div class="col-12">
+                <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.halfyear_onedateyy"
+                  [submitted]="submitted"></app-calendar>
+              </div>
+              <!-- 半年別 -->
+              <div class="col-12">
+                <app-dropdown label="半年別" controlName="halfyear" [options]="halfyearOptions" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.halfyear" [submitted]="submitted"></app-dropdown>
+              </div>
+            </div>
+          </div>
+          <!-- 年營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.reportType.value === '5'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <!-- 年度 -->
+              <div class="col-12">
+                <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.year_onedateyy"
+                  [submitted]="submitted"></app-calendar>
+              </div>
+            </div>
+          </div>
+          <!-- 區間營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.reportType.value === '6'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <!-- 基準日期範圍 -->
+              <div class="col-12">
+                <app-calendar-range-quick label="日期範圍" [startControl]="queryForm.controls.sad_startdate"
+                  [endControl]="queryForm.controls.sad_enddate" [submitted]="submitted" />
+              </div>
+            </div>
+          </div>
+          <!-- 活動區間營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.reportType.value === '7'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <!-- 基準活動 -->
+              <div class="col-12">
+                <app-dropdown label="活動" controlName="eventID" [options]="EventIDOptions" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.eventID" [submitted]="submitted"
+                  (valueChange)="queryEvent($event)"></app-dropdown>
+              </div>
+              <!-- 基準日期範圍 -->
+              <div class="col-12">
+                <app-calendar-range-quick label="日期範圍" [startControl]="queryForm.controls.event_startdate"
+                  [endControl]="queryForm.controls.event_enddate" [submitted]="submitted" />
+              </div>
+            </div>
+        </div>
         </div>
         <hr>
         <div class="grid p-fluid">
