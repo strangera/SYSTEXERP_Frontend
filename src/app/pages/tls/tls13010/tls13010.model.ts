@@ -190,8 +190,16 @@ export interface CleanFareItem {
   interval?: number;
   down_payment?: number;
   period_nos?: number;
-  tpy_1stamt?: number;
   tpy_rate?: number;
+  calc_type?: string;
+  rent_plus_rate?: number;
+  over_base_rate?: number;
+  edc_bank?: string;
+  pay_no?: string;
+
+  cap_saletype?: string;
+
+  instms_type?: string;
 }
 
 /**
@@ -427,7 +435,6 @@ export interface FareItem {
   interval?: number;
   down_payment?: number;
   period_nos?: number;
-  tpy_1stamt?: number;
   cap_saletype?: string;
   edc_bank?: string;
   instms_type?: string;
@@ -775,8 +782,14 @@ export class DataCleaner {
         interval: this.parseNumber(item.interval),
         down_payment: this.parseNumber(item.down_payment),
         period_nos: this.parseNumber(item.period_nos),
-        tpy_1stamt: this.parseNumber(item.tpy_1stamt),
-        tpy_rate: this.parseNumber(item.tpy_rate)
+        tpy_rate: this.parseNumber(item.tpy_rate),
+        calc_type: item.calc_type,
+        rent_plus_rate: this.parseNumber(item.rent_plus_rate),
+        over_base_rate: this.parseNumber(item.over_base_rate),
+        edc_bank: item.edc_bank,
+        pay_no: item.pay_no,
+        cap_saletype: item.cap_saletype,
+        instms_type: item.instms_type,
       };
 
       switch (item._status) {

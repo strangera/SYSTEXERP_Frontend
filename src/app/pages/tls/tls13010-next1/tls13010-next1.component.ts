@@ -20,7 +20,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { DialogComponent } from "@shared/componentkit/dialog/dialog.component";
 import { FareValidationService } from './Services/fare-validation.service';
-import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
+import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
 
 
 // 介面定義
@@ -41,6 +41,10 @@ interface CategoryItem {
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor, DialogComponent]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+
+  payNoOptions: any[] = [];
+
+  private _lastPayNoOptionsLength = 0;
   forceEditMode: boolean = true;
 
   //  對話框相關屬性
@@ -97,6 +101,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     private fareStatusService: FareStatusService,
     private cdr: ChangeDetectorRef,
     private fareValidationService: FareValidationService,
+    private tls13010DropdownService: TLS13010DropdownService
   ) {
     super();
   }
@@ -171,15 +176,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionDColumns(): ColumnDef[] {
     if (!this._cachedDeductionDColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastPayNoOptionsLength !== this.payNoOptions.length ||  // 加這行
       this._lastViewMode !== this.isViewMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      // console.log('🔄 重新生成 deductionDColumns');
       let columns = FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      columns = FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions); // 加這行
+
       if (this.isViewMode) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
+
       this._cachedDeductionDColumns = columns;
       this._updateCacheFlags();
     }
@@ -189,15 +197,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionEColumns(): ColumnDef[] {
     if (!this._cachedDeductionEColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastPayNoOptionsLength !== this.payNoOptions.length ||  // 加這行
       this._lastViewMode !== this.isViewMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      // console.log('🔄 重新生成 deductionEColumns');
       let columns = FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      columns = FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions); // 加這行
+
       if (this.isViewMode) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
+
       this._cachedDeductionEColumns = columns;
       this._updateCacheFlags();
     }
@@ -206,6 +217,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private _updateCacheFlags(): void {
     this._lastOrgOptionsLength = this.orgOptions.length;
+    this._lastPayNoOptionsLength = this.payNoOptions.length;
     this._lastViewMode = this.isViewMode;
     this._lastContractInfoLength = this.contractInfoData.length;
   }
@@ -227,6 +239,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadOrgOptions();
+    this.loadPayNoOptions();
     try {
       this.loadWorkflowData();
     } catch (error) {
@@ -304,6 +317,56 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     this.subscriptions.push(subscription);
+  }
+
+  /**
+  * 載入支付編號選項
+  */
+  private loadPayNoOptions(): void {
+    console.log('📄 開始載入支付編號選項...');
+    console.log('🔍 初始 payNoOptions 長度:', this.payNoOptions.length);
+
+    // 先嘗試直接取得
+    this.payNoOptions = this.tls13010DropdownService.getPayNoOptions();
+
+    console.log('🔍 直接取得後的 payNoOptions:', this.payNoOptions);
+    console.log('🔍 payNoOptions 長度:', this.payNoOptions.length);
+
+    if (this.payNoOptions.length > 0) {
+      console.log('✅ 支付編號選項載入成功 (直接):', this.payNoOptions.length);
+      console.log('🔍 第一筆資料:', this.payNoOptions[0]);
+      this._clearColumnCache();
+      this.cdr.detectChanges();
+    } else {
+      // 如果還沒載入完成，訂閱 service 的載入狀態
+      console.log('⏳ 支付編號尚未載入，等待...');
+
+      // 使用多次重試機制
+      let retryCount = 0;
+      const maxRetries = 5;
+
+      const checkInterval = setInterval(() => {
+        retryCount++;
+        console.log(`🔄 第 ${retryCount} 次重試...`);
+
+        this.payNoOptions = this.tls13010DropdownService.getPayNoOptions();
+        console.log('🔍 重試後 payNoOptions 長度:', this.payNoOptions.length);
+
+        if (this.payNoOptions.length > 0) {
+          console.log('✅ 支付編號選項延遲載入成功:', this.payNoOptions.length);
+          console.log('🔍 第一筆資料:', this.payNoOptions[0]);
+          this._clearColumnCache();
+          this.cdr.detectChanges();
+          clearInterval(checkInterval);
+        } else if (retryCount >= maxRetries) {
+          console.error('❌ 支付編號載入失敗，已達最大重試次數');
+          console.log('🔍 檢查 dropdown service 狀態...');
+          // 直接檢查 service
+          console.log('🔍 Service payNoOptions:', this.tls13010DropdownService.payNoOptions);
+          clearInterval(checkInterval);
+        }
+      }, 500); // 每 500ms 重試一次
+    }
   }
 
   private initializeViewModeFromService(): void {
@@ -557,7 +620,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    //  專門處理 checkbox 勾選
+    // 專門處理 checkbox 勾選
     if (fieldName === 'is_selected') {
       this.updateOriginalData(capType || 'A');
       this.filterData();
@@ -586,19 +649,34 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         console.warn(`未知的扣款類型: ${capType}`);
     }
 
-    //  只對關鍵欄位進行即時驗證
+    // 只對已勾選項目進行即時驗證
     if (rowData.is_selected && capType) {
       this.performRealTimeValidation(rowData, capType);
     }
 
-    //  關鍵修改：只在重要欄位變更時才觸發完整狀態更新
-    const criticalFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount', 'tpy_totalamt', 'tpy_rate'];
+    // 🔥 關鍵修改：擴充為所有業務欄位
+    const businessFields = [
+      // 共用欄位
+      'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
+      'tpy_amount', 'tpy_totalamt', 'tpy_rate', 'org_id', 'gui_flag',
 
-    if (criticalFields.includes(fieldName)) {
-      // 重要欄位變更才觸發完整更新
+      // B 類型特有
+      'day_account', 'interval',
+
+      // C 類型特有
+      'down_payment', 'period_nos',
+
+      // D/E 類型特有
+      'cap_saletype', 'edc_bank', 'instms_type', 'pay_no',
+      'calc_type', 'rent_plus_rate', 'over_base_rate'
+    ];
+
+    if (businessFields.includes(fieldName)) {
+      // 業務欄位變更：完整狀態更新
       this.updateRowDataState(rowData, capType || 'A');
     } else {
-      // 一般欄位變更只做簡單更新
+      // 其他欄位（理論上不應該有）：簡單更新
+      console.warn('⚠️ 未預期的欄位變更:', fieldName);
       this.updateOriginalDataItem(rowData, capType || 'A');
       this.saveFareDataToWorkflow();
     }

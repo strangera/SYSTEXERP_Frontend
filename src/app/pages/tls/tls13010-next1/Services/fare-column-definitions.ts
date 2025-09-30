@@ -614,6 +614,7 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         autoWidth: true,
+        options: [],
       },
       {
         field: 'calc_type',
@@ -826,6 +827,7 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         autoWidth: true,
+        options: [],
       },
       {
         field: 'org_id',
@@ -859,6 +861,18 @@ export class FareColumnDefinitions {
     return columns.map(col => {
       if (col.field === 'org_id') {
         return { ...col, options: [...orgOptions] };
+      }
+      return col;
+    });
+  }
+
+  /**
+ * 更新欄位定義中的支付編號選項
+ */
+  static updatePayNoOptionsInColumns(columns: ColumnDef[], payNoOptions: any[]): ColumnDef[] {
+    return columns.map(col => {
+      if (col.field === 'pay_no') {
+        return { ...col, options: [...payNoOptions] };
       }
       return col;
     });

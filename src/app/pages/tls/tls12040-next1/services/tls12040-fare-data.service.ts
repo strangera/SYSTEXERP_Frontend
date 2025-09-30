@@ -167,7 +167,6 @@ export class Tls12040FareDataService {
       tpy_amount: item.tpy_amount,
       tpy_totalamt: item.tpy_totalamt,
       tpy_rate: item.tpy_rate,
-      tpy_1stamt: item.tpy_1stamt,
       down_payment: item.down_payment,
       period_nos: item.period_nos,
       day_account: item.day_account,
@@ -229,7 +228,7 @@ export class Tls12040FareDataService {
     const editableFields = [
       'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
       'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
-      'down_payment', 'period_nos', 'tpy_1stamt', 'gui_flag',
+      'down_payment', 'period_nos', 'gui_flag',
       'tpy_rate', 'org_id'
     ];
 

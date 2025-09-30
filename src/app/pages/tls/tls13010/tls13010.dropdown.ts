@@ -33,6 +33,7 @@ import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdow
 import { BussclassDropdownService } from '../../../service/api/dropdownservice/tltbussclass-options.service';
 import { VendorCategoryOptionsService } from './../../../service/api/dropdownservice/vendor-category-options.service';
 import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // ========== 介面定義 ==========
 export interface DropdownOption {
@@ -104,6 +105,7 @@ export class TLS13010DropdownService {
   public discountTypeOptions: DropdownOption[] = [];
   public pos2013Options: DropdownOption[] = [];
   public negotiatorOptions: DropdownOption[] = [];
+  public payNoOptions: DropdownOption[] = [];
 
   // 載入狀態
   private loadingStates = {
@@ -113,7 +115,8 @@ export class TLS13010DropdownService {
     location: false,
     discount: false,
     pos2013: false,
-    negotiator: false
+    negotiator: false,
+    payNo: false
   };
 
   constructor(
@@ -122,7 +125,8 @@ export class TLS13010DropdownService {
     private bussclassService: BussclassDropdownService,
     private locationService: LocationOptionsService,
     private vendorCategoryService: VendorCategoryOptionsService,
-    private negotiatorService: NegotiatorOptionsService
+    private negotiatorService: NegotiatorOptionsService,
+
   ) {
     this.initAllOptions();
   }
@@ -136,6 +140,7 @@ export class TLS13010DropdownService {
     this.initDiscountOptions();
     this.initPOS2013Options();
     this.initNegotiatorOptions();
+    this.initPayNoOptions();
   }
 
   /**
@@ -353,10 +358,37 @@ export class TLS13010DropdownService {
   }
 
   /**
+    * 載入支付編號選項 (POS1006)
+    */
+  private initPayNoOptions(): void {
+    if (this.loadingStates.payNo) return;
+
+    this.negotiatorService.getPOS1006Options().subscribe({
+      next: (response: any[]) => {
+        this.payNoOptions = response;
+        this.loadingStates.payNo = true;
+        console.log('支付編號選項載入完成:', this.payNoOptions.length);
+      },
+      error: (error) => {
+        console.error('載入支付編號選項失敗:', error);
+        this.payNoOptions = [];
+        this.loadingStates.payNo = true;
+      }
+    });
+  }
+
+  /**
    * 取得洽談者選項的公開方法
    */
   public getNegotiatorOptionsData(): DropdownOption[] {
     return this.negotiatorOptions;
+  }
+
+  /**
+  * 取得支付編號選項的公開方法
+  */
+  public getPayNoOptions(): DropdownOption[] {
+    return this.payNoOptions;
   }
 
   /**
@@ -391,7 +423,8 @@ export class TLS13010DropdownService {
       location: false,
       discount: false,
       pos2013: false,
-      negotiator: false
+      negotiator: false,
+      payNo: false
     };
     this.initAllOptions();
   }

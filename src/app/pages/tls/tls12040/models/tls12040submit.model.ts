@@ -172,7 +172,6 @@ export interface TLS12040FareItem {
   interval?: number;
   down_payment?: number;
   period_nos?: number;
-  tpy_1stamt?: number;
   tpy_rate?: number;
 }
 
@@ -456,7 +455,6 @@ export class TLS12040DataCleanerClass {
         interval: this.parseNumber(item.interval),
         down_payment: this.parseNumber(item.down_payment),
         period_nos: this.parseNumber(item.period_nos),
-        tpy_1stamt: this.parseNumber(item.tpy_1stamt),
         tpy_rate: this.parseNumber(item.tpy_rate)
       };
 

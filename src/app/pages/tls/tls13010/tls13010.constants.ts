@@ -148,7 +148,6 @@ export const CAP_SALE_TYPE_OPTIONS = {
   '2': '信用卡',
   '3': '信用卡分期',
   '5': '券類',
-
   '52': '一卡通',
   '55': 'line pay',
 } as const;
