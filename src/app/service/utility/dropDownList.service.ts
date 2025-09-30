@@ -27,7 +27,16 @@ export interface IDropdownItem {
   ECR_TmplNo?: string; // 環境變數編號 模板編號
   ECR_TmplName?: string; // 環境變數編號 模板備註
 }
-
+export interface ITalentOption extends IDropdownItem {
+  tlt_no: string;
+  tlt_name: string;
+  talent_id: number;
+  org_id: string;
+  contract_no?: string;
+  contract_subno?: string;
+  tlt_contract_bdate?: string;
+  tlt_contract_edate?: string;
+}
 // 針對 querySYS3100_tree_DropDownList 的資料結構
 export interface ISYS3100TreeItem {
   org_id: string;
@@ -386,8 +395,10 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT__StoreWay2_Approve_DropDownList`, {});
   }
   // 查詢專櫃下拉 (取最新契約，含對應資料，不用傳參數)
-  queryTLTTALENTDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, {});
+  queryTLTTALENTDropDownList(): Observable<ApiResponse<ITalentOption[]>> {
+    return this.http.post<ApiResponse<ITalentOption[]>>(
+      `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, {}
+    );
   }
 
   // 查詢營業型態(SYS1000)資料表下拉選單
@@ -464,6 +475,8 @@ export class DropDownListService {
   queryAPS1003DropDownList(params: IAPS1003Request): Observable<ApiResponse<IAPS1003Item[]>> {
     return this.http.post<ApiResponse<IAPS1003Item[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryAPS1003DropDownList`, params);
   }
-
-
+  // 查詢專屬活動編號(TALPORDERM)資料表下拉選單
+  queryTALPORDERM_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTALPORDERM_DropDownList`, {});
+  }
 }
