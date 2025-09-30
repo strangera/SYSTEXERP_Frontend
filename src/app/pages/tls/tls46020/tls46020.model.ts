@@ -42,34 +42,34 @@ export const columns: Column[] = [
   { field: 'ECR_MaxDisc', header: '單筆交易最大折扣比率限制', visible: true },
   { field: 'ECR_EdcTimeout', header: '信用卡刷卡機連線時限(秒)', visible: true },
   { field: 'ECR_EdcSettle', header: '信用卡刷卡機連動日結', visible: true, format: formatYN }, // 新增 format (Y/N)
-  { field: 'ECR_ForceInput', header: '是否強制輸入付款金額', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_CustCntEntry', header: '是否輸入來客數', visible: true, format: formatYN }, // 已有 format, 校正為 Y/N 判斷
-  { field: 'ECR_CustTypeEntry', header: '是否輸入客層數', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_ClerkEntry', header: '是否強制輸入營業員', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_ForceMember', header: '是否強制輸入會員編號', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_ForceInput', header: '輸入付款金額', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_CustCntEntry', header: '輸入來客數', visible: true, format: formatYN }, // 已有 format, 校正為 Y/N 判斷
+  { field: 'ECR_CustTypeEntry', header: '輸入客層數', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_ClerkEntry', header: '輸入營業員', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_ForceMember', header: '輸入會員編號', visible: true, format: formatYN }, // 補上 format (Y/N)
   { field: 'ECR_SettleDD', header: '清機提示日期', visible: true, format: value => (value === 'T' ? '當天' : '隔天') }, // 補上
   { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: true, format: formatTimeHHMM }, // 補上
-  { field: 'ECR_VoidTxn', header: '是否允許作廢交易', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_VoidTxn', header: '允許作廢交易', visible: true, format: formatYN }, // 補上 format (Y/N)
   { field: 'ECR_VoidRstDay', header: '作廢交易限制天數', visible: true }, // 補上
-  { field: 'ECR_CreditNote', header: '是否允許開立折讓單', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_RestoreVoid', header: '是否允許回復已作廢交易', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_CreditNote', header: '允許開立折讓單', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_RestoreVoid', header: '允許回復已作廢交易', visible: true, format: formatYN }, // 補上 format (Y/N)
   { field: 'ECR_GUI_PeriodQty', header: '機台每期電子發票預設配號數量', visible: true }, // 補上
   { field: 'ECR_GUI_MinQty', header: '機台電子發票最小安全存量', visible: true }, // 補上
-  { field: 'ECR_SelfReport', header: '是否執行自我報帳', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt1', header: '是否列印收銀員交班表', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt2', header: '是否列印收銀機財務報表', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt3', header: '是否列印時段銷售報表', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt4', header: '是否列印部門銷售報表', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt5', header: '是否列印單品銷售報表', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt6', header: '是否列印銷貨明細表', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt7', header: '是否列印作廢明細表', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt8', header: '是否列印自我報帳(現額報告)帳條', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_SaleRpt9', header: '是否列印保全現金帳條(現金明細表)', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SelfReport', header: '執行自我報帳', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt1', header: '列印收銀員交班表', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt2', header: '列印收銀機財務報表', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt3', header: '列印時段銷售報表', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt4', header: '列印部門銷售報表', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt5', header: '列印單品銷售報表', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt6', header: '列印銷貨明細表', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt7', header: '列印作廢明細表', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt8', header: '列印自我報帳(現額報告)帳條', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_SaleRpt9', header: '列印保全現金帳條(現金明細表)', visible: true, format: formatYN }, // 補上 format (Y/N)
   { field: 'ECR_SaleRpt10', header: '保留', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_PcashValid', header: '零用金是否需要認證', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_PickUpValid', header: '中途取現是否需要認證', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_ReprintGUI', header: '是否允許執行補印發票', visible: true, format: formatYN }, // 補上 format (Y/N)
-  { field: 'ECR_PrnLogo', header: '是否列印商標', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_PcashValid', header: '零用金認證', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_PickUpValid', header: '中途取現認證', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_ReprintGUI', header: '允許執行補印發票', visible: true, format: formatYN }, // 補上 format (Y/N)
+  { field: 'ECR_PrnLogo', header: '列印商標', visible: true, format: formatYN }, // 補上 format (Y/N)
   { field: 'ECR_Logo1', header: '商標1 (門市名稱)', visible: true }, // 補上
   { field: 'ECR_Logo2', header: '商標2 (門市地址)', visible: true }, // 補上
   { field: 'ECR_Logo3', header: '商標3 (門市電話)', visible: true }, // 補上
@@ -77,38 +77,38 @@ export const columns: Column[] = [
   { field: 'ECR_Logo5', header: '商標5', visible: true }, // 補上
   { field: 'ECR_Logo6', header: '商標6', visible: true }, // 補上
   { field: 'ECR_KBLevel', header: '機台鍵盤等級', visible: true }, // 補上
-  { field: 'ECR_KBType', header: '鍵盤型態', visible: true }, // 補上
-  { field: 'ECR_Scanner', header: '掃描器型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_Scanner').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_ScannerCom', header: '掃描器連接埠', visible: true }, // 補上
-  { field: 'ECR_MSR', header: 'MSR型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_MSR').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_MSRCom', header: 'MSR連接埠', visible: true },
+  { field: 'ECR_KBType', header: '鍵盤', visible: true }, // 補上
+  { field: 'ECR_Scanner', header: '掃描器', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_Scanner').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_ScannerCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_MSR', header: 'MSR', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_MSR').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_MSRCom', header: '連接埠', visible: true },
   { field: 'ECR_ScrType', header: '收銀畫面樣式', visible: true }, // 補上
-  { field: 'ECR_CD', header: '客戶顯示器型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_CD').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_CDCom', header: '客戶顯示器連接埠', visible: true }, // 補上
+  { field: 'ECR_CD', header: '客戶顯示器', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_CD').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_CDCom', header: '連接埠', visible: true }, // 補上
   { field: 'ECR_ExtScr', header: '收銀外接顯示器名稱', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_ExtScr').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_ExtScrCom', header: '收銀外接顯示器連接埠', visible: true }, // 補上
-  { field: 'ECR_GUIPrn', header: '發票印表機型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_GUIPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_GUICom', header: '發票印表機連接埠', visible: true }, // 補上
-  { field: 'ECR_SlipPrn', header: '收據印表機型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_SlipPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_SlipPrnCom', header: '收據印表機連接埠', visible: true }, // 補上
-  { field: 'ECR_OrderPrn', header: '訂單印表機型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_OrderPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 後端JSON中沒有，資料庫有
-  { field: 'ECR_OrderPrnCom', header: '訂單印表機連接埠', visible: true }, // 後端JSON中沒有，資料庫有
-  { field: 'ECR_LablePrn', header: '標籤印表機型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_LablePrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_LablePrnCom', header: '標籤印表機連接埠', visible: true }, // 補上
-  { field: 'ECR_EDC', header: '信用卡刷卡機型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_EDC').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_EDCCom', header: '信用卡刷卡機連接埠', visible: true }, // 補上
-  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_EDC').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_EDC2Com', header: '第二台信用卡刷卡機連接埠', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdA', header: '悠遊卡型態', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdACom', header: '悠遊卡連接埠', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdB', header: '一卡通型態', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdBCom', header: '一卡通連接埠', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdC', header: '愛金卡型態', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdCCom', header: '愛金卡連接埠', visible: true }, // 補上
-  { field: 'ECR_ElecPay', header: '電子支付型態', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_ElecPay').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
-  { field: 'ECR_ElecPayCom', header: '電子支付連接埠', visible: true }, // 補上
-  { field: 'ECR_Drawer', header: '錢櫃型態', visible: true }, // 補上
-  { field: 'ECR_DrawerCom', header: '錢櫃連接埠', visible: true }, // 補上
+  { field: 'ECR_ExtScrCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_GUIPrn', header: '發票印表機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_GUIPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_GUICom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_SlipPrn', header: '收據印表機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_SlipPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_SlipPrnCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_OrderPrn', header: '訂單印表機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_OrderPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 後端JSON中沒有，資料庫有
+  { field: 'ECR_OrderPrnCom', header: '連接埠', visible: true }, // 後端JSON中沒有，資料庫有
+  { field: 'ECR_LablePrn', header: '標籤印表機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_LablePrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_LablePrnCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_EDC', header: '信用卡刷卡機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_EDC').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_EDCCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_EDC').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_EDC2Com', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdA', header: '悠遊卡', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdACom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdB', header: '一卡通', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdBCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdC', header: '愛金卡', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdCCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_ElecPay', header: '電子支付', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_ElecPay').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_ElecPayCom', header: '連接埠', visible: true }, // 補上
+  { field: 'ECR_Drawer', header: '錢櫃', visible: true }, // 補上
+  { field: 'ECR_DrawerCom', header: '連接埠', visible: true }, // 補上
   { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime }, // 新增 format
   { field: 'CRT_USR_No', header: '建立人員', visible: true }, // 補上
   { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true }, // 移除了 CRT_USR_Name 上不必要的 format，因為它是字串

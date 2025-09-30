@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { columns, ECR_GUI_Type_Option, ECR_SernoType_Option } from './tls46020.model';
 import { DropdownChangeEvent } from 'primeng/dropdown';
@@ -14,12 +13,12 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 // 2.4.6.2  POS環境變數維護作業
 @Component({
@@ -35,11 +34,11 @@ import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table
     InputTextComponent,
     CalendarRangeComponent,
     InputTextareaComponent,
-    TableComponent,
     DialogComponent,
     DropdownComponent,
     NgIf,
     TranslateModule,
+    TableReportComponent
   ],
 })
 export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> implements OnInit {
@@ -48,7 +47,9 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
     ECR_TmplBegDate: [null], // 環境變數啟用日期
     ECR_TmplEndDate: [null], // 環境變數截止日期
     ECR_TmplDesc: ['', [Validators.maxLength(20)]], // 環境變數備註
-    ...createPaginationConfig([{ field: 'ECR_TmplNo', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ECR_TmplNo', order: 1 }]],
   });
   ECR_SernoType_Options = ECR_SernoType_Option; // 交易序號模式選項
   ECR_GUI_Type_Option = ECR_GUI_Type_Option; // 發票使用類別選項
@@ -58,7 +59,7 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
   columns = columns;
 
   constructor(
-    private tls46020Service: TLS46020Service,
+    public tls46020Service: TLS46020Service,
     private dropDownListService: DropDownListService
   ) {
     super();
@@ -74,6 +75,7 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
       this.mergedDialogOptions = [{ label: '新增一筆環境變數', No: 'new' }, ...this.dialogOptions];
     });
   }
+  lastQueryFormValue: any;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
@@ -82,23 +84,14 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
         ECR_TmplEndDate: formatDateToYYYY_MM_DD(frm.value.ECR_TmplEndDate), // 環境變數截止日期
       }
       this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data.map(item => ({
-          ...item,
-          ECR_SettleHHNN: this.formatDateTime(item.ECR_SettleHHNN as string | null),
-        }));
+        this.lastQueryFormValue = body;
+        this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
-  formatDateTime(ECR_SettleHHNN: string | null): Date | null {
-    if (!ECR_SettleHHNN) return null;
-    const hours = parseInt(ECR_SettleHHNN.slice(0, 2), 10);
-    const minutes = parseInt(ECR_SettleHHNN.slice(2, 4), 10);
-    const formattedHours = hours.toString().padStart(2, '0');
-    const formattedMinutes = minutes.toString().padStart(2, '0');
-    return new Date(`1970-01-01T${formattedHours}:${formattedMinutes}:00`);
-  }
+
   onDelete(selectedRows: TLS46020Item[]) {
     const idList = selectedRows.map(row => row.id).filter((id): id is number => typeof id === 'number');
     this.tls46020Service.deleteTLS46020(idList).pipe(untilDestroyed(this)).subscribe({

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../system/auth.service';
 
@@ -112,9 +112,28 @@ export class TLS46020Service {
 
   constructor(private http: HttpClient) { }
 
+  formatDateTime(ECR_SettleHHNN: string | null): Date | null {
+    if (!ECR_SettleHHNN) return null;
+    const hours = parseInt(ECR_SettleHHNN.slice(0, 2), 10);
+    const minutes = parseInt(ECR_SettleHHNN.slice(2, 4), 10);
+    const formattedHours = hours.toString().padStart(2, '0');
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    return new Date(`1970-01-01T${formattedHours}:${formattedMinutes}:00`);
+  }
+
   /** 查詢 POS1002TML 資料 */
   queryTLS46020(params: TLS46020QueryParams): Observable<ApiResponse<any[]>> {
-    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryTLS46020`, params);
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryTLS46020`, params).pipe(
+      // 使用 RxJS 的 map 來轉換資料
+      // 需要先 import { map } from 'rxjs/operators';
+      map(res => ({
+        ...res,
+        Data: res.Data.map(item => ({
+          ...item,
+          ECR_SettleHHNN: this.formatDateTime(item.ECR_SettleHHNN as string | null),
+        }))
+      }))
+    );
   }
 
   /** 新增 POS1002TML 資料 */
