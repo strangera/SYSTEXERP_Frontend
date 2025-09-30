@@ -96,32 +96,32 @@
 
           <!-- 發票總金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-number-range
               label="發票總金額"
               [startControl]="queryForm.controls.PUR_Amt_Small"
               [endControl]="queryForm.controls.PUR_Amt_Big"
               [submitted]="submitted">
-            </app-input-text-range>
+            </app-input-number-range>
           </div>
 
           <!-- 未稅金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-number-range
               label="發票未稅金額"
               [startControl]="queryForm.controls.PUR_Net_Small"
               [endControl]="queryForm.controls.PUR_Net_Big"
               [submitted]="submitted">
-            </app-input-text-range>
+            </app-input-number-range>
           </div>
 
           <!-- 稅額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-number-range
               label="發票稅額"
               [startControl]="queryForm.controls.PUR_Tax_Small"
               [endControl]="queryForm.controls.PUR_Tax_Big"
               [submitted]="submitted">
-            </app-input-text-range>
+            </app-input-number-range>
           </div>
 
           <!-- 發票用途（多選=>逗號字串） -->
@@ -142,6 +142,16 @@
               label="課稅別"
               [control]="queryForm.controls.PUR_TaxType"
               [options]="taxTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="扣抵代號"
+              [control]="queryForm.controls.PUR_DiscNo"
+              [options]="PUR_DiscNoOptions"
               optionLabel="label"
               optionValue="value"
               [submitted]="submitted">
@@ -178,13 +188,16 @@
             </app-input-text>
           </div>
 
-          <!-- 銷售類型（若不用可不填） -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="銷售類型"
+        
+                  <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="系統別"
               [control]="queryForm.controls.SAL_Type"
+              [options]="SYS_ORIGINOptions"
+              optionLabel="label"
+              optionValue="value"
               [submitted]="submitted">
-            </app-input-text>
+            </app-multi-select>
           </div>
 
           <!-- 備註 -->

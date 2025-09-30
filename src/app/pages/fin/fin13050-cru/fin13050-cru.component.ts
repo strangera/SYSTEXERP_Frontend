@@ -17,6 +17,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
+
 
 @Component({
   selector: 'app-fin13050-cru',
@@ -34,6 +36,8 @@ import { ValidationService } from '@shared/service/validation.service';
     NgIf,
     TranslateModule,
     CalendarComponent,
+    
+    CalenderoneComponent,      
   ],
 })
 export class FIN13050CRUComponent

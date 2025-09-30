@@ -76,4 +76,16 @@ export class FIN13050Service {
         tap(res => console.log('VendorList:', res)),
       );
   }
+// ✅ SYS1000 下拉欄位（依 SYS_Type）
+querySYS1000DropDownList(sysType: string): Observable<any> {
+  return this.http
+    .post<any>(`${this.apiUrl}/querySYS1000_DropDownList`, {
+      SYS_Type: sysType,
+    })
+    .pipe(
+      tap((res) => console.log('SYS1000 下拉資料:', res)),
+      // 若你想沿用全域錯誤處理可解開以下一行
+      // catchError(err => this.errorHandler.handle(err))
+    );
+}
 }
