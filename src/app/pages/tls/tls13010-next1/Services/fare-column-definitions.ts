@@ -113,6 +113,17 @@ export class FareColumnDefinitions {
         // autoSaveOnUnselect: true,
       },
       {
+        field: 'copy_button',
+        header: '複製',
+        type: 'button',
+        // buttonLabel: '複製',
+        // buttonLabel: '',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此扣款項目',
+        style: 'width: 50px;'
+      },
+      {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
