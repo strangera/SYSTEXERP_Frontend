@@ -1688,7 +1688,7 @@ export class ContractFlowService {
         clearOps.clearLevelDetails = true;
         break;
 
-      case '6': // 包底加階梯 -> 清除包底 + 階梯條件
+      case '6': // 包底加層級 -> 清除包底 + 階梯條件
         clearOps.clearLimitDetails = true;
         clearOps.clearLevelDetails = true;
         break;

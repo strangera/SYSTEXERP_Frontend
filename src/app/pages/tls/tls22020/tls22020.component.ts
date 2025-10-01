@@ -17,8 +17,6 @@ import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { creditCardColumns, creditCardGroup, TLS22020Data } from './tls22020.model';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { HttpResponse } from '@angular/common/http';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
@@ -56,6 +54,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     TXN_DateEnd: [null as Date | null],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
+
   // 表格資料
   data: TLS22020Data[] = [];
   ECRNoOptions: any[] = [];
@@ -93,7 +92,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
-
   ngOnInit(): void {
     this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm);
     this.whetherService.getWhetherOptions().subscribe(data => {
@@ -101,6 +99,13 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     });
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
+    });
+    // 自動預帶 ECR_No_End
+    this.queryForm.controls.ECR_No_Start.valueChanges.subscribe(val => {
+      const endVal = this.queryForm.controls.ECR_No_End.value;
+      if (val && (!endVal || endVal === '' || endVal === undefined || endVal === null)) {
+        this.queryForm.controls.ECR_No_End.setValue(val, { emitEvent: false });
+      }
     });
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const isFromRelatedRoute = state?.['fromRoute']?.includes(this.ProgNo.toLowerCase());
@@ -116,7 +121,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
       this.footerData = [{ group_name: '總計', ...savedData.Data.SumData }];
     }
   }
-
 
   onSubmit(form: FormGroup): void {
     if (this.skipAutoQueryOnce) {

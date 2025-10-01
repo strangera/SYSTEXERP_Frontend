@@ -16,8 +16,8 @@ export class CommissionTypeService {
     { value: '2', label: '底租抽成取高者' },
     { value: '3', label: '一般抽成' },
     { value: '4', label: '包底抽成' },
-    { value: '5', label: '階梯式抽成' },
-    { value: '6', label: '包底加階梯' },
+    { value: '5', label: '層級抽成' },
+    { value: '6', label: '包底加層級' },
   ];
 
 

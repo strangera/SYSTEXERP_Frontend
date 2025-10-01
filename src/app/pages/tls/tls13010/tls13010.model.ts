@@ -1145,13 +1145,13 @@ export class DataCleaner {
         // 固定租金
         this.processFixedRentCondition(condition, result.fixedRents);
       } else if ('limit_amt' in condition && 'seq_no' in condition) {
-        // 包底加階梯
+        // 包底加層級
         this.processBaseTierCondition(condition, result.baseTier);
       } else if ('limit_amt' in condition) {
         // 包底抽成
         this.processBaseCommissionCondition(condition, result.baseCommissions);
       } else if ('seq_no' in condition) {
-        // 階梯式抽成
+        // 層級抽成
         this.processGraduatedCondition(condition, result.graduated);
       }
     });

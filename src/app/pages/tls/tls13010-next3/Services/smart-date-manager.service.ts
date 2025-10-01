@@ -26,10 +26,10 @@ export class SmartDateSegmentationService {
       case '4': // 包底抽成
         return this.getSequentialDateRange(contractStartDate, contractEndDate, existingItems);
 
-      case '5': // 階梯式抽成
+      case '5': // 層級抽成
         return this.getGraduatedDateRange(contractStartDate, contractEndDate);
 
-      case '6': // 包底加階梯
+      case '6': // 包底加層級
         return this.getBaseTierDateRange(contractStartDate, contractEndDate, existingItems as BaseTierCondition[]);
 
       default:
@@ -84,7 +84,7 @@ export class SmartDateSegmentationService {
   }
 
   /**
-   * 階梯式抽成日期範圍 (日期都是契約起訖日)
+   * 層級抽成日期範圍 (日期都是契約起訖日)
    */
   private getGraduatedDateRange(contractStartDate: string, contractEndDate: string): { cag_bdate: string; cag_edate: string } {
     return {
@@ -94,7 +94,7 @@ export class SmartDateSegmentationService {
   }
 
   /**
-   * 包底加階梯日期範圍
+   * 包底加層級日期範圍
    * 規則：當現有項目中有階梯金額迄值為999999999時，才能新增下一個區段
    * 新區段的日期使用契約起訖日
    */
@@ -137,7 +137,7 @@ export class SmartDateSegmentationService {
   }
 
   /**
-   * 檢查是否可以新增包底加階梯項目
+   * 檢查是否可以新增包底加層級項目
    */
   canAddBaseTierItem(existingItems: BaseTierCondition[]): { canAdd: boolean; reason?: string } {
     const validItems = existingItems.filter(item => (item as any)._status !== 'deleted');
@@ -279,7 +279,7 @@ export class SmartDateSegmentationService {
   }
 
   /**
-   * 獲取智能金額範圍建議 (用於階梯和包底加階梯)
+   * 獲取智能金額範圍建議 (用於階梯和包底加層級)
    */
   getSmartAmountRange(
     existingItems: (GraduatedCommissionCondition | BaseTierCondition)[],
@@ -379,7 +379,7 @@ export class SmartDateSegmentationService {
           limit_charge_rate: 0
         } as BaseCommissionCondition;
 
-      case '5': // 階梯式抽成
+      case '5': // 層級抽成
         {
           const gradAmountRange = this.getSmartAmountRange(existingItems as GraduatedCommissionCondition[], '5');
           return {
@@ -391,7 +391,7 @@ export class SmartDateSegmentationService {
           } as GraduatedCommissionCondition;
         }
 
-      case '6': // 包底加階梯
+      case '6': // 包底加層級
         {
           const tierAmountRange = this.getSmartAmountRange(existingItems as BaseTierCondition[], '6');
           return {

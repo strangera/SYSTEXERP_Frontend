@@ -934,6 +934,8 @@ get headerRow2Columns() {
 get hasTwoHeaderRows(): boolean {
   return this.headerRow2Columns.length > 0;
 }
-
+get skeletonRows(): any[] {
+  return Array.from({ length: this.rows });
+}
 
 }

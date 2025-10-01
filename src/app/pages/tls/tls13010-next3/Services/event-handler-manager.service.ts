@@ -228,8 +228,8 @@ export class EventHandlerManager {
       'fixedRent': '固定租金',
       'baseRentHigher': '底租抽成取高者',
       'baseCommission': '包底抽成',
-      'graduated': '階梯式抽成',
-      'baseTier': '包底加階梯'
+      'graduated': '層級抽成',
+      'baseTier': '包底加層級'
     };
 
     const typeName = typeNames[type as keyof typeof typeNames] || type;
@@ -379,8 +379,8 @@ export class EventHandlerManager {
       'fixedRent': '固定租金',
       'baseRentHigher': '底租抽成取高者',
       'baseCommission': '包底抽成',
-      'graduated': '階梯式抽成',
-      'baseTier': '包底加階梯'
+      'graduated': '層級抽成',
+      'baseTier': '包底加層級'
     };
 
     const typeName = type ? typeNames[type as keyof typeof typeNames] || type : '';
@@ -407,8 +407,8 @@ export class EventHandlerManager {
       'fixedRent': '固定租金',
       'baseRentHigher': '底租抽成取高者',
       'baseCommission': '包底抽成',
-      'graduated': '階梯式抽成',
-      'baseTier': '包底加階梯'
+      'graduated': '層級抽成',
+      'baseTier': '包底加層級'
     };
 
     const typeName = type ? typeNames[type as keyof typeof typeNames] || type : '';

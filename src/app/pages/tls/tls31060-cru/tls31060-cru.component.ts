@@ -40,11 +40,11 @@ import { TLS31060DetailRequest, TLS31060DetailResponse, TLS31060PrintDetailReque
   ],
   templateUrl: './tls31060-cru.component.html'
 })
-export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response> implements OnInit{
+export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     tlt_kind: [''],//櫃別
     tlt_kind_name: [''],//櫃別名稱
-    
+
     budget: [''],//營業目標
     AVN_TotSaleAmt: [''],//營業實績
     AchievementRate: [''],//達成率
@@ -112,8 +112,8 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
     { value: "2", label: "底租抽成取高者" },
     { value: "3", label: "一般抽成" },
     { value: "4", label: "包底抽成" },
-    { value: "5", label: "階梯式抽成" },
-    { value: "6", label: "包底加階梯" },
+    { value: "5", label: "層級抽成" },
+    { value: "6", label: "包底加層級" },
   ]
   tlt_building_Option: IDropdownItem[] = []; // 館別
   tlt_floor_Option: IDropdownItem[] = []; // 樓層

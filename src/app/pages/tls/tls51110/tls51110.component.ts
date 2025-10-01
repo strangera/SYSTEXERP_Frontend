@@ -6,6 +6,7 @@ import {
   AddButton,
   Column,
   createPaginationConfig,
+  formatAmount,
 } from '../../../shared/componentkit/table/table.model';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -57,7 +58,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
   queryForm = this.formBuilder.group({
     LOGO_No: [''],
     YYYYMM: [''],
-    YYYYMM2: ['', Validators.required],
+    YYYYMM2: [new Date(), Validators.required],
 
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]),
   });
@@ -71,8 +72,8 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'YYYYMM', header: '年月', visible: true },
-    { field: 'BUDGET', header: '預算', visible: true },
-    { field: 'BUDGET_Cost', header: '預算成本', visible: true },
+    { field: 'BUDGET', header: '預算', visible: true ,format:formatAmount},
+    { field: 'BUDGET_Cost', header: '預算成本', visible: true ,format:formatAmount},
     {
       field: 'BUD_Status',
       header: '審核狀態',
@@ -100,13 +101,13 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       icon: 'pi pi-check-circle text-green-500',
       action: (row: LogoBudget) => {
         if (this.actionLoadingId) return;
-        console.log(row);
         if (row.BUD_Status !== "0") {
           this.messageService.warnBubble('狀態不是「未審核」，無法審核');
           return;
         }
         this.statusChange(row, "1");
       },
+      disabled: (row: LogoBudget) => row.BUD_Status === "1", // 已審核 → 審核按鈕 disable
     },
     {
       label: '反審核',
@@ -119,8 +120,10 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
         }
         this.statusChange(row, "0");
       },
+      disabled: (row: LogoBudget) => row.BUD_Status === "0", // 未審核 → 反審核按鈕 disable
     },
   ];
+
 
   constructor(
     private apiService: Tls51110Service,

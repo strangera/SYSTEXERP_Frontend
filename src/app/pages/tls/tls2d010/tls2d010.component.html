@@ -146,5 +146,26 @@
     [showManage]="true"
     [loading]="loading"
     (delete)="onDelete($event)"
-  ></app-table>
+  >
+    <header>
+      <div
+        class="flex align-items-center justify-content-end w-full  p-2"
+      >
+        <input
+          #fileInput
+          type="file"
+          style="display: none"
+          (change)="onFileSelected($event)"
+        />
+
+        <p-button
+          type="button"
+          label="上傳"
+          icon="pi pi-upload"
+          severity="success"
+          (click)="fileInput.click()"
+        ></p-button>
+      </div>
+    </header>
+  </app-table>
 </div>

@@ -113,6 +113,17 @@ export class FareColumnDefinitions {
         // autoSaveOnUnselect: true,
       },
       {
+        field: 'copy_button',
+        header: '複製',
+        type: 'button',
+        // buttonLabel: '複製',
+        // buttonLabel: '',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此扣款項目',
+        style: 'width: 50px;'
+      },
+      {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
@@ -481,7 +492,7 @@ export class FareColumnDefinitions {
                 const endYear = endDate.getFullYear();
                 const endMonth = endDate.getMonth();
 
-                const calculatedPeriods = (endYear - startYear) * 12 + (endMonth - startMonth);
+                const calculatedPeriods = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
                 const finalPeriods = Math.max(1, calculatedPeriods);
 
                 console.log('🎯 期數預設值計算:', {
@@ -636,7 +647,11 @@ export class FareColumnDefinitions {
         header: '加抽比率',
         type: 'number',
         editable: true,
+        required: true,
+        allowDecimal: true,
+        decimalPlaces: 3,
         autoWidth: true,
+        style: 'min-width: 80px; width: 100px;',
       },
       {
         field: 'down_payment',
@@ -695,9 +710,9 @@ export class FareColumnDefinitions {
         type: 'number',
         editable: true,
         required: true,
-        allowDecimal: true,  // 是否允許小數點
+        allowDecimal: true,
         decimalPlaces: 3,
-        style: 'min-width: 50px; width: 50px;',
+        style: 'min-width: 80px; width: 100px;', // 加寬讓數字可以完整顯示
       },
       {
         field: 'org_id',
