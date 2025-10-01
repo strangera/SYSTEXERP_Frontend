@@ -1,5 +1,5 @@
 import { getSYS1000 } from "@service/system/sys1000.service";
-import { Column, formatAmount, formatDate, formatDateTime, formatYN } from "../../../shared/componentkit/table/table.model";
+import { Column, formatDate, formatYN } from "../../../shared/componentkit/table/table.model";
 
 export const TLTTALENT_columns: Column[] = [
   // { field: 'talent_id', header: '合約編號系統 id', visible: true },
@@ -10,10 +10,10 @@ export const TLTTALENT_columns: Column[] = [
 
   // { field: 'tlt_openflag', header: '營業狀態', visible: true },
   // { field: 'contract_no', header: '合約編號', visible: true },
-  // { field: 'contract_subno', header: '合約附號', visible: true },
+  { field: 'contract_subno', header: '版次', visible: true },
 
   // 基本資料
-  { field: 'tlt_building', header: '館別', visible: true },
+  { field: 'building_desc', header: '館別', visible: true },
   { field: 'org_name', header: '組織名稱', visible: true },
   { field: 'VEN_Name', header: '廠商名稱', visible: true },
   { field: 'location_no', header: '位置編號', visible: true },
@@ -31,8 +31,8 @@ export const TLTTALENT_columns: Column[] = [
   // { field: 'bus_class', header: '中分類代碼(tltbusclass)', visible: true },
   // { field: 'bus_sclass', header: '小分類(tltbussclass)', visible: true },
 
-  // { field: 'tlt_bdate', header: '合約起始日期', visible: true, format: formatDate },
-  // { field: 'tlt_edate', header: '合約終止日期', visible: true, format: formatDate },
+  { field: 'tlt_bdate', header: '合約起始日期', visible: true, format: formatDate },
+  { field: 'tlt_edate', header: '合約終止日期', visible: true, format: formatDate },
   // { field: 'tlt_contract_bdate', header: '正式營運起始日期', visible: true, format: formatDate },
   // { field: 'tlt_contract_edate', header: '正式營運終止日期', visible: true, format: formatDate },
   // { field: 'feedback_date', header: '回函日期', visible: true, format: formatDate },
