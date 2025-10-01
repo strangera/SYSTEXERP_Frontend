@@ -225,149 +225,138 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  fetchTLS55070 = (evt: LazyLoadEvent) => {
-    const raw: any = this.queryForm.getRawValue();
-    const pageSize = Number.isFinite(evt?.pageSize)
-      ? Number(evt.pageSize)
-      : Number(raw?.pageSize) || 20;
-    const pageIndex = Number.isFinite(evt?.pageIndex)
-      ? Number(evt.pageIndex)
-      : Number(raw?.pageIndex) || 1;
+ fetchTLS55070 = (evt: LazyLoadEvent) => {
+  const raw: any = this.queryForm.getRawValue();
+  const pageSize = Number.isFinite(evt?.pageSize)
+    ? Number(evt.pageSize)
+    : Number(raw?.pageSize) || 20;
+  const pageIndex = Number.isFinite(evt?.pageIndex)
+    ? Number(evt?.pageIndex)
+    : Number(raw?.pageIndex) || 1;
 
-    const uiSort = this.ensureGroupFirst(
-      Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
-        ? (evt as any).SortBy
-        : Array.isArray(raw?.SortBy) && raw.SortBy.length
-          ? raw.SortBy
-          : this.defaultSort,
-    );
-    const apiSort = this.toApiSort(uiSort);
-
-    const payload = this.buildPayload({
-      ...raw,
-      pageSize,
-      pageIndex,
-      SortBy: apiSort,
-    });
-
-    return this.tls55070Service.queryTLS55070(payload).pipe(
-      map((res: any) => {
-        const wrappers = Array.isArray(res?.Data)
-          ? res.Data
-          : res?.Data
-            ? [res.Data]
-            : [];
-        const { rows, allSubtotals, externalTotals, totalRecords } =
-          this.unpackResponse(wrappers);
-
-        const ended = new Set<string>();
-        for (let i = 0; i < rows.length - 1; i++) {
-          const g1 = rows[i][this.groupByField];
-          const g2 = rows[i + 1][this.groupByField];
-          if (g1 !== g2) ended.add(g1);
-        }
-        const last = rows[rows.length - 1];
-        const lastKey = last?.[this.groupByField];
-        const totalPage =
-          Number(
-            res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1)),
-          ) || 0;
-        const hasNext = totalPage
-          ? pageIndex < totalPage
-          : pageIndex * pageSize < totalRecords;
-        if (!hasNext && lastKey) ended.add(lastKey);
-
-        const externalSubtotals: Record<string, Record<string, number>> = {};
-        ended.forEach((k) => {
-          if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
-        });
-
-        this.allSubtotals = allSubtotals;
-        this.visibleSubtotals = externalSubtotals;
-        this.detailTotals = externalTotals;
-
-        return { rows, totalRecords, externalTotals, externalSubtotals };
-      }),
-      catchError(() =>
-        of({
-          rows: [],
-          totalRecords: 0,
-          externalTotals: {},
-          externalSubtotals: {},
-        }),
-      ),
-    );
-  };
-
-  onSubmit(form: FormGroup): void {
-    this.loading = true;
-    const raw: any = { ...form.getRawValue() };
-    const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
-    const pageIndex = Number.isFinite(raw?.pageIndex)
-      ? Number(raw.pageIndex)
-      : 1;
-
-    const uiSortBy: any[] = this.ensureGroupFirst(
-      Array.isArray(raw?.SortBy) && raw.SortBy.length
+  const uiSort = this.ensureGroupFirst(
+    Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+      ? (evt as any).SortBy
+      : Array.isArray(raw?.SortBy) && raw.SortBy.length
         ? raw.SortBy
-        : this.sortMeta?.length
-          ? this.sortMeta
-          : this.defaultSort,
-    ).map((s) => ({ ...s }));
+        : this.defaultSort,
+  );
+  const apiSort = this.toApiSort(uiSort);
 
-    const payload = this.buildPayload({
-      ...raw,
-      pageSize,
-      pageIndex,
-      SortBy: this.toApiSort(uiSortBy),
-    });
-    this.historyRequestBody = { ...payload };
+  const payload = this.buildPayload({
+    ...raw,
+    pageSize,
+    pageIndex,
+    SortBy: apiSort,
+  });
 
-    this.tls55070Service
-      .queryTLS55070(payload)
-      .pipe(
-        timeout(60_000),
-        finalize(() => (this.loading = false)),
-        catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
-      )
-      .subscribe((res: any) => {
-        const wrappers = Array.isArray(res?.Data)
-          ? res.Data
-          : res?.Data
-            ? [res.Data]
-            : [];
-        const { rows, allSubtotals, externalTotals, totalRecords } =
-          this.unpackResponse(wrappers);
+  return this.tls55070Service.queryTLS55070(payload).pipe(
+    map((res: any) => {
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+        this.unpackResponse(wrappers);
 
-        const ended = new Set<string>();
-        for (let i = 0; i < rows.length - 1; i++) {
-          const g1 = rows[i][this.groupByField];
-          const g2 = rows[i + 1][this.groupByField];
-          if (g1 !== g2) ended.add(g1);
-        }
+      // ✅ 優先採用後端回傳的 TotalCount，用於切分頁
+      const apiTotal = Number(res?.TotalCount);
+      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
 
-        const totalPage =
-          Number(
-            res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1)),
-          ) || 0;
-        const hasNext = totalPage
-          ? pageIndex < totalPage
-          : pageIndex * pageSize < totalRecords;
-        const lastKey = rows[rows.length - 1]?.[this.groupByField];
-        if (!hasNext && lastKey) ended.add(lastKey);
+      const ended = new Set<string>();
+      for (let i = 0; i < rows.length - 1; i++) {
+        const g1 = rows[i][this.groupByField];
+        const g2 = rows[i + 1][this.groupByField];
+        if (g1 !== g2) ended.add(g1);
+      }
+      const last = rows[rows.length - 1];
+      const lastKey = last?.[this.groupByField];
+      const totalPage =
+        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+      if (!hasNext && lastKey) ended.add(lastKey);
 
-        const vis: Record<string, Record<string, number>> = {};
-        ended.forEach((k) => {
-          if (allSubtotals[k]) vis[k] = allSubtotals[k];
-        });
-
-        this.data = rows;
-        this.totalRecords = totalRecords;
-        this.allSubtotals = allSubtotals;
-        this.visibleSubtotals = vis;
-        this.detailTotals = externalTotals;
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      ended.forEach((k) => {
+        if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
       });
-  }
+
+      this.allSubtotals = allSubtotals;
+      this.visibleSubtotals = externalSubtotals;
+      this.detailTotals = externalTotals;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    }),
+    catchError(() =>
+      of({
+        rows: [],
+        totalRecords: 0,
+        externalTotals: {},
+        externalSubtotals: {},
+      }),
+    ),
+  );
+};
+
+
+onSubmit(form: FormGroup): void {
+  this.loading = true;
+  const raw: any = { ...form.getRawValue() };
+  const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
+  const pageIndex = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+
+  const uiSortBy: any[] = this.ensureGroupFirst(
+    Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy
+      : this.sortMeta?.length ? this.sortMeta
+      : this.defaultSort,
+  ).map((s) => ({ ...s }));
+
+  const payload = this.buildPayload({
+    ...raw,
+    pageSize,
+    pageIndex,
+    SortBy: this.toApiSort(uiSortBy),
+  });
+  this.historyRequestBody = { ...payload };
+
+  this.tls55070Service
+    .queryTLS55070(payload)
+    .pipe(
+      timeout(60_000),
+      finalize(() => (this.loading = false)),
+      catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
+    )
+    .subscribe((res: any) => {
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+        this.unpackResponse(wrappers);
+
+      // ✅ 優先採用後端回傳的 TotalCount
+      const apiTotal = Number(res?.TotalCount);
+      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+
+      const ended = new Set<string>();
+      for (let i = 0; i < rows.length - 1; i++) {
+        const g1 = rows[i][this.groupByField];
+        const g2 = rows[i + 1][this.groupByField];
+        if (g1 !== g2) ended.add(g1);
+      }
+
+      const totalPage =
+        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+      const lastKey = rows[rows.length - 1]?.[this.groupByField];
+      if (!hasNext && lastKey) ended.add(lastKey);
+
+      const vis: Record<string, Record<string, number>> = {};
+      ended.forEach((k) => {
+        if (allSubtotals[k]) vis[k] = allSubtotals[k];
+      });
+
+      this.data = rows;
+      this.totalRecords = totalRecords;          // ← 這行會讓 Table2 依 TotalCount 切分頁
+      this.allSubtotals = allSubtotals;
+      this.visibleSubtotals = vis;
+      this.detailTotals = externalTotals;
+    });
+}
 
   // === 匯出 Excel ===
   onExportExcel() {
