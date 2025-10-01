@@ -43,11 +43,11 @@ export class TLS12040UpConditionDataManager {
     existingItems: ConditionItem[]
   ): ConditionItem | null {
 
-    // 特殊檢查：包底加階梯需要驗證是否可以新增
+    // 特殊檢查：包底加層級需要驗證是否可以新增
     if (commissionType === '6') {
       const canAddResult = this.smartDateService.canAddBaseTierItem(existingItems as BaseTierCondition[]);
       if (!canAddResult.canAdd) {
-        throw new Error(canAddResult.reason || '無法新增包底加階梯項目');
+        throw new Error(canAddResult.reason || '無法新增包底加層級項目');
       }
     }
 

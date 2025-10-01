@@ -36,5 +36,5 @@
 <div class="card">
   <app-table dataKey="id" [data]="data" [columns]="columns" [multiSortMeta]="queryForm.controls.SortBy.value"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showDelete]="false"></app-table>
+    [loading]="loading" [showDelete]="false" [showManage]="false"></app-table>
 </div>

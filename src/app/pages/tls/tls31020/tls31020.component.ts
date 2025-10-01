@@ -52,7 +52,7 @@ import { TLS26050Service } from '@service/api/tls/tls26050.service';
 })
 
 // 各樓層之營業報表
-export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response> implements OnInit{
+export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday],//交易日期開始
     TXN_DateE: [yesterday],  // 交易日期結束
@@ -64,12 +64,12 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     bus_class: [[] as IDropdownItem[]],//中分類
     bus_sclass: [[] as IDropdownItem[]],//小分類
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
+    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
     org_id: [[]],  // 組織
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
-    
-    
+
+
     ...createPaginationConfig([{ field: 'tlt_floor', order: 1 }])
   });
 
@@ -176,8 +176,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     { value: "2", label: "底租抽成取高者" },
     { value: "3", label: "一般抽成" },
     { value: "4", label: "包底抽成" },
-    { value: "5", label: "階梯式抽成" },
-    { value: "6", label: "包底加階梯" },
+    { value: "5", label: "層級抽成" },
+    { value: "6", label: "包底加層級" },
   ]
   TaxType_Option = [
     { value: "0", label: "是" },
@@ -344,7 +344,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
         // TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31020Request;
 
-      console.log('送出query請求',formValue);
+      console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
@@ -366,7 +366,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       // TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
     } as TLS31020PrintRequest;
 
-    console.log('送出print請求',formValue);
+    console.log('送出print請求', formValue);
 
     this.btnLoading = true;
     this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))

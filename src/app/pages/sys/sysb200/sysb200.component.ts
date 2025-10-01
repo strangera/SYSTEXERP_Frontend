@@ -108,7 +108,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { field: 'VEN_EngName', header: '廠商名稱(英文)', visible: true },
     { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
     { field: 'VEN_Address', header: '通訊地址', visible: true },
-    { field: 'VEN_GUIAddr', header: '公司登記地址', visible: true },
+    { field: 'VEN_GUIAddr', header: '公司營登地址', visible: true },
     { field: 'VEN_Boss', header: '聯絡人', visible: false },
     { field: 'VEN_BossTitle', header: '聯絡人職稱', visible: false },
     { field: 'VEN_BossEmail', header: '聯絡人電子郵件', visible: false },

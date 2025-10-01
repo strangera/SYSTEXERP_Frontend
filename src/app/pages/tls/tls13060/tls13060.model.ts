@@ -13,7 +13,7 @@ export const TLTTALENT_columns: Column[] = [
   // { field: 'contract_subno', header: '合約附號', visible: true },
 
   // 基本資料
-  { field: 'building_no', header: '館別', visible: true },
+  { field: 'tlt_building', header: '館別', visible: true },
   { field: 'org_name', header: '組織名稱', visible: true },
   { field: 'VEN_Name', header: '廠商名稱', visible: true },
   { field: 'location_no', header: '位置編號', visible: true },

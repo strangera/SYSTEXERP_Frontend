@@ -596,7 +596,7 @@ export class TLS12040ConditionDataManager {
     if (commissionType === '6') {
       const canAddResult = this.smartDateService.canAddBaseTierItem(existingItems as BaseTierCondition[]);
       if (!canAddResult.canAdd) {
-        throw new Error(canAddResult.reason || '無法新增包底加階梯項目');
+        throw new Error(canAddResult.reason || '無法新增包底加層級項目');
       }
     }
 

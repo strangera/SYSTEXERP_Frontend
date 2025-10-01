@@ -18,11 +18,12 @@ import {
   Tls57090Service
 } from '@service/api/tls/tls57090.service';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 @Component({
   selector: 'app-tls57090',
@@ -39,15 +40,16 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    TableReportComponent
+    TableReportComponent,
+    AsyncPipe
   ],
   providers: [DatePipe]
 })
 export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090DetailResponse | QueryTLS57090SummaryResponse> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     HOS_No: [null],
     LOGO_No: [null],
-    VEN_No: [''],
+    VEN_No: [null],
     ODM_Date_Start: [null],
     ODM_Date_End: [null],
     APRV_Date_Start: [null],
@@ -75,7 +77,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   ];
   warehouseOptions: IDropdownItem[] = [];
   brandCodeOptions: IDropdownItem[] = [];
-  vendorOptions: IDropdownItem[] = [];
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商下拉選單選項
   data: (QueryTLS57090DetailResponse | QueryTLS57090SummaryResponse)[] = [];
   columns: ReportColumn[] = [];
 
@@ -84,6 +86,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
 
   constructor(
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdown: DropdownApiService,
     public readonly tls57090Service: Tls57090Service,
     private datePipe: DatePipe
   ) { super(); }
@@ -101,9 +104,6 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     });
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandCodeOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
   }
 
@@ -152,7 +152,6 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
       const displayMode = formValue.DisplayMode;
-
       const requestBody: QueryTLS57090Request = {
         ReportType: displayMode === 1 ? '彙總' : '明細',
         HOS_No: formValue.HOS_No,

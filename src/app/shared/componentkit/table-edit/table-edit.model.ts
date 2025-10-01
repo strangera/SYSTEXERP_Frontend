@@ -15,6 +15,8 @@ export interface EditColumn {
   max?: number; // 最大值
   minLength?: number;
   maxLength?: number;
+  minFractionDigits?: number;
+  maxFractionDigits?: number;
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel

@@ -24,24 +24,24 @@ import { TLS31020DetailRequest, TLS31020DetailResponse, TLS31020DetialPrintReque
   selector: 'app-tls31020cru',
   standalone: true,
   imports: [
-      MenubarComponent,
-      AccordionModule,
-      FormsModule,
-      ReactiveFormsModule,
-      RadiobuttonComponent,
-      CalendarRangeQuickComponent,
-      ButtonComponent,
-      TableModule,
-      RadiobuttonYNComponent,
-      TranslateModule,
-      TableComponent,
-      MultiSelectComponent,
-      ButtonModule
-    ],
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RadiobuttonComponent,
+    CalendarRangeQuickComponent,
+    ButtonComponent,
+    TableModule,
+    RadiobuttonYNComponent,
+    TranslateModule,
+    TableComponent,
+    MultiSelectComponent,
+    ButtonModule
+  ],
   templateUrl: './tls31020cru.component.html'
 })
 // 各樓層之營業報表 cru
-export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response> implements OnInit{
+export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     tlt_floor: [''],//樓層
     floor_desc: [''],//樓層名稱
@@ -114,8 +114,8 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     { value: "2", label: "底租抽成取高者" },
     { value: "3", label: "一般抽成" },
     { value: "4", label: "包底抽成" },
-    { value: "5", label: "階梯式抽成" },
-    { value: "6", label: "包底加階梯" },
+    { value: "5", label: "層級抽成" },
+    { value: "6", label: "包底加層級" },
   ]
   tlt_building_Option: IDropdownItem[] = []; // 館別
   tlt_floor_Option: IDropdownItem[] = []; // 樓層

@@ -16,7 +16,7 @@
   [resizableColumns]="true"
   [reorderableColumns]="true"
   (onColReorder)="onColReorder($event)"
-  [paginator]="showPaginator && IsPrint && !rowEditing && !loading"
+  [paginator]="showPaginator && IsPrint && !rowEditing "
   [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint && showPaginator"
   [multiSortMeta]="multiSortMeta"
@@ -43,7 +43,7 @@
   (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)"
   [rowSelectable]="rowSelectableWrapper"
-  [loading]="loading && data.length === 0"
+   [loading]="loading"  
 
 
   [expandedRowKeys]="expandedRows"
@@ -643,9 +643,9 @@
 
   <!-- ===== 載入中骨架 ===== -->
 <ng-template pTemplate="loadingbody" let-columns="columns">
-  <tr style="height: 35px">
-    <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
-      <p-skeleton />
+  <tr *ngFor="let _ of skeletonRows" style="height: 35px">
+    <td *ngFor="let __ of [].constructor(getVisibleHeaderCount)">
+      <p-skeleton></p-skeleton>
     </td>
   </tr>
 </ng-template>

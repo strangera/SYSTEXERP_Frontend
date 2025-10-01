@@ -15,9 +15,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 //1.1.1.2 發票基本資料維護 CRU
 @Component({
@@ -25,6 +25,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
   templateUrl: './fin11020-cru.component.html',
   standalone: true,
   imports: [
+    YearMonthComponent,
     MenubarComponent,
     ButtonComponent,
     PanelModule,
@@ -76,8 +77,8 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
   ngOnInit(): void {
     this.initializePage('FIN11020', this.dataForm);
     if (this.isFormCreateable) {
-      this.minDate = this.setMinDate();
-      this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator]);
+      // this.minDate = this.setMinDate();
+      this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.minMonthValidator2]);
     }
     const totQtyValue = this.dataForm.get('GUI_TotQty')?.value;
     if (totQtyValue && totQtyValue !== 0) {
@@ -131,7 +132,6 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       const body = {
         ...frm.value,
         ID: this.isFormCreateable ? undefined : frm.get('ID')?.value ?? 0,
-        GUI_YYMM: convertDateToYYYYMM(frm.value.GUI_YYMM),
       }
       const serviceCall = this.isFormCreateable
         ? this.fin11020Service.insertFIN11020(body)
@@ -146,16 +146,16 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       });
     });
   }
-  setMinDate(): Date | undefined {
-    if (this.isFormCreateable) {
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      if ((currentMonth + 1) % 2 !== 0) {
-        return new Date(today.getFullYear(), currentMonth, 1);
-      } else {
-        return new Date(today.getFullYear(), currentMonth - 1, 1);
-      }
-    }
-    return undefined;
-  }
+  // setMinDate(): Date | undefined {
+  //   if (this.isFormCreateable) {
+  //     const today = new Date();
+  //     const currentMonth = today.getMonth();
+  //     if ((currentMonth + 1) % 2 !== 0) {
+  //       return new Date(today.getFullYear(), currentMonth, 1);
+  //     } else {
+  //       return new Date(today.getFullYear(), currentMonth - 1, 1);
+  //     }
+  //   }
+  //   return undefined;
+  // }
 }

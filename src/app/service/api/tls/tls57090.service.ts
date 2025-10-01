@@ -2,14 +2,13 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service'; // 假設 ApiResponse 在這個路徑
-import { LazyLoadEvent } from '@shared/componentkit/table/table.model'; // 您的 LazyLoadEvent 路徑
+import { SortMeta } from 'primeng/api';
 
 /**
  * 統一的進貨退貨單據統計表 請求參數
  * 包含所有明細和彙總可能需要的篩選條件，透過 ReportType 區分
  */
-export interface QueryTLS57090Request extends LazyLoadEvent {
+export interface QueryTLS57090Request {
   ReportType: '明細' | '彙總'; // 必填：'明細' 或 '彙總'
 
   HOS_No?: string[];         // 倉別代碼 (多選)
@@ -21,6 +20,9 @@ export interface QueryTLS57090Request extends LazyLoadEvent {
   APRV_Date_End?: string;    // 審核日期迄 (YYYY-MM-DD 字串)
   ODM_Type?: number[];       // 單據類型 (1: 進貨單, 2: 退貨單) (多選)
   Status?: string[];         // 單據狀態 ('1': 已申請, '2': 已審核, '9': 已作廢) (多選)
+  pageIndex: number,
+  pageSize: number,
+  SortBy: SortMeta[]
 }
 
 /**

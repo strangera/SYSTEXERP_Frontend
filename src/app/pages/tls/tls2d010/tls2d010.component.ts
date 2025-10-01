@@ -13,9 +13,11 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service'; // ★ 引入 Service
+import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
 import { DropDownListService, IDropdownItem, IAPS1003Item } from './../../../service/utility/dropDownList.service';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { Button } from 'primeng/button';
+
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -32,7 +34,9 @@ import { formatAmount } from '@shared/componentkit/table2/table2.model';
     CalendarComponent,
     DropdownComponent,
     TableComponent,
-    TranslateModule
+    TranslateModule,
+    Button,
+
   ]
 })
 export class TLS2D010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -79,6 +83,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
 
   totalRecords = 0;
   data: any[] = [];
+  selectedFile?: File;
   AccNoOptions: IDropdownItem[] = [];
   tlt_noOptions: IDropdownItem[] = [];
   org_idOptions: IDropdownItem[] = [];
@@ -192,4 +197,28 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       this.onSubmit(this.queryForm);
     });
   }
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      console.log('選擇檔案:', file.name);
+      this.upload();
+    }
+  }
+
+  upload() {
+    if (!this.selectedFile) {
+      alert('請先選擇檔案');
+      return;
+    }
+    this.tls2d010Service.uploadExcel(this.selectedFile).subscribe({
+      next: (res) => {
+        console.log('上傳成功:', res);
+        alert('上傳成功！');
+        this.selectedFile = undefined;
+        this.onSubmit(this.queryForm);
+      },
+    });
+  }
 }
+

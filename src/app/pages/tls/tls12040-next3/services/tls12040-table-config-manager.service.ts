@@ -143,7 +143,7 @@ export class TLS12040TableConfigManager {
   }
 
   /**
-   * 獲取階梯式抽成表格配置
+   * 獲取層級抽成表格配置
    */
   getGraduatedColumns(): ColumnDef[] {
     return [
@@ -165,7 +165,7 @@ export class TLS12040TableConfigManager {
   }
 
   /**
-   * 獲取包底加階梯表格配置
+   * 獲取包底加層級表格配置
    */
   getBaseTierColumns(): ColumnDef[] {
     return [
@@ -223,9 +223,9 @@ export class TLS12040TableConfigManager {
       case '4':
         return '包底抽成';
       case '5':
-        return '階梯式抽成';
+        return '層級抽成';
       case '6':
-        return '包底加階梯';
+        return '包底加層級';
       default:
         return '未知類型';
     }
@@ -263,8 +263,8 @@ export class TLS12040TableConfigManager {
       case '2': return '底租抽成取高者';
       case '3': return '一般抽成';
       case '4': return '包底抽成';
-      case '5': return '階梯式抽成';
-      case '6': return '包底加階梯';
+      case '5': return '層級抽成';
+      case '6': return '包底加層級';
       default: return `未知類型(${commissionType})`;
     }
   }

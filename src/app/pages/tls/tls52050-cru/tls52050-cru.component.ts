@@ -304,7 +304,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       CAT_SName: item.CAT_SName,
       PLU_OrderPrcRate: Number(item.PLU_OrderPrcRate),
       PLU_OrderPrc: Number(item.PLU_OrderPrc),
-      MAM_OrderPrc: 0,
+      MAM_OrderPrc: Number(item.PLU_OrderPrc),
       PLU_SalePrc: Number(item.PLU_SalePrc),
       MAM_UnitPrc: 0,
       MAD_Remark: ''

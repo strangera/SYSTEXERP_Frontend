@@ -75,9 +75,9 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
   ];
   sortMeta: any[] = [];
 
-  // ✅ 匯出/查詢用到
-
-  btnLoading = false;
+  // 匯出 loading 分離
+  btnLoadingExcel = false;
+  btnLoadingPDF = false;
 
   data: any[] = [];
   totalRecords = 0;
@@ -162,6 +162,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
       isSubTotal: true,
     },
   ];
+
   ECRNoOptions: any[] = [];
   txnStatusOptions = [
     { value: '1', label: '一般交易' },
@@ -171,19 +172,19 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
   yesNoOptions = [
     { value: '0', label: '全部' },
     { value: '1', label: '顯示' },
-
   ];
-  // ✅ 新增：LOGO/HOS_No 下拉資料
+
+  // LOGO/HOS_No / 專櫃 / 銷售人員
   logoOptions: Array<{label: string; value: string}> = [];
   hosOptions:  Array<{label: string; value: string}> = [];
   CounterOptions: any[] = [];
   cashierOptions: any[] = [];
+
   constructor(
     private tls55070Service: TLS55070Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-     private cashierService: CashierService,
-    
+    private cashierService: CashierService,
   ) {
     super();
   }
@@ -194,23 +195,27 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
     );
     this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
+
     this.ECRNoService.getECRNo().subscribe(
       (data) => (this.ECRNoOptions = data),
     );
+
     this.tls55070Service.getLogoHosOptions()
       .subscribe(({ logoOptions, hosOptions }) => {
         this.logoOptions = logoOptions;
         this.hosOptions  = hosOptions;
       });
+
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
         res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         })) || [];
     });
-       this.cashierService.getCashierOptions().subscribe((res) => {
+
+    this.cashierService.getCashierOptions().subscribe((res) => {
       this.cashierOptions =
         res?.map((x: any) => ({
           label: x.label,
@@ -220,168 +225,169 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  fetchTLS55070 = (evt: LazyLoadEvent) => {
-    const raw: any = this.queryForm.getRawValue();
-    const pageSize = Number.isFinite(evt?.pageSize)
-      ? Number(evt.pageSize)
-      : Number(raw?.pageSize) || 20;
-    const pageIndex = Number.isFinite(evt?.pageIndex)
-      ? Number(evt.pageIndex)
-      : Number(raw?.pageIndex) || 1;
+ fetchTLS55070 = (evt: LazyLoadEvent) => {
+  const raw: any = this.queryForm.getRawValue();
+  const pageSize = Number.isFinite(evt?.pageSize)
+    ? Number(evt.pageSize)
+    : Number(raw?.pageSize) || 20;
+  const pageIndex = Number.isFinite(evt?.pageIndex)
+    ? Number(evt?.pageIndex)
+    : Number(raw?.pageIndex) || 1;
 
-    const uiSort = this.ensureGroupFirst(
-      Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
-        ? (evt as any).SortBy
-        : Array.isArray(raw?.SortBy) && raw.SortBy.length
-          ? raw.SortBy
-          : this.defaultSort,
-    );
-    const apiSort = this.toApiSort(uiSort);
-
-    const payload = this.buildPayload({
-      ...raw,
-      pageSize,
-      pageIndex,
-      SortBy: apiSort,
-    });
-
-    return this.tls55070Service.queryTLS55070(payload).pipe(
-      map((res: any) => {
-        const wrappers = Array.isArray(res?.Data)
-          ? res.Data
-          : res?.Data
-            ? [res.Data]
-            : [];
-        const { rows, allSubtotals, externalTotals, totalRecords } =
-          this.unpackResponse(wrappers);
-
-        const ended = new Set<string>();
-        for (let i = 0; i < rows.length - 1; i++) {
-          const g1 = rows[i][this.groupByField];
-          const g2 = rows[i + 1][this.groupByField];
-          if (g1 !== g2) ended.add(g1);
-        }
-        const last = rows[rows.length - 1];
-        const lastKey = last?.[this.groupByField];
-        const totalPage =
-          Number(
-            res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1)),
-          ) || 0;
-        const hasNext = totalPage
-          ? pageIndex < totalPage
-          : pageIndex * pageSize < totalRecords;
-        if (!hasNext && lastKey) ended.add(lastKey);
-
-        const externalSubtotals: Record<string, Record<string, number>> = {};
-        ended.forEach((k) => {
-          if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
-        });
-
-        this.allSubtotals = allSubtotals;
-        this.visibleSubtotals = externalSubtotals;
-        this.detailTotals = externalTotals;
-
-        return { rows, totalRecords, externalTotals, externalSubtotals };
-      }),
-      catchError(() =>
-        of({
-          rows: [],
-          totalRecords: 0,
-          externalTotals: {},
-          externalSubtotals: {},
-        }),
-      ),
-    );
-  };
-
-  onSubmit(form: FormGroup): void {
-    this.loading = true;
-    const raw: any = { ...form.getRawValue() };
-    const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
-    const pageIndex = Number.isFinite(raw?.pageIndex)
-      ? Number(raw.pageIndex)
-      : 1;
-
-    const uiSortBy: any[] = this.ensureGroupFirst(
-      Array.isArray(raw?.SortBy) && raw.SortBy.length
+  const uiSort = this.ensureGroupFirst(
+    Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+      ? (evt as any).SortBy
+      : Array.isArray(raw?.SortBy) && raw.SortBy.length
         ? raw.SortBy
-        : this.sortMeta?.length
-          ? this.sortMeta
-          : this.defaultSort,
-    ).map((s) => ({ ...s }));
+        : this.defaultSort,
+  );
+  const apiSort = this.toApiSort(uiSort);
 
-    const payload = this.buildPayload({
-      ...raw,
-      pageSize,
-      pageIndex,
-      SortBy: this.toApiSort(uiSortBy),
+  const payload = this.buildPayload({
+    ...raw,
+    pageSize,
+    pageIndex,
+    SortBy: apiSort,
+  });
+
+  return this.tls55070Service.queryTLS55070(payload).pipe(
+    map((res: any) => {
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+        this.unpackResponse(wrappers);
+
+      // ✅ 優先採用後端回傳的 TotalCount，用於切分頁
+      const apiTotal = Number(res?.TotalCount);
+      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+
+      const ended = new Set<string>();
+      for (let i = 0; i < rows.length - 1; i++) {
+        const g1 = rows[i][this.groupByField];
+        const g2 = rows[i + 1][this.groupByField];
+        if (g1 !== g2) ended.add(g1);
+      }
+      const last = rows[rows.length - 1];
+      const lastKey = last?.[this.groupByField];
+      const totalPage =
+        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+      if (!hasNext && lastKey) ended.add(lastKey);
+
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      ended.forEach((k) => {
+        if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
+      });
+
+      this.allSubtotals = allSubtotals;
+      this.visibleSubtotals = externalSubtotals;
+      this.detailTotals = externalTotals;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    }),
+    catchError(() =>
+      of({
+        rows: [],
+        totalRecords: 0,
+        externalTotals: {},
+        externalSubtotals: {},
+      }),
+    ),
+  );
+};
+
+
+onSubmit(form: FormGroup): void {
+  this.loading = true;
+  const raw: any = { ...form.getRawValue() };
+  const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
+  const pageIndex = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+
+  const uiSortBy: any[] = this.ensureGroupFirst(
+    Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy
+      : this.sortMeta?.length ? this.sortMeta
+      : this.defaultSort,
+  ).map((s) => ({ ...s }));
+
+  const payload = this.buildPayload({
+    ...raw,
+    pageSize,
+    pageIndex,
+    SortBy: this.toApiSort(uiSortBy),
+  });
+  this.historyRequestBody = { ...payload };
+
+  this.tls55070Service
+    .queryTLS55070(payload)
+    .pipe(
+      timeout(60_000),
+      finalize(() => (this.loading = false)),
+      catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
+    )
+    .subscribe((res: any) => {
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+        this.unpackResponse(wrappers);
+
+      // ✅ 優先採用後端回傳的 TotalCount
+      const apiTotal = Number(res?.TotalCount);
+      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+
+      const ended = new Set<string>();
+      for (let i = 0; i < rows.length - 1; i++) {
+        const g1 = rows[i][this.groupByField];
+        const g2 = rows[i + 1][this.groupByField];
+        if (g1 !== g2) ended.add(g1);
+      }
+
+      const totalPage =
+        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+      const lastKey = rows[rows.length - 1]?.[this.groupByField];
+      if (!hasNext && lastKey) ended.add(lastKey);
+
+      const vis: Record<string, Record<string, number>> = {};
+      ended.forEach((k) => {
+        if (allSubtotals[k]) vis[k] = allSubtotals[k];
+      });
+
+      this.data = rows;
+      this.totalRecords = totalRecords;          // ← 這行會讓 Table2 依 TotalCount 切分頁
+      this.allSubtotals = allSubtotals;
+      this.visibleSubtotals = vis;
+      this.detailTotals = externalTotals;
     });
-    this.historyRequestBody = { ...payload };
+}
 
+  // === 匯出 Excel ===
+  onExportExcel() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoadingExcel = true;
     this.tls55070Service
-      .queryTLS55070(payload)
-      .pipe(
-        timeout(60_000),
-        finalize(() => (this.loading = false)),
-        catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
-      )
-      .subscribe((res: any) => {
-        const wrappers = Array.isArray(res?.Data)
-          ? res.Data
-          : res?.Data
-            ? [res.Data]
-            : [];
-        const { rows, allSubtotals, externalTotals, totalRecords } =
-          this.unpackResponse(wrappers);
-
-        const ended = new Set<string>();
-        for (let i = 0; i < rows.length - 1; i++) {
-          const g1 = rows[i][this.groupByField];
-          const g2 = rows[i + 1][this.groupByField];
-          if (g1 !== g2) ended.add(g1);
-        }
-
-        const totalPage =
-          Number(
-            res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1)),
-          ) || 0;
-        const hasNext = totalPage
-          ? pageIndex < totalPage
-          : pageIndex * pageSize < totalRecords;
-        const lastKey = rows[rows.length - 1]?.[this.groupByField];
-        if (!hasNext && lastKey) ended.add(lastKey);
-
-        const vis: Record<string, Record<string, number>> = {};
-        ended.forEach((k) => {
-          if (allSubtotals[k]) vis[k] = allSubtotals[k];
-        });
-
-        this.data = rows;
-        this.totalRecords = totalRecords;
-        this.allSubtotals = allSubtotals;
-        this.visibleSubtotals = vis;
-        this.detailTotals = externalTotals;
+      .exportTLS55070Excel(this.historyRequestBody) // <- 直接送清理後的查詢條件
+      .pipe(finalize(() => (this.btnLoadingExcel = false)))
+      .subscribe({
+        next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.xlsx'),
       });
   }
 
+  // === 匯出 PDF ===
   onExportPDF() {
     if (!this.historyRequestBody) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
-    this.btnLoading = true;
-    // ⚠️ 匯出沿用查詢 payload，但 Service 會只移除 OrderBy/Offset
+    this.btnLoadingPDF = true;
     this.tls55070Service
-      .exportTLS55070PDF(
-        this.historyRequestBody,
-        'TLS55070',
-        'TLS55070 銷售明細報表',
-      )
-      .pipe(finalize(() => (this.btnLoading = false)))
+      .exportTLS55070PDF(this.historyRequestBody) // <- 直接送清理後的查詢條件
+      .pipe(finalize(() => (this.btnLoadingPDF = false)))
       .subscribe({
         next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.pdf'),
       });
   }
+
 
   // ==== helpers ====
   private buildPayload(raw: any) {
@@ -516,9 +522,9 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
     return Number(val ?? 0).toLocaleString('en-US');
   }
 
-  private handleFileExport(response: HttpResponse<Blob>, ext: string): void {
+  private handleFileExport(response: HttpResponse<Blob>, defExt: string): void {
     const cd = response.headers.get('Content-Disposition');
-    const name = this.getFilenameFromHeader(cd, ext);
+    const name = this.getFilenameFromHeader(cd, defExt);
     const blob = response.body;
     if (blob && blob.size > 0) {
       const url = window.URL.createObjectURL(blob);
@@ -530,29 +536,22 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
-      this.messageService?.warnBubble?.(
-        '沒有找到符合條件的資料，無法生成報表。',
-      );
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
     }
   }
-  private getFilenameFromHeader(cd: string | null, def: string): string {
-    if (!cd) return `download${def}`;
+  private getFilenameFromHeader(cd: string | null, defExt: string): string {
+    const def = `download${defExt}`;
+    if (!cd) return def;
     const star = /filename\*=([^;]+)/.exec(cd);
     if (star?.[1]) {
-      try {
-        return decodeURIComponent(star[1].replace(/^UTF-8''/, ''));
-      } catch {
-        return star[1];
-      }
+      try { return decodeURIComponent(star[1].replace(/^UTF-8''/, '')); }
+      catch { return star[1]; }
     }
     const m = /filename="([^"]+)"/.exec(cd);
     if (m?.[1]) {
-      try {
-        return decodeURIComponent(m[1].replace(/\+/g, ' '));
-      } catch {
-        return m[1];
-      }
+      try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); }
+      catch { return m[1]; }
     }
-    return `download${def}`;
+    return def;
   }
 }

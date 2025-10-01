@@ -122,9 +122,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.virtualData = Array(0).fill(null);
       this.totalRecords = 0;
     }
-    if (changes['lastQueryBody'] && this.lastQueryBody) {
-      this.dt.multiSortMeta = this.lastQueryBody?.SortBy;
-    }
   }
 
   trackByFn(index: number, item: any) {
@@ -159,13 +156,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       return;
     }
     this.isLoading = true;
-    this.lastQueryBody = {
+    const body = {
       ...this.lastQueryBody,
       pageIndex: Math.floor(this.data.length / 30) + 1,
       pageSize: 30,
       SortBy: this.dt.multiSortMeta
-    }
-    const body = { ...this.lastQueryBody };
+    };
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.data = [...this.data, ...res.Data];
@@ -178,19 +174,34 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     });
   }
-  // 新增 onSort 方法
   onSort(event: any) {
-    // 檢查是否有 queryFunction
+    console.log('🚨 DEBUG - onSort event:', event);
+
+    // 1. 核心修正：確保單點擊只保留單一排序
+    // PrimeNG 在 sortMode="multiple" 時，event.multisortmeta 包含所有排序。
+    // 如果我們只想要單一排序，就只取最後一個元素作為新的排序狀態。
+    if (event.multiSortMeta && event.multiSortMeta.length > 0) {
+      // 取得最新點擊的排序狀態
+      const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
+
+      // 強制將 multiSortMeta 設定為只有最新的這一個排序
+      this.dt.multiSortMeta = [lastSort];
+    }
+
+    // 檢查是否有 queryFunction (省略部分邏輯，確保程式碼連貫)
     if (!this.queryFunction || !this.lastQueryBody || this.data.length < 30) {
       return;
     }
+
     // 3. 準備查詢參數
     const body = {
       ...this.lastQueryBody,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
+      pageSize: 30,
+      SortBy: this.dt.multiSortMeta // 這裡現在只包含最新的單一排序
     };
 
-    // 4. 呼叫 API 重新取得資料
+    // 4. 呼叫 API 重新取得資料 (後續邏輯不變)
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data) {
         // 5. API 成功後，更新資料和狀態

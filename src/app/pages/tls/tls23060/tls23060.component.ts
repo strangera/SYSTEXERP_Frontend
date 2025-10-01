@@ -196,7 +196,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23060', 'tls/tls23060', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23060', 'tls/tls23060cru', this.queryForm, (form) => this.onSubmit(form));
     this.sortMeta = this.defaultSort.map(s => ({ ...s }));
 
 
@@ -505,7 +505,7 @@ fetchTLS23060 = (evt: LazyLoadEvent) => {
 
   // 欄位
   columns = [
-    { field: 'TXN_Date', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v)  },
+    { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDateTime(v)  },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
