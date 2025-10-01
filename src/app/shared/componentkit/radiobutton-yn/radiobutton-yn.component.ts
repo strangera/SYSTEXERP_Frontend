@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { NgIf, NgFor, NgClass } from '@angular/common';
@@ -8,6 +8,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
 @Component({
   selector: 'app-radiobutton-yn',
   templateUrl: './radiobutton-yn.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     NgIf,

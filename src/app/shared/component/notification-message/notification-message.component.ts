@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { NotificationService } from './notification.service';
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -11,6 +11,7 @@ import { DialogModule } from 'primeng/dialog';
   selector: 'app-notification-message',
   templateUrl: './notification-message.component.html',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor]
 })
 export class NotificationMessageComponent implements OnInit {

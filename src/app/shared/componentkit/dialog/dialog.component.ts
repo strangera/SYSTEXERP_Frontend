@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonComponent } from '../button/button.component';
@@ -9,6 +9,7 @@ import { NgIf } from '@angular/common';
   templateUrl: './dialog.component.html',
   styleUrl: './dialog.component.scss',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DialogModule, PrimeTemplate, ButtonComponent, NgIf]
 })
 export class DialogComponent {

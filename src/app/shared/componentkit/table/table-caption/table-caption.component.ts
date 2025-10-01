@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { ButtonModule } from 'primeng/button';
@@ -19,6 +19,7 @@ import { Observable } from 'rxjs';
   selector: 'app-table-caption',
   standalone: true,
   animations: [toggleButtons],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MultiSelectModule,
     ButtonModule,

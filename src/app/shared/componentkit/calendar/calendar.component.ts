@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } from 'primeng/calendar';
@@ -10,6 +10,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   selector: 'app-calendar',
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })

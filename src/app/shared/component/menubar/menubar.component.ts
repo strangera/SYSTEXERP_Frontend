@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { AuthService } from '../../../service/system/auth.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
@@ -19,6 +19,7 @@ interface Favorite {
   templateUrl: './menubar.component.html',
   styleUrl: './menubar.component.scss',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     BreadcrumbModule,
     PrimeTemplate,

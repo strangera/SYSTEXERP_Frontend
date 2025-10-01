@@ -1,5 +1,5 @@
 import { NgClass, NgIf } from '@angular/common';
-import { Component, ElementRef, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
@@ -9,6 +9,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
   selector: 'app-multi-select',
   templateUrl: './multi-select.component.html',
   styleUrls: ['./multi-select.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     NgIf,

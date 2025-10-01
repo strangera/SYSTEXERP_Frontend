@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { v4 as uuidv4 } from 'uuid';
-import { AfterContentInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, AfterContentInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableColumnReorderEvent } from 'primeng/table';
 import { TableUtilityService } from './table-edit-utility.service';
 import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
@@ -28,6 +28,7 @@ import { CalendarModule } from 'primeng/calendar';
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
   styleUrl: './table-edit.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     CommonModule,

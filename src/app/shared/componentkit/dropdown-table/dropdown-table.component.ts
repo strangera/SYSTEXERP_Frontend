@@ -21,7 +21,6 @@ export interface FieldsConfig {
 @Component({
   selector: 'app-dropdown-table',
   templateUrl: './dropdown-table.component.html',
-  styleUrl: './dropdown-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent]
@@ -118,7 +117,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     return '';
   }
 
-  onSelectionChange(event: TableRowSelectEvent) {    
+  onSelectionChange(event: TableRowSelectEvent) {
     this.selectedItems = event.data;
     this.select.emit(event.data);
     this.suggestions = [...this.dialogData]
