@@ -210,18 +210,25 @@
 
       //  只對特殊欄位設定最小寬度
       &:first-child {
-        width: 60px; // 序號欄
-        min-width: 60px;
+        width: 40px; // 序號欄
+        min-width: 40px;
+        padding: 0.3rem 0.2rem !important;
       }
 
       &:has(.p-checkbox) {
-        width: 60px; // 核取方塊欄
-        min-width: 60px;
+        width: 45px; // 核取方塊欄
+        min-width: 45px;
+        padding: 0.3rem 0.2rem !important;
+
+        // 讓標題文字可以換行
+        white-space: pre-line !important;
+        line-height: 1.2 !important;
+        font-size: 0.85rem !important;
       }
 
       &:last-child {
-        width: 100px; // 操作欄
-        min-width: 100px;
+        width: 80px; // 操作欄
+        min-width: 80px;
       }
     }
 
@@ -299,7 +306,8 @@
 
       //  只對特殊欄位設定寬度
       &:first-child {
-        width: 60px; // 序號欄
+        width: 40px; // 序號欄
+        padding: 0.3rem 0.2rem !important;
       }
 
       &:has(.p-dropdown) {
@@ -309,7 +317,7 @@
       }
 
       &:last-child {
-        width: 100px; // 操作欄
+          width: 80px; // 操作欄
       }
     }
 
@@ -351,12 +359,12 @@
     .edit-buttons,
     .detail-edit-buttons {
       .p-button {
-        width: 2rem;
-        height: 2rem;
+        width: 1.5rem;
+        height: 1.5rem;
         background-color: var(--icon-button-bg);
         border-radius: 5px; // 方形按鈕
         border: var(--icon-button-border);
-
+        padding: 0 !important;
         &:hover {
           background-color: rgba(0, 123, 255, 0.2);
         }
@@ -371,10 +379,34 @@
 
         span.p-button-icon.pi {
           color: var(--icon-button-span);
+          font-size: 0.8rem !important;
         }
       }
     }
+    // td button[type="button"]:not(.p-button-rounded),
+    // td .p-button:not(.p-button-rounded):not(.p-row-toggler) {
+    //   width: 1.5rem !important;
+    //   height: 1.5rem !important;
+    //   padding: 0.2rem !important;
+    //   min-width: 1.5rem !important;
 
+    //   .p-button-icon {
+    //     font-size: 0.8rem !important;
+    //     margin: 0 !important;
+    //   }
+
+    //   // 如果按鈕只有圖示，隱藏文字
+    //   &:has(.p-button-icon:only-child) .p-button-label,
+    //   .p-button-label:empty {
+    //     display: none !important;
+    //   }
+
+    //   // 如果有文字，縮小字體
+    //   .p-button-label {
+    //     font-size: 0.75rem !important;
+    //     padding: 0 0.2rem !important;
+    //   }
+    // }
     // 編輯行樣式
     .editing-row {
       td {

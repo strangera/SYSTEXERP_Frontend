@@ -166,7 +166,6 @@ export class FareDataService {
       tpy_amount: item.tpy_amount,
       tpy_totalamt: item.tpy_totalamt,
       tpy_rate: item.tpy_rate,
-      tpy_1stamt: item.tpy_1stamt,
       down_payment: item.down_payment,
       period_nos: item.period_nos,
       day_account: item.day_account,
@@ -186,7 +185,10 @@ export class FareDataService {
       pay_no: item.pay_no,
       is_commonly_used: item.is_commonly_used,
       cap_tax_type: item.cap_tax_type,
-      acc_no: item.acc_no
+      acc_no: item.acc_no,
+      calc_type: item.calc_type,
+      rent_plus_rate: item.rent_plus_rate,
+      over_base_rate: item.over_base_rate,
     };
 
     return cleanedItem;
@@ -228,8 +230,15 @@ export class FareDataService {
     const editableFields = [
       'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
       'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
-      'down_payment', 'period_nos', 'tpy_1stamt', 'gui_flag',
-      'tpy_rate', 'org_id'
+      'down_payment', 'period_nos', 'gui_flag',
+      'tpy_rate', 'org_id',
+      'cap_saletype',
+      'edc_bank',
+      'instms_type',
+      'pay_no',
+      'calc_type',
+      'rent_plus_rate',
+      'over_base_rate'
     ];
 
     for (const field of editableFields) {
@@ -240,10 +249,10 @@ export class FareDataService {
       const normalizedOriginal = this.normalizeValue(originalValue);
 
       if (normalizedCurrent !== normalizedOriginal) {
-        console.log(`🔍 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
-          原始: originalValue,
-          目前: currentValue
-        });
+        // console.log(`🔍 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
+        //   原始: originalValue,
+        //   目前: currentValue
+        // });
         return true;
       }
     }

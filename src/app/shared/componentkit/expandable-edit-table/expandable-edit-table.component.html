@@ -207,7 +207,7 @@
                         [options]="formField.options"
                         optionLabel="label"
                         optionValue="value"
-                        [showClear]="true"
+                        [showClear]="false"
                         [style]="{ width: '100%', 'min-width': '200px' }"
                       ></p-dropdown>
                     </div>
@@ -256,7 +256,7 @@
                 (keydown)="onFieldKeyDown($event, rowData, col, ri)"
                 [style]="{ width: '100%' }"
                 appendTo="body"
-                [showClear]="true"
+                [showClear]="false"
                 optionLabel="label"
                 optionValue="value"
                 [filter]="true"
@@ -314,7 +314,7 @@
                   pButton
                   pRipple
                   type="button"
-                  [label]="col.buttonLabel || '按鈕'"
+                  [label]="col.buttonLabel ?? ''"
                   [icon]="col.buttonIcon || ''"
                   [ngClass]="col.buttonClass || 'p-button-sm p-button-info'"
                   [pTooltip]="col.buttonTooltip || ''"
@@ -364,7 +364,7 @@
                   pButton
                   pRipple
                   type="button"
-                  [label]="col.buttonLabel || '按鈕'"
+                  [label]="col.buttonLabel ?? ''"
                   [icon]="col.buttonIcon || ''"
                   [ngClass]="col.buttonClass || 'p-button-sm p-button-info'"
                   [pTooltip]="col.buttonTooltip || ''"
@@ -669,7 +669,7 @@
                           "
                           [style]="{ width: '100%' }"
                           appendTo="body"
-                          [showClear]="true"
+                          [showClear]="false"
                           optionLabel="label"
                           optionValue="value"
                           [filter]="true"
@@ -802,7 +802,7 @@
                             pButton
                             pRipple
                             type="button"
-                            [label]="col.buttonLabel || '按鈕'"
+                            [label]="col.buttonLabel ?? ''"
                             [icon]="col.buttonIcon || ''"
                             [ngClass]="
                               col.buttonClass || 'p-button-sm p-button-info'

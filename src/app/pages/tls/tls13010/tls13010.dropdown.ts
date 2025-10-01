@@ -20,7 +20,12 @@ import {
   CAG_TAXTYPE_OPTIONS,
   TOTAL_AMT_UNIT_OPTIONS,
   TOTAL_AMT_VENDOR_UNIT_OPTIONS,
-  APPLY_STATUS_OPTIONS
+  APPLY_STATUS_OPTIONS,
+  CAP_SALE_TYPE_OPTIONS,
+  INSTMS_TYPE_OPTIONS,
+  EDC_BANK_OPTIONS,
+  CALC_TYPE_OPTIONS,
+  CAP_SALE_TYPE_OPTIONS_E
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -28,6 +33,7 @@ import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdow
 import { BussclassDropdownService } from '../../../service/api/dropdownservice/tltbussclass-options.service';
 import { VendorCategoryOptionsService } from './../../../service/api/dropdownservice/vendor-category-options.service';
 import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // ========== 介面定義 ==========
 export interface DropdownOption {
@@ -63,6 +69,11 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   applyStatusOptions: convertToDropdownOptions(APPLY_STATUS_OPTIONS),
   total_amt_unit: convertToDropdownOptions(TOTAL_AMT_UNIT_OPTIONS), //目標營業額單位(業主)
   total_amt_vendor_unit: convertToDropdownOptions(TOTAL_AMT_VENDOR_UNIT_OPTIONS),  //目標營業額單位(廠商)
+  capSaletypeOptions: convertToDropdownOptions(CAP_SALE_TYPE_OPTIONS),  //銷售類型D
+  capSaletypeOptionsE: convertToDropdownOptions(CAP_SALE_TYPE_OPTIONS_E),  //銷售類型E
+  instmsTypeOptions: convertToDropdownOptions(INSTMS_TYPE_OPTIONS),
+  edcBankOptions: convertToDropdownOptions(EDC_BANK_OPTIONS),
+  calcTypeOptions: convertToDropdownOptions(CALC_TYPE_OPTIONS),
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],
   depositPayment: [
     { value: '1', label: '現金' },
@@ -94,6 +105,7 @@ export class TLS13010DropdownService {
   public discountTypeOptions: DropdownOption[] = [];
   public pos2013Options: DropdownOption[] = [];
   public negotiatorOptions: DropdownOption[] = [];
+  public payNoOptions: DropdownOption[] = [];
 
   // 載入狀態
   private loadingStates = {
@@ -103,7 +115,8 @@ export class TLS13010DropdownService {
     location: false,
     discount: false,
     pos2013: false,
-    negotiator: false
+    negotiator: false,
+    payNo: false
   };
 
   constructor(
@@ -112,7 +125,8 @@ export class TLS13010DropdownService {
     private bussclassService: BussclassDropdownService,
     private locationService: LocationOptionsService,
     private vendorCategoryService: VendorCategoryOptionsService,
-    private negotiatorService: NegotiatorOptionsService
+    private negotiatorService: NegotiatorOptionsService,
+
   ) {
     this.initAllOptions();
   }
@@ -126,6 +140,7 @@ export class TLS13010DropdownService {
     this.initDiscountOptions();
     this.initPOS2013Options();
     this.initNegotiatorOptions();
+    this.initPayNoOptions();
   }
 
   /**
@@ -343,10 +358,37 @@ export class TLS13010DropdownService {
   }
 
   /**
+    * 載入支付編號選項 (POS1006)
+    */
+  private initPayNoOptions(): void {
+    if (this.loadingStates.payNo) return;
+
+    this.negotiatorService.getPOS1006Options().subscribe({
+      next: (response: any[]) => {
+        this.payNoOptions = response;
+        this.loadingStates.payNo = true;
+        console.log('支付編號選項載入完成:', this.payNoOptions.length);
+      },
+      error: (error) => {
+        console.error('載入支付編號選項失敗:', error);
+        this.payNoOptions = [];
+        this.loadingStates.payNo = true;
+      }
+    });
+  }
+
+  /**
    * 取得洽談者選項的公開方法
    */
   public getNegotiatorOptionsData(): DropdownOption[] {
     return this.negotiatorOptions;
+  }
+
+  /**
+  * 取得支付編號選項的公開方法
+  */
+  public getPayNoOptions(): DropdownOption[] {
+    return this.payNoOptions;
   }
 
   /**
@@ -381,7 +423,8 @@ export class TLS13010DropdownService {
       location: false,
       discount: false,
       pos2013: false,
-      negotiator: false
+      negotiator: false,
+      payNo: false
     };
     this.initAllOptions();
   }

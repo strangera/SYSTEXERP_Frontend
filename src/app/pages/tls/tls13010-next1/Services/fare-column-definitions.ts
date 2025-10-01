@@ -229,11 +229,12 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
+        // buttonLabel: '',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-
+        style: 'width: 50px;'
       },
       {
         field: 'cap_item',
@@ -382,7 +383,7 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
@@ -392,7 +393,7 @@ export class FareColumnDefinitions {
         field: 'auto_calc',
         header: '自動計算',
         type: 'button',
-        buttonLabel: '自動計算',
+        // buttonLabel: '自動計算',
         buttonIcon: 'pi pi-calculator',
         buttonClass: 'p-button-sm p-button-info',
         buttonTooltip: '根據總金額自動計算',
@@ -563,7 +564,7 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
@@ -581,7 +582,68 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-
+        style: 'white-space: normal; word-break: break-word; line-height: 1.3; max-width: 150px; min-width: 100px;'
+      },
+      {
+        field: 'cap_saletype',
+        header: '銷售類型',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptions,
+      },
+      {
+        field: 'instms_type',
+        header: '期數',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.instmsTypeOptions,
+      },
+      {
+        field: 'edc_bank',
+        header: '收單行',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.edcBankOptions,
+      },
+      {
+        field: 'pay_no',
+        header: '支付編號',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: [],
+      },
+      {
+        field: 'calc_type',
+        header: '券類計算方式',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.calcTypeOptions,
+      },
+      {
+        field: 'over_base_rate',
+        header: '超過基準比率',
+        type: 'number',
+        editable: true,
+        autoWidth: true,
+      },
+      {
+        field: 'rent_plus_rate',
+        header: '加抽比率',
+        type: 'number',
+        editable: true,
+        autoWidth: true,
+      },
+      {
+        field: 'down_payment',
+        header: '超過基準金額',
+        type: 'number',
+        editable: true,
+        autoWidth: true,
       },
       {
         field: 'tpy_bdate',
@@ -590,6 +652,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         dateFormat: 'year-month',
+        style: 'min-width: 120px; width: 140px;',
         required: true,
 
         defaultValueFunction: () => {
@@ -607,7 +670,7 @@ export class FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
-
+        style: 'min-width: 120px; width: 140px;',
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -634,8 +697,7 @@ export class FareColumnDefinitions {
         required: true,
         allowDecimal: true,  // 是否允許小數點
         decimalPlaces: 3,
-
-
+        style: 'min-width: 50px; width: 50px;',
       },
       {
         field: 'org_id',
@@ -680,7 +742,7 @@ export class FareColumnDefinitions {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
@@ -732,6 +794,14 @@ export class FareColumnDefinitions {
         }
       },
       {
+        field: 'cap_saletype',
+        header: '銷售類型',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptionsE,
+      },
+      {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
@@ -750,6 +820,14 @@ export class FareColumnDefinitions {
         allowDecimal: true,
         decimalPlaces: 3,
 
+      },
+      {
+        field: 'pay_no',
+        header: '支付編號',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: [],
       },
       {
         field: 'org_id',
@@ -783,6 +861,18 @@ export class FareColumnDefinitions {
     return columns.map(col => {
       if (col.field === 'org_id') {
         return { ...col, options: [...orgOptions] };
+      }
+      return col;
+    });
+  }
+
+  /**
+ * 更新欄位定義中的支付編號選項
+ */
+  static updatePayNoOptionsInColumns(columns: ColumnDef[], payNoOptions: any[]): ColumnDef[] {
+    return columns.map(col => {
+      if (col.field === 'pay_no') {
+        return { ...col, options: [...payNoOptions] };
       }
       return col;
     });

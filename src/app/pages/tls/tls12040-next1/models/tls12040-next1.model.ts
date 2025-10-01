@@ -24,7 +24,6 @@ export interface TLS12040FareItem {
   tpy_amount?: number | null;    // 金額
   tpy_totalamt?: number | null;  // 總金額
   tpy_rate?: number | null;      // 比率
-  tpy_1stamt?: number | null;    // 首期金額
 
   // C類型專用欄位 (平均分攤)
   down_payment?: number | null;  // 頭期款
