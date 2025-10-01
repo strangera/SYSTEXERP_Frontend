@@ -68,7 +68,7 @@
             [submitted]="submitted" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" />
+          <app-button btnType="clear" [form]="queryForm" />
           <app-button btnType="query" [loading]="loading" />
         </div>
       </form>

@@ -12,7 +12,7 @@ export const columns: EditColumn[] = [
   { field: 'CAT_SName', header: '小分類名稱' },
   { field: 'PLU_OrderPrcRate', header: '進價折數' },
   { field: 'PLU_OrderPrc', header: '調整前進價', groupField: 'OrderPrc' },
-  { field: 'MAM_OrderPrc', header: '調整後進價', type: 'inputNumber', groupField: 'OrderPrc', width: '100px', maxLength: 8, validate: [validateRequired, validateMinNumber(1)] },
+  { field: 'MAM_OrderPrc', header: '調整後進價', type: 'inputNumber', groupField: 'OrderPrc', width: '100px', maxLength: 8, minFractionDigits: 2, maxFractionDigits: 2, validate: [validateRequired, validateMinNumber(1)] },
   { field: 'PLU_SalePrc', header: '調整前售價', groupField: 'SalePrc' },
   { field: 'MAM_UnitPrc', header: '調整後售價', type: 'inputNumber', groupField: 'SalePrc', width: '100px', maxLength: 8, validate: [validateRequired, validateMinNumber(1)] },
   { field: 'MAD_Remark', header: '單項說明', type: 'input', width: '120px', maxLength: 200 }
