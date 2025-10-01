@@ -18,6 +18,8 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { YearMonthComponent } from './query-year-month/query-year-month.component';
 
+
+
 //1.1.1.2 發票基本資料維護
 @Component({
   selector: 'app-fin11020',
@@ -27,9 +29,25 @@ import { YearMonthComponent } from './query-year-month/query-year-month.componen
   imports: [YearMonthComponent, InputGroupModule, InputGroupAddonModule, MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> implements OnInit {
+  // 輔助方法：計算當前雙月週期的起始 YYYYMM
+  private getCurrentBiMonthStart(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1; // 1-indexed month (1-12)
+
+    // 根據您的規則：1,2月 -> 01; 3,4月 -> 03; ...
+    // Math.floor((month - 1) / 2) * 2 + 1 會得出 1, 3, 5, 7, 9, 11
+    const biMonthStart = Math.floor((month - 1) / 2) * 2 + 1;
+
+    const yearString = year.toString();
+    const monthString = biMonthStart.toString().padStart(2, '0');
+
+    return yearString + monthString;
+  }
+  private initialYYMM = this.getCurrentBiMonthStart();
   queryForm = this.formBuilder.group({
-    GUI_YYMM_start: ['202501', [Validators.required]], // 發票年月
-    GUI_YYMM_end: ['202501', [Validators.required]], // 發票年月
+    GUI_YYMM_start: [this.initialYYMM, [Validators.required]], // 發票年月
+    GUI_YYMM_end: [this.initialYYMM, [Validators.required]], // 發票年月
     GUI_Track: ['', [this.validationService.guiTrackValidator, Validators.maxLength(2), Validators.minLength(2)]], // 字軌
     GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
     GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
