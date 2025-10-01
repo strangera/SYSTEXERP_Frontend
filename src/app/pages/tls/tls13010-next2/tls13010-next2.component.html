@@ -183,30 +183,33 @@
   [closable]="false"
   [visible]="showConfirmDialog"
   [style]="{ width: '450px' }"
+  styleClass="confirm-dialog"
 >
   <div class="p-4">
-    <p class="mb-3">
-      <i class="pi pi-exclamation-triangle text-orange-500 mr-2"></i>
-      確定要提交契約資料嗎？提交後將無法修改。
-    </p>
+    <div class="flex align-items-center mb-3">
+      <i
+        class="pi pi-exclamation-triangle text-orange-500 mr-3"
+        style="font-size: 1.5rem"
+      ></i>
+      <span class="text-lg">確定要提交契約資料嗎？</span>
+    </div>
+    <p class="ml-6 text-gray-600">提交後將無法修改。</p>
   </div>
 
   <ng-template pTemplate="footer">
-    <button
-      type="button"
-      pButton
-      label="取消"
-      icon="pi pi-times"
-      class="p-button-secondary mr-2"
-      (click)="onConfirmDialogResult(false)"
-    ></button>
-    <button
-      type="button"
-      pButton
-      label="確認提交"
-      icon="pi pi-check"
-      class="p-button-primary"
-      (click)="onConfirmDialogResult(true)"
-    ></button>
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="取消"
+        icon="pi pi-times"
+        styleClass="p-button-secondary"
+        (onClick)="onConfirmDialogResult(false)"
+      ></p-button>
+      <p-button
+        label="確認提交"
+        icon="pi pi-check"
+        styleClass="p-button-primary"
+        (onClick)="onConfirmDialogResult(true)"
+      ></p-button>
+    </div>
   </ng-template>
 </p-dialog>
