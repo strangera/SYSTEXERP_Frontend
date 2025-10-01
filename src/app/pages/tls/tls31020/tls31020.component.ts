@@ -1,6 +1,6 @@
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -16,12 +16,14 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { formatDate } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service } from '@service/api/tls/tls31020.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { CommonModule, DatePipe } from '@angular/common';
+import { TLS26050Service } from '@service/api/tls/tls26050.service';
 
 @Component({
   selector: 'app-tls31020',
@@ -33,8 +35,11 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
+    CommonModule,
     CalendarComponent,
     CalendarRangeQuickComponent,
+    DropdownComponent,
+    InputTextComponent,
     ButtonComponent,
     TableModule,
     RadiobuttonYNComponent,
@@ -67,6 +72,60 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     
     ...createPaginationConfig([{ field: 'tlt_floor', order: 1 }])
   });
+
+  // 日期查詢條件表單
+  dateForm = this.formBuilder.nonNullable.group({
+    // 日期查詢條件（單選報表類型）
+    reportType: ['1'], // 報表類型
+
+    // --- 日報（type 1）使用的單一基準 / 比較日期
+    onedatedd: [yesterday],        // 基準日期 (日)
+
+    // --- 週報（type 2）相關
+    onedateyy: [new Date()],      // 基準年度 (年字串)
+    weeks: [''],                                           // 基準週數 (輸入)
+    startdate: [null as Date | null],           // 基準開始日期 (由週數帶出)
+    enddate: [null as Date | null],             // 基準結束日期 (由週數帶出)
+
+    // --- 月報（type 3）
+    onedatemm: [null],       // 基準年月 (可由 calendar 取值)
+
+    // --- 半年報（type 4）
+    halfyear_onedateyy: [new Date()],
+    halfyear: ['1'],         // 上/下半年
+
+    // --- 年報（type 5）
+    year_onedateyy: [new Date()],
+
+    // --- 區間報（type 6）
+    sad_startdate: [null],
+    sad_enddate: [null],
+
+    // --- 活動區間報（type 7）
+    eventID: [null],
+    event_startdate: [null as Date | null],
+    event_enddate: [null as Date | null],
+  });
+
+  halfyearOptions = [
+    { value: '1', label: '上半年' },
+    { value: '2', label: '下半年' },
+  ];
+
+  EventIDOptions = [
+    { value: '1', label: '活動1', TXN_DateS: null, TXN_DateE: null },
+    { value: '2', label: '活動2', TXN_DateS: null, TXN_DateE: null },
+  ];
+
+  reportTypeOptions = [
+    { value: '1', label: '日營業報表' },
+    { value: '2', label: '週營業報表' },
+    { value: '3', label: '月營業報表' },
+    { value: '4', label: '半年營業報表' },
+    { value: '5', label: '年營業報表' },
+    { value: '6', label: '區間營業報表' },
+  ];
+
   totalRecords = 0;
   data: TLS31020Response[] = [];
   columns: Column[] = [
@@ -136,11 +195,23 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly tls31020Service: Tls31020Service,
-    private readonly httpClient: HttpClient
+    private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
+        private datePipe: DatePipe,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS31020', 'TLS/TLS31020cru', this.queryForm, (frm) => this.onSubmit(frm));
+
+    // 日期表單控制
+    this.onReportTypeChange('1');
+    this.setReadOnlyFields();
+
+    // 監聽 dateForm 的變化，套用日期到 queryForm
+    this.dateForm.valueChanges.subscribe(() => {
+      this.syncDateToQueryForm();
+    });
+
+
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
     })
@@ -307,6 +378,150 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
         }
       });
   }
+
+  // #region 日期選單事件
+    queryWeek(event: string) {
+      const control = this.dateForm.controls['onedateyy'];
+      if (!control.value) return;
+  
+      const payload = {
+        onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
+        weeks: event,
+      };
+  
+      this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
+        this.dateForm.controls['startdate'].setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
+        this.dateForm.controls['enddate'].setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
+      });
+    }
+  
+    onReportTypeChange(event: any) {
+      // 根據報表類型設定欄位驗證
+      const reportType = event;
+  
+      // 清除所有驗證器
+      Object.keys(this.dateForm.controls).forEach(key => {
+        if (key !== 'reportType') {
+          this.dateForm.get(key)?.clearValidators();
+        }
+      });
+  
+      // 根據報表類型設定必要欄位驗證
+      switch (reportType) {
+        case '1': // 日營業報表
+          this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
+          break;
+        case '2': // 週營業報表
+          this.dateForm.get('onedateyy')?.setValidators([Validators.required]);
+          this.dateForm.get('weeks')?.setValidators([Validators.required]);
+          this.dateForm.get('startdate')?.setValidators([Validators.required]);
+          this.dateForm.get('enddate')?.setValidators([Validators.required]);
+          break;
+        case '3': // 月營業報表
+          this.dateForm.get('onedatemm')?.setValidators([Validators.required]);
+          break;
+        case '4': // 半年營業報表
+          this.dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
+          break;
+        case '5': // 年營業報表
+          this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
+          break;
+        case '6': // 區間營業報表
+          this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
+          this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
+          break;
+        case '7': // 活動區間營業報表
+          this.dateForm.get('event_startdate')?.setValidators([Validators.required]);
+          this.dateForm.get('event_enddate')?.setValidators([Validators.required]);
+          break;
+      }
+  
+      // 更新所有欄位驗證狀態
+      Object.keys(this.dateForm.controls).forEach(key => {
+        this.dateForm.get(key)?.updateValueAndValidity();
+      });
+    }
+  
+    setReadOnlyFields() {
+      this.dateForm.controls['startdate'].disable();
+      this.dateForm.controls['enddate'].disable();
+      this.dateForm.controls['event_startdate'].disable();
+      this.dateForm.controls['event_enddate'].disable();
+    }
+  
+    // 活動下拉改變
+    queryEvent(event: any) {
+      console.log(event);
+      console.log(this.EventIDOptions);
+      this.dateForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateS ?? null);
+      this.dateForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateE ?? null);
+    }
+  
+    // #region 同步日期選單內容給表單日期
+    private syncDateToQueryForm() {
+      const reportType = this.dateForm.get('reportType')?.value;
+  
+      let start: Date | null = null;
+      let end: Date | null = null;
+  
+      switch (reportType) {
+        case '1': // 日報
+          start = this.dateForm.get('onedatedd')?.value ?? null;
+          end = start;
+          break;
+  
+        case '2': // 週報
+          start = this.dateForm.get('startdate')?.value ?? null;
+          end = this.dateForm.get('enddate')?.value ?? null;
+          break;
+  
+        case '3': { // 月報 
+          const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
+          if (onedatemm) {
+            start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
+            end = new Date(onedatemm.getFullYear(), onedatemm.getMonth() + 1, 0);
+          }
+          break;
+        }
+  
+        case '4': { // 半年報
+          const dateValue = this.dateForm.get('halfyear_onedateyy')?.value as Date | string;
+          const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+          const half = String(this.dateForm.get('halfyear')?.value); // 確保是字串
+  
+          if (year) {
+            if (half === '1') { // 上半年
+              start = new Date(year, 0, 1);
+              end = new Date(year, 5, 30);
+            } else if (half === '2') { // 下半年
+              start = new Date(year, 6, 1);
+              end = new Date(year, 11, 31);
+            }
+          }
+          break;
+        }
+  
+        case '5': { // 年報
+          const dateValue = this.dateForm.get('year_onedateyy')?.value as Date | string;
+          const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+  
+          if (year) {
+            start = new Date(year, 0, 1);
+            end = new Date(year, 11, 31);
+          }
+          break;
+        }
+  
+        case '6': // 區間報
+          start = this.dateForm.get('sad_startdate')?.value ?? null;
+          end = this.dateForm.get('sad_enddate')?.value ?? null;
+          break;
+      }
+  
+      // 套用到 queryForm
+      if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
+      if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+    }
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

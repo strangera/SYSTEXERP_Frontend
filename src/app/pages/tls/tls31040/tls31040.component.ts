@@ -369,11 +369,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   }
 
   // #region 日期選單事件
-  // onHalfyearChange(value: string) {
-  //   this.dateForm.controls.halfyear.setValue(value);
-  //   this.syncDateToQueryForm();
-  // }
-
   queryWeek(event: string) {
     const control = this.dateForm.controls['onedateyy'];
     if (!control.value) return;
