@@ -83,3 +83,10 @@ export const getCurrentPeriodCode = (() => {
 
   return periodCode;
 })();
+
+// 自動當天00:00:00
+export const todayStart = (() => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+})();
