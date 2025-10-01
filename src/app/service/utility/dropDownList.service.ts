@@ -26,6 +26,8 @@ export interface IDropdownItem {
   items?: IDropdownItem[];
   ECR_TmplNo?: string; // 環境變數編號 模板編號
   ECR_TmplName?: string; // 環境變數編號 模板備註
+  bus_type?: string;
+  bus_type_name?: string;
 }
 export interface ITalentOption extends IDropdownItem {
   tlt_no: string;

@@ -137,15 +137,15 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
 
   updateColumns(sortOrder: string): void {
     const baseColumns: Column[] = [
-      {
-        field: 'TXN_Date',
-        header: '銷售日期',
-        visible: true,
-        format: (v) => formatDate(v, 'yyyy/MM/dd', 'en-US')
-      },
+      // {
+      //   field: 'TXN_Date',
+      //   header: '銷售日期',
+      //   visible: true,
+      //   format: (v) => formatDate(v, 'yyyy/MM/dd', 'en-US')
+      // },
       {
         field: 'BOOK_PayAmt',
-        header: '電腦金額',
+        header: '系統金額',
         visible: true,
         format: formatAmount
       },

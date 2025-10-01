@@ -1,136 +1,71 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { CheckTls55010Data, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-tls55010',
   templateUrl: './tls55010.component.html',
-  styleUrls: ['./tls55010.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
+  imports: [TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
 })
-export class TLS55010Component {
-
-  ProgNo: string = '250026';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
-  queryForm = this.formBuilder.group({
-    issueDate: [new Date(), Validators.required],
+export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    TXN_Date: [null as Date | null, Validators.required],
   });
-
-  // Table data
-  data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
-    // Other data
+  lastQuery: Tls55010DateRequest | null = null;
+  data: CheckTls55010Data[] = [];
+  columns: Column[] = [
+    { field: 'cls_date', header: '交易日期' },
+    { field: 'step_num', header: '檢查步驟' },
+    { field: 'master_key', header: '主鍵值' },
+    { field: 'check_result', header: '結果說明' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'name', header: 'Name', visible: true },
-    { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
-    // Other columns
-  ];
+  cls_date: string | null = null;
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-  ) { }
+    private readonly tls55010Service: Tls55010Service,
+    private readonly datePipe: DatePipe
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize permissions
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS55010', '/tls/tls55010cru');
+    this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
+      this.cls_date = res.Data.CLS_DATE;
+      const closeDate = new Date(res.Data.CLS_DATE);
+      closeDate.setDate(closeDate.getDate() + 1);
+      this.queryForm.patchValue({ TXN_Date: closeDate });
+    });
   }
-
-  canQuery(): boolean {
-    return true;
+  onQuery(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
+      }
+      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+        this.data = res.Data;
+        this.lastQuery = body;
+      });
+    });
   }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  insertLoading = false;
+  onSubmit(lastForm: Tls55010DateRequest | null) {
+    if (!lastForm) {
+      return;
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.tls55010Service.insertTLS55010(lastForm).pipe(untilDestroyed(this), finalize(() => this.insertLoading = false)).subscribe((res) => {
+      this.messageService.successBubble(res.Message);
+    });
   }
 }

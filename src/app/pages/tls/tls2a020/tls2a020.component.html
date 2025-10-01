@@ -30,8 +30,8 @@
           <div class="col-12 lg:col-8">
             <app-radiobutton label="查詢條件" groupname="SortOrder" [control]="queryForm.controls.SortOrder"
               [submitted]="submitted" [options]="[
-                { value: 'ECR', label: '收銀機號' },
-                { value: 'payTool', label: '支付工具' },
+                { value: 'ECR', label: '未審核收銀機號' },
+                { value: 'payTool', label: '未審核支付工具' },
               ]" (valueChange)="queryForm.controls.SortOrder.setValue($event)"></app-radiobutton>
           </div>
         </div>

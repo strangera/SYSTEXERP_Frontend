@@ -16,7 +16,7 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { debounceTime, finalize } from 'rxjs';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { DetailData, QueryTLS57050Request, SummaryData, Tls57050Service } from '@service/api/tls/tls57050.service';
-import { DatePipe, NgIf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -40,7 +40,6 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     ButtonModule,
     InputNumberComponent,
     TableReportComponent,
-    NgIf
   ],
 })
 export class TLS57050Component extends BasicQueryPageComponent<DetailData | SummaryData> implements OnInit {

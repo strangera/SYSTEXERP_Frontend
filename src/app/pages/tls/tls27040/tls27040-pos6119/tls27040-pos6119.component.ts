@@ -38,24 +38,24 @@ export class Tls27040POS6119Component extends BasicQueryPageComponent<POS6119Dat
   @ViewChild('tableTemplate', { static: true }) tableTemplate!: TemplateRef<unknown>;
   @Input() selectedBank!: string;
   queryForm = this.formBuilder.group({
-    ECR_No: ['', [Validators.maxLength(10)]], // ECR編號
-    TXN_No: ['', [Validators.maxLength(8)]], // 交易編號
-    TLT_No: ['', [Validators.maxLength(12)]], // 專櫃編號
+    ECR_No: [null, [Validators.maxLength(10)]], // ECR編號
+    TXN_No: [null, [Validators.maxLength(8)]], // 交易編號
+    TLT_No: [null, [Validators.maxLength(12)]], // 專櫃編號
     CTBC_TxnCodeList: [null], // 銷售狀態
     CTBC_TxnAmt_Start: [null, [Validators.max(9999999999)]], // 交易金額起
     CTBC_TxnAmt_End: [null, [Validators.max(9999999999)]], // 交易金額迄
     CTBC_TxnTime_Start: [null], // 交易時間起
     CTBC_TxnTime_End: [null], // 交易時間迄
-    CTBC_CrdNo: ['', [Validators.maxLength(32)]], // 卡號
-    CTBC_TmID: ['', [Validators.maxLength(8)]], // EDC號碼
+    CTBC_CrdNo: [null, [Validators.maxLength(32)]], // 卡號
+    CTBC_TmID: [null, [Validators.maxLength(8)]], // EDC號碼
     CTBC_Date_Start: [null], // 請款日期起
     CTBC_Date_End: [null], // 請款日期迄
     CTBC_DataTypeList: [null],  // 交易類別 // 中信 資料型態，C=一般交易、I=分期交易、R=紅利交易 // 中信停車場只有一般交易
     CTBC_CheckList: [null], // 輸入狀態
-    CTBC_ApprovalCode: ['', [Validators.maxLength(6)]],  // 核准碼
-    CTBC_TermNoList: [],  // 分期期數 // 中信-停車 無分期
+    CTBC_ApprovalCode: [null, [Validators.maxLength(6)]],  // 核准碼
+    CTBC_TermNoList: [null],  // 分期期數 // 中信-停車 無分期
     radioBtn: [null], // 查詢篩選
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
+    ...createPaginationConfig([{ field: 'CTBC_TxnTime', order: 1 }]),
   });
   totalRecords = 0;
   POS6119Data: POS6119Data[] = [];
