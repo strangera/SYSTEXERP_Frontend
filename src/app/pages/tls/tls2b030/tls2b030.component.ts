@@ -6,7 +6,7 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { startWith, distinctUntilChanged } from 'rxjs/operators';
+import { startWith, distinctUntilChanged, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
@@ -241,6 +241,38 @@ private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
   this.columns = [...baseCols, ...payCols, ...totalCol];
 }
 
+// ✅ 提供給 <app-table-report> 的查詢函式（包裝成 Data/TotalCount）
+// - 攤平 PayDiffs 成同層欄位（讓動態欄可直接綁）
+// - 兼容 API 回傳可能的 { Data: { Rows, SumPayDiffs }, TotalCount } 或 { Data: [] } 兩種型態
+public queryTLS2B030ForReport = (body: any) =>
+  this.tls2b030Service.queryTLS2B030(body).pipe(
+    map((res: any) => {
+      const dataAny = res?.Data as any;
+      const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
+        const flat: any = { ...r };
+
+        // 攤平 PayDiffs => Pay_Dif_XX 欄位
+        if (r?.PayDiffs) {
+          Object.entries(r.PayDiffs).forEach(([k, v]) => {
+            flat[k] = v ?? 0;
+          });
+        }
+
+        // 產一個穩定的列 key（避免用 TLT_Name 造成重複）
+        flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+        return flat;
+      });
+
+      const totalCount =
+        Number(res?.TotalCount ?? dataAny?.TotalCount ?? rows.length) || rows.length;
+
+      // 若你有 API 總計（SumPayDiffs），也一併帶回（子表 footer 會用不到，但保留無妨）
+      const grandTotal = dataAny?.SumPayDiffs ?? null;
+
+      return { Data: rows, TotalCount: totalCount, GrandTotal: grandTotal };
+    })
+  );
 
   // ===== Init =====
   ngOnInit(): void {
@@ -300,7 +332,6 @@ private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
   // ===== Submit =====
 onSubmit(frm: FormGroup) {
   this.submitted = true;
-
   if (this.queryForm.invalid) {
     this.queryForm.markAllAsTouched();
     this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
@@ -310,41 +341,40 @@ onSubmit(frm: FormGroup) {
   const raw = this.queryForm.getRawValue();
   const payload = this.buildPayload(raw);
 
-  // ✅ 與 TableReport 虛擬滾動一致：首次查詢以 30 筆載入
+  // ✅ 初次查詢用 30 筆，並保存 lastQueryBody 給子表用
   payload.pageIndex = 1;
   payload.pageSize  = 30;
-
-  // 給 TableReport 使用（排序/滾動會以它為基礎進行後續請求）
   this.lastQueryBody = { ...payload };
 
   this.handleSubmit(frm, () => {
     this.loading = true;
     this.tls2b030Service.queryTLS2B030(payload).subscribe({
       next: (response) => {
-        // 允許兩種形態：Data = rows[] 或 Data = { Rows, SumPayDiffs }
-const dataAny = response?.Data as any; // ★ 先寬化
-const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-const sumRaw  = dataAny?.SumPayDiffs ?? null;
-        // ★ 攤平 PayDiffs 成同層欄位（for 動態欄）
+        // 兼容 {Data:{Rows,SumPayDiffs}} / {Data:[]}
+        const dataAny = response?.Data as any;
+        const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+        const sumRaw  = dataAny?.SumPayDiffs ?? null;
+
         const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
           const flat: any = { ...r };
-          if (r.PayDiffs) {
-            Object.entries(r.PayDiffs).forEach(([k, v]) => {
-              flat[k] = v ?? 0;
-            });
+
+          // 攤平 PayDiffs
+          if (r?.PayDiffs) {
+            Object.entries(r.PayDiffs).forEach(([k, v]) => (flat[k] = v ?? 0));
           }
+
+          // ✅ 給子表穩定 key（很重要）
+          flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
           return flat as TLS2B030Row;
         });
 
         this.data = rows;
-        this.totalRecords =
-          typeof response?.TotalCount === 'number'
-            ? response.TotalCount
-            : this.data.length || 0;
 
-        // ✅ 頁尾總計（SumPayDiffs → footerData）
+        // ✅ 這裡一定要用「後端總筆數」
+        this.totalRecords = Number(response?.TotalCount ?? this.data.length) || this.data.length;
+
+        // ✅ 頁尾總計（維持你原本的映射）
         if (sumRaw) {
-          // 將 sum_Pay_Dif_XX 轉成 Pay_Dif_XX；sum_PPay_Dif_sum → PPay_Dif_sum
           const footer: any = {};
           Object.keys(sumRaw).forEach((k) => {
             const v = sumRaw[k] ?? 0;
@@ -361,11 +391,10 @@ const sumRaw  = dataAny?.SumPayDiffs ?? null;
           this.footerData = undefined;
         }
 
-        // 保存查詢狀態
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         this.loading = false;
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('API error:', err);
         this.data = [];
         this.totalRecords = 0;
@@ -396,4 +425,6 @@ const sumRaw  = dataAny?.SumPayDiffs ?? null;
     this.data = [];
     this.totalRecords = 0;
   }
+
+
 }
