@@ -22,8 +22,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
+  <app-table dataKey="id" [data]="data" [columns]="columns" [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [showManage]="false"></app-table>
 </div>
