@@ -1,6 +1,6 @@
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -83,7 +83,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     onedatedd: [yesterday],        // 基準日期 (日)
 
     // --- 週報（type 2）相關
-    onedateyy: [new Date().getFullYear()],      // 基準年度 (年字串)
+    onedateyy: [new Date()],      // 基準年度 (年字串)
     weeks: [''],                                           // 基準週數 (輸入)
     startdate: [null as Date | null],           // 基準開始日期 (由週數帶出)
     enddate: [null as Date | null],             // 基準結束日期 (由週數帶出)
@@ -92,11 +92,11 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     onedatemm: [null],       // 基準年月 (可由 calendar 取值)
 
     // --- 半年報（type 4）
-    halfyear_onedateyy: [new Date().getFullYear()],
+    halfyear_onedateyy: [new Date()],
     halfyear: ['1'],         // 上/下半年
 
     // --- 年報（type 5）
-    year_onedateyy: [new Date().getFullYear()],
+    year_onedateyy: [new Date()],
 
     // --- 區間報（type 6）
     sad_startdate: [null],
@@ -369,20 +369,24 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   }
 
   // #region 日期選單事件
+  // onHalfyearChange(value: string) {
+  //   this.dateForm.controls.halfyear.setValue(value);
+  //   this.syncDateToQueryForm();
+  // }
 
- queryWeek(event: string) {
+  queryWeek(event: string) {
     const control = this.dateForm.controls['onedateyy'];
-  if (!control.value) return;
+    if (!control.value) return;
 
-  const payload = {
-    onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
-    weeks: event,
-  };
+    const payload = {
+      onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
+      weeks: event,
+    };
 
-  this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
-    this.dateForm.controls['startdate'].setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
-    this.dateForm.controls['enddate'].setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
-  });
+    this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
+      this.dateForm.controls['startdate'].setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
+      this.dateForm.controls['enddate'].setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
+    });
   }
 
   onReportTypeChange(event: any) {
@@ -465,7 +469,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         end = this.dateForm.get('enddate')?.value ?? null;
         break;
 
-      case '3': { // 月報
+      case '3': { // 月報 
         const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
         if (onedatemm) {
           start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
@@ -475,13 +479,15 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       }
 
       case '4': { // 半年報
-        const year = Number(this.dateForm.get('halfyear_onedateyy')?.value);
-        const half = this.dateForm.get('halfyear')?.value;
+        const dateValue = this.dateForm.get('halfyear_onedateyy')?.value as Date | string;
+        const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+        const half = String(this.dateForm.get('halfyear')?.value); // 確保是字串
+
         if (year) {
           if (half === '1') { // 上半年
             start = new Date(year, 0, 1);
             end = new Date(year, 5, 30);
-          } else { // 下半年
+          } else if (half === '2') { // 下半年
             start = new Date(year, 6, 1);
             end = new Date(year, 11, 31);
           }
@@ -490,7 +496,9 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       }
 
       case '5': { // 年報
-        const year = Number(this.dateForm.get('year_onedateyy')?.value);
+        const dateValue = this.dateForm.get('year_onedateyy')?.value as Date | string;
+        const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+
         if (year) {
           start = new Date(year, 0, 1);
           end = new Date(year, 11, 31);
@@ -503,8 +511,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         end = this.dateForm.get('sad_enddate')?.value ?? null;
         break;
     }
-
-    console.log(`報表類型: ${reportType}, 起始日期: ${start}, 結束日期: ${end}`);
 
     // 套用到 queryForm
     if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
