@@ -475,7 +475,7 @@ this.historyRequestBody = { ...payload };
     { field: 'EDC_InstEachAmt', header: '每期', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
 
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: this.formatYMD },
-    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '銷售時間', visible: true, format: this.formatISOToHHMMSS },
     { field: 'TERM_No', header: '分期數', visible: true },
   ];
