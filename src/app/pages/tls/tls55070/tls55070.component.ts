@@ -75,9 +75,9 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
   ];
   sortMeta: any[] = [];
 
-  // ✅ 匯出/查詢用到
-
-  btnLoading = false;
+  // 匯出 loading 分離
+  btnLoadingExcel = false;
+  btnLoadingPDF = false;
 
   data: any[] = [];
   totalRecords = 0;
@@ -162,6 +162,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
       isSubTotal: true,
     },
   ];
+
   ECRNoOptions: any[] = [];
   txnStatusOptions = [
     { value: '1', label: '一般交易' },
@@ -171,19 +172,19 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
   yesNoOptions = [
     { value: '0', label: '全部' },
     { value: '1', label: '顯示' },
-
   ];
-  // ✅ 新增：LOGO/HOS_No 下拉資料
+
+  // LOGO/HOS_No / 專櫃 / 銷售人員
   logoOptions: Array<{label: string; value: string}> = [];
   hosOptions:  Array<{label: string; value: string}> = [];
   CounterOptions: any[] = [];
   cashierOptions: any[] = [];
+
   constructor(
     private tls55070Service: TLS55070Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-     private cashierService: CashierService,
-    
+    private cashierService: CashierService,
   ) {
     super();
   }
@@ -194,23 +195,27 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
     );
     this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
+
     this.ECRNoService.getECRNo().subscribe(
       (data) => (this.ECRNoOptions = data),
     );
+
     this.tls55070Service.getLogoHosOptions()
       .subscribe(({ logoOptions, hosOptions }) => {
         this.logoOptions = logoOptions;
         this.hosOptions  = hosOptions;
       });
+
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
         res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         })) || [];
     });
-       this.cashierService.getCashierOptions().subscribe((res) => {
+
+    this.cashierService.getCashierOptions().subscribe((res) => {
       this.cashierOptions =
         res?.map((x: any) => ({
           label: x.label,
@@ -364,24 +369,36 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
       });
   }
 
+  // === 匯出 Excel ===
+  onExportExcel() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoadingExcel = true;
+    this.tls55070Service
+      .exportTLS55070Excel(this.historyRequestBody) // <- 直接送清理後的查詢條件
+      .pipe(finalize(() => (this.btnLoadingExcel = false)))
+      .subscribe({
+        next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.xlsx'),
+      });
+  }
+
+  // === 匯出 PDF ===
   onExportPDF() {
     if (!this.historyRequestBody) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
-    this.btnLoading = true;
-    // ⚠️ 匯出沿用查詢 payload，但 Service 會只移除 OrderBy/Offset
+    this.btnLoadingPDF = true;
     this.tls55070Service
-      .exportTLS55070PDF(
-        this.historyRequestBody,
-        'TLS55070',
-        'TLS55070 銷售明細報表',
-      )
-      .pipe(finalize(() => (this.btnLoading = false)))
+      .exportTLS55070PDF(this.historyRequestBody) // <- 直接送清理後的查詢條件
+      .pipe(finalize(() => (this.btnLoadingPDF = false)))
       .subscribe({
         next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.pdf'),
       });
   }
+
 
   // ==== helpers ====
   private buildPayload(raw: any) {
@@ -516,9 +533,9 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
     return Number(val ?? 0).toLocaleString('en-US');
   }
 
-  private handleFileExport(response: HttpResponse<Blob>, ext: string): void {
+  private handleFileExport(response: HttpResponse<Blob>, defExt: string): void {
     const cd = response.headers.get('Content-Disposition');
-    const name = this.getFilenameFromHeader(cd, ext);
+    const name = this.getFilenameFromHeader(cd, defExt);
     const blob = response.body;
     if (blob && blob.size > 0) {
       const url = window.URL.createObjectURL(blob);
@@ -530,29 +547,22 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
-      this.messageService?.warnBubble?.(
-        '沒有找到符合條件的資料，無法生成報表。',
-      );
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
     }
   }
-  private getFilenameFromHeader(cd: string | null, def: string): string {
-    if (!cd) return `download${def}`;
+  private getFilenameFromHeader(cd: string | null, defExt: string): string {
+    const def = `download${defExt}`;
+    if (!cd) return def;
     const star = /filename\*=([^;]+)/.exec(cd);
     if (star?.[1]) {
-      try {
-        return decodeURIComponent(star[1].replace(/^UTF-8''/, ''));
-      } catch {
-        return star[1];
-      }
+      try { return decodeURIComponent(star[1].replace(/^UTF-8''/, '')); }
+      catch { return star[1]; }
     }
     const m = /filename="([^"]+)"/.exec(cd);
     if (m?.[1]) {
-      try {
-        return decodeURIComponent(m[1].replace(/\+/g, ' '));
-      } catch {
-        return m[1];
-      }
+      try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); }
+      catch { return m[1]; }
     }
-    return `download${def}`;
+    return def;
   }
 }
