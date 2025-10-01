@@ -57,9 +57,17 @@
         <!-- 左：鍵盤設定明細 -->
         <div class="col-12 md:col-8">
           <p-panel header="鍵盤設定明細">
+            <div class="flex justify-content-end mb-2">
+              <app-button
+                label="新增頁數"
+                btnType="create"
+                (click)="addPage()"
+                style="height: 28px; font-size: 12px"
+              ></app-button>
+            </div>
             <p-tabView
               [activeIndex]="dataForm.controls.activePage.value"
-              (onChange)="onTabChange($event)"
+              (onChange)="onTabChangeTab($event)"
               class="kb-tabview"
             >
               <p-tabPanel
@@ -229,7 +237,9 @@
                   [binary]="true"
                   [inputId]="'ft-' + opt.index"
                   [label]="opt.label"
-                  [ngModel]="getControl('KB_Fonttyped').value[opt.index] === 'Y'"
+                  [ngModel]="
+                    getControl('KB_Fonttyped').value[opt.index] === 'Y'
+                  "
                   (onChange)="toggleFonttyped(opt.index, $event.checked)"
                   [ngModelOptions]="{ standalone: true }"
                 ></p-checkbox>

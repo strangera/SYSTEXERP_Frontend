@@ -79,7 +79,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     activePage: [0]
   });
 
-  // 右側設定區 form
+  // 右側設定 form
   selectedKeyForm: FormGroup = this.formBuilder.group({
     KB_Func: [''],
     KB_Switch: ['Y'],
@@ -101,7 +101,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   // ---------------- Grid ----------------
   xCount = 8;
   yCount = 5;
-  keys: KeyItem[] = [];
+  pages: KeyItem[][] = [];   // 每頁獨立存 keys
   selected?: KeyItem;
 
   // ---------------- Tab Options ----------------
@@ -155,52 +155,40 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ---------------- Computed ----------------
   get pageCapacity() { return this.xCount * this.yCount; }
-  get totalPages() { return Math.max(1, Math.ceil(this.keys.length / this.pageCapacity)); }
+  get totalPages() { return this.pages.length; }
   get pageList() { return Array.from({ length: this.totalPages }, (_, i) => i); }
   get visibleKeys() {
-    const p = this.dataForm.controls.activePage.value;
-    const start = p * this.pageCapacity;
-    return this.keys.slice(start, start + this.pageCapacity);
+    return this.pages[this.dataForm.controls.activePage.value] || [];
   }
 
   // ---------------- Lifecycle ----------------
   ngOnInit(): void {
     this.initializePage('TLS42010', this.dataForm);
-    this.buildGrid();
+    this.pages = [this.buildGrid(0)];
+    this.selected = this.pages[0][0];
     this.loadDropdowns();
 
-    // 只要 form 有變動就同步到 selected key
+    // 同步選中的 key
     this.selectedKeyForm.valueChanges.subscribe(val => {
-      if (this.selected) {
-        Object.assign(this.selected, val);
-      }
+      if (this.selected) Object.assign(this.selected, val);
     });
 
-    // 顏色監聽
-    this.selectedKeyForm.controls['color'].valueChanges.subscribe(value => {
-      if (value) {
-        this.selectedKeyForm.controls['KB_Color'].setValue(`RGB:${value.r},${value.g},${value.b}`);
-      }
+    this.selectedKeyForm.controls['color'].valueChanges.subscribe(v => {
+      if (v) this.selectedKeyForm.controls['KB_Color'].setValue(`RGB:${v.r},${v.g},${v.b}`);
     });
-    this.selectedKeyForm.controls['FontColor'].valueChanges.subscribe(value => {
-      if (value) {
-        this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${value.r},${value.g},${value.b}`);
-      }
+    this.selectedKeyForm.controls['FontColor'].valueChanges.subscribe(v => {
+      if (v) this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${v.r},${v.g},${v.b}`);
     });
 
-    // === 編輯 / 檢視模式 ===
+    // 編輯 / 檢視 模式才查 API
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       if (this.rowdata?.USR_Level) {
-        // 先查主檔
+        // 主檔
         this.tls42010Service.queryTLS42010M({ USR_Level: this.rowdata.USR_Level }).subscribe({
           next: (res) => {
             const master = res?.Data?.[0];
             if (master) {
-              console.log('主檔資料:', master);
-
-              // ⚠️ 主檔 ID 一定要存起來
               this.rowdata.ID = master.id;
-
               this.dataForm.patchValue({
                 USR_Level: master.USR_Level,
                 TSB_Name: master.TSB_Name,
@@ -212,77 +200,72 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           }
         });
 
-        // 再查明細
-        this.tls42010Service.queryTLS42010_Detail({
-          USR_Level: [this.rowdata.USR_Level]
-        }).subscribe({
-          next: (res) => {
-            this.applyDetail(res?.Data ?? []);
-          },
+        // 明細
+        this.tls42010Service.queryTLS42010_Detail({ USR_Level: [this.rowdata.USR_Level] }).subscribe({
+          next: (res) => this.applyDetail(res?.Data ?? [])
         });
       }
     }
   }
 
+  // ---------------- Dropdown ----------------
   private loadDropdowns() {
     this.dropDownListService.queryPOS1008DropDownList().subscribe({
       next: (res) => {
-        this.TSB_NameOptions = res?.Data?.map((item: any) => ({
-          No: item.TSB_Name,
-          Name: item.TSB_Name
-        })) ?? [];
-
+        this.TSB_NameOptions = res?.Data?.map((item: any) => ({ No: item.TSB_Name, Name: item.TSB_Name })) ?? [];
         res?.Data?.forEach((item: any) => {
           if (item.KB_ScanCode) {
-            this.pos1008Map[item.KB_ScanCode] = {
-              width: item.KB_Width ?? 1,
-              height: item.KB_Height ?? 1
-            };
+            this.pos1008Map[item.KB_ScanCode] = { width: item.KB_Width ?? 1, height: item.KB_Height ?? 1 };
           }
         });
       }
     });
 
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe({
-      next: (res) => {
-        this.ECR_KBTypeOptions = res?.Data ?? [];
-      }
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe(res => {
+      this.ECR_KBTypeOptions = res?.Data ?? [];
     });
 
-    const params = { SYS_Type: 'KB_Style', SYS_Status: 'A' };
-    this.dropDownListService.querySYS1000_DropDownList(params).subscribe({
-      next: (res) => {
-        this.KB_StyleOptions = res?.Data?.map((item: any) => ({
-          No: item.No ?? item.SYS_Code,
-          Name: item.Name ?? item.SYS_Name
-        })) ?? [];
-      }
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'KB_Style' }).subscribe(res => {
+      this.KB_StyleOptions = res?.Data?.map((item: any) => ({
+        No: item.No ?? item.SYS_Code,
+        Name: item.Name ?? item.SYS_Name
+      })) ?? [];
     });
   }
 
   // ---------------- Grid ----------------
-  private buildGrid() {
-    const onePage: KeyItem[] = [];
+  private buildGrid(pageIndex: number): KeyItem[] {
+    const grid: KeyItem[] = [];
+    const offsetY = pageIndex * this.yCount;
     for (let y = 1; y <= this.yCount; y++) {
       for (let x = 1; x <= this.xCount; x++) {
-        const code = `${x.toString().padStart(2, '0')}${y.toString().padStart(2, '0')}`;
-        onePage.push({ code, x, y });
+        const code = `${x.toString().padStart(2, '0')}${(y + offsetY).toString().padStart(2, '0')}`;
+        grid.push({ code, x, y: y + offsetY });
       }
     }
-    this.keys = [...onePage];
-    this.selected = this.keys[0];
+    return grid;
+  }
+
+  addPage() {
+    const newPageIndex = this.totalPages;
+    this.pages.push(this.buildGrid(newPageIndex));
+    this.dataForm.controls.activePage.setValue(newPageIndex);
   }
 
   private applyDetail(detailList: any[]) {
-    this.buildGrid();
+    if (!detailList?.length) return;
+
+    detailList.forEach(d => d.KG_KeyPage = 1);
 
     detailList.forEach((d: any) => {
+      const pageIndex = 0;
+
       const scanCode = d.KB_Merge;
-      const key = this.keys.find(k => k.code === scanCode);
+      const key = this.pages[pageIndex].find(k => k.code === scanCode);
       if (key) {
         Object.assign(key, {
-          ID: d.ID && d.ID > 0 ? d.ID : 0,       // 明細自己的 ID，沒有就設 0
-          MID: this.rowdata?.ID ?? 0,            // 每筆綁主檔 ID
+          ID: d.ID && d.ID > 0 ? d.ID : 0,
+          MID: this.rowdata?.ID ?? 0,
           KB_Func: d.KB_Func,
           KB_Switch: d.KB_Switch,
           KB_Display1: d.KB_Display1,
@@ -299,100 +282,56 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         });
       }
     });
-
-    const first = this.keys.find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);
+    const first = this.pages.flat().find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);
     if (first) {
-      this.selectKey(first);
-    } else {
-      this.selectedKeyForm.reset({
-        KB_Func: '',
-        KB_Switch: 'Y',
-        KB_Display1: '',
-        KB_Display2: '',
-        KB_Color: 'RGB:0,0,0',
-        KB_Style: '1',
-        KB_Font: 'Microsoft JhengHei',
-        KB_Size: 14,
-        KB_FontColor: 'RGB:0,0,0',
-        KB_Fonttyped: 'NNN',
-        KB_Arg1: '',
-        KB_Arg2: '',
-        KB_Arg3: ''
+      this.selected = first;
+      this.selectedKeyForm.patchValue({
+        KB_Func: first.KB_Func ?? '',
+        KB_Switch: first.KB_Switch ?? 'Y',
+        KB_Display1: first.KB_Display1 ?? '',
+        KB_Display2: first.KB_Display2 ?? '',
+        KB_Color: first.KB_Color ?? 'RGB:0,0,0',
+        KB_Style: first.KB_Style ?? '1',
+        KB_Font: first.KB_Font ?? 'Microsoft JhengHei',
+        KB_Size: first.KB_Size ?? 14,
+        KB_FontColor: first.KB_FontColor ?? 'RGB:0,0,0',
+        KB_Fonttyped: first.KB_Fonttyped ?? 'NNN',
+        KB_Arg1: first.KB_Arg1 ?? '',
+        KB_Arg2: first.KB_Arg2 ?? '',
+        KB_Arg3: first.KB_Arg3 ?? ''
       });
     }
   }
-
-
   // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem) {
-    // 先把上一顆存起來
-    if (this.selected) {
-      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
-    }
+    if (this.selected) Object.assign(this.selected, this.selectedKeyForm.getRawValue());
     this.selected = k;
-    const hasConfig =
-      k.KB_Func || k.KB_Display1 || k.KB_Display2 ||
-      k.KB_Arg1 || k.KB_Arg2 || k.KB_Arg3;
-    if (hasConfig) {
-      this.selectedKeyForm.patchValue({
-        KB_Func: k.KB_Func ?? '',
-        KB_Switch: k.KB_Switch ?? 'Y',
-        KB_Display1: k.KB_Display1 ?? '',
-        KB_Display2: k.KB_Display2 ?? '',
-        KB_Color: k.KB_Color ?? 'RGB:0,0,0',
-        KB_Style: k.KB_Style ?? '1',
-        KB_Font: k.KB_Font ?? 'Microsoft JhengHei',
-        KB_Size: k.KB_Size ?? 14,
-        KB_FontColor: k.KB_FontColor ?? 'RGB:0,0,0',
-        KB_Fonttyped: k.KB_Fonttyped ?? 'NNN',
-        KB_Arg1: k.KB_Arg1 ?? '',
-        KB_Arg2: k.KB_Arg2 ?? '',
-        KB_Arg3: k.KB_Arg3 ?? ''
-      });
-    } else {
-      this.selectedKeyForm.reset({
-        KB_Func: '',
-        KB_Switch: 'Y',
-        KB_Display1: '',
-        KB_Display2: '',
-        KB_Color: 'RGB:0,0,0',
-        KB_Style: '1',
-        KB_Font: 'Microsoft JhengHei',
-        KB_Size: 14,
-        KB_FontColor: 'RGB:0,0,0',
-        KB_Fonttyped: 'NNN',
-        KB_Arg1: '',
-        KB_Arg2: '',
-        KB_Arg3: ''
-      });
-    }
+    this.selectedKeyForm.patchValue({
+      KB_Func: k.KB_Func ?? '',
+      KB_Switch: k.KB_Switch ?? 'Y',
+      KB_Display1: k.KB_Display1 ?? '',
+      KB_Display2: k.KB_Display2 ?? '',
+      KB_Color: k.KB_Color ?? 'RGB:0,0,0',
+      KB_Style: k.KB_Style ?? '1',
+      KB_Font: k.KB_Font ?? 'Microsoft JhengHei',
+      KB_Size: k.KB_Size ?? 14,
+      KB_FontColor: k.KB_FontColor ?? 'RGB:0,0,0',
+      KB_Fonttyped: k.KB_Fonttyped ?? 'NNN',
+      KB_Arg1: k.KB_Arg1 ?? '',
+      KB_Arg2: k.KB_Arg2 ?? '',
+      KB_Arg3: k.KB_Arg3 ?? ''
+    });
   }
-
   // ---------------- Submit ----------------
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.loading = true;
-
-      // log: 送出前 selectedKeyForm 與 keys[0] (KB_ScanCode='0101')
-      const key0101 = this.keys.find(k => k.code === '0101');
-      console.log('送出前 selectedKeyForm:', this.selectedKeyForm.getRawValue());
-      console.log('送出前 keys[0] (KB_ScanCode=0101):', key0101);
-
-      if (this.selected) {
-        Object.assign(this.selected, this.selectedKeyForm.getRawValue());
-      }
-
-      // 先組明細
-      const detailList = this.keys.map(k => {
+  private buildDetailList(frm: any) {
+    return this.pages.flatMap((page, pageIndex) =>
+      page.map(k => {
         const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
         const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
-
         return {
           ID: this.crudstatus === CRUDStatus.Create ? 0 : (k.ID ?? 0),
-          ECR_KBType: frm.value.ECR_KBType,
-          USR_Level: this.crudstatus === CRUDStatus.Create
-            ? frm.value.USR_Level              // 新增用表單
-            : this.rowdata?.USR_Level || frm.value.USR_Level, // 修改用 DB 值
+          ECR_KBType: frm.ECR_KBType,
+          USR_Level: this.crudstatus === CRUDStatus.Create ? frm.USR_Level : this.rowdata?.USR_Level || frm.USR_Level,
           KB_ScanCode: k.code,
           KB_Func: hasConfig ? k.KB_Func : '',
           KB_Arg1: hasConfig ? k.KB_Arg1 : '',
@@ -402,99 +341,50 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Display2: hasConfig ? k.KB_Display2 : '',
           KB_Font: hasConfig ? k.KB_Font : 'Microsoft JhengHei',
           KB_Size: hasConfig ? k.KB_Size : 14,
-          KB_Fonttyped: hasConfig
-            ? (Array.isArray(k.KB_Fonttyped) ? k.KB_Fonttyped.join(',') : (k.KB_Fonttyped || 'NNN'))
-            : 'NNN',
-          KB_Style: hasConfig ? (k.KB_Style || '1') : '1',
-          KB_Switch: hasConfig ? (k.KB_Switch || 'Y') : 'Y',
+          KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
+          KB_Style: hasConfig ? k.KB_Style || '1' : '1',
+          KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
           KB_Width: pos1008.width,
           KB_Height: pos1008.height,
           KB_Merge: k.code,
           KB_Color: hasConfig ? k.KB_Color : 'RGB:0,0,0',
           KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
-          KG_KeyPage: frm.value.activePage + 1
+          KG_KeyPage: pageIndex + 1
         };
-      });
+      })
+    );
+  }
 
-      // === Create 模式 ===
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      if (this.selected) Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+      const detailList = this.buildDetailList(frm.value);
+
       if (this.crudstatus === CRUDStatus.Create) {
         const payload = {
           ECR_KBType: frm.value.ECR_KBType,
           USR_Level: frm.value.USR_Level,
           ECR_KBDesc: frm.value.ECR_KBDesc,
           TSB_Name: frm.value.TSB_Name,
-          POS1004Disc: detailList   // ⚠️ 新增用 POS1004Disc
+          POS1004Disc: detailList
         };
-
-        this.tls42010Service.insertTLS42010M(payload).subscribe({
-          next: (res) => {
-            this.loading = false;
-            console.log('Create 成功:', res);
-          },
-          error: () => (this.loading = false)
-        });
-      }
-
-      else if (this.crudstatus === CRUDStatus.Edit) {
-        const masterId = this.rowdata?.ID ?? 0;
-
-        const detailList = this.keys.map(k => {
-          const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
-          const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
-
-          return {
-            ID: k.ID && k.ID > 0 ? k.ID : 0,
-            ECR_KBType: frm.value.ECR_KBType,
-            USR_Level: frm.value.USR_Level,
-            KB_ScanCode: k.code,
-            KB_Func: hasConfig ? k.KB_Func : '',
-            KB_Arg1: hasConfig ? k.KB_Arg1 : '',
-            KB_Arg2: hasConfig ? k.KB_Arg2 : '',
-            KB_Arg3: hasConfig ? k.KB_Arg3 : '',
-            KB_Display1: hasConfig ? k.KB_Display1 : '',
-            KB_Display2: hasConfig ? k.KB_Display2 : '',
-            KB_Font: hasConfig ? k.KB_Font : 'Microsoft JhengHei',
-            KB_Size: hasConfig ? k.KB_Size : 14,
-            KB_Fonttyped: hasConfig
-              ? (Array.isArray(k.KB_Fonttyped) ? k.KB_Fonttyped.join(',') : (k.KB_Fonttyped || 'NNN'))
-              : 'NNN',
-            KB_Style: hasConfig ? (k.KB_Style || '1') : '1',
-            KB_Switch: hasConfig ? (k.KB_Switch || 'Y') : 'Y',
-            KB_Width: pos1008.width,
-            KB_Height: pos1008.height,
-            KB_Merge: k.code,
-            KB_Color: hasConfig ? k.KB_Color : 'RGB:0,0,0',
-            KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
-            KG_KeyPage: frm.value.activePage + 1
-          };
-        });
-
-
+        this.tls42010Service.insertTLS42010M(payload).subscribe({ next: () => this.loading = false, error: () => this.loading = false });
+      } else {
         const payload = {
-          ID: masterId, // 主檔 ID
+          ID: this.rowdata?.ID ?? 0,
           ECR_KBType: frm.value.ECR_KBType,
           USR_Level: frm.value.USR_Level,
           ECR_KBDesc: frm.value.ECR_KBDesc,
           TSB_Name: frm.value.TSB_Name,
           POS1004: detailList
         };
-
-        this.tls42010Service.updateTLS42010M(payload).subscribe({
-          next: (res) => {
-            this.loading = false;
-            console.log('Edit 成功:', res);
-          },
-          error: () => (this.loading = false)
-        });
+        this.tls42010Service.updateTLS42010M(payload).subscribe({ next: () => this.loading = false, error: () => this.loading = false });
       }
     });
   }
 
-
   // ---------------- 其他 ----------------
-  onTabChange(event: any) {
-    this.selectedTab = event.value;
-  }
   getControl(name: string): FormControl {
     return this.selectedKeyForm.get(name) as FormControl;
   }
@@ -502,8 +392,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.selectedTab = event.value;
   }
   toggleFonttyped(index: number, checked: boolean) {
-    const current = this.selectedKeyForm.controls['KB_Fonttyped'].value || 'NNN';
-    const arr = current.split('');
+    const arr = (this.selectedKeyForm.controls['KB_Fonttyped'].value || 'NNN').split('');
     arr[index] = checked ? 'Y' : 'N';
     this.selectedKeyForm.controls['KB_Fonttyped'].setValue(arr.join(''));
   }
