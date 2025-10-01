@@ -289,6 +289,23 @@ export class ValidationService {
 
     return null;
   }
+  //輸入的字串YYYYMM 不能小於前一個月
+  minMonthValidator2(control: { value: string | null }): ValidationErrors | null {
+    const value = control.value;
+    const now = new Date();
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
+    if (value && value.length === 6) {
+      const year = parseInt(value.substring(0, 4), 10);
+      const month = parseInt(value.substring(4, 6), 10) - 1; // JS 月份從 0 開始
+      if (!isNaN(year) && !isNaN(month)) {
+        const inputDate = new Date(year, month, 1);
+        if (inputDate < prevMonth) {
+          return { invalidMinMonthDate: true };
+        }
+      }
+    }
+    return null;
+  }
 
   // 輸入日期不能大於當前月份
   maxMonthValidator(control: { value: Date | null }): ValidationErrors | null {

@@ -1,0 +1,20 @@
+<div class="field year-month-field">
+  <label for="yearMonth">
+    {{ label }}
+    <span *ngIf="isControlRequired" class="required">*</span>
+  </label>
+  <div class="year-month-group">
+    <!-- 年份 -->
+    <p-calendar [formControl]="yearControl" view="year" dateFormat="yy" inputId="yearMonth"
+      [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }" placeholder="請輸入年份" id="yearMonth"
+      (onSelect)="onChange()" (onInput)="onChange()" />
+
+    <!-- 月份 -->
+    <p-dropdown class="w-full" [formControl]="monthControl" [options]="months" placeholder="請選擇月份" optionLabel="label"
+      [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }" optionValue="value"
+      [class.ng-invalid]="submitted && monthControl.invalid" (onChange)="onChange()">
+    </p-dropdown>
+  </div>
+  <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+    [control]="control"></app-control-messages>
+</div>

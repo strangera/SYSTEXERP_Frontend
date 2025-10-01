@@ -28,7 +28,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   @Input() startMaxDate: Date | undefined | null = null;
   @Input() endMinDate: Date | undefined | null = null;
   @Input() endMaxDate: Date | undefined | null = null;
-   @Input() disabled = false;  // ← 新增
+  @Input() disabled = false;  // ← 新增
   // 自訂義
   calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';
 

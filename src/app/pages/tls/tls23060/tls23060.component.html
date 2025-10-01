@@ -110,10 +110,12 @@
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
-    [showDetail]="false"
-    [showManage]="false"
+    [showDetail]="true"
+    [showEdit]="false"
+    [showManage]="true"
     [showDelete]="false"
     [showSubTotal]="true"
+    [showReportMode]="false"
     [showTotal]="true"
     [groupRowsBy]="'ECR_No'"
     [externalTotals]="detailTotals"
@@ -121,6 +123,7 @@
     [externalSubtotals]="detailSubtotals"
     [externalSubtotalFieldMap]="detailSubtotalFieldMap"
     (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    (detail)="onDetail($event, queryForm.getRawValue())"
     [serverFetch]="fetchTLS23060"  >
   <header>
       <div class="flex justify-content-end gap-2">
