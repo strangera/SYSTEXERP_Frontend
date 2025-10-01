@@ -1,6 +1,6 @@
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -14,9 +14,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service'; // ★ 引入 Service
-import { DropDownListService, IDropdownItem, IAPS1003Request, IAPS1003Item } from './../../../service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, IAPS1003Item } from './../../../service/utility/dropDownList.service';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
-import { format } from 'crypto-js';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -58,7 +57,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     { field: 'AccNo', header: '會計科目代號', visible: true },
     { field: 'org_id', header: '組織代號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
-    { field: 'pod_desc', header: '活動名稱', visible: true },
+    { field: 'pod_no', header: '活動名稱', visible: true },
     {
       field: 'tpy_date',
       header: '扣款日期',
@@ -155,12 +154,13 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         Name: item.Name
       }));
     });
-    this.dropDownListService.getActivityOptions({ mid: 0, str_no: '10', pod_type: [], pod_status: '' }).subscribe((res) => {
+    this.dropDownListService.queryTALPORDERM_DropDownList().subscribe((res) => {
       this.pod_noOptions = (res?.Data || []).map((item: any) => ({
-        value: item.pod_no,
-        label: `${item.pod_no}-${item.pod_desc}`
+        value: item.No,
+        label: `${item.No}-${item.Name}`
       }));
     });
+
   }
 
   onSubmit(frm: FormGroup) {
@@ -185,5 +185,11 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   }
   setCounterType(row: any) {
     return { ...row, type: 'counter' };
+  }
+  onDelete(event: any) {
+    const idList = event.map((item: any) => item.id);
+    this.tls2d010Service.deleteTLS2D010({ idList }).subscribe(() => {
+      this.onSubmit(this.queryForm);
+    });
   }
 }

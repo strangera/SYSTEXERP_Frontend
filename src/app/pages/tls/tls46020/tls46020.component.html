@@ -27,11 +27,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="ECR_TmplNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'ECR_TmplNo', order: 1 }]" [totalRecords]="totalRecords" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [showCheckBox]="true" (delete)="onDelete($event)"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+  <app-table-report dataKey="ECR_TmplNo" [lastQueryBody]="lastQueryFormValue"
+    [queryFunction]="tls46020Service.queryTLS46020.bind(tls46020Service)" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [showCheckBox]="true" (delete)="onDelete($event)" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords"></app-table-report>
 </div>
 
 <app-dialog [visible]="dialogVisible" header="複製環境變數" (visibleChange)="dialogVisible = $event"

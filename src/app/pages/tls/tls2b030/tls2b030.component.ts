@@ -6,7 +6,7 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { startWith, distinctUntilChanged } from 'rxjs/operators';
+import { startWith, distinctUntilChanged, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
@@ -31,6 +31,10 @@ import { RegionService } from '../../../service/basic/region-code.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+// 追加 import（若尚未）
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+
 
 // Models
 import { PayTypeItem, TLS2B030Row } from './tls2b030.model';
@@ -54,7 +58,8 @@ type SortItem = { field: string; order: 1 | -1 };
     CheckboxModule,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
+    // TableComponent,
+    TableReportComponent,
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
@@ -62,6 +67,9 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   data: TLS2B030Row[] = [];
   totalRecords = 0;
   selectedItems: TLS2B030Row[] = [];
+  lastQueryBody: any = null;
+  footerData: any = undefined; // 頁尾總計列（SumPayDiffs 會映射進來）
+  queryFn = (body: any) => this.tls2b030Service.queryTLS2B030(body);
 
   // 動態付款清單（No/Name）
   payTypes: PayTypeItem[] = [];
@@ -107,7 +115,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   });
 
   // 表格欄位（動態）
-  columns: any[] = [];
+  columns: ReportColumn[] = [];
 
   constructor(
     private tls2b030Service: TLS2B030Service,
@@ -205,35 +213,66 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
 
   /** 用付款清單動態建欄 */
-  private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
-    const baseCols = [
-      { field: 'ECR_No', header: '收銀機號', visible: true },
-      { field: 'TLT_No', header: '專櫃編號', visible: true },
-      { field: 'TLT_Name', header: '櫃位名稱', visible: true, style: 'text-left' },
-    ];
+private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
+  const baseCols: ReportColumn[] = [
+    { field: 'ECR_No',  header: '收銀機號' },
+    { field: 'TLT_No',  header: '專櫃編號' },
+    { field: 'TLT_Name', header: '櫃位名稱' }, // ← 改這裡
+  ];
 
-    const payCols = payTypes.map((pt) => ({
-      field: `Pay_Dif_${pt.No}`,
-      header: pt.Name,
-      visible: true,
-      style: 'text-right',
+  const payCols: ReportColumn[] = payTypes.map((pt) => ({
+    field: `Pay_Dif_${pt.No}`,
+    header: pt.Name,
+    style: 'text-right',          // ← 改這裡
+    format: this.moneyFormat,
+    isTotal: true,
+  }));
+
+  const totalCol: ReportColumn[] = [
+    {
+      field: 'PPay_Dif_sum',
+      header: '總金額',
+      
       format: this.moneyFormat,
       isTotal: true,
-    }));
+    },
+  ];
 
-    const totalCol = [
-      {
-        field: 'PPay_Dif_sum',
-        header: '總金額',
-        visible: true,
-        style: 'text-right',
-        format: this.moneyFormat,
-        isTotal: true,
-      },
-    ];
+  this.columns = [...baseCols, ...payCols, ...totalCol];
+}
 
-    this.columns = [...baseCols, ...payCols, ...totalCol];
-  }
+// ✅ 提供給 <app-table-report> 的查詢函式（包裝成 Data/TotalCount）
+// - 攤平 PayDiffs 成同層欄位（讓動態欄可直接綁）
+// - 兼容 API 回傳可能的 { Data: { Rows, SumPayDiffs }, TotalCount } 或 { Data: [] } 兩種型態
+public queryTLS2B030ForReport = (body: any) =>
+  this.tls2b030Service.queryTLS2B030(body).pipe(
+    map((res: any) => {
+      const dataAny = res?.Data as any;
+      const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
+        const flat: any = { ...r };
+
+        // 攤平 PayDiffs => Pay_Dif_XX 欄位
+        if (r?.PayDiffs) {
+          Object.entries(r.PayDiffs).forEach(([k, v]) => {
+            flat[k] = v ?? 0;
+          });
+        }
+
+        // 產一個穩定的列 key（避免用 TLT_Name 造成重複）
+        flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+        return flat;
+      });
+
+      const totalCount =
+        Number(res?.TotalCount ?? dataAny?.TotalCount ?? rows.length) || rows.length;
+
+      // 若你有 API 總計（SumPayDiffs），也一併帶回（子表 footer 會用不到，但保留無妨）
+      const grandTotal = dataAny?.SumPayDiffs ?? null;
+
+      return { Data: rows, TotalCount: totalCount, GrandTotal: grandTotal };
+    })
+  );
 
   // ===== Init =====
   ngOnInit(): void {
@@ -291,59 +330,81 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   }
 
   // ===== Submit =====
-  onSubmit(frm: FormGroup) {
-    this.submitted = true;
-
-    if (this.queryForm.invalid) {
-      this.queryForm.markAllAsTouched();
-      this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
-      return;
-    }
-
-    const raw = this.queryForm.getRawValue();
-    const payload = this.buildPayload(raw);
-
-    this.handleSubmit(frm, () => {
-      this.loading = true;
-      this.tls2b030Service.queryTLS2B030(payload).subscribe({
-        next: (response) => {
-          if (response?.Status === '0000') {
-            const rows = (response.Data || []) as TLS2B030Row[];
-
-            // ★ 把 PayDiffs 攤平成同層（field: Pay_Dif_XX），配合動態 columns 顯示
-            this.data = rows.map((r) => {
-              const flat: any = { ...r };
-              if (r.PayDiffs) {
-                Object.entries(r.PayDiffs).forEach(([k, v]) => {
-                  flat[k] = v ?? 0;
-                });
-              }
-              return flat as TLS2B030Row;
-            });
-
-            this.totalRecords =
-              typeof response?.TotalCount === 'number'
-                ? response.TotalCount
-                : this.data.length || 0;
-
-            // 保存查詢狀態
-            this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-          } else {
-            console.error('API error:', response?.Status, response?.Message);
-            this.data = [];
-            this.totalRecords = 0;
-          }
-          this.loading = false;
-        },
-        error: (err: any) => {
-          console.error('API error:', err);
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-        },
-      });
-    });
+onSubmit(frm: FormGroup) {
+  this.submitted = true;
+  if (this.queryForm.invalid) {
+    this.queryForm.markAllAsTouched();
+    this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
+    return;
   }
+
+  const raw = this.queryForm.getRawValue();
+  const payload = this.buildPayload(raw);
+
+  // ✅ 初次查詢用 30 筆，並保存 lastQueryBody 給子表用
+  payload.pageIndex = 1;
+  payload.pageSize  = 30;
+  this.lastQueryBody = { ...payload };
+
+  this.handleSubmit(frm, () => {
+    this.loading = true;
+    this.tls2b030Service.queryTLS2B030(payload).subscribe({
+      next: (response) => {
+        // 兼容 {Data:{Rows,SumPayDiffs}} / {Data:[]}
+        const dataAny = response?.Data as any;
+        const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+        const sumRaw  = dataAny?.SumPayDiffs ?? null;
+
+        const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
+          const flat: any = { ...r };
+
+          // 攤平 PayDiffs
+          if (r?.PayDiffs) {
+            Object.entries(r.PayDiffs).forEach(([k, v]) => (flat[k] = v ?? 0));
+          }
+
+          // ✅ 給子表穩定 key（很重要）
+          flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+          return flat as TLS2B030Row;
+        });
+
+        this.data = rows;
+
+        // ✅ 這裡一定要用「後端總筆數」
+        this.totalRecords = Number(response?.TotalCount ?? this.data.length) || this.data.length;
+
+        // ✅ 頁尾總計（維持你原本的映射）
+        if (sumRaw) {
+          const footer: any = {};
+          Object.keys(sumRaw).forEach((k) => {
+            const v = sumRaw[k] ?? 0;
+            if (k.startsWith('sum_Pay_Dif_')) {
+              const code = k.replace('sum_', ''); // sum_Pay_Dif_10 → Pay_Dif_10
+              footer[code] = v;
+            }
+            if (k === 'sum_PPay_Dif_sum') {
+              footer['PPay_Dif_sum'] = v;
+            }
+          });
+          this.footerData = footer;
+        } else {
+          this.footerData = undefined;
+        }
+
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('API error:', err);
+        this.data = [];
+        this.totalRecords = 0;
+        this.footerData = undefined;
+        this.loading = false;
+      },
+    });
+  });
+}
+
 
   onClear(frm: FormGroup) {
     frm.reset({
@@ -364,4 +425,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     this.data = [];
     this.totalRecords = 0;
   }
+
+
 }

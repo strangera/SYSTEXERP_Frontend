@@ -40,13 +40,14 @@ export interface TLS26070QueryRequest extends BaseQueryRequest {
   event_enddate_c?: string; // 比較活動結束日期 - ISO 格式
 
   // 合約查詢條件
-  floor?: string; // 樓層
-  region?: string; // 區域
-  bus_type?: string; // 大分類/中分類
-  tlt_kind?: string; // 櫃別
-  tlt_term_type?: string; // 抽成別
-  org_id?: string; // 組織代號
-  tlt_no?: string; // 專櫃編號
+  floor?: string[]; // 樓層
+  region?: string[]; // 區域
+  bus_type?: string[]; // 大分類
+  bus_class?: string[]; // 中分類
+  tlt_kind?: string[]; // 櫃別
+  tlt_term_type?: string[]; // 抽成別
+  org_id?: string[]; // 組織代號
+  tlt_no?: string[]; // 專櫃編號
   tax?: boolean; // 是否含稅
 }
 

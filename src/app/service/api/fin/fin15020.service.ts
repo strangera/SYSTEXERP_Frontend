@@ -4,50 +4,57 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
+/**
+ * 查詢進貨退出或折讓明細表 Request
+ */
 export interface FIN15020QueryRequest extends BaseQueryRequest {
-  MID?: number;
-  STO_No?: string;
-  TXN_Ret_No_S?: string;
-  TXN_Ret_No_E?: string;
-  PUR_GUIDate?: string;
-  PUR_VoucherType?: string;
-  GUI_Track?: string;
-  PUR_GUINo_S?: string;
-  PUR_GUINo_E?: string;
-  PUR_GUIDate_S?: string;
-  PUR_GUIDate_E?: string;
-  Credit_Type?: string;
-  PUR_RepYYYYMM?: string;
-  PUR_GUIDateYYYYMM_S?: string;
-  PUR_GUIDateYYYYMM_E?: string;
-  Source_Doc_No_S?: string;
-  Source_Doc_No_E?: string;
-  Voucher_No_S?: string;
-  Voucher_No_E?: string;
-  SAL_Type?: string;
+  MID?: number; // 商場編號
+  STO_No?: string; // 分店編號
+  TXN_Ret_No_S?: string; // 退出/折讓單號起
+  TXN_Ret_No_E?: string; // 退出/折讓單號訖
+  PUR_GUIDate?: string; // 退出/折讓日期
+  PUR_VoucherType?: string[]; // 發票格式
+  GUI_Track?: string; // 字軌
+  PUR_GUINo_S?: string; // 發票號碼起
+  PUR_GUINo_E?: string; // 發票號碼訖
+  PUR_GUIDate_S?: string; // 退出/折讓日期起
+  PUR_GUIDate_E?: string; // 退出/折讓日期訖
+  Credit_Type?: string[]; // 區別
+  PUR_RepYYYYMM?: string; // 申報年月
+  PUR_GUIDateYYYYMM_S?: string; // 資料所屬年月起
+  PUR_GUIDateYYYYMM_E?: string; // 資料所屬年月訖
+  Source_Doc_No_S?: string; // 憑證單號起
+  Source_Doc_No_E?: string; // 憑證單號訖
+  Voucher_No_S?: string; // 傳票號碼起
+  Voucher_No_E?: string; // 傳票號碼訖
+  SAL_Type?: string[]; // 使用別
+  SYS_ORIGIN?: string[]; // 系統別
 }
 
+/**
+ * 進貨退出或折讓明細表資料清單細項
+ */
 export interface FIN15020Data {
-  No: number;
-  TXN_Ret_No: string;
-  PUR_VoucherType: string;
-  GUI_Track: string;
-  InvoiceNo: string;
-  PUR_GUIDate: string;
-  Credit_Type: string;
-  PUR_RepYYYYMM: string;
-  PUR_Net: number;
-  PUR_Tax: number;
-  Source_Doc_No: string;
-  Voucher_No: string;
-  SAL_Type: string;
-  PUR_DiscNo: string;
-  PUR_Uniform: string;
+  No?: number; // 序號
+  TXN_Ret_No?: string; // 退出/折讓單號
+  PUR_VoucherType?: string; // 發票格式代號
+  GUI_Track?: string; // 字軌
+  InvoiceNo?: string; // 發票號碼
+  PUR_GUIDate?: string; // 退出折讓日期
+  Credit_Type?: string; // 區別
+  PUR_RepYYYYMM?: string; // 申報年月
+  PUR_Net?: number; // 退出折讓單金額
+  PUR_Tax?: number; // 退出折讓單稅額
+  Source_Doc_No?: string; // 憑證單號
+  Voucher_No?: string; // 傳票編號
+  SAL_Type?: string; // 系統別
+  PUR_DiscNo?: string; // 折抵代號
+  PUR_Uniform?: string; // 統一編號
 }
 
 export interface FIN15020PrintRequest extends FIN15020QueryRequest {
-  IsMerge?: boolean;
-  IsExcel?: boolean;
+  IsMerge?: boolean;  // 是否合併列印
+  IsExcel?: boolean;  // 是否為EXCEL
 }
 
 @Injectable({
@@ -58,6 +65,7 @@ export class FIN15020Service {
 
   constructor(private http: HttpClient) { }
 
+  // 查詢進貨退出或折讓明細表
   queryFIN15020(data: FIN15020QueryRequest): Observable<BaseQueryResponse<FIN15020Data>> {
     return this.http.post<BaseQueryResponse<FIN15020Data>>(`${this.apiUrl}/queryFIN15020`, data);
   }

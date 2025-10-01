@@ -241,20 +241,23 @@
 
         <h4>電子票證、電子支付</h4>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="悠遊卡型態" controlName="ECR_ElecSVCrdA"
-            [control]="dataForm.controls.ECR_ElecSVCrdA" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="悠遊卡型態" controlName="ECR_ElecSVCrdA"
+            [control]="dataForm.controls.ECR_ElecSVCrdA" [options]="ECR_ElecSVCrdA_Option" optionLabel="label"
+            optionValue="value" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="悠遊卡連接埠" controlName="ECR_ElecSVCrdACom"
             [control]="dataForm.controls.ECR_ElecSVCrdACom" [submitted]="submitted" />
         </div>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="一卡通型態" controlName="ECR_ElecSVCrdB"
-            [control]="dataForm.controls.ECR_ElecSVCrdB" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="一卡通型態" controlName="ECR_ElecSVCrdB"
+            [control]="dataForm.controls.ECR_ElecSVCrdB" [options]="ECR_ElecSVCrdB_Option" optionLabel="label"
+            optionValue="value" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="一卡通連接埠" controlName="ECR_ElecSVCrdBCom"
             [control]="dataForm.controls.ECR_ElecSVCrdBCom" [submitted]="submitted" />
         </div>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="愛金卡型態" controlName="ECR_ElecSVCrdC"
-            [control]="dataForm.controls.ECR_ElecSVCrdC" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="愛金卡型態" controlName="ECR_ElecSVCrdC"
+            [control]="dataForm.controls.ECR_ElecSVCrdC" [options]="ECR_ElecSVCrdC_Option" optionLabel="label"
+            optionValue="value" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="愛金卡連接埠" controlName="ECR_ElecSVCrdCCom"
             [control]="dataForm.controls.ECR_ElecSVCrdCCom" [submitted]="submitted" />
         </div>
@@ -267,8 +270,9 @@
         </div>
         <h4>其他</h4>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="錢櫃型態" controlName="ECR_Drawer"
-            [control]="dataForm.controls.ECR_Drawer" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="錢櫃型態" controlName="ECR_Drawer"
+            [control]="dataForm.controls.ECR_Drawer" [options]="ECR_Drawer_Option" optionLabel="label"
+            optionValue="value" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="錢櫃連接埠" controlName="ECR_DrawerCom"
             [control]="dataForm.controls.ECR_DrawerCom" [submitted]="submitted" />
         </div>

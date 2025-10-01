@@ -16,7 +16,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { SystemOptionsService } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // 2.4.6.2 POS環境變數維護作業 CRU
@@ -73,8 +73,8 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
     ECR_VoidRstDay: [0, [Validators.required, Validators.min(0), Validators.max(9999)]], // DECIMAL(04) NOT NULL
     ECR_CreditNote: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_RestoreVoid: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL (注意：表格預設是 'N' 且 NOT NULL)
-    ECR_GUI_PeriodQty: [50, [Validators.min(0), Validators.max(99999999)]], // DECIMAL(08) NULL (只給數字驗證，不預設 required)
-    ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]], // DECIMAL(08) NULL (只給數字驗證，不預設 required)
+    ECR_GUI_PeriodQty: [50, [Validators.min(50), Validators.max(99999999)]], // DECIMAL(08) NULL (只給數字驗證，不預設 required)
+    ECR_GUI_MinQty: [50, [Validators.min(50), Validators.max(99999999)]], // DECIMAL(08) NULL (只給數字驗證，不預設 required)
 
     // 報表設定
     ECR_SelfReport: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
@@ -170,6 +170,11 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
   ECR_EDC_Option = SystemOptionsService.getOptions('ECR_EDC');
   ECR_EDC2_Option = SystemOptionsService.getOptions('ECR_EDC2');
   ECR_ElecPay_Option = SystemOptionsService.getOptions('ECR_ElecPay');
+
+  ECR_ElecSVCrdA_Option = getSYS1000Options('ECR_ElecSVCrdA');
+  ECR_ElecSVCrdB_Option = getSYS1000Options('ECR_ElecSVCrdB');
+  ECR_ElecSVCrdC_Option = getSYS1000Options('ECR_ElecSVCrdC');
+  ECR_Drawer_Option = getSYS1000Options('ECR_Drawer');
 
   constructor(
     private tls46020Service: TLS46020Service,

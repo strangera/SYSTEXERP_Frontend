@@ -58,7 +58,6 @@ export class TLS57130Component extends BasicQueryPageComponent<Tls57130DataItem>
     { field: 'RNK', header: '名次' },
   ]
 
-
   constructor(
     public readonly tls57130Service: Tls57130Service,
     private readonly dropdown: DropdownApiService

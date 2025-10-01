@@ -122,19 +122,27 @@
 </div>
 
 <div class="card">
-  <app-table
-    [tableKey]="'tls2b030'"
-    dataKey="TLT_Name"
-    [multiSortMeta]="[{ field: 'TLT_Name', order: 1 }]"
-    [columns]="columns"
-    [data]="data"
-    [loading]="loading"
-    [showCheckBox]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [totalRecords]="totalRecords"
-    [showManage]="false"
-    [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
-  </app-table>
+ <app-table-report
+  [tableKey]="'tls2b030'"
+  [dataKey]="'_rowKey'"              
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="totalRecords"     
+  [loading]="loading"
+  [showManage]="false"
+  [showHeader]="true"
+  [showFilter]="true"
+  [showReportMode]="true"
+  [showExcel]="false"
+  [footerData]="footerData"
+
+  [queryFunction]="queryTLS2B030ForReport"  
+  [lastQueryBody]="lastQueryBody"          
+
+  [showCheckBox]="false"
+  [selectedItems]="selectedItems"
+  (selectionChange)="selectedItems = $event"
+>
+  
+</app-table-report>
 </div>

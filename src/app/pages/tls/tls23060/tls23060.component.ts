@@ -22,6 +22,7 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { finalize, map } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { CalendarModule } from 'primeng/calendar';
 
 @Component({
   selector: 'app-tls23060',
@@ -36,12 +37,13 @@ import { HttpResponse } from '@angular/common/http';
     CalendarRangeQuickComponent,
     RadiobuttonComponent,
     MultiSelectComponent,
-    DropdownComponent,
+
     InputTextModule,
     ButtonComponent,
     TranslateModule,
     Table2Component,
     ButtonComponent,
+
     ButtonModule
   ],
 })

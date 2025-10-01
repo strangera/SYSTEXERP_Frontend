@@ -5095,7 +5095,7 @@
   .p-dialog .p-dialog-content {
     background: #1f2937;
     color: rgba(255, 255, 255, 0.87);
-    padding: 0 1.5rem 0 1.5rem;
+    padding: 0 1.5rem 1.5rem 1.5rem;
   }
   .p-dialog .p-dialog-content:last-of-type {
     border-bottom-right-radius: 6px;

@@ -64,7 +64,7 @@
         <ng-container *ngFor="let col of columns">
           <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn
             [pSortableColumn]="col.field" [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn
-            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" style="min-width: 55px">
             {{ col.header }}
             <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
           </th>
@@ -83,7 +83,7 @@
         </th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn [pSortableColumn]="col.field"
           [pSortableColumnDisabled]="col.showSort === false" class="text-center wrap-header" pFrozenColumn
-          [frozen]="col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+          [frozen]="col.frozen" [alignFrozen]="col.alignFrozen || 'right'" style="min-width: 55px">
           {{col.header}}
           <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
         </th>

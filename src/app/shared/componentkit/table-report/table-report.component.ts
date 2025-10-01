@@ -27,13 +27,13 @@ import { TableExpansionComponent } from '../table/table-expansion/table-expansio
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') private dt!: Table;
-  @Input() lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
-  @Input() totalRecords = 0;                               // 用來儲存總筆數
-  @Input() data: any[] = [];                               // 用來儲存查詢結果
+  @Input({ required: true }) lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
+  @Input({ required: true }) totalRecords = 0;                               // 用來儲存總筆數
+  @Input({ required: true }) data: any[] = [];                               // 用來儲存查詢結果
   @Input() dataKey: string | undefined;                                 // 用來儲存查詢結果
-  @Input() columns: ReportColumn[] = [];                              // 用來儲存查詢結果
+  @Input({ required: true }) columns: ReportColumn[] = [];                              // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];                  // 用來儲存查詢結果
-  @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
+  @Input({ required: true }) queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   @Input() loading = false;
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
