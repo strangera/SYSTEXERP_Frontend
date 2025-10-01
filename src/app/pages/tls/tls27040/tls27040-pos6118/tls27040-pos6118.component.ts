@@ -15,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { todayStart } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls27040-pos6118',
@@ -38,27 +39,27 @@ export class Tls27040POS6118Component extends BasicQueryPageComponent<POS6118Dat
   @ViewChild('tableTemplate', { static: true }) tableTemplate!: TemplateRef<unknown>;
   @Input() selectedBank!: string;
   queryForm = this.formBuilder.group({
-    ECR_No: ['', [Validators.maxLength(10)]], // ECR編號
-    TXN_No: ['', [Validators.maxLength(8)]], // 交易編號
-    TLT_No: ['', [Validators.maxLength(12)]], // 專櫃編號
+    ECR_No: [null, [Validators.maxLength(10)]], // ECR編號
+    TXN_No: [null, [Validators.maxLength(8)]], // 交易編號
+    TLT_No: [null, [Validators.maxLength(12)]], // 專櫃編號
     NCML_TxnTypeList: [null],         // 銷售狀況
     NCML_PayCrdTypeList: [null],    // 卡別
     NCML_TxnAmt_Start: [null, [Validators.max(9999999999)]],       // 交易金額起 decimal 12, 2
     NCML_TxnAmt_End: [null, [Validators.max(9999999999)]],      // 交易金額迄 decimal 12, 2
     NCML_TxnDate_Start: [null],    // 交易日期起
     NCML_TxnDate_End: [null],    // 交易日期迄
-    NCML_TxnTime_Start: [null],  // 交易時間起
-    NCML_TxnTime_End: [null],  // 交易時間迄
-    NCML_CrdNo: ['', [Validators.maxLength(32)]],       // 卡號
-    NCML_TmID: ['', [Validators.maxLength(8)]],      //EDC號碼
+    NCML_TxnTime_Start: [todayStart],  // 交易時間起
+    NCML_TxnTime_End: [todayStart],  // 交易時間迄
+    NCML_CrdNo: [null, [Validators.maxLength(32)]],       // 卡號
+    NCML_TmID: [null, [Validators.maxLength(8)]],      //EDC號碼
     NCML_BatCloseDate_Start: [null], // 請款日期起
     NCML_BatCloseDate_End: [null], // 請款日期迄
     NCML_CrdTxnFgList: [null],      // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
     NCML_CheckList: [null],       // 輸入狀態
-    NCML_ApprovalCode: ['', [Validators.maxLength(6)]],  // 核准碼
+    NCML_ApprovalCode: [null, [Validators.maxLength(6)]],  // 核准碼
     NCML_TermNoList: [null],      // 分期期數
     radioBtn: [null], // 查詢篩選
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
+    ...createPaginationConfig([{ field: 'NCML_TxnDate', order: 1 }]),
   });
   totalRecords = 0;
   POS6118Data: POS6118Data[] = [];
