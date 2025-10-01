@@ -69,7 +69,7 @@ export interface KeyItem {
   ]
 })
 export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-
+  activeIndex = 0;
   // 主檔 form
   dataForm = this.formBuilder.nonNullable.group({
     USR_Level: ['', [Validators.maxLength(6), Validators.required]],
@@ -180,7 +180,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       if (v) this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${v.r},${v.g},${v.b}`);
     });
 
-    // 編輯 / 檢視 模式才查 API
+    // 編輯 / 檢視 模式查 API
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       if (this.rowdata?.USR_Level) {
         // 主檔
@@ -206,6 +206,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         });
       }
     }
+    this.activeIndex = this.dataForm.controls.activePage.value || 0;
   }
 
   // ---------------- Dropdown ----------------
@@ -249,18 +250,29 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   addPage() {
     const newPageIndex = this.totalPages;
     this.pages.push(this.buildGrid(newPageIndex));
-    this.dataForm.controls.activePage.setValue(newPageIndex);
+    setTimeout(() => {
+      this.activeIndex = newPageIndex;
+      this.dataForm.controls.activePage.setValue(newPageIndex);
+
+      const newPage = this.pages[newPageIndex];
+      if (newPage?.length) {
+        this.selectKey(newPage[0]);
+      }
+    });
   }
 
   private applyDetail(detailList: any[]) {
     if (!detailList?.length) return;
 
-    detailList.forEach(d => d.KG_KeyPage = 1);
+    const maxPage = Math.max(...detailList.map(d => d.KG_KeyPage || 1));
+    while (this.pages.length < maxPage) {
+      this.pages.push(this.buildGrid(this.pages.length));
+    }
 
     detailList.forEach((d: any) => {
-      const pageIndex = 0;
-
+      const pageIndex = (d.KG_KeyPage ?? 1) - 1;
       const scanCode = d.KB_Merge;
+
       const key = this.pages[pageIndex].find(k => k.code === scanCode);
       if (key) {
         Object.assign(key, {
@@ -302,9 +314,13 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       });
     }
   }
+
   // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem) {
-    if (this.selected) Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+    if (this.crudstatus === CRUDStatus.Read) return;
+    if (this.selected) {
+      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+    }
     this.selected = k;
     this.selectedKeyForm.patchValue({
       KB_Func: k.KB_Func ?? '',
@@ -322,6 +338,19 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       KB_Arg3: k.KB_Arg3 ?? ''
     });
   }
+
+  onPageChange(newPageIndex: number) {
+    if (this.selected) {
+      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+    }
+    this.activeIndex = newPageIndex;
+    this.dataForm.controls.activePage.setValue(newPageIndex);
+    const newPage = this.pages[newPageIndex];
+    if (newPage?.length) {
+      this.selectKey(newPage[0]);
+    }
+  }
+
   // ---------------- Submit ----------------
   private buildDetailList(frm: any) {
     return this.pages.flatMap((page, pageIndex) =>

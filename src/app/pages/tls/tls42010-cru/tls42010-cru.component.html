@@ -62,16 +62,17 @@
                 label="新增頁數"
                 btnType="create"
                 (click)="addPage()"
-                style="height: 28px; font-size: 12px"
+                class="btn-small"
+                icon="pi pi-plus"
               ></app-button>
             </div>
             <p-tabView
-              [activeIndex]="dataForm.controls.activePage.value"
-              (onChange)="onTabChangeTab($event)"
+              [activeIndex]="activeIndex"
+              (activeIndexChange)="onPageChange($event)"
               class="kb-tabview"
             >
               <p-tabPanel
-                *ngFor="let _ of pageList; index as i"
+                *ngFor="let page of pages; index as i"
                 [header]="(i + 1).toString()"
               >
                 <div
@@ -80,22 +81,20 @@
                   [style.gridTemplateRows]="'repeat(' + yCount + ', 60px)'"
                 >
                   <button
-                    *ngFor="let k of visibleKeys"
+                    *ngFor="let k of page"
                     type="button"
                     class="kb-key"
                     [class.active]="selected?.code === k.code"
                     [ngClass]="'type-' + (k.type || 'normal')"
                     (click)="selectKey(k)"
                   >
-                    <!-- 第一行 -->
                     <div class="kb-line" *ngIf="k.KB_Display1">
                       {{ k.KB_Display1 }}
                     </div>
-                    <!-- 第二行 -->
                     <div class="kb-line" *ngIf="k.KB_Display2">
                       {{ k.KB_Display2 }}
                     </div>
-                    <!-- ScanCode：只有兩行都沒文字才顯示 -->
+
                     <div
                       class="kb-sub"
                       *ngIf="!k.KB_Display1 && !k.KB_Display2"
