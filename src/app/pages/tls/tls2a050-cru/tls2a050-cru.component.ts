@@ -84,13 +84,16 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
     this.tls2A050Service.queryTLS22050(raw).subscribe({
       next: (res) => {
         if (res.Status === '0000' || res.Status === 0) {
+          if (!res.Data || res.Data.length === 0) {
+            alert('查無資料');
+            this.detailData = [];
+            return;
+          }
           this.detailData = [];
-
           (res.Data || []).forEach((group: any) => {
             const list = group._DetailList && group._DetailList.length > 0
               ? group._DetailList
               : [{ ECR_No: null, TXN_No: null, BOOK_PayAmt: 0, ACT_PayAmt: 0, OVER_PayAmt: 0 }];
-
             // 加入明細列
             list.forEach((d: any) => {
               this.detailData.push({
@@ -99,7 +102,6 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
                 isTotal: false
               });
             });
-
             this.detailData.push({
               PAY_Name: group.PAY_Name,  // 保持分組歸屬
               isTotal: true,
@@ -107,10 +109,7 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
               ACT_PayAmt: group.ACT_PayAmt_Sum ?? 0,
               OVER_PayAmt: group.OVER_PayAmt_Sum ?? 0
             });
-
-
           });
-
           console.log('展平後 detailData:', this.detailData);
         } else {
           this.messageService.errorBubble(`查詢失敗: ${res.Message}`);

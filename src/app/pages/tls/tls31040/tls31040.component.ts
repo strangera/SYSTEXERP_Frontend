@@ -23,6 +23,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { CommonModule, DatePipe } from '@angular/common';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TLS26050Service } from '@service/api/tls/tls26050.service';
 
 @Component({
   selector: 'app-tls31040',
@@ -53,9 +54,28 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 // 各櫃別之營業報表
 export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
-    TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
+    TXN_DateS: [yesterday, Validators.required],
+    TXN_DateE: [yesterday, Validators.required],
 
+    // 合約查詢條件
+    tlt_building: [[]],// 館別
+    tlt_floor: [[]],// 樓層
+    area_no: [[]],// 區域
+    bus_type: [[] as string[]],//大分類
+    bus_class: [[] as IDropdownItem[]],//中分類
+    bus_sclass: [[] as IDropdownItem[]],//小分類
+    tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
+    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
+    org_id: [[]],  // 組織
+    TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
+    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
+
+
+    ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
+  });
+
+  // 日期查詢條件表單
+  dateForm = this.formBuilder.nonNullable.group({
     // 日期查詢條件（單選報表類型）
     reportType: ['1'], // 報表類型
 
@@ -63,20 +83,20 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     onedatedd: [yesterday],        // 基準日期 (日)
 
     // --- 週報（type 2）相關
-    onedateyy: [new Date().getFullYear().toString()],      // 基準年度 (年字串)
+    onedateyy: [new Date()],      // 基準年度 (年字串)
     weeks: [''],                                           // 基準週數 (輸入)
-    startdate: [null],           // 基準開始日期 (由週數帶出)
-    enddate: [null],             // 基準結束日期 (由週數帶出)
+    startdate: [null as Date | null],           // 基準開始日期 (由週數帶出)
+    enddate: [null as Date | null],             // 基準結束日期 (由週數帶出)
 
     // --- 月報（type 3）
     onedatemm: [null],       // 基準年月 (可由 calendar 取值)
 
     // --- 半年報（type 4）
-    halfyear_onedateyy: [new Date().getFullYear().toString()],
+    halfyear_onedateyy: [new Date()],
     halfyear: ['1'],         // 上/下半年
 
     // --- 年報（type 5）
-    year_onedateyy: [new Date().getFullYear().toString()],
+    year_onedateyy: [new Date()],
 
     // --- 區間報（type 6）
     sad_startdate: [null],
@@ -87,7 +107,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     event_startdate: [null as Date | null],
     event_enddate: [null as Date | null],
 
-    // 合約查詢條件（你原本的那些）
     // 合約查詢條件
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
@@ -122,7 +141,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
     { value: '6', label: '區間營業報表' },
-    { value: '7', label: '活動區間營業報表' },
   ];
 
   totalRecords = 0;
@@ -186,11 +204,21 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly tls31040Service: Tls31040Service,
+    private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS31040', 'TLS/TLS31040cru', this.queryForm, (frm) => this.onSubmit(frm));
+    // 日期表單控制
+    this.onReportTypeChange('1');
+    this.setReadOnlyFields();
+
+    // 監聽 dateForm 的變化，套用日期到 queryForm
+    this.dateForm.valueChanges.subscribe(() => {
+      this.syncDateToQueryForm();
+    });
+
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
     })
@@ -314,6 +342,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
+
         bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
         bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
       } as TLS31040Request;
@@ -355,17 +384,20 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       });
   }
 
-  /**** 新增/補齊的方法 ****/
+  // #region 日期選單事件
+  queryWeek(event: string) {
+    const control = this.dateForm.controls['onedateyy'];
+    if (!control.value) return;
+    
+    const payload = {
+      onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
+      weeks: event,
+    };
 
-  queryWeek(event: string, baseOrCompare: 'base' | 'compare') {
-    // const control = this.queryForm.controls[baseOrCompare === 'base' ? 'onedateyy' : 'onedateyy_c'];
-    // if (!control.value) return;
-    // const payload = {
-    //   onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
-    //   weeks: event,
-    // };
-
-    // console.log('queryWeek payload', payload);
+    this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
+      this.dateForm.controls['startdate'].setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
+      this.dateForm.controls['enddate'].setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
+    });
   }
 
   onReportTypeChange(event: any) {
@@ -373,62 +405,129 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     const reportType = event;
 
     // 清除所有驗證器
-    Object.keys(this.queryForm.controls).forEach(key => {
+    Object.keys(this.dateForm.controls).forEach(key => {
       if (key !== 'reportType') {
-        this.queryForm.get(key)?.clearValidators();
+        this.dateForm.get(key)?.clearValidators();
       }
     });
 
     // 根據報表類型設定必要欄位驗證
     switch (reportType) {
       case '1': // 日營業報表
-        this.queryForm.get('onedatedd')?.setValidators([Validators.required]);
+        this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
         break;
       case '2': // 週營業報表
-        this.queryForm.get('onedateyy')?.setValidators([Validators.required]);
-        this.queryForm.get('weeks')?.setValidators([Validators.required]);
-        this.queryForm.get('startdate')?.setValidators([Validators.required]);
-        this.queryForm.get('enddate')?.setValidators([Validators.required]);
+        this.dateForm.get('onedateyy')?.setValidators([Validators.required]);
+        this.dateForm.get('weeks')?.setValidators([Validators.required]);
+        this.dateForm.get('startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('enddate')?.setValidators([Validators.required]);
         break;
       case '3': // 月營業報表
-        this.queryForm.get('onedatemm')?.setValidators([Validators.required]);
+        this.dateForm.get('onedatemm')?.setValidators([Validators.required]);
         break;
       case '4': // 半年營業報表
-        this.queryForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
+        this.dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
         break;
       case '5': // 年營業報表
-        this.queryForm.get('year_onedateyy')?.setValidators([Validators.required]);
+        this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
         break;
       case '6': // 區間營業報表
-        this.queryForm.get('sad_startdate')?.setValidators([Validators.required]);
-        this.queryForm.get('sad_enddate')?.setValidators([Validators.required]);
+        this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
         break;
       case '7': // 活動區間營業報表
-        this.queryForm.get('event_startdate')?.setValidators([Validators.required]);
-        this.queryForm.get('event_enddate')?.setValidators([Validators.required]);
+        this.dateForm.get('event_startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('event_enddate')?.setValidators([Validators.required]);
         break;
     }
 
     // 更新所有欄位驗證狀態
-    Object.keys(this.queryForm.controls).forEach(key => {
-      this.queryForm.get(key)?.updateValueAndValidity();
+    Object.keys(this.dateForm.controls).forEach(key => {
+      this.dateForm.get(key)?.updateValueAndValidity();
     });
   }
 
   setReadOnlyFields() {
-    // this.queryForm.controls['startdate'].disable();
-    // this.queryForm.controls['enddate'].disable();
-    this.queryForm.controls['event_startdate'].disable();
-    this.queryForm.controls['event_enddate'].disable();
+    this.dateForm.controls['startdate'].disable();
+    this.dateForm.controls['enddate'].disable();
+    this.dateForm.controls['event_startdate'].disable();
+    this.dateForm.controls['event_enddate'].disable();
   }
 
   // 活動下拉改變
   queryEvent(event: any) {
     console.log(event);
     console.log(this.EventIDOptions);
-    this.queryForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateS ?? null);
-    this.queryForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateE ?? null);
+    this.dateForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateS ?? null);
+    this.dateForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateE ?? null);
   }
+
+  // #region 同步日期選單內容給表單日期
+  private syncDateToQueryForm() {
+    const reportType = this.dateForm.get('reportType')?.value;
+
+    let start: Date | null = null;
+    let end: Date | null = null;
+
+    switch (reportType) {
+      case '1': // 日報
+        start = this.dateForm.get('onedatedd')?.value ?? null;
+        end = start;
+        break;
+
+      case '2': // 週報
+        start = this.dateForm.get('startdate')?.value ?? null;
+        end = this.dateForm.get('enddate')?.value ?? null;
+        break;
+
+      case '3': { // 月報 
+        const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
+        if (onedatemm) {
+          start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
+          end = new Date(onedatemm.getFullYear(), onedatemm.getMonth() + 1, 0);
+        }
+        break;
+      }
+
+      case '4': { // 半年報
+        const dateValue = this.dateForm.get('halfyear_onedateyy')?.value as Date | string;
+        const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+        const half = String(this.dateForm.get('halfyear')?.value); // 確保是字串
+
+        if (year) {
+          if (half === '1') { // 上半年
+            start = new Date(year, 0, 1);
+            end = new Date(year, 5, 30);
+          } else if (half === '2') { // 下半年
+            start = new Date(year, 6, 1);
+            end = new Date(year, 11, 31);
+          }
+        }
+        break;
+      }
+
+      case '5': { // 年報
+        const dateValue = this.dateForm.get('year_onedateyy')?.value as Date | string;
+        const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+
+        if (year) {
+          start = new Date(year, 0, 1);
+          end = new Date(year, 11, 31);
+        }
+        break;
+      }
+
+      case '6': // 區間報
+        start = this.dateForm.get('sad_startdate')?.value ?? null;
+        end = this.dateForm.get('sad_enddate')?.value ?? null;
+        break;
+    }
+
+    // 套用到 queryForm
+    if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
+    if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+  }
+
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

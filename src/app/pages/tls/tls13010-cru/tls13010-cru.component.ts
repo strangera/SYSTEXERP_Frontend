@@ -1768,10 +1768,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // 取得位置總營業坪數
   getTotaltlt_space(): number {
-    return this.locationData.reduce((total: number, item: LocationItem) => {
-      const area = parseFloat(item.tlt_space.toString()) || 0;
-      return total + area;
-    }, 0);
+    return this.locationData
+      .filter(item => item._status !== 'deleted')  // ✅ 排除已刪除的項目
+      .reduce((total: number, item: LocationItem) => {
+        const area = parseFloat(item.tlt_space.toString()) || 0;
+        return total + area;
+      }, 0);
   }
 
   // 取得位置設定狀態

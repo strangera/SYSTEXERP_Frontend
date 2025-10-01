@@ -18,13 +18,14 @@ import { NgIf } from '@angular/common';
 import { ButtonComponent } from "@shared/componentkit/button/button.component";
 import { DialogModule } from "primeng/dialog";
 import { MenubarComponent } from "@shared/component/menubar/menubar.component";
+import { Button } from "primeng/button";
 
 @Component({
   selector: 'app-tls13010-next2',
   templateUrl: './tls13010-next2.component.html',
   styleUrls: ['./tls13010-next2.component.scss'],
   standalone: true,
-  imports: [AccordionModule, ExpandableEditTableComponent, ProgressSpinnerModule, NgIf, ButtonComponent, DialogModule, MenubarComponent]
+  imports: [AccordionModule, ExpandableEditTableComponent, ProgressSpinnerModule, NgIf, ButtonComponent, DialogModule, MenubarComponent, Button]
 })
 export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> implements OnInit, OnDestroy {
 

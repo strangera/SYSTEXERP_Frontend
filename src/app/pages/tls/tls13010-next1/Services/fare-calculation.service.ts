@@ -76,7 +76,7 @@ export class FareCalculationService {
     const quantity = parseFloat(data.tpy_qty) || 0;
 
     if (unitPrice > 0 && quantity > 0) {
-      data.tpy_amount = unitPrice * quantity;
+      data.tpy_amount = this.roundToFixed(unitPrice * quantity);
       console.log(`💰 A類型計算: ${unitPrice} × ${quantity} = ${data.tpy_amount}`);
     } else {
       data.tpy_amount = 0;
@@ -98,7 +98,8 @@ export class FareCalculationService {
     const quantity = parseFloat(data.tpy_qty) || 0;
 
     if (unitPrice > 0 && quantity > 0) {
-      data.tpy_amount = unitPrice * quantity;
+      // 🔧 修正浮點數精度問題
+      data.tpy_amount = this.roundToFixed(unitPrice * quantity);
       console.log(`💰 B類型計算: ${unitPrice} × ${quantity} = ${data.tpy_amount}`);
     } else {
       data.tpy_amount = 0;
@@ -142,11 +143,11 @@ export class FareCalculationService {
       case 'tpy_totalamt': // 總金額變更
         if (monthlyAmount > 0) {
           const calculatedDownPayment = totalAmount - (monthlyAmount * (periods - 1));
-          data.down_payment = Math.max(0, calculatedDownPayment);
+          data.down_payment = this.roundToFixed(Math.max(0, calculatedDownPayment));
           console.log(`💰 總金額變更: 根據每月金額計算首期金額 = ${data.down_payment}`);
         } else if (downPayment > 0) {
           const calculatedMonthlyAmount = (totalAmount - downPayment) / (periods - 1);
-          data.tpy_amount = Math.max(0, calculatedMonthlyAmount);
+          data.tpy_amount = this.roundToFixed(Math.max(0, calculatedMonthlyAmount));
           console.log(`💰 總金額變更: 根據首期金額計算每月金額 = ${data.tpy_amount}`);
         }
         break;
@@ -154,11 +155,11 @@ export class FareCalculationService {
       case 'period_nos': // 期數變更
         if (monthlyAmount > 0) {
           const calculatedDownPayment = totalAmount - (monthlyAmount * (periods - 1));
-          data.down_payment = Math.max(0, calculatedDownPayment);
+          data.down_payment = this.roundToFixed(Math.max(0, calculatedDownPayment));
           console.log(`📅 期數變更: 重新計算首期金額 = ${data.down_payment}`);
         } else if (downPayment > 0) {
           const calculatedMonthlyAmount = (totalAmount - downPayment) / (periods - 1);
-          data.tpy_amount = Math.max(0, calculatedMonthlyAmount);
+          data.tpy_amount = this.roundToFixed(Math.max(0, calculatedMonthlyAmount));
           console.log(`📅 期數變更: 重新計算每月金額 = ${data.tpy_amount}`);
         }
         break;
@@ -166,7 +167,7 @@ export class FareCalculationService {
       case 'tpy_amount': // 每月金額變更
         if (monthlyAmount >= 0) {
           const calculatedDownPayment = totalAmount - (monthlyAmount * (periods - 1));
-          data.down_payment = Math.max(0, calculatedDownPayment);
+          data.down_payment = this.roundToFixed(Math.max(0, calculatedDownPayment));
           console.log(`🔄 每月金額變更: 計算首期金額 = ${data.down_payment}`);
         }
         break;
@@ -174,7 +175,7 @@ export class FareCalculationService {
       case 'down_payment': // 首期金額變更
         if (downPayment >= 0) {
           const calculatedMonthlyAmount = (totalAmount - downPayment) / (periods - 1);
-          data.tpy_amount = Math.max(0, calculatedMonthlyAmount);
+          data.tpy_amount = this.roundToFixed(Math.max(0, calculatedMonthlyAmount));
           console.log(`🔄 首期金額變更: 計算每月金額 = ${data.tpy_amount}`);
         }
         break;
@@ -269,5 +270,15 @@ export class FareCalculationService {
       default:
         return true;
     }
+  }
+
+  /**
+ * 修正浮點數精度問題
+ * @param value 原始數值
+ * @param decimals 保留小數位數,預設2位
+ */
+  private roundToFixed(value: number, decimals: number = 2): number {
+    const multiplier = Math.pow(10, decimals);
+    return Math.round(value * multiplier) / multiplier;
   }
 }
