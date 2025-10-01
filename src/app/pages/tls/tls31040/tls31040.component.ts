@@ -51,7 +51,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 })
 
 // 各櫃別之營業報表
-export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response> implements OnInit{
+export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
     TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
@@ -96,7 +96,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     bus_class: [[] as IDropdownItem[]],//中分類
     bus_sclass: [[] as IDropdownItem[]],//小分類
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
+    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
     org_id: [[]],  // 組織
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
@@ -128,8 +128,8 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   totalRecords = 0;
   data: TLS31040Response[] = [];
   columns: Column[] = [
-    { field: 'tlt_kind', header: '櫃別', visible: true }, 
-    { field: 'tlt_kindName', header: '櫃別名稱', visible: true }, 
+    { field: 'tlt_kind', header: '櫃別', visible: true },
+    { field: 'tlt_kindName', header: '櫃別名稱', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
@@ -141,9 +141,9 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
     { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
 
-    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, 
+    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' },
-    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, 
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' },
 
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
     { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
@@ -168,8 +168,8 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     { value: "2", label: "底租抽成取高者" },
     { value: "3", label: "一般抽成" },
     { value: "4", label: "包底抽成" },
-    { value: "5", label: "階梯式抽成" },
-    { value: "6", label: "包底加階梯" },
+    { value: "5", label: "層級抽成" },
+    { value: "6", label: "包底加層級" },
   ]
   TaxType_Option = [
     { value: "0", label: "是" },
@@ -357,7 +357,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
 
   /**** 新增/補齊的方法 ****/
 
- queryWeek(event: string, baseOrCompare: 'base' | 'compare') {
+  queryWeek(event: string, baseOrCompare: 'base' | 'compare') {
     // const control = this.queryForm.controls[baseOrCompare === 'base' ? 'onedateyy' : 'onedateyy_c'];
     // if (!control.value) return;
     // const payload = {

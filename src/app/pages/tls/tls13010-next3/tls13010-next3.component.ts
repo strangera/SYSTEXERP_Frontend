@@ -372,11 +372,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         this.adjustItemsDatesForType(this.baseCommissionItems, contractStartDate, contractEndDate);
         break;
       case '5':
-        // 階梯式抽成使用契約起訖日
+        // 層級抽成使用契約起訖日
         this.adjustGraduatedItemsDates(contractStartDate, contractEndDate);
         break;
       case '6':
-        // 包底加階梯使用契約起訖日
+        // 包底加層級使用契約起訖日
         this.adjustBaseTierItemsDates(contractStartDate, contractEndDate);
         break;
     }
@@ -934,7 +934,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   /**
-   * 智能新增階梯式抽成項目
+   * 智能新增層級抽成項目
    */
   onAddGraduatedItem(): void {
     if (this.isViewMode) {
@@ -958,9 +958,9 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
         this.graduatedItems.push(graduatedItem);
         this.saveConditionDataToWorkflow();
-        this.notificationService.successBubble('已新增階梯式抽成項目');
+        this.notificationService.successBubble('已新增層級抽成項目');
 
-        console.log(' 智能新增階梯式抽成:', {
+        console.log(' 智能新增層級抽成:', {
           id: graduatedItem.id,
           seqNo: graduatedItem.seq_no,
           dateRange: `${graduatedItem.cag_bdate} ~ ${graduatedItem.cag_edate}`,
@@ -969,13 +969,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         });
       }
     } catch (error) {
-      console.error('新增階梯式抽成項目失敗:', error);
-      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增階梯式抽成項目失敗');
+      console.error('新增層級抽成項目失敗:', error);
+      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增層級抽成項目失敗');
     }
   }
 
   /**
-   * 智能新增包底加階梯項目
+   * 智能新增包底加層級項目
    */
   onAddBaseTierItem(): void {
     if (this.isViewMode) {
@@ -987,7 +987,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       // 先檢查是否可以新增
       const canAddResult = this.smartDateService.canAddBaseTierItem(this.baseTierItems);
       if (!canAddResult.canAdd) {
-        this.notificationService.warnBubble(canAddResult.reason || '無法新增包底加階梯項目');
+        this.notificationService.warnBubble(canAddResult.reason || '無法新增包底加層級項目');
         return;
       }
 
@@ -1006,9 +1006,9 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
         this.baseTierItems.push(baseTierItem);
         this.saveConditionDataToWorkflow();
-        this.notificationService.successBubble('已新增包底加階梯項目');
+        this.notificationService.successBubble('已新增包底加層級項目');
 
-        console.log(' 智能新增包底加階梯:', {
+        console.log(' 智能新增包底加層級:', {
           id: baseTierItem.id,
           seqNo: baseTierItem.seq_no,
           dateRange: `${baseTierItem.cag_bdate} ~ ${baseTierItem.cag_edate}`,
@@ -1017,8 +1017,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         });
       }
     } catch (error) {
-      console.error('新增包底加階梯項目失敗:', error);
-      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增包底加階梯項目失敗');
+      console.error('新增包底加層級項目失敗:', error);
+      this.notificationService.errorBubble(error instanceof Error ? error.message : '新增包底加層級項目失敗');
     }
   }
 

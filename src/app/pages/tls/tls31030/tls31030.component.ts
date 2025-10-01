@@ -55,7 +55,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     bus_class: [[] as IDropdownItem[]],//中分類
     bus_sclass: [[] as IDropdownItem[]],//小分類
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
+    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
     org_id: [[]],  // 組織
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
@@ -111,8 +111,8 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     { value: "2", label: "底租抽成取高者" },
     { value: "3", label: "一般抽成" },
     { value: "4", label: "包底抽成" },
-    { value: "5", label: "階梯式抽成" },
-    { value: "6", label: "包底加階梯" },
+    { value: "5", label: "層級抽成" },
+    { value: "6", label: "包底加層級" },
   ]
   TaxType_Option = [
     { value: "0", label: "是" },

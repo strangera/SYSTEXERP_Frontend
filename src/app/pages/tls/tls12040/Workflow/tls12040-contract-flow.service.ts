@@ -816,7 +816,7 @@ export class TLS12040FlowService {
   }
 
   /**
-   * 處理階梯式抽成條件
+   * 處理層級抽成條件
    */
   private processGraduatedCondition(condition: any, operations: any): void {
     const cleanItem = {
@@ -838,7 +838,7 @@ export class TLS12040FlowService {
   }
 
   /**
-   * 處理包底加階梯條件
+   * 處理包底加層級條件
    */
   private processBaseTierCondition(condition: any, operations: any): void {
     const cleanItem = {
