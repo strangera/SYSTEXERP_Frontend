@@ -176,6 +176,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   get applyTypeOptions() { return this.sharedDropdownService.applyTypeOptions; }
 
   get contractTypeOptions() { return this.sharedDropdownService.contractTypeOptions; }
+
+  get applyStatusOptions() { return this.sharedDropdownService.applyStatusOptions; }
   // API 選項
   bustypeOptions: any[] = [];
   busClassOptions: any[] = [];
@@ -289,9 +291,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     cap_saletype4: [''],
     open_deposit: [''],
     open_fees: [0], //準時開業保證金
-    construct_deposit: [0],
+    construct_deposit: [''],
     construct_fees: [0], //施工保證金額
-    expiration_deposit: [0],
+    expiration_deposit: [''],
     expiration_fees: [0], //契約屆滿保證金金額
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],

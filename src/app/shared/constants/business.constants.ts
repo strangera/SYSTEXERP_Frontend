@@ -148,7 +148,6 @@ export const CONTRACT_TYPE_OPTIONS = {
   '2': '意向書',
   '3': '要約書',
 } as const;
-
 // ========== 通用格式化函數 ==========
 
 // 多選格式化函數
