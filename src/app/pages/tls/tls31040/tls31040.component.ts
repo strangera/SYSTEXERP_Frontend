@@ -229,18 +229,18 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       this.area_no_Option = res.Data;
     })
     // 獲取大分類下拉選項
-    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
     // 監聽大分類變化
     this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
       if (value && value.length > 0) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
           const groupedData = response.Data.reduce((accumulator, currentItem) => {
-            const groupKey = currentItem.CAT_LNo || '';
+            const groupKey = currentItem.bus_type || '';
             if (!accumulator[groupKey]) {
               accumulator[groupKey] = {
-                label: currentItem.CAT_LName,
+                label: currentItem.bus_type_name,
                 items: []
               };
             }
@@ -276,12 +276,12 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         const requests = [];
         // 根據選取的中分類，為每一個中分類組建一個 API 請求
         for (const mValue of selectedMValues) {
-          if (mValue && mValue.CAT_LNo) {
+          if (mValue && mValue.bus_type) {
             requests.push(
-              this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [mValue.CAT_LNo], CAT_MNo: [mValue.No] }).pipe(
+              this.dropDownListService.queryTLTBUSSCLASS_DropDownList({ bus_type: [mValue.bus_type], bus_class: [mValue.No] }).pipe(
                 map(res => ({
-                  LNo: mValue.CAT_LNo,
-                  LName: mValue.CAT_LName,
+                  LNo: mValue.bus_type,
+                  LName: mValue.bus_type_name,
                   MNo: mValue.No,
                   MName: mValue.Name,
                   Data: res.Data
@@ -310,8 +310,8 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         const newItems = group.Data.map(item => ({
           ...item,
           label: `${item.No} - ${item.Name}`,
-          CAT_LNo: group.LNo,
-          CAT_LName: group.LName,
+          bus_type: group.LNo,
+          bus_type_name: group.LName,
           CAT_MNo: group.MNo,
           CAT_MName: group.MName
         }));
