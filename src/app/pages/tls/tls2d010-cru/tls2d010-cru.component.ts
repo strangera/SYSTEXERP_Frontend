@@ -47,7 +47,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
   currentCreateType: 'normal' | 'counter' = 'counter';
-
+  isDetailMode = false;
   data: any[] = [];
   selectedItems: any[] = [];
 
@@ -84,7 +84,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   });
 
   dataFormNormal = this.formBuilder.group({
-    tlt_no: [''],
+    tlt_no: [null as any],
     pod_no: [],
     CAP_Type: [],
     tpy_date: [null as null | Date, [Validators.required]],
@@ -112,7 +112,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         // 主要新增行（第一個 status=modified 或無 status）也預設日期
         let mainRowSet = false;
         this.data.forEach(row => {
-          // 只同步有主資料（tlt_no不為空）的 row
           if (!mainRowSet && (row.status === 'modified' || !row.status) && row.tlt_no) {
             row.tpy_date = date;
             mainRowSet = true;
@@ -125,11 +124,22 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         });
       }
     });
+
+    // 把 router 帶進來的 rowdata 拿來做初始化
     const rowdata = history.state?.rowdata;
     if (rowdata) {
       this.currentCreateType = rowdata.type;
       const form = this.currentCreateType === 'counter' ? this.dataFormCounter : this.dataFormNormal;
+
+      // 共用初始化
       this.initializePage('TLS2D010', form);
+
+      // ===== 判斷 detail 模式 =====
+      if (rowdata.mode === 'detail') {
+        this.isDetailMode = true;
+        form.disable(); // 表單直接唯讀
+      }
+
       // counter模式補齊所有table-edit行欄位
       const counterMapping = (row: any) => {
         if (row.tlt_no && typeof row.tlt_no === 'object') {
@@ -138,13 +148,16 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             contract_subno: row.tlt_no.contract_subno ?? '',
             org_id: row.tlt_no.org_id ?? '',
             tlt_contract_bdate: row.tlt_no.tlt_contract_bdate
-              ? formatDate(new Date(row.tlt_no.tlt_contract_bdate), 'yyyy-MM-dd', 'en-US') : null,
+              ? formatDate(new Date(row.tlt_no.tlt_contract_bdate), 'yyyy-MM-dd', 'en-US')
+              : null,
             tlt_contract_edate: row.tlt_no.tlt_contract_edate
-              ? formatDate(new Date(row.tlt_no.tlt_contract_edate), 'yyyy-MM-dd', 'en-US') : null,
+              ? formatDate(new Date(row.tlt_no.tlt_contract_edate), 'yyyy-MM-dd', 'en-US')
+              : null,
           };
         }
         return {};
       };
+
       if (Array.isArray(rowdata)) {
         form.patchValue(rowdata[0]);
         this.data = rowdata.map(row => ({ ...row, ...counterMapping(row) }));
@@ -154,8 +167,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     }
 
+    // 載入下拉選單
     this.loadTltAndPodOptions();
     this.loadAndSetupColumns();
+
 
     // counter → 選專櫃時帶入契約資料
     this.dataFormCounter.get('tlt_no')?.valueChanges.subscribe((selected: any) => {
@@ -170,11 +185,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             ? formatDate(new Date(selected.tlt_contract_edate), 'yyyy-MM-dd', 'en-US') : null,
           org_id: selected.org_id ?? '',
         }, { emitEvent: false });
-
-        // table-edit 新增行也預設 org_id
         if (this.data && this.data.length) {
           this.data.forEach(row => {
-            // 若 row.tlt_no 為物件且 tlt_no 相同，或 row.tlt_no 尚未選擇
             if ((row.tlt_no && row.tlt_no.tlt_no === selected.tlt_no) || !row.tlt_no) {
               row.org_id = selected.org_id ?? '';
             }
@@ -197,7 +209,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe(({ tlt, pod, acc, org, capItem }) => {
         this.tlt_noOptions = (tlt?.Data || []).map((item: any) => ({
           ...item,
-          value: item,
           label: `${item.tlt_no}-${item.tlt_name}`,
           tlt_contract_bdate: item.tlt_contract_bdate
             ? formatDate(new Date(item.tlt_contract_bdate), 'yyyy-MM-dd', 'en-US') : null,
@@ -263,7 +274,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem' },
         { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
       ];
+
     }
+
   }
 
   // ===== normal: 扣款類型切換 =====
@@ -341,17 +354,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
     return String(field);
   }
-  // 抽一個方法：把 tlt_no + talent_id + contract + org_id 等補齊
   private buildTltInfo(selectedTltNo: any, podNo: any) {
+    console.log('>>> buildTltInfo input selectedTltNo:', selectedTltNo);
 
     let tltObj: any;
 
-    // 如果是整個物件（counter）
     if (selectedTltNo && typeof selectedTltNo === 'object') {
-      tltObj = selectedTltNo;
-    }
-    // 如果只是字串（normal）
-    else if (typeof selectedTltNo === 'string') {
+      tltObj = selectedTltNo.value ? selectedTltNo.value : selectedTltNo;
+    } else if (typeof selectedTltNo === 'string') {
       tltObj = this.tlt_noOptions.find(opt => opt.tlt_no === selectedTltNo);
     }
 
@@ -367,50 +377,125 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     };
   }
   onSubmit(): void {
+      if (this.isDetailMode) {
+    return; // 檢視模式下不做任何動作
+  }
     this.submitted = true;
 
-    if (this.currentCreateType === 'counter') {
-      const counterValue = this.dataFormCounter.getRawValue();
-      const tltInfo = this.buildTltInfo(counterValue.tlt_no, counterValue.pod_no);
+    // 判斷是否為更新
+    const mainRow = this.data?.find(row => row.tlt_no) || this.data[0];
+    const isUpdate = !!(mainRow?.id && mainRow.id > 0);
 
-      const feeList = this.data
-        .filter(i => !i._isAutoInsertCandidate)
-        .map(i => ({
-          tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
-          CAP_Type: i.CAP_Type || '',
-          CAP_Item: i.CAP_Item || '',
-          org_id: this.normalizeValue(i.org_id),
-          AccNo: this.normalizeValue(i.AccNo),
-          GUI_FLAG: i.GUI_FLAG || '',
-          cap_taxtype: i.cap_taxtype || '',
-          tpy_net: Number(i.tpy_net ?? 0),
-          remarks: i.remarks || ''
-        }));
+    if (isUpdate) {
+      // ===== 更新 =====
+      let payload: any;
 
-      const payload = { tltList: [tltInfo], feeList };
-      this.tls2d010Service.insertTLS2D010(payload).subscribe();
-    }
-    else {
-      const normalValue = this.dataFormNormal.getRawValue();
-      const mainRow = this.data.find(row => row.tlt_no);
-      const tltInfo = this.buildTltInfo(normalValue.tlt_no || mainRow?.tlt_no, normalValue.pod_no || mainRow?.pod_no);
+      if (this.currentCreateType === 'counter') {
+        const counterValue = this.dataFormCounter.getRawValue();
+        payload = {
+          id: mainRow?.id || 0,
+          tlt_no: this.normalizeValue(counterValue.tlt_no),
+          talent_id: typeof counterValue.tlt_no === 'object' ? counterValue.tlt_no?.talent_id : mainRow?.talent_id || 0,
+          pod_no: this.normalizeValue(counterValue.pod_no),
+          tpy_date: mainRow?.tpy_date ? formatDate(mainRow.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+          CAP_Type: mainRow?.CAP_Type || '',
+          CAP_Item: mainRow?.CAP_Item || '',
+          org_id: this.normalizeValue(mainRow?.org_id),
+          AccNo: this.normalizeValue(mainRow?.AccNo),
+          GUI_FLAG: mainRow?.GUI_FLAG || '',
+          cap_taxtype: mainRow?.cap_taxtype || '',
+          tpy_net: Number(mainRow?.tpy_net ?? 0),
+          remarks: mainRow?.remarks || ''
+        };
+      } else {
+        const normalValue = this.dataFormNormal.getRawValue();
+        payload = {
+          id: mainRow?.id || 0,
+          tlt_no: this.normalizeValue(mainRow?.tlt_no || normalValue.tlt_no),
+          talent_id: typeof mainRow?.tlt_no === 'object'
+            ? mainRow?.tlt_no?.talent_id
+            : (normalValue.tlt_no as any)?.talent_id || 0,
+          pod_no: this.normalizeValue(mainRow?.pod_no || normalValue.pod_no),
+          tpy_date: mainRow?.tpy_date ? formatDate(mainRow.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+          CAP_Type: mainRow?.CAP_Type || normalValue.CAP_Type || '',
+          CAP_Item: mainRow?.CAP_Item || normalValue.CAP_Item || '',
+          org_id: this.normalizeValue(mainRow?.org_id || normalValue.org_id),
+          AccNo: this.normalizeValue(mainRow?.AccNo || normalValue.AccNo),
+          GUI_FLAG: mainRow?.GUI_FLAG || normalValue.GUI_FLAG || '',
+          cap_taxtype: mainRow?.cap_taxtype || normalValue.cap_taxtype || '',
+          tpy_net: Number(mainRow?.tpy_net ?? normalValue.tpy_net ?? 0),
+          remarks: mainRow?.remarks || normalValue.remarks || ''
+        };
+      }
 
-      const feeList = this.data
-        .filter(i => !i._isAutoInsertCandidate)
-        .map(i => ({
-          tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
-          CAP_Type: i.CAP_Type || normalValue.CAP_Type || '',
-          CAP_Item: i.CAP_Item || normalValue.CAP_Item || '',
-          org_id: this.normalizeValue(i.org_id || normalValue.org_id),
-          AccNo: this.normalizeValue(i.AccNo || normalValue.AccNo),
-          GUI_FLAG: i.GUI_FLAG || normalValue.GUI_FLAG || '',
-          cap_taxtype: i.cap_taxtype || normalValue.cap_taxtype || '',
-          tpy_net: Number(i.tpy_net ?? normalValue.tpy_net ?? 0),
-          remarks: i.remarks || normalValue.remarks || ''
-        }));
+      this.tls2d010Service.updateTLS2D010(payload)
+        .pipe(untilDestroyed(this))
+        .subscribe(() => {
+          this.messageService.successBubble('更新成功');
+          this.onCancel();
+        });
 
-      const payload = { tltList: [tltInfo], feeList };
-      this.tls2d010Service.insertTLS2D010(payload).subscribe();
+    } else {
+      // ===== 新增 =====
+      let payload: any;
+
+      if (this.currentCreateType === 'counter') {
+        // counter 從 form 抓
+        const counterValue = this.dataFormCounter.getRawValue();
+        const tltInfo = this.buildTltInfo(counterValue.tlt_no, counterValue.pod_no);
+        const feeList = this.data
+          .filter(i => !i._isAutoInsertCandidate)
+          .map(i => ({
+            tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+            CAP_Type: i.CAP_Type || '',
+            CAP_Item: i.CAP_Item || '',
+            org_id: this.normalizeValue(i.org_id),
+            AccNo: this.normalizeValue(i.AccNo),
+            GUI_FLAG: i.GUI_FLAG || '',
+            cap_taxtype: i.cap_taxtype || '',
+            tpy_net: Number(i.tpy_net ?? 0),
+            remarks: i.remarks || ''
+          }));
+
+        payload = { tltList: [tltInfo], feeList };
+
+      } else {
+        // normal 從 table-edit 抓
+        const normalValue = this.dataFormNormal.getRawValue();
+        const selectedRow = this.data.find(i => i.tlt_no); // 取 table 第一筆有 tlt_no 的
+        const tltInfo = this.buildTltInfo(
+          selectedRow?.tlt_no || normalValue.tlt_no,
+          normalValue.pod_no
+        );
+
+        const feeList = this.data
+          .filter(i => !i._isAutoInsertCandidate)
+          .map(i => ({
+            tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+            CAP_Type: i.CAP_Type || normalValue.CAP_Type || '',
+            CAP_Item: i.CAP_Item || normalValue.CAP_Item || '',
+            org_id: this.normalizeValue(i.org_id || normalValue.org_id),
+            AccNo: this.normalizeValue(i.AccNo || normalValue.AccNo),
+            GUI_FLAG: i.GUI_FLAG || normalValue.GUI_FLAG || '',
+            cap_taxtype: i.cap_taxtype || normalValue.cap_taxtype || '',
+            tpy_net: Number(i.tpy_net ?? normalValue.tpy_net ?? 0),
+            remarks: i.remarks || normalValue.remarks || ''
+          }));
+
+        payload = { tltList: [tltInfo], feeList };
+      }
+
+      console.log('insert payload', payload);
+
+      this.tls2d010Service.insertTLS2D010(payload)
+        .pipe(untilDestroyed(this))
+        .subscribe(() => {
+          this.messageService.successBubble('新增成功');
+          this.dataFormCounter.reset();
+          this.dataFormNormal.reset();
+          this.data = [];
+          this.onCancel();
+        });
     }
   }
 

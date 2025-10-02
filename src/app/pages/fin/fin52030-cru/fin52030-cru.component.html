@@ -14,27 +14,27 @@
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="常用傳票代號"
-                        controlName="typeCode"
-                        [control]="df().typeCode"
+                        controlName="TempNo"
+                        [control]="df().TempNo"
                         [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="常用傳票名稱"
-                        controlName="subpoenaName"
-                        [control]="df().subpoenaName"
+                        controlName="TempName"
+                        [control]="df().TempName"
                         [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="傳票種類"
-                      controlName="subpoenaType"
+                      controlName="VouType"
                       [options]="service.subpoenaTypes()"
                       optionLabel="Name"
                       optionValue="No"
                       [showClear]="false"
-                      [control]="df().subpoenaType"
+                      [control]="df().VouType"
                       [submitted]="submitted"></app-dropdown>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="建立者"
-                        controlName="creator"
-                        [control]="df().creator"
+                        controlName="CRT_USR_No"
+                        [control]="df().CRT_USR_No"
                         [disabled]="true"
                         [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4"
@@ -45,8 +45,8 @@
                       [submitted]="submitted"></app-calendar>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="修改者"
-                        controlName="modifier"
-                        [control]="df().modifier"
+                        controlName="UPD_USR_No"
+                        [control]="df().UPD_USR_No"
                         [disabled]="true"
                         [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4"
@@ -76,7 +76,24 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <!-- <app-table [showDetail]="false"
+        <!-- <app-table-edit class="col-12"
+                        title="費率對照明細"
+                        [tableKey]="'FIN52030_detail'"
+                        [columns]="columns"
+                        [data]="filteredData()"
+                        (selectionChange)="selectedItems = $event"
+                        [selectedItems]="selectedItems"
+                        (dataChange)="tableData.set($event)"
+                        [tableRequired]="true"
+                        [showReorder]="false"
+                        [disabled]="isFormReadable"
+                        [showExcel]="true"
+                        [showExcelImport]="!isFormReadable"
+                        [showCheckBox]="!isFormReadable"
+                        [showReorder]="true"
+                        [showInsert]="!isFormReadable"
+                        [loading]="service.tableLoading"></app-table-edit> -->
+        <app-table [showDetail]="false"
                    [showEdit]="false"
                    [alwaysEdit]="true"
                    [alwaysBlurValidate]="true"
@@ -97,11 +114,70 @@
                    [data]="filteredData()"
                    [totalRecords]="totalRecords()"
                    [loading]="service.tableLoading"
-                   [dataKey]="'id'"
+                   [dataKey]="'index'"
                    [tableKey]="'FIN52030_detail'"
-                   [columns]="columns">
-        </app-table> -->
+                   [columns]="columns()"></app-table>
       </p-panel>
     </div>
   </div>
 </div>
+
+
+<ng-template #venUsrTemplate let-rowData let-col="col" let-overlayPanel="overlayPanel">
+  <div class="col-12">
+    <div class="flex justify-content-between align-items-center mb-3">
+      <h6 class="mb-0">選擇廠商/員工</h6>
+      <p-dropdown [options]="templateOptions"
+                  [(ngModel)]="selectedTemplateType"
+                  [ngModelOptions]="{ standalone: true }"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="選擇類型"
+                  (onChange)="onTemplateTypeChange($event)"
+                  styleClass="w-10rem"></p-dropdown>
+    </div>
+
+    <div class="mb-3">
+      <input pInputText
+             class="w-full"
+             [(ngModel)]="templateSearchTerm"
+             [ngModelOptions]="{ standalone: true }"
+             (input)="onTemplateSearch($event)"
+             placeholder="搜尋..." />
+    </div>
+
+    <div class="max-h-20rem overflow-auto">
+      <p-table [value]="getFilteredTemplateData()"
+               [scrollable]="true"
+               scrollHeight="300px"
+               selectionMode="single"
+               dataKey="id"
+               styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>代號</th>
+            <th>名稱</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr class="cursor-pointer hover:surface-hover"
+              (click)="selectTemplateItem(item, rowData, col, overlayPanel)">
+            <td>{{ getItemCode(item) }}</td>
+            <td>{{ getItemName(item) }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border">
+      <button pButton
+              label="取消"
+              class="p-button-text"
+              (click)="overlayPanel.hide()"></button>
+      <button pButton
+              label="清除"
+              class="p-button-outlined"
+              (click)="clearSelection(rowData, col, overlayPanel)"></button>
+    </div>
+  </div>
+</ng-template>
