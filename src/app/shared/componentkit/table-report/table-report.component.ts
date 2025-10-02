@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
+import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
 import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
 import { TableReportUtilityService } from './table-report-utility.service';
@@ -102,7 +102,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
@@ -139,6 +139,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   }
   onScroll(event: any) {
     if (this.isLoading || this.data.length >= this.totalRecords || this.data.length < 30) {
+      this.virtualData = [...this.data]
       return;
     }
     if (event && event.originalEvent && event.originalEvent.target) {
@@ -171,6 +172,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         setTimeout(() => {
           this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
           this.dt.scrollHeight = '700px';
+          this.selectedItems = [...this.selectedItems]
         })
       }
     });
@@ -223,6 +225,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         }
       }
     });
+  }
+  loadCarsLazy(event: TableLazyLoadEvent) {
+    this.dt.reset();
+    this.cdr.detectChanges();
   }
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as ReportColumn[];

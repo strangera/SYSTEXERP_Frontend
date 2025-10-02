@@ -85,8 +85,8 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     salePriceDiscount: [0, [Validators.min(0), Validators.max(99)]], // 售價折扣%
     salePriceAmount: [0], // 售價金額調整
   },);
-  brandOptions?: Observable<Option[] | null>;   // 品牌
-  vendorOptions?: Observable<Option[] | null>;  // 廠商編號
+  brandOptions = this.dropdown.queryPluLogo();   // 品牌
+  vendorOptions?: Observable<Option[] | null> = of([]);  // 廠商編號
   data: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   editColumns = columns;
@@ -103,9 +103,8 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
 
   ngOnInit(): void {
     this.initializePage('TLS52050', this.dataForm);
-    this.brandOptions = this.dropdown.queryPluLogo();// 品牌代碼 (LOGO_No)
-    this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     // 監聽 MAM_Method 是否為永久變價
+    this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       if (!this.isFormCreateable) {
         return;
@@ -141,6 +140,13 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   }
   private setupFormLogic(): void {
     const controls = this.dataForm.controls;
+    controls.LOGO_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
+      if (value) {
+        this.vendorOptions = this.dropdown.queryPos2013LOGO_No({ LOGO_No: value });
+      } else {
+        this.vendorOptions = of([])
+      }
+    })
     controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
       const isPermanent = value === '1';
       controls.MAM_EndDate.setValue(null);

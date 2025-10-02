@@ -306,7 +306,12 @@ export class DropdownApiService {
       shareReplay(1)// 避免重複查詢
     );
   }
-
+  /** 查詢廠商資料表(POS2013依照品牌) */
+  queryPos2013LOGO_No(body: { LOGO_No: string }): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Pos2013Item, { LOGO_No: string }>('/queryPOS2013LOGO_NoDropDownList', 'VEN_No', 'Name', body).pipe(
+      shareReplay(1)// 避免重複查詢
+    );
+  }
   // --- 品牌代碼相關 ---
 
   /** 查詢品牌代碼(PLULOGO) */

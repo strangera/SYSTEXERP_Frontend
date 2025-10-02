@@ -163,6 +163,14 @@ export interface IPOS2032PData {
   PLU_SalePrc_UNI: number,
   PLU_SalePrc: number
 }
+export interface ISetCloseTLS52020Request {
+  _DetailList:
+  {
+    CRN_No: string,
+    CRN_Status: string,
+    CRN_Status_Ori: string
+  }[]
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -208,7 +216,7 @@ export class Tls52020Service {
    * @param data 包含要更新的退貨單 ID 列表及目標狀態
    * @returns API 響應
    */
-  updateStatusTLS52020(data: { idList: number[]; CRN_Status: string; }): Observable<ApiResponse<any>> {
+  updateStatusTLS52020(data: ISetCloseTLS52020Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52020`, data);
   }
   /**

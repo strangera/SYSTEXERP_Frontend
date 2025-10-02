@@ -10,7 +10,6 @@ export const TLTTALENT_columns: Column[] = [
 
   // { field: 'tlt_openflag', header: '營業狀態', visible: true },
   // { field: 'contract_no', header: '合約編號', visible: true },
-  { field: 'contract_subno', header: '版次', visible: true },
 
   // 基本資料
   { field: 'building_desc', header: '館別', visible: true },
@@ -30,7 +29,7 @@ export const TLTTALENT_columns: Column[] = [
   // { field: 'bus_type', header: '大分類代碼(tltbustype)', visible: true },
   // { field: 'bus_class', header: '中分類代碼(tltbusclass)', visible: true },
   // { field: 'bus_sclass', header: '小分類(tltbussclass)', visible: true },
-
+  { field: 'contract_subno', header: '版次', visible: true },
   { field: 'tlt_bdate', header: '合約起始日期', visible: true, format: formatDate },
   { field: 'tlt_edate', header: '合約終止日期', visible: true, format: formatDate },
   // { field: 'tlt_contract_bdate', header: '正式營運起始日期', visible: true, format: formatDate },

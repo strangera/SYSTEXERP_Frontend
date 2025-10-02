@@ -160,8 +160,13 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   statusChange(rowData: ITLS52020Data, status: string) {
     this.btnLoading = true;
     const body = {
-      idList: [rowData.id],
-      CRN_Status: status
+      _DetailList: [
+        {
+          CRN_No: rowData.CRN_No,
+          CRN_Status: status,
+          CRN_Status_Ori: rowData.CRN_Status
+        }
+      ]
     }
     this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.btnLoading = false)).pipe(untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
@@ -170,9 +175,14 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   }
   close(rowData: ITLS52020Data[]) {
     const body = {
-      idList: rowData.map(item => item.id),
-      CRN_Status: CRNtatus.強制結案
-    }
+      _DetailList: rowData.map(item => {
+        return {
+          CRN_No: item.CRN_No,
+          CRN_Status: CRNtatus.強制結案,
+          CRN_Status_Ori: item.CRN_Status
+        };
+      })
+    };
     this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.selectedItems = [];

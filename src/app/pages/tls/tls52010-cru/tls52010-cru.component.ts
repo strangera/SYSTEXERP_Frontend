@@ -233,6 +233,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       ...this.data,
       ...this.selectedItemsDialog.map(item => ({
         ...item,
+        id: 0,
         PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
         POD_SubQty: 1,
         POD_Remark: ''
@@ -276,9 +277,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         this.loading = false
         return;
       }
+      console.log(this.data);
+
       const details: IPODetail[] = this.data.map((item) => ({
-        id: item.id,
-        PO_No: item.PO_No,
+        id: this.isFormCreateable ? 0 : item.id,
+        PO_No: this.dataForm.controls.PO_No.value,
         POD_SeqNo: item.POD_SeqNo,
         HOS_No: this.dataForm.controls.HOS_No.value,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',

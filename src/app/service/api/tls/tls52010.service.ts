@@ -225,8 +225,12 @@ export interface IPOS2017Data {
 
 /** 更新 POS2016 資料狀態 (SetCloseTLS52010) 的請求介面 */
 export interface ISetCloseTLS52010Request {
-  idList: number[]; // 要設定狀態的採購單 ID 列表
-  PO_Status: string; // 要設定的狀態 (例如 "結案", "作廢" 等)
+  _DetailList:
+  {
+    PO_No: string,
+    PO_Status: string,
+    PO_Status_Ori: string
+  }[]
 }
 
 @Injectable({

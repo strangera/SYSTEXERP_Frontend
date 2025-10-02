@@ -44,7 +44,6 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
     { field: 'CRT_Date', header: '關帳時間', visible: true },
     { field: 'CRT_USR_Name', header: '關帳者', visible: true },
   ];
-
   constructor(
     private readonly dropdown: DropdownApiService,
     private readonly tls2d030Service: Tls2d030Service
@@ -67,7 +66,7 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
       this.loading2 = true;
       const body: ExecuteTls2d030Request = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-        sam_termno: frm.value.sam_termno,
+        sam_termno: Number(frm.value.sam_termno),
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor,
       };
@@ -86,10 +85,12 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
     this.handleSubmit(frm, () => {
       const body: QueryTls2d030Request = {
         ...frm.value,
+        sam_termno: Number(frm.value.sam_termno),
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       };
       this.tls2d030Service.queryTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
+        this.totalRecords = res.TotalCount;
+        this.data = res.Data;
       });
     });
   }

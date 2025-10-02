@@ -330,7 +330,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
       const details: TLS52020Detail[] = this.data.map((item) => ({
         id: item.id,
-        CRN_No: item.CRN_No,
+        CRN_No: this.dataForm.controls.CRN_No.value,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
         HOS_No: this.dataForm.controls.HOS_No.value,
         PLU_MagNo: item.PLU_MagNo,
