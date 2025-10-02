@@ -81,6 +81,7 @@ export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
 export interface AddButton {
   label: string;
   icon: string;
+  displayText?: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
 }

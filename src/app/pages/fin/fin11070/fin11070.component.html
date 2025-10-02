@@ -1,6 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="寫入產製空白發票" (click)="insertFIN11070()"></app-button>
+    <app-button btnType="create" label="轉檔" (click)="downloadFIN11070()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -10,8 +12,6 @@
           <!-- 申報年月 -->
           <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
             [control]="queryForm.controls.GUI_YYMM" [submitted]="submitted" placeholder="請選擇月份"></app-calendar>
-          <app-button style="margin-top: 24px;" (click)="insertFIN11070()" label="寫入產製空白發票"></app-button>
-          <app-button btnType="create" style="margin-top: 24px;" (click)="downloadFIN11070()" label="轉檔"></app-button>
         </div>
         <!-- 說明文字 -->
         <div class="grid p-fluid">

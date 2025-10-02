@@ -280,9 +280,9 @@
                 border: '1px solid var(--surface-border)',
                 'border-left': '0',
               }"></div>
-            <p-button *ngFor="let btn of addButton" pTooltip="{{ btn.label }}" tooltipPosition="top" [icon]="btn.icon"
-              (click)="btn.action(rowData, $event)" [disabled]="btn.disabled ? btn.disabled(rowData) : false"
-              [loading]="buttonsLoading" />
+            <p-button *ngFor="let btn of addButton" [label]="btn.displayText" pTooltip="{{ btn.label }}"
+              tooltipPosition="top" [icon]="btn.icon" (click)="btn.action(rowData, $event)"
+              [disabled]="btn.disabled ? btn.disabled(rowData) : false" [loading]="buttonsLoading" />
           </ng-container>
         </td>
       </ng-container>
