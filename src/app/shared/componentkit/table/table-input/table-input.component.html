@@ -179,4 +179,28 @@
     </p-overlayPanel>
   </div>
   }
+
+  @case ('template') {
+  <div class="input-wrapper"
+       [attr.data-suffix]="col().suffix">
+    <input pInputText
+           class="w-full min-w-max"
+           [placeholder]="'請選擇' + col().header"
+           [value]="templateDisplayValue()"
+           readonly
+           [disabled]="disabled()"
+           (click)="overlayPanel.toggle($event)" />
+    <p-overlayPanel #overlayPanel
+                    [dismissable]="true"
+                    [showCloseIcon]="false"
+                    [ngStyle]="{'max-width': '50vw', 'min-width': '300px'}"
+                    [appendTo]="'body'">
+      <div class="grid p-fluid">
+        <ng-container *ngIf="col().templateRef">
+          <ng-container *ngTemplateOutlet="col().templateRef!; context: { $implicit: rowData(), col, overlayPanel }"></ng-container>
+        </ng-container>
+      </div>
+    </p-overlayPanel>
+  </div>
+  }
 }
