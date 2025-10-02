@@ -17,37 +17,37 @@
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-4"
                           label="常用傳票代號"
-                          controlName="typeCode"
-                          [control]="qf().typeCode"
+                          controlName="TempNo"
+                          [control]="qf().TempNo"
                           [submitted]="submitted"></app-input-text>
           <app-input-text class="col-12 md:col-6 lg:col-4"
                           label="常用傳票名稱"
-                          controlName="subpoenaName"
-                          [control]="qf().subpoenaName"
+                          controlName="TempName"
+                          [control]="qf().TempName"
                           [submitted]="submitted"></app-input-text>
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="傳票種類"
-                        controlName="subpoenaType"
+                        controlName="VouType"
                         [options]="service.subpoenaTypes()"
                         optionLabel="Name"
                         optionValue="No"
-                        [control]="qf().subpoenaType"
+                        [control]="qf().VouType"
                         [submitted]="submitted"></app-dropdown>
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="建立者"
-                        controlName="creator"
-                        [options]="service.creators()"
+                        controlName="CRT_USR_No"
+                        [options]="service.usrList()"
                         optionLabel="Name"
                         optionValue="No"
-                        [control]="qf().creator"
+                        [control]="qf().CRT_USR_No"
                         [submitted]="submitted"></app-dropdown>
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="修改者"
-                        controlName="modifier"
-                        [options]="service.modifiers()"
+                        controlName="UPD_USR_No"
+                        [options]="service.usrList()"
                         optionLabel="Name"
                         optionValue="No"
-                        [control]="qf().modifier"
+                        [control]="qf().UPD_USR_No"
                         [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -64,13 +64,13 @@
 
 <div class="card">
   <div class="col-12">
-    <!-- <app-table [data]="filteredData()"
+    <app-table [data]="filteredData()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [loading]="service.tableLoading"
                [dataKey]="'id'"
-               [tableKey]="'FIN52030'"></app-table> -->
+               [tableKey]="'FIN52030'"></app-table>
   </div>
 </div>
