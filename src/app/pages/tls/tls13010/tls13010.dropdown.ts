@@ -1,6 +1,6 @@
 // TLS13010 下拉選單選項 - 整理後版本（含洽談者）
 import { Injectable } from '@angular/core';
-import { forkJoin, Observable, map } from 'rxjs';
+import { forkJoin, Observable, map, of, tap, catchError } from 'rxjs';
 import {
   DECO_TYPE_OPTIONS,
   MONEY_TYPE_OPTIONS,
@@ -210,37 +210,29 @@ export class TLS13010DropdownService {
   loadBusSClassOptions(busType: string, busClass: string): Observable<DropdownOption[]> {
     if (!busType || !busClass) {
       this.busSClassOptions = [];
-      return new Observable(observer => {
-        observer.next([]);
-        observer.complete();
-      });
+      return of([]); // 使用 of 更簡潔
     }
 
     console.log('載入小分類選項，大分類:', busType, '中分類:', busClass);
     this.loadingStates.bussclass = false;
 
-    return new Observable(observer => {
-      this.bussclassService.getSystemTypesByBustype([busType], [busClass]).subscribe({
-        next: (response) => {
-          this.busSClassOptions = response.map(item => ({
-            value: item.value,
-            label: item.label
-          }));
-
-          this.loadingStates.bussclass = true;
-          console.log('小分類選項載入完成:', this.busSClassOptions.length);
-
-          observer.next(this.busSClassOptions);
-          observer.complete();
-        },
-        error: (error) => {
-          console.error('載入小分類選項失敗:', error);
-          this.busSClassOptions = [];
-          this.loadingStates.bussclass = true;
-          observer.error(error);
-        }
-      });
-    });
+    return this.bussclassService.getSystemTypesByBustype([busType], [busClass]).pipe(
+      tap(response => {
+        this.busSClassOptions = response.map(item => ({
+          value: item.value,
+          label: item.label
+        }));
+        this.loadingStates.bussclass = true;
+        console.log('小分類選項載入完成:', this.busSClassOptions.length);
+      }),
+      map(() => this.busSClassOptions),
+      catchError(error => {
+        console.error('載入小分類選項失敗:', error);
+        this.busSClassOptions = [];
+        this.loadingStates.bussclass = true;
+        return of([]); // 錯誤時回傳空陣列
+      })
+    );
   }
 
   /**

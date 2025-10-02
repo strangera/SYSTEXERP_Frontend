@@ -229,7 +229,14 @@ export class Tls12040FareDataService {
       'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
       'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
       'down_payment', 'period_nos', 'gui_flag',
-      'tpy_rate', 'org_id'
+      'tpy_rate', 'org_id',
+      'cap_saletype',
+      'edc_bank',
+      'instms_type',
+      'pay_no',
+      'calc_type',
+      'rent_plus_rate',
+      'over_base_rate'
     ];
 
     for (const field of editableFields) {
