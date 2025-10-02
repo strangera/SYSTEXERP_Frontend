@@ -109,8 +109,6 @@ export class FareColumnDefinitions {
         type: 'checkbox',
         editable: true,
         autoWidth: true,
-        // autoEditOnSelect: true,
-        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',

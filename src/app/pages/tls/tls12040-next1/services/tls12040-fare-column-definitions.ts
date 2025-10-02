@@ -99,32 +99,42 @@ export class TLS12040FareColumnDefinitions {
   }
 
   /**
-   * 取得 A 類型（一次扣款）欄位定義
-   */
+  * 取得 A 類型（一次扣款）欄位定義
+  */
   static getDeductionAColumns(contractInfoData: any[] = []): ColumnDef[] {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         autoWidth: true,
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+      },
+      {
+        field: 'copy_button',
+        header: '複製',
+        type: 'button',
+        // buttonLabel: '複製',
+        // buttonLabel: '',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此扣款項目',
+        style: 'width: 50px;'
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
+
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        autoWidth: true
+        autoWidth: true,
+
       },
       {
         field: 'tpy_bdate',
@@ -133,7 +143,11 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
+          if ((this as any)?._isCopiedItem) {
+            return null; // 保持現有值
+          }
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
             return new Date(contractInfo.tlt_contract_bdate);
@@ -148,6 +162,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         required: true,
+
       },
       {
         field: 'tpy_unitamt',
@@ -155,6 +170,7 @@ export class TLS12040FareColumnDefinitions {
         type: 'number',
         editable: true,
         required: true,
+
         validators: [TableValidators.positive('單價必須大於0')]
       },
       {
@@ -165,6 +181,7 @@ export class TLS12040FareColumnDefinitions {
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
         defaultValue: 1,
+
         allowDecimal: true, // 是否允許小數點
         decimalPlaces: 3  // 小數位數，預設2位
       },
@@ -175,6 +192,7 @@ export class TLS12040FareColumnDefinitions {
         editable: false,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'org_id',
@@ -183,6 +201,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -195,7 +214,8 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }
@@ -207,22 +227,23 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
+        // buttonLabel: '',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+        style: 'width: 50px;'
       },
       {
         field: 'cap_item',
@@ -244,8 +265,8 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         dateFormat: 'year-month',
-
         required: true,
+
         defaultValueFunction: () => {
           if ((this as any)?._isCopiedItem) {
             return null; // 保持現有值
@@ -264,6 +285,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           if ((this as any)?._isCopiedItem) {
             return null; // 保持現有值
@@ -282,7 +304,8 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
-        required: true
+        required: true,
+
       },
       {
         field: 'tpy_unitamt',
@@ -291,7 +314,8 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         required: true,
         validators: [TableValidators.positive('單價必須大於0')],
-        defaultValue: 0
+        defaultValue: 0,
+
       },
       {
         field: 'tpy_qty',
@@ -301,14 +325,16 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1
+        defaultValue: 1,
+
       },
       {
         field: 'tpy_amount',
         header: '扣款金額(未稅)',
         type: 'number',
         editable: false,
-        defaultValue: 0
+        defaultValue: 0,
+
       },
       {
         field: 'gui_flag',
@@ -320,7 +346,8 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       },
       {
         field: 'day_account',
@@ -332,7 +359,8 @@ export class TLS12040FareColumnDefinitions {
           { label: '否', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       },
       {
         field: 'interval',
@@ -340,7 +368,8 @@ export class TLS12040FareColumnDefinitions {
         type: 'number',
         editable: true,
         required: true,
-        defaultValue: 1
+        defaultValue: 1,
+
       }
     ];
   }
@@ -352,38 +381,39 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+
       },
       {
         field: 'auto_calc',
         header: '自動計算',
         type: 'button',
-        buttonLabel: '自動計算',
+        // buttonLabel: '自動計算',
         buttonIcon: 'pi pi-calculator',
         buttonClass: 'p-button-sm p-button-info',
         buttonTooltip: '根據總金額自動計算',
-        directEdit: true,
+
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
+
       },
       {
         field: 'cap_name',
@@ -391,6 +421,7 @@ export class TLS12040FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
+
       },
       {
         field: 'tpy_bdate',
@@ -399,6 +430,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -414,6 +446,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -429,6 +462,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'period_nos',
@@ -456,7 +490,7 @@ export class TLS12040FareColumnDefinitions {
                 const endYear = endDate.getFullYear();
                 const endMonth = endDate.getMonth();
 
-                const calculatedPeriods = (endYear - startYear) * 12 + (endMonth - startMonth);
+                const calculatedPeriods = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
                 const finalPeriods = Math.max(1, calculatedPeriods);
 
                 console.log('🎯 期數預設值計算:', {
@@ -487,6 +521,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'down_payment',
@@ -502,6 +537,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -513,7 +549,8 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }
@@ -525,22 +562,22 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
+        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+
       },
       {
         field: 'cap_item',
@@ -554,6 +591,72 @@ export class TLS12040FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
+        style: 'white-space: normal; word-break: break-word; line-height: 1.3; max-width: 150px; min-width: 100px;'
+      },
+      {
+        field: 'cap_saletype',
+        header: '銷售類型',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptions,
+      },
+      {
+        field: 'instms_type',
+        header: '期數',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.instmsTypeOptions,
+      },
+      {
+        field: 'edc_bank',
+        header: '收單行',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.edcBankOptions,
+      },
+      {
+        field: 'pay_no',
+        header: '支付編號',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: [],
+      },
+      {
+        field: 'calc_type',
+        header: '券類計算方式',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.calcTypeOptions,
+      },
+      {
+        field: 'over_base_rate',
+        header: '超過基準比率',
+        type: 'number',
+        editable: true,
+        autoWidth: true,
+      },
+      {
+        field: 'rent_plus_rate',
+        header: '加抽比率',
+        type: 'number',
+        editable: true,
+        required: true,
+        allowDecimal: true,
+        decimalPlaces: 3,
+        autoWidth: true,
+        style: 'min-width: 80px; width: 100px;',
+      },
+      {
+        field: 'down_payment',
+        header: '超過基準金額',
+        type: 'number',
+        editable: true,
+        autoWidth: true,
       },
       {
         field: 'tpy_bdate',
@@ -562,7 +665,9 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         dateFormat: 'year-month',
+        style: 'min-width: 120px; width: 140px;',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -578,6 +683,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
+        style: 'min-width: 120px; width: 140px;',
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -594,6 +700,7 @@ export class TLS12040FareColumnDefinitions {
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'tpy_rate',
@@ -601,9 +708,9 @@ export class TLS12040FareColumnDefinitions {
         type: 'number',
         editable: true,
         required: true,
-        allowDecimal: true,  // 是否允許小數點
-        decimalPlaces: 3  // 小數位數，預設2位
-
+        allowDecimal: true,
+        decimalPlaces: 3,
+        style: 'min-width: 80px; width: 100px;', // 加寬讓數字可以完整顯示
       },
       {
         field: 'org_id',
@@ -612,6 +719,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -623,7 +731,8 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }
@@ -635,22 +744,18 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+
       },
       {
         field: 'cap_item',
@@ -672,6 +777,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -687,6 +793,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -696,6 +803,14 @@ export class TLS12040FareColumnDefinitions {
         }
       },
       {
+        field: 'cap_saletype',
+        header: '銷售類型',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptionsE,
+      },
+      {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
@@ -703,6 +818,7 @@ export class TLS12040FareColumnDefinitions {
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'tpy_rate',
@@ -710,8 +826,17 @@ export class TLS12040FareColumnDefinitions {
         type: 'number',
         editable: true,
         required: true,
-        allowDecimal: true,  // 是否允許小數點
-        decimalPlaces: 3  // 小數位數，預設2位
+        allowDecimal: true,
+        decimalPlaces: 3,
+
+      },
+      {
+        field: 'pay_no',
+        header: '支付編號',
+        type: 'dropdown',
+        editable: true,
+        autoWidth: true,
+        options: [],
       },
       {
         field: 'org_id',
@@ -720,6 +845,7 @@ export class TLS12040FareColumnDefinitions {
         editable: true,
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -731,7 +857,8 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }
@@ -743,6 +870,18 @@ export class TLS12040FareColumnDefinitions {
     return columns.map(col => {
       if (col.field === 'org_id') {
         return { ...col, options: [...orgOptions] };
+      }
+      return col;
+    });
+  }
+
+  /**
+ * 更新欄位定義中的支付編號選項
+ */
+  static updatePayNoOptionsInColumns(columns: ColumnDef[], payNoOptions: any[]): ColumnDef[] {
+    return columns.map(col => {
+      if (col.field === 'pay_no') {
+        return { ...col, options: [...payNoOptions] };
       }
       return col;
     });
