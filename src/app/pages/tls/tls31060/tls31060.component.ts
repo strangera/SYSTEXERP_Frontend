@@ -140,6 +140,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
     { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+    // { field: 'MonthlyPayment', header: '???', visible: true, groupField: 'space' }, // 不知道是甚麼
 
     { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' },

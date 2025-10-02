@@ -129,7 +129,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
   totalRecords = 0;
   data: TLS31030Response[] = [];
   columns: Column[] = [
-    { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
+    { field: 'bus_type', header: '大分類代碼', visible: true }, // queryTLS31030
     { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },

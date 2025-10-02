@@ -127,8 +127,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   totalRecords = 0;
   data: TLS31070Response[] = [];
   columns: Column[] = [
-    { field: 'org_id', header: '組織代號', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'paper_type', header: '營業形態代號', visible: true },
+    { field: 'paper_type_desc', header: '營業形態名稱', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },

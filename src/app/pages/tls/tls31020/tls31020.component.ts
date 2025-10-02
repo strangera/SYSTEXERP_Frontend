@@ -129,8 +129,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   totalRecords = 0;
   data: TLS31020Response[] = [];
   columns: Column[] = [
-    { field: 'tlt_floor', header: '樓層', visible: true },
-    { field: 'floor_desc', header: '樓層說明', visible: true },
+    { field: 'tlt_floor', header: '樓層代碼', visible: true },
+    { field: 'floor_desc', header: '樓層名稱', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },

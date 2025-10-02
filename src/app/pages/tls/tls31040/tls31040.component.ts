@@ -130,7 +130,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   totalRecords = 0;
   data: TLS31040Response[] = [];
   columns: Column[] = [
-    { field: 'tlt_kind', header: '櫃別', visible: true },
+    { field: 'tlt_kind', header: '櫃別代碼', visible: true },
     { field: 'tlt_kindName', header: '櫃別名稱', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
