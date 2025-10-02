@@ -76,17 +76,17 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
+<!-- <div class="card">
   <app-report-table-group [columns]="columns" [data]="data"
     [subtotalFields]="['open_fees','construct_fees','expiration_fees']" [enableGrouping]="false"
     [reportTitle]="'保證票彙總表'" [currentPage]="1" [dateStart]="'SalesDateStart'" [dateEnd]="'SalesDateEnd'"
     [showTotalOnly]="false" [defaultMergedView]="true">
   </app-report-table-group>
-</div>
-<!-- <div class="card">
+</div> -->
+<div class="card">
     <app-table tableKey="TLS14040" dataKey="field" [data]="data" [columns]="columns" (edit)="onEdit($event)"
         (detail)="onDetail($event)" [showCheckBox]="false" [multiSortMeta]="[{ field: 'open_fees', order: 1 },{ field: 'construct_fees', order: 1 },{ field: 'expiration_fees', order: 1 }]"
         [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
         [lazy]="true" [loading]="loading">
     </app-table>
-</div> -->
+</div>

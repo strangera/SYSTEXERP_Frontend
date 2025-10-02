@@ -70,4 +70,9 @@ export class Tls12060Service {
   queryTLTTALENT_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
   }
+
+  //查詢 館別(SYS3800)
+  querySYS3800_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3800_DropDownList`, body);
+  }
 }

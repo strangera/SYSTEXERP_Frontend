@@ -59,12 +59,15 @@
               [submitted]="submitted"></app-input-text>
           </div> -->
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="館別" controlName="tlt_building" [options]="tlt_building_Option" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.tlt_building" [submitted]="submitted">
+            </app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range label="版本編號" [startControl]="queryForm.controls.version_start"
               [endControl]="queryForm.controls.version_end" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-text label="專櫃編號 " controlName="counter" [control]="queryForm.controls.counter"
-              [submitted]="submitted"></app-input-text> -->
             <app-multi-select label="專櫃編號" controlName="counter" [options]="TLTTalent_Option" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.counter" [submitted]="submitted"></app-multi-select>
           </div>

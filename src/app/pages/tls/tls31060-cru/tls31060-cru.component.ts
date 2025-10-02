@@ -42,8 +42,8 @@ import { TLS31060DetailRequest, TLS31060DetailResponse, TLS31060PrintDetailReque
 })
 export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    tlt_kind: [''],//櫃別
-    tlt_kind_name: [''],//櫃別名稱
+    org_id: [''],//組織代號
+    org_name: [''],//組織名稱
 
     budget: [''],//營業目標
     AVN_TotSaleAmt: [''],//營業實績
@@ -143,7 +143,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
 
     // 重新讀取類別資料
     if (this.queryConditions) {
-      this.queryTLS31060Detail(); // 查詢單大分類之資料
+      this.queryTLS31060Detail(); // 查詢組織之資料
     } else {
       this.messageService.errorBubble('請返回查詢頁重新操作');
     }
@@ -178,7 +178,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
     // 把 bus_type 從 string[] 轉成 string
     const request: TLS31060DetailRequest = {
       ...this.queryConditions,
-      tlt_kind: this.dataForm.get('tlt_kind')?.value ?? '',
+      org_id: this.dataForm.get('org_id')?.value ?? '',
     };
 
     //用Json顯示request
