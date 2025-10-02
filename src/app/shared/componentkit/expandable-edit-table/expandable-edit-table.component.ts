@@ -2021,8 +2021,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     //觸發詳細資料欄位變更事件
     this.triggerDetailFieldChangeEvent(fieldName, numericValue, detailData, rowIndex, detailIndex, oldValue);
 
-    // 強制變更檢測
-    this.cdr.detectChanges();
+    // // 強制變更檢測
+    // this.cdr.detectChanges();
 
     // 處理直接編輯
     this.handleDirectEditForNumber(fieldName, numericValue, detailData, true);

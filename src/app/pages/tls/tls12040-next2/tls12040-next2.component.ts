@@ -922,7 +922,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     detailData: any;
     field: string;
     parentData: any;
-  }): void { }
+  }): void {
+    // 判斷是否為複製按鈕
+    if (event.field === 'copy_button') {
+      this.copyDetailItem(event.detailData, event.parentData);
+    }
+  }
 
   ngOnDestroy(): void {
     // 最後一次儲存
@@ -1733,7 +1738,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   /**
  * 複製詳細項目（插入到下一行）
  */
-  private copyDetailItem(sourceItem: any, parentData: ChargeSettingBusinessModel): void {
+  copyDetailItem(sourceItem: any, parentData: ChargeSettingBusinessModel): void {
     if (this.isReadOnlyMode) {
       this.notificationService.infoBubble('檢視模式下無法複製項目');
       return;
