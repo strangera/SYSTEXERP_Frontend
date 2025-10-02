@@ -60,19 +60,19 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
    * 執行結算作業
    * @param frm 表單群組
    */
+  loading2 = false;
   onSettle(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.loading = false;
+      this.loading2 = true;
       const body: ExecuteTls2d030Request = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
         sam_termno: frm.value.sam_termno,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor,
       };
-      this.tls2d030Service.executeTLS2D030(body).pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      ).subscribe(() => {
-        // 結算成功後，自動查詢資料並更新表格
+      this.tls2d030Service.executeTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe(res => {
+        this.messageService.successBubble(res.Message);
         this.onSubmit(frm);
       });
     });
@@ -88,12 +88,8 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
         ...frm.value,
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       };
-      this.tls2d030Service.queryTLS2D030(body).pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      ).subscribe((res) => {
-        this.totalRecords = res.TotalCount;
-        this.data = res.Data;
+      this.tls2d030Service.queryTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
       });
     });
   }

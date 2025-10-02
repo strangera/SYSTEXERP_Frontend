@@ -136,6 +136,7 @@ export abstract class BasicQueryPageComponent<T> {
     this.messageService.blockUi();
 
     if (queryForm.valid) {
+      this.submitted = false;
       callback(); // 執行傳入的回調函數
     } else {
       this.logValidationErrors(queryForm);
