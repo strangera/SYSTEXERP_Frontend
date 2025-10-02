@@ -13,6 +13,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 // 專櫃下拉資訊
 interface TLTTALENT {
@@ -30,7 +31,18 @@ interface TLTTALENT {
   templateUrl: './tls14030-cru.component.html',
   styleUrl: './tls14030-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputTextComponent,
+    InputNumberComponent,
+    CalendarComponent,
+    NgIf,
+    TranslateModule]
 })
 
 export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
