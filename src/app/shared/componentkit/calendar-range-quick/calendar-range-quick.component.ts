@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-range-quick.model';
@@ -13,6 +13,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
 @Component({
   selector: 'app-calendar-range-quick',
   templateUrl: './calendar-range-quick.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     NgIf,

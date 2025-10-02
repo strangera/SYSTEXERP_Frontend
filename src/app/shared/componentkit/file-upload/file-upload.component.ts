@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FileUploadModule, FileUploadEvent, FileRemoveEvent, FileSelectEvent, FileProgressEvent, FileUploadHandlerEvent, FileUploadErrorEvent, RemoveUploadedFileEvent, FileBeforeUploadEvent, FileSendEvent, FileUpload } from 'primeng/fileupload';
 import { PrimeTemplate } from 'primeng/api';
 import { NgIf, NgFor } from '@angular/common';
@@ -8,6 +8,7 @@ import { ButtonComponent } from '../button/button.component';
 @Component({
   selector: 'app-file-upload',
   templateUrl: './file-upload.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     FileUploadModule,

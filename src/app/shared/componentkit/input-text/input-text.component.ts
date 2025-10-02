@@ -1,7 +1,7 @@
 // src/app/components/input-text/input-text.component.ts
 
 import { NgClass, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
@@ -15,6 +15,7 @@ import { InputTextService } from './input-text.service';
   selector: 'app-input-text',
   templateUrl: './input-text.component.html',
   styleUrl: './input-text.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     NgIf,

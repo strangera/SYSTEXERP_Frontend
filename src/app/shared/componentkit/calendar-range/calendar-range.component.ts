@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgIf, NgStyle } from '@angular/common';
@@ -9,6 +9,7 @@ import { CalendarComponent } from '../calendar/calendar.component';
   selector: 'app-calendar-range',
   templateUrl: './calendar-range.component.html',
   styleUrl: './calendar-range.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgIf, NgStyle, CalendarModule, FormsModule, ReactiveFormsModule, CalendarComponent]
 })

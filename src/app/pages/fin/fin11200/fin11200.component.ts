@@ -105,25 +105,30 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   }
   manageLoading = false;
   onStop(rowData: Pos1018) {
-    const params = {
-      ClosedDetail: {
-        ID: rowData.ID,
-        STO_No: rowData.STO_No,
-        GUI_YYMM: convertDateToYYYYMM(new Date(rowData.GUI_YYMM)),
-        SER_NOS: rowData.SER_NOS,
-        ECR_No: rowData.ECR_No
+    this.confirmationService.confirm({
+      header: '是否停用?',
+      accept: () => {
+        const params = {
+          ClosedDetail: {
+            ID: rowData.ID,
+            STO_No: rowData.STO_No,
+            GUI_YYMM: convertDateToYYYYMM(new Date(rowData.GUI_YYMM)),
+            SER_NOS: rowData.SER_NOS,
+            ECR_No: rowData.ECR_No
+          }
+        }
+        this.manageLoading = true;
+        this.fin11200Service.execProcClosed(params).pipe(finalize(() => this.manageLoading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
+          if (response.Status === "0000") {
+            this.messageService.successBubble(response.Message);
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(response.Message);
+          }
+          this.selectedRows = [];
+        });
       }
-    }
-    this.manageLoading = true;
-    this.fin11200Service.execProcClosed(params).pipe(finalize(() => this.manageLoading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
-      if (response.Status === "0000") {
-        this.messageService.successBubble(response.Message);
-        this.onSubmit(this.queryForm);
-      } else {
-        this.messageService.errorBubble(response.Message);
-      }
-      this.selectedRows = [];
-    });
+    })
   }
   btnLoading = false;
   onUpload() {

@@ -18,7 +18,7 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" label="日節前檢查" [loading]="loading"></app-button>
-          <app-button type="button" label="確定日結" (clickEvent)="onSubmit(lastQuery)"
+          <app-button type="button" label="確定日結" (clickEvent)="onSubmit(queryForm)"
             [loading]="insertLoading"></app-button>
         </div>
       </form>
@@ -27,5 +27,6 @@
 </div>
 <div class=" card">
   <app-table dataKey="master_key" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [loading]="loading" [showDelete]="false"></app-table>
+    [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details" [showPaginator]="false"
+    [showManage]="false" [showCaption]="false" [showSort]="false"></app-table>
 </div>

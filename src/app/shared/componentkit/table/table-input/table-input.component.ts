@@ -1,6 +1,6 @@
 // table-input.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PrimeTemplate } from 'primeng/api';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
@@ -29,6 +29,7 @@ import { Column } from '../table.model';
     PrimeTemplate,
     TableModule,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './table-input.component.html',
   styles: [
     `

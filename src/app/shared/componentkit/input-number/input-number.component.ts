@@ -1,5 +1,5 @@
 import { NgClass, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
@@ -14,6 +14,7 @@ import { TooltipModule } from 'primeng/tooltip';
   selector: 'app-input-number',
   templateUrl: './input-number.component.html',
   styleUrl: './input-number.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     NgIf,

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgIf, NgClass } from '@angular/common';
@@ -9,6 +9,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   selector: 'app-input-textarea',
   templateUrl: './input-textarea.component.html',
   styleUrl: './input-textarea.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
 })

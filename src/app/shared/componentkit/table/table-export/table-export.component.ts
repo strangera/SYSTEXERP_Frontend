@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
@@ -21,11 +21,11 @@ export interface TableExport {
 }
 
 @Component({
-    selector: 'app-table-export',
-    templateUrl: './table-export.component.html',
-    styleUrl: './table-export.component.scss',
-    standalone: true,
-    imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
+  selector: 'app-table-export',
+  templateUrl: './table-export.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
 })
 export class TableExportComponent implements OnInit, OnDestroy {
   @Input() visible = true;

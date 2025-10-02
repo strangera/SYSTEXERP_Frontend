@@ -1,5 +1,5 @@
-import { NgClass, NgIf, NgStyle } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { NgIf, NgStyle } from '@angular/common';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
 import { DropdownChangeEvent } from 'primeng/dropdown';
@@ -15,11 +15,10 @@ import { DropdownComponent } from '../dropdown/dropdown.component';
     FormsModule,
     DropdownComponent,
     ReactiveFormsModule,
-    NgClass,
     NgStyle
   ],
   templateUrl: './dropdown-range.component.html',
-  styleUrl: './dropdown-range.component.scss'
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DropdownRangeComponent extends BasicKitComponent implements OnInit {
   // 必填欄位

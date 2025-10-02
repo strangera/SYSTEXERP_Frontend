@@ -1,25 +1,19 @@
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-
-// Component Kit
+import { Component, OnInit } from '@angular/core';
+import { finalize } from 'rxjs';
+import { TLS2C040Service } from '../../../service/api/tls/tls2c040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-
-// Services
-import { TLS2C040Data, TLS2C040Service } from '../../../service/api/tls/tls2c040.service';
-import { SubpoenaTypeService } from '../../../service/basic/subpoena-type.service';
-import { SubpoenaStatusService } from '../../../service/basic/subpoena-status.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
 
 @Component({
   selector: 'app-tls2c040',
@@ -28,78 +22,92 @@ import { finalize } from 'rxjs';
   standalone: true,
   imports: [
     MenubarComponent,
+    ButtonComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
+    InputTextComponent,
     MultiSelectComponent,
     CalendarRangeComponent,
-    InputTextComponent,
-    ButtonComponent,
     TableComponent,
-    TranslateModule,
-  ],
+    TranslateModule
+  ]
 })
-export class TLS2C040Component extends BasicQueryPageComponent<TLS2C040Data> {
+export class TLS2C040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    subpoenaType: [null], // 傳票總類
-    startdate: [null], // 傳票開始日期
-    enddate: [null],   // 傳票結束日期
-    subpoenaStatus: [null], // 傳票狀態
-    serialnumber: [null], // 結帳單號
-    ...createPaginationConfig([{ field: 'UID', order: 1 }]),
+    SrcSheetTypeList: [[]],                                    // 傳票種類(多選)
+    VouDate_Start: [''],                                       // 傳票日期(起)
+    VouDate_End: [''],                                         // 傳票日期(迄)
+    PostFlagList: [[]],                                        // 傳票狀態(多選)
+    No: ['', Validators.maxLength(12)],                         // 結帳單號
+    ...createPaginationConfig([])
   });
 
-  data: TLS2C040Data[] = [];
+  data: any[] = [];
+  selectedItems: any[] = [];
   totalRecords = 0;
-  selectedItems: TLS2C040Data[] = [];
 
-  // 下拉選單資料
-  subpoenaTypeOptions: any[] = [];
-  subpoenaStatusOptions: any[] = [];
+  addButton: AddButton[] = [
+    {
+      label: '應收',
+      displayText: '應收',
+      icon: '',
+      action: (rowData: any) => { this.onEdit(rowData) },
+    },
+    {
+      label: '應付',
+      displayText: '應付',
+      icon: '',
+      action: (rowData: any) => { this.onEdit(rowData) },
+    },
+  ];
 
-  columns = [
-    { field: 'contactPerson', header: '應收(付)明細暫存資料', visible: true },
-    { field: 'contactDate', header: '傳票編號', visible: true },
-    { field: 'UID', header: '傳票種類', visible: true },
-    { field: 'industryType', header: '傳票日期', visible: true },
-    { field: 'category', header: '傳票狀態', visible: true },
-    { field: 'version', header: '傳票摘要', visible: true },
-    { field: 'rentNumber', header: '結帳單號', visible: true },
+  // 下拉選單選項
+  // 傳票種類
+  srcSheetTypeOptions: IDropdownItem[] = [
+    { No: 'SD', Name: '每日營收傳票' },
+    { No: 'MR', Name: '租金傳票' },
+    { No: 'MD', Name: '代扣款傳票' },
+    { No: 'PR', Name: '抽成傳票' },
+    { No: 'PN', Name: '進貨帳款-暫估應付傳票' },
+    { No: 'PNC', Name: '進貨帳款-成本結轉' },
+    { No: 'PT', Name: '每日營收傳票' },
+    { No: 'WD', Name: '自營日結暫存傳票' },
+  ];
+  // 傳票狀態
+  postFlagOptions: IDropdownItem[] = [
+    { No: '0', Name: '作廢' },
+    { No: '1', Name: '建立' },
+    { No: '2', Name: '確認' },
+    { No: '3', Name: '過帳' }
+  ];
+
+  columns: Column[] = [
+    { field: 'VouNo', header: '傳票編號', visible: true },
+    { field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => this.srcSheetTypeOptions.find(item => item.No === value)?.Name || value },
+    { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
+    { field: 'PostFlag', header: '傳票狀態', visible: true, format: (value: string) => this.postFlagOptions.find(item => item.No === value)?.Name || value },
+    { field: 'Remark', header: '傳票摘要', visible: true },
+    { field: 'No', header: '結帳單號', visible: true }
   ];
 
   constructor(
-    private subpoenaTypeService: SubpoenaTypeService,
-    private subpoenaStatusService: SubpoenaStatusService,
     private tls2c040Service: TLS2C040Service,
-    public validationService: ValidationService,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2C040', '/tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadOptions();
+    this.initializePage('TLS2C040', 'tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  onSubmit(frm: FormGroup): void {
-    this.handleSubmit(this.queryForm, () => {
-      this.tls2c040Service.queryTLS2C040(frm.getRawValue())
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(res => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        });
-    });
-  }
-
-  loadOptions(): void {
-    this.subpoenaTypeService.getSystemTypes().subscribe(data => {
-      this.subpoenaTypeOptions = data;
-    });
-
-    this.subpoenaStatusService.getSystemTypes().subscribe(data => {
-      this.subpoenaStatusOptions = data;
-    });
+  onSubmit(form: FormGroup) {
+    this.tls2c040Service.queryTLS2C040(form.getRawValue())
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      .subscribe(response => {
+        this.data = response.Data.map((item: any) => item._GLS6001);
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+      });
   }
 }

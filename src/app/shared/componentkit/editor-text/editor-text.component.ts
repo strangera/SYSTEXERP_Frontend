@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { EditorInitEvent, EditorTextChangeEvent, EditorModule } from 'primeng/editor';
@@ -9,6 +9,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   selector: 'app-editor-text',
   templateUrl: './editor-text.component.html',
   styleUrl: './editor-text.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent]
 })

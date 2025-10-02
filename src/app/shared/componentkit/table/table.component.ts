@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
@@ -17,6 +17,7 @@ import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEdi
   templateUrl: './table.component.html',
   styleUrl: './table.component.scss',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush, // 可能會有問題，排查看看不然就先註解掉
   imports: [COMMON_IMPORTS],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnChanges {

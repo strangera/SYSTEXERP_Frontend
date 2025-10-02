@@ -1,20 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { SortMeta } from 'primeng/api';
 import { FileSelectEvent } from 'primeng/fileupload';
-import { MultiSelectChangeEvent } from 'primeng/multiselect';
-import { Table, TableColumnReorderEvent, TableLazyLoadEvent } from 'primeng/table';
+import { Table, TableLazyLoadEvent } from 'primeng/table';
 // import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../../componentextends/basic-print/basic-print-data.component';
 import { AddButton, Column, LazyLoadEvent } from './../table.model';
 import { COMMON_IMPORTS } from './../import-table';
 import { TableUtilityService } from './../table-utility.service';
-import { SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-table-report',
   standalone: true,
   imports: [COMMON_IMPORTS],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss']
 })

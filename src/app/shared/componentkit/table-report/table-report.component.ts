@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
 import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
@@ -23,7 +23,8 @@ import { TableExpansionComponent } from '../table/table-expansion/table-expansio
   standalone: true,
   imports: [TableExpansionComponent, SkeletonModule, TableModule, NgFor, NgIf, NgClass, NgStyle, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
   templateUrl: './table-report.component.html',
-  styleUrls: ['./table-report.component.scss']
+  styleUrls: ['./table-report.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') private dt!: Table;

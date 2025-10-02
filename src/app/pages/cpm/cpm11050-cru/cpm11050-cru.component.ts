@@ -1,167 +1,81 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CPM11050Data, InsertCPM11050Request, UpdateCPM11050Request, CPM11050Service } from '../../../service/api/cpm/cpm11050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
-
-const now = new Date();
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cpm11050-cru',
   templateUrl: './cpm11050-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
-})
-export class Cpm11050CRUComponent extends BasicCrupageComponent implements OnInit {
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    //之後提供給 尋人廣播服務
-    name: ['', [Validators.required, Validators.maxLength(20)]], // 被尋人姓名
-    meetingPoint: ['', [Validators.required, Validators.maxLength(50)]], // 集合地點
-    title: [1], // 被尋人稱謂
-    registerDate: [now], // 登錄日期
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
-  });
-  // ----------------------------------------------------------------
-  titleOptions: any[] = [
-    { value: 1, label: '先生' },
-    { value: 2, label: '小姐' },
-    { value: 3, label: '小朋友' },
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TranslateModule
   ]
+})
+export class CPM11050CRUComponent extends BasicCruPageComponent<CPM11050Data> implements OnInit {
+  dataForm = this.formBuilder.nonNullable.group({
+    SYS_Code: ['', [Validators.required, Validators.maxLength(60)]],   // 物品類別代碼
+    SYS_Name: ['', [Validators.required, Validators.maxLength(60)]]    // 物品類別名稱
+  });
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
+    private cpm11050Service: CPM11050Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510006';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    this.initializePage('CPM11050', this.dataForm);
+    if (this.crudstatus === CRUDStatus.Edit) {
+      // 編輯時 SYS_Code 不可編輯
+      this.dataForm.get('SYS_Code')?.disable();
+    }
+  }
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
+  onSubmit(form: FormGroup): void {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      // 新增
+      if (this.crudstatus === CRUDStatus.Create) {
+        const insertRequest: InsertCPM11050Request = {
+          SYS_Code: formValue.SYS_Code || '',
+          SYS_Name: formValue.SYS_Name || ''
+        }
+        this.cpm11050Service.insertCPM11050(insertRequest)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            this.dataForm.reset(); // 重置表單
+          });
+      }
       // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // counterPosition: [], // 所屬服務台位置
-      // allocateNumber: [, [this.validationService.numberValidator]], // 分配設備數量
+      else if (this.crudstatus === CRUDStatus.Edit) {
+        const updateRequest: UpdateCPM11050Request = {
+          ID: this.rowdata?.ID!,
+          SYS_Name: formValue.SYS_Name || ''
+        }
+        this.cpm11050Service.updateCPM11050(updateRequest)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('修改成功');
+            this.onCancel();  // 返回查詢頁
+          });
+      }
     });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/CPM1000/CPM11060']);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Column } from '../table.model';
 import { TableModule } from 'primeng/table';
 import { PrimeTemplate, SortMeta } from 'primeng/api';
@@ -9,6 +9,7 @@ import { expandAnimation } from './table-expansion.model';
   selector: 'app-table-expansion',
   templateUrl: './table-expansion.component.html',
   animations: [expandAnimation],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [TableModule, PrimeTemplate, NgFor, NgIf, CommonModule]
 })

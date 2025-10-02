@@ -65,6 +65,7 @@
         <ng-container *ngFor="let col of columns">
           <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn>
             {{ col.header }}
+            <span *ngIf="isRequired(col)" class="required">*</span>
           </th>
         </ng-container>
       </tr>
