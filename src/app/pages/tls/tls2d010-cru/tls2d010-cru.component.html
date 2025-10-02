@@ -17,7 +17,6 @@
           controlName="tlt_no"
           [options]="tlt_noOptions"
           optionLabel="label"
-          optionValue="value"
           [control]="dataFormCounter.controls.tlt_no"
           [submitted]="submitted"
         ></app-dropdown>
@@ -91,7 +90,7 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
         <app-button btnType="cancel" [form]="dataFormCounter" />
-        <app-button btnType="submit" [loading]="loading" />
+       <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
     <form
@@ -232,7 +231,7 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
         <app-button btnType="cancel" [form]="dataFormNormal" />
-        <app-button btnType="submit" [loading]="loading" />
+        <app-button  btnType="submit" [loading]="loading"  />
       </div>
     </form>
   </p-panel>

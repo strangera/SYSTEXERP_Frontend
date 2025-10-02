@@ -46,6 +46,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() rowSelectableWrapper: (row: any) => boolean = () => true;
   // Header 相關
   @Input() showCaption = true;                                                  // 是否顯示 Caption
+  @Input() showSort = true;                                                     // 是否顯示 排序
   // Header(左) 相關
   @Input() showHeader = true;                 // 是否顯示 Header
   @Input() showFilter = true;                 // 是否顯示 Filter
