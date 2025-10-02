@@ -102,34 +102,40 @@ export class AuthService {
     }
     return false; // 沒有用戶資訊或沒有 Token
   }
-  login(data: userLogin): Observable<ApiResponse<UserInfo>> {
-    data.password = this.encrypt.getPassword(data.code as string, data.password as string);
-    data.client_ip = this.client_ip;
-    return this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, data).pipe(
-      map((response: ApiResponse<UserInfo>) => {
-        if (response.Status === '0000') {
-          localStorage.setItem('UserInfo', JSON.stringify(response.Data));
-          const userInfo = JSON.parse(localStorage.getItem('UserInfo') as string);
-          userInfo.client_ip = this.client_ip;
-          localStorage.setItem('UserInfo', JSON.stringify(userInfo));
-          this.userSubject.next(userInfo);
-          if (!this.inactivityService) {
-            this.inactivityService = this.injector.get(InactivityService);
-          }
-          this.inactivityService.setupListener();
-          this.inactivityService.startTimer();
-          this.queryStateService.clearAllQueryStates();
-          this.router.navigate(['/sso/dashboard']);
-          return response;
-        } else {
-          throw new Error(response.Message || 'Login failed');
+ // 變更：加入 options?: { skipNavigate?: boolean }
+login(data: userLogin, options?: { skipNavigate?: boolean }): Observable<ApiResponse<UserInfo>> {
+  data.password = this.encrypt.getPassword(data.code as string, data.password as string);
+  data.client_ip = this.client_ip;
+
+  return this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, data).pipe(
+    map((response: ApiResponse<UserInfo>) => {
+      if (response.Status === '0000') {
+        localStorage.setItem('UserInfo', JSON.stringify(response.Data));
+        const userInfo = JSON.parse(localStorage.getItem('UserInfo') as string);
+        userInfo.client_ip = this.client_ip;
+        localStorage.setItem('UserInfo', JSON.stringify(userInfo));
+        this.userSubject.next(userInfo);
+
+        if (!this.inactivityService) {
+          this.inactivityService = this.injector.get(InactivityService);
         }
-      }),
-      catchError(err => {
-        return throwError(() => err);
-      })
-    );
-  }
+        this.inactivityService.setupListener();
+        this.inactivityService.startTimer();
+        this.queryStateService.clearAllQueryStates();
+
+        // ✅ 只有在沒指定 skipNavigate 時才導到 /sso/dashboard
+        if (!options?.skipNavigate) {
+          this.router.navigate(['/sso/dashboard']);
+        }
+        return response;
+      } else {
+        throw new Error(response.Message || 'Login failed');
+      }
+    }),
+    catchError(err => throwError(() => err))
+  );
+}
+
   // 移除存儲的 JWT Token
   logout(): void {
     const userInfoStr = this.getUserInfo();
