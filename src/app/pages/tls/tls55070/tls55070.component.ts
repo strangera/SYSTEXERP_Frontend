@@ -151,7 +151,13 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
     },
-    { field: 'DiscRate', header: '折扣率', visible: true, style: 'text-right' },
+    {
+  field: 'DiscRate',
+  header: '折扣率',
+  visible: true,
+  style: 'text-right',
+  format: (v: number | string) => this.percent(v),
+},
     {
       field: 'TXN_SaleAmt',
       header: '單項小計',
@@ -188,6 +194,25 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
   ) {
     super();
   }
+private parsePercent(v: any): number {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number') return v;                // 已是數字就用
+  const s = String(v).trim();
+  if (s.endsWith('%')) {
+    const n = Number(s.slice(0, -1));                 // "100%" -> 100
+    return isNaN(n) ? 0 : n;
+  }
+  const n = Number(s);                                // "100" -> 100, "1.5" -> 1.5
+  return isNaN(n) ? 0 : n;
+}
+
+percent(val: any): string {
+  const n = this.parsePercent(val);                   // 100
+  return (n / 100).toLocaleString('en-US', {          // 顯示成 100%
+    style: 'percent',
+    maximumFractionDigits: 2,
+  });
+}
 
   ngOnInit(): void {
     this.initializePage('TLS55070', 'tls/tls55070', this.queryForm, (f) =>
@@ -462,7 +487,7 @@ onSubmit(form: FormGroup): void {
           TXN_SaleAmt: Number(d?.TXN_SaleAmt ?? 0),
           TXN_Qty: Number(d?.TXN_Qty ?? 0),
           TXN_Disc: Number(d?.TXN_Disc ?? 0),
-          DiscRate: Number(d?.DiscRate ?? 0),
+          DiscRate: this.parsePercent(d?.DiscRate),
         });
       });
 
