@@ -271,6 +271,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         return;
       }
       const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
+      if (formData.remainingBudgetAmount < formData.PO_TotalBuyAmt) {
+        this.messageService.errorBubble('採購金額不能大於剩餘預算金額');
+        this.loading = false
+        return;
+      }
       const details: IPODetail[] = this.data.map((item) => ({
         id: item.id,
         PO_No: item.PO_No,
