@@ -204,7 +204,6 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       this.syncDateToQueryForm();
     });
 
-
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
     })

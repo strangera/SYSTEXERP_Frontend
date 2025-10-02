@@ -106,22 +106,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     eventID: [null],
     event_startdate: [null as Date | null],
     event_enddate: [null as Date | null],
-
-    // 合約查詢條件
-    tlt_building: [[]],// 館別
-    tlt_floor: [[]],// 樓層
-    area_no: [[]],// 區域
-    bus_type: [[] as string[]],//大分類
-    bus_class: [[] as IDropdownItem[]],//中分類
-    bus_sclass: [[] as IDropdownItem[]],//小分類
-    tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
-    org_id: [[]],  // 組織
-    TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
-    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
-
-
-    ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
   });
 
   halfyearOptions = [
