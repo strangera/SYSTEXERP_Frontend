@@ -81,6 +81,7 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
         tlt_floor: frm.value.tlt_floor
       }
       this.tls2d020Service.executeTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe((res) => {
+        this.onSubmit(frm);
         this.messageService.successBubble(res.Message);
       })
     })

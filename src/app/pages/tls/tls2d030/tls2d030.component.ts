@@ -71,7 +71,8 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor,
       };
-      this.tls2d030Service.executeTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe(() => {
+      this.tls2d030Service.executeTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe(res => {
+        this.messageService.successBubble(res.Message);
         this.onSubmit(frm);
       });
     });
