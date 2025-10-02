@@ -19,8 +19,11 @@ import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TLS31070PrintDetailRequest, TLS31070Request, TLS31070Response, Tls31070Service } from '@service/api/tls/tls31070.service';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls31070',
@@ -33,7 +36,11 @@ import { TLS26050Service } from '@service/api/tls/tls26050.service';
     FormsModule,
     ReactiveFormsModule,
     RadiobuttonComponent,
+    CommonModule,
+    CalendarComponent,
     CalendarRangeQuickComponent,
+    DropdownComponent,
+    InputTextComponent,
     ButtonComponent,
     TableModule,
     RadiobuttonYNComponent,
@@ -185,7 +192,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
 
   ngOnInit(): void {
     this.initializePage('TLS31070', 'TLS/TLS31070cru', this.queryForm, (frm) => this.onSubmit(frm));
-    
+
     // 日期表單控制
     this.onReportTypeChange('1');
     this.setReadOnlyFields();
