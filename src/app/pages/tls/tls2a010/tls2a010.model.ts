@@ -14,6 +14,17 @@ export interface TLS2A010Data {
   check_status: number;     // 審核狀態 (1~4)
   check_Remark: string;     // 備註
 }
+export interface TLS2A010Query {
+  PageSize: number;
+  PageIndex: number;
+  SortBy?: any;
+  TXN_Date?: string;
+  Floor_No?: string;
+  ECR_No_Start?: string;
+  ECR_No_End?: string;
+  PAY_NO?: string;
+  Building_No?: string;
+}
 
 export const defaultColumns = [
   { header: '總計', field: 'group_name', hidden: true },
@@ -26,13 +37,15 @@ export const defaultColumns = [
 
   {
     header: '狀況',
-    field: 'OVER_PayAmt',
+    field: 'OVER_Status',
+    sortField: 'OVER_PayAmt',
     format: (v: number) => {
       if (v < 0) return '欠';
       if (v === 0) return '平';
       if (v > 0) return '溢';
       return v; // 預設 fallback
-    }
+    },
+
   },
   { header: '審核人員', field: 'check_usr_name' },
 
@@ -69,8 +82,17 @@ export const creditCardColumns: Column[] = [
       return v;
     }
   },
-
-  { header: '狀況', field: 'OVER_Status' },
+  {
+    header: '狀況',
+    field: 'OVER_Status',
+    sortField: 'OVER_PayAmt',
+    format: (v: number) => {
+      if (v < 0) return '欠';
+      if (v === 0) return '平';
+      if (v > 0) return '溢';
+      return v; // 預設 fallback
+    },
+  },
   { header: '審核人員', field: 'check_usr_name' },
   {
     header: '是否有缺單',
@@ -84,4 +106,3 @@ export const creditCardGroup: ColumnGroup[] = [
   { field: 'ACT', header: '實收帳' },
   { field: 'OVER', header: '實收帳 - 系統帳' },
 ];
-

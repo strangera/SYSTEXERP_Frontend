@@ -59,6 +59,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     { field: 'CAP_Item', header: '扣款項目', visible: true },
     { field: 'CAP_Name', header: '扣款名稱', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'AccCName', header: '會計科目名稱', visible: true },
     { field: 'org_id', header: '組織代號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
     { field: 'pod_no', header: '活動名稱', visible: true },
@@ -211,7 +212,10 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       alert('請先選擇檔案');
       return;
     }
-    this.tls2d010Service.uploadExcel(this.selectedFile).subscribe({
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+
+    this.tls2d010Service.uploadExcel(formData).subscribe({
       next: (res) => {
         console.log('上傳成功:', res);
         alert('上傳成功！');
