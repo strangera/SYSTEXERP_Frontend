@@ -504,6 +504,7 @@
               [columns]="getDetailColumnsForTab(rowData)"
               [(selection)]="detailSelectedItems[rowData[dataKey]]"
               [dataKey]="dataKey"
+              [rowTrackBy]="trackByFn"
               [selectionMode]="readonly ? null : 'multiple'"
               (selectionChange)="onDetailSelectionChange(rowData, $event)"
               styleClass="detail-table"

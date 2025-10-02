@@ -4,21 +4,22 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Button } from 'primeng/button';
 import { NgStyle, NgIf, DatePipe } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { creditCardColumns, creditCardGroup, defaultColumns } from './tls2a010.model';
+import { creditCardColumns, creditCardGroup, defaultColumns, TLS2A010Data, TLS2A010Query } from './tls2a010.model';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { finalize } from 'rxjs';
 
 
 const yesterday = new Date();
@@ -42,7 +43,7 @@ yesterday.setDate(yesterday.getDate() - 1);
     TooltipModule,
     DropdownRangeComponent,
     DatePipe,
-    CustomFooterTableComponent
+    TableReportComponent,
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -55,8 +56,12 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     PAY_NO: ['', Validators.required],
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
+  historyRequestBody: TLS2A010Query | null = null;
+
   //  { validators: this.validateRangeStartBeforeEnd });
   ECR_Options: { label: string; value: string }[] = [];
   floorOptions: IDropdownItem[] = [];
@@ -67,7 +72,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   selectionMode = 'single';
   data: any[] = [];
-  footerData: any[] = [];
+  footerData: any = [];
   totalRecords = 0;
   PAY_NO = '';
   PAY_Type = '';
@@ -94,8 +99,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private dropDownListService: DropDownListService,
-    private tls2a010Service: Tls2a010Service,
-
+    public readonly tls2a010Service: Tls2a010Service,
     private readonly validationService: ValidationService
 
   ) {
@@ -170,39 +174,39 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     });
 
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'FIN_PAY_Type' })
-    .pipe(untilDestroyed(this))
-    .subscribe(sysRes => {
-      // 從 querySYS1000_DropDownList 取得下拉選單資料
-      const sysOptions = sysRes.Data.map(item => ({
-        label: `${item.No ?? ''}-${item.Name ?? ''}`,
-        value: item.No,
-        Name: item.Name,
-        No: item.No
-      }));
-
-      // 呼叫 queryPOS1006_DropDownList 來取得 PAY_Type 對應
-      this.dropDownListService.queryPOS1006_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(posRes => {
-        // 建立 payNo 到 PAY_Type 的映射
-        const payNoToTypeMap = new Map<string, string>();
-        posRes.Data.forEach(x => {
-          payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
-        });
-
-        // 將 PAY_Type 加入 sysOptions
-        this.paymentToolOptions = sysOptions.map(opt => ({
-          ...opt,
-          PAY_Type: payNoToTypeMap.get(opt.No) ?? ''
+      .subscribe(sysRes => {
+        // 從 querySYS1000_DropDownList 取得下拉選單資料
+        const sysOptions = sysRes.Data.map(item => ({
+          label: `${item.No ?? ''}-${item.Name ?? ''}`,
+          value: item.No,
+          Name: item.Name,
+          No: item.No
         }));
 
-        // 處理初始 payNo
-        const payNo = this.queryForm.value.PAY_NO;
-        if (payNo) {
-          this.onPayNoChange(payNo);
-        }
+        // 呼叫 queryPOS1006_DropDownList 來取得 PAY_Type 對應
+        this.dropDownListService.queryPOS1006_DropDownList()
+          .pipe(untilDestroyed(this))
+          .subscribe(posRes => {
+            // 建立 payNo 到 PAY_Type 的映射
+            const payNoToTypeMap = new Map<string, string>();
+            posRes.Data.forEach(x => {
+              payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
+            });
+
+            // 將 PAY_Type 加入 sysOptions
+            this.paymentToolOptions = sysOptions.map(opt => ({
+              ...opt,
+              PAY_Type: payNoToTypeMap.get(opt.No) ?? ''
+            }));
+
+            // 處理初始 payNo
+            const payNo = this.queryForm.value.PAY_NO;
+            if (payNo) {
+              this.onPayNoChange(payNo);
+            }
+          });
       });
-    });
 
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
@@ -225,142 +229,119 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (form.invalid) return;
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.value;
+      const payload = {
+        PageSize: raw.pageSize ?? 0,
+        PageIndex: raw.pageIndex ?? 0,
+        SortBy: raw.SortBy ?? [],
+        TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
+          ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
+          : '',
+        Floor_No: raw.Floor_No ?? '',
+        ECR_No_Start: raw.ECR_No_Start ?? '',
+        ECR_No_End: raw.ECR_No_End ?? '',
+        PAY_NO: raw.PAY_NO ?? '',
+        Building_No: raw.Building_No ?? ''
+      };
+      this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this),finalize(() => this.loading = false)).subscribe(response => {
+        // if (response?.Data?.mainData) {
+          this.data = response.Data ? response.Data : [];
+          this.footerData = response.footerData;
+          this.totalRecords = response.TotalCount;
 
-    this.loading = true;
-
-    const raw = form.value;
-
-    const payload = {
-      PageSize: raw.pageSize ?? 0,
-      PageIndex: raw.pageIndex ?? 0,
-      SortBy: raw.SortBy ?? [],
-      TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
-        ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
-        : '',
-      Floor_No: raw.Floor_No ?? '',
-      ECR_No_Start: raw.ECR_No_Start ?? '',
-      ECR_No_End: raw.ECR_No_End ?? '',
-      PAY_NO: raw.PAY_NO ?? '',
-      Building_No: raw.Building_No ?? ''
-    };
-
-    this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
-      next: (response) => {
-        this.data = (response?.Data.mainData ?? []).map((item: any) => {
-          const diff = Number(item.OVER_PayAmt ?? 0);
-
-          let status = '';
-          if (diff < 0) status = '欠';
-          else if (diff === 0) status = '平';
-          else status = '溢';
-
-          return {
-            ...item,
-            // 總差異
-            OVER_PayAmt: diff,
-
-            // 各支付別差異
-            OVER_PayAmt1: item.OVER_PayAmt1,
-            OVER_PayAmt2: item.OVER_PayAmt2,
-            OVER_PayAmt3: item.OVER_PayAmt3,
-
-            // 額外欄位
-            OVER_Status: status,
-            check_status: item.check_status,
-            check_usr_name: item.check_usr_name
-          };
-        });
-        this.onPayNoChange(payload.PAY_NO);
-
-        this.footerData = [...response.Data.totalData]; // table總計那列的資料
-
-        const first = this.data[0];
-        this.PAY_NO = this.queryForm.value.PAY_NO || '';
-        this.TXN_Date = first?.TXN_Date || '';
-
-        this.totalRecords = response.TotalCount ?? this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('TLS2A010 查詢失敗', err);
-        this.loading = false;
-      }
+          // this.data = (response.Data.mainData ?? []).map((item: any) => {
+          //   const diff = Number(item.OVER_PayAmt ?? 0);
+          //   let status = '';
+          //   if (diff < 0) status = '欠';
+          //   else if (diff === 0) status = '平';
+          //   else status = '溢';
+          //   return {
+          //     ...item,
+          //     OVER_PayAmt: diff,
+          //     OVER_PayAmt1: item.OVER_PayAmt1,
+          //     OVER_PayAmt2: item.OVER_PayAmt2,
+          //     OVER_PayAmt3: item.OVER_PayAmt3,
+          //     OVER_Status: status,
+          //     check_status: item.check_status,
+          //     check_usr_name: item.check_usr_name
+          //   };
+          // });
+          this.onPayNoChange(payload.PAY_NO);
+          console.log('footerData (API totalData):', response.Data.totalData);
+          console.log('selectedColumns:', this.selectedColumns);
+          this.historyRequestBody = payload;
+          const first = this.data[0];
+          this.PAY_NO = this.queryForm.value.PAY_NO || '';
+          this.TXN_Date = first?.TXN_Date || '';
+          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        // } else {
+        //   this.data = [];
+        //   this.totalRecords = 0;
+        //   this.messageService.warnBubble(response?.Message || '沒有找到符合條件的資料。');
+        // }
+      });
     });
   }
 
-onReview(selectedItems: any[]): void {
-  if(!selectedItems || selectedItems.length === 0) {
-  this.messageService.warnBubble('請先勾選要審核的項目');
-  return;
-}
+  onReview(selectedItems: any[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選要審核的項目');
+      return;
+    }
 
-// 依照 API 格式，包成 selectList
-const payload = {
-  PAY_Type: this.PAY_Type,
-  selectList: selectedItems.map(item => ({
-    ID: item.ID,
-    PAY_NO: item.PAY_NO,
-  }))
-};
+    // 依照 API 格式，包成 selectList
+    const payload = {
+      PAY_Type: this.PAY_Type,
+      selectList: selectedItems.map(item => ({
+        ID: item.ID,
+        PAY_NO: item.PAY_NO,
+      }))
+    };
 
-console.log('送出審核資料:', payload);
+    console.log('送出審核資料:', payload);
 
-this.loading = true;
+    this.loading = true;
 
-this.tls2a010Service.updateTLS2A010(payload).subscribe({
-  next: () => {
-    this.messageService.successBubble('審核完成');
-    this.onSubmit(this.queryForm);
-    this.loading = false;
-  },
-  error: (err) => {
-    console.error('更新審核狀態失敗:', err);
-    this.messageService.errorBubble('更新失敗，請稍後再試');
-    this.loading = false;
-  }
-});
+    this.tls2a010Service.updateTLS2A010(payload).subscribe({
+      next: () => {
+        this.messageService.successBubble('審核完成');
+        this.onSubmit(this.queryForm);
+        this.loading = false;
+      },
+    });
   }
 
+  onPayNoChange(payNo: string): void {
+    console.log(payNo);
+    this.PAY_Type = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
+    this.PAY_NO = payNo;
 
-
-
-onPayNoChange(payNo: string): void {
-  console.log(payNo);
-  this.PAY_Type = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
-  this.PAY_NO = payNo;
-
-  if(this.PAY_Type === '0') {
-  this.selectedColumns = this.creditCardColumns;
-  this.columnGroup = this.creditCardGroup;
-} else {
-  this.selectedColumns = this.defaultColumns;
-  this.columnGroup = [];
-}
+    if (this.PAY_Type === '0') {
+      this.selectedColumns = this.creditCardColumns;
+      this.columnGroup = this.creditCardGroup;
+    } else {
+      this.selectedColumns = this.defaultColumns;
+      this.columnGroup = [];
+    }
   }
   override onDetail(row: any): void {
-  console.log('缺單審核被點擊:', row);
+    console.log('缺單審核被點擊:', row);
 
-  this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
-    next: (res) => {
-      const detailData = res?.Data ?? [];
-      const rowdataWithDetail = {
-        ...row,
-        details: detailData
-      };
+    this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
+      next: (res) => {
+        const detailData = res?.Data ?? [];
+        const rowdataWithDetail = {
+          ...row,
+          details: detailData
+        };
 
-      // 呼叫共通的 navigateWithState (不會覆蓋底層)
-      this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
-    },
-    error: (err) => {
-      console.error('查詢明細失敗:', err);
-    }
-  });
-}
-
+        // 呼叫共通的 navigateWithState (不會覆蓋底層)
+        this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
+      },
+    });
+  }
 
 }
 

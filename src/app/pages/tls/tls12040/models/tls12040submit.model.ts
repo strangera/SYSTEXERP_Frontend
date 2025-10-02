@@ -86,9 +86,9 @@ export interface TLS12040ContractData {
   open_fees?: number;
   total_amt?: number;
   total_amt_vendor?: number;
-  construct_deposit?: number;
+  construct_deposit?: string;
   construct_fees?: number;
-  expiration_deposit?: number;
+  expiration_deposit?: string;
   expiration_fees?: number;
   open_deposit?: string;
 
@@ -123,7 +123,6 @@ export interface TLS12040ContractData {
   ticket_remarks?: string;
   total_amt_unit?: string;
   total_amt_vendor_unit?: string;
-
   approve_status: string;
 
   // 位置資訊
@@ -299,6 +298,7 @@ export class TLS12040DataCleanerClass {
       apply_date: this.formatDate(rawData.apply_date),
       apply_type: rawData.apply_type,
       apply_status: rawData.apply_status,
+      approve_status: rawData.approve_status,
       contract_type: rawData.contract_type,
       ven_uniform: rawData.ven_uniform || '',
       ven_no: rawData.ven_no || '',
@@ -347,9 +347,9 @@ export class TLS12040DataCleanerClass {
       open_fees: this.parseNumber(rawData.open_fees),
       total_amt: this.parseNumber(rawData.total_amt),
       total_amt_vendor: this.parseNumber(rawData.total_amt_vendor),
-      construct_deposit: this.parseNumber(rawData.construct_deposit),
+      construct_deposit: (rawData.construct_deposit),
       construct_fees: this.parseNumber(rawData.construct_fees),
-      expiration_deposit: this.parseNumber(rawData.expiration_deposit),
+      expiration_deposit: (rawData.expiration_deposit),
       expiration_fees: this.parseNumber(rawData.expiration_fees),
       open_deposit: rawData.open_deposit,
 
@@ -385,7 +385,6 @@ export class TLS12040DataCleanerClass {
       ticket_remarks: rawData.ticket_remarks,
       total_amt_unit: rawData.total_amt_unit,
       total_amt_vendor_unit: rawData.total_amt_vendor_unit,
-      approve_status: rawData.approve_status,
 
       // 位置資訊
       locationInfo: this.cleanLocationInfo(rawData.locationInfo || [])

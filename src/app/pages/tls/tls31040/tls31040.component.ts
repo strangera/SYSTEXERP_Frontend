@@ -106,22 +106,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     eventID: [null],
     event_startdate: [null as Date | null],
     event_enddate: [null as Date | null],
-
-    // 合約查詢條件
-    tlt_building: [[]],// 館別
-    tlt_floor: [[]],// 樓層
-    area_no: [[]],// 區域
-    bus_type: [[] as string[]],//大分類
-    bus_class: [[] as IDropdownItem[]],//中分類
-    bus_sclass: [[] as IDropdownItem[]],//小分類
-    tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
-    org_id: [[]],  // 組織
-    TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
-    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
-
-
-    ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
   });
 
   halfyearOptions = [
@@ -146,7 +130,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   totalRecords = 0;
   data: TLS31040Response[] = [];
   columns: Column[] = [
-    { field: 'tlt_kind', header: '櫃別', visible: true },
+    { field: 'tlt_kind', header: '櫃別代碼', visible: true },
     { field: 'tlt_kindName', header: '櫃別名稱', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
@@ -229,18 +213,18 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       this.area_no_Option = res.Data;
     })
     // 獲取大分類下拉選項
-    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
     // 監聽大分類變化
     this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
       if (value && value.length > 0) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
           const groupedData = response.Data.reduce((accumulator, currentItem) => {
-            const groupKey = currentItem.CAT_LNo || '';
+            const groupKey = currentItem.bus_type || '';
             if (!accumulator[groupKey]) {
               accumulator[groupKey] = {
-                label: currentItem.CAT_LName,
+                label: currentItem.bus_type_name,
                 items: []
               };
             }
@@ -276,12 +260,12 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         const requests = [];
         // 根據選取的中分類，為每一個中分類組建一個 API 請求
         for (const mValue of selectedMValues) {
-          if (mValue && mValue.CAT_LNo) {
+          if (mValue && mValue.bus_type) {
             requests.push(
-              this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [mValue.CAT_LNo], CAT_MNo: [mValue.No] }).pipe(
+              this.dropDownListService.queryTLTBUSSCLASS_DropDownList({ bus_type: [mValue.bus_type], bus_class: [mValue.No] }).pipe(
                 map(res => ({
-                  LNo: mValue.CAT_LNo,
-                  LName: mValue.CAT_LName,
+                  LNo: mValue.bus_type,
+                  LName: mValue.bus_type_name,
                   MNo: mValue.No,
                   MName: mValue.Name,
                   Data: res.Data
@@ -310,8 +294,8 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         const newItems = group.Data.map(item => ({
           ...item,
           label: `${item.No} - ${item.Name}`,
-          CAT_LNo: group.LNo,
-          CAT_LName: group.LName,
+          bus_type: group.LNo,
+          bus_type_name: group.LName,
           CAT_MNo: group.MNo,
           CAT_MName: group.MName
         }));

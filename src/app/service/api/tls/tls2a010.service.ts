@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -9,12 +9,25 @@ import { Observable } from 'rxjs';
 export class Tls2a010Service {
   private apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** 查詢 各支付工具審核作業 */
   queryTLS2A010(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS2A010`, data);
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2A010`, data).pipe(
+      map(res => {
+        if (res?.Data?.mainData) {
+          res.footerData = res?.Data?.totalData ? res.Data.totalData[0] : {};
+          res.Data = res.Data.mainData.map((item: any) => ({
+            ...item,
+            OVER_Status: item.OVER_PayAmt
+          }));
+        }
+        console.log('queryTLS2A010 處理後的 res:', res);
+        return res; // 保持原結構，只改 Data.mainData
+      })
+    );
   }
+
 
   /** 查詢明細 */
   queryDetailTLS2A010(data: any): Observable<any> {

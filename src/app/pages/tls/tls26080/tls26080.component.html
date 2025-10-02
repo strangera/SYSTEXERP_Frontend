@@ -73,5 +73,5 @@
              [totalRecords]="totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
              [lazy]="true"
-             [loading]="loading"></app-table>
+             [loading]="service.tableLoading"></app-table>
 </div>

@@ -481,48 +481,46 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
    * 同步明細到父項目數組
    */
   private syncDetailToParentArray(detailData: any, parentItem: CommissionItem): void {
-    const currentTab = parentItem.currentTab || 'discount';
-    const detailId = detailData.id;
     const originalType = detailData._originalType;
+    const detailId = detailData.id;
 
-    console.log('🔗 同步明細到父項目:', {
-      detailId,
-      originalType,
-      currentTab,
-      status: detailData._status,
-      selected: detailData.selected
-    });
-
-    // 根據 originalType 而不是 currentTab 來決定更新哪個數組
+    // ⚠️ 直接更新,不要創建新陣列
     switch (originalType) {
       case 'discount':
-        this.updateItemInArray(parentItem.discountSettingItems, detailId, detailData);
-        break;
+        {
+          const discountIndex = parentItem.discountSettingItems.findIndex(item => item.id === detailId);
+          if (discountIndex > -1) {
+            // ✅ 直接更新物件屬性,不要替換整個物件
+            Object.assign(parentItem.discountSettingItems[discountIndex], detailData);
+          }
+          break;
+        }
+
       case 'annual':
-        this.updateItemInArray(parentItem.annualPerformanceItems, detailId, detailData);
-        break;
+        {
+          const annualIndex = parentItem.annualPerformanceItems.findIndex(item => item.id === detailId);
+          if (annualIndex > -1) {
+            Object.assign(parentItem.annualPerformanceItems[annualIndex], detailData);
+          }
+          break;
+        }
+
       case 'level':
-        this.updateItemInArray(parentItem.discountLevelItems, detailId, detailData);
-        break;
-      default:
-        // 如果沒有 originalType，回退到使用 currentTab
-        switch (currentTab) {
-          case 'discount':
-            this.updateItemInArray(parentItem.discountSettingItems, detailId, detailData);
-            break;
-          case 'annual':
-            this.updateItemInArray(parentItem.annualPerformanceItems, detailId, detailData);
-            break;
-          case 'level':
-            this.updateItemInArray(parentItem.discountLevelItems, detailId, detailData);
-            break;
+        {
+          const levelIndex = parentItem.discountLevelItems.findIndex(item => item.id === detailId);
+          if (levelIndex > -1) {
+            Object.assign(parentItem.discountLevelItems[levelIndex], detailData);
+          }
+          break;
         }
     }
 
-    // 同時更新 detailItems（用於顯示）
-    this.updateItemInArray(parentItem.detailItems, detailId, detailData);
+    // 同時更新 detailItems
+    const detailItemsIndex = parentItem.detailItems.findIndex(item => item.id === detailId);
+    if (detailItemsIndex > -1) {
+      Object.assign(parentItem.detailItems[detailItemsIndex], detailData);
+    }
   }
-
   /**
    * 更新數組中的項目
    */

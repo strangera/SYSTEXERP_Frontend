@@ -3,7 +3,7 @@ import { MenubarComponent } from "@shared/component/menubar/menubar.component";
 import { ButtonComponent } from "@shared/componentkit/button/button.component";
 import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { AccordionModule } from "primeng/accordion";
-import { debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, lastValueFrom, Subscription } from 'rxjs';
 import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
@@ -690,7 +690,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       currentApplyNo: this.currentApplyNo,
 
       // 合約資訊
-      contractInfoData: this.contractInfoData || [],
+      // contractInfoData: this.contractInfoData || [],
 
       // 額外設定
       additionalSettings: {
@@ -700,12 +700,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       }
     };
 
-    console.log('💾 準備儲存 Next2 資料:', {
-      commissionDataLength: dataToSave.commissionData.length,
-      selectedTab: dataToSave.selectedSettingTab,
-      applyNo: dataToSave.currentApplyNo,
-      hasContractInfo: dataToSave.contractInfoData.length > 0
-    });
+    // console.log('💾 準備儲存 Next2 資料:', {
+    //   commissionDataLength: dataToSave.commissionData.length,
+    //   selectedTab: dataToSave.selectedSettingTab,
+    //   applyNo: dataToSave.currentApplyNo,
+    //   hasContractInfo: dataToSave.contractInfoData.length > 0
+    // });
 
     // 呼叫 flowService 儲存資料
     const success = this.flowService.setNext2Data(dataToSave);
@@ -922,7 +922,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     detailData: any;
     field: string;
     parentData: any;
-  }): void { }
+  }): void {
+    // 判斷是否為複製按鈕
+    if (event.field === 'copy_button') {
+      this.copyDetailItem(event.detailData, event.parentData);
+    }
+  }
 
   ngOnDestroy(): void {
     // 最後一次儲存
@@ -1015,32 +1020,22 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private async performSubmit(): Promise<void> {
+    this.loading = true;
+    this.notificationService.blockUi();
+
     try {
-      this.loading = true;
-      this.notificationService.blockUi();
-
-      // 生成提交資料
       const submitData = this.flowService.generateTLS12040SubmitData();
-      console.log('準備提交的資料:', submitData);
+      const response = await lastValueFrom(this.tls12040Service.submitFinalTLS12040(submitData));
 
-      // 呼叫 API 提交
-      const response = await this.tls12040Service.submitFinalTLS12040(submitData).toPromise();
+      this.notificationService.successBubble('契約資料提交成功！');
+      this.flowService.onSubmitSuccess();
 
-      if (response.Status === '0000') {
-        this.notificationService.successBubble('契約資料提交成功！');
-        this.flowService.onSubmitSuccess();
-
-        // 延遲導航回列表頁
-        setTimeout(() => {
-          this.router.navigate(['account/tls/tls12040']);
-        }, 2000);
-      } else {
-        throw new Error(response.Message || '提交失敗');
-      }
+      setTimeout(() => {
+        this.router.navigate(['account/tls/tls12040']);
+      }, 2000);
 
     } catch (error) {
-      console.error('提交失敗:', error);
-      this.notificationService.errorBubble('契約資料提交失敗，請重試');
+      this.notificationService.errorBubble('契約資料提交失敗');
     } finally {
       this.loading = false;
       this.notificationService.unblockUi();
@@ -1733,7 +1728,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   /**
  * 複製詳細項目（插入到下一行）
  */
-  private copyDetailItem(sourceItem: any, parentData: ChargeSettingBusinessModel): void {
+  copyDetailItem(sourceItem: any, parentData: ChargeSettingBusinessModel): void {
     if (this.isReadOnlyMode) {
       this.notificationService.infoBubble('檢視模式下無法複製項目');
       return;

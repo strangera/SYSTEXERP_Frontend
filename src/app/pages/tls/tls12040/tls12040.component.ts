@@ -136,7 +136,7 @@ export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response>
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'apply_type', header: '合約狀態', visible: true, format: formatApproveStatus },
+    { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
   ];
 
   // ========== 下拉選單選項 ==========

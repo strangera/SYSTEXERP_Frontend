@@ -58,9 +58,7 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
     { field: 'field', header: '欄位' }, // 欄位定義
   ];
   constructor(
-    private fin14040Service: Fin14040Service,
-    private http: HttpClient,
-    private sanitizer: DomSanitizer
+    private fin14040Service: Fin14040Service
   ) {
     super();
   }
@@ -115,34 +113,9 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
             // 下載壓縮檔
             if (response.Data.ZipUrl) {
               window.open(environment.BaseUrl + response.Data.ZipUrl, '_blank');
+
+              this.loading = false; 
             }
-
-            // const files = [
-            //   { key: 'T02Url', name: '申報檔.t02' },
-            //   { key: 'TETUrl', name: '申報檔.tet' },
-            //   { key: 'TXTUrl', name: '申報檔.txt' }
-            // ];
-
-            // files.forEach(f => {
-            //   const url = response.Data[f.key];
-            //   if (url) {
-            //     this.http.get(environment.BaseUrl + url, { responseType: 'blob' }).subscribe({
-            //       next: (blob) => {
-            //         const a = document.createElement('a');
-            //         const objectUrl = window.URL.createObjectURL(blob);
-            //         a.href = objectUrl;
-            //         a.download = f.name;
-            //         document.body.appendChild(a);
-            //         a.click();
-            //         document.body.removeChild(a);
-            //         window.URL.revokeObjectURL(objectUrl);
-            //       },
-            //       error: (err) => {
-            //         console.error(`下載失敗: ${f.name}`, err);
-            //       }
-            //     });
-            //   }
-            // });
             }
           },
           error: () => { this.loading = false; },

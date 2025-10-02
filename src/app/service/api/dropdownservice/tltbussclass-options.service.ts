@@ -23,12 +23,21 @@ export class BussclassDropdownService {
    * @param classTypes 中分類代碼陣列
    */
   getSystemTypesByBustype(busTypes: string[], classTypes: string[]): Observable<{ value: string, label: string }[]> {
+    // 將 busTypes 和 classTypes 組合成新的參數格式
+    const queryInfos = [];
+    const maxLength = Math.max(busTypes.length, classTypes.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      if (busTypes[i] && classTypes[i]) {
+        queryInfos.push({
+          bus_type: busTypes[i],
+          bus_class: classTypes[i]
+        });
+      }
+    }
+
     const params = {
-      id: 0,
-      No: '',
-      Name: '',
-      bus_type: busTypes || [], // 傳遞大分類代碼陣列
-      bus_class: classTypes || [] // 傳遞中分類代碼陣列
+      queryTLTBUSSCLASSInfos: queryInfos
     };
 
     console.log('小分類 API 請求參數:', params);

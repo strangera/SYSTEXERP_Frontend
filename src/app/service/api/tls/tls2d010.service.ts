@@ -12,7 +12,6 @@ export class Tls2d010Service {
 
   constructor(private http: HttpClient) {}
 
-  // 查詢 TLS2D010 序號異常報表
   queryTLS2D010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2D010`, data);
   }
@@ -22,13 +21,10 @@ export class Tls2d010Service {
   deleteTLS2D010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS2D010`, data);
   }
-  uploadExcel(file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.http.post<any>(`${this.apiUrl}/uploadExcel`, formData, {
-      reportProgress: true,
-      observe: 'events'
-    });
+  updateTLS2D010(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS2D010`, data);
+  }
+  uploadExcel(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/uploadExcel`, formData);
   }
 }

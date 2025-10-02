@@ -82,14 +82,15 @@ export interface TLS12040DetailModel {
   deposit?: number;
   credit_card?: number;
   check_day?: number;
-  open_fees?: number;
+
   total_amt?: number;
   total_amt_vendor?: number;
-  construct_deposit?: number;
+  construct_deposit?: string;
   construct_fees?: number;
-  expiration_deposit?: number;
+  expiration_deposit?: string;
   expiration_fees?: number;
   open_deposit?: string;
+  open_fees?: number;
 
   // ========== 其他設定 ==========
   invoice_type?: string;

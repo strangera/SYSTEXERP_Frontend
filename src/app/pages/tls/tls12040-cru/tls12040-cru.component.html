@@ -111,9 +111,20 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
+                label="申請案件內容"
+                controlName="apply_type"
+                [options]="applyTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="dataForm.controls.apply_type"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
                 label="申請案件狀態"
                 controlName="apply_status"
-                [options]="applyTypeOptions"
+                [options]="applyStatusOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="dataForm.controls.apply_status"
@@ -905,9 +916,9 @@
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-6 flex flex-column gap-3">
-              <!-- 公司登記地址 -->
+              <!-- 公司營登地址 -->
               <app-input-text
-                label="公司登記地址"
+                label="公司營登地址"
                 controlName="VEN_Address"
                 [control]="dataForm.controls.VEN_Address"
                 [submitted]="submitted"

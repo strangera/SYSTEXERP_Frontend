@@ -1,9 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
-import { FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
+import { computed, effect, Injectable, signal } from '@angular/core';
+import { AccNoDropdown, FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { OrganizationNumberService } from '@service/basic/organization-number.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
@@ -12,33 +15,35 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 export class FIN52030Service {
 
   public readonly FIN52030Data = signal<FIN52030Data[]>([]);
-  public readonly FIN52030DetailData = signal<Record<string, any>[]>([]);
-  public readonly subpoenaTypes = signal<DropdownOption[]>([]);
-  public readonly creators = signal<DropdownOption[]>([]);
-  public readonly modifiers = signal<DropdownOption[]>([]);
+  public readonly FIN52030Detail = signal<FIN52030Detail[]>([]);
 
-  /** 預留給科目api */
-  public readonly FIN52030xxxxData = signal<Record<string, any>[]>([]);
+  public readonly subpoenaTypes = signal<DropdownOption[]>([]);
+  public readonly vendorList = signal<VendorList[]>([]);
+  public readonly accNoList = signal<AccNoDropdown[]>([]);
+  public readonly orgNoList = signal<Option[]>([]);
+  public readonly usrList = signal<Option[]>([]);
+
+  public vendorMap = computed(() => new Map(this.vendorList().map(item => [item.VEN_No, item])));
+  public accNoMap = computed(() => new Map(this.accNoList().map(item => [item.AccNo, item])));
 
   private readonly tableCancel$ = new Subject<void>();
-  private readonly creatorCancel$ = new Subject<void>();
-  private readonly modifierCancel$ = new Subject<void>();
 
   public tableLoading = !1;
-  public creatorLoading = !1;
-  public modifierLoading = !1;
+
+  public readonly subpoenaTypeMap = new Map([
+    ['1', '現金收入傳票'],
+    ['2', '現金支出傳票'],
+    ['3', '轉帳傳票'],
+  ]);
 
   constructor(
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,
+    private readonly dropdownApi: DropdownApiService,
   ) { }
 
   public getSubpoenaTypes(): void {
-    this.subpoenaTypes.set([
-      { No: '1', Name: '現金收入傳票' },
-      { No: '2', Name: '現金支出傳票' },
-      { No: '3', Name: '轉帳傳票' },
-    ]);
+    this.subpoenaTypes.set(Array.from(this.subpoenaTypeMap.entries()).map(([No, Name]) => ({ No, Name })));
   }
 
   public loadFIN52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
@@ -61,25 +66,10 @@ export class FIN52030Service {
     this.http.post<BaseQueryResponse<FIN52030Detail>>(`${apiUrl}/queryFIN52030Detail`, { id }).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(res => this.FIN52030DetailData.set(res.Data)),
+      tap(res => this.FIN52030Detail.set(res.Data)),
       finalize(() => {
         this.tableLoading = !1;
-        this.logger.debug('查詢FIN52030 Detail結果:', [this.FIN52030DetailData()]);
-      })
-    ).subscribe();
-  };
-
-  /** 預留給科目api */
-  public loadxxxx(payload?: unknown): void {
-    this.tableCancel$.next();
-    this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/xxxx`, payload).pipe(
-      take(1),
-      takeUntil(this.tableCancel$),
-      tap(res => this.FIN52030DetailData.set(res.Data)),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('查詢FIN52030 Detail結果:', [this.FIN52030DetailData()]);
+        this.logger.debug('查詢FIN52030 Detail結果:', [this.FIN52030Detail()]);
       })
     ).subscribe();
   };
@@ -126,31 +116,37 @@ export class FIN52030Service {
     );
   }
 
-  public loadCreators(): void {
-    this.creatorCancel$.next();
-    this.creatorLoading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030_Creaters`, {}).pipe(
+  public getAccNoList(): void {
+    this.http.post<BaseQueryResponse<AccNoDropdown>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
-      takeUntil(this.creatorCancel$),
-      tap(res => this.creators.set(res.Data)),
-      finalize(() => {
-        this.creatorLoading = !1;
-        this.logger.debug('查詢Creaters結果:', [this.creators()]);
-      })
+      tap(res => this.accNoList.set(res.Data)),
+      finalize(() => this.logger.debug('查詢AccNoList結果:', [this.accNoList()])),
     ).subscribe();
-  };
+  }
 
-  public loadModifiers(): void {
-    this.modifierCancel$.next();
-    this.modifierLoading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030_Modifiers`, {}).pipe(
+  public getVendorList(): void {
+    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
-      takeUntil(this.modifierCancel$),
-      tap(res => this.modifiers.set(res.Data)),
-      finalize(() => {
-        this.modifierLoading = !1;
-        this.logger.debug('查詢Modifiers結果:', [this.modifiers()]);
-      })
+      tap(res => this.vendorList.set(res.Data)),
+      finalize(() => this.logger.debug('查詢VendorList結果:', [this.vendorList()])),
     ).subscribe();
-  };
+  }
+
+  public getUsrList(): void {
+    this.dropdownApi.queryTblUser().pipe(
+      take(1),
+      map(res => res ?? []),
+      tap(res => this.usrList.set(res)),
+      finalize(() => this.logger.debug('查詢UsrList結果:', [this.usrList()])),
+    ).subscribe();
+  }
+
+  public getOrgNoList(): void {
+    this.dropdownApi.querySys3100().pipe(
+      take(1),
+      map(res => res ?? []),
+      tap(res => this.orgNoList.set(res)),
+      finalize(() => this.logger.debug('查詢OrgNoList結果:', [this.orgNoList()])),
+    ).subscribe();
+  }
 }
