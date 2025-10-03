@@ -184,12 +184,12 @@
   <div class="input-wrapper"
        [attr.data-suffix]="col().suffix">
     <input pInputText
-           class="w-full min-w-max"
-           [placeholder]="'請選擇' + col().header"
-           [value]="templateDisplayValue()"
            readonly
+           class="w-full min-w-max"
+           [placeholder]="'請選擇' + (col().header || '')"
+           [value]="templateDisplayValue()"
            [disabled]="disabled()"
-           (click)="overlayPanel.toggle($event)" />
+           (click)="overlayPanel.show($event)" />
     <p-overlayPanel #overlayPanel
                     [dismissable]="true"
                     [showCloseIcon]="false"
