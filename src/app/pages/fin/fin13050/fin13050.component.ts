@@ -156,10 +156,10 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     { field: 'PUR_Amt', header: '發票總金額', visible: true },
     { field: 'PUR_Net', header: '發票未稅金額', visible: true },
     { field: 'PUR_Tax', header: '發票稅額', visible: true },
-    { field: 'PUR_DirectType', header: '發票用途', visible: true },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true },
+    { field: 'PUR_DirectTypeDesc', header: '發票用途', visible: true },
+    { field: 'PUR_TaxTypeDesc', header: '課稅別', visible: true },
     { field: 'PUR_DiscNo', header: '折讓/扣抵號', visible: true },
-    { field: 'PUR_Type', header: '類別區分', visible: true },
+    { field: 'PUR_TypeDesc', header: '類別區分', visible: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SAL_Type', header: '銷售類型', visible: true },
@@ -183,6 +183,13 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       }));
       this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_No, v]));
     });
+      this.fin13050Service.queryAPS2002DropDownList().subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.PUR_VoucherTypeOptions = list.map(x => ({
+      value: String(x.No),
+      label: String(x.Name),
+    }));
+  });
     this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
       const list = res?.Data ?? [];
       this.directTypeOptions = list.map((x: any) => ({
