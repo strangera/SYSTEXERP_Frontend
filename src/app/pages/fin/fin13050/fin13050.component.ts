@@ -40,7 +40,7 @@ type SortMeta = { field: string; order: 1 | -1 };
     ReactiveFormsModule,
     InputTextComponent,
     CalendarRangeComponent,
-    DropdownComponent,
+    // DropdownComponent,
     // QueryYearMonthComponent,
     TableComponent,
     MultiSelectComponent,
@@ -240,12 +240,63 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       
   }
 
-  // 多選=>逗號字串；單值維持
-  private toCsv(value: any): string | undefined {
-    if (Array.isArray(value)) return value.length ? value.join(',') : undefined;
-    if (value === null || value === undefined || value === '') return undefined;
-    return String(value);
+/** 將多選值正規化為陣列（空陣列=>undefined 不送） */
+/** 將多選值正規化為陣列（空陣列=>undefined 不送） */
+private arr<T = any>(
+  value: any,
+  mapFn?: (x: any) => T | undefined
+): T[] | undefined {
+  if (value == null) return undefined;
+
+  const pushSafe = (src: any): T | undefined =>
+    mapFn ? mapFn(src) : (src as T);
+
+  if (Array.isArray(value)) {
+    const arr = value
+      .map(pushSafe)
+      .filter((x): x is T => x != null && x !== '');
+    return arr.length ? arr : undefined;
   }
+
+  const single = pushSafe(value);
+  return single != null && single !== '' ? [single] : undefined;
+}
+
+/** 單一值 -> 'YYYYMM'，無法轉則回 undefined */
+private toYYYYMMOne(input: any): string | undefined {
+  if (!input) return undefined;
+  if (typeof input === 'string' && /^\d{6}$/.test(input)) return input;     // 'YYYYMM'
+  if (typeof input === 'string' && /^\d{8}$/.test(input)) return input.slice(0, 6); // 'YYYYMMDD' -> 'YYYYMM'
+  if (typeof input === 'string') {
+    const m = input.match(/^(\d{4})[-\/](\d{2})/);
+    if (m) return m[1] + m[2];
+  }
+  const d = new Date(input);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+  return undefined;
+}
+
+/** 允許單值或陣列，回傳 'YYYYMM' 的陣列（空=>undefined） */
+private toYYYYMMArray(value: any): string[] | undefined {
+  return this.arr<string>(value, (v) => this.toYYYYMMOne(v));
+}
+
+/** 統編：接受單值或陣列，回傳「只取前8碼數字」的陣列（空=>undefined） */
+private uniform8Array(value: any): string[] | undefined {
+  const mapTo8 = (val: any): string | undefined => {
+    if (val == null || val === '') return undefined;
+    const s = String(val).trim();
+    const head = s.split('-')[0].trim();
+    const digits = head.replace(/\D/g, '');
+    return digits.length >= 8 ? digits.slice(0, 8) : undefined;
+  };
+  return this.arr<string>(value, mapTo8);
+}
+
 
   // 組合「前端號碼區間」成單一送出值（兩端都有時：start-end；僅一端就送該值）
   private composeGUINo(
@@ -278,53 +329,62 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
 
     // 建立 payload：對齊後端，且不包含 Offset / OrderBy
     const payload: any = {
-      pageSize: v.pageSize ?? 20,
-      pageIndex: v.pageIndex ?? 1,
-      SortBy:
-        v.SortBy && v.SortBy.length
-          ? v.SortBy
-          : [{ field: 'PUR_RepYYYYMM', order: 1 }],
+  pageSize: v.pageSize ?? 20,
+  pageIndex: v.pageIndex ?? 1,
+  SortBy: v.SortBy && v.SortBy.length ? v.SortBy : [{ field: 'PUR_RepYYYYMM', order: 1 }],
 
-      PUR_VoucherType: this.toCsv(v.PUR_VoucherType),
-      PUR_GUITrack: this.toCsv(v.PUR_GUITrack),
-      PUR_GUINo: this.composeGUINo(v.PUR_GUINoStart, v.PUR_GUINoEnd),
+  // 單/區間維持原邏輯
+  PUR_GUITrack: v.PUR_GUITrack || undefined,
+  PUR_GUINo: this.composeGUINo(v.PUR_GUINoStart, v.PUR_GUINoEnd),
 
-      PUR_GUIDate_Start: v.PUR_GUIDate_Start || undefined,
-      PUR_GUIDate_End: v.PUR_GUIDate_End || undefined,
-      PUR_GUIDate_YYYYMM: this.toYYYYMMCsv(v.PUR_GUIDate_YYYYMM),
-      PUR_RepYYYYMM: this.toYYYYMMCsv(v.PUR_RepYYYYMM),
-      PUR_VenUniform: this.uniform8(v.PUR_VenUniform),
+  // ↓↓↓ 全部改成「陣列」送出 ↓↓↓
+  PUR_VoucherType: this.arr(v.PUR_VoucherType),
 
-      PUR_Amt_Small: v.PUR_Amt_Small ?? undefined,
-      PUR_Amt_Big: v.PUR_Amt_Big ?? undefined,
-      PUR_Net_Small: v.PUR_Net_Small ?? undefined,
-      PUR_Net_Big: v.PUR_Net_Big ?? undefined,
-      PUR_Tax_Small: v.PUR_Tax_Small ?? undefined,
-      PUR_Tax_Big: v.PUR_Tax_Big ?? undefined,
+  PUR_GUIDate_Start: v.PUR_GUIDate_Start || undefined,
+  PUR_GUIDate_End: v.PUR_GUIDate_End || undefined,
 
-      PUR_DirectType: this.toCsv(v.PUR_DirectType),
-      PUR_TaxType: this.toCsv(v.PUR_TaxType),
+  // 年月也改成陣列（單選時就是單元素陣列）
+  PUR_GUIDate_YYYYMM: this.toYYYYMMArray(v.PUR_GUIDate_YYYYMM),
+  PUR_RepYYYYMM: this.toYYYYMMArray(v.PUR_RepYYYYMM),
 
-      PUR_DiscNo: this.toCsv(v.PUR_DiscNo),
-      PUR_Type: this.toCsv(v.PUR_Type),
+  // 統編可多選 -> 傳陣列（每個元素都只保留前8碼數字）
+  PUR_VenUniform: this.uniform8Array(v.PUR_VenUniform),
 
-      Source_Doc_No: this.toCsv(v.Source_Doc_No),
-      Voucher_No: this.toCsv(v.Voucher_No),
-      SAL_Type: this.toCsv(v.SAL_Type),
-      PUR_Remark: this.toCsv(v.PUR_Remark),
+  PUR_Amt_Small: v.PUR_Amt_Small ?? undefined,
+  PUR_Amt_Big: v.PUR_Amt_Big ?? undefined,
+  PUR_Net_Small: v.PUR_Net_Small ?? undefined,
+  PUR_Net_Big: v.PUR_Net_Big ?? undefined,
+  PUR_Tax_Small: v.PUR_Tax_Small ?? undefined,
+  PUR_Tax_Big: v.PUR_Tax_Big ?? undefined,
 
-      CRT_USR_Name: this.toCsv(v.CRT_USR_Name),
-      CRT_Date_Start: v.CRT_Date_Start || undefined,
-      CRT_Date_End: v.CRT_Date_End || undefined,
-      UPD_USR_Name: this.toCsv(v.UPD_USR_Name),
-      UPD_Date_Start: v.UPD_Date_Start || undefined,
-      UPD_Date_End: v.UPD_Date_End || undefined,
-    };
+  // 多選 -> 陣列
+  PUR_DirectType: this.arr(v.PUR_DirectType),
+  PUR_TaxType: this.arr(v.PUR_TaxType),
+  PUR_DiscNo: this.arr(v.PUR_DiscNo),
+  PUR_Type: this.arr(v.PUR_Type),
 
-    // 清空空字串與 null
-    Object.keys(payload).forEach((k) => {
-      if (payload[k] === '' || payload[k] === null) payload[k] = undefined;
-    });
+  // 這些也改成多選陣列（若你 UI 仍是單選，會自動轉單元素陣列）
+  Source_Doc_No: this.arr(v.Source_Doc_No),
+  
+  SAL_Type: this.arr(v.SAL_Type),          // 你模板已用 multi-select（系統別）
+  PUR_Remark: this.arr(v.PUR_Remark),
+
+  Voucher_No:  v.Voucher_No ?? undefined,
+  CRT_USR_Name:  v.CRT_USR_Name ?? undefined,
+  CRT_Date_Start: v.CRT_Date_Start || undefined,
+  CRT_Date_End: v.CRT_Date_End || undefined,
+  UPD_USR_Name:  v.UPD_USR_Name ?? undefined,
+  UPD_Date_Start: v.UPD_Date_Start || undefined,
+  UPD_Date_End: v.UPD_Date_End || undefined,
+};
+
+// 清掉空值
+Object.keys(payload).forEach((k) => {
+  const val = payload[k];
+  if (val === '' || val === null) payload[k] = undefined;
+  // 陣列也檢查一下空陣列
+  if (Array.isArray(val) && val.length === 0) payload[k] = undefined;
+});
 
     this.loading = true;
     this.messageService.blockUi();
@@ -391,33 +451,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         },
       });
   };
-  /** 單一值 → 'YYYYMM'；無法轉就回傳 undefined */
-  private toYYYYMMOne(input: any): string | undefined {
-    if (!input) return undefined;
 
-    // 已是 'YYYYMM'
-    if (typeof input === 'string' && /^\d{6}$/.test(input)) return input;
-
-    // 'YYYYMMDD' 取前 6 碼
-    if (typeof input === 'string' && /^\d{8}$/.test(input))
-      return input.slice(0, 6);
-
-    // 'YYYY-MM' / 'YYYY/MM'
-    if (typeof input === 'string') {
-      const m = input.match(/^(\d{4})[-\/](\d{2})/);
-      if (m) return m[1] + m[2];
-    }
-
-    // Date 或 可被 Date 解析的字串（例如 Thu May 01 2025 ...）
-    const d = new Date(input);
-    if (!isNaN(d.getTime())) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    }
-
-    return undefined;
-  }
 
   /** 允許陣列（回逗號字串），或單值（回單一 'YYYYMM'） */
   private toYYYYMMCsv(value: any): string | undefined {
@@ -450,67 +484,51 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
   private defaultSort = [{ field: 'PUR_RepYYYYMM', order: 1 } as any];
 
   private buildInitialQueryValues() {
-    return {
-      pageIndex: 1,
-      pageSize: 20,
-      SortBy: this.defaultSort,
+  return {
+    pageIndex: 1,
+    pageSize: 20,
+    SortBy: this.defaultSort,
 
-      PUR_VoucherType: null,
-      PUR_GUITrack: undefined,
-      PUR_GUINoStart: undefined,
-      PUR_GUINoEnd: undefined,
+    // 多選欄位 -> []
+    PUR_VoucherType: [],
+    PUR_GUITrack: undefined,
+    PUR_GUINoStart: undefined,
+    PUR_GUINoEnd: undefined,
 
-      PUR_GUIDate_Start: null,
-      PUR_GUIDate_End: null,
+    PUR_GUIDate_Start: null,
+    PUR_GUIDate_End: null,
 
-      PUR_GUIDate_YYYYMM: null,
-      PUR_RepYYYYMM: null,
+    // 年月也視為多選 -> []
+    PUR_GUIDate_YYYYMM: [],
+    PUR_RepYYYYMM: [],
 
-      PUR_VenUniform: null,
+    PUR_VenUniform: [],
 
-      PUR_Amt_Small: undefined,
-      PUR_Amt_Big: undefined,
-      PUR_Net_Small: undefined,
-      PUR_Net_Big: undefined,
-      PUR_Tax_Small: undefined,
-      PUR_Tax_Big: undefined,
+    PUR_Amt_Small: undefined,
+    PUR_Amt_Big: undefined,
+    PUR_Net_Small: undefined,
+    PUR_Net_Big: undefined,
+    PUR_Tax_Small: undefined,
+    PUR_Tax_Big: undefined,
 
-      // ⬇⬇⬇ 這三個改成 null
-      PUR_DirectType: null,
-      PUR_TaxType: null,
-      PUR_Type: null,
+    PUR_DirectType: [],
+    PUR_TaxType: [],
+    PUR_Type: [],
 
-      Source_Doc_No: undefined,
-      Voucher_No: undefined,
-      SAL_Type: undefined,
-      PUR_Remark: undefined,
+    Source_Doc_No: [],
+    Voucher_No: [],
+    SAL_Type: [],      // 系統別：多選
+    PUR_Remark: [],
 
-      CRT_USR_Name: undefined,
-      CRT_Date_Start: null,
-      CRT_Date_End: null,
-      UPD_USR_Name: undefined,
-      UPD_Date_Start: null,
-      UPD_Date_End: null,
-    };
-  }
+    CRT_USR_Name: [],
+    CRT_Date_Start: null,
+    CRT_Date_End: null,
+    UPD_USR_Name: [],
+    UPD_Date_Start: null,
+    UPD_Date_End: null,
+  };
+}
 
-  onClearForm() {
-    const init = this.buildInitialQueryValues();
-    this.queryForm.reset(init);
 
-    // 再明確 patch 回到「未選取」狀態（用 null，不要用 []）
-    this.queryForm.patchValue({
-      PUR_VoucherType: null,
-      PUR_VenUniform: null,
-      PUR_DirectType: null,
-      PUR_TaxType: null,
-      PUR_Type: null,
-    });
 
-    this.queryForm.markAsPristine();
-    this.queryForm.markAsUntouched();
-    this.queryForm.updateValueAndValidity();
-
-    this.queryStateService?.clearQueryState?.(this.ProgNo);
-  }
 }
