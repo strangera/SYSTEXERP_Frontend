@@ -97,6 +97,9 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '審核人員編號', visible: true }, // 核准人員編號
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true }, // 核准人員姓名
+    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate }, // 反審核日期 (ISO 格式字串)
+    { field: 'ReAPRV_USR_No', header: '反審核人員編號', visible: true }, // 反審核人員編號
+    { field: 'ReAPRV_USR_Name', header: '反審核人員姓名', visible: true }, // 反審核人員姓名
     { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDate }, // 作廢日期 (ISO 格式字串)
     { field: 'VOID_USR_No', header: '作廢人員編號', visible: true }, // 作廢人員編號
     { field: 'VOID_USR_Name', header: '作廢人員姓名', visible: true }, // 作廢人員姓名
