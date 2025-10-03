@@ -251,23 +251,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           this.footerData = response.footerData;
           this.totalRecords = response.TotalCount;
 
-          // this.data = (response.Data.mainData ?? []).map((item: any) => {
-          //   const diff = Number(item.OVER_PayAmt ?? 0);
-          //   let status = '';
-          //   if (diff < 0) status = '欠';
-          //   else if (diff === 0) status = '平';
-          //   else status = '溢';
-          //   return {
-          //     ...item,
-          //     OVER_PayAmt: diff,
-          //     OVER_PayAmt1: item.OVER_PayAmt1,
-          //     OVER_PayAmt2: item.OVER_PayAmt2,
-          //     OVER_PayAmt3: item.OVER_PayAmt3,
-          //     OVER_Status: status,
-          //     check_status: item.check_status,
-          //     check_usr_name: item.check_usr_name
-          //   };
-          // });
           this.onPayNoChange(payload.PAY_NO);
           console.log('footerData (API totalData):', response.Data.totalData);
           console.log('selectedColumns:', this.selectedColumns);
@@ -276,11 +259,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           this.PAY_NO = this.queryForm.value.PAY_NO || '';
           this.TXN_Date = first?.TXN_Date || '';
           this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-        // } else {
-        //   this.data = [];
-        //   this.totalRecords = 0;
-        //   this.messageService.warnBubble(response?.Message || '沒有找到符合條件的資料。');
-        // }
+
       });
     });
   }

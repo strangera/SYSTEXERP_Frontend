@@ -18,3 +18,17 @@ export interface ITxnData {
   GUI_REFUND: number;
   TXN_TotPayAmt: number;
 }
+export interface TLS22010Query {
+  PageSize: number;
+  PageIndex: number;
+  OrderBy?: string;
+  Offset?: number;
+  SortBy?: { field: string; order: number }[];
+  TXN_Date?: string;
+  floor_noList?: string[];
+  ECR_NoList?: string[];
+  ShowStatus?: string;
+  status1?: string;
+  status2?: string;
+}
+
