@@ -46,6 +46,6 @@
 <div class="card">
   <app-table tableKey="TLS24010" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
     [showDelete]="false" [multiSortMeta]="[{ field: 'ID', order: -1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
     [loading]="loading"></app-table>
 </div>
