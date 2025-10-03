@@ -147,6 +147,9 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
       budget_yymm
     };
 
+    // 取得本月的 avg_cag_charge_nurate（抽成額）計算用
+    const avg_cag_charge_nurate = row.avg_cag_charge_nurate ?? 0;
+
     this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
       next: (res) => {
         const apiData = res?.Data || [];
@@ -154,13 +157,12 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
         this.currentMonthData.days = {};
         apiData.forEach((d: any) => {
           const day = new Date(d.budget_date).getDate();
-          const rate = row.avg_cag_charge_rate ?? 0;
-
+          // 若 API 有回傳 commission 欄位，優先帶入，否則用公式計算
           this.currentMonthData.days[day] = {
             DayID: d.DayID ?? 0,
             budget: d.budget ?? null,
-            rate: Number(rate.toFixed(2)),
-            commission: Number(((d.budget ?? 0) * (rate / 100)).toFixed(2)),
+            rate: row.avg_cag_charge_rate ?? 0,
+            commission: d.commission != null ? Number(d.commission) : Number(((d.budget ?? 0) * avg_cag_charge_nurate).toFixed(2)),
             disabled: !d.DayID
           };
         });

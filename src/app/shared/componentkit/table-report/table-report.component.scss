@@ -151,7 +151,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-height: 1.2em; /* 限制高度為一行 */
-    white-space: normal;
+    // white-space: normal;
     word-break: break-word;
     max-width: 75px; /* 可選：限制寬度 */
   }
