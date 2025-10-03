@@ -16,7 +16,7 @@
   [resizableColumns]="true"
   [reorderableColumns]="true"
   (onColReorder)="onColReorder($event)"
-  [paginator]="showPaginator && IsPrint && !rowEditing && !loading"
+  [paginator]="showPaginator && IsPrint && !rowEditing "
   [showCurrentPageReport]="IsPrint && showPaginator"
   [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions"
@@ -233,9 +233,13 @@
       [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
       (click)="itemClick.emit(rowData)">
 
-      <td class="text-center">
-        {{ rowIndex + 1 }}
-      </td>
+     <!-- 序號（跟著群組做 rowspan，只在本頁群組首列顯示） -->
+<td *ngIf="isFirstInGroupOnPage(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+    [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+    class="text-center">
+  {{ getGlobalGroupDisplayIndex(rowIndex, rowData) }}
+</td>
+
 
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
         <p-tableCheckbox

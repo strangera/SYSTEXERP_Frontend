@@ -45,8 +45,8 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     InvoiceNo_S: ['', [Validators.maxLength(8)]],               // 發票號碼_起
     InvoiceNo_E: ['', [Validators.maxLength(8)]],               // 發票號碼_迄
     PUR_RepYYYYMM: [null, [Validators.required, this.validationService.evenMonthValidator]], // 申報年月
-    PUR_GUIDateYYYYMM_S: [null, [Validators.required]],         // 資料所屬年月_起
-    PUR_GUIDateYYYYMM_E: [null, [Validators.required]],         // 資料所屬年月_迄
+    PUR_GUIDateYYYYMM_S: [null],         // 資料所屬年月_起
+    PUR_GUIDateYYYYMM_E: [null],         // 資料所屬年月_迄
     PUR_Uniform_S: ['', [Validators.maxLength(10)]],            // 廠商統一編號_起
     PUR_Uniform_E: ['', [Validators.maxLength(10)]],            // 廠商統一編號_迄
     PUR_DiscNo: [null],                                         // 扣抵代號
@@ -86,7 +86,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount },
     { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount },
     { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount },
-    { field: 'PLU_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value }

@@ -3,7 +3,20 @@ import { Injectable } from '@angular/core';
 import { Observable, tap, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
+export interface ApiResponse<T> {
+  Status: string;
+  Data: T;
+  Error?: { Code?: string; Message?: string; Details?: string };
+  Meta?: { Timestamp?: string; RequestId?: string };
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+}
 
+export interface DropDownItem {
+  No: string;
+  Name: string;
+}
 @Injectable({ providedIn: 'root' })
 export class FIN13050Service {
   private apiUrl = environment.ApiUrl;
@@ -88,4 +101,14 @@ querySYS1000DropDownList(sysType: string): Observable<any> {
       // catchError(err => this.errorHandler.handle(err))
     );
 }
+  queryAPS2002DropDownList(): Observable<ApiResponse<DropDownItem[]>> {
+    // 如果你的後端是 GET，改成 this.http.get<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryAPS2002_DropDownList`);
+    return this.http
+      .post<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryAPS2002_DropDownList`, {})
+      .pipe(
+        tap((res) => console.log('APS2002 下拉資料:', res)),
+        // 需要共用錯誤處理的話打開下一行
+        // catchError(err => this.errorHandler.handle(err))
+      );
+  }
 }

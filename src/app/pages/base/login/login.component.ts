@@ -49,7 +49,23 @@ export class LoginComponent implements OnInit {
     private router: Router,
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+  try {
+    if (typeof window !== 'undefined') {
+      const topWin = window.top as (Window & typeof globalThis) | null;
+      const selfWin = window.self as Window & typeof globalThis;
+
+      if (topWin && topWin !== selfWin) {
+        // 用 replace 避免使用者按上一頁又回到被嵌頁面造成循環
+        topWin.location.replace(window.location.href);
+        return;
+      }
+    }
+  } catch {
+    // 跨網域取 top 可能丟錯，fallback：至少把自己導向本頁以跳脫 iframe
+    window.location.replace(window.location.href);
+  }
+  }
 
   /** 只存一次，目前頁面實際的完整 URL（例如 http://localhost:4200/login?...） */
   private saveCurrentUrlOnce(): void {

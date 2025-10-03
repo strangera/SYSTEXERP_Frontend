@@ -8,31 +8,29 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="盤點單編號" controlName="inventorySerialNo"
-              [control]="queryForm.controls.inventorySerialNo" [submitted]="submitted"></app-input-text>
+            <app-input-text label="盤點單編號" controlName="PST_No" [control]="queryForm.controls.PST_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="倉別" controlName="HOS_No" [options]="HOSNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌編號" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="品牌" controlName="LOGO_No" [options]="LOGONoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="盤點基準日期"
-              [startControl]="queryForm.controls.inventoryDateFrom" [endControl]="queryForm.controls.inventoryDateTo"
+              [startControl]="queryForm.controls.PST_DateStart" [endControl]="queryForm.controls.PST_DateEnd"
               [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="盤點單狀態" controlName="storageInventoryStatus" [options]="storageInventoryStatusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.storageInventoryStatus"
-              [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="盤點狀態" controlName="PST_Status" [options]="PSTStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PST_Status" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="盤點類別" controlName="inventoryCategory"
-              [control]="queryForm.controls.inventoryCategory" [options]="inventoryCategoryOptions"
-              [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton label="盤點類型" controlName="PST_Type" [control]="queryForm.controls.PST_Type"
+              [options]="PSTTypeOptions" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -45,8 +43,27 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS53020" [data]="data" [columns]="columns" dataKey="ID"
-    [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    [showManage]="true" [showDetail]="false" [showEdit]="false" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [addButton]="addButton"></app-table>
+  <app-table tableKey="TLS53020" [data]="data" [columns]="columns" [multiSortMeta]="[{ field: 'PST_Date', order: -1 }]"
+    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" [showManage]="true" [showDetail]="false"
+    [showEdit]="false" [showDelete]="false" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [addButton]="addButton"></app-table>
 </div>
+
+<!-- 匯入視窗 -->
+<app-dialog [visible]="dialogVisible" header="匯入盤點資料" (visibleChange)="dialogVisible = $event" [showFooter]="false"
+  [disable]="false" [height]="'auto'" [width]="'auto'">
+  <form [formGroup]="queryForm2">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <app-input-text label="盤點單編號" controlName="PST_No" [control]="queryForm2.controls.PST_No"
+          [submitted]="submitted"></app-input-text>
+      </div>
+      <div class="col-12">
+        <app-radiobutton label="盤點類型" controlName="PST_Type" [control]="queryForm2.controls.PST_Type"
+          [options]="PSTTypeOptions" [submitted]="submitted"></app-radiobutton>
+      </div>
+    </div>
+  </form>
+  <app-file-upload #fileUpload [accept]="'.txt'" [customUpload]="true"
+    (uploadHandler)="onFileUpload($event)"></app-file-upload>
+</app-dialog>
