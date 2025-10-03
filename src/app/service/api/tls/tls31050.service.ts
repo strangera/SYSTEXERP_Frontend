@@ -1,0 +1,130 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '@service/system/auth.service';
+
+export interface TLS31050Request {
+  TXN_DateS: string | Date;
+  TXN_DateE: string | Date;
+  tlt_building: string[]
+  tlt_floor: string[]
+  area_no: string[]
+  bus_type: string[]
+  bus_class: string[]
+  bus_sclass: string[]
+  tlt_kind: string[]
+  tlt_term_type: string[]
+  org_id: string[]
+  TaxType: string
+  IsRece_Yn: string
+}
+
+export interface TLS31050PrintRequest extends TLS31050Request {
+  IsMerge: boolean;
+  IsExcel: boolean;
+}
+
+// 單一抽成別
+export interface TLS31050DetailRequest {
+  TXN_DateS: string | Date;
+  TXN_DateE: string | Date;
+  tlt_building: string[]
+  tlt_floor: string[]
+  area_no: string[]
+  bus_type: string[]
+  bus_class: string[]
+  bus_sclass: string[]
+  tlt_kind: string[]
+  tlt_term_type: string // 這裡只有一個抽成別
+  org_id: string[]
+  TaxType: string
+  IsRece_Yn: string
+}
+
+export interface TLS31050PrintDetailRequest extends TLS31050DetailRequest {
+  IsMerge: boolean;
+  IsExcel: boolean;
+}
+
+export interface TLS31050Response {
+  tlt_term_type: string;
+  tlt_term_desc: string;
+  
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+}
+
+export interface TLS31050DetailResponse {
+  building_desc: string;
+  org_name: string;
+  tlt_kind: string;
+  tlt_no: string;
+  location_no: string;
+  tlt_name: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+
+  NormalSales: number; //一般
+  SpecialSales: number; //特價 (來源尚未提供)
+  Discount95Sales: number; // 95折 (來源尚未提供)
+  Discount90Sales: number; // 90折 (來源尚未提供)
+  Discount80Sales: number; // 80折 (來源尚未提供)
+  Discount70Sales: number; // 70折 (來源尚未提供)
+
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+
+export class Tls31050Service {
+  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
+  constructor(private http: HttpClient) { }
+      
+  // 查詢各抽成別之營業報表
+  queryTLS31050(body: TLS31050Request): Observable<ApiResponse<TLS31050Response[]>> {
+    return this.http.post<ApiResponse<TLS31050Response[]>>(`${this.apiUrl}/queryTLS31050`, body);
+  }
+  
+  // 查詢單抽成別展開之營業報表
+  queryTLS31050Detail(body: TLS31050DetailRequest): Observable<ApiResponse<TLS31050DetailResponse[]>> {
+    return this.http.post<ApiResponse<TLS31050DetailResponse[]>>(`${this.apiUrl}/queryTLS31050Detail`, body);
+  }
+    
+  // 產出各抽成別之營業報表
+  printTLS31050(body: TLS31050PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31050`, body);
+  }
+    
+  // 產出單抽成別展開之營業報表
+  printTLS31050Detail(body: TLS31050PrintDetailRequest): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31050Detail`, body);
+  }
+}

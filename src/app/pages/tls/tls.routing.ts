@@ -428,6 +428,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls31040cru', loadComponent: () => import('./tls31040-cru/tls31040-cru.component').then(m => m.Tls31040CRUComponent) },
   // 各抽成別之營業報表
   { path: 'tls31050', loadComponent: () => import('./tls31050/tls31050.component').then(m => m.TLS31050Component) },
+  // 各抽成別之營業報表 CRU
+  { path: 'tls31050cru', loadComponent: () => import('./tls31050-cru/tls31050-cru.component').then(m => m.Tls31050CRUComponent) },
   // 各組織之營業報表
   { path: 'tls31060', loadComponent: () => import('./tls31060/tls31060.component').then(m => m.TLS31060Component) },
   // 各組織之營業報表 CRU
