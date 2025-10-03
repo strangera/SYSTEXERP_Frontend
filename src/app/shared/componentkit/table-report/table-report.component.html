@@ -4,7 +4,7 @@
   [resizableColumns]="true" [reorderableColumns]="true" [loading]="isLoading" (onColReorder)="onColReorder($event)"
   [totalRecords]="totalRecords" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
   (selectionChange)="selectionChange.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" (onLazyLoad)="loadCarsLazy($event)"
+  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [lazy]="totalRecords < 30 ? false : true"
   [virtualScrollItemSize]="showManage ? 40.6 : 24" [virtualScrollOptions]="{
       delay: 50,
       inline: true,

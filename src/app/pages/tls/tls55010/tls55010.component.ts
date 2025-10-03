@@ -14,12 +14,13 @@ import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { TableModule } from 'primeng/table';
+import { PanelModule } from 'primeng/panel';
 
 @Component({
   selector: 'app-tls55010',
   templateUrl: './tls55010.component.html',
   standalone: true,
-  imports: [TableModule, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
+  imports: [PanelModule, TableModule, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
 })
 export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
