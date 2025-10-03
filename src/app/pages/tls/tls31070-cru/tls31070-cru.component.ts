@@ -12,13 +12,13 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ButtonModule } from 'primeng/button';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TLS31030DetailRequest, TLS31030DetailResponse, TLS31030PrintDetailRequest, TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { TLS31070DetailRequest, TLS31070DetailResponse, TLS31070PrintDetailRequest, TLS31070Response, Tls31070Service } from '@service/api/tls/tls31070.service';
 
 @Component({
   selector: 'app-tls31070-cru',
@@ -40,7 +40,7 @@ import { environment } from 'src/environments/environment';
   ],
   templateUrl: './tls31070-cru.component.html'
 })
-export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31030Response> implements OnInit {
+export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31070Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     paper_type: [''],//型態
     paper_type_desc: [''],//型態名稱
@@ -64,7 +64,7 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31030Response
 
   });
   totalRecords = 0;
-  data: TLS31030DetailResponse[] = [];
+  data: TLS31070DetailResponse[] = [];
   columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
@@ -92,7 +92,7 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31030Response
     { field: 'sum', header: '營業佔比' },
     { field: 'custCnt', header: '客單價' },
     { field: 'space', header: '營業坪效' },
-    // { field: 'temp', header: '臨時櫃' }, // queryTLS31030
+    // { field: 'temp', header: '臨時櫃' }, // queryTLS31070
     { field: 'month', header: '月累計' },
   ]
   tlt_kind_Option = [
@@ -118,11 +118,11 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31030Response
   org_id_Option: IDropdownItem[] = []; // 組織
 
   //查詢頁查詢條件
-  queryConditions!: TLS31030DetailRequest;
+  queryConditions!: TLS31070DetailRequest;
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly tls31030Service: Tls31030Service,
+    private readonly tls31070Service: Tls31070Service,
     private readonly queryStateService: QueryStateService
   ) {
     super(); // 呼叫父類建構子
@@ -152,36 +152,36 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31030Response
     const formValue = {
       ...this.queryConditions,
       IsExcel: isExcel,
-      bus_type: this.dataForm.get('bus_type')?.value ?? '',
-    } as TLS31030PrintDetailRequest;
+      paper_type: this.dataForm.get('paper_type')?.value ?? '',
+    } as TLS31070PrintDetailRequest;
 
     console.log('單型態之營業報表print請求', JSON.stringify(formValue, null, 2));
 
     this.btnLoading = true;
-    // this.tls31030Service.printTLS31030Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-    //   .subscribe(res => {
-    //     this.messageService.successBubble(res.Message);
-    //     if (res.Data && res.Data.Print_URL) {
-    //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-    //       window.open(downloadUrl, '_blank');
-    //     }
-    //   });
+    this.tls31070Service.printTLS31070Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data && res.Data.Print_URL) {
+          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          window.open(downloadUrl, '_blank');
+        }
+      });
   }
 
   queryTLS31030Detail() {
     // 把 bus_type 從 string[] 轉成 string
-    const request: TLS31030DetailRequest = {
+    const request: TLS31070DetailRequest = {
       ...this.queryConditions,
-      bus_type: this.dataForm.get('bus_type')?.value ?? '',
+      paper_type: this.dataForm.get('paper_type')?.value ?? '',
     };
 
     //用Json顯示request
     console.log('單型態之營業報表request', JSON.stringify(request));
 
-    // this.tls31030Service.queryTLS31030Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-    //   console.log('單大分類之營業報表response', res.Data);
-    //   this.data = res.Data;
-    //   // this.totalRecords = res.TotalCount;
-    // })
+    this.tls31070Service.queryTLS31070Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      console.log('單型態之營業報表response', res.Data);
+      this.data = res.Data;
+      // this.totalRecords = res.TotalCount;
+    })
   }
 }

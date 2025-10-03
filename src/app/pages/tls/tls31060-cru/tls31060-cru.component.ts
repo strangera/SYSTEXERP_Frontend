@@ -14,7 +14,6 @@ import { ButtonModule } from 'primeng/button';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { QueryStateService } from '@shared/service/query-state.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -73,8 +72,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'location_no', header: '位置編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    // { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
-    // { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
+    
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
@@ -84,10 +82,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
     { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
-
-    // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
+    { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
 
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
     { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
@@ -128,9 +123,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly tls31060Service: Tls31060Service,
-    private readonly queryStateService: QueryStateService
-  ) {
+    private readonly tls31060Service: Tls31060Service  ) {
     super(); // 呼叫父類建構子
   }
 
