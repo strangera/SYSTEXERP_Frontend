@@ -81,7 +81,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
     { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
 
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
