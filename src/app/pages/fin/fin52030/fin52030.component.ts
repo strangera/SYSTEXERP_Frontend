@@ -98,10 +98,12 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const payload = <FIN52030Payload>{
-        ...Object.fromEntries(
-          Object.entries(this.queryForm.getRawValue() as FIN52030Payload)
-            .filter(([, value]) => value !== null)
-        )
+        ...this.queryForm.getRawValue(),
+        TempNo: String(this.qf().TempNo.value ?? ''),
+        VouType: String(this.qf().VouType.value ?? ''),
+        TempName: String(this.qf().TempName.value ?? ''),
+        CRT_USR_No: String(this.qf().CRT_USR_No.value ?? ''),
+        UPD_USR_No: String(this.qf().UPD_USR_No.value ?? ''),
       };
       this.loading = !0;
       this.logger.debug(`onSubmit:`, [payload]);

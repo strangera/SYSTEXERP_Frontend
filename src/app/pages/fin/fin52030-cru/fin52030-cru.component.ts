@@ -20,7 +20,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
-import { FIN52030Data, FIN52030Detail, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
+import { FIN52030Data, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -48,7 +48,8 @@ import { FIN52030Data, FIN52030Detail, FIN52030DetailTable, VendorList } from '.
 })
 export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> implements OnInit {
 
-  private readonly venUsrTemplate = viewChild<TemplateRef<any>>('venUsrTemplate');
+  private readonly tb = viewChild.required<TableComponent>('tb');
+  private readonly venUsrTemplate = viewChild.required<TemplateRef<any>>('venUsrTemplate');
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
     TempNo: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(8)]),
@@ -61,13 +62,15 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  public readonly tableData = signal<FIN52030Detail[]>([]);
+  public readonly tableData = signal<FIN52030DetailTable[]>([]);
 
   public readonly filteredData = computed(() => {
-    return this.isFormCreateable ? [] : this.tableData();
+    return this.tableData();
   });
 
   public selectedItems: Record<string, any>[] = [];
+  public onEditing = !1;
+  public rowEditCanSave = !1;
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
@@ -157,27 +160,28 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
+      const details = this.filteredData().map((item, idx) => ({ ...item, index: idx + 1 }));
       const payload = {
         ...d,
         TempNo: String(d.TempNo),
         VouType: String(d.VouType),
         TempName: String(d.TempName),
-        Details: this.filteredData(),
+        Details: details,
       };
-      this.logger.debug(`FIN52030CRU request:`, [payload, this.filteredData()]);
+      this.logger.debug(`FIN52030CRU request:`, [payload, details]);
 
       if (this.isFormCreateable) {
         this.service.insertFIN52030Data(payload).pipe(
           finalize(() => {
             this.loading = !1;
-            this.logger.debug(`onSubmit:`, [this.dataForm.getRawValue(), this.filteredData()]);
+            this.logger.debug(`onSubmit:`, [this.dataForm.getRawValue(), details]);
           }),
         ).subscribe();
       } else {
         this.service.updateFIN52030Data({ ...payload, CRT_USR_No: this.user.user_Name, UPD_USR_No: '' }).pipe(
           finalize(() => {
             this.loading = !1;
-            this.logger.debug(`onSubmit:`, [this.dataForm.getRawValue(), this.filteredData()]);
+            this.logger.debug(`onSubmit:`, [this.dataForm.getRawValue(), details]);
           }),
         ).subscribe();
       }
@@ -187,30 +191,60 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onFieldChange(event: FieldChangeEvent<FIN52030DetailTable>): void {
     this.logger.debug(`onFieldChange:`, [event]);
     if (event.field === 'AccNo') event.rowData.AccDC = this.service.accNoMap().get(String(event.value) ?? '')?.AccCName ?? '';
+
+    const exclude = ['AccName', 'DetailName'];
+    const row = event.rowData;
+    let allFilled = !0;
+    for (const key in row) {
+      if (!exclude.includes(key)) {
+        const v = row[key as keyof FIN52030DetailTable];
+        if (v === void 0 || v === null || v === '' || (typeof v === 'number' && isNaN(v))) {
+          allFilled = !1;
+        }
+      }
+    }
+    this.rowEditCanSave = allFilled;
   }
 
-  public onRowEditInit(event: RowEditSaveEvent): void {
-    this.logger.debug(`onRowEditInit:`, [event]);
+  public onDelete(event: FIN52030DetailTable[]): void {
+    let ids: number[] = [];
+    for (let e of event) {
+      if (RegExp(/^[^0-9]/).test(String(e.index))) continue;
+
+      const data = this.tableData();
+      const idx = data.findIndex(d => d.index === e.index);
+      if (idx > -1) ids.push(idx + 1);
+    }
+    this.logger.debug(`onDelete:`, [event, ids]);
+
+    this.service.deleteFIN52030Data(ids).pipe(
+      finalize(() => this.service.loadFIN52030Detail(this.rowdata!.id))
+    ).subscribe();
   }
 
-  public onRowEditSave(event: RowEditSaveEvent): void {
-    this.logger.debug(`onRowEditSave:`, [event]);
+  public onRowEditInit(event: FIN52030DetailTable[]): void {
+    this.onEditing = !0;
+    this.logger.debug(`onRowEditInit:`, [event, this.tableData()]);
   }
 
-  public onRowEditCancel(event: RowEditSaveEvent): void {
-    this.logger.debug(`onRowEditCancel:`, [event]);
+  public onRowEditSave(event: RowEditSaveEvent<FIN52030DetailTable>): void {
+    if (!this.rowEditCanSave) return;
+    const arr = Array.isArray(event.data) ? event.data : [event.data];
+    const curr = this.tableData();
+    this.tableData.update(list =>
+      arr.reduce((acc, item) => {
+        const i = acc.findIndex(d => d.index === item.index);
+        i > -1 ? acc[i] = { ...acc[i], ...item } : acc.push(item);
+        return acc;
+      }, [...curr])
+    );
+    this.onEditing = !1;
+    this.logger.debug(`onRowEditSave:`, [event, this.tableData()]);
   }
 
-  public onDelete(event: any): void {
-    this.logger.debug(`onDelete:`, [event]);
-  }
-
-  public onInsert(event: any): void {
-    this.logger.debug(`onInsert:`, [event]);
-  }
-
-  public onItemClick(event: any): void {
-    this.logger.debug(`onItemClick:`, [event]);
+  public onRowEditCancel(event: { data: FIN52030DetailTable, rowData: FIN52030DetailTable[], ri: number; }): void {
+    this.onEditing = !1;
+    this.logger.debug(`onRowEditCancel:`, [event, this.tableData()]);
   }
 
   // Template 相關方法

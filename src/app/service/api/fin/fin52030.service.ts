@@ -110,10 +110,10 @@ export class FIN52030Service {
     );
   }
 
-  public deleteFIN52030Data(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
+  public deleteFIN52030Data(payload: number[]): Observable<BaseQueryResponse<Record<string, any>>> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/deleteFIN52030`, payload).pipe(
+    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/deleteFIN52030`, { ids: payload }).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => { }),

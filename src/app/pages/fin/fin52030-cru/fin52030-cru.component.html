@@ -63,6 +63,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
+                    [disabled]="!dataForm.valid || this.onEditing"
                     [loading]="service.tableLoading"></app-button>
       </div>
       }
@@ -76,19 +77,19 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <app-table [alwaysEdit]="!isFormReadable"
+        <app-table #tb
                    [showManage]="!isFormReadable"
                    [showCheckBox]="!isFormReadable"
                    [showRowEdit]="!isFormReadable"
                    [showInsert]="!isFormReadable"
+                   [showReorder]="!isFormReadable"
                    [insertRowData]="!isFormReadable"
                    (fieldChange)="onFieldChange($event)"
+                   (delete)="onDelete($event)"
                    (rowEditInit)="onRowEditInit($event)"
                    (rowEditSave)="onRowEditSave($event)"
                    (rowEditCancel)="onRowEditCancel($event)"
-                   (delete)="onDelete($event)"
-                   (insert)="onInsert($event)"
-                   (itemClick)="onItemClick($event)"
+                   [rowEditCanSave]="rowEditCanSave"
                    [data]="filteredData()"
                    [totalRecords]="totalRecords()"
                    [loading]="service.tableLoading"
