@@ -1,10 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
 import { AccNoDropdown, FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, VendorList } from '@pages/fin/fin52030/fin52030.model';
-import { OrganizationNumberService } from '@service/basic/organization-number.service';
-import { Option } from '@service/utility/dropdown-api.model';
+import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -17,18 +16,25 @@ export class FIN52030Service {
   public readonly FIN52030Data = signal<FIN52030Data[]>([]);
   public readonly FIN52030Detail = signal<FIN52030Detail[]>([]);
 
-  public readonly subpoenaTypes = signal<DropdownOption[]>([]);
-  public readonly vendorList = signal<VendorList[]>([]);
   public readonly accNoList = signal<AccNoDropdown[]>([]);
+  public readonly vendorList = signal<Option[]>([]);
+  public readonly subpoenaTypes = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
   public readonly usrList = signal<Option[]>([]);
 
-  public vendorMap = computed(() => new Map(this.vendorList().map(item => [item.VEN_No, item])));
+  public vendorMap = computed(() => new Map(this.vendorList().map(item => [item.value, item])));
   public accNoMap = computed(() => new Map(this.accNoList().map(item => [item.AccNo, item])));
 
   private readonly tableCancel$ = new Subject<void>();
 
   public tableLoading = !1;
+  public venUsrLoading = !1;
+  public venLoading = signal(!1);
+  public usrLoading = signal(!1);
+
+  private readonly loadingEffect = effect(() => {
+    this.venUsrLoading = this.venLoading() && this.usrLoading();
+  });
 
   public readonly subpoenaTypeMap = new Map([
     ['1', '現金收入傳票'],
@@ -43,7 +49,9 @@ export class FIN52030Service {
   ) { }
 
   public getSubpoenaTypes(): void {
-    this.subpoenaTypes.set(Array.from(this.subpoenaTypeMap.entries()).map(([No, Name]) => ({ No, Name })));
+    const arr = Array.from(this.subpoenaTypeMap.entries());
+    const payload: Option[] = arr.map(([value, label]) => ({ value, label }));
+    this.subpoenaTypes.set(payload);
   }
 
   public loadFIN52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
@@ -125,26 +133,31 @@ export class FIN52030Service {
   }
 
   public getVendorList(): void {
+    this.venLoading.set(!0);
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
-      tap(res => this.vendorList.set(res.Data)),
+      map(({ Data }) => Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option))),
+      tap(res => this.vendorList.set(res)),
       finalize(() => this.logger.debug('查詢VendorList結果:', [this.vendorList()])),
+      finalize(() => this.venLoading.set(!1)),
     ).subscribe();
   }
 
   public getUsrList(): void {
+    this.usrLoading.set(!0);
     this.dropdownApi.queryTblUser().pipe(
       take(1),
-      map(res => res ?? []),
+      map(res => <Option[]>(<IDropdownItem[]><unknown>res)?.map(item => ({ value: item.No, label: item.Name })) ?? []),
       tap(res => this.usrList.set(res)),
       finalize(() => this.logger.debug('查詢UsrList結果:', [this.usrList()])),
+      finalize(() => this.usrLoading.set(!1)),
     ).subscribe();
   }
 
   public getOrgNoList(): void {
     this.dropdownApi.querySys3100().pipe(
       take(1),
-      map(res => res ?? []),
+      map(res => <Option[]>(<IDropdownItem[]><unknown>res)?.map(item => ({ value: item.No, label: item.Name })) ?? []),
       tap(res => this.orgNoList.set(res)),
       finalize(() => this.logger.debug('查詢OrgNoList結果:', [this.orgNoList()])),
     ).subscribe();

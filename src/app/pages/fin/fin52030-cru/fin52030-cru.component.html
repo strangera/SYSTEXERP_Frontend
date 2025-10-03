@@ -76,34 +76,12 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <!-- <app-table-edit class="col-12"
-                        title="費率對照明細"
-                        [tableKey]="'FIN52030_detail'"
-                        [columns]="columns"
-                        [data]="filteredData()"
-                        (selectionChange)="selectedItems = $event"
-                        [selectedItems]="selectedItems"
-                        (dataChange)="tableData.set($event)"
-                        [tableRequired]="true"
-                        [showReorder]="false"
-                        [disabled]="isFormReadable"
-                        [showExcel]="true"
-                        [showExcelImport]="!isFormReadable"
-                        [showCheckBox]="!isFormReadable"
-                        [showReorder]="true"
-                        [showInsert]="!isFormReadable"
-                        [loading]="service.tableLoading"></app-table-edit> -->
-        <app-table [showDetail]="false"
-                   [showEdit]="false"
-                   [alwaysEdit]="true"
-                   [alwaysBlurValidate]="true"
+        <app-table [alwaysEdit]="!isFormReadable"
+                   [showManage]="!isFormReadable"
                    [showCheckBox]="!isFormReadable"
-                   [showRowEdit]="true"
-                   [showManage]="true"
-                   [showHeader]="true"
-                   [showReorder]="true"
+                   [showRowEdit]="!isFormReadable"
                    [showInsert]="!isFormReadable"
-                   [insertRowData]="true"
+                   [insertRowData]="!isFormReadable"
                    (fieldChange)="onFieldChange($event)"
                    (rowEditInit)="onRowEditInit($event)"
                    (rowEditSave)="onRowEditSave($event)"
@@ -123,7 +101,10 @@
 </div>
 
 
-<ng-template #venUsrTemplate let-rowData let-col="col" let-overlayPanel="overlayPanel">
+<ng-template #venUsrTemplate
+             let-rowData
+             let-col="col"
+             let-overlayPanel="overlayPanel">
   <div class="col-12">
     <div class="flex justify-content-between align-items-center mb-3">
       <h6 class="mb-0">選擇廠商/員工</h6>
@@ -142,7 +123,6 @@
              class="w-full"
              [(ngModel)]="templateSearchTerm"
              [ngModelOptions]="{ standalone: true }"
-             (input)="onTemplateSearch($event)"
              placeholder="搜尋..." />
     </div>
 
@@ -152,18 +132,20 @@
                scrollHeight="300px"
                selectionMode="single"
                dataKey="id"
-               styleClass="p-datatable-sm">
+               styleClass="p-datatable-sm"
+               [loading]="service.venUsrLoading">
         <ng-template pTemplate="header">
           <tr>
             <th>代號</th>
             <th>名稱</th>
           </tr>
         </ng-template>
-        <ng-template pTemplate="body" let-item>
+        <ng-template pTemplate="body"
+                     let-item>
           <tr class="cursor-pointer hover:surface-hover"
-              (click)="selectTemplateItem(item, rowData, col, overlayPanel)">
-            <td>{{ getItemCode(item) }}</td>
-            <td>{{ getItemName(item) }}</td>
+              (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
+            <td>{{ item.value }}</td>
+            <td>{{ item.label }}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -177,7 +159,7 @@
       <button pButton
               label="清除"
               class="p-button-outlined"
-              (click)="clearSelection(rowData, col, overlayPanel)"></button>
+              (click)="selectTemplateItem(rowData); overlayPanel.hide()"></button>
     </div>
   </div>
 </ng-template>

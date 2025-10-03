@@ -3,6 +3,7 @@ import { Component, computed, OnInit, signal, TemplateRef, viewChild } from '@an
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52030Service } from '@service/api/fin/fin52030.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -10,16 +11,16 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, FieldChangeEvent, formatAmount, RowEditSaveEvent, TemplateDisplayFormats } from '@shared/componentkit/table/table.model';
+import { Column, FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { DropdownModule } from 'primeng/dropdown';
+import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
-import { FIN52030Data, FIN52030Detail, FIN52030DetailTable } from '../fin52030/fin52030.model';
+import { FIN52030Data, FIN52030Detail, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -91,10 +92,9 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     {
       field: 'DetailNo',
       header: '廠商/員工代號',
+      disabled: () => this.service.venUsrLoading,
       type: 'template',
       templateRef: this.venUsrTemplate(),
-      templateDisplayField: 'DetailName',
-      templateDisplayFormat: TemplateDisplayFormats.codeWithName
     },
     { field: 'DetailName', header: '廠商/員工名稱' },
     { field: 'NoteDesc', header: '摘要', type: 'input' },
@@ -117,8 +117,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       header: '組織代號',
       type: 'dropdown',
       options: () => this.service.orgNoList(),
-      optionLabel: 'Name',
-      optionValue: 'No',
+      optionLabel: 'label',
+      optionValue: 'value',
     },
     { field: 'SubDetailNo', header: '對象別編號', type: 'input' },
     { field: 'recKey', header: '對帳KEY值', type: 'input' },
@@ -214,80 +214,33 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   }
 
   // Template 相關方法
-  public onTemplateTypeChange(event: any): void {
+  public onTemplateTypeChange(event: DropdownChangeEvent): void {
     this.selectedTemplateType = event.value;
     this.templateSearchTerm = ''; // 重置搜尋
   }
 
-  public onTemplateSearch(event: any): void {
-    this.templateSearchTerm = event.target.value;
-  }
+  /** 根據所選模板類型與搜尋條件取得並過濾模板資料 */
+  public getFilteredTemplateData(): (VendorList | Option)[] {
+    const src = this.selectedTemplateType === 'vendor'
+      ? this.service.vendorList()
+      : this.service.usrList();
 
-  public getFilteredTemplateData(): any[] {
-    let data: any[] = [];
+    const term = (this.templateSearchTerm || '').trim().toLowerCase();
+    if (!term) return src;
 
-    if (this.selectedTemplateType === 'vendor') {
-      data = this.service.vendorList();
-    } else {
-      data = this.service.usrList();
+    const result: (VendorList | Option)[] = [];
+    for (let i = 0, n = src.length; i < n; i++) {
+      const it: any = src[i];
+      const lb = (it.label || '').toLowerCase();
+      const val = (it.value || '').toLowerCase();
+      (lb.indexOf(term) > -1 || val.indexOf(term) > -1) && result.push(it);
     }
-
-    if (this.templateSearchTerm) {
-      const searchTerm = this.templateSearchTerm.toLowerCase();
-      data = data.filter(item => {
-        const code = this.getItemCode(item).toLowerCase();
-        const name = this.getItemName(item).toLowerCase();
-        return code.includes(searchTerm) || name.includes(searchTerm);
-      });
-    }
-
-    return data;
+    return result;
   }
 
-  public getItemCode(item: any): string {
-    if (this.selectedTemplateType === 'vendor') {
-      return item.VEN_No || '';
-    } else {
-      return item.value || '';
-    }
-  }
-
-  public getItemName(item: any): string {
-    if (this.selectedTemplateType === 'vendor') {
-      return item.VEN_Name || '';
-    } else {
-      return item.label || '';
-    }
-  }
-
-  public selectTemplateItem(item: any, rowData: any, col: any, overlayPanel: any): void {
-    const code = this.getItemCode(item);
-    const name = this.getItemName(item);
-
-    rowData[col.field] = code;
-    rowData['DetailName'] = name;
-
-    this.onFieldChange({
-      field: col.field,
-      value: code,
-      rowData: rowData
-    });
-
-    overlayPanel.hide();
-    this.logger.debug('selectTemplateItem:', [item, rowData, `${col.field}: ${code}`]);
-  }
-
-  public clearSelection(rowData: any, col: any, overlayPanel: any): void {
-    rowData[col.field] = '';
-    rowData['DetailName'] = '';
-
-    this.onFieldChange({
-      field: col.field,
-      value: '',
-      rowData: rowData
-    });
-
-    overlayPanel.hide();
-    this.logger.debug('clearSelection:', [rowData]);
+  /** 選中的項目 */
+  public selectTemplateItem(rowData: FIN52030DetailTable, item?: Option): void {
+    this.logger.debug('selectTemplateItem:', [rowData, item]);
+    [rowData.DetailNo, rowData.DetailName] = [item?.value || '', item?.label || ''];
   }
 }
