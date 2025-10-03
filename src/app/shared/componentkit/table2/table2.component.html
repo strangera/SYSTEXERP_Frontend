@@ -478,7 +478,9 @@
     [pSelectableRowIndex]="rowIndex"
     [pEditableRow]="rowData"
     [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
-    (click)="itemClick.emit(rowData)">
+    (click)="itemClick.emit(rowData)"
+     (dblclick)="onRowDblClick($event, rowData, editing)">
+   
 
     <!-- 序號（跨兩列） -->
     <td class="text-center" [attr.rowspan]="hasTwoHeaderRows ? 2 : 1">
@@ -538,7 +540,7 @@
       [frozen]="IsPrint && (col.frozen ?? false)"
       [style.minWidth]="getColMinWidth(col)"
       (click)="editing ? $event.stopPropagation() : null"
-      (dblclick)="detailRow(rowData)">
+      >
       <span *ngIf="!col.type">
         {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
       </span>
@@ -578,7 +580,7 @@
       [frozen]="IsPrint && (col.frozen ?? false)"
       [style.minWidth]="getColMinWidth(col)"
       (click)="editing ? $event.stopPropagation() : null"
-      (dblclick)="detailRow(rowData)">
+     >
       <span *ngIf="!col.type">
         {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
       </span>

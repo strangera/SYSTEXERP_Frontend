@@ -937,5 +937,45 @@ get hasTwoHeaderRows(): boolean {
 get skeletonRows(): any[] {
   return Array.from({ length: this.rows });
 }
+/** 整列雙擊 → 觸發「檢視」；編輯中或點到互動元件時不觸發 */
+onRowDblClick(ev: MouseEvent, rowData: any, editing: boolean) {
+  // 若未開放檢視按鈕，雙擊也不做事
+  if (!this.showDetail) return;
+
+  // 編輯中不觸發檢視
+  if (editing) {
+    ev.stopPropagation();
+    return;
+  }
+
+  // 點到可互動元素（避免與按鈕/輸入交互衝突）則不觸發
+  const target = ev.target as HTMLElement;
+  if (
+    target.closest(
+      [
+        'button',
+        'a',
+        'input',
+        'textarea',
+        'select',
+        '[role="button"]',
+        '.p-button',
+        '.p-inputtext',
+        '.p-dropdown',
+        '.p-multiselect',
+        '.p-calendar',
+        '.p-checkbox',
+        '.p-inputswitch',
+        '.p-radiobutton',
+        '.p-fileupload',
+      ].join(',')
+    )
+  ) {
+    return;
+  }
+
+  // 真的進入檢視（等同按右側「檢視」鈕）
+  this.detailRow(rowData);
+}
 
 }
