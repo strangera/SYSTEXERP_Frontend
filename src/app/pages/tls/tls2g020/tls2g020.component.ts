@@ -34,7 +34,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     TLT_NoList: [[]],
     budget_yy: [new Date()],
-    ...createPaginationConfig([{ field: 'TLT_NoList', order: 1 }]),
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
   });
 
   data: any[] = [];
@@ -45,6 +45,10 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     { field: 'budget_yy', header: '年度', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'Contract_No', header: '合約編號', visible: true },
+    { field: 'Contract_subno', header: '合約版次', visible: true },
+    { field: 'Contract_bdate', header: '合約起始日', visible: true },
+    { field: 'Contract_edate', header: '合約結束日', visible: true },
   ];
   expansionColumns: Column[] = [
     {
@@ -65,9 +69,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2G020', '/TLS/TLS2G020CRU', this.queryForm, (form) =>
-      this.onSubmit(form)
-    );
+    this.initializePage('TLS2G020', 'TLS/TLS2G020CRU', this.queryForm, (form) => this.onSubmit(form));
 
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))
@@ -93,17 +95,23 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
         ? new Date(raw.budget_yy).getFullYear().toString()
         : '',
       tlt_no: raw.TLT_NoList || [],
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: [{ field: 'tlt_no', order: 1 }],
     };
 
     this.tls2g020Service.queryTLS2G020(payload).subscribe({
       next: (res) => {
         this.data = (res?.Data || []).map((item: any) => ({
           ...item,
+          Contract_bdate: item.Contract_bdate ? formatDateString(item.Contract_bdate) : '',
+          Contract_edate: item.Contract_edate ? formatDateString(item.Contract_edate) : '',
           avg_cag_charge_rate: item.avg_cag_charge_rate,
           Mdeatil: (item.Mdeatil || []).map((m: any) => ({
             ...m,
             talent_id: item.talent_id,
-            budget_yy: item.budget_yy
+            budget_yy: item.budget_yy,
+            avg_cag_charge_nurate: m.budget * m.avg_cag_charge_rate // 新增抽成額
           }))
         }));
         this.totalRecords = res?.TotalCount || 0;
@@ -113,6 +121,16 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
         this.messageService.unblockUi();
       }
     });
+
+    // 工具函式：將日期字串或 Date 物件轉 yyyy-mm-dd
+    function formatDateString(date: string | Date): string {
+      const d = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(d.getTime())) return '';
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
   }
 
 

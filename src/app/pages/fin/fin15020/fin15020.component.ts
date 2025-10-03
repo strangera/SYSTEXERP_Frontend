@@ -136,9 +136,9 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
         ...frm.value,
         TXN_Date_S: this.datePipe.transform(frm.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '',
         TXN_Date_E: this.datePipe.transform(frm.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '',
-        INV_YM: this.datePipe.transform(frm.get('INV_YM')?.value, 'yyyyMM') ?? '',
-        INV_Data_YM_S: this.datePipe.transform(frm.get('INV_Data_YM_S')?.value, 'yyyyMM') ?? '',
-        INV_Data_YM_E: this.datePipe.transform(frm.get('INV_Data_YM_E')?.value, 'yyyyMM') ?? '',
+        PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
+        PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
+        PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
       };
 
       this.fin15020Service.queryFIN15020(requestData)
@@ -162,9 +162,9 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
       ...frm1.value,
       TXN_Date_S: this.datePipe.transform(frm1.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '',
       TXN_Date_E: this.datePipe.transform(frm1.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '',
-      INV_YM: this.datePipe.transform(frm1.get('INV_YM')?.value, 'yyyyMM') ?? '',
-      INV_Data_YM_S: this.datePipe.transform(frm1.get('INV_Data_YM_S')?.value, 'yyyyMM') ?? '',
-      INV_Data_YM_E: this.datePipe.transform(frm1.get('INV_Data_YM_E')?.value, 'yyyyMM') ?? '',
+      PUR_RepYYYYMM: this.datePipe.transform(frm1.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
+      PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm1.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
+      PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm1.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
       IsMerge: frm2.get('IsMerge')?.value === '1' || false,
       IsExcel: frm2.get('IsExcel')?.value === '1' || false
     };

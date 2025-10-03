@@ -190,9 +190,10 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
           No: Number(item.No), // 確保是 number
           Name: item.Name,
           contract_no: item.contract_no,// 用戶顯示適用這個欄位，還是用talent_id，只是顯示是contract_no合約編號)
+          Label: item.contract_no + '-' + item.Name // 顯示合約編號+名稱
         }));
 
-        console.log('專櫃主檔(合約編號)明細:', this.TLTTALENT_Option);
+        console.log('專櫃主檔(合約編號)明細:', response.Data);
       });
   }
 

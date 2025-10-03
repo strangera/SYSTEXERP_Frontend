@@ -13,12 +13,16 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
-import { createPaginationConfig, Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { NgIf } from '@angular/common';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { finalize } from 'rxjs';
+import { TLS22010Query } from "../tls22010-cru/tls22010.model";
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+
 
 
 
@@ -39,21 +43,21 @@ import { finalize } from 'rxjs';
     TranslateModule,
     ButtonModule,
     NgIf,
-    CustomFooterTableComponent
+    TableReportComponent
   ],
 })
 export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
   first = 0;
   queryForm = this.formBuilder.group({
-    TXN_DATE: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
+    TXN_Date: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
     floor_noList: [[]],
     ECR_NoList: [[]],
     ShowStatus: ['1'],
     status1: [''],
     status2: [''],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-  });
 
+  });
+  historyRequestBody: TLS22010Query | null = null;
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
@@ -64,9 +68,9 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   };
   TXN_Date = '';
   // ------ 欄位定義 ------
-  columns7: Column[] = [
-    { header: '總計', field: 'group_name', hidden: true },
-    { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html',sortField: 'ECR_No' },
+  columns7: ReportColumn[] = [
+    // { header: '總計', field: 'group_name', hidden: true },
+    { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html', sortField: 'ECR_No' },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'FLOOR_Name', header: '樓層', visible: true },
     { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, isTotal: true },
@@ -106,7 +110,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     private floorService: FloorService,
     private machineDisplayService: MachinedisplayService,
     private ECRNoService: ECRNoService,
-    private tls22010Service: Tls22010Service,
+    public readonly tls22010Service: Tls22010Service,
   ) {
     super();
   }
@@ -114,25 +118,23 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   // --------- 生命週期 ----------
   ngOnInit(): void {
     this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm);
+
     // 下拉選項
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
+
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const isFromRelatedRoute = state?.['fromRoute']?.includes(this.ProgNo.toLowerCase());
     if (isFromRelatedRoute) {
       this.skipAutoQueryOnce = true;
-      // // 還原查詢條件（含分頁、機號等）
-      // const savedForm = this.queryStateService.getQueryStateValue(this.ProgNo);
-      // if (savedForm) {
-      //   this.queryForm.patchValue(savedForm);
-      //   // 還原分頁資訊
-      //   if (savedForm.pageIndex) this.queryForm.get('pageIndex')?.setValue(savedForm.pageIndex);
-      //   if (savedForm.pageSize) this.queryForm.get('pageSize')?.setValue(savedForm.pageSize);
-      // }
-      // 還原資料
-      const res = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
-      this.processResponseData(res);
+
+      const res = this.queryStateService.getQueryStateValue(this.ProgNo + '_data');
+      if (res) {
+        this.data = res.Data ?? [];
+        this.footerData = res.footerData ?? [];
+        this.totalRecords = res.TotalCount ?? this.data.length;
+      }
     }
   }
 
@@ -141,51 +143,45 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  // --------- 事件 ----------
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup): void {
     if (this.skipAutoQueryOnce) {
       this.skipAutoQueryOnce = false;
       return;
     }
+
     this.handleSubmit(frm, () => {
-      this.tls22010Service.queryTLS22010(frm.value).pipe(finalize(() => this.loading = false)).subscribe({
-        next: (res) => {
-          this.processResponseData(res);
-          // 保留「表單值」到查詢狀態（initializePage 才能正確還原 Date 型別）
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.queryStateService.setQueryState(this.ProgNo + '_data', res);
-        },
+      const raw = frm.value;
+
+      const payload = {
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        OrderBy: raw.OrderBy ?? '',    // 後端有要
+        Offset: raw.Offset ?? 0,       // 後端有要
+        SortBy: raw.SortBy ?? [],
+        TXN_Date: raw.TXN_Date instanceof Date
+          ? this.toYMD(raw.TXN_Date)
+          : raw.TXN_Date || '',
+
+        ECR_NoList: raw.ECR_NoList?.length ? raw.ECR_NoList : [],
+        floor_noList: raw.floor_noList?.length ? raw.floor_noList : [],
+        ShowStatus: raw.ShowStatus ?? 'all',   // 預設一個值避免漏掉
+      };
+
+      this.tls22010Service.queryTLS22010(payload).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(response => {
+        this.data = response.Data ?? [];
+        this.footerData = { group_name: '總計', ...(response.footerData[0] ?? {}) };
+        this.totalRecords = response.TotalCount ?? this.data.length;
+
+        // 儲存查詢狀態
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        this.historyRequestBody = payload;
+
+        console.log('Data:', this.data);
+        console.log('footerData:', this.footerData);
       });
     });
-  }
-
-
-  // 處理response data資料
-  private processResponseData(res: any) {
-    if (res?.Data?.queryTLS22010_DataList?.length > 0 && res.Data.queryTLS22010_DataList[0].TXN_DATE) {
-      this.TXN_Date = res.Data.queryTLS22010_DataList[0].TXN_DATE;
-    } else {
-      this.TXN_Date = '';
-    }
-    this.data = res.Data.queryTLS22010_DataList.map((item: any) => {
-      let iconHtml = '';
-      switch (item.Status_Code) {
-        case '#':
-          iconHtml = '<span class="text-red-500 mr-1">#</span>';
-          break;
-        case '@':
-          iconHtml = '<span class="text-red-500 mr-1">@</span>';
-          break;
-        case '!':
-          iconHtml = '<span class="text-red-500 mr-1">!</span>';
-          break;
-      }
-      return {
-        ...item,
-        ECR_No_Display: `${iconHtml}${item.ECR_No}`
-      };
-    });
-    this.footerData = [{ group_name: '總計', ...res.Data.queryTLS22010_Sum }];
-    this.totalRecords = res?.TotalCount ?? this.data.length;
   }
 }

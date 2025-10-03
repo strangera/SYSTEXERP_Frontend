@@ -53,8 +53,7 @@ export interface Column<T = Record<string, any>> {
 
   /** Template 顯示相關配置 */
   templateRef?: TemplateRef<any>; // 自定義模板
-  templateDisplayField?: string; // 用於顯示名稱
-  templateDisplayFormat?: (value: any, nameValue: any) => string; // 自訂顯示格式
+  templateDisplayField?: string; // 用於顯示名稱的欄位
   tableTemplate?: () => TemplateRef<any>; // 自定義表格模板
 }
 
@@ -326,35 +325,4 @@ export const Maps = {
     ['Y', '是'],
     ['N', '否'],
   ]),
-};
-
-/** Template 顯示格式化函數 */
-export const TemplateDisplayFormats = {
-  /** 標準格式：代號 - 名稱 */
-  codeWithName: (value: any, nameValue: any) => {
-    if (value && nameValue) {
-      return `${value} - ${nameValue}`;
-    } else if (value) {
-      return value;
-    }
-    return '';
-  },
-
-  /** 只顯示代號 */
-  codeOnly: (value: any) => value || '',
-
-  /** 只顯示名稱 */
-  nameOnly: (value: any, nameValue: any) => nameValue || value || '',
-
-  /** 括號格式：名稱(代號) */
-  nameWithCodeInBrackets: (value: any, nameValue: any) => {
-    if (value && nameValue) {
-      return `${nameValue}(${value})`;
-    } else if (nameValue) {
-      return nameValue;
-    } else if (value) {
-      return value;
-    }
-    return '';
-  }
 };

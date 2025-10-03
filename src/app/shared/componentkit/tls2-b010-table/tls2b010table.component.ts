@@ -76,6 +76,7 @@ export class tls2b010tableComponent
   @Input() tableKey?: string;
   @Input() apiUrl?: string;
   @Input() title?: string;
+  @Input() groupPageSize = 20;
 
   // 欄位 / 資料
   @Input() columns: Column[] = [];
@@ -251,8 +252,13 @@ export class tls2b010tableComponent
     if (changes['data'] || changes['totalRecords']) {
       this.rebuildPageGroupMeta();
       this.calculateTotalPages();
+      this.resyncFirstAfterRowsChange();
       this.cdr.detectChanges?.();
     }
+
+     if (changes['rows'] && !changes['rows'].firstChange) {
+ this.resyncFirstAfterRowsChange();   // ★ rows 變了也同步
+ }
   }
 
   ngOnDestroy(): void {
@@ -286,15 +292,17 @@ export class tls2b010tableComponent
       return;
     }
 
-    if (this.lazy) {
-      const maxFirst = Math.max(0, (this.totalPages - 1) * this.rows);
-      if (this.first > maxFirst) {
-        this._suppressNextLazy = true;
-        this.first = maxFirst;
-      }
-      this.cdr.detectChanges?.();
-      return;
-    }
+if (this.lazy) {
+  const maxFirst = Math.max(0, (this.totalPages - 1) * this.rows);
+  if (this.first > maxFirst) {
+
+   // 讓它自然觸發下一次 onLazyLoad，不要抑制
+   this.first = maxFirst;
+   return; // 提早結束這次計算，等待下一個事件
+  }
+  this.cdr.detectChanges?.();
+  return;
+}
 
     if (this.totalPages > 0 && this.selectedPage && this.selectedPage > this.totalPages) {
       this.selectedPage = this.totalPages;
@@ -303,7 +311,12 @@ export class tls2b010tableComponent
       this.cdr.detectChanges?.();
     }
   }
-
+getGlobalGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+ const localNo = this.getGroupDisplayIndex(rowIndexGlobal, rowData); // 本頁第幾個群組（1-based）
+const pageNo = this.selectedPage ?? 1;                              // 目前第幾頁（1-based）
+const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群組」為單位的 offset
+ return offset + localNo;
+ }
   /** 給右上角頁碼下拉用 */
   goToPage(pageNumber: number) {
     const newFirst = (pageNumber - 1) * this.rows;
@@ -329,8 +342,8 @@ export class tls2b010tableComponent
 
   loadDataLazy(event: TableLazyLoadEvent, force = false) {
     if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
-    if (this._suppressNextLazy && !force) { this._suppressNextLazy = false; return; }
-    if (force) { this._skipFirstLazy = false; this._suppressNextLazy = false; }
+    if (force) { this._skipFirstLazy = false; }
+   
 
     const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
     let pageIndex = (event.first ?? 0) / pageSize + 1;
@@ -341,15 +354,19 @@ export class tls2b010tableComponent
     const sort = this.ensureGroupFirst(normalized);
     const sortSig = JSON.stringify(sort);
 
+    // 判斷這次 onLazyLoad 是否真的是「使用者點了排序」
+    const userSorted = !!(event.sortField || (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length));
+
     if (!this.lastSortSig) {
       this.lastSortSig = sortSig;
-    } else if (sortSig !== this.lastSortSig) {
+    }  else if (sortSig !== this.lastSortSig) {
       this.lastSortSig = sortSig;
-      if (pageIndex !== 1) {
-        pageIndex = 1;
-        this._suppressNextLazy = true;
-        this.first = 0;
-      }
+
+   if (userSorted && pageIndex !== 1) {
+     this.first = 0;
+     this.selectedPage = 1;
+     return;
+  }
     }
 
     this.selectedPage = pageIndex;
@@ -375,24 +392,7 @@ export class tls2b010tableComponent
 
 
 
-  /** 每次換頁或資料更新都重建本頁的 group meta */
-  private rebuildPageGroupMeta(): void {
-    const rows = this.getPageRows();
-    const meta: Record<string, { index: number; size: number }> = {};
-    let lastKey: string | null = null;
 
-    rows.forEach((row, i) => {
-      const key = this.buildGroupKey(row?.[this.groupKey], i);
-      if (lastKey === key) {
-        meta[key].size++;
-      } else {
-        meta[key] = { index: i, size: 1 };
-        lastKey = key;
-      }
-    });
-
-    this.pageGroupMeta = meta;
-  }
 
 
 
@@ -696,6 +696,14 @@ isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
   const m = this.pageGroupMeta[key];
   return !!m && m.index === local;
 }
+private resyncFirstAfterRowsChange() {
+  if (!this.lazy) return;
+  const curPage = this.selectedPage ?? 1;
+  // 避免因為重設 first 又觸發一次 onLazyLoad
+  this._suppressNextLazy = true;
+  this.first = (curPage - 1) * (this.rows || 0);
+}
+
 
 /** 取得本頁的 rowspan；meta 查不到也回 1，避免整欄被吃掉 */
 getPageRowSpan(rowIndexGlobal: number, key: string): number {
@@ -704,5 +712,38 @@ getPageRowSpan(rowIndexGlobal: number, key: string): number {
   const m = this.pageGroupMeta[key];
   return (m && m.index === local) ? m.size : 1;
 }
+// 新增：本頁分組的序號 (1-based)
+private pageGroupOrder: Record<string, number> = {};
 
+// 調整：重建本頁 group meta 時，順便建立組序
+private rebuildPageGroupMeta(): void {
+  const rows = this.getPageRows();
+  const meta: Record<string, { index: number; size: number }> = {};
+  const order: Record<string, number> = {};
+
+  let lastKey: string | null = null;
+  let groupNo = 0;
+
+  rows.forEach((row, i) => {
+    const key = this.buildGroupKey(row?.[this.groupKey], i);
+    if (lastKey === key) {
+      meta[key].size++;
+    } else {
+      groupNo++;
+      meta[key] = { index: i, size: 1 };
+      order[key] = groupNo;         // 這一組在本頁的組序
+      lastKey = key;
+    }
+  });
+
+  this.pageGroupMeta = meta;
+  this.pageGroupOrder = order;
+}
+
+// 取得本頁組序，用於序號顯示（fallback 為 rowIndex+1）
+getGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+  const key = this.getGroupKeyValue(rowData, rowIndexGlobal);
+  const local = this.toPageIndex(rowIndexGlobal);
+  return this.pageGroupOrder[key] ?? (local + 1);
+}
 }

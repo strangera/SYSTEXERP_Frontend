@@ -312,13 +312,17 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
       });
 
   }
-  handleLazyLoad(e: { pageIndex: number; pageSize: number; SortBy: any[] }, form: FormGroup) {
-    form.patchValue(
-      { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: e.SortBy },
-      { emitEvent: false }
-    );
-    this.onSubmit(form); // 集中在這裡打一次 API
-  }
+handleLazyLoad(
+  e: { pageIndex: number; pageSize: number; SortBy: any[] },
+  form: FormGroup
+) {
+  const groupSize = this.queryForm.get('pageSize')?.value ?? 20; // 以機號為主的頁大小
+  form.patchValue(
+    { pageIndex: e.pageIndex, pageSize: groupSize, SortBy: e.SortBy },
+    { emitEvent: false }
+  );
+  this.onSubmit(form);
+}
 
 
   get formattedTXNDate(): string {

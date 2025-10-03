@@ -392,7 +392,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   // !!! 以下為核心
   // 判斷此col的validate參數是否有validateRequired的fuction
   isRequired(col: EditColumn) {
-    return col.validate?.some(validate => validate === validateRequired);
+    return col.validate?.some(validate => validate.name === 'validateRequired');
   }
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as EditColumn[];// 欄位調整
