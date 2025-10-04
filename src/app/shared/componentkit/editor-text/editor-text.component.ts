@@ -8,7 +8,11 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
 @Component({
   selector: 'app-editor-text',
   templateUrl: './editor-text.component.html',
-  styleUrl: './editor-text.component.scss',
+  styleUrls: [
+    './editor-text.component.scss',
+    './quill.core.scss',
+    './quill.snow.scss'
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent]

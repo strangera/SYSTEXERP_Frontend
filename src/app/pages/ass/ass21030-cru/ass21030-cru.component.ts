@@ -8,8 +8,8 @@ import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.model';
@@ -55,8 +55,8 @@ export interface ENG2001 {
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
-    ButtonDynamicallyaddComponent,
-    ButtonDynamicallydeleteComponent,
+
+
     DropdownComponent,
     InputTextComponent,
     InputNumberComponent,
@@ -66,106 +66,106 @@ export interface ENG2001 {
 
 // 能源抄表作業
 export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> implements OnInit {
-    // ----------------------------------------------------------------
-    dataForm = this.formBuilder.nonNullable.group({
-      // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
-      ID: [this.authService.getUserInfo()?.SYS_StoreNo ?? ''], // ID (隱藏)
-      Mid: [Number(this.authService.getUserInfo()?.mid)], // Mid (隱藏)
-      // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
-      ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
-      ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
-      ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號
-      ENG_Date: [''], // 本次抄錶日
-      ENG_CurrentReading: [0, [Validators.max(9999999999)]], // 本次抄錶度數 (最多小數後4位)
-      ENG_Amount: [0, [Validators.max(9999999999)]], // 本次結算金額
+  // ----------------------------------------------------------------
+  dataForm = this.formBuilder.nonNullable.group({
+    // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
+    ID: [this.authService.getUserInfo()?.SYS_StoreNo ?? ''], // ID (隱藏)
+    Mid: [Number(this.authService.getUserInfo()?.mid)], // Mid (隱藏)
+    // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
+    ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
+    ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
+    ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號
+    ENG_Date: [''], // 本次抄錶日
+    ENG_CurrentReading: [0, [Validators.max(9999999999)]], // 本次抄錶度數 (最多小數後4位)
+    ENG_Amount: [0, [Validators.max(9999999999)]], // 本次結算金額
 
-      CRT_Date: [''], // 建立日期
-      CRT_USR_No: [''], // 建立人員代碼 (隱藏)
-      CRT_USR_Name: [''], // 建立人員姓名 (隱藏)
-      UPD_Date: [''], // 變更日期 (隱藏)
-      UPD_USR_No: [''], // 變更人員代碼 (隱藏)
-      UPD_USR_Name: [''], // 變更人員姓名 (隱藏)
-    });
-  
-    //
-    ENG_Type_Option: option[] = [ // 能源類型選項
-      { value: 'G01', label: '水錶' },
-      { value: 'G02', label: '電錶' },
-      { value: 'G03', label: '瓦斯錶' }
-    ];
-    ENG_Status_Option: option[] = [ // 抄錶狀態選項
-      { value: '0', label: '未結算' },
-      { value: '1', label: '已結算' }
-    ];
-  
-    // ----------------------------------------------------------------
-    constructor(private ass21030Service: ASS21030Service) {
-      super(); // 呼叫父類建構子
-    }
-  
-    ngOnInit(): void {
-      this.initializePage('ASS21030', this.dataForm);
-      this.loadOptions();
+    CRT_Date: [''], // 建立日期
+    CRT_USR_No: [''], // 建立人員代碼 (隱藏)
+    CRT_USR_Name: [''], // 建立人員姓名 (隱藏)
+    UPD_Date: [''], // 變更日期 (隱藏)
+    UPD_USR_No: [''], // 變更人員代碼 (隱藏)
+    UPD_USR_Name: [''], // 變更人員姓名 (隱藏)
+  });
 
-      console.log('取得資料',this.dataForm.value);
-    }
-  
-    onSubmit(frm: FormGroup) {
-      this.messageService.blockUi();
-      this.submitted = true;
-  
-      if (this.dataForm.invalid) {
-        this.messageService.unblockUi();
-        return;
-      }
-  
-      //都用匯入(import excel)的方式進行編輯
-      const formValue = frm.getRawValue();
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            console.log('insert:', JSON.stringify(formValue, null, 2));
-            // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            //   this.dataForm.reset(); // 重置表單
-            // });
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            console.log('update:', JSON.stringify(formValue, null, 2));
-            // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 儲存後，會返回列表
-            // });
-          }
-          break;
-      }
-  
+  //
+  ENG_Type_Option: option[] = [ // 能源類型選項
+    { value: 'G01', label: '水錶' },
+    { value: 'G02', label: '電錶' },
+    { value: 'G03', label: '瓦斯錶' }
+  ];
+  ENG_Status_Option: option[] = [ // 抄錶狀態選項
+    { value: '0', label: '未結算' },
+    { value: '1', label: '已結算' }
+  ];
+
+  // ----------------------------------------------------------------
+  constructor(private ass21030Service: ASS21030Service) {
+    super(); // 呼叫父類建構子
+  }
+
+  ngOnInit(): void {
+    this.initializePage('ASS21030', this.dataForm);
+    this.loadOptions();
+
+    console.log('取得資料', this.dataForm.value);
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.messageService.blockUi();
+    this.submitted = true;
+
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
-      this.submitted = false;
+      return;
     }
-  
-    submitForm(frm: FormGroup) {
-      console.log('提交');
-      this.onSubmit(frm);
+
+    //都用匯入(import excel)的方式進行編輯
+    const formValue = frm.getRawValue();
+    switch (this.crudstatus) {
+      case CRUDStatus.Create:
+        if (this.canAdd()) {
+          console.log('insert:', JSON.stringify(formValue, null, 2));
+          // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
+          //   this.messageService.successBubble('新增成功');
+          //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+          //   this.dataForm.reset(); // 重置表單
+          // });
+        }
+        break;
+      case CRUDStatus.Edit:
+        if (this.canEdit()) {
+          console.log('update:', JSON.stringify(formValue, null, 2));
+          // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
+          //   this.messageService.successBubble('更新成功');
+          //   this.onCancel(); // 儲存後，會返回列表
+          // });
+        }
+        break;
     }
-  
-    onClearForm() {
-      this.dataForm.reset(); // 重置表單
-    }
-  
-    // 讀取dopropdown選項
-    loadOptions() {
-      // 查詢 接待人員
-      // this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
-      //   this.contact_USR_Option = response.Data.map((item: any) => ({
-      //     No: item.No, // 接待人員 代碼
-      //     Name: item.Name, // 接待人員 名稱
-      //     Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-      //   }));
-      //   console.log('接待人員代號:', this.contact_USR_Option);
-      // });
-    }
+
+    this.messageService.unblockUi();
+    this.submitted = false;
+  }
+
+  submitForm(frm: FormGroup) {
+    console.log('提交');
+    this.onSubmit(frm);
+  }
+
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
+  }
+
+  // 讀取dopropdown選項
+  loadOptions() {
+    // 查詢 接待人員
+    // this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+    //   this.contact_USR_Option = response.Data.map((item: any) => ({
+    //     No: item.No, // 接待人員 代碼
+    //     Name: item.Name, // 接待人員 名稱
+    //     Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+    //   }));
+    //   console.log('接待人員代號:', this.contact_USR_Option);
+    // });
+  }
 }

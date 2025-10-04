@@ -9,9 +9,9 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.model';
@@ -56,7 +56,7 @@ export interface POS1002 {
   templateUrl: './tls41050-cru.component.html',
   styleUrl: './tls41050-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, DropdownComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, InputNumberComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, DropdownComponent, EditorTextComponent, NgFor, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
   implements OnInit {

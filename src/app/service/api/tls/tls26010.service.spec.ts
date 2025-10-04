@@ -2,7 +2,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { TestBed } from '@angular/core/testing';
 import { DependentDataQuery, EcrTable, PodRequest, TLS26010Data, TLS26010Query, TltTable } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
-import { ErrorHandlerService } from '@service/system/error-handler.service';
+import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ItemOperationStatus } from '@shared/models/system/CRUDstatus';

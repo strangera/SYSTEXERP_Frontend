@@ -11,15 +11,15 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 
 @Component({
-    selector: 'app-ass16050-cru',
-    templateUrl: './ass16050-cru.component.html',
-    styleUrls: ['./ass16050-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule]
+  selector: 'app-ass16050-cru',
+  templateUrl: './ass16050-cru.component.html',
+  styleUrls: ['./ass16050-cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, NgIf, TranslateModule]
 })
 export class ASS16050CRUComponent extends BasicCrupageComponent implements OnInit {
 

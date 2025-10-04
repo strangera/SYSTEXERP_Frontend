@@ -11,12 +11,10 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
   selector: 'app-sysb100',
   templateUrl: './sysb100.component.html',
-  styleUrl: './sysb100.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -3,7 +3,7 @@
         <div class="col" style="flex: 1">
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
-        <div >
+        <div>
             <app-button btnType="create" label="套用詢價清單" class="col"></app-button>
         </div>
     </div>
@@ -95,8 +95,7 @@
                             <h5>商品 {{ i + 1 }}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
-                                class="col"></app-button-dynamicallydelete>
+
                         </div>
                     </div>
                     <div class="grid p-fluid">
@@ -167,7 +166,7 @@
                 </ng-container>
             </ng-container>
             <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+
             </div>
         </form>
         <div class="col pt-4">

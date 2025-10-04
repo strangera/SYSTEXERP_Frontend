@@ -10,16 +10,16 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { Button } from 'primeng/button';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.18.4 發票換開作業
 @Component({
-    selector: 'app-tls2j040',
-    templateUrl: './tls2j040.component.html',
-    styleUrl: './tls2j040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, CalendarRangeComponent, InputNumberComponent, InputNumberRangeComponent, Button, ButtonDynamicallyaddComponent, TranslateModule]
+  selector: 'app-tls2j040',
+  templateUrl: './tls2j040.component.html',
+  styleUrl: './tls2j040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, CalendarRangeComponent, InputNumberComponent, InputNumberRangeComponent, Button, TranslateModule]
 })
 export class TLS2J040Component {
   ProgNo: string = '220093';

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
 import { TLS12040RequestModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
 import { TLS12040SubmitData } from '@pages/tls/tls12040/models/tls12040submit.model';

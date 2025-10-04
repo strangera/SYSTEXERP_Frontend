@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { catchError, tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Injectable({ providedIn: 'root' })
 export class TLS13040Service {

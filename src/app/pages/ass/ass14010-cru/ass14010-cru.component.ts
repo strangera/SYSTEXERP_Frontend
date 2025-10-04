@@ -15,18 +15,18 @@ import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 //3.1.4.1  進貨發票建檔作業 CRU
 @Component({
-    selector: 'app-ass14010-cru',
-    templateUrl: './ass14010-cru.component.html',
-    styleUrl: './ass14010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass14010-cru',
+  templateUrl: './ass14010-cru.component.html',
+  styleUrl: './ass14010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, NgFor, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS14010CRUComponent extends BasicCrupageComponent implements OnInit {
   supplierCodeOptions: any[] = [];

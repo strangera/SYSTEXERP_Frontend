@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../system/error-handler.service';
+import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { environment } from '../../../environments/environment';
 
 

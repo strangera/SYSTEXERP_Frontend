@@ -17,17 +17,17 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 //3.1.1.9 資材中分類會計科目維護作業 CRU
 @Component({
-    selector: 'app-ass11090-cru',
-    templateUrl: './ass11090-cru.component.html',
-    styleUrl: './ass11090-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass11090-cru',
+  templateUrl: './ass11090-cru.component.html',
+  styleUrl: './ass11090-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS11090CRUComponent extends BasicCrupageComponent implements OnInit {
   //

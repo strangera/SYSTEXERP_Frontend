@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Component, EventEmitter, Input, SimpleChanges, OnChanges, Output,
-  ViewChild, OnDestroy, OnInit, inject,
+  ViewChild, OnDestroy, OnInit,
 } from '@angular/core';
 import {
   Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent,
@@ -16,7 +16,6 @@ import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileuploa
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
 import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NgIf, NgClass, NgFor } from '@angular/common';
@@ -39,6 +38,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Table2UtilityService } from './table2-utility.service';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ImageModule } from 'primeng/image';
+import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
 
 @Component({
   selector: 'app-table2',
@@ -61,7 +61,7 @@ import { ImageModule } from 'primeng/image';
 export class Table2Component
   extends BasicPrintData2Component
   implements OnInit, OnChanges, OnDestroy {
-    trackByCol = (index: number, col: any) => col.key ?? col.__uid ?? col.field ?? index;
+  trackByCol = (index: number, col: any) => col.key ?? col.__uid ?? col.field ?? index;
 
 
   /* ====== 基本與依賴 ====== */
@@ -246,7 +246,7 @@ export class Table2Component
   ngOnInit(): void {
     this.ensureInitialGroupingSort();
     this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
-   
+
 
     this.currentPageService.currentPageProgNo$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -257,7 +257,7 @@ export class Table2Component
     this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
 
     this.showSubTotal = this.showSubTotal ? this.showSubTotal : (this.columns?.some(c => c.isSubTotal) ?? false);
-    this.showTotal    = this.showTotal    ? this.showTotal    : (this.columns?.some(c => c.isTotal) ?? false);
+    this.showTotal = this.showTotal ? this.showTotal : (this.columns?.some(c => c.isTotal) ?? false);
 
     const saved = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
     this.selectedColumns = (saved?.length ? saved : this.columns || [])
@@ -280,7 +280,7 @@ export class Table2Component
     if (changes['columns'] && this.columns?.length > 0) {
       this.originalColumns = this.columns;
       this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.some(c => c.isSubTotal);
-      this.showTotal    = this.showTotal    ? this.showTotal    : this.columns.some(c => c.isTotal);
+      this.showTotal = this.showTotal ? this.showTotal : this.columns.some(c => c.isTotal);
 
       const saved = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
       this.selectedColumns = (saved?.length ? saved : this.columns)
@@ -288,11 +288,11 @@ export class Table2Component
 
       if (changes['columns'].firstChange) {
         setTimeout(() => {
-  this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
-  this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
-  // ✅ 同步簽章
-  this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
-}, 300);
+          this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+          this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
+          // ✅ 同步簽章
+          this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
+        }, 300);
       }
     }
   }
@@ -339,22 +339,22 @@ export class Table2Component
   }
 
   /** 右上下拉切頁（同步 paginator） */
-goToPage(pageNumber: number) {
-  const newFirst = (pageNumber - 1) * this.rows;
-  if (this.first === newFirst && this.selectedPage === pageNumber) return;
+  goToPage(pageNumber: number) {
+    const newFirst = (pageNumber - 1) * this.rows;
+    if (this.first === newFirst && this.selectedPage === pageNumber) return;
 
-  this.first = newFirst;
-  this.selectedPage = pageNumber;
+    this.first = newFirst;
+    this.selectedPage = pageNumber;
 
-  if (this.lazy) {
-    this._suppressNextLazy = true; // 吞掉 p-table 的 echo
-    this.loadDataLazy({
-      first: this.first,
-      rows: this.rows,
-      multiSortMeta: this.multiSortMeta
-    } as TableLazyLoadEvent, true);   // 強制打 API
+    if (this.lazy) {
+      this._suppressNextLazy = true; // 吞掉 p-table 的 echo
+      this.loadDataLazy({
+        first: this.first,
+        rows: this.rows,
+        multiSortMeta: this.multiSortMeta
+      } as TableLazyLoadEvent, true);   // 強制打 API
+    }
   }
-}
 
 
   /** paginator 點擊（同步下拉） */
@@ -376,86 +376,86 @@ goToPage(pageNumber: number) {
   }
 
   /** ✅ 唯一 API 觸發點（統一做去重／抑制 echo／排序變更回第1頁） */
-loadDataLazy(event: TableLazyLoadEvent, force = false) {
-  // 1) 跳過首發 / 抑制 echo：force=true 時一律執行
-  if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
-  if (this._suppressNextLazy && !force) { this._suppressNextLazy = false; return; }
+  loadDataLazy(event: TableLazyLoadEvent, force = false) {
+    // 1) 跳過首發 / 抑制 echo：force=true 時一律執行
+    if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
+    if (this._suppressNextLazy && !force) { this._suppressNextLazy = false; return; }
 
-  // 強制呼叫時，直接清旗標避免後續早退
-  if (force) {
-    this._skipFirstLazy = false;
-    this._suppressNextLazy = false;
-  }
+    // 強制呼叫時，直接清旗標避免後續早退
+    if (force) {
+      this._skipFirstLazy = false;
+      this._suppressNextLazy = false;
+    }
 
-  // 2) 解析分頁與排序
-const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-let pageIndex  = (event.first ?? 0) / pageSize + 1;
+    // 2) 解析分頁與排序
+    const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
+    let pageIndex = (event.first ?? 0) / pageSize + 1;
 
-const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
-  (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+    const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
+      (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
 
-const sort    = this.ensureGroupFirst(sortRaw);
-const sortSig = JSON.stringify(sort);
+    const sort = this.ensureGroupFirst(sortRaw);
+    const sortSig = JSON.stringify(sort);
 
-// ✅ 第一次先「建簽章、不回第一页」
-if (!this.lastSortSig) {
-  this.lastSortSig = sortSig;
-} else if (sortSig !== this.lastSortSig) {
-  // ✅ 之後才把「排序變更」視為要回第 1 頁
-  this.lastSortSig = sortSig;
-  if (pageIndex !== 1) {
-    pageIndex = 1;
-    this._suppressNextLazy = true;
-    this.first = 0;
-  }
-}
-
-  // 同步頁碼&排序狀態（供右上 dropdown 與 paginator 顯示）
-  this.selectedPage = pageIndex;
-  this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
-  this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-
-  // 3) 去重：同一個 pageIndex|pageSize|sortSig 就不重打
-  const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
-  const key = `${pageIndex}|${pageSize}|${sortSig}`;
-  if (!force && key === this.lastEmitKey) return;
-  this.lastEmitKey = key;
-
-  // 4) 打 API：優先用 serverFetch，否則對外 emit 事件
-  if (this.serverFetch) {
-    this.loading = true; // [loading]="loading && data.length === 0"
-    this.serverFetch(payload).subscribe({
-      next: (res) => {
-        const rows = Array.isArray(res?.rows) ? res.rows : [];
-        this.data = rows;
-        this.dataChange.emit(this.data);
-
-        this.totalRecords = Number(res?.totalRecords ?? rows.length) || 0;
-
-        // 後端若回傳總計/小計，落地至對應 input
-        if (res?.externalTotals)    this.externalTotals = { ...res.externalTotals };
-        if (res?.externalSubtotals) this.externalSubtotals = { ...res.externalSubtotals };
-
-        // 依新 totalRecords 重算總頁/頁碼清單
-        this.calculateTotalPages();
-        this.loading = false;
-
-        // 清選取
-        this.selectedItems = [];
-        this.selectionChange.emit(this.selectedItems);
-        this.selectedItemsChange.emit(this.selectedItems);
-      },
-      error: (err) => {
-        this.loading = false;
-        this.serverError.emit(err);
+    // ✅ 第一次先「建簽章、不回第一页」
+    if (!this.lastSortSig) {
+      this.lastSortSig = sortSig;
+    } else if (sortSig !== this.lastSortSig) {
+      // ✅ 之後才把「排序變更」視為要回第 1 頁
+      this.lastSortSig = sortSig;
+      if (pageIndex !== 1) {
+        pageIndex = 1;
+        this._suppressNextLazy = true;
+        this.first = 0;
       }
-    });
-    return;
-  }
+    }
 
-  // 無 serverFetch：維持舊行為交給父層
-  this.lazyLoadData.emit(payload);
-}
+    // 同步頁碼&排序狀態（供右上 dropdown 與 paginator 顯示）
+    this.selectedPage = pageIndex;
+    this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
+    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+
+    // 3) 去重：同一個 pageIndex|pageSize|sortSig 就不重打
+    const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+    const key = `${pageIndex}|${pageSize}|${sortSig}`;
+    if (!force && key === this.lastEmitKey) return;
+    this.lastEmitKey = key;
+
+    // 4) 打 API：優先用 serverFetch，否則對外 emit 事件
+    if (this.serverFetch) {
+      this.loading = true; // [loading]="loading && data.length === 0"
+      this.serverFetch(payload).subscribe({
+        next: (res) => {
+          const rows = Array.isArray(res?.rows) ? res.rows : [];
+          this.data = rows;
+          this.dataChange.emit(this.data);
+
+          this.totalRecords = Number(res?.totalRecords ?? rows.length) || 0;
+
+          // 後端若回傳總計/小計，落地至對應 input
+          if (res?.externalTotals) this.externalTotals = { ...res.externalTotals };
+          if (res?.externalSubtotals) this.externalSubtotals = { ...res.externalSubtotals };
+
+          // 依新 totalRecords 重算總頁/頁碼清單
+          this.calculateTotalPages();
+          this.loading = false;
+
+          // 清選取
+          this.selectedItems = [];
+          this.selectionChange.emit(this.selectedItems);
+          this.selectedItemsChange.emit(this.selectedItems);
+        },
+        error: (err) => {
+          this.loading = false;
+          this.serverError.emit(err);
+        }
+      });
+      return;
+    }
+
+    // 無 serverFetch：維持舊行為交給父層
+    this.lazyLoadData.emit(payload);
+  }
 
 
   /* ======================= Header（原 TableCaption）相關 ======================= */
@@ -521,21 +521,21 @@ if (!this.lastSortSig) {
   /* ======================= 行/欄位邏輯（原本就有） ======================= */
   trackByRow = (index: number, item: any) => (item as any)?.[this.dataKey] || index;
 
-get getVisibleHeaderCount(): number {
-  const visibleCount =
-    this.selectedColumns?.filter(c => c.hidden !== true && c.visible !== false).length ?? 0;
+  get getVisibleHeaderCount(): number {
+    const visibleCount =
+      this.selectedColumns?.filter(c => c.hidden !== true && c.visible !== false).length ?? 0;
 
-  // 1 = 序號
-  // + 勾選欄（僅在 IsPrint 且 multiple 且非編輯）
-  // + 展開欄（僅在有 expansion 且 IsPrint）
-  // + 可見資料欄
-  // + 管理欄（與表頭條件一致）
-  return 1
-    + (this.IsPrint && this.showCheckBox && !this.rowEditing && this.selectionMode === 'multiple' ? 1 : 0)
-    + (this.expansionDataKey && this.IsPrint ? 1 : 0)
-    + visibleCount
-    + (this.IsPrint && this.showManage && (!this.alwaysEdit || (this.alwaysEdit && this.rowEditing)) ? 1 : 0);
-}
+    // 1 = 序號
+    // + 勾選欄（僅在 IsPrint 且 multiple 且非編輯）
+    // + 展開欄（僅在有 expansion 且 IsPrint）
+    // + 可見資料欄
+    // + 管理欄（與表頭條件一致）
+    return 1
+      + (this.IsPrint && this.showCheckBox && !this.rowEditing && this.selectionMode === 'multiple' ? 1 : 0)
+      + (this.expansionDataKey && this.IsPrint ? 1 : 0)
+      + visibleCount
+      + (this.IsPrint && this.showManage && (!this.alwaysEdit || (this.alwaysEdit && this.rowEditing)) ? 1 : 0);
+  }
 
 
   rowSelectableWrapper = ({ data }: { data: any; index: number }) =>
@@ -702,7 +702,7 @@ get getVisibleHeaderCount(): number {
         const blob = new Blob([src.data], { type: src.type || 'image/png' });
         return URL.createObjectURL(blob);
       }
-    } catch {}
+    } catch { }
     return String(src);
   }
 
@@ -849,133 +849,133 @@ get getVisibleHeaderCount(): number {
   // ========= Export（補上讓 template 可呼叫） =========
 
 
-/** 開啟匯出對話框：type = 'PDF' | 'Excel' */
-export(type: 'PDF' | 'Excel') {
-  this.exportStatus = type;
-  this.exportDialog = true;
-}
-// 點展開按鈕時先阻止冒泡，再走原有邏輯
-onToggleRow(ev: MouseEvent, rowData: any) {
-  ev?.stopPropagation();
-  this.toggleRowExpansion(rowData);
-}
-
-//（可選）若要在「使用 pRowToggler / 外部展開事件」時自動載入明細，可用這一個。
-//有用 (onRowExpand)="onRowExpandHandler($event)" 才會觸發；你現在是手動按鈕就可以不加。
-onRowExpandHandler(event: any) {
-  const rowData = event?.data ?? event; // PrimeNG 版本差異
-  if (!rowData) return;
-
-  if (this.expansionLoadFn && !rowData[this.expansionDataKey]?.length && !rowData.expansionLoading) {
-    rowData.expansionLoading = true;
-    this.expansionLoadFn(rowData).subscribe({
-      next: (resp: any) => {
-        // 允許回傳 { Data: [...] } 或直接 [...]
-        const list = Array.isArray(resp?.Data) ? resp.Data : (Array.isArray(resp) ? resp : []);
-        rowData[this.expansionDataKey] = list;
-        rowData.expansionLoading = false;
-      },
-      error: () => { rowData.expansionLoading = false; }
-    });
+  /** 開啟匯出對話框：type = 'PDF' | 'Excel' */
+  export(type: 'PDF' | 'Excel') {
+    this.exportStatus = type;
+    this.exportDialog = true;
   }
-}
-getColMinWidth(col: any): string {
-  const text = (col?.header ?? '').toString();
-  // 用展開運算子避免代理對（emoji/CJK 擴充等）計數錯誤
-  const len = [...text].length;
-
-  // 基準：每字 1ch，保留 sortIcon/必填星號/邊距空間；下限/上限做個夾取
-  const ch = Math.max(6, Math.min(40, len + 2)); // 6ch~40ch
-  return `calc(${ch}ch + 1.25rem)`; // 多 1.25rem 做左右 padding / icon 空間
-}
-
-
-get bodyColumnsOrdered(): any[] {
-  if (this.hasTwoHeaderRows) {
-    return [
-      ...this.leftFixedHeaderColumns,
-      ...this.headerRow1Columns,
-      ...this.headerRow2Columns,
-    ];
-  } else {
-    return [
-      ...this.leftFixedHeaderColumns,
-      ...this.headerRow1Columns,
-    ];
-  }
-}
-
-
-
-// -----------------------------------------------------
-/** 取得目前可見欄位（selectedColumns 優先，其次 columns） */
-private get visibleCols() {
-  const cols = this.selectedColumns?.length ? this.selectedColumns : this.columns || [];
-  return cols.filter(c => c.visible !== false && c.hidden !== true);
-}
-
-/** 沒有 headerRow（= undefined/null）的欄位：固定放最左邊，且表頭要 rowspan=2 */
-get leftFixedHeaderColumns() {
-  return this.visibleCols.filter(c => c.headerRow == null);
-}
-
-/** 表頭第 1 列欄位（headerRow = 1） */
-get headerRow1Columns() {
-  return this.visibleCols.filter(c => c.headerRow === 1);
-}
-
-/** 表頭第 2 列欄位（headerRow = 2） */
-get headerRow2Columns() {
-  return this.visibleCols.filter(c => c.headerRow === 2);
-}
-
-
-/** 是否需要兩列表頭：只要有任一個 row2 欄位就需要；或你也可強制兩列 */
-get hasTwoHeaderRows(): boolean {
-  return this.headerRow2Columns.length > 0;
-}
-get skeletonRows(): any[] {
-  return Array.from({ length: this.rows });
-}
-/** 整列雙擊 → 觸發「檢視」；編輯中或點到互動元件時不觸發 */
-onRowDblClick(ev: MouseEvent, rowData: any, editing: boolean) {
-  // 若未開放檢視按鈕，雙擊也不做事
-  if (!this.showDetail) return;
-
-  // 編輯中不觸發檢視
-  if (editing) {
-    ev.stopPropagation();
-    return;
+  // 點展開按鈕時先阻止冒泡，再走原有邏輯
+  onToggleRow(ev: MouseEvent, rowData: any) {
+    ev?.stopPropagation();
+    this.toggleRowExpansion(rowData);
   }
 
-  // 點到可互動元素（避免與按鈕/輸入交互衝突）則不觸發
-  const target = ev.target as HTMLElement;
-  if (
-    target.closest(
-      [
-        'button',
-        'a',
-        'input',
-        'textarea',
-        'select',
-        '[role="button"]',
-        '.p-button',
-        '.p-inputtext',
-        '.p-dropdown',
-        '.p-multiselect',
-        '.p-calendar',
-        '.p-checkbox',
-        '.p-inputswitch',
-        '.p-radiobutton',
-        '.p-fileupload',
-      ].join(',')
-    )
-  ) {
-    return;
+  //（可選）若要在「使用 pRowToggler / 外部展開事件」時自動載入明細，可用這一個。
+  //有用 (onRowExpand)="onRowExpandHandler($event)" 才會觸發；你現在是手動按鈕就可以不加。
+  onRowExpandHandler(event: any) {
+    const rowData = event?.data ?? event; // PrimeNG 版本差異
+    if (!rowData) return;
+
+    if (this.expansionLoadFn && !rowData[this.expansionDataKey]?.length && !rowData.expansionLoading) {
+      rowData.expansionLoading = true;
+      this.expansionLoadFn(rowData).subscribe({
+        next: (resp: any) => {
+          // 允許回傳 { Data: [...] } 或直接 [...]
+          const list = Array.isArray(resp?.Data) ? resp.Data : (Array.isArray(resp) ? resp : []);
+          rowData[this.expansionDataKey] = list;
+          rowData.expansionLoading = false;
+        },
+        error: () => { rowData.expansionLoading = false; }
+      });
+    }
+  }
+  getColMinWidth(col: any): string {
+    const text = (col?.header ?? '').toString();
+    // 用展開運算子避免代理對（emoji/CJK 擴充等）計數錯誤
+    const len = [...text].length;
+
+    // 基準：每字 1ch，保留 sortIcon/必填星號/邊距空間；下限/上限做個夾取
+    const ch = Math.max(6, Math.min(40, len + 2)); // 6ch~40ch
+    return `calc(${ch}ch + 1.25rem)`; // 多 1.25rem 做左右 padding / icon 空間
   }
 
-  // 真的進入檢視（等同按右側「檢視」鈕）
-  this.detailRow(rowData);
-}
+
+  get bodyColumnsOrdered(): any[] {
+    if (this.hasTwoHeaderRows) {
+      return [
+        ...this.leftFixedHeaderColumns,
+        ...this.headerRow1Columns,
+        ...this.headerRow2Columns,
+      ];
+    } else {
+      return [
+        ...this.leftFixedHeaderColumns,
+        ...this.headerRow1Columns,
+      ];
+    }
+  }
+
+
+
+  // -----------------------------------------------------
+  /** 取得目前可見欄位（selectedColumns 優先，其次 columns） */
+  private get visibleCols() {
+    const cols = this.selectedColumns?.length ? this.selectedColumns : this.columns || [];
+    return cols.filter(c => c.visible !== false && c.hidden !== true);
+  }
+
+  /** 沒有 headerRow（= undefined/null）的欄位：固定放最左邊，且表頭要 rowspan=2 */
+  get leftFixedHeaderColumns() {
+    return this.visibleCols.filter(c => c.headerRow == null);
+  }
+
+  /** 表頭第 1 列欄位（headerRow = 1） */
+  get headerRow1Columns() {
+    return this.visibleCols.filter(c => c.headerRow === 1);
+  }
+
+  /** 表頭第 2 列欄位（headerRow = 2） */
+  get headerRow2Columns() {
+    return this.visibleCols.filter(c => c.headerRow === 2);
+  }
+
+
+  /** 是否需要兩列表頭：只要有任一個 row2 欄位就需要；或你也可強制兩列 */
+  get hasTwoHeaderRows(): boolean {
+    return this.headerRow2Columns.length > 0;
+  }
+  get skeletonRows(): any[] {
+    return Array.from({ length: this.rows });
+  }
+  /** 整列雙擊 → 觸發「檢視」；編輯中或點到互動元件時不觸發 */
+  onRowDblClick(ev: MouseEvent, rowData: any, editing: boolean) {
+    // 若未開放檢視按鈕，雙擊也不做事
+    if (!this.showDetail) return;
+
+    // 編輯中不觸發檢視
+    if (editing) {
+      ev.stopPropagation();
+      return;
+    }
+
+    // 點到可互動元素（避免與按鈕/輸入交互衝突）則不觸發
+    const target = ev.target as HTMLElement;
+    if (
+      target.closest(
+        [
+          'button',
+          'a',
+          'input',
+          'textarea',
+          'select',
+          '[role="button"]',
+          '.p-button',
+          '.p-inputtext',
+          '.p-dropdown',
+          '.p-multiselect',
+          '.p-calendar',
+          '.p-checkbox',
+          '.p-inputswitch',
+          '.p-radiobutton',
+          '.p-fileupload',
+        ].join(',')
+      )
+    ) {
+      return;
+    }
+
+    // 真的進入檢視（等同按右側「檢視」鈕）
+    this.detailRow(rowData);
+  }
 
 }

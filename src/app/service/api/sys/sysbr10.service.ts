@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { ApiResponse } from '../../system/auth.service';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class SYSBR10Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService,
-  ) {}
+  ) { }
 
   // ✅ 查詢列表
   querySYSBR10(query: any): Observable<ApiResponse<any[]>> {
@@ -23,7 +23,7 @@ export class SYSBR10Service {
       query
     ).pipe(
       tap(res => console.log('查詢結果:', res)),
-     
+
     );
   }
 
@@ -34,7 +34,7 @@ export class SYSBR10Service {
       { pos5101_id }
     ).pipe(
       tap(res => console.log('明細結果:', res)),
-      
+
     );
   }
 
@@ -45,7 +45,7 @@ export class SYSBR10Service {
       data
     ).pipe(
       tap(res => console.log('新增結果:', res)),
-     
+
     );
   }
 
@@ -58,7 +58,7 @@ export class SYSBR10Service {
       data
     ).pipe(
       tap(res => console.log('更新結果:', res)),
-      
+
     );
   }
 
@@ -69,17 +69,17 @@ export class SYSBR10Service {
       { idList }
     ).pipe(
       tap(res => console.log('刪除結果:', res)),
-     
+
     );
   }
-updateSYSBR10_PubEable(payload: { id: number; pub_enable: 'Y' | 'N' }): Observable<ApiResponse<any>> {
-  return this.http.post<ApiResponse<any>>(
-    `${this.apiUrl}/SYS0000/BAS1000/updateSYSBR10_PubEable`,
-    payload
-  ).pipe(
-   
-  );
-}
+  updateSYSBR10_PubEable(payload: { id: number; pub_enable: 'Y' | 'N' }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/SYS0000/BAS1000/updateSYSBR10_PubEable`,
+      payload
+    ).pipe(
+
+    );
+  }
 
 
 }

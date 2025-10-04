@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { ApiResponse } from '../../system/auth.service';
 
 @Injectable({
@@ -20,7 +20,7 @@ export class FIN13010Service {
   queryFIN13010(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13010`, query).pipe(
       tap(res => console.log('查詢結果:', res)),
-   
+
     );
   }
   queryINV1000List(param: { GUI_Track: string }) {
@@ -35,7 +35,7 @@ export class FIN13010Service {
   insertFIN13010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13010`, data).pipe(
       tap(res => console.log('新增結果:', res)),
-    
+
     );
   }
 
@@ -43,7 +43,7 @@ export class FIN13010Service {
   updateFIN13010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13010`, data).pipe(
       tap(res => console.log('更新結果:', res)),
-      
+
     );
   }
   queryDetailByPURGUINo(param: { PUR_GUINo: string }) {

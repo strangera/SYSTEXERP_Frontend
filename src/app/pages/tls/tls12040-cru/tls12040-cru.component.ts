@@ -18,9 +18,9 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { CheckboxModule } from 'primeng/checkbox';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
 import { AccordionModule } from "primeng/accordion";
 import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
@@ -46,7 +46,7 @@ interface CategoryItem {
   templateUrl: './tls12040-cru.component.html',
   styleUrl: './tls12040-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, CheckboxModule, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarRangeComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule, InputTextareaComponent, AccordionModule, ExpandableEditTableComponent, RadiobuttonComponent, MultiSelectComponent]
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, CheckboxModule, EditorTextComponent, NgFor, CalendarRangeComponent, NgIf, TranslateModule, InputTextareaComponent, AccordionModule, ExpandableEditTableComponent, RadiobuttonComponent, MultiSelectComponent]
 })
 export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   locationData: LocationDetails[] = [];

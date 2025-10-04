@@ -1,6 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
 import { AuthService } from '../../../service/system/auth.service';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
+import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { Subject, takeUntil, timer } from 'rxjs';
 import { FormGroup } from '@angular/forms';
 import { Button } from 'primeng/button';

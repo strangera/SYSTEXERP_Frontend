@@ -1,6 +1,6 @@
-import { CurrentPageService } from './../../../layout/app.menulist/current-page.service';
+import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
 // 直接導入需要的服務，不再繼承

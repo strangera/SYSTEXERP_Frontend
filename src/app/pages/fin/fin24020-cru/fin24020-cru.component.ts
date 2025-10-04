@@ -15,17 +15,17 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 // 1.1.4.1 補登進項稅額 CRU
 @Component({
-    selector: 'app-fin24020-cru',
-    templateUrl: './fin24020-cru.component.html',
-    styleUrl: './fin24020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, InputTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin24020-cru',
+  templateUrl: './fin24020-cru.component.html',
+  styleUrl: './fin24020-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, InputTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN24020CRUComponent extends BasicCrupageComponent implements OnInit {
   //

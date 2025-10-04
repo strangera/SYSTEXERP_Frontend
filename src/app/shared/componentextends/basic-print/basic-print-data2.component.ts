@@ -1,5 +1,5 @@
 import { saveAs } from 'file-saver';
-import { CurrentPageService } from './../../../layout/app.menulist/current-page.service';
+import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { QueryStateService } from '../../service/query-state.service';

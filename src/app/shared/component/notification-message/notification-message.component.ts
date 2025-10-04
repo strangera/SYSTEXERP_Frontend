@@ -6,13 +6,16 @@ import { NgFor, NgIf } from '@angular/common';
 import { Button, ButtonDirective } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
+@UntilDestroy()
 @Component({
   selector: 'app-notification-message',
   templateUrl: './notification-message.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor]
+  imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor],
+  providers: [MessageService, ConfirmationService]
 })
 export class NotificationMessageComponent implements OnInit {
   msgBoxHeader = '';
@@ -35,19 +38,19 @@ export class NotificationMessageComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.notificationService.bubbleMsg$.subscribe((message) => {
+    this.notificationService.bubbleMsg$.pipe(untilDestroyed(this)).subscribe((message) => {
       if (message) {
         this.messageService.add(message);
       }
     });
 
-    this.notificationService.boxMsg$.subscribe((opts) => {
+    this.notificationService.boxMsg$.pipe(untilDestroyed(this)).subscribe((opts) => {
       this.msgBoxHeader = opts.header || 'Alert';
       this.msgBoxMessage = opts.message;
       this.msgBoxDisplay = true;
     });
 
-    this.notificationService.confirmMsg$.subscribe((opts) => {
+    this.notificationService.confirmMsg$.pipe(untilDestroyed(this)).subscribe((opts) => {
       this.showIcon = opts.showIcon === true; // 只有明確設定為 true 時才顯示圖示
       this.extraButtons = opts.extraButtons || [];
       this.confirmationService.confirm({
@@ -68,15 +71,15 @@ export class NotificationMessageComponent implements OnInit {
       });
     });
 
-    this.notificationService.blockUiMsg$.subscribe((blocked) => {
+    this.notificationService.blockUiMsg$.pipe(untilDestroyed(this)).subscribe((blocked) => {
       this.blockedDocument = blocked;
     });
 
-    this.notificationService.blockUiMsg$.subscribe(() => {
+    this.notificationService.blockUiMsg$.pipe(untilDestroyed(this)).subscribe(() => {
       this.blockedDocument = false;
     });
 
-    this.notificationService.inputBoxMsg$.subscribe((opts) => {
+    this.notificationService.inputBoxMsg$.pipe(untilDestroyed(this)).subscribe((opts) => {
       this.inputBoxDisplay = true;
       this.inputBoxHeader = opts.header;
       this.inputBoxMessage = opts.message || '';

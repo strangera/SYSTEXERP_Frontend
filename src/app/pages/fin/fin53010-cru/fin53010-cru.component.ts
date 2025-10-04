@@ -14,31 +14,31 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
-    selector: 'app-fin53010-cru',
-    templateUrl: './fin53010-cru.component.html',
-    styleUrl: './fin53010-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        CalendarComponent,
-        CheckboxModule,
-        NgFor,
-        ButtonDynamicallydeleteComponent,
-        ButtonDynamicallyaddComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-fin53010-cru',
+  templateUrl: './fin53010-cru.component.html',
+  styleUrl: './fin53010-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+    CheckboxModule,
+    NgFor,
+
+
+    ButtonComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 export class FIN53010CRUComponent
   extends BasicCrupageComponent

@@ -20,18 +20,18 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 //3.1.1.7 備用供應商資料維護作業 CRU
 @Component({
-    selector: 'app-ass11070-cru',
-    templateUrl: './ass11070-cru.component.html',
-    styleUrl: './ass11070-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, NgFor, ButtonDynamicallydeleteComponent, EditorTextComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass11070-cru',
+  templateUrl: './ass11070-cru.component.html',
+  styleUrl: './ass11070-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, NgFor, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS11070CRUComponent extends BasicCrupageComponent implements OnInit {
   receptionPersonOptions: any[] = [];

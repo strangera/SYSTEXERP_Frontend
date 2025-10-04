@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../system/error-handler.service';
+import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { Observable, of } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 
@@ -44,7 +44,7 @@ export class InstallmentPeriodService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   /**
    * 從後端 SYS1000 取得分期期數下拉資料

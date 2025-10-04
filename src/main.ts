@@ -6,22 +6,19 @@ import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, UrlSerializer } from '@angular/router';
 import { JwtModule } from '@auth0/angular-jwt';
-import { QueryCacheInterceptorService } from '@interceptors/querycacheinterceptor.service';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DialogModule } from 'primeng/dialog';
-import { ToastModule } from 'primeng/toast';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routing';
-import { AuthinterceptorService } from './app/interceptors/authinterceptor.service';
-import { CustomheaderinterceptorService } from './app/interceptors/customheaderinterceptor.service';
-import { DateToISOStringInterceptor } from './app/interceptors/dateToISOStringInterceptor.interceptor';
-import { ErrorinterceptorService } from './app/interceptors/errorinterceptor.service';
-import { LowerCaseUrlSerializer } from './app/utils/LowerCaseUrlSerializer';
+import { AuthinterceptorService } from './app/core/interceptors/authinterceptor.service';
+import { CustomheaderinterceptorService } from './app/core/interceptors/customheaderinterceptor.service';
+import { DateToISOStringInterceptor } from './app/core/interceptors/dateToISOStringInterceptor.interceptor';
+import { ErrorinterceptorService } from './app/core/interceptors/errorinterceptor.service';
+import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
+import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -37,7 +34,7 @@ export function tokenGetter() {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(ConfirmDialogModule, ToastModule, DialogModule, BrowserModule,
+    importProvidersFrom(BrowserModule,
       TranslateModule.forRoot({
         loader: {
           provide: TranslateLoader,
@@ -53,7 +50,7 @@ bootstrapApplication(AppComponent, {
         }
       }),
       LoggerModule.forRoot({
-        level: NgxLoggerLevel.TRACE, // 設定log等級
+        level: environment.production ? NgxLoggerLevel.OFF : NgxLoggerLevel.TRACE, // 設定log等級
         serverLogLevel: NgxLoggerLevel.ERROR, // 設定伺服器log等級
         // serverLoggingUrl: `${environment.ApiUrl}/log`, // 設定伺服器接收log的API
         // enableSourceMaps: !environment.production,

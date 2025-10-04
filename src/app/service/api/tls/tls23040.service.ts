@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { tap, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Injectable({ providedIn: 'root' })
 export class TLS23040Service {
@@ -11,7 +11,7 @@ export class TLS23040Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   /** 查詢（頁面用） */
   queryTLS23040(body: any): Observable<any> {
