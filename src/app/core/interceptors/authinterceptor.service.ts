@@ -8,9 +8,9 @@ import { AuthService } from '@service/system/auth.service';
 @Injectable()
 export class AuthinterceptorService implements HttpInterceptor {
 
-  constructor(private authService: AuthService) { }
+  constructor(private readonly authService: AuthService) { }
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // 使用 AuthService 中判斷是否登入（包含 Token 是否過期）的方法
     // 注意：這裡只負責在請求發送前附加 Token
     // Token 過期或無效導致的 401 錯誤將由 ErrorinterceptorService 處理

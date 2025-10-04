@@ -116,10 +116,6 @@
   > tr:not(.p-highlight):hover {
   background: var(--surface-hover) !important; /* 使用你的 hover 背景顏色變數 */
   color: var(--text-color); /* 使用你的文字顏色變數 */
-
-  td {
-    border-radius: 0.75rem !important;
-  }
 }
 .p-overlaypanel-content
   .p-datatable.p-datatable-hoverable-rows

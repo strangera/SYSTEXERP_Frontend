@@ -7,13 +7,13 @@ import { DOCUMENT } from '@angular/common';
   providedIn: 'root'
 })
 export class InactivityService {
-  private timeoutId: any;
+  private timeoutId: ReturnType<typeof setTimeout> | undefined;
   private readonly timeout: number = 10 * 60 * 1000 * 6 * 8; // 10 minutes
 
   constructor(
-    private authService: AuthService,
-    @Inject(DOCUMENT) private document: Document,
-    private ngZone: NgZone
+    private readonly authService: AuthService,
+    @Inject(DOCUMENT) private readonly document: Document,
+    private readonly ngZone: NgZone
   ) {
   }
 

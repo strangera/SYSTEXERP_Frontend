@@ -7,7 +7,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
-import { DropDownListService, IDropdownItem, POS2004Item, TLTTALENT_CHARGEData } from '../../../../service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, POS2004Item, TltTalentChargeData } from '../../../../service/utility/dropDownList.service';
 import { POS5007Data } from '../../../../service/api/tls/tls24010.service';
 import { ButtonModule } from 'primeng/button';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -46,7 +46,7 @@ export class Tls24010Pos5007Component implements OnChanges {
   POS5007Data: POS5007Data[] = [];
   POS5007SelectedItems: POS5007Data[] = [];
   POS2004Options: POS2004Item[] = []; //下拉選單 商品資料
-  tlt_idOptions: TLTTALENT_CHARGEData[] = []; //下拉選單 類別
+  tlt_idOptions: TltTalentChargeData[] = []; //下拉選單 類別
   TLT_NoOptions: IDropdownItem[] = [];
   trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
   constructor(

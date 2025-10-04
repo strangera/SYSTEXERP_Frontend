@@ -9,11 +9,11 @@ import { AuthService } from '../../service/system/auth.service';
   providedIn: 'root'
 })
 export class ErrorHandlerService {
-  private LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS: string = environment.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS;
+  private readonly LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS: string = environment.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS;
 
   constructor(
-    private notificationService: NotificationService,
-    private authService: AuthService,
+    private readonly notificationService: NotificationService,
+    private readonly authService: AuthService,
   ) { }
 
   handleError(error: HttpErrorResponse): Observable<never> {

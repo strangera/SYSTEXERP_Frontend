@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 
 export interface AppConfig {
   inputStyle: string;
-  colorScheme: string;
+  colorScheme: 'light' | 'dark';
   theme: string;
   ripple: boolean;
   menuMode: string;
@@ -29,15 +29,15 @@ export class LayoutService {
   isConfigSidebarVisible = signal(false);      // 配置側邊欄是否可見 (你原先的 configSidebarVisible)
   isMenuHoverActive = signal(false);           // 菜單懸停是否活躍 (你原先的 menuHoverActive)
 
-  private configUpdate = new Subject<AppConfig>();
-  private overlayOpen = new Subject<void>();
+  private readonly configUpdate = new Subject<AppConfig>();
+  private readonly overlayOpen = new Subject<void>();
   configUpdate$ = this.configUpdate.asObservable();
   overlayOpen$ = this.overlayOpen.asObservable();
 
   constructor() {
     effect(() => {
       const config = this.config();
-      this.updateThemeClass(config.colorScheme === 'dark');
+      this.updateThemeClass(config.colorScheme);
       // 當 colorScheme 或 theme 改變時才需要重新載入
       if (
         config.colorScheme !== this.initialConfig.colorScheme ||
@@ -78,14 +78,12 @@ export class LayoutService {
       if (this.isOverlayMenuActive()) {
         this.overlayOpen.next();
       }
-    } else { // Static menu mode
-      if (this.isDesktop()) {
-        this.isStaticMenuDesktopInactive.update(val => !val);
-      } else { // Mobile mode
-        this.isStaticMenuMobileActive.update(val => !val);
-        if (this.isStaticMenuMobileActive()) {
-          this.overlayOpen.next();
-        }
+    } else if (this.isDesktop()) {// Static menu mode
+      this.isStaticMenuDesktopInactive.update(val => !val);
+    } else { // Mobile mode
+      this.isStaticMenuMobileActive.update(val => !val);
+      if (this.isStaticMenuMobileActive()) {
+        this.overlayOpen.next();
       }
     }
     // 確保只在菜單實際打開時發送 overlayOpen 事件
@@ -130,11 +128,11 @@ export class LayoutService {
     this.configUpdate.next(this.config());
   }
 
-  updateThemeClass(isDark: boolean) {
-    if (isDark) {
+  updateThemeClass(colorScheme: 'light' | 'dark') {
+    if (colorScheme === 'dark') {
       document.documentElement.classList.add('dark-theme');
       document.documentElement.classList.remove('light-theme');
-    } else {
+    } else if (colorScheme === 'light') {
       document.documentElement.classList.add('light-theme');
       document.documentElement.classList.remove('dark-theme');
     }

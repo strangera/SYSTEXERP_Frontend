@@ -15,6 +15,7 @@ import { registerLocaleData } from '@angular/common';
 import zhHant from '@angular/common/locales/zh-Hant';
 import { InactivityService } from '../../core/services/inactivity.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Favorite } from '@shared/component/menubar/menubar.component';
 registerLocaleData(zhHant, 'zh-Hant-TW');
 export interface OuterTokenResponse {
   token: string;
@@ -45,26 +46,26 @@ export interface ApiResponse<T> {
 })
 export class AuthService {
   private inactivityService?: InactivityService;
-  private apiUrl: string = environment.ApiUrl;
-  private userSubject: BehaviorSubject<UserInfo | null>;
+  private readonly apiUrl: string = environment.ApiUrl;
+  private readonly userSubject: BehaviorSubject<UserInfo | null>;
   public user: Observable<UserInfo | null>;
-  private _menuUpdated = new BehaviorSubject<any[]>([]);
+  private readonly _menuUpdated = new BehaviorSubject<FunsrightInfo[]>([]);
   menuUpdated = this._menuUpdated.asObservable();
-  private _sys1000 = new BehaviorSubject<any[]>([]);
+  private readonly _sys1000 = new BehaviorSubject<unknown[]>([]);
   sys1000 = this._sys1000.asObservable();
-  private jwtHelper: JwtHelperService;
+  private readonly jwtHelper: JwtHelperService;
   private client_ip = '0.0.0.0';
 
   constructor(
-    private router: Router,
-    private http: HttpClient,
-    private encrypt: EncryptionService,
-    private notemessage: NotificationService,
-    private queryStateService: QueryStateService,
-    private httpBackend: HttpBackend,
-    private injector: Injector,
+    private readonly router: Router,
+    private readonly http: HttpClient,
+    private readonly encrypt: EncryptionService,
+    private readonly notemessage: NotificationService,
+    private readonly queryStateService: QueryStateService,
+    private readonly httpBackend: HttpBackend,
+    private readonly injector: Injector,
   ) {
-    const userStorage: any = this.getUserInfo();
+    const userStorage = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
     this.user = this.userSubject.asObservable();
     const storedFunRightsInfo = sessionStorage.getItem('FunRightsInfo');
@@ -95,7 +96,7 @@ export class AuthService {
   }
   isLoggedIn(): boolean {
     const user = this.currentUserValue; // 獲取當前用戶資訊
-    if (user && user.AccessToken) {
+    if (user?.AccessToken) {
       const isTokenExpired = this.jwtHelper.isTokenExpired(user.AccessToken);
       if (isTokenExpired) { return false; }
       return true; // Token 存在且未過期
@@ -116,9 +117,8 @@ export class AuthService {
           localStorage.setItem('UserInfo', JSON.stringify(userInfo));
           this.userSubject.next(userInfo);
 
-          if (!this.inactivityService) {
-            this.inactivityService = this.injector.get(InactivityService);
-          }
+          this.inactivityService ??= this.injector.get(InactivityService);
+
           this.inactivityService.setupListener();
           this.inactivityService.startTimer();
           this.queryStateService.clearAllQueryStates();
@@ -142,7 +142,7 @@ export class AuthService {
     const token = userInfoStr ? userInfoStr.AccessToken : null;
     // 如果有 Token 且需要後端登出，才發送請求
     if (token) {
-      this.http.post<ApiResponse<any>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
+      this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
         catchError((error) => {
           // 後端登出失敗不影響前端登出狀態，但可以記錄錯誤
           console.error('後端登出請求失敗:', error);
@@ -164,21 +164,23 @@ export class AuthService {
     this.notemessage.infoBubble('已成功登出');
   }
   // 獲取我的最愛
-  getFavorites(user_No?: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/User/GetUserFavorite`, { user_No: user_No }).pipe(
-      map((response: any) => {
+  getFavorites(user_No?: string): Observable<ApiResponse<Favorite[]>> {
+    return this.http.post<ApiResponse<Favorite[]>>(`${this.apiUrl}/User/GetUserFavorite`, { user_No: user_No }).pipe(
+      map((response: ApiResponse<Favorite[]>) => { // 使用 ApiResponse<unknown>
+        // 雖然 Data 結構是未知的，但 response 結構是已知的
         sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
         return response;
-      }));
+      })
+    );
   }
   // 更新我的最愛
-  UpdateUserFavorite(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
+  UpdateUserFavorite(body: Favorite[]): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
   }
   // 獲取使用者權限
-  getFunRightsInfo(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
-      map((response: any) => {
+  getFunRightsInfo(): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
+      map((response: ApiResponse<any>) => {
         sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
         this._menuUpdated.next(response.Data.funright_info);
         return response;
@@ -190,9 +192,9 @@ export class AuthService {
     );
   }
   // 獲得系統代碼檔
-  queryAllSystemCode(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
-      map((response: any) => {
+  queryAllSystemCode(): Observable<ApiResponse<unknown[]>> { // 確保 Data 是一個陣列
+    return this.http.post<ApiResponse<unknown[]>>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
+      map((response: ApiResponse<unknown[]>) => {
         sessionStorage.setItem('SYS1000', JSON.stringify(response.Data));
         this._sys1000.next(response.Data);
         return response;

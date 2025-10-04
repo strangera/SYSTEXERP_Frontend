@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class CurrentPageService {
-  private progNoSource = new BehaviorSubject<string | null>(null);
+  private readonly progNoSource = new BehaviorSubject<string | null>(null);
   currentPageProgNo$ = this.progNoSource.asObservable();
   currentPageProgNoSubject = this.progNoSource; // 暴露 BehaviorSubject
 

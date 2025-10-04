@@ -7,10 +7,10 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class AppMenulistService {
-  private menuUpdatedSource = new BehaviorSubject<MenuItem[]>([]); // 使用 BehaviorSubject 儲存最新的選單資料，初始值為空陣列
+  private readonly menuUpdatedSource = new BehaviorSubject<MenuItem[]>([]); // 使用 BehaviorSubject 儲存最新的選單資料，初始值為空陣列
   menuUpdated = this.menuUpdatedSource.asObservable(); // 將 BehaviorSubject 轉換為 Observable，供外部訂閱
 
-  private fixedMenuItems: MenuItem[] = [
+  private readonly fixedMenuItems: MenuItem[] = [
     {
       prog_No: '000',
       label: '首頁',
@@ -59,6 +59,19 @@ export class AppMenulistService {
     const dynamicMenu: MenuItem[] = [];
     // 先處理所有節點，建立基本的 MenuItem 物件並放入 menuLookup
     lists.forEach(({ prog_id, prog_No, prog_name, prog_up, prog_ispage, prog_sort, sub_module_no }) => {
+      // --- 提取 icon 邏輯到獨立的 if/else 結構 ---
+      let itemIcon: string;
+
+      if (prog_ispage === 'Y') {
+        // 條件 1: 如果是頁面
+        itemIcon = 'pi pi-bookmark';
+      } else if (sub_module_no === "") {
+        // 條件 2: 如果不是頁面，且 sub_module_no 為空字串
+        itemIcon = 'pi pi-home';
+      } else {
+        // 條件 3: 既不是頁面，且 sub_module_no 不為空
+        itemIcon = 'pi pi-box';
+      }
       const menuItem: MenuItem = {
         prog_No: prog_No,
         label: prog_name,
@@ -66,7 +79,7 @@ export class AppMenulistService {
         routerLink: prog_ispage === 'Y' ? `/account/${prog_No.slice(0, 3).toLowerCase()}/${prog_No.toLowerCase()}` : undefined,
         items: undefined,
         expanded: false,
-        icon: prog_ispage === 'Y' ? 'pi pi-bookmark' : sub_module_no === "" ? "pi pi-home" : 'pi pi-box',
+        icon: itemIcon,
         hasChildrenOnly: false,
         prog_ispage: prog_ispage,
         prog_sort: prog_sort || 0, // 確保 prog_sort 有預設值，方便排序
@@ -81,7 +94,7 @@ export class AppMenulistService {
       const menuItem = menuLookup.get(prog_No);
       if (menuItem) {
         if (prog_up !== "") {
-          const parentItem = menuLookup.get(prog_up as string);
+          const parentItem = menuLookup.get(prog_up);
           if (parentItem) {
             parentItem.items = parentItem.items || [];
             parentItem.items.push(menuItem);

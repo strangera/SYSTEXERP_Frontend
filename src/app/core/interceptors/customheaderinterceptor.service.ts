@@ -7,7 +7,7 @@ import { environment } from 'src/environments/environment';
 @Injectable()
 export class CustomheaderinterceptorService implements HttpInterceptor {
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // TransactionTime
     const utc_now = formatDate(new Date(), 'yyyy/MM/ddThh:mm:ssZ', 'zh-Hant-TW');
 

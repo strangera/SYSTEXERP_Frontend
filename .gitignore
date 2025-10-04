@@ -44,4 +44,4 @@ src/environments/environment.ts
 
 # sonarQube
 
-.scannerwork
+.scannerwork/

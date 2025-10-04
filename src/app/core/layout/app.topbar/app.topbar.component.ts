@@ -21,15 +21,15 @@ import { AuthService } from '@service/system/auth.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 
 interface Favorite {
-  USER_No: string,
+  USER_No?: string,
   PROG_No: string,
   FVT_SeqNo: number,
-  CRT_Date: string | null,
-  CRT_USR_No: string | null,
-  CRT_USR_Name: string | null,
-  UPD_Date: string | null,
-  UPD_USR_No: string | null,
-  UPD_USR_Name: string | null
+  CRT_Date?: string | null,
+  CRT_USR_No?: string | null,
+  CRT_USR_Name?: string | null,
+  UPD_Date?: string | null,
+  UPD_USR_No?: string | null,
+  UPD_USR_Name?: string | null
 }
 @UntilDestroy()
 @Component({
@@ -81,8 +81,8 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     {
       label: '個人資料',
       items: [
-        { label: '回主畫面', icon: 'pi pi-home', command: () => this.router.navigate(['/sso/dashboard']) },
-        { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => this.router.navigate(['/account/changepsw']) },
+        { label: '回主畫面', icon: 'pi pi-home', command: () => void this.router.navigate(['/sso/dashboard']) },
+        { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => void this.router.navigate(['/account/changepsw']) },
         { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
       ]
     },
@@ -96,9 +96,9 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   constructor(
     public layoutService: LayoutService,
     public authService: AuthService,
-    private formBuilder: FormBuilder,
+    private readonly formBuilder: FormBuilder,
     public router: Router,
-    private messageService: NotificationService,
+    private readonly messageService: NotificationService,
   ) { }
   ngOnInit() {
     // 當權限更新時
@@ -171,9 +171,9 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     }
     for (const f of this.funRightsInfo) {
       if (f.prog_ispage === 'Y') {
-        const matchProgNo = f.prog_No && f.prog_No.toLowerCase().includes(query);
+        const matchProgNo = f.prog_No?.toLowerCase().includes(query);
         const matchProgID = f.prog_id !== null && f.prog_id !== undefined && String(f.prog_id).toLowerCase().includes(query);
-        const matchProgName = f.prog_name && f.prog_name.toLowerCase().includes(query);
+        const matchProgName = f.prog_name?.toLowerCase().includes(query);
         if (f.label && (matchProgNo || matchProgID || matchProgName)) {
           filtered.push({ label: f.label, value: f });
         }

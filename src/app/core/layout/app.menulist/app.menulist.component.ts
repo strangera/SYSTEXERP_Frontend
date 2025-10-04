@@ -1,6 +1,5 @@
 import { AppMenulistService } from './app.menulist.service';
-import { ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
-import { Component } from '@angular/core';
+import { ElementRef, Input, OnDestroy, OnInit, Component } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { CurrentPageService } from './current-page.service';
@@ -26,9 +25,9 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
 
   constructor(
     public el: ElementRef,
-    private currentPageService: CurrentPageService, // 注入 Service
-    private authService: AuthService,
-    private appMenulistService: AppMenulistService,
+    private readonly currentPageService: CurrentPageService, // 注入 Service
+    private readonly authService: AuthService,
+    private readonly appMenulistService: AppMenulistService,
   ) { }
 
   ngOnInit(): void {

@@ -1,10 +1,9 @@
-import { AfterViewInit, Component, effect, ElementRef, HostListener, OnDestroy, Renderer2, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, ElementRef, HostListener, OnDestroy, Renderer2, ViewChild, computed } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { Subject, Subscription, filter } from 'rxjs';
 import { AppMenulistComponent } from './app.menulist/app.menulist.component';
 import { AppTopbarComponent } from './app.topbar/app.topbar.component';
 import { LayoutService } from './layout.service';
-import { computed } from '@angular/core';
 import { NgIf, NgClass } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { UserInfo } from '@shared/models/system/userInfo';
@@ -25,19 +24,19 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
   @ViewChild('searchInput') searchInput!: ElementRef;
   @ViewChild('sidebarContainer') sidebarContainer!: ElementRef; // 監聽滾動的容器
   @ViewChild('scrollContent') scrollContent!: ElementRef;   // 要添加 class 的元素
-  private destroy$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
 
   selectedTopMenuProgNo: string | null = null;
   activeIndex = 2;
   menuOutsideClickListener: (() => void) | null = null;
   user: UserInfo | null = null;
-  private subscriptions: Subscription[] = [];
+  private readonly subscriptions: Subscription[] = [];
   isDarkMode = computed(() => this.layoutService.config().colorScheme === 'dark');
 
   constructor(
-    private router: Router,
+    private readonly router: Router,
     public layoutService: LayoutService,
-    private authService: AuthService,
+    private readonly authService: AuthService,
     public renderer: Renderer2
   ) {
     this.subscriptions.push(this.authService.user.pipe(untilDestroyed(this)).subscribe(x => this.user = x));

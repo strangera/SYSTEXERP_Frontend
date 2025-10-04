@@ -7,10 +7,10 @@ import { QueryStateService } from '@shared/service/query-state.service';
 export class QueryCacheInterceptorService implements HttpInterceptor {
 
   constructor(
-    private queryState: QueryStateService,
+    private readonly queryState: QueryStateService,
   ) { }
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
       tap(event => {
         if (event instanceof HttpResponse && event.status === 200) {

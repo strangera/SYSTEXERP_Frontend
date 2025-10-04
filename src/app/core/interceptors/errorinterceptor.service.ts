@@ -7,9 +7,9 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 @Injectable()
 export class ErrorinterceptorService implements HttpInterceptor {
 
-  constructor(private errorHandler: ErrorHandlerService) { }
+  constructor(private readonly errorHandler: ErrorHandlerService) { }
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const maxRetries = 0;
     const retryDelayMs = 100000000;
     const timeoutMs = 300000;
@@ -42,7 +42,7 @@ export class ErrorinterceptorService implements HttpInterceptor {
           return this.errorHandler.handleError(customError);
         }
         // 處理其他所有錯誤
-        return this.errorHandler.handleError(error as HttpErrorResponse);
+        return this.errorHandler.handleError(error);
       })
     );
   }

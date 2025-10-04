@@ -2,20 +2,21 @@ import { Injectable } from '@angular/core';
 import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators'; // 注意這裡要從 'rxjs/operators' 引入 map
+import { ApiResponse } from '@service/system/auth.service';
 
 @Injectable() // 必須添加此裝飾器，以便 Angular 可以注入此服務
 export class DateToISOStringInterceptor implements HttpInterceptor {
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // 如果請求體是 FormData，則跳過日期轉換
     const clonedReq = req.body instanceof FormData ? req : req.clone({ body: this.serializeDates(req.body) });
 
     return next.handle(clonedReq).pipe(
-      map((event: HttpEvent<any>) => {
+      map((event: HttpEvent<ApiResponse<unknown>>) => {
         if (event instanceof HttpResponse && event.body) {
           const body = event.body;
-          // 假設你的日期數據在響應的 'Data' 屬性中
           if (body.Data) {
+            // 這裡的 body.Data 應當使用泛型 T 的類型，但由於是攔截器，使用 unknown
             body.Data = this.deserializeDates(body.Data);
           }
           return event.clone({ body });
@@ -26,51 +27,54 @@ export class DateToISOStringInterceptor implements HttpInterceptor {
   }
 
   /**
-   * **序列化請求數據中的 Date（到秒，無時區）**
-   * 將 Date 物件或符合日期字串格式的值轉換為 "yyyy-MM-dd'T'HH:mm:ss" 格式。
+   * **序列化請求數據中的 Date**
    * @param data 要序列化的數據。
    * @returns 序列化後的數據。
    */
-  private serializeDates(data: any): any {
+  private serializeDates<T>(data: T): T { // 使用泛型 <T>
     if (Array.isArray(data)) {
-      return data.map(item => this.serializeDates(item));
-    } else if (data !== null && typeof data === 'object') {
-      return Object.keys(data).reduce((acc, key) => {
-        const value = data[key];
+      // 這裡需要將 data 斷言為陣列類型，以讓 TypeScript 知道 map 的結果
+      return (data as unknown[]).map(item => this.serializeDates(item)) as T;
+    } else if (data !== null && typeof data === 'object' && !('getDate' in data)) {
+      // 關鍵修正：將 data 斷言為 Record<string, unknown>，告訴 TypeScript 它的索引是 string
+      const dataObject = data as Record<string, unknown>;
+      return Object.keys(dataObject).reduce((acc, key) => {
+        // 現在 dataObject[key] 是安全的 (類型為 unknown)
+        const value = dataObject[key];
         if (typeof value === 'string' && this.isDateString(value)) {
-          // 如果是字串且符合日期格式，先轉為 Date 物件再格式化，確保一致性
           const date = new Date(value);
           acc[key] = this.formatDateToISO(date);
         } else if (value instanceof Date) {
-          // 如果是 Date 物件，直接格式化
           acc[key] = this.formatDateToISO(value);
         } else {
           // 遞歸處理嵌套對象
           acc[key] = this.serializeDates(value);
         }
         return acc;
-      }, {} as any);
+      }, {} as Record<string, unknown>) as T; // 替換 as any 為 as Record<string, unknown>
     }
     return data;
   }
 
   /**
    * **反序列化響應中的日期**
-   * 將符合 ISO 8601 日期格式的字串轉換為 Date 物件。
    * @param data 要反序列化的數據。
    * @returns 反序列化後的數據。
    */
-  private deserializeDates(data: any): any {
+  private deserializeDates<T>(data: T): T { // 使用泛型 <T>
     if (Array.isArray(data)) {
-      return data.map(item => this.deserializeDates(item));
-    } else if (data !== null && typeof data === 'object') {
-      return Object.keys(data).reduce((acc, key) => {
-        const value = data[key];
+      return (data as unknown[]).map(item => this.deserializeDates(item)) as T;
+    } else if (data !== null && typeof data === 'object' && !('getDate' in data)) {
+      // 關鍵修正：將 data 斷言為 Record<string, unknown>，告訴 TypeScript 它的索引是 string
+      const dataObject = data as Record<string, unknown>;
+      return Object.keys(dataObject).reduce((acc, key) => {
+        // 現在 dataObject[key] 是安全的 (類型為 unknown)
+        const value = dataObject[key];
         acc[key] = typeof value === 'string' && this.isDateString(value)
-          ? new Date(value) // 將日期字串轉換為 Date 物件
-          : this.deserializeDates(value); // 遞歸處理嵌套對象
+          ? new Date(value)
+          : this.deserializeDates(value);
         return acc;
-      }, {} as any);
+      }, {} as Record<string, unknown>) as T; // 替換 as any
     }
     return data;
   }

@@ -16,8 +16,10 @@ export interface IExportLabelRequest {
   providedIn: 'root'
 })
 export class ExportLabelService {
-  private apiUrl = environment.ApiUrl;
-
+  private readonly apiUrl = environment.ApiUrl;
+  constructor(
+    private readonly http: HttpClient,
+  ) { }
   ExportLabel(data: IExportLabelRequest[]): Observable<HttpResponse<Blob>> {
     // 如果後端需要 Content-Type: application/json，你可能需要設定 headers
     const headers = new HttpHeaders({
@@ -35,7 +37,4 @@ export class ExportLabelService {
     );
   }
 
-  constructor(
-    private http: HttpClient,
-  ) { }
 }

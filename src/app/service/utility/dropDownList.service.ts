@@ -141,7 +141,7 @@ export interface POS1002Item {
   Remark?: string
 }
 
-export interface TLTTALENT_CHARGEData {
+export interface TltTalentChargeData {
   tlt_id: string,
   tlt_id_desc: string,
   cag_taxtype: string,
@@ -203,10 +203,10 @@ export interface IAPS1003Item {
   providedIn: 'root'
 })
 export class DropDownListService {
-  private apiUrl = environment.ApiUrl;
+  private readonly apiUrl = environment.ApiUrl;
 
   constructor(
-    private http: HttpClient,
+    private readonly http: HttpClient,
   ) { }
 
   queryPLULOGO_HOS_No_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -451,8 +451,8 @@ export class DropDownListService {
     return this.http.post<ApiResponse<POS2004Item[]>>(`${this.apiUrl}/queryPOS2004_DropDownList`, { TLT_NO });
   }
   // 查詢專櫃抽成主檔(TLTTALENT_CHARGE)資料表下拉選單
-  queryTLTTALENT_CHARGE_DropDownList(talent_id?: number): Observable<ApiResponse<TLTTALENT_CHARGEData[]>> {
-    return this.http.post<ApiResponse<TLTTALENT_CHARGEData[]>>(`${this.apiUrl}/queryTLTTALENT_CHARGE_DropDownList`, { talent_id });
+  queryTLTTALENT_CHARGE_DropDownList(talent_id?: number): Observable<ApiResponse<TltTalentChargeData[]>> {
+    return this.http.post<ApiResponse<TltTalentChargeData[]>>(`${this.apiUrl}/queryTLTTALENT_CHARGE_DropDownList`, { talent_id });
   }
 
   // 查詢字軌(POS1018)資料表下拉選單

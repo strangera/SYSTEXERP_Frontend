@@ -16,10 +16,10 @@ export interface IExportLabelRequest {
   providedIn: 'root'
 })
 export class ExecSpFuncService {
-  private apiUrl = environment.ApiUrl;
+  private readonly apiUrl = environment.ApiUrl;
 
   constructor(
-    private http: HttpClient,
+    private readonly http: HttpClient,
   ) { }
 
   ExecSpFunc(data: IExportLabelRequest): Observable<{ Success: boolean; ErrCode: number; ErrMsg: string }> {
