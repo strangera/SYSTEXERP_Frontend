@@ -24,6 +24,8 @@ export abstract class BasicCruPageComponent<T> {
   activatedRoute = inject(ActivatedRoute);
   formLabelService = inject(FormLabelService);
   private valid = inject(ValidationService);
+
+  protected useReadonlyInsteadOfDisable = false;
   // 權限
   ProgNo = '';
   funInfo?: FunsrightInfo;
@@ -58,12 +60,17 @@ export abstract class BasicCruPageComponent<T> {
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
-  initializePage(progNo: string, form?: FormGroup) {
+  initializePage(progNo: string, form?: FormGroup, options?: { useReadonly?: boolean }) {
     this.formLabelService.clearLabels();
 
     this.ProgNo = progNo;
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    // 設定是否使用 readonly 模式 搭配各共通元件的readonly參數 by bruce tls13010 && tls12040 會用到 我先用參數搭配[readonly] = 'XXX' 或是 [readonly] = 'true' 控
+    if (options?.useReadonly) {
+      this.useReadonlyInsteadOfDisable = true;
+    }
 
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
@@ -86,7 +93,10 @@ export abstract class BasicCruPageComponent<T> {
         this.formTitle = '顯示資料';
         this.crudstatus = CRUDStatus.Read;
         form?.patchValue(state?.['rowdata']);
-        form?.disable();
+        // 根據設定決定要不要 disable
+        if (!this.useReadonlyInsteadOfDisable) {
+          form?.disable();
+        }
         break;
     }
   }

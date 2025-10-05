@@ -27,7 +27,7 @@ import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/ex
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { forkJoin, Observable } from 'rxjs';
+import { debounceTime, forkJoin, Observable, Subscription } from 'rxjs';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
 import { TLS12040Response } from '../tls12040/tls12040.component';
@@ -35,6 +35,12 @@ import { BusinessClassificationService } from './services/business-classificatio
 import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS12040ValidationService } from './validation/tls12040-validation.service';
+import { DateValidationService } from '../tls13010-cru/validation/date-validation.service';
+import { EmailValidationService } from '../tls13010-cru/validation/email-validation.service';
+import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
+import { CrudModeService } from '../tls12040/Workflow/crud-mode.service';
+import { DropdownOption } from '@shared/constants/business.constants';
 
 interface CategoryItem {
   id: number;
@@ -51,6 +57,7 @@ interface CategoryItem {
 export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   locationData: LocationDetails[] = [];
   displayLocationData: LocationDetails[] = [];
+  private subscriptions: Subscription[] = [];
 
   locationColumns: ColumnDef[] = [
     {
@@ -302,7 +309,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ----------------------------------------------------------------
   constructor(
     private translate: TranslateService,
-    private validationService: ValidationService,
+    // private validationService: ValidationService,
     private sharedDropdownService: SharedDropdownService,
     private route: ActivatedRoute, // 新增
     private tls12040Service: TLS12040Service, // 新增
@@ -311,20 +318,26 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     private flowService: TLS12040FlowService,
     private businessClassificationService: BusinessClassificationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+
+    private validationService: TLS12040ValidationService,
+    private dateValidationService: DateValidationService,
+    private emailValidationService: EmailValidationService,
+    private vendorCategoryService: VendorCategoryOptionsService,
+    public crudModeService: CrudModeService
+
   ) { super(); }
 
   ngOnInit() {
-    this.initializePage('TLS12040', this.dataForm);
-    // 先處理路由狀態
+    this.initializePage('TLS12040', this.dataForm, { useReadonly: true });
     this.handleRouterState();
-
+    this.setupVendorUniformListener();
     // 🔍 調試當前狀態
     console.log('=== CRU 狀態調試 ===');
     console.log('當前 CRUD 狀態:', this.crudstatus);
     console.log('表單標題:', this.formTitle);
     console.log('表單是否禁用:', this.dataForm.disabled);
-
+    this.setupDynamicValidators();
     // 先保護現有資料
     const existingData = this.flowService.getCruData() as any;
 
@@ -457,19 +470,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         // 設定 CRUD 狀態和標題
         this.crudstatus = crudstatus;
         this.formTitle = this.getFormTitle(crudstatus);
-
+        this.crudModeService.setCrudStatus(this.crudstatus);
         console.log('設定 CRUD 狀態:', this.crudstatus);
         console.log('表單標題:', this.formTitle);
-
-        // 根據狀態決定表單是否可編輯
-        if (this.crudstatus === CRUDStatus.Read) {
-          console.log('檢視模式：將禁用表單');
-          // 延遲禁用表單，確保初始化完成
-          setTimeout(() => {
-            this.dataForm.disable();
-            console.log('表單已禁用');
-          }, 100);
-        }
 
         // 工作流程處理：只在沒有現有流程時才初始化新流程
         if (!hasExistingFlow) {
@@ -843,13 +846,11 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 編輯模式：暫存包含位置資料
     if (this.dataForm.dirty || this.hasLocationChanges()) {
-      if (confirm('是否要儲存目前的編輯內容？')) {
-        const completeData = {
-          ...this.dataForm.value,
-          locationData: this.locationData  // 包含位置資料
-        };
-        this.flowService.setCruData(completeData);
-      }
+      const completeData = {
+        ...this.dataForm.value,
+        locationData: this.locationData  // 包含位置資料
+      };
+      this.flowService.setCruData(completeData);
     }
 
     this.router.navigate(['account/tls/tls12040'], extras);
@@ -943,46 +944,6 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   hasFieldError(fieldName: string): boolean {
     const field = this.dataForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
-  }
-
-  getFieldErrorMessage(fieldName: string): string {
-    const field = this.dataForm.get(fieldName);
-    if (field && field.errors) {
-      if (field.errors['required']) {
-        return this.getRequiredErrorMessage(fieldName);
-      }
-      if (field.errors['email']) return '請輸入正確的 Email 格式';
-      if (field.errors['maxlength']) {
-        return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
-      }
-      if (field.errors['min']) {
-        return `最小值為 ${field.errors['min'].min}`;
-      }
-      if (field.errors['max']) {
-        return `最大值為 ${field.errors['max'].max}`;
-      }
-      if (field.errors['depositRequired']) {
-        return '付款方式有值時此欄位為必填';
-      }
-    }
-    return '';
-  }
-
-  private getRequiredErrorMessage(fieldName: string): string {
-    const requiredMessages: { [key: string]: string } = {
-      'tlt_ctype_mtotal': '當前抽成別需要選擇包底類別',
-      'base_rent': '預收租金為是時固定租金為必填',
-      'CHECK_TITLE': '支票付款時票據抬頭為必填',
-      'bank_id': '匯款付款時銀行代號為必填',
-      'vendor_acct_name': '匯款付款時帳戶名稱為必填',
-      'vendor_acct_no': '匯款付款時銀行帳號為必填',
-      'credit_card': '配合聯名卡時聯名卡折數為必填',
-      'open_fees': '履約保證金付款方式有值時此欄位為必填',
-      'construct_fees': '施工保證金付款方式有值時此欄位為必填',
-      'expiration_fees': '契約屆滿保證金付款方式有值時此欄位為必填'
-    };
-
-    return requiredMessages[fieldName] || '此欄位為必填';
   }
 
   canCopyAddress(): boolean {
@@ -1549,5 +1510,187 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       'invoice_email': '發票信箱'
     };
     return fieldNames[fieldName] || fieldName;
+  }
+
+  // 新增：設定動態驗證器（從 tls13010 複製）
+  private setupDynamicValidators(): void {
+    // 設定抽成別變更監聽
+    this.dataForm.get('tlt_term_type')?.valueChanges.subscribe(() => {
+      this.validationService.updateFieldValidators(this.dataForm);
+    });
+
+    // 設定付款方式變更監聽
+    this.dataForm.get('paytype')?.valueChanges.subscribe(() => {
+      this.validationService.updatePaymentValidators(this.dataForm);
+    });
+
+    // 設定信用卡配合變更監聽（如果需要）
+    // this.dataForm.get('vip_yn')?.valueChanges.subscribe(() => {
+    //   this.validationService.updateCreditCardValidators(this.dataForm);
+    // });
+
+    // 設定日期驗證器
+    this.dateValidationService.setupDateValidators(this.dataForm, this.messageService);
+
+    // 設定預收租金相關監聽
+    this.setupRentAheadCalculation();
+
+    // 設定保證金付款方式變更監聽
+    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+      this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
+        this.validationService.updateDepositValidators(this.dataForm);
+      });
+    });
+
+    // 初始驗證器設定
+    this.validationService.updateAllValidators(this.dataForm);
+  }
+
+  // 新增：設定預收租金計算邏輯（從 tls13010 複製）
+  private setupRentAheadCalculation(): void {
+    // 監聽預收租金選項變更
+    this.dataForm.get('rent_ahead')?.valueChanges.subscribe((rentAhead) => {
+      console.log('📊 預收租金選項變更:', rentAhead);
+
+      if (rentAhead === 'Y') {
+        this.calculateRentPeriodIfPossible();
+        // 設定固定租金為必填
+        this.updateBaseRentValidators();
+      } else {
+        // 預收租金為否時，清空期數
+        this.dataForm.get('rent_period')?.setValue(0);
+        this.updateBaseRentValidators();
+      }
+    });
+
+    // 監聽契約起始日變更（使用 blur 事件模擬）
+    this.dataForm.get('tlt_bdate')?.valueChanges.pipe(
+      debounceTime(500) // 延遲觸發，模擬 blur 效果
+    ).subscribe(() => {
+      console.log('📅 契約起始日變更，檢查是否需要重新計算');
+      this.dateValidationService.validateContractDates(this.dataForm, this.messageService);
+      this.calculateRentPeriodIfPossible();
+    });
+
+    // 監聽契約迄日變更（使用 blur 事件模擬）
+    this.dataForm.get('tlt_edate')?.valueChanges.pipe(
+      debounceTime(500) // 延遲觸發，模擬 blur 效果
+    ).subscribe(() => {
+      this.calculateRentPeriodIfPossible();
+    });
+  }
+
+  // 檢查條件並計算預收租金期數
+  private calculateRentPeriodIfPossible(): void {
+    const rentAhead = this.dataForm.get('rent_ahead')?.value;
+    const startDate = this.dataForm.get('tlt_bdate')?.value;
+    const endDate = this.dataForm.get('tlt_edate')?.value;
+    if (rentAhead !== 'Y' || !startDate || !endDate) {
+      return;
+    }
+    // 使用 service 計算
+    this.dateValidationService.calculateAndSetRentPeriod(
+      this.dataForm,
+      this.messageService
+    );
+  }
+
+  private updateBaseRentValidators(): void {
+    const baseRentControl = this.dataForm.get('base_rent');
+    const rentAhead = this.dataForm.get('rent_ahead')?.value;
+
+    if (!baseRentControl) return;
+
+    baseRentControl.clearValidators();
+
+    if (rentAhead === 'Y') {
+      baseRentControl.setValidators([Validators.required, Validators.min(1)]);
+      console.log('✅ 預收租金為"是"：固定租金設為必填');
+    } else {
+      baseRentControl.setValidators([Validators.min(0)]);
+      console.log('ℹ️ 預收租金為"否"：固定租金非必填');
+    }
+
+    baseRentControl.updateValueAndValidity();
+  }
+
+  /**
+   * 觸發所有動態驗證器（用於初始化和資料載入後）
+   */
+  private triggerAllDynamicValidators(): void {
+    this.validationService.updateAllValidators(this.dataForm);
+  }
+
+  // 新增：自訂錯誤訊息處理（從 tls13010 複製）
+  getFieldErrorMessage(fieldName: string): string {
+    const field = this.dataForm.get(fieldName);
+    if (field) {
+      return this.validationService.getFieldErrorMessage(fieldName, field);
+    }
+    return '';
+  }
+
+  private setupVendorUniformListener(): void {
+    const venUniformSubscription = this.dataForm.get('ven_uniform')?.valueChanges.subscribe(venUniform => {
+      if (venUniform && venUniform.trim()) {
+        this.loadVendorInfo(venUniform);
+      } else {
+        // 清空相關欄位
+        this.dataForm.patchValue({
+          VEN_Name: '',
+          ven_no: ''
+        });
+      }
+    });
+
+    if (venUniformSubscription) this.subscriptions.push(venUniformSubscription);
+  }
+
+  private loadVendorInfo(venUniform: string): void {
+    this.loading = true;
+
+    this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
+      next: (vendors: any[]) => {
+        const matchedVendor = vendors.find((vendor: { value: string; }) => vendor.value === venUniform);
+
+        if (matchedVendor) {
+          // 更新廠商編號、廠商名稱和公司地址
+          this.dataForm.patchValue({
+            ven_no: matchedVendor.ven_no || '',
+            VEN_Name: matchedVendor.Name || matchedVendor.label || '',
+            VEN_Address: matchedVendor.VEN_Address || ''
+          });
+
+          // 立即標記為已觸碰，不需要延遲
+          this.dataForm.get('ven_no')?.markAsTouched();
+          this.dataForm.get('VEN_Name')?.markAsTouched();
+          this.dataForm.get('VEN_Address')?.markAsTouched();
+
+          this.messageService.successBubble('已自動填入廠商編號、廠商名稱和公司登記地址');
+          console.log('✅ 自動填入廠商資料:', matchedVendor);
+
+          // 立即儲存
+          this.autoSaveToWorkflow();
+        } else {
+          this.messageService.warnBubble('查無此廠商統一編號對應的資料');
+          this.dataForm.patchValue({
+            ven_no: '',
+            VEN_Name: '',
+            VEN_Address: ''
+          });
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('❌ 查詢廠商資訊失敗:', error);
+        this.messageService.errorBubble('查詢廠商資訊失敗，請檢查統一編號是否正確');
+        this.dataForm.patchValue({
+          ven_no: '',
+          VEN_Name: '',
+          VEN_Address: ''
+        });
+        this.loading = false;
+      }
+    });
   }
 }

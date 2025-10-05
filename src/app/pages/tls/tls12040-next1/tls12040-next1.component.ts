@@ -273,12 +273,12 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private loadFareDataWithPriority(): void {
     console.log('開始優先級載入扣款資料...');
 
-    // 新增模式直接初始化空資料
-    if (this.isCreateMode) {
-      console.log('新增模式：直接初始化空扣款資料');
-      this.initializeEmptyData();
-      return;
-    }
+    // // 新增模式直接初始化空資料
+    // if (this.isCreateMode) {
+    //   console.log('新增模式：直接初始化空扣款資料');
+    //   this.initializeEmptyData();
+    //   return;
+    // }
 
     // 1. 優先檢查 Next1 步驟的暫存資料
     const savedNext1Data = this.flowService.getNext1Data<Next1Data>();

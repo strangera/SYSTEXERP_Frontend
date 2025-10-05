@@ -37,6 +37,7 @@
                 [control]="dataForm.controls.apply_no"
                 [customPlaceholder]="'系統自動產生'"
                 [alwaysShowPlaceholder]="true"
+                [readonly]="true"
               >
                 [submitted]="submitted">
               </app-input-text>
@@ -47,7 +48,7 @@
                 controlName="tlt_no"
                 [control]="dataForm.controls.tlt_no"
                 [submitted]="submitted"
-                [customPlaceholder]="'系統自動產生'"
+                [customPlaceholder]="'待確認自己填還是由系統產生'"
                 [alwaysShowPlaceholder]="true"
               ></app-input-text>
             </div>
@@ -60,6 +61,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.ven_uniform"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -70,6 +72,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.ven_no"
                 [submitted]="submitted"
+                [readonly]="true"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -79,6 +82,7 @@
                 [control]="dataForm.controls.VEN_Name"
                 [submitted]="submitted"
                 [customPlaceholder]="'選擇廠商統一編號自動帶入'"
+                [readonly]="true"
                 [alwaysShowPlaceholder]="true"
               ></app-input-text>
             </div>
@@ -88,6 +92,7 @@
                 controlName="tlt_name"
                 [control]="dataForm.controls.tlt_name"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -96,6 +101,7 @@
                 controlName="contract_subno"
                 [control]="dataForm.controls.contract_subno"
                 [submitted]="submitted"
+                [readonly]="true"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -107,6 +113,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.approve_status"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -118,6 +125,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.apply_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -129,6 +137,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.apply_status"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -138,6 +147,7 @@
                 controlName="apply_date"
                 [control]="dataForm.controls.apply_date"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -149,6 +159,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.contract_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
           </div>
@@ -176,6 +187,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.paper_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -187,6 +199,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.org_id"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -199,6 +212,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.bus_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -211,6 +225,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.bus_class"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -223,6 +238,7 @@
                 [control]="dataForm.controls.bus_sclass"
                 [submitted]="submitted"
                 (valueChange)="onBusSClassChange($event)"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -232,6 +248,7 @@
                 controlName="tlt_bdate"
                 [control]="dataForm.controls.tlt_bdate"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -241,6 +258,7 @@
                 controlName="tlt_edate"
                 [control]="dataForm.controls.tlt_edate"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -250,6 +268,7 @@
                 controlName="tlt_contract_bdate"
                 [control]="dataForm.controls.tlt_contract_bdate"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -259,6 +278,7 @@
                 controlName="tlt_contract_edate"
                 [control]="dataForm.controls.tlt_contract_edate"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -268,6 +288,7 @@
                 controlName="feedback_date"
                 [control]="dataForm.controls.feedback_date"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -277,6 +298,7 @@
                 controlName="due_date"
                 [control]="dataForm.controls.due_date"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -286,6 +308,7 @@
                 controlName="contact_Date"
                 [control]="dataForm.controls.contact_Date"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-calendar>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -297,6 +320,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.contact_USR_No"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
           </div>
@@ -329,6 +353,11 @@
             (save)="onLocationTableSave($event)"
             (edit)="onLocationTableEdit($event)"
             (cancel)="onLocationTableCancel($event)"
+            [showCheckBox]="!this.crudModeService.isReadOnlyMode"
+            [showPaginator]="false"
+            [showAddButton]="!this.crudModeService.isReadOnlyMode"
+            [showBatchDelete]="!this.crudModeService.isReadOnlyMode"
+            [showActionColumn]="!this.crudModeService.isReadOnlyMode"
             (dropdownChange)="onLocationDropdownChange($event)"
           ></app-expandable-edit-table>
         </div>
@@ -355,6 +384,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.tlt_kind"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -366,6 +396,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.deco_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -377,6 +408,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.tlt_term_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
               <small
                 class="block mt-1 text-orange-600 text-xs"
@@ -394,6 +426,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.comm_comp_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -405,6 +438,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.edc_yn"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -416,11 +450,8 @@
                 optionValue="value"
                 [control]="dataForm.controls.tlt_ctype_mtotal"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
-              <!-- <small class="block mt-1 text-red-600 text-base"
-                *ngIf="['2','4','6'].includes((dataForm.get('tlt_term_type')?.value ?? ''))">
-                當抽成別為 {{ dataForm.get('tlt_term_type')?.value }} 需要選擇包底類別
-              </small> -->
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
@@ -431,6 +462,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.overall_status"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -442,6 +474,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.rent_ahead"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -450,6 +483,7 @@
                 controlName="rent_period"
                 [control]="dataForm.controls.rent_period"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -458,6 +492,7 @@
                 controlName="base_rent"
                 [control]="dataForm.controls.base_rent"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -466,6 +501,7 @@
                 controlName="deposit"
                 [control]="dataForm.controls.deposit"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -477,6 +513,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.rece_yn"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -488,6 +525,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.pos_yn"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -499,6 +537,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.cash_yn"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -510,6 +549,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.comm_yn"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -521,6 +561,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.money_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -532,6 +573,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.store_way"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -543,6 +585,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.check_typeList"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-multi-select>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -554,6 +597,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.paytype"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -565,6 +609,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.vip_yn"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -575,6 +620,7 @@
                 [minFractionDigits]="0"
                 [maxFractionDigits]="2"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
               <small
                 class="block mt-1 text-blue-600 text-base"
@@ -589,6 +635,7 @@
                 controlName="total_amt"
                 [control]="dataForm.controls.total_amt"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -600,6 +647,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.total_amt_unit"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -608,6 +656,7 @@
                 controlName="total_amt_vendor"
                 [control]="dataForm.controls.total_amt_vendor"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -619,6 +668,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.total_amt_vendor_unit"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -630,6 +680,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.open_deposit"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -638,6 +689,7 @@
                 controlName="performanceBond"
                 [control]="dataForm.controls.open_fees"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -649,6 +701,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.construct_deposit"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -657,6 +710,7 @@
                 controlName="construct_fees"
                 [control]="dataForm.controls.construct_fees"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -668,6 +722,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.expiration_deposit"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -676,6 +731,7 @@
                 controlName="expiration_fees"
                 [control]="dataForm.controls.expiration_fees"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -713,6 +769,7 @@
                 controlName="ticket_remarks"
                 [control]="dataForm.controls.ticket_remarks"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -721,6 +778,7 @@
                 controlName="check_day"
                 [control]="dataForm.controls.check_day"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -732,6 +790,7 @@
                 optionValue="value"
                 [control]="dataForm.controls.invoice_type"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
             </div>
           </div>
@@ -832,6 +891,7 @@
                 [control]="dataForm.controls.email"
                 (blurEvent)="formatEmailField('email', $event)"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
               <small class="block mt-1 text-blue-600 text-base">
                 💡 多個信箱請用分號(；)分隔
@@ -844,6 +904,7 @@
                 [control]="dataForm.controls.invoice_email"
                 (blurEvent)="formatEmailField('invoice_email', $event)"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
               <small class="block mt-1 text-blue-600 text-base">
                 💡 多個信箱請用分號(；)分隔
@@ -855,6 +916,7 @@
                 controlName="CHECK_TITLE"
                 [control]="dataForm.controls.CHECK_TITLE"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
               <!-- <small class="block mt-1 text-blue-600 text-base" *ngIf="dataForm.get('paytype')?.value === '1'">
                 💡支票付款時必填
@@ -866,6 +928,7 @@
                 controlName="store_tel"
                 [control]="dataForm.controls.store_tel"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -876,6 +939,7 @@
                 optionLabel="label"
                 optionValue="value"
                 [control]="dataForm.controls.bank_id"
+                [readonly]="this.crudModeService.isReadOnlyMode"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
@@ -885,6 +949,7 @@
                 controlName="vendor_acct_name"
                 [control]="dataForm.controls.vendor_acct_name"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -897,6 +962,7 @@
                 [padLength]="16"
                 [padOnBlur]="true"
                 [textAlign]="'right'"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -905,6 +971,7 @@
                 controlName="contact_tel"
                 [control]="dataForm.controls.contact_tel"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -913,6 +980,7 @@
                 controlName="contact_fax"
                 [control]="dataForm.controls.contact_fax"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-6 flex flex-column gap-3">
@@ -922,6 +990,7 @@
                 controlName="VEN_Address"
                 [control]="dataForm.controls.VEN_Address"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-text>
 
               <!-- 郵寄地址 - 統一使用 app-input-text -->
@@ -931,6 +1000,7 @@
                   controlName="contact_addr"
                   [control]="dataForm.controls.contact_addr"
                   [submitted]="submitted"
+                  [readonly]="this.crudModeService.isReadOnlyMode"
                 ></app-input-text>
 
                 <button
@@ -951,6 +1021,7 @@
                 controlName="tlt_remark"
                 [control]="dataForm.controls.tlt_remark"
                 [submitted]="submitted"
+                [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-input-textarea>
             </div>
           </div>
