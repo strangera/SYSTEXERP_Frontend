@@ -62,8 +62,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   commissionData: ChargeSettingBusinessModel[] = [];
   dataForm: FormGroup;
 
-  // 新增：當前申請編號
-  currentApplyNo = '';
+
+  currentApplyNo: string | null = null;
 
   // 使用 CRUDStatus 判斷模式
   get isReadOnlyMode(): boolean {
@@ -308,7 +308,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('CRU 資料:', cruData);
 
     // 直接設定 apply_no，不管是否為空
-    this.currentApplyNo = cruData?.apply_no || '';
+    this.currentApplyNo = this.isCreateMode ? null : (cruData?.apply_no || null);
+
     console.log('當前申請編號:', this.currentApplyNo);
     if (cruData) {
       // 準備合約資訊顯示
@@ -448,6 +449,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     console.log(' TLS12040 創建預設折扣項目 (參考 TLS13010)');
+    const contractStartDate = this.getContractDate('start');
+    const contractEndDate = this.getContractDate('end');
 
     return this.discountOptions.map((option, index) => {
       //  修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
@@ -458,8 +461,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         apply_no: parentItem.apply_no,
         tlt_id: parentItem.tlt_id,
         cag_barcode: option.value,
-        tlt_bdate: null,
-        tlt_edate: null,
+        tlt_bdate: contractStartDate,
+        tlt_edate: contractEndDate,
         cag_charge_rate: 0,
         barcode_desc: option.label || '',
         is_configured: shouldSelectByDefault,
@@ -827,14 +830,13 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     const cruData = this.flowService.getCruData<SimpleContractInfo>();
-    if (!cruData?.apply_no) {
-      this.notificationService.errorBubble('缺少申請編號，無法新增項目');
-      return;
-    }
+
+    // 修正：新增模式下 apply_no 可以是空的，後端會生成
+    const applyNo = cruData?.apply_no || '';  // 允許空字串
 
     const newItem: ChargeSettingBusinessModel = {
       id: this.generateTempId(),
-      apply_no: cruData.apply_no,
+      apply_no: applyNo,  // 可以是空字串
       tlt_id: this.generateNewTltId(),
       tlt_id_desc: '新抽成類別',
       cag_bdate: this.getContractDate('start'),
@@ -847,12 +849,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       cag_remark: '',
       _status: 'new',
       ChargeDetails: this.createDefaultDiscountItems({
-        apply_no: cruData.apply_no,
+        apply_no: applyNo,
         tlt_id: this.generateNewTltId()
       } as ChargeSettingBusinessModel),
       YearChargeDetails: [],
       LevelChargeDetails: this.createDefaultLevelItems({
-        apply_no: cruData.apply_no,
+        apply_no: applyNo,
         tlt_id: this.generateNewTltId()
       } as ChargeSettingBusinessModel)
     };

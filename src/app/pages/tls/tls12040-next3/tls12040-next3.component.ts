@@ -1259,10 +1259,10 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       return { isValid: false, errors, warnings };
     }
 
-    // 檢查基本合約資料
-    if (!submitData.contractInfo?.data?.apply_no) {
-      errors.push('缺少申請編號');
-    }
+    // // 檢查基本合約資料
+    // if (!submitData.contractInfo?.data?.apply_no) {
+    //   errors.push('缺少申請編號');
+    // }
 
     if (!submitData.contractInfo?.data?.tlt_name) {
       errors.push('缺少品牌名稱');
@@ -1273,10 +1273,10 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       errors.push('缺少合約操作類型');
     }
 
-    // 檢查元數據
-    if (!submitData.metadata?.apply_no) {
-      errors.push('缺少元數據中的申請編號');
-    }
+    // // 檢查元數據
+    // if (!submitData.metadata?.apply_no) {
+    //   errors.push('缺少元數據中的申請編號');
+    // }
 
     // 檢查條件資料（根據抽成類型）
     const commissionType = submitData.metadata?.commissionType;

@@ -79,7 +79,7 @@ export class TLS12040DataFlowService {
    * 載入資料 - 主要入口點
    */
   async loadData(
-    applyNo: string,
+    applyNo: string | null,
     discountOptions?: any[],
     contractStartDate?: string,
     contractEndDate?: string
@@ -620,7 +620,7 @@ export class TLS12040DataFlowService {
       case 'master':
         return {
           id: tempId,
-          apply_no: '',
+          apply_no: null,
           tlt_id: '',
           tlt_id_desc: '',
           cag_bdate: '',
@@ -641,7 +641,7 @@ export class TLS12040DataFlowService {
       case 'chargeDetail':
         return {
           id: null,
-          apply_no: '',
+          apply_no: null,
           tlt_id: parentId ? String(parentId) : '',
           cag_barcode: '',
           tlt_bdate: null,
@@ -657,7 +657,7 @@ export class TLS12040DataFlowService {
       case 'yearChargeDetail':
         return {
           id: tempId,
-          apply_no: '',
+          apply_no: null,
           tlt_id: parentId ? String(parentId) : '',
           tlt_bdate: '',
           tlt_edate: '',
@@ -670,7 +670,7 @@ export class TLS12040DataFlowService {
       case 'levelChargeDetail':
         return {
           id: null,
-          apply_no: '',
+          apply_no: null,
           tlt_id: parentId ? String(parentId) : '',
           seq_no: 1,
           cag_barcode: '',

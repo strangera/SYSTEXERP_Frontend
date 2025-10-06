@@ -135,8 +135,8 @@ export interface TLS12040FareStatistics {
 }
 
 export interface SimpleContractInfo {
-  id: string;
-  apply_no: string;
+  id: string | null;
+  apply_no: string | null;
   tlt_no: string;
   tlt_name: string;
   ven_uniform: string;

@@ -49,7 +49,7 @@ export interface TLS12040ChargeQueryResponse {
  */
 export interface ChargeSettingAPIModel {
   id: string;
-  apply_no: string;
+  apply_no: string | null;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string; // YYYY-MM-DD
@@ -167,7 +167,7 @@ export interface LevelChargeDetailBusinessModel extends LevelChargeDetailAPIMode
  */
 export interface ChargeSettingFormData {
   id?: string;
-  apply_no: string;
+  apply_no: string | null;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string | Date;
@@ -273,7 +273,7 @@ export interface DetailOperations {
  */
 export interface CleanChargeSettingData {
   id?: string;
-  apply_no: string;
+  apply_no: string | null;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string; // YYYY-MM-DD

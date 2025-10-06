@@ -59,7 +59,7 @@ export class TLS12040Service {
   }
 
   /** 查詢抽成設定資料 */
-  queryTLS12040Charge(apply_no: string) {
+  queryTLS12040Charge(apply_no: string | null) {
     const payload = { apply_no: apply_no };
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040Charge`, payload).pipe(
       tap((res) => console.log('查詢抽成設定資料結果:', res)),
