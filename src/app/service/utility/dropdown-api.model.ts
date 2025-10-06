@@ -4,7 +4,7 @@
  */
 export interface Option {
   label: string;
-  value: string;
+  value: any;
   [key: string]: any;
 }
 

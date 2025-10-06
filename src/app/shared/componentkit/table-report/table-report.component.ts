@@ -227,10 +227,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     });
   }
-  loadCarsLazy(event: TableLazyLoadEvent) {
-    this.dt.reset();
-    this.cdr.detectChanges();
-  }
+  // loadCarsLazy(event: TableLazyLoadEvent) {
+  //   this.dt.reset();
+  //   this.cdr.detectChanges();
+  // }
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as ReportColumn[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);

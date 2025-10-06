@@ -1,28 +1,27 @@
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, } from '@angular/forms';
+import { Component, ViewChild } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { AddButton, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 // Component Kit
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 // Services
 import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020.service';
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { InventoryCategoryService } from '../../../service/basic/inventory-category.service';
-import { StorageInventoryStatusService } from '../../../service/basic/storage-inventory-status.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
+import { FileUploadHandlerEvent } from 'primeng/fileupload';
 
 @Component({
   selector: 'app-tls53020',
@@ -35,24 +34,32 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    DropdownComponent,
     CalendarRangeComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    MultiSelectComponent,
+    DialogComponent,
+    FileUploadComponent
   ],
 })
 export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   queryForm = this.formBuilder.group({
-    warehouseCode: [null], // 倉別
-    inventorySerialNo: [null], // 盤點單號
-    brandCode: [null], // 品牌代碼
-    inventoryCategory: [null], // 盤點類別
-    inventoryDateFrom: [null], // 盤點基準開始日期
-    inventoryDateTo: [null], // 盤點基準結束日期
-    storageInventoryStatus: [null], // 盤點單狀態
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
+    PST_No: ['', [Validators.maxLength(14)]], // 盤點單編號
+    HOS_No: [[]], // 倉別代碼
+    LOGO_No: [[]], // 品牌代碼
+    PST_DateStart: ['2024/01/01', Validators.required], // 盤點基準日期(起)
+    PST_DateEnd: ['2025/10/30', Validators.required], // 盤點基準日期(迄)
+    PST_Status: [[]], // 盤點狀態
+    PST_Type: [null], // 盤點類型
+    ...createPaginationConfig([{ field: 'PST_Date', order: -1 }]),
+  });
+
+  // 匯入菜單 dialog
+  queryForm2 = this.formBuilder.group({
+    PST_No: [''], // 盤點單編號
+    PST_Type: [null, Validators.required], // 盤點類型
   });
 
   data: TLS53020Data[] = [];
@@ -60,35 +67,58 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   selectedItems: TLS53020Data[] = [];
 
   // 下拉選單資料
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  inventoryCategoryOptions: any[] = [];
-  storageInventoryStatusOptions: any[] = [];
+  HOSNoOptions: any[] = []; // 倉別選項
+  LOGONoOptions: any[] = []; // 品牌選項
+  PSTStatusOptions: any[] = [ // 盤點狀態選項
+    { label: '盤點單開立，待盤點', value: '0' },
+    { label: '初盤，盤點中', value: '1' },
+    { label: '複盤，盤點完成', value: '2' },
+    { label: '抽盤，小盤結案', value: '3' },
+    { label: '已結案', value: '4' },
+    { label: '作廢', value: '9' },
+  ];
+  PSTTypeOptions: any[] = [ // 盤點類型選項
+    { label: '初盤', value: '1' },
+    { label: '複盤', value: '2' },
+    { label: '抽盤', value: '3' },
+  ];
 
-  columns = [
-    { field: 'inventorySerialNo', header: '盤點單號', visible: true },
-    { field: 'brandCode', header: '品牌', visible: true },
-    { field: 'warehouseCode', header: '倉別', visible: true },
-    { field: 'inventoryDate', header: '盤點基準日', visible: true },
-    { field: 'inventoryCategory', header: '盤點類別', visible: true },
-    { field: 'storageInventoryStatus', header: '狀態', visible: true },
+  columns: Column[] = [
+    { field: 'PST_No', header: '盤點單編號', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品牌', visible: true },
+    { field: 'HOS_NAME', header: '倉別', visible: true },
+    {
+      field: 'PST_Date',
+      header: '盤點基準日',
+      visible: true,
+      format: formatDate
+    },
+    {
+      field: 'PST_Type',
+      header: '盤點類型',
+      visible: true,
+      format: (value) => this.PSTTypeOptions.find(item => item.value === value)?.label || value
+    },
+    {
+      field: 'PST_Status',
+      header: '狀態',
+      visible: true,
+      format: (value) => this.PSTStatusOptions.find(item => item.value === value)?.label || value
+    },
   ];
 
   addButton: AddButton[] = [
     {
       label: '匯入',
-      icon: 'pi pi-file-import',
+      displayText: '匯入',
+      icon: '',
       action: (rowData: TLS53020Data) => { this.onImport(rowData); },
     }
   ];
 
   constructor(
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private inventoryCategoryService: InventoryCategoryService,
-    private storageInventoryStatusService: StorageInventoryStatusService,
     private tls53020Service: TLS53020Service,
-    public validationService: ValidationService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -105,31 +135,69 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
         .subscribe(res => {
           this.data = res.Data;
           this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
   }
 
   loadOptions(): void {
-    this.warehouseService.getWarehouseOptions().subscribe(data => {
-      this.warehouseOptions = data;
+    // 載入倉別選項
+    this.dropDownListService.getPOS2034Options().subscribe(options => {
+      this.HOSNoOptions = options.Data.map(item => ({
+        value: item.No,
+        label: `${item.No}-${item.Name}`
+      }));
     });
-
-    this.brandCodeService.getSystemTypes().subscribe(data => {
-      this.brandCodeOptions = data;
-    });
-
-    this.inventoryCategoryService.getInventoryCategoryOptions().subscribe(data => {
-      this.inventoryCategoryOptions = data;
-    });
-
-    this.storageInventoryStatusService.getStorageInventoryStatusOptions().subscribe(data => {
-      this.storageInventoryStatusOptions = data;
+    // 載入品牌選項
+    this.dropDownListService.queryPLULOGO_DropDownList().subscribe(options => {
+      this.LOGONoOptions = options.Data.map(item => ({
+        value: item.No,
+        label: `${item.No}-${item.Name}`
+      }));
     });
   }
 
+  // 匯入
+  dialogVisible = false;
+  @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
+
   onImport(rowData: TLS53020Data): void {
-    // 處理匯入邏輯
-    console.log('處理匯入邏輯', rowData);
+    this.dialogVisible = true;
+    this.initFileUpload(rowData);
+  }
+
+  onFileUpload(event: FileUploadHandlerEvent) {
+    // 驗證表單
+    if (this.queryForm2.invalid) {
+      this.submitted = true;
+      return;
+    }
+    this.submitted = false;
+
+    // 上傳檔案
+    const formData = new FormData();
+    formData.append('PST_No', this.queryForm2.controls.PST_No.value || '');
+    formData.append('PST_Type', this.queryForm2.controls.PST_Type.value || '');
+    formData.append('file', event.files[0]);
+
+    this.tls53020Service.uploadTLS53020(formData)
+      .pipe(untilDestroyed(this)).subscribe(res => {
+        if (res.Status === '0000') {
+          this.messageService.successBubble(res.Message);
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm);
+        } else {
+          this.messageService.errorBubble(res.Message);
+        }
+      });
+  }
+
+  // 初始化匯入視窗
+  initFileUpload(rowData: TLS53020Data) {
+    this.fileUploadComponent.clearFiles();
+    this.queryForm2.reset();
+    this.queryForm2.controls.PST_No.setValue(rowData?.PST_No || '');
+    this.queryForm2.controls.PST_No.disable();
+    this.submitted = false;
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../system/error-handler.service';
+import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { Observable, of } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 
@@ -36,7 +36,7 @@ export class AcquiringBankService {
   private localOptions: DropdownItem[] = [
     { value: "1", label: '聯合' },
     { value: "2", label: '中信' },
-  
+
   ];
 
   constructor(
@@ -44,29 +44,29 @@ export class AcquiringBankService {
     private errorHandler: ErrorHandlerService
   ) { }
 
-    getAcquiringBanks(): Observable<DropdownItem[]> {
-      const url = `${this.apiUrl}/querySYS1000_DropDownList`;
-      const body = { SYS_Type: 'T113' };
-  
-      return this.http
-        .post<ApiResponse<Sys1000Item[]>>(url, body)
-        .pipe(
-          tap((res) => console.debug('[InstallmentPeriodService] raw response', res)),
-          map((res) => {
-            const list = Array.isArray(res?.Data) ? res.Data : [];
-            return list.map<DropdownItem>((x) => ({
-              value: x.No,
-              label: x.Name,
-            }));
-          }),
-          tap((data) => console.debug('[InstallmentPeriodService] mapped options', data)),
-          catchError((error: HttpErrorResponse) => {
-            // 記錄錯誤並退回本地選項
-            this.errorHandler.handleError(error);
-            return of(this.localOptions);
-          })
-        );
-    }
+  getAcquiringBanks(): Observable<DropdownItem[]> {
+    const url = `${this.apiUrl}/querySYS1000_DropDownList`;
+    const body = { SYS_Type: 'T113' };
+
+    return this.http
+      .post<ApiResponse<Sys1000Item[]>>(url, body)
+      .pipe(
+        tap((res) => console.debug('[InstallmentPeriodService] raw response', res)),
+        map((res) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          return list.map<DropdownItem>((x) => ({
+            value: x.No,
+            label: x.Name,
+          }));
+        }),
+        tap((data) => console.debug('[InstallmentPeriodService] mapped options', data)),
+        catchError((error: HttpErrorResponse) => {
+          // 記錄錯誤並退回本地選項
+          this.errorHandler.handleError(error);
+          return of(this.localOptions);
+        })
+      );
+  }
 
   // // 獲取所有收單銀行（本地數據）
   // getAcquiringBanks(): Observable<any[]> {

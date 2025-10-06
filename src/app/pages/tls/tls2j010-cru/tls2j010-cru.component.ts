@@ -10,17 +10,17 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
-    selector: 'app-tls2j010-cru',
-    templateUrl: './tls2j010-cru.component.html',
-    styleUrl: './tls2j010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, NgFor, ButtonDynamicallydeleteComponent, InputTextComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2j010-cru',
+  templateUrl: './tls2j010-cru.component.html',
+  styleUrl: './tls2j010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS2J010CRUComponent extends BasicCrupageComponent implements OnInit {
   //

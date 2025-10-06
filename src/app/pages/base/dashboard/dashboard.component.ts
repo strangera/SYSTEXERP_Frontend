@@ -1,6 +1,6 @@
 import { AuthService } from '@service/system/auth.service';
 import { Component, OnInit } from '@angular/core';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
+import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Base64 } from 'js-base64';

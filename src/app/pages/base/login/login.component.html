@@ -1,13 +1,13 @@
 <div
   class="fadein animation-duration-500 surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden relative">
   <div class="flex flex-column align-items-center justify-content-center w-full sm:w-auto h-screensm:h-auto">
-    <img [src]="logoPath" alt="logo" loading="lazy"
+    <img [src]="logoPath" fetchpriority="high" alt="logo" loading="lazy"
       class="fadeindown animation-duration-500 hidden sm:block mb-5 w-18rem flex-shrink-0" />
     <div class="card w-full sm:w-auto h-screen sm:h-auto flex flex-column align-items-center justify-content-center">
       <div
         class="w-full h-full surface-card py-0 sm:py-8 px-0 sm:px-4 login-card flex flex-column justify-content-center">
         <div class="text-center mb-5">
-          <img [src]="logoPath" alt="logo"
+          <img [src]="logoPath" fetchpriority="high" alt="logo"
             class="fadeindown animation-duration-500 w-full sm:hidden mb-5 w-18rem flex-shrink-0" />
           <div class="fadeindown animation-duration-500 text-900 text-3xl font-medium mb-3">請登入管理帳號</div>
         </div>

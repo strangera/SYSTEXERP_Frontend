@@ -20,16 +20,16 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 
 //3.1.2.3 採購申請作業 CRU
 @Component({
-    selector: 'app-ass12030-cru',
-    templateUrl: './ass12030-cru.component.html',
-    styleUrl: './ass12030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, EditorTextComponent, DropdownComponent, CalendarComponent, InputNumberComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule]
+  selector: 'app-ass12030-cru',
+  templateUrl: './ass12030-cru.component.html',
+  styleUrl: './ass12030-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, EditorTextComponent, DropdownComponent, CalendarComponent, InputNumberComponent, NgFor, NgIf, TranslateModule]
 })
 export class ASS12030CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

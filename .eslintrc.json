@@ -3,9 +3,33 @@
     // ... 其他設定
   ],
   "plugins": [
-    "unused-imports"
+    "unused-imports",
+    "rxjs-angular"
   ],
   "rules": {
-    "unused-imports/no-unused-imports": "error"
+    "unused-imports/no-unused-imports": "error",
+    "rxjs-angular/prefer-takeuntil": [
+      "error",
+      {
+        // 確保規則接受 'untilDestroyed' 作為 takeUntil 的有效別名
+        "alias": [
+          "untilDestroyed"
+        ],
+        // 允許單次訂閱（例如 HTTP 請求）使用 take(1) 或 first()
+        "checkComplete": true,
+        // 檢查訂閱鏈中的每個 observable 
+        "checkEach": true
+      }
+    ],
+    // 2. 檢查銷毀機制是否正確實現
+    // 這會檢查：
+    // a) 是否有 @UntilDestroy()
+    // b) 如果手動使用 takeUntil，是否在 ngOnDestroy 中 next/complete
+    "@angular-eslint/no-unsafe-takeuntil": "error",
+    // 3. 確保手動取消訂閱是可行的 (必須賦值給變數)
+    // 避免有人寫了 this.service.pipe(...).subscribe() 卻沒辦法取消
+    "@angular-eslint/no-ignored-subscribe": "error"
+    // 💡 注意：您不需要其他規則來強制執行手動或自動模式，
+    // 上述規則會涵蓋所有有效的取消訂閱模式。
   }
 }

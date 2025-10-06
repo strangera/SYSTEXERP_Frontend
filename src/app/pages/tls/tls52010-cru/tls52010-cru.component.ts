@@ -104,10 +104,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   selectedItems: IPOS2004DetailData[] = [];
 
   constructor(
-    private dropDownListService: DropDownListService,
+    private readonly dropDownListService: DropDownListService,
     public readonly dropdown: DropdownApiService,
-    private tls52010Service: Tls52010Service,
-    private cdr: ChangeDetectorRef,
+    private readonly tls52010Service: Tls52010Service,
+    private readonly cdr: ChangeDetectorRef,
   ) {
     super();  // 呼叫父類建構子
   }

@@ -15,20 +15,20 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { PanelModule } from 'primeng/panel';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 //1.2.3.4 暫付款核銷作業 CRU
 @Component({
-    selector: 'app-fin23040-cru',
-    templateUrl: './fin23040-cru.component.html',
-    styleUrl: './fin23040-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, NgFor, ButtonDynamicallydeleteComponent, DropdownComponent, InputTextComponent, CalendarComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin23040-cru',
+  templateUrl: './fin23040-cru.component.html',
+  styleUrl: './fin23040-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, NgFor, DropdownComponent, InputTextComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN23040CRUComponent extends BasicCrupageComponent implements OnInit {
   //

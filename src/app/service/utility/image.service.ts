@@ -47,9 +47,9 @@ export interface ImageDeleteRequest {
   providedIn: 'root'
 })
 export class ImageService {
-  private apiUrl = 'http://localhost:5142/Image';
+  private readonly apiUrl = 'http://localhost:5142/Image';
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * 查詢圖片資料
@@ -65,7 +65,7 @@ export class ImageService {
    * @param request 包含圖片上傳所需的資料
    * @returns 上傳結果的 Observable
    */
-  uploadImages(request: ImageUploadRequest): Observable<any> {
+  uploadImages(request: ImageUploadRequest): Observable<unknown> {
     const formData = new FormData();
     formData.append('IMG_Type', request.IMG_Type);
     formData.append('IMG_SeqNo', request.IMG_SeqNo);
@@ -99,7 +99,7 @@ export class ImageService {
    * @param request 包含 IMG_Type, IMG_SeqNo 和 IMG_File 的物件
    * @returns 刪除結果的 Observable
    */
-  deleteImage(request: ImageDeleteRequest): Observable<any> {
+  deleteImage(request: ImageDeleteRequest): Observable<unknown> {
     // 這裡我們假設後端回傳的是一個 JSON 物件
     const options = {
       headers: new HttpHeaders({

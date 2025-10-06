@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 interface ApiError {
   Code: string;
@@ -33,7 +33,7 @@ export class TLS13030Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   /**
    * 查詢 TLS13030 主資料

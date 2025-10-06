@@ -128,7 +128,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
   totalRecords = 0;
   data: TLS31060Response[] = [];
   columns: Column[] = [
-    { field: 'org_id', header: '組織代號', visible: true },
+    { field: 'org_id', header: '組織代號', visible: false },
     { field: 'org_name', header: '組織名稱', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },

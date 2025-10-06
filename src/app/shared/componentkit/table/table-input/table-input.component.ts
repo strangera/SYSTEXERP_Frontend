@@ -111,32 +111,19 @@ export class TableInputComponent {
 
   /** 處理下拉 Table 的選擇變更 */
   public onTableSelectionChange(): void {
-    if (this.col().type !== 'dropdownTable') return;
     // console.log(`onTableSelectionChange:`, [this.selectedItems, this.rowData(), this.col]);
     this.rowData()[this.col().field] = this.selectedItems[this.col().valueKey || 'id'] || null;
     this.fieldChange.emit({ field: this.col().field, value: this.rowData()[this.col().field], rowIndex: this.rowIndex() });
   };
 
-  /** 取得 template 類型欄位的顯示值 */
-  public templateDisplayValue = computed(() => {
-    if (this.col().type !== 'template') return '';
-
+  /** 處理 Template input 顯示的值 */
+  public templateDisplayValue(): string {
     const rowData = this.rowData();
-    const fieldValue = rowData?.[this.col().field];
     const displayField = this.col().templateDisplayField;
-    const nameValue = displayField ? rowData?.[displayField] : void 0;
+    // console.log(`templateDisplayValue:`, [rowData, displayField]);
 
-    if (typeof this.col().templateDisplayFormat === 'function') {
-      return this.col().templateDisplayFormat!(fieldValue, nameValue);
-    }
-
-    if (this.col().templateDisplayField) {
-      if (fieldValue && nameValue) return `${fieldValue} - ${nameValue}`;
-    }
-
-    // 預設顯示邏輯：只顯示欄位值
-    return fieldValue || '';
-  });
+    return displayField ? rowData[displayField] : rowData[this.col().field] || '';
+  };
 }
 
 interface FieldChangeEvent {

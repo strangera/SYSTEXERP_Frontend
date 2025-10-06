@@ -94,7 +94,10 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
   }
   onECRNoChange(event: DropdownChangeEvent): void {
-    if (!event.value || event.value === '') { return; }
+    if (!event.value || event.value === '') {
+      this.queryForm.get('TLT_No')?.setValue(null);
+      return;
+    }
     const body = { ECR_No: event.value };
     this.tLS41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Data[0].ECR_Type === '1') {
@@ -118,26 +121,30 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
-        this.addButton = [
-          {
-            label: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? '取消作廢' : '修正交易資料',
-            icon: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-undo' : 'pi pi-ellipsis-h',
-            action: (rowdata: TLS24010Data, event) => {
-              const data = this.TLT_NoOptions.find(option => option.No === rowdata.TLT_No);
-              if (data?.store_way && data?.Name && data?.talent_id) {
-                rowdata.store_way = data.store_way;
-                rowdata.TLT_Name = data?.Name;
-                rowdata.talent_id = data?.talent_id;
-              }
-              if (frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C') {
-                this.onCancel(rowdata)
-              } else {
-                this.openModal(rowdata, event);
-              }
-            },
-            disabled: (rowData: TLS24010Data) => rowData.TXN_Status === 'D'
-          }
-        ]
+        if (frm.get('TXN_GUIPaper')?.value === 'C') {
+          this.addButton = [];
+        } else {
+          this.addButton = [
+            {
+              label: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? '取消作廢' : '修正交易資料',
+              icon: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-undo' : 'pi pi-ellipsis-h',
+              action: (rowdata: TLS24010Data, event) => {
+                const data = this.TLT_NoOptions.find(option => option.No === rowdata.TLT_No);
+                if (data?.store_way && data?.Name && data?.talent_id) {
+                  rowdata.store_way = data.store_way;
+                  rowdata.TLT_Name = data?.Name;
+                  rowdata.talent_id = data?.talent_id;
+                }
+                if (frm.get('TXN_GUIPaper')?.value === 'R') {
+                  this.onCancel(rowdata)
+                } else {
+                  this.openModal(rowdata, event);
+                }
+              },
+              disabled: (rowData: TLS24010Data) => rowData.TXN_Status === 'D'
+            }
+          ]
+        }
         this.updateItems(frm);
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

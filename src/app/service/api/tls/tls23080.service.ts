@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, catchError, map, of, tap, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 /** CRU 請求型別：只需要日期 */
 export interface TLS23080CruRequest {
@@ -71,7 +71,7 @@ export class TLS23080Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService, // 如需全域錯誤處理可使用；下方保留簡單 console
-  ) {}
+  ) { }
 
   /** 主清單查詢（分頁版） */
   queryTLS23080(query: any): Observable<any> {

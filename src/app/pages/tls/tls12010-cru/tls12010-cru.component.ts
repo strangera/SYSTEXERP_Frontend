@@ -13,8 +13,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
@@ -89,7 +89,7 @@ export interface POS2013 {
   templateUrl: './tls12010-cru.component.html',
   styleUrl: './tls12010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Customer> implements OnInit {
   @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;

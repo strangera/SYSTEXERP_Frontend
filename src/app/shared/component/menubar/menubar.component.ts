@@ -8,8 +8,8 @@ import { RouterLink } from '@angular/router';
 import { NgClass, NgIf } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
-interface Favorite {
-  USER_No: string,
+export interface Favorite {
+  USER_No?: string,
   PROG_No: string,
   FVT_SeqNo: number,
 }
@@ -39,8 +39,8 @@ export class MenubarComponent implements OnInit {
   funRightsInfo: FunsrightInfo[] = []; // 功能權限資訊
 
   constructor(
-    private authService: AuthService,
-    private messageService: NotificationService,
+    private readonly authService: AuthService,
+    private readonly messageService: NotificationService,
   ) { }
 
   ngOnInit(): void {

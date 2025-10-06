@@ -2,8 +2,21 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, tap, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+export interface ApiResponse<T> {
+  Status: string;
+  Data: T;
+  Error?: { Code?: string; Message?: string; Details?: string };
+  Meta?: { Timestamp?: string; RequestId?: string };
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+}
 
+export interface DropDownItem {
+  No: string;
+  Name: string;
+}
 @Injectable({ providedIn: 'root' })
 export class FIN13050Service {
   private apiUrl = environment.ApiUrl;
@@ -11,7 +24,7 @@ export class FIN13050Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // ✅ 查詢（對齊後端；不傳 Offset、OrderBy）
   queryFIN13050(query: any): Observable<any> {
@@ -19,7 +32,7 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13050`, query)
       .pipe(
         tap((res) => console.log('查詢結果:', res)),
-        
+
       );
   }
 
@@ -29,7 +42,7 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13050`, data)
       .pipe(
         tap((res) => console.log('新增結果:', res)),
-        
+
       );
   }
 
@@ -39,7 +52,7 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13050`, data)
       .pipe(
         tap((res) => console.log('更新結果:', res)),
-        
+
       );
   }
 
@@ -49,7 +62,7 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13050Detail`, param)
       .pipe(
         tap((res) => console.log('明細查詢結果:', res)),
-        
+
       );
   }
 
@@ -61,10 +74,10 @@ export class FIN13050Service {
       )
       .pipe(
         tap((res) => console.log('對應查詢結果:', res)),
-        
+
       );
   }
- deleteFIN13050(idList: number[]): Observable<any> {
+  deleteFIN13050(idList: number[]): Observable<any> {
     return this.http
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/deleteFIN13050`, { idList })
       .pipe(tap((res) => console.log('刪除結果:', res)));
@@ -76,16 +89,26 @@ export class FIN13050Service {
         tap(res => console.log('VendorList:', res)),
       );
   }
-// ✅ SYS1000 下拉欄位（依 SYS_Type）
-querySYS1000DropDownList(sysType: string): Observable<any> {
-  return this.http
-    .post<any>(`${this.apiUrl}/querySYS1000_DropDownList`, {
-      SYS_Type: sysType,
-    })
-    .pipe(
-      tap((res) => console.log('SYS1000 下拉資料:', res)),
-      // 若你想沿用全域錯誤處理可解開以下一行
-      // catchError(err => this.errorHandler.handle(err))
-    );
-}
+  // ✅ SYS1000 下拉欄位（依 SYS_Type）
+  querySYS1000DropDownList(sysType: string): Observable<any> {
+    return this.http
+      .post<any>(`${this.apiUrl}/querySYS1000_DropDownList`, {
+        SYS_Type: sysType,
+      })
+      .pipe(
+        tap((res) => console.log('SYS1000 下拉資料:', res)),
+        // 若你想沿用全域錯誤處理可解開以下一行
+        // catchError(err => this.errorHandler.handle(err))
+      );
+  }
+  queryAPS2002DropDownList(): Observable<ApiResponse<DropDownItem[]>> {
+    // 如果你的後端是 GET，改成 this.http.get<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryAPS2002_DropDownList`);
+    return this.http
+      .post<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryAPS2002_DropDownList`, {})
+      .pipe(
+        tap((res) => console.log('APS2002 下拉資料:', res)),
+        // 需要共用錯誤處理的話打開下一行
+        // catchError(err => this.errorHandler.handle(err))
+      );
+  }
 }

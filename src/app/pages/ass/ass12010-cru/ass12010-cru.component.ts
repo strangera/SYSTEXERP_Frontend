@@ -17,18 +17,18 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 //3.1.2.1 請購申請作業 CRU
 @Component({
-    selector: 'app-ass12010-cru',
-    templateUrl: './ass12010-cru.component.html',
-    styleUrl: './ass12010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, InputTextComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass12010-cru',
+  templateUrl: './ass12010-cru.component.html',
+  styleUrl: './ass12010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, InputNumberComponent, EditorTextComponent, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS12010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

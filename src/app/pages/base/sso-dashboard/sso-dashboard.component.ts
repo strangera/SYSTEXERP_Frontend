@@ -1,6 +1,6 @@
 // src/app/pages/base/sso-dashboard/sso-dashboard.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core'; // 新增 OnDestroy
-import { LayoutService } from '../../../layout/layout.service';
+import { LayoutService } from '../../../core/layout/layout.service';
 import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
 import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
@@ -23,7 +23,6 @@ import { PasswordModule } from 'primeng/password';
 import { DividerModule } from 'primeng/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { environment } from '../../../../environments/environment';
 import type { OuterTokenResponse } from '../../../service/system/auth.service';
 
 @UntilDestroy()

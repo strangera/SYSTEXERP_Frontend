@@ -26,6 +26,13 @@
   </p-accordion>
 </div>
 <div class=" card">
+  <p-panel class="m-0">
+    <ng-template pTemplate="header">
+      <div class="p-0 text-center">
+        傳票資料
+      </div>
+    </ng-template>
+  </p-panel>
   <app-table dataKey="master_key" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details" [showPaginator]="false"
     [showManage]="false" [showCaption]="false" [showSort]="false"></app-table>

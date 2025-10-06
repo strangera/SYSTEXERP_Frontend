@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 export interface TLS23030SumPayNoRow {
   PAY_NO: string;
   PAY_NAME: string;
@@ -43,7 +43,7 @@ export class TLS23030Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // 既有：明細查詢
   queryTLS23030(body: any): Observable<any> {
@@ -131,8 +131,8 @@ export class TLS23030Service {
   }
 
   queryTLS23030_SumPayNo(body: any) {
-  const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23030_SumPayNo`;
-  return this.http.post<ApiResponse<TLS23030SumPayNoRow>>(url, body);
-}
+    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23030_SumPayNo`;
+    return this.http.post<ApiResponse<TLS23030SumPayNoRow>>(url, body);
+  }
 
 }

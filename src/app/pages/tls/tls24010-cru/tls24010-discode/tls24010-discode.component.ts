@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS2004ForUpdateResponse, POS5007Data, Tls24010Service } from '@service/api/tls/tls24010.service';
-import { DropDownListService, TLTTALENT_CHARGEData } from '@service/utility/dropDownList.service';
+import { DropDownListService, TltTalentChargeData } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { STORE_WAY } from '../tls24010-cru.model';
@@ -33,7 +33,7 @@ export class Tls24010DiscodeComponent implements OnInit, OnChanges {
     { field: 'PLU_TaxType', header: '稅別', },
     { field: 'TXN_DiscCode', header: '折扣別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'cag_barcode', filter: false },
   ]
-  TXN_DiscCodeOptions: TLTTALENT_CHARGEData[] = [];
+  TXN_DiscCodeOptions: TltTalentChargeData[] = [];
   POS2004Options: POS2004ForUpdateResponse[] = []; //下拉選單 商品資料
   constructor(
     private readonly dropDownListService: DropDownListService,

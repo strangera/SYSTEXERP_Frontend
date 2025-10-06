@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../system/error-handler.service';
+import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { catchError, map, Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class PaymentTypeService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   /**
    * 取得付款別清單 (轉換成 {value, label} 格式)

@@ -14,18 +14,18 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 // 2.2.18.2 大分類換開品項維護作業
 @Component({
-    selector: 'app-tls2j020-cru',
-    templateUrl: './tls2j020-cru.component.html',
-    styleUrl: './tls2j020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, NgFor, ButtonDynamicallydeleteComponent, InputTextComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2j020-cru',
+  templateUrl: './tls2j020-cru.component.html',
+  styleUrl: './tls2j020-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS2J020CRUComponent extends BasicCrupageComponent implements OnInit {
   //

@@ -14,18 +14,18 @@ import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
-    selector: 'app-sysbp00.cru',
-    templateUrl: './sysbp00.cru.component.html',
-    styleUrl: './sysbp00.cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CheckboxModule, NgFor, ButtonDynamicallydeleteComponent, DropdownComponent, InputNumberComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-sysbp00.cru',
+  templateUrl: './sysbp00.cru.component.html',
+  styleUrl: './sysbp00.cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CheckboxModule, NgFor, DropdownComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
 // 參數資料設定維護 CRU
 export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit {

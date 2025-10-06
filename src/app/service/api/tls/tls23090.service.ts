@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,9 +18,10 @@ export class TLS23090Service {
   queryTLS23090(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23090_CreditCard`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-       // ✅ 正確
-    );}
-    // 查詢（專櫃卡別分析）
+      // ✅ 正確
+    );
+  }
+  // 查詢（專櫃卡別分析）
   queryTLS23090CounterCard(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23090_CounterCard`, body);
   }
@@ -40,23 +41,23 @@ export class TLS23090Service {
       responseType: 'blob',
     });
   }
-  
-    /**
-     * 匯出用：移除分頁相關欄位（大小寫都處理），保留 SortBy（若後端會依排序輸出）
-     */
-    private stripPaging<T extends Record<string, any>>(
-      input: T
-    ): Omit<T,
-      'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' |
-      'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
-    > {
-      if (!input) return input as any;
-      const {
-        PageSize, PageIndex, OrderBy, Offset,
-        pageSize, pageIndex, orderBy, offset,
-        ...rest
-      } = input as any;
-      return rest as any;
-    }
+
+  /**
+   * 匯出用：移除分頁相關欄位（大小寫都處理），保留 SortBy（若後端會依排序輸出）
+   */
+  private stripPaging<T extends Record<string, any>>(
+    input: T
+  ): Omit<T,
+    'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' |
+    'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
+  > {
+    if (!input) return input as any;
+    const {
+      PageSize, PageIndex, OrderBy, Offset,
+      pageSize, pageIndex, orderBy, offset,
+      ...rest
+    } = input as any;
+    return rest as any;
+  }
 }
 

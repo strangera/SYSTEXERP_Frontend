@@ -55,7 +55,7 @@ import { environment } from 'src/environments/environment';
 export class DropdownApiService {
   private readonly apiUrl = environment.ApiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
      * 泛型底層方法：處理所有下拉選單的查詢和轉換
@@ -78,8 +78,8 @@ export class DropdownApiService {
         }
         return data.map(item => ({
           ...item,
-          value: item[noKey] as any,
-          label: `${item[noKey]} - ${item[nameKey]}` as any,
+          value: item[noKey] as string | number,
+          label: `${item[noKey]} - ${item[nameKey]}`,
         }));
       }),
       catchError(err => {
@@ -133,7 +133,7 @@ export class DropdownApiService {
         const nestedData = firstItem && typeof firstItem === 'object' && 'Data' in firstItem
           ? (firstItem as { Data?: T[] }).Data
           : null;
-        return nestedData ? nestedData : null;
+        return nestedData ?? null;
       }),
       catchError(err => {
         console.error(`API ${endpoint} 呼叫失敗:`, err);

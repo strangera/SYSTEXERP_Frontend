@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../system/error-handler.service';
+import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { catchError, map, Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class CardTypeService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // 從後端 API 取得卡別下拉選單
   getCardType(): Observable<any[]> {
@@ -26,9 +26,9 @@ export class CardTypeService {
       map((res) =>
         Array.isArray(res?.Data)
           ? res.Data.map((item: any) => ({
-              value: item.No,
-              label: item.Name,
-            }))
+            value: item.No,
+            label: item.Name,
+          }))
           : []
       ),
       catchError((error: HttpErrorResponse) =>
