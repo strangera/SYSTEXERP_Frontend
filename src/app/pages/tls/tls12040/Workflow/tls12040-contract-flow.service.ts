@@ -204,14 +204,34 @@ class Next2DataCleaner implements TLS12040DataCleaner {
 
 class Next3DataCleaner implements TLS12040DataCleaner {
   clean(data: any) {
-    return {
-      finalSettings: data.finalSettings || {},
-      submitReady: data.submitReady || false
-    };
+    console.log('Next3DataCleaner 清理資料:', data);
+
+    // Next3 儲存的是條件項目陣列，直接返回
+    if (Array.isArray(data)) {
+      return data.map(item => ({
+        ...item,
+        // 確保所有必要屬性都存在
+        _status: item._status || 'original',
+        _fromNext2: item._fromNext2 || false,
+        _readonly: item._readonly || false
+      }));
+    }
+
+    // 如果是舊格式或空資料，返回空陣列
+    return [];
   }
 
   validate(data: any): boolean {
-    return data.submitReady === true;
+    // Next3 的驗證：至少要有條件項目陣列（可以是空的）
+    const isValid = Array.isArray(data);
+
+    console.log('Next3DataCleaner 驗證結果:', {
+      isValid,
+      dataType: Array.isArray(data) ? 'array' : typeof data,
+      itemCount: Array.isArray(data) ? data.length : 0
+    });
+
+    return isValid;
   }
 }
 
@@ -780,7 +800,7 @@ export class TLS12040FlowService {
   private processBaseRentHigherCondition(condition: any, operations: any): void {
     const cleanItem = {
       ...(this.hasValidId(condition.id) ? { id: Number(condition.id) } : {}),
-      talent_id: condition.talent_id || '',
+      apply_no: condition.apply_no || '',
       tlt_id: condition.tlt_id || '',
       cag_bdate: this.formatDate(condition.cag_bdate),
       cag_edate: this.formatDate(condition.cag_edate),
@@ -801,7 +821,7 @@ export class TLS12040FlowService {
   private processBaseCommissionCondition(condition: any, operations: any): void {
     const cleanItem = {
       ...(this.hasValidId(condition.id) ? { id: Number(condition.id) } : {}),
-      talent_id: condition.talent_id || '',
+      apply_no: condition.apply_no || '',
       tlt_id: condition.tlt_id || '',
       cag_bdate: this.formatDate(condition.cag_bdate),
       cag_edate: this.formatDate(condition.cag_edate),
@@ -822,7 +842,7 @@ export class TLS12040FlowService {
   private processGraduatedCondition(condition: any, operations: any): void {
     const cleanItem = {
       ...(this.hasValidId(condition.id) ? { id: Number(condition.id) } : {}),
-      talent_id: condition.talent_id || '',
+      apply_no: condition.apply_no || '',
       seq_no: condition.seq_no || 0,
       cag_bdate: this.formatDate(condition.cag_bdate),
       cag_edate: this.formatDate(condition.cag_edate),
@@ -844,7 +864,7 @@ export class TLS12040FlowService {
   private processBaseTierCondition(condition: any, operations: any): void {
     const cleanItem = {
       ...(this.hasValidId(condition.id) ? { id: Number(condition.id) } : {}),
-      talent_id: condition.talent_id || '',
+      apply_no: condition.apply_no || '',
       seq_no: condition.seq_no || 0,
       ...(condition.tlt_id ? { tlt_id: condition.tlt_id } : {}),
       cag_bdate: this.formatDate(condition.cag_bdate),

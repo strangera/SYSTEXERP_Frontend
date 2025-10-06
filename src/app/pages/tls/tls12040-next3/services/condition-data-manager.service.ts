@@ -40,18 +40,18 @@ export class TLS12040ConditionDataManager {
   /**
    * 根據抽成類型初始化空的條件數據
    */
-  initializeEmptyConditions(commissionType: string, talentId: string, existingItems?: any[]): ConditionItem[] {
+  initializeEmptyConditions(commissionType: string, applyNo: string, existingItems?: any[]): ConditionItem[] {
     switch (commissionType) {
       case '1':
-        return [this.createFixedRentItem(talentId)];
+        return [this.createFixedRentItem(applyNo)];
       case '2':
-        return [this.createBaseRentHigherItem(talentId)];
+        return [this.createBaseRentHigherItem(applyNo)];
       case '4':
-        return [this.createBaseCommissionItem(talentId)];
+        return [this.createBaseCommissionItem(applyNo)];
       case '5':
-        return [this.createGraduatedItem(talentId, existingItems as GraduatedCommissionCondition[])];
+        return [this.createGraduatedItem(applyNo, existingItems as GraduatedCommissionCondition[])];
       case '6':
-        return [this.createBaseTierItem(talentId, existingItems as BaseTierCondition[])];
+        return [this.createBaseTierItem(applyNo, existingItems as BaseTierCondition[])];
       default:
         return [];
     }
@@ -62,7 +62,7 @@ export class TLS12040ConditionDataManager {
    */
   initializeSmartConditions(
     commissionType: string,
-    talentId: string,
+    applyNo: string,
     contractStartDate: string,
     contractEndDate: string,
     existingItems?: any[]
@@ -70,7 +70,7 @@ export class TLS12040ConditionDataManager {
     try {
       const newItem = this.createSmartConditionItem(
         commissionType,
-        talentId,
+        applyNo,
         contractStartDate,
         contractEndDate,
         existingItems || []
@@ -79,7 +79,7 @@ export class TLS12040ConditionDataManager {
     } catch (error) {
       console.warn('智能創建項目失敗，使用默認創建:', error);
       // 失敗時回退到原始方法
-      return this.initializeEmptyConditions(commissionType, talentId, existingItems);
+      return this.initializeEmptyConditions(commissionType, applyNo, existingItems);
     }
   }
 
@@ -301,10 +301,10 @@ export class TLS12040ConditionDataManager {
 
   // =============== 私有方法 ===============
 
-  private createFixedRentItem(talentId: string): FixedRentCondition {
+  private createFixedRentItem(applyNo: string): FixedRentCondition {
     return {
       id: this.generateTempId(), // 新增唯一 ID
-      talent_id: talentId,
+      apply_no: applyNo,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),
@@ -314,10 +314,10 @@ export class TLS12040ConditionDataManager {
     };
   }
 
-  private createBaseRentHigherItem(talentId: string): BaseRentHigherCondition {
+  private createBaseRentHigherItem(applyNo: string): BaseRentHigherCondition {
     return {
       id: this.generateTempId(), // 新增唯一 ID
-      talent_id: talentId,
+      apply_no: applyNo,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),
@@ -328,10 +328,10 @@ export class TLS12040ConditionDataManager {
     };
   }
 
-  private createBaseCommissionItem(talentId: string): BaseCommissionCondition {
+  private createBaseCommissionItem(applyNo: string): BaseCommissionCondition {
     return {
       id: this.generateTempId(), // 新增唯一 ID
-      talent_id: talentId,
+      apply_no: applyNo,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),
@@ -341,10 +341,10 @@ export class TLS12040ConditionDataManager {
       _isNew: true
     };
   }
-  private createGraduatedItem(talentId: string, existingItems: GraduatedCommissionCondition[] = []): GraduatedCommissionCondition {
+  private createGraduatedItem(applyNo: string, existingItems: GraduatedCommissionCondition[] = []): GraduatedCommissionCondition {
     return {
       id: this.generateTempId(), // 新增唯一 ID
-      talent_id: talentId,
+      apply_no: applyNo,
       seq_no: this.getNextSeqNo(existingItems), // 使用正確的序號
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),
@@ -356,10 +356,10 @@ export class TLS12040ConditionDataManager {
     };
   }
 
-  private createBaseTierItem(talentId: string, existingItems: BaseTierCondition[] = []): BaseTierCondition {
+  private createBaseTierItem(applyNo: string, existingItems: BaseTierCondition[] = []): BaseTierCondition {
     return {
       id: this.generateTempId(), // 新增唯一 ID
-      talent_id: talentId,
+      apply_no: applyNo,
       seq_no: this.getNextSeqNo(existingItems), // 使用正確的序號
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -378,7 +378,7 @@ export class TLS12040ConditionDataManager {
 
     return data.RentDetails.map((item: any) => ({
       id: item.id,
-      talent_id: item.talent_id.toString(),
+      apply_no: item.apply_no.toString(),
       tlt_id: item.tlt_id || '',
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -392,7 +392,7 @@ export class TLS12040ConditionDataManager {
 
     return data.RentDetails.map((rentItem: any, index: number) => ({
       id: rentItem.id,
-      talent_id: rentItem.talent_id.toString(),
+      apply_no: rentItem.apply_no.toString(),
       tlt_id: rentItem.tlt_id || '',
       cag_bdate: this.formatDate(rentItem.cag_bdate),
       cag_edate: this.formatDate(rentItem.cag_edate),
@@ -407,7 +407,7 @@ export class TLS12040ConditionDataManager {
 
     return data.LimitDetails.map((item: any) => ({
       id: item.id,
-      talent_id: item.talent_id.toString(),
+      apply_no: item.apply_no.toString(),
       tlt_id: item.tlt_id || '',
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -422,7 +422,7 @@ export class TLS12040ConditionDataManager {
 
     return data.LevelDetails.map((item: any) => ({
       id: item.id,
-      talent_id: item.talent_id.toString(),
+      apply_no: item.apply_no.toString(),
       seq_no: item.seq_no || 0,
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -439,7 +439,7 @@ export class TLS12040ConditionDataManager {
       console.log('🎯 使用新的 BottomTierDetails 資料');
       return data.BottomTierDetails.map((item: BottomTierDetailApiItem) => ({
         id: item.id,
-        talent_id: item.talent_id.toString(),
+        apply_no: item.apply_no.toString(),
         seq_no: item.seq_no || 0,
         tlt_id: '', // BottomTierDetails 中沒有 tlt_id
         cag_bdate: this.formatDate(item.cag_bdate),
@@ -458,7 +458,7 @@ export class TLS12040ConditionDataManager {
     console.log('🎯 使用舊的 LimitDetails + LevelDetails 組合邏輯');
     return data.LevelDetails.map((levelItem: any) => ({
       id: levelItem.id,
-      talent_id: levelItem.talent_id.toString(),
+      apply_no: levelItem.apply_no.toString(),
       seq_no: levelItem.seq_no || 0,
       tlt_id: '',
       cag_bdate: this.formatDate(levelItem.cag_bdate),
@@ -587,7 +587,7 @@ export class TLS12040ConditionDataManager {
    */
   createSmartConditionItem(
     commissionType: string,
-    talentId: string,
+    applyNo: string,
     contractStartDate: string,
     contractEndDate: string,
     existingItems: ConditionItem[]
@@ -602,7 +602,7 @@ export class TLS12040ConditionDataManager {
 
     const smartItem = this.smartDateService.generateSmartNewItem(
       commissionType,
-      talentId,
+      applyNo,
       contractStartDate,
       contractEndDate,
       existingItems

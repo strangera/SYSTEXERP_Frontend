@@ -1,6 +1,6 @@
 export interface ChargeDetailApiItem {
   id: number;
-  talent_id: number;
+  apply_no: number;
   tlt_id: string;
   cag_barcode: string;
   tlt_bdate: string;
@@ -20,7 +20,7 @@ export interface RentSettingApiData {
 
 export interface CommissionMasterApiItem {
   id: number;
-  talent_id: number;
+  apply_no: number;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string;
@@ -35,7 +35,7 @@ export interface CommissionMasterApiItem {
 
 export interface RentDetailApiItem {
   id: number;
-  talent_id: number;
+  apply_no: number;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -44,7 +44,7 @@ export interface RentDetailApiItem {
 
 export interface LimitDetailApiItem {
   id: number;
-  talent_id: number;
+  apply_no: number;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -54,7 +54,7 @@ export interface LimitDetailApiItem {
 
 export interface LevelDetailApiItem {
   id: number;
-  talent_id: number;
+  apply_no: number;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;
@@ -66,7 +66,7 @@ export interface LevelDetailApiItem {
 
 export interface BottomTierDetailApiItem {
   id: number;
-  talent_id: number;
+  apply_no: number;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;

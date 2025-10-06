@@ -153,15 +153,15 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   async ngOnInit(): Promise<void> {
     this.initializePage('TLS12040', this.dataForm);
-    console.log('當前 CRUD 狀態:', this.crudstatus);
-    console.log('是否為唯讀模式:', this.isReadOnlyMode);
-    console.log('路由狀態:', this.router.getCurrentNavigation()?.extras?.state);
+    // console.log('當前 CRUD 狀態:', this.crudstatus);
+    // console.log('是否為唯讀模式:', this.isReadOnlyMode);
+    // console.log('路由狀態:', this.router.getCurrentNavigation()?.extras?.state);
     this.handleRouterState();
     try {
       // 1. 先檢查是否有暫存的 Next2 資料
       const savedNext2Data = this.flowService.getNext2Data();
       console.log('🔍 檢查暫存的 Next2 資料:', savedNext2Data);
-
+      this.loadContractInfo();
       // 2. 先訂閱資料狀態變更
       this.dataFlowService.state$.subscribe(state => {
         this.commissionData = state.currentEditData;
@@ -200,6 +200,21 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     } catch (error) {
       console.error('初始化失敗:', error);
       this.notificationService.errorBubble('頁面初始化失敗');
+    }
+  }
+
+  //獨立的合約資訊載入方法（學習 Next1）
+  private loadContractInfo(): void {
+    console.log('載入合約資訊...');
+
+    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
+
+    if (cruData) {
+      this.prepareContractInfoDisplay(cruData);
+      console.log('✅ 合約資訊載入完成:', this.contractInfoData);
+    } else {
+      console.warn('⚠️ 沒有 CRU 資料');
+      this.contractInfoData = [];
     }
   }
 
@@ -693,7 +708,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       currentApplyNo: this.currentApplyNo,
 
       // 合約資訊
-      // contractInfoData: this.contractInfoData || [],
+      contractInfoData: this.contractInfoData || [],
 
       // 額外設定
       additionalSettings: {

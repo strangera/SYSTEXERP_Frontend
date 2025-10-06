@@ -346,8 +346,20 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 如果之前有資料，確保不被覆蓋
     if (existingData && Object.keys(existingData).length > 0) {
-      // 修正：先載入基本下拉選項，然後再載入緩存資料
+      console.log('✅ 使用暫存資料，跳過 API 載入');
+
+      // 直接載入暫存資料（包含分類）
       this.loadCachedDataWithClassifications(existingData);
+
+      // ⚠️ 關鍵：延遲載入 selector panel 選項（背景執行）
+      setTimeout(() => {
+        this.updateSelectorPanelOptions();
+      }, 100);
+
+    } else {
+      console.log('🔄 首次載入，需要打 API');
+      // 首次載入才打 API
+      this.initializeDropdownOptions();
     }
   }
 
@@ -758,6 +770,12 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   private loadApiOptions() {
+    // ✅ 檢查是否已經載入過
+    if (this.bustypeOptions.length > 0) {
+      console.log('✅ API 選項已存在，跳過載入');
+      return;
+    }
+
     this.loading = true;
 
     const loadTasks = [
@@ -783,25 +801,12 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.bankDropdownOptions = banks;
 
         console.log('✅ 所有 API 選項載入完成');
-
-        // 在所有選項載入完成後更新 selector 面板選項
         this.updateSelectorPanelOptions();
-
-        // 關鍵：檢查是否需要處理緩存的分類資料
-        const existingData = this.flowService.getCruData() as any;
-        if (existingData && existingData.bus_type && !this.busClassOptions.length) {
-          console.log('🔄 API 載入完成後處理分類資料');
-          this.loadClassificationChain(existingData);
-        }
-
         this.loading = false;
       },
       error: (error) => {
         console.error('載入選項失敗:', error);
-        this.bustypeOptions = [];
-        this.negotiatorOptions = [];
         this.loading = false;
-        this.updateSelectorPanelOptions();
       }
     });
   }
@@ -1690,6 +1695,52 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
           VEN_Address: ''
         });
         this.loading = false;
+      }
+    });
+  }
+
+  //利用 Service 快取同步載入分類
+  private loadClassificationChainSync(cruData: any): void {
+    console.log('🏷️ 同步載入分類鏈（使用快取）');
+
+    // 1. 設定大分類
+    this.dataForm.patchValue({ bus_type: cruData.bus_type });
+
+    // 2. 同時請求中分類和小分類（平行處理）
+    const requests = [
+      this.businessClassificationService.getBusClassOptions(cruData.bus_type)
+    ];
+
+    if (cruData.bus_class) {
+      requests.push(
+        this.businessClassificationService.getBusSClassOptions(
+          cruData.bus_type,
+          cruData.bus_class
+        )
+      );
+    }
+
+    // ✅ 使用 forkJoin 平行處理
+    forkJoin(requests).subscribe({
+      next: ([busClassOptions, busSClassOptions]) => {
+        this.busClassOptions = busClassOptions;
+
+        if (cruData.bus_class) {
+          this.dataForm.patchValue({ bus_class: cruData.bus_class });
+        }
+
+        if (busSClassOptions) {
+          this.busSClassOptions = busSClassOptions;
+          if (cruData.bus_sclass) {
+            this.dataForm.patchValue({ bus_sclass: cruData.bus_sclass });
+          }
+        }
+
+        this.saveCompleteDataToFlow(cruData);
+      },
+      error: (error) => {
+        console.error('❌ 載入分類失敗:', error);
+        this.saveCompleteDataToFlow(cruData);
       }
     });
   }

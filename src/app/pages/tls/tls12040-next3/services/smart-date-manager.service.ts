@@ -336,7 +336,7 @@ export class TLS12040SmartDateSegmentationService {
    */
   generateSmartNewItem(
     commissionType: string,
-    talentId: string,
+    applyNo: string,
     contractStartDate: string,
     contractEndDate: string,
     existingItems: ConditionItem[]
@@ -347,7 +347,7 @@ export class TLS12040SmartDateSegmentationService {
 
     const baseItem = {
       id: this.generateTempId(),
-      talent_id: talentId,
+      apply_no: applyNo,
       cag_bdate: dateRange.cag_bdate,
       cag_edate: dateRange.cag_edate,
       _status: 'new' as const,  // 明確指定字面量類型

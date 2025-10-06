@@ -100,7 +100,7 @@ export class TLS12040UpConditionDataManager {
   private createLegacyItem(commissionType: string, talentId: string, existingItems?: any[]): ConditionItem {
     const baseItem = {
       id: this.generateTempId(),
-      talent_id: talentId,
+      apply_no: talentId,
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),
       _status: 'new',
@@ -332,7 +332,7 @@ export class TLS12040UpConditionDataManager {
 
     return data.RentDetails.map((item: any) => ({
       id: item.id,
-      talent_id: item.talent_id.toString(),
+      apply_no: item.apply_no.toString(),
       tlt_id: item.tlt_id || '',
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -346,7 +346,7 @@ export class TLS12040UpConditionDataManager {
 
     return data.RentDetails.map((rentItem: any, index: number) => ({
       id: rentItem.id,
-      talent_id: rentItem.talent_id.toString(),
+      apply_no: rentItem.apply_no.toString(),
       tlt_id: rentItem.tlt_id || '',
       cag_bdate: this.formatDate(rentItem.cag_bdate),
       cag_edate: this.formatDate(rentItem.cag_edate),
@@ -361,7 +361,7 @@ export class TLS12040UpConditionDataManager {
 
     return data.LimitDetails.map((item: any) => ({
       id: item.id,
-      talent_id: item.talent_id.toString(),
+      apply_no: item.apply_no.toString(),
       tlt_id: item.tlt_id || '',
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -376,7 +376,7 @@ export class TLS12040UpConditionDataManager {
 
     return data.LevelDetails.map((item: any) => ({
       id: item.id,
-      talent_id: item.talent_id.toString(),
+      apply_no: item.apply_no.toString(),
       seq_no: item.seq_no || 0,
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -391,7 +391,7 @@ export class TLS12040UpConditionDataManager {
     if (data.BottomTierDetails?.length) {
       return data.BottomTierDetails.map((item: BottomTierDetailApiItem) => ({
         id: item.id,
-        talent_id: item.talent_id.toString(),
+        apply_no: item.apply_no.toString(),
         seq_no: item.seq_no || 0,
         tlt_id: '',
         cag_bdate: this.formatDate(item.cag_bdate),
@@ -408,7 +408,7 @@ export class TLS12040UpConditionDataManager {
 
     return data.LevelDetails.map((levelItem: any) => ({
       id: levelItem.id,
-      talent_id: levelItem.talent_id.toString(),
+      apply_no: levelItem.apply_no.toString(),
       seq_no: levelItem.seq_no || 0,
       tlt_id: '',
       cag_bdate: this.formatDate(levelItem.cag_bdate),

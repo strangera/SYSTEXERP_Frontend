@@ -1,7 +1,7 @@
 // 條件設定相關介面
 export interface BaseConditionItem {
   id?: number | string;
-  talent_id: string;
+  apply_no: string;
   _status?: 'original' | 'new' | 'modified' | 'deleted';
   _isNew?: boolean;
   _fromNext2?: boolean;

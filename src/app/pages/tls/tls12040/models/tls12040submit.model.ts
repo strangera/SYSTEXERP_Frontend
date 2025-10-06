@@ -289,7 +289,7 @@ export class TLS12040DataCleanerClass {
       if (value === false || value === 'false' || value === 'N') return 'N';
       return 'N';
     };
-
+    const locationSource = rawData.locationData || rawData.locationInfo || [];
     const cleanedData: TLS12040ContractData = {
       // 基本資料
       apply_no: rawData.apply_no || '',
@@ -387,16 +387,8 @@ export class TLS12040DataCleanerClass {
       total_amt_vendor_unit: rawData.total_amt_vendor_unit,
 
       // 位置資訊
-      locationInfo: this.cleanLocationInfo(rawData.locationInfo || [])
+      locationInfo: this.cleanLocationInfo(locationSource)
     };
-
-    console.log('🎯 合約日期欄位清理完成:', {
-      tlt_bdate: cleanedData.tlt_bdate,
-      tlt_edate: cleanedData.tlt_edate,
-      tlt_contract_bdate: cleanedData.tlt_contract_bdate,
-      tlt_contract_edate: cleanedData.tlt_contract_edate,
-      說明: '格式為 YYYY-MM-DD'
-    });
 
     return cleanedData;
   }
