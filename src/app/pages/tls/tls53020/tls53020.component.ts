@@ -13,15 +13,15 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
+import { FileUploadHandlerEvent } from 'primeng/fileupload';
 
 // Services
 import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
-import { FileUploadHandlerEvent } from 'primeng/fileupload';
 
 @Component({
   selector: 'app-tls53020',
@@ -49,8 +49,8 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
     PST_No: ['', [Validators.maxLength(14)]], // 盤點單編號
     HOS_No: [[]], // 倉別代碼
     LOGO_No: [[]], // 品牌代碼
-    PST_DateStart: ['2024/01/01', Validators.required], // 盤點基準日期(起)
-    PST_DateEnd: ['2025/10/30', Validators.required], // 盤點基準日期(迄)
+    PST_DateStart: ['', Validators.required], // 盤點基準日期(起)
+    PST_DateEnd: ['', Validators.required], // 盤點基準日期(迄)
     PST_Status: [[]], // 盤點狀態
     PST_Type: [null], // 盤點類型
     ...createPaginationConfig([{ field: 'PST_Date', order: -1 }]),
@@ -58,7 +58,7 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
 
   // 匯入菜單 dialog
   queryForm2 = this.formBuilder.group({
-    PST_No: [''], // 盤點單編號
+    PST_No: [{ value: '', disabled: true }], // 盤點單編號
     PST_Type: [null, Validators.required], // 盤點類型
   });
 
@@ -158,8 +158,9 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   }
 
   // 匯入
-  dialogVisible = false;
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
+  dialogVisible = false;
+  fileUploadLoading = false;
 
   onImport(rowData: TLS53020Data): void {
     this.dialogVisible = true;
@@ -172,7 +173,6 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
       this.submitted = true;
       return;
     }
-    this.submitted = false;
 
     // 上傳檔案
     const formData = new FormData();
@@ -180,12 +180,14 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
     formData.append('PST_Type', this.queryForm2.controls.PST_Type.value || '');
     formData.append('file', event.files[0]);
 
+    this.fileUploadLoading = true;
     this.tls53020Service.uploadTLS53020(formData)
-      .pipe(untilDestroyed(this)).subscribe(res => {
+      .pipe(untilDestroyed(this), finalize(() => this.fileUploadLoading = false))
+      .subscribe(res => {
         if (res.Status === '0000') {
           this.messageService.successBubble(res.Message);
-          this.dialogVisible = false;
-          this.onSubmit(this.queryForm);
+          this.dialogVisible = false;     // 關閉視窗
+          this.onSubmit(this.queryForm);  // 重新整理列表
         } else {
           this.messageService.errorBubble(res.Message);
         }
@@ -196,8 +198,7 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   initFileUpload(rowData: TLS53020Data) {
     this.fileUploadComponent.clearFiles();
     this.queryForm2.reset();
-    this.queryForm2.controls.PST_No.setValue(rowData?.PST_No || '');
-    this.queryForm2.controls.PST_No.disable();
+    this.queryForm2.get('PST_No')?.setValue(rowData?.PST_No || '');
     this.submitted = false;
   }
 }
