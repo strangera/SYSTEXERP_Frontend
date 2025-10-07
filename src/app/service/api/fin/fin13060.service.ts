@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { tap, Observable, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+
 import { DropDownItem } from './fin13050.service';
 
 export interface ApiResponse<T> {
@@ -25,7 +25,7 @@ export class FIN13060Service {
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
+    
   ) {}
 // 將任何可被 new Date() 解析的值，轉成 yyyy/MM/dd；無法解析就原樣回傳字串
 
@@ -36,7 +36,7 @@ export class FIN13060Service {
       .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060`, query)
       .pipe(
         tap((res) => console.log('查詢結果:', res)),
-        catchError((err) => this.errorHandler.handleError(err))
+       
       );
   }
 
@@ -46,7 +46,7 @@ export class FIN13060Service {
       .post<ApiResponse<number>>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13060`, data)
       .pipe(
         tap((res) => console.log('新增結果:', res)),
-        catchError((err) => this.errorHandler.handleError(err))
+        
       );
   }
 
@@ -56,7 +56,7 @@ export class FIN13060Service {
       .post<ApiResponse<number>>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13060`, data)
       .pipe(
         tap((res) => console.log('更新結果:', res)),
-        catchError((err) => this.errorHandler.handleError(err))
+      
       );
   }
 
@@ -66,7 +66,7 @@ export class FIN13060Service {
       .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Detail`, param)
       .pipe(
         tap((res) => console.log('明細查詢結果:', res)),
-        catchError((err) => this.errorHandler.handleError(err))
+        
       );
   }
 
@@ -76,7 +76,7 @@ export class FIN13060Service {
       .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Correspond`, param)
       .pipe(
         tap((res) => console.log('對應查詢結果:', res)),
-        catchError((err) => this.errorHandler.handleError(err))
+       
       );
   }
   queryAPS2002DropDownList(): Observable<ApiResponse<DropDownItem[]>> {
