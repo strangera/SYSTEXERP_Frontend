@@ -60,9 +60,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖
-    SAL_Type: [null],                                           // 使用別
     SYS_ORIGIN: [null],                                         // 系統別
-    ...createPaginationConfig([{ field: 'No', order: -1 }])
+    ...createPaginationConfig([{ field: 'PUR_VoucherType', order: 1 }, { field: 'InvoiceNo', order: 1 }])
   });
 
   queryForm2 = this.formBuilder.group({
@@ -88,7 +87,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'PUR_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true },
+    { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'PUR_DiscNo', header: '折抵代號', visible: true, format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'PUR_Uniform', header: '統一編號', visible: true }
   ];
