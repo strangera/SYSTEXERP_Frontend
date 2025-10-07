@@ -14,6 +14,7 @@ import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/ba
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Tls13070Response } from '@service/api/tls/tls13070.service';
 
 @Component({
   selector: 'app-tls13070-table',
@@ -40,6 +41,7 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   aps1003_B = this.dropdown.queryAps1003({ cap_typeList: ['B'] });
   aps1003_C = this.dropdown.queryAps1003({ cap_typeList: ['C'] });
   aps1003_D = this.dropdown.queryAps1003({ cap_typeList: ['D'] });
+  totalColspan = 0;
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -47,8 +49,86 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
+    // 訂閱所有動態欄位 Observable，並在資料載入後計算總欄位數
+    let aLength = 0;
+    let bLength = 0;
+    let cLength = 0;
+    let dLength = 0;
+
+    const calculateColspan = () => {
+      // 固定的欄位數
+      // 序號(1) + 招募編號(1) + 更新時間(1) + 位置編號(1) + 廠商名稱(1) + 廠商統編(1) = 6
+      // 店櫃資料 (11) = 11
+      // 租賃條件 (18) = 18
+      // 目標營業額 (1) + 結帳後幾天匯款 (1) + 備註 (1) = 3
+      const fixedCols = 6 + 11 + 18 + 3; // 總固定欄位 = 38
+
+      // 動態欄位數
+      const dynamicCols = aLength + bLength + (cLength * 3) + dLength;
+
+      this.totalColspan = fixedCols + dynamicCols;
+    };
+
+    this.aps1003_A.subscribe(res => {
+      aLength = res?.length ?? 0;
+      calculateColspan();
+    });
+    this.aps1003_B.subscribe(res => {
+      bLength = res?.length ?? 0;
+      calculateColspan();
+    });
+    this.aps1003_C.subscribe(res => {
+      cLength = res?.length ?? 0;
+      calculateColspan();
+    });
+    this.aps1003_D.subscribe(res => {
+      dLength = res?.length ?? 0;
+      calculateColspan();
+    });
+  }
+  // 新增一個方法：取得當前行數據中，實際有資料的租賃條件列表
+  // 由於您說它們是互斥或擇一，且長度相同，我們只需找到第一個非空列表
+  getTltConditionList(rowData: Tls13070Response): any[] {
+    // 檢查所有列表，返回第一個非空列表
+    if (rowData.cagList && rowData.cagList.length > 0) {
+      return rowData.cagList;
+    }
+    if (rowData.levelList && rowData.levelList.length > 0) {
+      return rowData.levelList;
+    }
+    if (rowData.limitList && rowData.limitList.length > 0) {
+      return rowData.limitList;
+    }
+    if (rowData.rentList && rowData.rentList.length > 0) {
+      return rowData.rentList;
+    }
+    return [];
   }
 
+  // 新增一個方法：根據列表名稱取得該列表的資料欄位名稱 (這是為了讓 body 知道要取哪個欄位)
+  // 雖然您的 levelList/limitList/rentList 結構不明，但假設它們的欄位名稱略有不同
+  getTltConditionFieldConfig(list: any[]): { start: string, end: string, rate: string, total: string, month: string, down: string } {
+    const emptyConfig = { start: '', end: '', rate: '', total: '', month: '', down: '' };
+    if (list.length === 0) return emptyConfig;
+
+    const firstItem = list[0];
+
+    // 根據您提供的 Interface 進行判斷
+    if ('cag_charge_rate' in firstItem) {
+      // 抽成 (cagList)
+      return { start: 'tlt_bdate', end: 'tlt_edate', rate: 'cag_charge_rate', total: '', month: '', down: '' };
+    } else if ('level_charge_rate' in firstItem) {
+      // 階梯 (levelList)
+      return { start: 'cag_bdate', end: 'cag_edate', rate: 'level_charge_rate', total: '', month: '', down: '' };
+    } else if ('limit_amt_year' in firstItem) {
+      // 包底 (limitList)
+      return { start: 'cag_bdate', end: 'cag_edate', rate: 'limit_amt_year', total: '', month: '', down: '' }; // 使用 limit_amt_year 作為主要的「率/金額」
+    } else if ('base_rent' in firstItem) {
+      // 固定租金 (rentList)
+      return { start: 'cag_bdate', end: 'cag_edate', rate: 'base_rent', total: '', month: '', down: '' };
+    }
+    return emptyConfig;
+  }
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
     if (changes['data'] && this.data.length > 0) {
