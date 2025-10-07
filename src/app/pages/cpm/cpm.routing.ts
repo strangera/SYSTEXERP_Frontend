@@ -12,7 +12,7 @@ export const cpmRoutes: Routes = [
   { path: 'cpm11050', loadComponent: () => import('./cpm11050/cpm11050.component').then(m => m.CPM11050Component) }, // 遺失/拾獲管理作業
   { path: 'cpm11050cru', loadComponent: () => import('./cpm11050-cru/cpm11050-cru.component').then(m => m.CPM11050CRUComponent) }, // 遺失/拾獲管理作業
   { path: 'cpm11060', loadComponent: () => import('./cpm11060/cpm11060.component').then(m => m.CPM11060Component) }, // 總機廣播服務
-  { path: 'cpm11060cru', loadComponent: () => import('./cpm11060-cru/cpm11060-cru.component').then(m => m.Cpm11060CRUComponent) }, // 總機廣播服務 CRU
+  { path: 'cpm11060cru', loadComponent: () => import('./cpm11060-cru/cpm11060-cru.component').then(m => m.CPM11060CRUComponent) }, // 總機廣播服務 CRU
   // { path: 'cpm11070', loadComponent: () => import('./cpm11070/cpm11070.component').then(m => m.CPM11070Component) }, // 全館店櫃資訊查詢
   { path: 'cpm12010', loadComponent: () => import('./cpm12010/cpm12010.component').then(m => m.CPM12010Component) }, // 顧客意見類別維護
   { path: 'cpm12010cru', loadComponent: () => import('./cpm12010-cru/cpm12010-cru.component').then(m => m.CPM12010CRUComponent) },

@@ -82,18 +82,24 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 明細table相關
   editColumns: EditColumn[] = [
-    { field: 'AcctNo', header: '科目代號' },
     {
-      field: 'Remark', header: '摘要', type: 'input', validate: [validateRequired], width: '250px'
+      field: 'AccNo', header: '科目代號',
+      format: (v, i, r) => `${v} ${r.AccNotes}`,
     },
-    { field: 'DebitAmt', header: '借方金額', format: formatAmount },
-    { field: 'CreditAmt', header: '貸方金額', format: formatAmount },
-    { field: 'OrgCode', header: '組織代碼' },
-    { field: 'ActivityNo', header: '活動代號' },
-    { field: 'OffsetNo', header: '立沖代號' }
+    { field: 'NoteDesc', header: '摘要' },
+    {
+      field: 'AccAmt', header: '借方金額',
+      format: (v, i, r) => r.AccDC === 'D' ? formatAmount(v) : '0',
+    },
+    {
+      field: 'AccAmt', header: '貸方金額',
+      format: (v, i, r) => r.AccDC === 'C' ? formatAmount(v) : '0'
+    },
+    { field: 'ORG_ID', header: '組織代碼' },
+    { field: 'ProjectNo', header: '活動代號' },
+    { field: 'PTA', header: '立沖代號' }
   ]
 
-  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   data: any[] = [];
   selectedItems: any[] = [];
 
@@ -109,8 +115,27 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     this.setupFormControls();
     // 編輯時 帶回明細資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      this.loadDetailData();
+      this.data = this.rowdata._GLS6002List;
     }
+  }
+
+  onSubmit(form: FormGroup): void {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      // 僅更新傳票摘要
+      if (this.crudstatus === CRUDStatus.Edit) {
+        const updateRequest = {
+          id: this.rowdata.id,
+          Remark: formValue.Remark || ''
+        }
+        this.tls2c040Service.updateTLS2C040(updateRequest)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('修改成功');
+            this.onCancel();  // 返回查詢頁
+          });
+      }
+    });
   }
 
   setupFormControls(): void {
@@ -125,42 +150,5 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('CRT_Date')?.disable();
     this.dataForm.get('UPD_USR_No')?.disable();
     this.dataForm.get('UPD_Date')?.disable();
-  }
-
-  onSubmit(form: FormGroup): void {
-    const formValue = form.getRawValue();
-    this.handleSubmit(form, () => {
-      // 送出前先驗證明細table
-      const valid = this.tableEditComponent.validateAndShowErrors()
-      if (!valid) {
-        this.loading = false
-        return;
-      }
-      // 僅更新傳票摘要
-      if (this.crudstatus === CRUDStatus.Edit) {
-        const updateRequest = {
-          ID: this.rowdata?.ID!,
-          Remark: formValue.Remark || ''
-        }
-        // 這裡需要根據實際 API 調整更新方法
-        // this.tls2c040Service.updateTLS2C040(updateRequest)
-        //   .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        //   .subscribe(() => {
-        //     this.messageService.successBubble('修改成功');
-        //     this.onCancel();  // 返回查詢頁
-        //   });
-
-        // 暫時模擬成功
-        this.messageService.successBubble('修改成功');
-        this.onCancel();
-      }
-    });
-  }
-
-  loadDetailData(): void {
-    this.data = [
-      { AcctNo: '1001', Remark: '現金收入', DebitAmt: 1000, CreditAmt: 0, OrgCode: 'A01', ActivityNo: 'ACT100', OffsetNo: '' },
-      { AcctNo: '2001', Remark: '銷貨收入', DebitAmt: 0, CreditAmt: 1000, OrgCode: 'A01', ActivityNo: 'ACT100', OffsetNo: '' }
-    ]
   }
 }

@@ -1,58 +1,93 @@
+/* src/app/service/api/fin/fin13060.service.ts */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, Observable, tap } from 'rxjs';
+import { tap, Observable, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
+import { DropDownItem } from './fin13050.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface ApiResponse<T> {
+  Status?: string;
+  Data: T;
+  Error?: { Code?: string; Message?: string; Details?: string };
+  Meta?: any;
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+}
+
+export type QueryResponse<T> = ApiResponse<T[]>;
+
+@Injectable({ providedIn: 'root' })
 export class FIN13060Service {
   private apiUrl = environment.ApiUrl;
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
-  ) { }
+    
+  ) {}
+// 將任何可被 new Date() 解析的值，轉成 yyyy/MM/dd；無法解析就原樣回傳字串
 
-  // ✅ 查詢
-  queryFIN13060(query: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060`, query).pipe(
-      tap(res => console.log('查詢結果:', res)),
 
-    );
+  // 查詢
+  queryFIN13060(query: any): Observable<QueryResponse<any>> {
+    return this.http
+      .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060`, query)
+      .pipe(
+        tap((res) => console.log('查詢結果:', res)),
+       
+      );
   }
 
-  // ✅ 新增
-  insertFIN13060(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13060`, data).pipe(
-      tap(res => console.log('新增結果:', res)),
-
-    );
+  // 新增
+  insertFIN13060(data: any): Observable<ApiResponse<number>> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13060`, data)
+      .pipe(
+        tap((res) => console.log('新增結果:', res)),
+        
+      );
   }
 
-  // ✅ 更新
-  updateFIN13060(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13060`, data).pipe(
-      tap(res => console.log('更新結果:', res)),
-
-    );
+  // 更新
+  updateFIN13060(data: any): Observable<ApiResponse<number>> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13060`, data)
+      .pipe(
+        tap((res) => console.log('更新結果:', res)),
+      
+      );
   }
 
-  // ✅ 發票明細查詢（例如依據 GUI_No）
-  queryDetailByGUI(param: { GUI_No: string }): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Detail`, param).pipe(
-      tap(res => console.log('明細查詢結果:', res)),
-
-    );
+  // 明細查詢（若後端提供）
+  queryDetailByGUI(param: { GUI_No: string }): Observable<QueryResponse<any>> {
+    return this.http
+      .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Detail`, param)
+      .pipe(
+        tap((res) => console.log('明細查詢結果:', res)),
+        
+      );
   }
 
-  // ✅ 進一步對應查詢（若需要）
-  queryCorrespondByGUI(param: { GUI_Correspond: string }): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Correspond`, param).pipe(
-      tap(res => console.log('對應查詢結果:', res)),
-
-    );
+  // 對應查詢（若後端提供）
+  queryCorrespondByGUI(param: { GUI_Correspond: string }): Observable<QueryResponse<any>> {
+    return this.http
+      .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Correspond`, param)
+      .pipe(
+        tap((res) => console.log('對應查詢結果:', res)),
+       
+      );
+  }
+  queryAPS2002DropDownList(): Observable<ApiResponse<DropDownItem[]>> {
+    // 如果你的後端是 GET，改成 this.http.get<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryAPS2002_DropDownList`);
+    return this.http
+      .post<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryFIN13060_TDS1007DropDownList`, {})
+      .pipe(
+        tap((res) => console.log('APS2002 下拉資料:', res)),
+        // 需要共用錯誤處理的話打開下一行
+        // catchError(err => this.errorHandler.handle(err))
+      );
   }
 }
+

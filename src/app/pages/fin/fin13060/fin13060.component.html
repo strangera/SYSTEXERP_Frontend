@@ -1,11 +1,8 @@
+<!-- src/app/pages/fin/fin13060/fin13060.component.html -->
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
 
   <p-accordion>
@@ -15,174 +12,173 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 左欄 -->
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="發票格式"
-              controlName="PUR_VoucherType"
-              [options]="PUR_VoucherTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.PUR_VoucherType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div> -->
+
+
+          <!-- 字軌 (INV_GUITrack) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="字軌"
-              [control]="queryForm.controls.GUI_Track"
+              [control]="queryForm.controls.INV_GUITrack"
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
+          <!-- 發票號碼 (INV_GUINumber) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-text
               label="發票號碼"
-              [startControl]="queryForm.controls.PUR_GUINoStart"
-              [endControl]="queryForm.controls.PUR_GUINoEnd"
+              [control]="queryForm.controls.INV_GUINumber"
               [submitted]="submitted"
-            ></app-input-text-range>
+            ></app-input-text>
           </div>
+
+          <!-- 發票日期 (TXN_Date_Start / TXN_Date_End) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               label="發票日期"
               calendarType="dateRange"
-              [startControl]="queryForm.controls.GUI_DateStart"
-              [endControl]="queryForm.controls.GUI_DateEnd"
+              [startControl]="queryForm.controls.TXN_Date_Start"
+              [endControl]="queryForm.controls.TXN_Date_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
+          <!-- 資料所屬年月 (INV_YM) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month
-              label="資料所屬年月"
-              [control]="queryForm.controls.Rep_YYYYMM"
-              [submitted]="submitted"
-              [onlyOddMonths]="true"
-            ></app-query-year-month>
+            <app-calendar
+            controlName="INV_YM"
+            calendarType="dateMonthOne"
+            label="資料所屬年月"
+            [control]="queryForm.controls.INV_YM"
+            [submitted]="submitted">
+          </app-calendar>
+      
           </div>
 
+          <!-- 申報年月 (INV_DeclareYM) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month
-              label="申報年月"
-              [control]="queryForm.controls.Apply_YYYYMM"
-              [submitted]="submitted"
-              [onlyOddMonths]="true"
-            ></app-query-year-month>
+ 
+          <app-calendar
+            controlName="INV_DeclareYM"
+            calendarType="dateMonthOne"
+            label="申報年月"
+            [control]="queryForm.controls.INV_DeclareYM"
+            [submitted]="submitted">
+          </app-calendar>
           </div>
+
+          <!-- 專櫃編號 (Tlt_No) 單選 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="專櫃編號"
-              controlName="TLT_No"
+              controlName="Tlt_No"
               [options]="CounterOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.TLT_No"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠客代號"
-              [control]="queryForm.controls.VendorCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="銷售人統一編號"
-              [control]="queryForm.controls.SellerUniCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="買受人統一編號"
-              [control]="queryForm.controls.BuyerUniCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="發票格式"
-              controlName="PUR_VoucherType"
-              [options]="PUR_VoucherTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.PUR_VoucherType"
+              [control]="queryForm.controls.Tlt_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 廠客代號 (Ven_No) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="發票總金額"
-              [startControl]="queryForm.controls.AmountStart"
-              [endControl]="queryForm.controls.AmountEnd"
+            <app-input-text
+              label="廠客代號"
+              [control]="queryForm.controls.Ven_No"
               [submitted]="submitted"
-            ></app-input-text-range>
+            ></app-input-text>
           </div>
+
+          <!-- 買受人統一編號 (TXN_Uniform) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="買受人統一編號"
+              [control]="queryForm.controls.TXN_Uniform"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+                    <!-- 發票格式 (INV_GUIType: string[]) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="發票格式"
+              controlName="INV_GUIType"
+              [options]="INV_GUITypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.INV_GUIType"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          
+          <!-- 發票總金額 (TXN_SaleAmt_Small/Big) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              label="發票總金額"
+              [startControl]="queryForm.controls.TXN_SaleAmt_Small"
+              [endControl]="queryForm.controls.TXN_SaleAmt_Big"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+
+          <!-- 課稅別 (PLU_TaxType: string[]) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="課稅別"
-              controlName="PUR_TaxType"
+              controlName="PLU_TaxType"
+              [options]="taxTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.PUR_TaxType"
-              [options]="taxTypeOptions"
+              [control]="queryForm.controls.PLU_TaxType"
               [submitted]="submitted"
             ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="發票未稅金額"
-              [startControl]="queryForm.controls.TaxExcludedStart"
-              [endControl]="queryForm.controls.TaxExcludedEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="稅額"
-              [startControl]="queryForm.controls.TaxStart"
-              [endControl]="queryForm.controls.TaxEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="憑證單號"
-              [startControl]="queryForm.controls.Source_Doc_NoStart"
-              [endControl]="queryForm.controls.Source_Doc_NoEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="傳票編號"
-              [startControl]="queryForm.controls.Voucher_NoStart"
-              [endControl]="queryForm.controls.Voucher_NoEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
           </div>
 
+
+          <!-- 發票未稅金額 (TXN_Net_Small/Big) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="系統別"
-              [control]="queryForm.controls.System_ID"
-              [options]="System_IDOptions"
-              optionLabel="label"
-              optionValue="value"
+            <app-input-number-range
+              label="發票未稅金額"
+              [startControl]="queryForm.controls.TXN_Net_Small"
+              [endControl]="queryForm.controls.TXN_Net_Big"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-input-number-range>
           </div>
+
+          <!-- 稅額 (TXN_Tax_Small/Big) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              label="稅額"
+              [startControl]="queryForm.controls.TXN_Tax_Small"
+              [endControl]="queryForm.controls.TXN_Tax_Big"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+
+          <!-- 憑證單號 (Source_Doc_No) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="憑證單號"
+              [control]="queryForm.controls.Source_Doc_No"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <!-- 傳票編號 (Voucher_No) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="傳票編號"
+              [control]="queryForm.controls.Voucher_No"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          
+          <!-- 資產註記 (AssetType: string[]) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="資產註記"
-              [control]="queryForm.controls.AssetNote"
+              [control]="queryForm.controls.AssetType"
               [options]="AssetNoteOptions"
               optionLabel="label"
               optionValue="value"
@@ -190,18 +186,34 @@
             ></app-multi-select>
           </div>
 
+          <!-- 系統別 (SYS_ORIGIN: string[]) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="系統別"
+              [control]="queryForm.controls.SYS_ORIGIN"
+              [options]="System_IDOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+
+          <!-- 備註 (INV_Remark) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="備註"
-              controlName="remark"
-              [control]="queryForm.controls.remark"
+              controlName="INV_Remark"
+              [control]="queryForm.controls.INV_Remark"
               [submitted]="submitted"
             ></app-input-text>
           </div>
-          <!-- <div class="col-12 md:col-6 lg:col-4">
+
+             <!-- 建/改檔者與日期（可選） -->
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="建檔人員"
-              [control]="queryForm.controls.Create_User"
+              [control]="queryForm.controls.CRT_USR_Name"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -209,16 +221,15 @@
             <app-calendar-range
               label="建檔日期"
               calendarType="dateRange"
-              [startControl]="queryForm.controls.Create_DateStart"
-              [endControl]="queryForm.controls.Create_DateEnd"
+              [startControl]="queryForm.controls.CRT_Date_Start"
+              [endControl]="queryForm.controls.CRT_Date_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="修改人員"
-              [control]="queryForm.controls.Update_User"
+              [control]="queryForm.controls.UPD_USR_Name"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -226,17 +237,15 @@
             <app-calendar-range
               label="修改日期"
               calendarType="dateRange"
-              [startControl]="queryForm.controls.Update_DateStart"
-              [endControl]="queryForm.controls.Update_DateEnd"
+              [startControl]="queryForm.controls.UPD_Date_Start"
+              [endControl]="queryForm.controls.UPD_Date_End"
               [submitted]="submitted"
             ></app-calendar-range>
-          </div> -->
+          </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear" (click)="onClearForm()"></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -249,8 +258,8 @@
     tableKey="FIN13060"
     [data]="data"
     [columns]="columns"
-    dataKey="Rep_YYYYMM"
-    [multiSortMeta]="[{ field: 'Rep_YYYYMM', order: 1 }]"
+    dataKey="ID"
+    [multiSortMeta]="[{ field: 'ID', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"

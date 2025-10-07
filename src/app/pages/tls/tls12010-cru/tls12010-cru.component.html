@@ -86,8 +86,10 @@
                     optionValue="No" [control]="dataForm.controls.bus_type" [submitted]="submitted"></app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="品牌名稱(中文)" controlName="tlt_name" [options]="tlt_name_Option" optionLabel="Label"
-                    optionValue="No" [control]="dataForm.controls.tlt_name" [submitted]="submitted"></app-dropdown>
+                    <!-- <app-dropdown label="品牌名稱(中文)" controlName="tlt_name" [options]="tlt_name_Option" optionLabel="Label"
+                    optionValue="No" [control]="dataForm.controls.tlt_name" [submitted]="submitted"></app-dropdown> -->
+                    <app-input-text label="品牌名稱(中文)" controlName="tlt_name" [control]="dataForm.controls.tlt_name"
+                    [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="品牌名稱(英文)" controlName="tlt_EngName" [control]="dataForm.controls.tlt_EngName"
