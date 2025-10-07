@@ -26,14 +26,70 @@
   </p-accordion>
 </div>
 <div class=" card">
-  <p-panel class="m-0">
-    <ng-template pTemplate="header">
-      <div class="p-0 text-center">
-        傳票資料
-      </div>
-    </ng-template>
-  </p-panel>
+  @if (!isConfirmDate) {
   <app-table dataKey="master_key" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details" [showPaginator]="false"
     [showManage]="false" [showCaption]="false" [showSort]="false"></app-table>
+  } @else {
+  <form [formGroup]="dataForm" id="dataForm" class="flex flex-column gap-3" (ngSubmit)="onReverse(dataForm)">
+    @if (showReverseBtn) {
+    <div class="grid justify-content-end m-0 mt-2">
+      <app-button type="button" label="反日結" (clickEvent)="onReverse(dataForm)" [loading]="reverseLoading"></app-button>
+    </div>
+    }
+    <p-panel header="傳票資料">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票編號" controlName="VouNo" [control]="dataForm.controls.VouNo"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-dropdown label="傳票種類" controlName="VouType" [control]="dataForm.controls.VouType"
+            [options]="VouTypeOptions" optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票型態" controlName="SrcSheetType" [control]="dataForm.controls.SrcSheetType"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="傳票日期" controlName="VouDate" [control]="dataForm.controls.VouDate"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6">
+          <app-input-text label="傳票摘要" controlName="Remark" [control]="dataForm.controls.Remark"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="結帳單號" controlName="SrcSheetNo" [control]="dataForm.controls.SrcSheetNo"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-dropdown label="傳票狀態" controlName="PostFlag" [control]="dataForm.controls.PostFlag"
+            [submitted]="submitted" [options]="PostFlagOptions" optionLabel="label" optionValue="value"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="建立人員編號" controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="建立日期" controlName="CRT_Date" [control]="dataForm.controls.CRT_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="變更人員編號" controlName="UPD_USR_No"
+            [control]="dataForm.controls.UPD_USR_No"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="變更日期" controlName="UPD_Date" [control]="dataForm.controls.UPD_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
+      </div>
+    </p-panel>
+    <p-panel header="傳票明細">
+      <app-table [data]="data2" [columns]="columns2" [showManage]="false" [showDelete]="false" [showPaginator]="false"
+        [showCaption]="false">
+      </app-table>
+    </p-panel>
+  </form>
+  }
 </div>
