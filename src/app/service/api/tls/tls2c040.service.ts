@@ -13,6 +13,12 @@ export interface QueryTLS2C040Request extends BaseQueryRequest {
   No?: string;                   // 結帳單號
 }
 
+// 更新GLS6001資料表 Request
+export interface UpdateTLS2C040Request {
+  id: number;
+  Remark: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -24,5 +30,10 @@ export class TLS2C040Service {
   // 查詢
   queryTLS2C040(req: QueryTLS2C040Request): Observable<BaseQueryResponse<any>> {
     return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/queryTLS2C040`, req);
+  }
+
+  // 更新GLS6001資料表
+  updateTLS2C040(req: UpdateTLS2C040Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS2C040`, req);
   }
 }

@@ -105,9 +105,16 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     this.tls2c040Service.queryTLS2C040(form.getRawValue())
       .pipe(untilDestroyed(this), finalize(() => this.loading = false))
       .subscribe(response => {
-        this.data = response.Data.map((item: any) => item._GLS6001);
+        this.data = response.Data.map((item: any) => this.restructureData(item));
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
       });
+  }
+
+  restructureData(item: any) {
+    return {
+      ...item._GLS6001,
+      _GLS6002List: item._GLS6002List
+    }
   }
 }
