@@ -88,7 +88,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工ID, 由使用者自行輸入 */
     bus_type: [[], [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
-    tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
+    tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱) --- 20251007 修改: 品牌名稱(中文)應為文字輸入欄位
     tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
     //分頁查詢
     ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
