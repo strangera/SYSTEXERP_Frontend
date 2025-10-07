@@ -17,10 +17,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
@@ -61,14 +58,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
 
   // 下拉/多選選項（沿用你原本的）
   PUR_VoucherTypeOptions: any[] = [
-    {
-      value: '23',
-      label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單',
-    },
-    {
-      value: '24',
-      label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單',
-    },
+   
   ];
 
   // 發票用途 -> 對應後端 PUR_DirectType
@@ -197,13 +187,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         label: String(x.Name), // Name -> label
       }));
     });
-    this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.directTypeOptions = list.map((x: any) => ({
-        value: String(x.No), // No -> value
-        label: String(x.Name), // Name -> label
-      }));
-    });
+
 
     this.fin13050Service
       .querySYS1000DropDownList('PUR_TaxType')
