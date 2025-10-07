@@ -84,7 +84,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
   editColumns: EditColumn[] = [
     {
       field: 'AccNo', header: '科目代號',
-      format: (v, i, r) => `${v}-${r.AccNotes}`,
+      format: (v, i, r) => `${v} ${r.AccNotes}`,
     },
     { field: 'NoteDesc', header: '摘要' },
     {
