@@ -140,6 +140,10 @@ export interface ContractItem {
   /** 營業狀態: 0=已撤櫃, 1=營運中, 9=核准時合約尚未開始 */
   tlt_openflag: string;
 
+  approve_status: string;
+
+  tlt_contract_bdate: string;
+
   /** 是否可編輯 */
   CanEdit: boolean;
 }

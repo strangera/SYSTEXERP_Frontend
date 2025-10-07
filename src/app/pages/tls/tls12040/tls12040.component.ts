@@ -31,10 +31,10 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
-import { TLS12040QueryRequest } from './models/tls12040.model';
+import { ContractItem, TLS12040QueryRequest } from './models/tls12040.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 2.1.2.4 專櫃要約書維護
@@ -83,7 +83,28 @@ export interface TLS12040Response {
     TranslateModule
   ]
 })
-export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response> implements OnInit {
+export class TLS12040Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: ContractItem) => this.onApprove(rowData),
+      disabled: (rowData: ContractItem) => rowData.approve_status !== '1' // 只有未審核狀態才能審核
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: ContractItem) => this.onUnapprove(rowData),
+      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' // 只有已審核狀態才能反審核
+    },
+    {
+      label: '作廢',
+      icon: 'pi pi-times-circle text-red-500',
+      action: (rowData: ContractItem) => this.onVoid(rowData),
+      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData)
+    }
+  ];
 
   // 查詢表單
   queryForm = this.formBuilder.group({
@@ -126,12 +147,15 @@ export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response>
     rece_yn: [false], // 是否開立業主發票
     pos_yn: [false], // 是否使用業主收銀機
     cash_yn: [false], // 是否為業主收現
+
+    ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
   });
 
   // 表格資料
   data: TLS12040Response[] = [];
   filteredData: TLS12040Response[] = [...this.data];
   totalRecords: number = 0;
+  selectedItems: ContractItem[] = [];
   columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -385,5 +409,136 @@ export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response>
     if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
       this.navigateWithState(CRUDStatus.Read, rowData);
     }
+  }
+
+  /**
+     * 審核功能
+     */
+  public onApprove(rowData: ContractItem): void {
+    this.confirmationService.confirm({
+      message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
+      accept: () => {
+        // 調用審核 API
+        this.apiService.approveTLS12040({ apply_no: rowData.apply_no }).subscribe({
+          next: (response: any) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('審核成功');
+              this.onSubmit(this.queryForm); // 重新查詢更新狀態
+            } else {
+              this.messageService.errorBubble(`審核失敗: ${response.Message || '未知錯誤'}`);
+            }
+          },
+          error: (err: any) => {
+            console.error('審核失敗:', err);
+            this.messageService.errorBubble('審核失敗，請檢查網路連線或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消審核');
+      }
+    });
+  }
+
+  /**
+     * 反審核功能
+     */
+  public onUnapprove(rowData: ContractItem): void {
+    this.confirmationService.confirm({
+      message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
+      accept: () => {
+        // 調用反審核 API
+        this.apiService.unapproveTLS12040({ apply_no: rowData.apply_no }).subscribe({
+          next: (response: any) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('反審核成功');
+              this.onSubmit(this.queryForm); // 重新查詢更新狀態
+            } else {
+              this.messageService.errorBubble(`反審核失敗: ${response.Message || '未知錯誤'}`);
+            }
+          },
+          error: (err: any) => {
+            console.error('反審核失敗:', err);
+            this.messageService.errorBubble('反審核失敗，請檢查網路連線或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消反審核');
+      }
+    });
+  }
+
+  /**
+ * 判斷作廢按鈕是否應該被禁用
+ */
+  private isVoidDisabled(rowData: ContractItem): boolean {
+    // 已作廢的不能再作廢
+    if (rowData.approve_status === '3') {
+      return true;
+    }
+
+    // 未審核的可以作廢
+    if (rowData.approve_status === '1') {
+      return false;
+    }
+
+    // 已審核的需要檢查契約是否已生效
+    if (rowData.approve_status === '2') {
+      const today = new Date();
+      const contractStart = new Date(rowData.tlt_contract_bdate);
+      // 契約已生效就不能作廢
+      return contractStart < today;
+    }
+
+    return true; // 其他情況都禁用
+  }
+
+
+  /**
+   * 作廢功能
+   */
+  public onVoid(rowData: ContractItem): void {
+    // 先檢查是否可以作廢
+    if (this.isVoidDisabled(rowData)) {
+      if (rowData.approve_status === '3') {
+        this.messageService.warnBubble('該合約已作廢');
+      } else if (rowData.approve_status === '2') {
+        this.messageService.warnBubble('合約已生效，無法作廢');
+      }
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
+      accept: () => {
+        // 調用作廢 API
+        this.apiService.voidTLS12040({ apply_no: rowData.apply_no }).subscribe({
+          next: (response: any) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('作廢成功');
+              this.onSubmit(this.queryForm); // 重新查詢更新狀態
+            } else {
+              this.messageService.errorBubble(`作廢失敗: ${response.Message || '未知錯誤'}`);
+            }
+          },
+          error: (err: any) => {
+            console.error('作廢失敗:', err);
+            this.messageService.errorBubble('作廢失敗，請檢查網路連線或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消作廢');
+      }
+    });
+  }
+
+
+  /**
+   * 判斷資料列是否可選取
+   */
+  isRowSelectable(rowData: ContractItem): boolean {
+    return true;
   }
 }

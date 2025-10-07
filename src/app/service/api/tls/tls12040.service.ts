@@ -17,6 +17,18 @@ interface TLS12040CommissionRequest {
   CurrentTltTermType: string;
 }
 
+interface APPROVE_TLS12040Request {
+  apply_no: string;
+}
+
+interface UNAPPROVE_TLS12040Request {
+  apply_no: string;
+}
+
+interface VOID_TLS12040Request {
+  apply_no: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -165,6 +177,27 @@ export class TLS12040Service {
 
         throw enhancedError;
       })
+    );
+  }
+
+  /** 審核 */
+  approveTLS12040(request: APPROVE_TLS12040Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/approveTLS12040`, request).pipe(
+      tap((res) => console.log('審核結果:', res)),
+    );
+  }
+
+  /** 反審核 */
+  unapproveTLS12040(request: UNAPPROVE_TLS12040Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/unapproveTLS12040`, request).pipe(
+      tap((res) => console.log('反審核結果:', res)),
+    );
+  }
+
+  /** 作廢 */
+  voidTLS12040(request: VOID_TLS12040Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/voidTLS12040`, request).pipe(
+      tap((res) => console.log('作廢結果:', res)),
     );
   }
 }
