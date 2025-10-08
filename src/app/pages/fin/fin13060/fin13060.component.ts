@@ -177,7 +177,7 @@ private toSlashDateDisplay(d: any): string {
       label: String(x.Name),
     }));
   });
-      this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
+      this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res) => {
       const list = res?.Data ?? [];
       this.taxTypeOptions = list.map((x: any) => ({
         value: String(x.No), // No -> value
