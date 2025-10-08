@@ -1,8 +1,11 @@
+/* src/app/service/api/fin/fin13050.service.ts */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, tap, catchError } from 'rxjs';
+import { Observable, tap, catchError, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+
 export interface ApiResponse<T> {
   Status: string;
   Data: T;
@@ -17,6 +20,32 @@ export interface DropDownItem {
   No: string;
   Name: string;
 }
+
+/** 後端常見的 Vendor 欄位（防禦性設計：多鍵名相容）*/
+export interface VendorItem {
+  Ven_No?: string;          // 供應商編號
+  Vdr_No?: string;
+  VEN_No?: string;
+
+  Ven_Name?: string;        // 供應商名稱
+  Vdr_Name?: string;
+  VEN_Name?: string;
+
+  Ven_Uniform?: string;     // 統一編號
+  Vdr_Uniform?: string;
+  VEN_Uniform?: string;
+  Uniform?: string;
+}
+
+/** 統一編號下拉用（可直接回填 VenNo/VenName） */
+export interface VendorOption {
+  label: string;     // 顯示「統編 名稱」
+  value: string;     // VEN_Uniform（統編）
+  venNo?: string;    // VEN_No
+  venName?: string;  // VEN_Name
+  venUniform?: string; // VEN_Uniform
+}
+
 @Injectable({ providedIn: 'root' })
 export class FIN13050Service {
   private apiUrl = environment.ApiUrl;
@@ -32,7 +61,6 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13050`, query)
       .pipe(
         tap((res) => console.log('查詢結果:', res)),
-
       );
   }
 
@@ -42,7 +70,6 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13050`, data)
       .pipe(
         tap((res) => console.log('新增結果:', res)),
-
       );
   }
 
@@ -52,7 +79,6 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13050`, data)
       .pipe(
         tap((res) => console.log('更新結果:', res)),
-
       );
   }
 
@@ -62,7 +88,6 @@ export class FIN13050Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13050Detail`, param)
       .pipe(
         tap((res) => console.log('明細查詢結果:', res)),
-
       );
   }
 
@@ -74,21 +99,15 @@ export class FIN13050Service {
       )
       .pipe(
         tap((res) => console.log('對應查詢結果:', res)),
-
       );
   }
+
   deleteFIN13050(idList: number[]): Observable<any> {
     return this.http
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/deleteFIN13050`, { idList })
       .pipe(tap((res) => console.log('刪除結果:', res)));
   }
-  queryVendorList(): Observable<any> {
-    return this.http
-      .post<any>(`${this.apiUrl}/FIN0000/GLS1000/queryVendorList`, {})
-      .pipe(
-        tap(res => console.log('VendorList:', res)),
-      );
-  }
+
   // ✅ SYS1000 下拉欄位（依 SYS_Type）
   querySYS1000DropDownList(sysType: string): Observable<any> {
     return this.http
@@ -101,6 +120,7 @@ export class FIN13050Service {
         // catchError(err => this.errorHandler.handle(err))
       );
   }
+
   queryAPS2002DropDownList(): Observable<ApiResponse<DropDownItem[]>> {
     // 如果你的後端是 GET，改成 this.http.get<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryAPS2002_DropDownList`);
     return this.http
@@ -109,6 +129,49 @@ export class FIN13050Service {
         tap((res) => console.log('APS2002 下拉資料:', res)),
         // 需要共用錯誤處理的話打開下一行
         // catchError(err => this.errorHandler.handle(err))
+      );
+  }
+
+  /** 取得供應商清單（用於統一編號下拉）。可接受 keyword 做伺服端過濾（可選）。 */
+  queryVendorList(payload: { keyword?: string } = {}): Observable<ApiResponse<VendorItem[]>> {
+    return this.http
+      .post<ApiResponse<VendorItem[]>>(
+        `${this.apiUrl}/FIN0000/GLS1000/queryVendorList`,
+        payload ?? {}
+      )
+      .pipe(
+        tap(res => console.log('VendorList:', res))
+      );
+  }
+
+  /** 便利：直接回傳 dropdown 需要的 {label,value,venNo,venName,venUniform}[]，value=統編，label=「統編 名稱」 */
+  queryVendorUniformOptions(keyword = ''): Observable<VendorOption[]> {
+    return this.queryVendorList(keyword ? { keyword } : {})
+      .pipe(
+        map(res => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          // 去重、過濾空值、統編需為 8 位數字，轉換為 VendorOption
+          const seen = new Set<string>();
+          const options: VendorOption[] = [];
+          for (const v of list) {
+            const venNo = v.VEN_No ?? v.Ven_No ?? v.Vdr_No ?? '';
+            const venName = v.VEN_Name ?? v.Ven_Name ?? v.Vdr_Name ?? '';
+            const venUniformRaw = v.VEN_Uniform ?? v.Ven_Uniform ?? v.Vdr_Uniform ?? v.Uniform ?? '';
+            const venUniform = String(venUniformRaw ?? '').trim();
+            if (!/^\d{8}$/.test(venUniform) || seen.has(venUniform)) continue;
+            seen.add(venUniform);
+            options.push({
+              label: venName ? `${venUniform} ${venName}` : venUniform,
+              value: venUniform,
+              venNo,
+              venName,
+              venUniform,
+            });
+          }
+          // 依 label 排序（可改依 value）
+          options.sort((a, b) => a.label.localeCompare(b.label));
+          return options;
+        })
       );
   }
 }
