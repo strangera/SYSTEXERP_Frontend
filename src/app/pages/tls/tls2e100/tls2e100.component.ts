@@ -1,15 +1,5 @@
-import { CounterCodeService } from './../../../service/basic/counter-code.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -17,38 +7,34 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Button } from 'primeng/button';
 
 // 2.2.14.10 年度對帳單
 @Component({
-    selector: 'app-tls2e100',
-    templateUrl: './tls2e100.component.html',
-    styleUrl: './tls2e100.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2e100',
+  templateUrl: './tls2e100.component.html',
+  styleUrl: './tls2e100.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, Button, TableReportComponent, AccordionModule, MultiSelectComponent, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class TLS2E100Component {
-  ProgNo: string = '220079';
-  // 權限
-  funInfo?: FunsrightInfo;
 
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS2E100Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    counterName: [], // 專櫃編號
-    onedatetyy: [, [Validators.required]], // 查詢年
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    salesDate: [new Date()],
+    TLT_NoList: [[]],
+    Floor_No: [[]],
+    Building_No: [[]],
+    org_id: [[]],
+    ...createPaginationConfig([{ field: 'TLT_NoList', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
+
   columns: any[] = [
     { field: 'contactPerson', header: '招募編號	', visible: true },
     { field: 'contactDate', header: '專櫃編號', visible: true },
@@ -72,110 +58,63 @@ export class TLS2E100Component {
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  checkoutOptions: any[] = [];
-  counterNameOptions: any[] = [];
-  commissionMethodOptions: any[] = [];
+  org_id_Option: IDropdownItem[] = [];
+  tltNoOptions: IDropdownItem[] = [];
+  buildingNoOptions: IDropdownItem[] = [];
   floorOptions: any[] = [];
-
+  data: any[] = [];
+  totalRecords = 0;
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private counterCodeService: CounterCodeService,
+    private dropDownListService: DropDownListService,
+    private locationOptionsService: LocationOptionsService,
+
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterNameOptions = data;
+    this.initializePage('TLS2E100', 'TLS/TLS2E100cru', this.queryForm, (form) => this.onSubmit(form));
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    })
+    this.dropDownListService.queryTLTTALENT_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res?.Data) {
+          this.tltNoOptions = res.Data.map(item => ({
+            label: `${item.No} ${item.Name}`,
+            value: item.No,
+            No: item.No,
+            Name: item.Name
+          }));
+        }
+      });
+    this.locationOptionsService.getFloorOptions().subscribe({
+      next: (res) => {
+        this.floorOptions = res.map((item: any) => ({
+          label: item.name || item.FLOOR_NAME || item.label,
+          value: item.code || item.FLOOR_NO || item.value
+        }));
+      },
     });
+    // 館別
+    this.dropDownListService.querySYS3800_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.buildingNoOptions = res.Data.map(x => ({
+          label: x.Name,
+          value: x.No,
+          Name: x.Name,
+          No: x.No
+        }));
+      });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
 
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2E100CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2E100CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2E100CRU'], extras);
+    this.handleSubmit(frm, () => {
+    });
   }
 }
+
