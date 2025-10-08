@@ -132,6 +132,25 @@
                 optionValue="value"
                 [showClear]="true"
               ></app-dropdown>
+               <!-- 其他分頁 -->
+            <div class="col-12" *ngIf="selectedTab === 'func'">
+              <app-input-text
+                label="參數1"
+                [control]="getControl('KB_Arg1')"
+              ></app-input-text>
+            </div>
+            <div class="col-12" *ngIf="selectedTab === 'func'">
+              <app-input-text
+                label="參數2"
+                [control]="getControl('KB_Arg2')"
+              ></app-input-text>
+            </div>
+            <div class="col-12" *ngIf="selectedTab === 'func'">
+              <app-input-text
+                label="參數3"
+                [control]="getControl('KB_Arg3')"
+              ></app-input-text>
+            </div>
             </div>
 
             <!-- 按鈕分頁 -->
@@ -247,22 +266,19 @@
 
             <!-- 其他分頁 -->
             <div class="col-12" *ngIf="selectedTab === 'other'">
-              <app-input-text
-                label="參數1"
-                [control]="getControl('KB_Arg1')"
-              ></app-input-text>
-            </div>
-            <div class="col-12" *ngIf="selectedTab === 'other'">
-              <app-input-text
-                label="參數2"
-                [control]="getControl('KB_Arg2')"
-              ></app-input-text>
-            </div>
-            <div class="col-12" *ngIf="selectedTab === 'other'">
-              <app-input-text
-                label="參數3"
-                [control]="getControl('KB_Arg3')"
-              ></app-input-text>
+              <label for="mergeOptions">按鍵合併設定</label>
+              <div class="flex flex-row  gap-2 mt-3">
+                <p-checkbox
+                  *ngFor="let opt of KB_MergeOptions"
+                  [inputId]="'merge-' + opt.value"
+                  [label]="opt.label"
+                  [value]="opt.value"
+                  name="mergeType"
+                  [ngModel]="getControl('KB_MergeType').value"
+                  (onClick)="getControl('KB_MergeType').setValue(opt.value)"
+                  [ngModelOptions]="{ standalone: true }"
+                ></p-checkbox>
+              </div>
             </div>
           </div>
         </div>

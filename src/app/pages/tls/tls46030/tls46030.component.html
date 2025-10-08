@@ -95,6 +95,7 @@
     [columns]="columns"
     [showCheckBox]="true"
     [multiSortMeta]="[{ field: 'ECR_SchNo', order: 1 }]"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
