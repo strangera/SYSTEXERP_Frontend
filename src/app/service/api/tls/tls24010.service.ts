@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
@@ -148,7 +148,7 @@ export interface UpdateTLS24010Payload {
   EditType: string;
   Store_way: string;
   SYS_StoreNo: string;
-  TXN_Date: string;
+  TXN_Date: string | null;
   ECR_No: string;
   TXN_No: number;
   POS5006_ID?: number;
@@ -230,6 +230,14 @@ export interface CancelVoidTLS24010Payload {
   TXN_No: number
 }
 
+export interface ExportTLS24010PDFResponse {
+  TXN_GUIPaper: string,
+  TXN_Date: string,
+  ECR_No: string,
+  TLT_No: string,
+  TXN_No: number
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -298,5 +306,12 @@ export class Tls24010Service {
    */
   cancelVoidTLS24010(payload: CancelVoidTLS24010Payload): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/cancelVoidTLS24010`, payload);
+  }
+
+  exportTLS24010PDF(payload: ExportTLS24010PDFResponse): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS24010PDF`, payload, {
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 }

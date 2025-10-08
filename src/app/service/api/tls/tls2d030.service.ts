@@ -8,7 +8,7 @@ import { SortMeta } from 'primeng/api';
 // executeTLS2D030 的請求主體
 export interface ExecuteTls2d030Request {
   sam_yyymm: string;
-  sam_termno: number;
+  money_type: number;
   tlt_no: string;
   tlt_floor: string;
 }
@@ -19,7 +19,7 @@ export interface QueryTls2d030Request {
   PageIndex: number;
   SortBy: SortMeta[];
   sam_yyymm: string;
-  sam_termno: number;
+  money_type: number;
   tlt_no: string;
   tlt_floor: string;
 }

@@ -110,8 +110,8 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
     if (newData.length !== oldData.length) return false;
     return newData.every((item, index) => item.id === oldData[index]?.id);
   }
-
-  filterCountry(event: { rowData: POS5007Data, value: string }): void {
+  // 過濾PLU_MagNo
+  filterPLU_MagNo(event: { rowData: POS5007Data, value: string }): void {
     const query = event.value.toLowerCase();
     if (!query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 9) {
       return;
@@ -123,12 +123,19 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
       Keyword: query
     }
     this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.POS2004Options = response.Data.map((item, index) => ({
+      const newPOS2004Options = response.Data.map((item, index) => ({
         ...item,
         id: index,
         label: `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}`
       }));
-      this.columns[0].options = this.POS2004Options;
+      const updatedColumn = {
+        ...this.columns[0], // 複製原有屬性
+        options: newPOS2004Options // 賦予新的 options
+      };
+      this.columns = [
+        updatedColumn, // 放入更新後的 column
+        ...this.columns.slice(1) // 放入其他未變動的 columns
+      ];
     });
   }
   onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {

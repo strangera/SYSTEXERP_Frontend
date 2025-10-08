@@ -39,6 +39,17 @@ queryTLS22010(data: any): Observable<any> {
 
   // 查詢收銀機對帳查詢作業 - 明細
   queryTLS22010_Detail(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS22010_Detail`, data);
+    return this.http.post<any>(`${this.apiUrl}/queryTLS22010_Detail`, data).pipe(
+      map(res => {
+        // 確保 Data 和 TotalCount 存在
+        if (!res.Data) {
+          res.Data = [];
+        }
+        if (!res.TotalCount) {
+          res.TotalCount = res.Data.length;
+        }
+        return res;
+      })
+    );
   }
 }

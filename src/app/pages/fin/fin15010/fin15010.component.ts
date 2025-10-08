@@ -61,7 +61,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     CRT_Date_S: [null],                                         // 建立日期_起
     CRT_Date_D: [null],                                         // 建立日期_迄
     SYS_ORIGIN: [null],                                         // 系統別
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'PUR_VoucherType', order: 1 }, { field: 'InvoiceNo', order: 1 }])
   });
 
   queryForm2 = this.formBuilder.group({
@@ -89,7 +89,8 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value }
+    { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
   ];
 
   //#region 下拉選項

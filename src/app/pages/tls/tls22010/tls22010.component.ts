@@ -77,7 +77,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'sad_preorder_Amt', header: '預購金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'sad_settle_Amt', header: '預購結帳 (C2)', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_TotSaleAmt_Sum', header: '銷售小計(D) = (A)', visible: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)', visible: true, format: formatAmount, isTotal: true},
     { field: 'TXN_TotHaveTax', header: '已開發票金額 (E)', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_ChangeHaveTax', header: '已開找零 (K)', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_TotOver', header: '已開溢付 (I)', visible: true, format: formatAmount, isTotal: true },
@@ -87,8 +87,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_TotGUISaleNoTax', header: '發票免稅金額 (O)', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_TotOver_Sum', header: '溢收 (G)', visible: true, format: formatAmount, isTotal: true },
     { field: 'GUI_REFUND', header: '折讓 (J)', visible: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_TotPayAmt', header: '付款金額(H)=(D)+(G)-(C2)-(K)', visible: true, format: formatAmount, isTotal: true },
-    { field: 'SLE_SaleAmt', header: 'Z 報表總金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_TotPayAmt', header: '付款金額(H)=(D)+(G)-(C2)-(K)', visible: true, format: formatAmount, isTotal: true,cellClass: (row) => this.getStatusColor(row)  },
+    { field: 'SLE_SaleAmt', header: 'Z 報表總金額', visible: true, format: formatAmount, isTotal: true, cellClass: (row) => this.getStatusColor(row) },
     { field: 'TXN_Mode_P', header: '後台(作廢/補登)', visible: true, isTotal: true, format: formatAmount },
     { field: 'Status_Code', header: '狀態', visible: true },
   ];
@@ -114,7 +114,18 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
-
+  getStatusColor(row: any): string {
+    switch (row.Status_Code) {
+      case '#': // 粉紅：L檔金額異常
+        return 'bg-pink-100 text-red-600';
+      case '!': // 咖啡：L檔未上送
+        return 'bg-amber-100 text-amber-800';
+      case '@': // 綠：Z報與L檔不平
+        return 'bg-green-100 text-green-700';
+      default:
+        return '';
+    }
+  }
   // --------- 生命週期 ----------
   ngOnInit(): void {
     this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm);
@@ -137,7 +148,6 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       }
     }
   }
-
   /** 避免時區影響：以本地時間組 YYYY-MM-DD */
   private toYMD(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -184,4 +194,22 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
+
+  // 覆寫父類別的 onDetail 方法，傳遞查詢條件到 CRU 頁面
+  override onDetail(data: unknown) {
+    const queryConditions = {
+      Data: this.data,
+      footerData: this.footerData,
+      TotalCount: this.totalRecords
+    };
+
+    // 儲存完整的查詢結果數據
+    this.queryStateService.setQueryState(this.ProgNo + '_data', queryConditions);
+
+    // 呼叫父類別的 onDetail 方法，傳遞查詢條件
+    super.onDetail(data, queryConditions);
+  }
+
+
+
 }

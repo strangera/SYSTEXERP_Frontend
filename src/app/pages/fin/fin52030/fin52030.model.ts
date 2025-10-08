@@ -42,6 +42,8 @@ export interface FIN52030DetailTable extends FIN52030Detail {
   AccName?: string;
   DetailName?: string;
   recKey?: number;
+  AccAmtD?: number;
+  AccAmtC?: number;
 }
 
 export interface FIN52030Payload extends BaseQueryRequest {
@@ -68,11 +70,6 @@ export interface FIN52030UpdatePayload {
 }
 
 export interface FIN52030DeleteResult {
-}
-
-export interface AccNoDropdown {
-  AccNo: string;
-  AccCName: string;
 }
 
 export interface VendorList {

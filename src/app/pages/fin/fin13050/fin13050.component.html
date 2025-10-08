@@ -1,7 +1,11 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
 
   <p-accordion>
@@ -9,11 +13,14 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-
           <!-- 發票格式 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -23,8 +30,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.PUR_VoucherType"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 字軌 -->
@@ -32,18 +39,18 @@
             <app-input-text
               label="字軌"
               [control]="queryForm.controls.PUR_GUITrack"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 發票號碼（前端區間 -> 後端單值，送出時合併） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
+            <app-input-text
               label="發票號碼"
-              [startControl]="queryForm.controls.PUR_GUINoStart"
-              [endControl]="queryForm.controls.PUR_GUINoEnd"
-              [submitted]="submitted">
-            </app-input-number-range>
+              [control]="queryForm.controls.PUR_GUINo"
+      
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 發票日期 -->
@@ -53,45 +60,43 @@
               calendarType="dateRange"
               [startControl]="queryForm.controls.PUR_GUIDate_Start"
               [endControl]="queryForm.controls.PUR_GUIDate_End"
-              [submitted]="submitted">
-            </app-calendar-range>
-            
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <!-- 發票年月（可選） -->
           <div class="col-12 md:col-6 lg:col-4">
-           <app-calendar
-            controlName="PUR_GUIDate_YYYYMM"
-            calendarType="dateMonthOne"
-            label="資料所屬年月"
-            [control]="queryForm.controls.PUR_GUIDate_YYYYMM"
-            [submitted]="submitted">
-          </app-calendar>
+            <app-calendar
+              controlName="PUR_GUIDate_YYYYMM"
+              calendarType="dateMonthOne"
+              label="資料所屬年月"
+              [control]="queryForm.controls.PUR_GUIDate_YYYYMM"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
 
           <!-- 資料所屬年月 -->
           <div class="col-12 md:col-6 lg:col-4">
-
             <app-calendar
-            controlName="PUR_RepYYYYMM"
-            calendarType="dateMonthOne"
-            label="申報年月"
-            [control]="queryForm.controls.PUR_RepYYYYMM"
-            [submitted]="submitted">
-          </app-calendar>
+              controlName="PUR_RepYYYYMM"
+              calendarType="dateMonthOne"
+              label="申報年月"
+              [control]="queryForm.controls.PUR_RepYYYYMM"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
 
           <!-- 廠商統編 -->
           <div class="col-12 md:col-6 lg:col-4">
-             <app-multi-select
-    label="廠商編號(統一編號)"
-    controlName="PUR_VenUniform"
-    [options]="vendorOptions"
-    optionLabel="label"
-    optionValue="value"
-    [control]="queryForm.controls.PUR_VenUniform"
-    [submitted]="submitted">
-  </app-multi-select>
+            <app-multi-select
+              label="廠商編號(統一編號)"
+              controlName="PUR_VenUniform"
+              [options]="vendorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PUR_VenUniform"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 發票總金額 -->
@@ -100,8 +105,8 @@
               label="發票總金額"
               [startControl]="queryForm.controls.PUR_Amt_Small"
               [endControl]="queryForm.controls.PUR_Amt_Big"
-              [submitted]="submitted">
-            </app-input-number-range>
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
 
           <!-- 未稅金額 -->
@@ -110,8 +115,8 @@
               label="發票未稅金額"
               [startControl]="queryForm.controls.PUR_Net_Small"
               [endControl]="queryForm.controls.PUR_Net_Big"
-              [submitted]="submitted">
-            </app-input-number-range>
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
 
           <!-- 稅額 -->
@@ -120,8 +125,8 @@
               label="發票稅額"
               [startControl]="queryForm.controls.PUR_Tax_Small"
               [endControl]="queryForm.controls.PUR_Tax_Big"
-              [submitted]="submitted">
-            </app-input-number-range>
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
 
           <!-- 發票用途（多選=>逗號字串） -->
@@ -132,8 +137,8 @@
               [options]="directTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 課稅別（多選=>逗號字串） -->
@@ -144,18 +149,18 @@
               [options]="taxTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
-                    <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="扣抵代號"
               [control]="queryForm.controls.PUR_DiscNo"
               [options]="PUR_DiscNoOptions"
               optionLabel="label"
               optionValue="value"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 類別區分（多選=>逗號字串） -->
@@ -166,8 +171,8 @@
               [options]="typeOptions"
               optionLabel="label"
               optionValue="value"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 憑證單號 -->
@@ -175,8 +180,8 @@
             <app-input-text
               label="憑證單號"
               [control]="queryForm.controls.Source_Doc_No"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 傳票號碼 -->
@@ -184,20 +189,19 @@
             <app-input-text
               label="傳票號碼"
               [control]="queryForm.controls.Voucher_No"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
-        
-                  <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="系統別"
-              [control]="queryForm.controls.SAL_Type"
+              [control]="queryForm.controls.SYS_ORIGIN"
               [options]="SYS_ORIGINOptions"
               optionLabel="label"
               optionValue="value"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 備註 -->
@@ -205,14 +209,17 @@
             <app-input-text
               label="備註"
               [control]="queryForm.controls.PUR_Remark"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 建/改檔者與日期（可選） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="建檔人員" [control]="queryForm.controls.CRT_USR_Name" [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="建檔人員"
+              [control]="queryForm.controls.CRT_USR_Name"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
@@ -220,12 +227,15 @@
               calendarType="dateRange"
               [startControl]="queryForm.controls.CRT_Date_Start"
               [endControl]="queryForm.controls.CRT_Date_End"
-              [submitted]="submitted">
-            </app-calendar-range>
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="修改人員" [control]="queryForm.controls.UPD_USR_Name" [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="修改人員"
+              [control]="queryForm.controls.UPD_USR_Name"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
@@ -233,12 +243,14 @@
               calendarType="dateRange"
               [startControl]="queryForm.controls.UPD_Date_Start"
               [endControl]="queryForm.controls.UPD_Date_End"
-              [submitted]="submitted">
-            </app-calendar-range>
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -262,7 +274,7 @@
     [showManage]="true"
     [showDelete]="true"
     [showCheckBox]="true"
-    (delete)="onDelete($event)"  
-    (lazyLoadData)="onLazyLoadData($event, queryForm)">
-  </app-table>
+    (delete)="onDelete($event)"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+  ></app-table>
 </div>

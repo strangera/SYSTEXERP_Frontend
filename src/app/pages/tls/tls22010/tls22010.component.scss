@@ -35,10 +35,37 @@
         background-color: #28a745;
       }
     }
-
   }
-   .short-line {
-      width: 10%;
-      margin-left: 24px;
+
+  .short-line {
+    width: 10%;
+    margin-left: 24px;
+  }
+}
+
+// 使用 CSS 選擇器來標記特定資料行，透過自定義屬性
+::ng-deep .tls22010-component {
+  // 透過 CSS 變數來動態設置顏色
+  .p-datatable-tbody > tr {
+    &[data-status="green"] {
+      td:nth-child(19), td:nth-child(20) { // TXN_TotPayAmt 和 SLE_SaleAmt 的位置
+        background-color: #28a745;
+        color: white;
+      }
     }
+
+    &[data-status="pink"] {
+      td:nth-child(19), td:nth-child(20) {
+        background-color: #f8b4d9;
+        color: #000;
+      }
+    }
+
+    &[data-status="brown"] {
+      td:nth-child(19), td:nth-child(20) {
+        background-color: #b5651d;
+        color: white;
+      }
+    }
+  }
 }

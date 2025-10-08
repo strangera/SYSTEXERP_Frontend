@@ -80,28 +80,35 @@
                   [style.gridTemplateColumns]="'repeat(' + xCount + ', 1fr)'"
                   [style.gridTemplateRows]="'repeat(' + yCount + ', 60px)'"
                 >
-                  <button
-                    *ngFor="let k of page"
-                    type="button"
-                    class="kb-key"
-                    [class.active]="selected?.code === k.code"
-                    [ngClass]="'type-' + (k.type || 'normal')"
-                    (click)="selectKey(k)"
-                  >
-                    <div class="kb-line" *ngIf="k.KB_Display1">
-                      {{ k.KB_Display1 }}
-                    </div>
-                    <div class="kb-line" *ngIf="k.KB_Display2">
-                      {{ k.KB_Display2 }}
-                    </div>
-
-                    <div
-                      class="kb-sub"
-                      *ngIf="!k.KB_Display1 && !k.KB_Display2"
+                  <ng-container *ngFor="let k of page">
+                    <button
+                      *ngIf="!isKeyHidden(k, page)"
+                      type="button"
+                      class="kb-key"
+                      [class.active]="selected?.code === k.code"
+                      [ngClass]="'type-' + (k.type || 'normal')"
+                      [style.background-color]="k.KB_Color ? convertRGBToCss(k.KB_Color) : ''"
+                      [style.color]="k.KB_FontColor ? convertRGBToCss(k.KB_FontColor) : ''"
+                      [style.font-size]="k.KB_Size ? k.KB_Size + 'px' : ''"
+                      [style.grid-column]="getKeyGridStyle(k)['grid-column']"
+                      [style.grid-row]="getKeyGridStyle(k)['grid-row']"
+                      (click)="selectKey(k)"
                     >
-                      {{ k.code }}
-                    </div>
-                  </button>
+                      <div class="kb-line" *ngIf="k.KB_Display1">
+                        {{ k.KB_Display1 }}
+                      </div>
+                      <div class="kb-line" *ngIf="k.KB_Display2">
+                        {{ k.KB_Display2 }}
+                      </div>
+
+                      <div
+                        class="kb-sub"
+                        *ngIf="!k.KB_Display1 && !k.KB_Display2"
+                      >
+                        {{ k.code }}
+                      </div>
+                    </button>
+                  </ng-container>
                 </div>
               </p-tabPanel>
             </p-tabView>
@@ -132,6 +139,25 @@
                 optionValue="value"
                 [showClear]="true"
               ></app-dropdown>
+               <!-- 其他分頁 -->
+            <div class="col-12" *ngIf="selectedTab === 'func'">
+              <app-input-text
+                label="參數1"
+                [control]="getControl('KB_Arg1')"
+              ></app-input-text>
+            </div>
+            <div class="col-12" *ngIf="selectedTab === 'func'">
+              <app-input-text
+                label="參數2"
+                [control]="getControl('KB_Arg2')"
+              ></app-input-text>
+            </div>
+            <div class="col-12" *ngIf="selectedTab === 'func'">
+              <app-input-text
+                label="參數3"
+                [control]="getControl('KB_Arg3')"
+              ></app-input-text>
+            </div>
             </div>
 
             <!-- 按鈕分頁 -->
@@ -167,8 +193,7 @@
                   id="kb-color"
                   type="text"
                   class="p-inputtext p-component"
-                  [value]="selectedKeyForm.get('KB_Color')?.value"
-                  readonly
+                  [formControl]="getControl('KB_Color')"
                 />
                 <p-colorPicker
                   [formControl]="getControl('color')"
@@ -201,14 +226,15 @@
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'font'">
-              <app-dropdown
+              <app-input-number
                 label="顯示字型大小"
                 [control]="getControl('KB_Size')"
-                [options]="KB_SizeOptions"
-                optionLabel="label"
-                optionValue="value"
-                [showClear]="true"
-              ></app-dropdown>
+                [showButtons]="true"
+                [min]="8"
+                [max]="72"
+                [step]="1"
+                [submitted]="submitted"
+              ></app-input-number>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'font'">
@@ -218,8 +244,7 @@
                   id="KB_FontColor"
                   type="text"
                   class="p-inputtext p-component"
-                  [value]="selectedKeyForm.get('KB_FontColor')?.value"
-                  readonly
+                  [formControl]="getControl('KB_FontColor')"
                 />
                 <p-colorPicker
                   [formControl]="getControl('FontColor')"
@@ -247,22 +272,17 @@
 
             <!-- 其他分頁 -->
             <div class="col-12" *ngIf="selectedTab === 'other'">
-              <app-input-text
-                label="參數1"
-                [control]="getControl('KB_Arg1')"
-              ></app-input-text>
-            </div>
-            <div class="col-12" *ngIf="selectedTab === 'other'">
-              <app-input-text
-                label="參數2"
-                [control]="getControl('KB_Arg2')"
-              ></app-input-text>
-            </div>
-            <div class="col-12" *ngIf="selectedTab === 'other'">
-              <app-input-text
-                label="參數3"
-                [control]="getControl('KB_Arg3')"
-              ></app-input-text>
+              <div class="flex flex-row justify-content-center gap-2 mt-3">
+                <p-button
+                  *ngFor="let opt of KB_MergeOptions"
+                  [label]="getMergeButtonLabel(opt)"
+                  [severity]="isMergeOptionSelected(opt.value) ? 'primary' : null"
+                  [outlined]="!isMergeOptionSelected(opt.value)"
+                  size="small"
+                  (click)="toggleMergeOption(opt.value)"
+                  class="flex-1"
+                ></p-button>
+              </div>
             </div>
           </div>
         </div>

@@ -75,25 +75,28 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-
-    { field: 'NormalSales', header: '單價', visible: true },
-    { field: 'SpecialSales', header: '特價 ', visible: true }, // 特價 (來源尚未提供)
-    { field: 'Discount95Sales', header: '95折 ', visible: true }, // 95折 (來源尚未提供)
-    { field: 'Discount90Sales', header: '90折 ', visible: true }, // 90折 (來源尚未提供)
-    { field: 'Discount80Sales', header: '80折 ', visible: true }, // 80折 (來源尚未提供)
-    { field: 'Discount70Sales', header: '70折 ', visible: true }, // 70折 (來源尚未提供)
+    
+    { field: 'NormalSales', header: '正品', groupField: 'budgetAmt', visible: true }, // 正品 (來源尚未提供)
+    { field: 'SpecialSales', header: '特價 ', groupField: 'budgetAmt', visible: true }, // 特價 (來源尚未提供)
+    { field: 'Discount95Sales', header: '95折 ', groupField: 'budgetAmt', visible: true }, // 95折 (來源尚未提供)
+    { field: 'Discount90Sales', header: '9折 ', groupField: 'budgetAmt', visible: true }, // 9折 (來源尚未提供)
+    { field: 'Discount80Sales', header: '8折 ', groupField: 'budgetAmt', visible: true }, // 8折 (來源尚未提供)
+    { field: 'Discount70Sales', header: '7折 ', groupField: 'budgetAmt', visible: true }, // 7折 (來源尚未提供)
+    { field: 'AchievementRate', header: '達成率', groupField: 'budgetAmt', visible: true, format: (value) => formatPercentage(value, 2) },
     
     { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
     { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
+
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
+
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
     { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
-    { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
+    // { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
+    // { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
+    // { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
+    
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
   ];
   columnGroup: ColumnGroup[] = [

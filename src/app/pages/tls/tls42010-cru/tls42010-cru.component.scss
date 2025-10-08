@@ -14,14 +14,57 @@
   width: 100%;
   height: 100%;
   border: 1px solid var(--surface-border);
-  background: var(--gray-200);
+  background: white;
   border-radius: 0.5rem;
   padding: 0.25rem 0.5rem;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   pointer-events: auto;
 }
 .kb-key.active {
   outline: 2px solid var(--cyan-200);
-  background-color: var(--cyan-100);
+  background-color: white;
+}
+
+
+::ng-deep app-input-number {
+  .p-inputnumber-buttons-stacked {
+    .p-inputnumber-button {
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      outline: none !important;
+    }
+
+    .p-inputnumber-button:hover {
+      background: transparent !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    .p-inputnumber-button:active {
+      background: transparent !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    .p-inputnumber-button:focus {
+      background: transparent !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+
+    .p-inputnumber-button-up,
+    .p-inputnumber-button-down {
+      margin: 0 !important;
+      background: transparent !important;
+    }
+  }
+
+  .p-inputnumber-input {
+    border-right: 1px solid var(--surface-border) !important;
+  }
 }

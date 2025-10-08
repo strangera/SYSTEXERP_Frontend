@@ -10,7 +10,7 @@ import { SortMeta } from 'primeng/api';
 // executeTLS2D020 的請求主體
 export interface ExecuteRequest {
   sam_yyymm: string;
-  sam_termno: number;
+  money_type: number;
   tlt_no: string;
   tlt_floor: string;
 }
@@ -20,7 +20,7 @@ export interface QueryRequest {
   PageIndex: number;
   SortBy: SortMeta[];
   sam_yyymm: string;
-  sam_termno: number;
+  money_type: number;
   tlt_no: string;
   tlt_floor: string;
 }

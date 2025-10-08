@@ -15,7 +15,6 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor],
-  providers: [MessageService, ConfirmationService]
 })
 export class NotificationMessageComponent implements OnInit {
   msgBoxHeader = '';

@@ -26,9 +26,11 @@ export interface Gls6002 {
   SerNo: number;
   AccDC: string;
   AccNo: string;
+  ACCCNAME: string;
   AccAmt: number;
   ORG_ID: string;
   DetailNo: string;
+  VEN_NAME: string;
   SubDetailNo: string;
   ProjectNo: string;
   NoteDesc: string;
@@ -110,6 +112,10 @@ export class Tls55010Service {
    * @returns 僅包含狀態碼和訊息的 API Response
    */
   unLockTLS55010(request: Tls55010DateRequest): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/unLockTLS55010`, request);
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/unLockTLS55010`, { TXN_Date: request });
+  }
+
+  queryTLS55010(request: Tls55010DateRequest): Observable<ApiResponse<InsertTls55010Data>> {
+    return this.http.post<ApiResponse<InsertTls55010Data>>(`${this.apiUrl}/queryTLS55010`, request);
   }
 }

@@ -6,10 +6,10 @@
   (selectionChange)="selectionChange.emit($event)" [rowSelectable]="rowSelectableWrapper"
   [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [lazy]="totalRecords < 30 ? false : true"
   [virtualScrollItemSize]="showManage ? 40.6 : 24" [virtualScrollOptions]="{
-      delay: 50,
-      inline: true,
-      trackBy: trackByFn,
-      onScroll: onScroll,
+    delay: 50,
+    inline: true,
+    trackBy: trackByFn,
+    onScroll: onScroll,
   }" rowGroupMode="subheader" [groupRowsBy]="groupRowsBy" [expandedRowKeys]="expandedRows">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
@@ -67,8 +67,8 @@
         <ng-container *ngFor="let col of columns">
           <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn
             [pSortableColumn]="
-                showSort ? col.sortField ?? col.field : undefined
-              " [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn [frozen]="!!col.frozen"
+              showSort ? col.sortField ?? col.field : undefined
+            " [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn [frozen]="!!col.frozen"
             [alignFrozen]="col.alignFrozen || 'right'" style="min-width: 55px">
             {{ col.header }}
             <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
@@ -84,9 +84,9 @@
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
-        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn [pSortableColumn]="
-                showSort ? col.sortField ?? col.field : undefined
-              " [pSortableColumnDisabled]="col.showSort === false" class="text-center wrap-header" pFrozenColumn
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
+          [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
+          [pSortableColumnDisabled]="col.showSort === false" class="text-center wrap-header" pFrozenColumn
           [frozen]="col.frozen" [alignFrozen]="col.alignFrozen || 'right'" style="min-width: 55px">
           {{ col.header }}
           <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
@@ -121,9 +121,11 @@
             (!expansionLoadFn && !rowData[expansionDataKey]?.length)
           " />
       </td>
-      <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
-        (dblclick)="detail.emit(rowData)" [ngClass]="col.style"
-        [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen">
+      <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis; min-width: 55px"
+        (dblclick)="detail.emit(rowData)" [ngClass]="[
+          col.style || '',
+          col.cellClass ? col.cellClass(rowData) || '' : '',
+        ]" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen">
         <ng-container *ngIf="col.type === 'image'">
           <p-image [src]="tableUtility.getImage(rowData[col.field])" alt="Image" width="50" [preview]="true" />
         </ng-container>

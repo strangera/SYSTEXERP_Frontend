@@ -9,7 +9,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount, formatYN } from '@shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { QueryDataItem, Tls2d020Service } from '@service/api/tls/tls2d020.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
@@ -25,12 +25,12 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [null, [Validators.required]], // 試算年月
-    sam_termno: [null, [Validators.required]], // 試算方式
+    money_type: [null, [Validators.required]], // 試算方式
     tlt_no: [null], // 專櫃編號
     tlt_floor: [null],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
   });
-  sam_termnoOptions = getSYS1000Options('sam_termno')
+  sam_termnoOptions = getSYS1000Options('money_type')
   tlt_noOptions = this.dropdown.queryTltTalent();
   tlt_floorOptions = this.dropdown.querySys3900();
   totalRecords = 0;
@@ -41,7 +41,7 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
     { field: 'CAP_Item', header: '扣款代號', visible: true },
     { field: 'CAP_Name', header: '扣款名稱', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
-    { field: 'sam_yyymm', header: '扣款年月', visible: true },
+    { field: 'sam_yyymm', header: '扣款年月', visible: true, format: formatYYYYMM },
     { field: 'GUI_FLAG', header: '是否開立發票', visible: true, format: formatYN, exportFormat: [{ 'Y': '是' }, { 'N': '否' }] },
     { field: 'tpy_amt', header: '扣款金額(含稅)', visible: true, format: formatAmount },
     { field: 'tpy_tax', header: '稅額', visible: true, format: formatAmount },
@@ -61,7 +61,6 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        sam_termno: Number(frm.value.sam_termno),
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       }
       this.tls2d020Service.queryTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
@@ -77,7 +76,7 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
       this.loading2 = true;
       const body = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-        sam_termno: Number(frm.value.sam_termno),
+        money_type: frm.value.money_type,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor
       }

@@ -17,15 +17,13 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 type SortMeta = { field: string; order: 1 | -1 };
 
@@ -47,6 +45,7 @@ type SortMeta = { field: string; order: 1 | -1 };
     TranslateModule,
     CalendarComponent,
     InputNumberRangeComponent,
+    
   ],
   templateUrl: './fin13050.component.html',
   styleUrls: ['./fin13050.component.scss'],
@@ -60,16 +59,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
   > = {};
 
   // 下拉/多選選項（沿用你原本的）
-  PUR_VoucherTypeOptions: any[] = [
-    {
-      value: '23',
-      label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單',
-    },
-    {
-      value: '24',
-      label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單',
-    },
-  ];
+  PUR_VoucherTypeOptions: any[] = [];
 
   // 發票用途 -> 對應後端 PUR_DirectType
   directTypeOptions: Array<{ label: string; value: string }> = [];
@@ -88,6 +78,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     return `${no}#${dt}`;
   }
 
+
+
   // ===== 表單：全面改成後端欄位命名 =====
   queryForm = this.formBuilder.group({
     // 後端分頁排序；不包含 Offset / OrderBy
@@ -99,8 +91,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     // 主條件（全部使用後端命名）
     PUR_VoucherType: [], // 發票格式
     PUR_GUITrack: [, [Validators.maxLength(2)]], // 字軌
-    PUR_GUINoStart: [, [Validators.maxLength(8)]], // 發票號碼（前端區間 -> 後端只有單值，會在送出時合併）
-    PUR_GUINoEnd: [, [Validators.maxLength(8)]],
+    PUR_GUINo: [, [Validators.maxLength(8)]], // 發票號碼（前端區間 -> 後端只有單值，會在送出時合併）
+
 
     PUR_GUIDate_Start: [], // 發票日期 起
     PUR_GUIDate_End: [], // 發票日期 迄
@@ -125,7 +117,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     PUR_TaxType: [], // 課稅別（多選轉逗號字串）
     PUR_DiscNo: [], // 憑證單號（若你需要「來源單號」，後端是 Source_Doc_No；此欄保留對應規格）
     PUR_Type: [], // 類別區分（多選轉逗號字串）
-
+    SYS_ORIGIN: [], // 系統別（多選轉逗號字串） 
     Source_Doc_No: [, [Validators.maxLength(14)]], // 憑證單號（若前端使用這個，會直送）
     Voucher_No: [, [Validators.maxLength(11)]], // 傳票號碼
     SAL_Type: [], // 銷售類型（若不用可留空）
@@ -158,7 +150,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     { field: 'PUR_Tax', header: '發票稅額', visible: true },
     { field: 'PUR_DirectTypeDesc', header: '發票用途', visible: true },
     { field: 'PUR_TaxTypeDesc', header: '課稅別', visible: true },
-    { field: 'PUR_DiscNo', header: '折讓/扣抵號', visible: true },
+    { field: 'PUR_DiscNo', header: '扣抵代號', visible: true },
     { field: 'PUR_TypeDesc', header: '類別區分', visible: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
@@ -190,20 +182,14 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       label: String(x.Name),
     }));
   });
-    this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
+    this.fin13050Service.querySYS1000DropDownList('PUR_DirectType').subscribe((res) => {
       const list = res?.Data ?? [];
       this.directTypeOptions = list.map((x: any) => ({
         value: String(x.No), // No -> value
         label: String(x.Name), // Name -> label
       }));
     });
-    this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.directTypeOptions = list.map((x: any) => ({
-        value: String(x.No), // No -> value
-        label: String(x.Name), // Name -> label
-      }));
-    });
+
 
     this.fin13050Service
       .querySYS1000DropDownList('PUR_TaxType')
@@ -245,8 +231,14 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       });
 
       
-  }
-
+const toStr = (v: any) => (v == null ? v : String(v));
+  this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe(v => {
+    if (typeof v === 'number') {
+      this.queryForm.controls.PUR_GUINo.patchValue(toStr(v), { emitEvent: false });
+    }
+  });
+ 
+}
 /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
 /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
 private arr<T = any>(
@@ -342,7 +334,7 @@ private uniform8Array(value: any): string[] | undefined {
 
   // 單/區間維持原邏輯
   PUR_GUITrack: v.PUR_GUITrack || undefined,
-  PUR_GUINo: this.composeGUINo(v.PUR_GUINoStart, v.PUR_GUINoEnd),
+  PUR_GUINo:v.PUR_GUINo || undefined,
 
   // ↓↓↓ 全部改成「陣列」送出 ↓↓↓
   PUR_VoucherType: this.arr(v.PUR_VoucherType),
@@ -351,8 +343,8 @@ private uniform8Array(value: any): string[] | undefined {
   PUR_GUIDate_End: v.PUR_GUIDate_End || undefined,
 
   // 年月也改成陣列（單選時就是單元素陣列）
-  PUR_GUIDate_YYYYMM: this.toYYYYMMArray(v.PUR_GUIDate_YYYYMM),
-  PUR_RepYYYYMM: this.toYYYYMMArray(v.PUR_RepYYYYMM),
+  PUR_GUIDate_YYYYMM: this.toYYYYMMOne(v.PUR_GUIDate_YYYYMM),
+  PUR_RepYYYYMM: this.toYYYYMMOne(v.PUR_RepYYYYMM),
 
   // 統編可多選 -> 傳陣列（每個元素都只保留前8碼數字）
   PUR_VenUniform: this.uniform8Array(v.PUR_VenUniform),
@@ -371,8 +363,8 @@ private uniform8Array(value: any): string[] | undefined {
   PUR_Type: this.arr(v.PUR_Type),
 
   // 這些也改成多選陣列（若你 UI 仍是單選，會自動轉單元素陣列）
-  Source_Doc_No: this.arr(v.Source_Doc_No),
-  
+  Source_Doc_No: v.Source_Doc_No,
+  SYS_ORIGIN: this.arr(v.SYS_ORIGIN),  // 你模板已用 multi-select（系統別）
   SAL_Type: this.arr(v.SAL_Type),          // 你模板已用 multi-select（系統別）
   PUR_Remark: this.arr(v.PUR_Remark),
 

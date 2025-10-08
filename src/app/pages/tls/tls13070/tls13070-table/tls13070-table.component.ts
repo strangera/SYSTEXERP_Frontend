@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
-import { TableReportUtilityService } from './tls13070-table.service';
 import { ImageModule } from 'primeng/image';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ButtonModule } from 'primeng/button';
@@ -12,13 +11,29 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { FormsModule } from '@angular/forms';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { SkeletonModule } from 'primeng/skeleton';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Tls13070Cag, Tls13070Level, Tls13070Limit, Tls13070Rent, Tls13070Response } from '@service/api/tls/tls13070.service';
+
+export interface FlattenedTls13070Row extends Tls13070Response {
+  // 增加索引來識別這是該筆主資料的第幾條子資料
+  rowIndex: number;
+  // 該行是否有主資料 (用於控制 rowspan)
+  isMainRow: boolean;
+  // 儲存該筆主資料的總子行數
+  rowspanCount: number;
+
+  // 該行單獨的抽成、階梯、包底、固定租金資料
+  singleCag?: Tls13070Cag;
+  singleLevel?: Tls13070Level;
+  singleLimit?: Tls13070Limit;
+  singleRent?: Tls13070Rent;
+  globalIndex: number;
+}
 
 @Component({
   selector: 'app-tls13070-table',
   standalone: true,
-  imports: [TableCaptionComponent, CommonModule, SkeletonModule, TableModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
+  imports: [CommonModule, SkeletonModule, TableModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule],
   templateUrl: './tls13070-table.component.html',
   styleUrls: ['./tls13070-table.component.scss'],
 })
@@ -32,7 +47,6 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   @Input() loading = false;
   @Input() apiUrl: string | undefined = undefined;
   tableKey = 'TLS13070Table';                     // 用來儲存 table 狀態的 key
-
   private = true;            // 用來判斷是否為第一次載入
   virtualData: any = [];
   isLoading = false;
@@ -40,25 +54,62 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   aps1003_B = this.dropdown.queryAps1003({ cap_typeList: ['B'] });
   aps1003_C = this.dropdown.queryAps1003({ cap_typeList: ['C'] });
   aps1003_D = this.dropdown.queryAps1003({ cap_typeList: ['D'] });
+  totalColspan = 0;
   constructor(
-    public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
     private readonly dropdown: DropdownApiService,
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
-  }
+    // 訂閱所有動態欄位 Observable，並在資料載入後計算總欄位數
+    let aLength = 0;
+    let bLength = 0;
+    let cLength = 0;
+    let dLength = 0;
 
+    const calculateColspan = () => {
+      // 固定的欄位數
+      // 序號(1) + 招募編號(1) + 更新時間(1) + 位置編號(1) + 廠商名稱(1) + 廠商統編(1) = 6
+      // 店櫃資料 (11) = 11
+      // 租賃條件 (18) = 18
+      // 目標營業額 (1) + 結帳後幾天匯款 (1) + 備註 (1) = 3
+      const fixedCols = 6 + 11 + 18 + 3; // 總固定欄位 = 38
+
+      // 動態欄位數
+      const dynamicCols = aLength + bLength + (cLength * 3) + dLength;
+
+      this.totalColspan = fixedCols + dynamicCols;
+    };
+
+    this.aps1003_A.subscribe(res => {
+      aLength = res?.length ?? 0;
+      calculateColspan();
+    });
+    this.aps1003_B.subscribe(res => {
+      bLength = res?.length ?? 0;
+      calculateColspan();
+    });
+    this.aps1003_C.subscribe(res => {
+      cLength = res?.length ?? 0;
+      calculateColspan();
+    });
+    this.aps1003_D.subscribe(res => {
+      dLength = res?.length ?? 0;
+      calculateColspan();
+    });
+  }
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
-    if (changes['data'] && this.data.length > 0) {
-      if (this.data.length >= 30) {
-        this.virtualData = Array(this.data.length).fill(null); // ! 清空虛擬資料
+    if (changes['data'] && this.data !== changes['data'].previousValue) {
+      const flatData = this.flattenData(this.data);
+
+      if (flatData.length >= 30) {
+        this.virtualData = Array(flatData.length).fill(null);
         setTimeout(() => {
-          this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-        })
+          this.virtualData.splice(0, flatData.length, ...flatData);
+        });
       } else {
-        this.virtualData = [...this.data];
+        this.virtualData = flatData;
       }
     } else if (changes['data'] && this.data.length === 0) {
       this.virtualData = Array(0).fill(null);
@@ -68,7 +119,6 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
       this.dt.multiSortMeta = this.lastQueryBody?.SortBy;
     }
   }
-
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;
   }
@@ -102,106 +152,66 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.data = [...this.data, ...res.Data];
-        this.totalRecords = res.TotalCount; // 確保總筆數同步更新
-        this.virtualData = Array(this.data.length).fill(null);
-        setTimeout(() => {
-          this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-          this.dt.scrollHeight = '700px';
-        })
-      }
-    });
-  }
-  // 新增 onSort 方法
-  onSort(event: any) {
-    // 檢查是否有 queryFunction
-    if (!this.queryFunction || !this.lastQueryBody || this.data.length < 30) {
-      return;
-    }
-    // 3. 準備查詢參數
-    const body = {
-      ...this.lastQueryBody,
-      pageIndex: 1, // 重新排序時，總是從第一頁開始
-    };
-
-    // 4. 呼叫 API 重新取得資料
-    this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
-      if (res && res.Data) {
-        // 5. API 成功後，更新資料和狀態
-        this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.lastQueryBody = body; // 更新最後一次的查詢條件
-
-        // 重新處理虛擬滾動資料
-        if (this.data.length > 0) {
-          if (this.data.length >= 30) {
-            this.virtualData = Array(this.data.length).fill(null);
-            setTimeout(() => {
-              this.virtualData.splice(0, this.data.length, ...this.data);
-            });
-          } else {
-            this.virtualData = [...this.data];
-          }
-        }
+        const flatData = this.flattenData(this.data);
+        this.virtualData = Array(flatData.length).fill(null);
+        setTimeout(() => {
+          this.virtualData.splice(0, flatData.length, ...flatData);
+          this.dt.scrollHeight = '700px';
+        });
       }
     });
   }
+  /**
+   * 將字串中的逗號 (,) 替換為 HTML 換行標籤 (<br />)
+   * @param text 包含逗號分隔值的字串
+   * @returns 包含 <br /> 標籤的新字串
+   */
+  splitWithLineBreaks(text: string | null | undefined): string {
+    if (!text) { return ''; }
+    return text.replace(/,/g, '<br />');
+  }
+  private flattenData(data: Tls13070Response[]): FlattenedTls13070Row[] {
+    const flatData: FlattenedTls13070Row[] = [];
+    if (!data) return [];
 
-  // 回傳幾年幾個月又幾天，不要用moment方法，tlt_contract_edate 減 tlt_contract_bdate
-  getContractYear(rowData: any): string {
-    // 檢查日期是否存在
-    if (!rowData.tlt_contract_bdate || !rowData.tlt_contract_edate) {
-      return '';
-    }
+    // 引入一個計數器來計算全局序號
+    let currentGlobalIndex = 1;
 
-    // 將日期字串轉換成 Date 物件
-    const startDate = new Date(rowData.tlt_contract_bdate);
-    const endDate = new Date(rowData.tlt_contract_edate);
+    data.forEach(item => {
+      // 找出四個列表中的最大長度
+      const maxLen = Math.max(
+        item.cagList?.length ?? 0,
+        item.levelList?.length ?? 0,
+        item.limitList?.length ?? 0,
+        item.rentList?.length ?? 0,
+        1 // 至少要有一行來顯示主資料
+      );
 
-    // 檢查日期是否有效
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return '';
-    }
+      for (let i = 0; i < maxLen; i++) {
+        const row: FlattenedTls13070Row = {
+          ...item,
+          rowIndex: i,
+          isMainRow: i === 0,
+          rowspanCount: maxLen,
 
-    // 確保結束日期大於或等於起始日期
-    if (startDate > endDate) {
-      return '結束日期早於起始日期';
-    }
+          // 只有主資料行才賦予 globalIndex，非主資料行賦予 null
+          globalIndex: i === 0 ? currentGlobalIndex : null!,
+          // 注意：這裡使用 ! 是因為 TypeScript 介面定義是 number，
+          // 但在實際情況中只有 isMainRow 為 true 時才需要使用。
 
-    let years = endDate.getFullYear() - startDate.getFullYear();
-    let months = endDate.getMonth() - startDate.getMonth();
-    let days = endDate.getDate() - startDate.getDate();
+          singleCag: item.cagList?.[i],
+          singleLevel: item.levelList?.[i],
+          singleLimit: item.limitList?.[i],
+          singleRent: item.rentList?.[i],
+        };
+        flatData.push(row);
+      }
 
-    // 調整月份和年份
-    if (days < 0) {
-      months--;
-      // 取得上個月的最後一天，用來計算剩餘天數
-      const lastDayOfLastMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate();
-      days = days + lastDayOfLastMonth;
-    }
+      // 每處理完一組主資料，全局序號才遞增
+      currentGlobalIndex++;
+    });
 
-    // 調整年份
-    if (months < 0) {
-      years--;
-      months = months + 12;
-    }
-
-    // 建構回傳字串
-    let result = '';
-    if (years > 0) {
-      result += `${years}年`;
-    }
-    if (months > 0) {
-      result += `${months}個月`;
-    }
-    if (days > 0) {
-      result += `${days}天`;
-    }
-
-    // 如果所有值都是 0，回傳「0天」
-    if (result === '') {
-      return '0天';
-    }
-
-    return result;
+    return flatData;
   }
 }

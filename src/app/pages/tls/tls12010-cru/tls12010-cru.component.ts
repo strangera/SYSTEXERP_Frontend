@@ -119,7 +119,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, 由使用者自行輸入 */
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
-    tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
+    tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱) --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
     tlt_EngName: ['', [Validators.maxLength(100), this.validationService.alphanumericValidator]], // 品牌英文(專櫃名稱)
     VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 廠商聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人電話
@@ -226,16 +226,18 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     });
 
     //品牌 valueChanges
-    this.dataForm.get('tlt_name')?.valueChanges.subscribe(value => {
-      if (this.skipValueChanges) return;
-      const match = this.tlt_name_Option.find(opt => opt.No === value);
-      if (match) {
-        this.dataForm.get('tlt_EngName')?.setValue(match.LOGO_EN_NAME);
-      } else {
-        this.dataForm.get('tlt_EngName')?.setValue('');
-        // this.messageService.errorBubble('無該廠商名稱資料');
-      }
-    });
+    // --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
+    
+    // this.dataForm.get('tlt_name')?.valueChanges.subscribe(value => {
+    //   if (this.skipValueChanges) return;
+    //   const match = this.tlt_name_Option.find(opt => opt.No === value);
+    //   if (match) {
+    //     this.dataForm.get('tlt_EngName')?.setValue(match.LOGO_EN_NAME);
+    //   } else {
+    //     this.dataForm.get('tlt_EngName')?.setValue('');
+    //     // this.messageService.errorBubble('無該廠商名稱資料');
+    //   }
+    // });
 
     console.log('讀取資料', this.dataForm.value);
 

@@ -68,8 +68,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls13040cru', loadComponent: () => import('./tls13040-cru/tls13040-cru.component').then(m => m.TLS13040CRUComponent) },
   // 年度目標營業額管制報表 CRU
   { path: 'tls13050cru', loadComponent: () => import('./tls13050-cru/tls13050-cru.component').then(m => m.TLS13050CRUComponent) },
-  // 櫃位營運事項明細查詢作業 CRU
-  { path: 'tls13060cru', loadComponent: () => import('./tls13060-cru/tls13060-cru.component').then(m => m.TLS13060CRUComponent) },
   // 合約狀態清單 CRU
   { path: 'tls14010cru', loadComponent: () => import('./tls14010-cru/tls14010-cru.component').then(m => m.TLS14010CRUComponent) },
   // 專櫃契約書列印 CRU
@@ -440,6 +438,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls31070cru', loadComponent: () => import('./tls31070-cru/tls31070-cru.component').then(m => m.Tls31070CRUComponent) },
   // 各時段之樓層營業報表
   { path: 'tls31080', loadComponent: () => import('./tls31080/tls31080.component').then(m => m.TLS31080Component) },
+  // 各時段之樓層營業報表 CRU
+  { path: 'tls31080cru', loadComponent: () => import('./tls31080-cru/tls31080-cru.component').then(m => m.Tls31080CRUComponent) },
   // 各時段之大分類營業報表
   { path: 'tls31090', loadComponent: () => import('./tls31090/tls31090.component').then(m => m.TLS31090Component) },
   // 銷售排名分析報表
@@ -676,8 +676,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls53020cru', loadComponent: () => import('./tls53020-cru/tls53020-cru.component').then(m => m.TLS53020CRUComponent) },
   // 盤點資料維護作業 CRU
   { path: 'tls53030cru', loadComponent: () => import('./tls53030-cru/tls53030-cru.component').then(m => m.TLS53030CRUComponent) },
-  // 進貨日結作業 CRU
-  { path: 'tls55010cru', loadComponent: () => import('./tls55010-cru/tls55010-cru.component').then(m => m.TLS55010CRUComponent) },
   // 廠商發票折讓作業 CRU
   { path: 'tls55030cru', loadComponent: () => import('./tls55030-cru/tls55030-cru.component').then(m => m.TLS55030CRUComponent) },
   // 廠商請款作業 CRU

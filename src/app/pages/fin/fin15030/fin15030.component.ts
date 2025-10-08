@@ -61,7 +61,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖 (string(16))
     SAL_Type: [null],           // 使用別 (dropdown)
     SYS_ORIGIN: [null],         // 系統別 (dropdown)
-    ...createPaginationConfig([{ field: 'No', order: -1 }])
+    ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'TXN_GUINo', order: 1 }])
   });
 
   queryForm2 = this.formBuilder.group({
@@ -87,7 +87,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true },
+    { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'TXN_Uniform', header: '統一編號', visible: true }
   ];
 

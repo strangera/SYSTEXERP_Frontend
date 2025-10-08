@@ -1,13 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 import {
   FormGroup,
   Validators,
   FormsModule,
   ReactiveFormsModule,
+  FormControl,
 } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -15,9 +23,49 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { FIN13050Service } from '@service/api/fin/fin13050.service';
+import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
+import { ValidationService } from '@shared/service/validation.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+
+type YM = string | null;
+
+/** Typed Forms：每個欄位都給明確的 FormControl 型別 */
+interface Fin13060CruForm {
+  mid: FormControl<number | null>;
+  SYS_StoreNo: FormControl<string | null>;
+
+  ECR_No: FormControl<string | null>;
+  TXN_No: FormControl<number | null>;
+  TXN_GUIPaper: FormControl<string | null>;
+
+  INV_NoneTax: FormControl<string | null>;
+  INV_Cancel: FormControl<'N' | 'Y' | null>;
+
+  INV_GUIType: FormControl<string | null>;
+  INV_GUITrack: FormControl<string | null>;
+  INV_GUINumber: FormControl<string | null>;
+
+  TXN_Date: FormControl<Date | string | null>;
+  INV_DeclareYM: FormControl<YM>;
+
+  TXN_SaleAmt: FormControl<number | null>;
+  TXN_Net: FormControl<number | null>;
+  TXN_Tax: FormControl<number | null>;
+
+  PLU_TaxType: FormControl<string | null>;
+
+  Source_Doc_No: FormControl<string | null>;
+  Voucher_No: FormControl<string | null>;
+  SAL_Type: FormControl<string | null>;
+  SYS_ORIGIN: FormControl<string | null>;
+  AssetType: FormControl<string | null>;
+  INV_Remark: FormControl<string | null>;
+  Tlt_No: FormControl<string | null>;
+  Ven_No: FormControl<string | null>;
+
+  ID: FormControl<number | null>;
+}
 
 @Component({
   selector: 'app-fin13060-cru',
@@ -32,10 +80,11 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    QueryYearMonthComponent,
+   
     NgIf,
     TranslateModule,
     CalendarComponent,
+    CalenderoneComponent,
   ],
 })
 export class FIN13060CRUComponent
@@ -44,175 +93,340 @@ export class FIN13060CRUComponent
 {
   @Output() fieldChange = new EventEmitter<any>();
 
-  // 下拉選單
-  invoicePurposeOptions = [
-    { label: '營業用', value: '營業用' },
-    { label: '共同使用', value: '共同使用' },
-  ];
-PUR_VoucherTypeOptions: any[] = [
-  { value: '31', label: '銷項三聯式、電子計算機統一發票' },
-  { value: '32', label: '銷項二聯式、二聯式收銀機統一發票' },
-  { value: '35', label: '銷項三聯式收銀機統一發票及一般稅額計算之電子發票' },
-  { value: '36', label: '銷項免用統一發票' },
-  { value: '37', label: '特種稅額之銷項憑證' },
-];
+  // 下拉選項
+  PUR_VoucherTypeOptions: any[] = [];
 
-  deductOptions = [
-    { label: '代表進項可扣抵之進貨及費用', value: 'A' },
-    { label: '代表進項可扣抵之固定資產', value: 'B' },
-    { label: '代表進項不可扣抵之進貨及費用', value: 'C' },
-    { label: '代表進項不可扣抵之固定資產', value: 'D' },
-  ];
+  taxTypeOptions = [];
 
-  taxRateOptions = [
-    { label: '應稅', value: '1' },
-    { label: '零稅率', value: '2' },
-    { label: '免稅', value: '3' },
-  ];
+  SAL_TypeOptions = [];
 
-  typeOptions = [
-    { label: '進貨及費用', value: 'E' },
-    { label: '固定資產', value: 'F' },
-  ];
-  taxTypeOptions = [
-    { label: '免稅', value: '0' },
-    { label: '應稅', value: '1' },
-    { label: '零稅', value: '2' },
-  ];
-   CounterOptions: any[] = [];
+  AssetNoteOptions = [];
+  SYS_ORIGINOptions = [];
+  ECRNoOptions: any[] = [];
 
-   BuyerUniCodeOptions = [
-  { value: '00000000', label: '南紡流通服務台' },
-  { value: '00000000-2', label: '南紡流通服務台' },
-  { value: '00000000-3', label: '南紡流通' },
-  { value: '00000000-4', label: '停管管理' },
-  { value: '00000000-5', label: '南紡流通停管管理' },
-  { value: '00000000-7', label: '停管管理' },
-  { value: '00000000-8', label: '測試' },
-  { value: '00852492-1', label: '佳達旅運行' },
-  { value: '01052878-1', label: '財團法人臺業文教基金會' },
-  { value: '01508949-1', label: '財團法人聯合信用卡處理中心' },
-];
-  AssetNoteOptions = [
-    { label: '固定資產', value: '0' },
-    { label: '土地', value: '1' },
-  ];
+  CounterOptions: any[] = []; // 專櫃
+  INV_NoneTaxOptions: any[] = [];
+  INV_CancelOptions: any[] = [
+    { label: '否', value: 'N' },
+    { label: '是', value: 'Y' },
+  ];  
 
+  TXN_GUIPaperOptions: any[] = [];  
 
-  constructor(private fin13060Service: FIN13060Service, private counterNameService: CounterNameService,) {
+  INV_GUITypeOptions: any[] = [];
+  /** 轉成 'YYYYMM'（可吃 Date 或字串 'YYYY/MM'、'YYYYMM'）*/
+private toYYYYMM(v: any): string | null {
+  if (!v) return null;
+
+  // 先試 Date
+  const asDate = v instanceof Date ? v : new Date(v);
+  if (!isNaN(asDate.getTime())) {
+    const y = asDate.getFullYear();
+    const m = String(asDate.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+
+  // 再試純字元：取數字、保留前6碼
+  const digits = String(v).replace(/\D/g, '');
+  return digits.length >= 6 ? digits.slice(0, 6) : null;
+}
+
+  /** 完整 Typed FormGroup —— 讓 template 可用 dataForm.controls.欄位 直接取用 */
+  dataForm: FormGroup<Fin13060CruForm> = new FormGroup<Fin13060CruForm>({
+    mid: new FormControl<number | null>({ value: null, disabled: true }, { validators: [Validators.required] }),
+    SYS_StoreNo: new FormControl<string | null>({ value: null, disabled: true }, { validators: [Validators.required] }),
+
+    ECR_No: new FormControl<string | null>('', { validators: [Validators.required] }),
+    TXN_No: new FormControl<number | null>(null, { validators: [Validators.required] }),
+    TXN_GUIPaper: new FormControl<string | null>('', { validators: [Validators.required] }),
+
+    INV_NoneTax: new FormControl<string | null>('0', { validators: [Validators.required] }),
+    INV_Cancel: new FormControl<'N' | 'Y' | null>('N', { validators: [Validators.required] }),
+
+    INV_GUIType: new FormControl<string | null>(null, { validators: [Validators.required] }),
+      INV_GUITrack: new FormControl<string | null>('', {
+      validators: [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(2),
+        Validators.pattern(/^[A-Z]{2}$/), // 僅 A-Z，長度 2
+      ],
+    }),
+        INV_GUINumber: new FormControl<string | null>('', {
+      validators: [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(8),
+        Validators.pattern(/^\d{8}$/), // 8位數字
+      ],
+    }),
+
+    TXN_Date: new FormControl<Date | string | null>(null, { validators: [Validators.required] }),
+ INV_DeclareYM: new FormControl<YM>(null, [
+  Validators.required,
+  this.validationService.evenMonthValidator,
+  this.validationService.minMonthValidator,
+]),
+
+    TXN_SaleAmt: new FormControl<number | null>(null, { validators: [Validators.required] }),
+    TXN_Net: new FormControl<number | null>(null, { validators: [Validators.required] }),
+    TXN_Tax: new FormControl<number | null>(null, { validators: [Validators.required] }),
+
+    PLU_TaxType: new FormControl<string | null>(null, { validators: [Validators.required] }),
+
+      Source_Doc_No: new FormControl<string | null>(null, {
+      validators: [
+        Validators.minLength(16),
+        Validators.maxLength(16),
+        Validators.pattern(/^[A-Z0-9]{16}$/),
+      ],
+    }),
+    Voucher_No: new FormControl<string | null>(null),
+    SAL_Type: new FormControl<string | null>(null),
+    AssetType: new FormControl<string | null>(null),
+    INV_Remark: new FormControl<string | null>(null),
+    Tlt_No: new FormControl<string | null>(null),
+    Ven_No: new FormControl<string | null>(null),
+    SYS_ORIGIN: new FormControl<string | null>(null),
+    ID: new FormControl<number | null>(null),
+  });
+
+  constructor(
+    private fin13060Service: FIN13060Service,
+    private counterNameService: CounterNameService,
+    private fin13050Service: FIN13050Service,
+    private validationService: ValidationService,
+    private ECRNoService: ECRNoService,
+  ) {
     super();
   }
 
-  dataForm = this.formBuilder.group({
-    PUR_VoucherType: ['', Validators.required],
-    GUI_Track: [''],
-    PUR_GUINo: [''],
-    PUR_GUINoEnd: [''],
-    GUI_Date: [null, Validators.required],
-    Rep_YYYYMM: ['', Validators.required],
-    Apply_YYYYMM: ['', Validators.required],
-    UniCode: [''],
-    Amount: [null, Validators.required],
-    TaxExcluded: [null, Validators.required],
-    Tax: [null, Validators.required],
-    Invoice_Purpose: [''], 
-    PUR_TaxType: ['', Validators.required], 
-    Deduct_Flag: [''], 
-    Category: [''], 
-    Source_Doc_No: [''],
-    Voucher_No: [''],
-    Serial: [''],
-    Note: [''],
-    System_ID: [''],
-    remark: [''],
-    VendorCode: [''],
-    TLT_No: [''],
-    SellerUniCode: [{ value: '', disabled: true }, Validators.required],
-
-    BuyerUniCode: ['', Validators.required],
-    AssetNote: [''],
-
-  });
-
-  detailRows: any[] = [];
-
   ngOnInit(): void {
-    this.initializePage('FIN13060', this.dataForm);
-    this.updateDisabledState();
-     this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
-          value: x.value,
-        })) || [];
+  this.initializePage('FIN13060', this.dataForm);
+  this.hydrateStoreInfoFromLocalStorage(); // mid、SYS_StoreNo 由 localStorage 帶入
+
+  // 專櫃清單
+  this.counterNameService.getCounters().subscribe((res) => {
+    this.CounterOptions =
+      res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) ?? [];
+  });
+    this.fin13050Service
+    .querySYS1000DropDownList('AssetType')
+    .subscribe((res) => {
+      const list = res?.Data ?? [];
+      this.AssetNoteOptions = list.map((x: any) => ({
+        value: String(x.No),   // No -> value
+        label: String(x.Name), // Name -> label
+      } ));
     });
-    this.dataForm.get('SellerUniCode')?.disable(); // ← 補這行
+    
+  // 零稅銷售註記清單 + 載入後預設為「否」
+  this.fin13050Service
+    .querySYS1000DropDownList('INV_NoneTax')
+    .subscribe((res) => {
+      const list = res?.Data ?? [];
+      this.INV_NoneTaxOptions = list.map((x: any) => ({
+        value: String(x.No),   // No -> value
+        label: String(x.Name), // Name -> label
+      }));
+
+      // 只在「新增」且目前沒有值時，預設為「否」
+      if (
+        this.crudstatus === CRUDStatus.Create &&
+        !this.dataForm.controls.INV_NoneTax.value
+      ) {
+        const defaultNo =
+          this.INV_NoneTaxOptions.find(o => o.label?.includes('否'))?.value ??
+          this.INV_NoneTaxOptions.find(o => o.value === '0')?.value ??
+          null;
+
+        if (defaultNo !== null) {
+          this.dataForm.controls.INV_NoneTax.setValue(defaultNo, { emitEvent: false });
+        }
+      }
+    });
+   this.fin13060Service.queryAPS2002DropDownList().subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.INV_GUITypeOptions = list.map(x => ({
+      value: String(x.No),
+      label: String(x.Name),
+    }));
+  });
+    this.ECRNoService.getECRNo().subscribe(res => {
+      this.ECRNoOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+    });
+     this.fin13050Service
+      .querySYS1000DropDownList('SYS_ORIGIN')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.SYS_ORIGINOptions = list.map((x: any) => ({
+          value: String(x.No), // No -> value
+          label: String(x.Name), // Name -> label
+        }));
+      });
+           this.fin13050Service
+      .querySYS1000DropDownList('T205')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.SAL_TypeOptions = list.map((x: any) => ({
+          value: String(x.No), // No -> value
+          label: String(x.Name), // Name -> label
+        }));
+      });
+
+        this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res) => {
+      const list = res?.Data ?? [];
+      this.taxTypeOptions = list.map((x: any) => ({
+        value: String(x.No), // No -> value
+        label: String(x.Name), // Name -> label
+      }));
+    });
+           this.fin13050Service.querySYS1000DropDownList('TXN_GUIPaper').subscribe((res) => {
+      const list = res?.Data ?? [];
+      this.TXN_GUIPaperOptions = list.map((x: any) => ({
+        value: String(x.No), // No -> value
+        label: String(x.Name), // Name -> label
+      }));
+    });
+    // ▲ 即時矯正：輸入同時限制格式/長度
+    this.setupInputMasks();
+
+   
+  this.updateDisabledState();
+}
+  private setupInputMasks(): void {
+    // INV_GUITrack：轉大寫、去掉非 A-Z、限制長度 2
+    const guiTrack = this.dataForm.controls.INV_GUITrack;
+    guiTrack.valueChanges.subscribe(v => {
+      const inStr = (v ?? '').toString();
+      const fixed = inStr.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+      if (fixed !== inStr) guiTrack.setValue(fixed, { emitEvent: false });
+    });
+
+    // INV_GUINumber：只留數字、限制長度 8
+    const guiNumber = this.dataForm.controls.INV_GUINumber;
+    guiNumber.valueChanges.subscribe(v => {
+      const inStr = (v ?? '').toString();
+      const fixed = inStr.replace(/\D/g, '').slice(0, 8);
+      if (fixed !== inStr) guiNumber.setValue(fixed, { emitEvent: false });
+    });
+
+    // Source_Doc_No：英數大寫、限制長度 16
+    const srcDoc = this.dataForm.controls.Source_Doc_No;
+    srcDoc.valueChanges.subscribe(v => {
+      if (v == null) return;
+      const inStr = v.toString();
+      const fixed = inStr.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+      if (fixed !== inStr) srcDoc.setValue(fixed, { emitEvent: false });
+    });
   }
 
-  private updateDisabledState(): void {
-    if (this.crudstatus === CRUDStatus.Edit) {
-      const editableFields = ['GUI_Date', 'Rep_YYYYMM', 'Tax', 'Voucher_No'];
-      Object.keys(this.dataForm.controls).forEach((key) => {
-        const control = this.dataForm.get(key);
-        if (editableFields.includes(key)) {
-          control?.enable();
-        } else {
-          control?.disable();
-        }
+  /** 從 localStorage.UserInfo 取 mid、SYS_StoreNo（依你的頁面截圖鍵名做容錯） */
+  private hydrateStoreInfoFromLocalStorage(): void {
+    try {
+      const raw = localStorage.getItem('UserInfo');
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+
+      const mid = Number(obj?.mid ?? obj?.Mid ?? 0);
+      const store = String(obj?.SYS_StoreNo ?? obj?.STR_StoreNo ?? obj?.StoreNo ?? '');
+
+      this.dataForm.patchValue({
+        mid: isNaN(mid) ? 0 : mid,
+        SYS_StoreNo: store || null,
       });
-    } else if (this.crudstatus === CRUDStatus.Read) {
-      this.dataForm.disable();
-    } else {
-      this.dataForm.enable(); // 新增模式全開
+    } catch {
+      // ignore
     }
   }
 
-  onSubmit(form: FormGroup): void {
+  private toDateOnlyString(d: any): string | null {
+    if (!d) return null;
+    const date = typeof d === 'string' ? new Date(d) : d;
+    if (isNaN(date?.getTime?.())) return null;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  }
+
+  private normalize(v: any): string | null {
+    if (v === null || v === undefined) return null;
+    const s = String(v).trim();
+    return s === '' ? null : s;
+  }
+
+  private updateDisabledState(): void {
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.dataForm.disable();
+      return;
+    }
+    this.dataForm.enable();
+    // mid、SYS_StoreNo 永遠唯讀
+    this.dataForm.controls.mid.disable();
+    this.dataForm.controls.SYS_StoreNo.disable();
+  }
+
+  onSubmit(form: FormGroup<Fin13060CruForm>): void {
     this.handleSubmit(form, () => {
-      const formValue = form.getRawValue();
+      const raw = form.getRawValue(); // typed 取值
+
       const payload = {
-        ...formValue,
-        APS40235List: this.detailRows.map((row) => ({
-          PLU_Name: row.PLU_Name,
-          TXN_Qty: row.TXN_Qty,
-          PLU_SalePrc: row.PLU_SalePrc,
-          TXN_SaleAmt: row.TXN_SaleAmt,
-        })),
-      };
+        mid: Number(raw.mid ?? 0),
+        SYS_StoreNo: this.normalize(raw.SYS_StoreNo),
+
+        ECR_No: this.normalize(raw.ECR_No),
+        TXN_No: raw.TXN_No != null ? Number(raw.TXN_No) : null,
+        TXN_GUIPaper: this.normalize(raw.TXN_GUIPaper),
+
+        INV_NoneTax: this.normalize(raw.INV_NoneTax),
+        INV_Cancel: this.normalize(raw.INV_Cancel),
+
+        INV_GUIType: this.normalize(raw.INV_GUIType),
+        INV_GUITrack: this.normalize(raw.INV_GUITrack),
+        INV_GUINumber: this.normalize(raw.INV_GUINumber),
+
+        TXN_Date: this.toDateOnlyString(raw.TXN_Date),
+        INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM),
+
+        TXN_SaleAmt: raw.TXN_SaleAmt != null ? Number(raw.TXN_SaleAmt) : null,
+        TXN_Net: raw.TXN_Net != null ? Number(raw.TXN_Net) : null,
+        TXN_Tax: raw.TXN_Tax != null ? Number(raw.TXN_Tax) : null,
+
+        PLU_TaxType: this.normalize(raw.PLU_TaxType),
+
+        Source_Doc_No: this.normalize(raw.Source_Doc_No),
+        Voucher_No: this.normalize(raw.Voucher_No),
+        SAL_Type: this.normalize(raw.SAL_Type),
+        AssetType: this.normalize(raw.AssetType),
+        INV_Remark: this.normalize(raw.INV_Remark),
+        Tlt_No: this.normalize(raw.Tlt_No),
+        Ven_No: this.normalize(raw.Ven_No),
+      } as const;
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
         this.fin13060Service.insertFIN13060(payload).subscribe(() => {
           this.messageService.successBubble('新增成功');
           this.dataForm.reset();
+          this.hydrateStoreInfoFromLocalStorage();
+          this.updateDisabledState();
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        this.fin13060Service.updateFIN13060(payload).subscribe(() => {
+        const id = form.controls.ID.getRawValue();
+        const upd = id != null ? { ...payload, ID: Number(id) } : payload;
+        this.fin13060Service.updateFIN13060(upd).subscribe(() => {
           this.messageService.successBubble('更新成功');
           this.onCancel();
         });
       }
     });
-  }
-
-  onFieldChange(event: { rowData: any; field: string; value: any }) {
-    const { rowData, field, value } = event;
-    rowData[field] = value;
-
-    if (field === 'TXN_Qty' || field === 'PLU_SalePrc') {
-      const qty = parseFloat(rowData.TXN_Qty) || 0;
-      const price = parseFloat(rowData.PLU_SalePrc) || 0;
-      rowData.TXN_SaleAmt = qty * price;
-    }
-  }
-
-  clearFormExcept(): void {
-    const keepKeys = ['GUI_Track', 'GUI_Number'];
-    const keepValues = Object.fromEntries(
-      keepKeys.map((key) => [key, this.dataForm.get(key)?.value]),
-    );
-    this.dataForm.reset();
-    this.dataForm.patchValue(keepValues);
-    this.updateDisabledState();
   }
 }

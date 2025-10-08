@@ -64,7 +64,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     AssetType: [null],                                      // 資產註記
     HasUniform: [null],                                     // 是否有統一編號
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
-    ...createPaginationConfig([{ field: 'No', order: -1 }])
+    ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'INV_GUINumber', order: 1 }])
   });
 
   queryForm2 = this.formBuilder.group({
@@ -90,7 +90,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: formatAmount },
     { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value }
+    { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
   ];
 
   //#region 

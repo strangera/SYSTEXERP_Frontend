@@ -128,7 +128,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   data: TLS31070Response[] = [];
   columns: Column[] = [
     { field: 'paper_type', header: '營業形態代號', visible: false },
-    { field: 'paper_type_desc', header: '營業形態名稱', visible: true },
+    { field: 'paper_type_desc', header: '營業形態', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
@@ -139,7 +139,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
     { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
-
+    // { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
 
     { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' },
