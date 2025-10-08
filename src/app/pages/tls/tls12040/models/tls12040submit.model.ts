@@ -106,6 +106,8 @@ export interface TLS12040ContractData {
   cap_saletype2?: string;
   cap_saletype3?: string;
   cap_saletype4?: string;
+  cap_saletype5?: string;
+
 
   // 聯絡資訊
   email?: string;
@@ -367,6 +369,8 @@ export class TLS12040DataCleanerClass {
       cap_saletype2: convertBooleanToYN(rawData.cap_saletype2),
       cap_saletype3: convertBooleanToYN(rawData.cap_saletype3),
       cap_saletype4: convertBooleanToYN(rawData.cap_saletype4),
+      cap_saletype5: convertBooleanToYN(rawData.cap_saletype5),
+
 
       // 聯絡資訊
       email: rawData.email,
