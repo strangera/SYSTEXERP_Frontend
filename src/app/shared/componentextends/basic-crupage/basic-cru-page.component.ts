@@ -133,10 +133,15 @@ export abstract class BasicCruPageComponent<T> {
     });
   }
   onCancel() {
+    // 確保返回正確的查詢頁面
+    const queryPageRoute = this.previousRoute?.includes('account/')
+      ? this.previousRoute
+      : `/account/${this.ProgNo.toLowerCase()}`;
+
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate([this.previousRoute], extras);
+    this.router.navigate([queryPageRoute], extras);
   }
 
   onLazyLoadData(event: LazyLoadEvent, dataForm: FormGroup) {
