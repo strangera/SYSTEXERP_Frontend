@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -17,6 +17,15 @@ import { NgIf, NgFor } from '@angular/common';
 import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+
+// 定義日期資料的類型
+interface DayData {
+  DayID?: number;
+  budget: number | null;
+  rate: number;
+  commission: number;
+  disabled?: boolean;
+}
 
 @Component({
   selector: 'app-tls2g020-cru',
@@ -78,7 +87,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private route: ActivatedRoute,
     private dropDownListService: DropDownListService,
-    private tls2g020Service: Tls2g020Service
+    private tls2g020Service: Tls2g020Service,
+    private cdr: ChangeDetectorRef
   ) {
     super();
   }
@@ -89,6 +99,15 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     console.log('rowdata', this.rowdata);
 
     this.data = this.rowdata?.Mdeatil ?? [];
+
+    if (this.data.length > 0) {
+      this.data.forEach(monthData => {
+        // 如果沒有 charge_amt，用 avg_cag_charge_nurate 設定
+        if (!monthData.charge_amt && monthData.avg_cag_charge_nurate) {
+          monthData.charge_amt = monthData.avg_cag_charge_nurate;
+        }
+      });
+    }
 
     if (this.rowdata) {
       this.dataForm.patchValue({
@@ -120,50 +139,55 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     this.editMode = 'day';
     this.currentMonthData = row;
 
-    // 年度優先順序：表單 > row > 系統當前年
+    this.currentMonthData.avg_cag_charge_nurate = row.avg_cag_charge_nurate ?? 0;
+
     const year =
       Number(this.dataForm.controls['budget_yy'].value) ||
       Number(row.budget_yy) ||
       new Date().getFullYear();
 
-    // 月份取 row.Month 後兩位，不存在則給 1
     const month = Number(row.Month?.slice(-2)) || 1;
 
-    // 組合 budget_yymm (YYYYMM)
     const budget_yymm = `${year}${month.toString().padStart(2, '0')}`;
 
-    // 更新表單的主要欄位
     this.dataForm.patchValue({
       budget_yy: year.toString(),
       budget_mm: month.toString().padStart(2, '0'),
-      budget_yymm,                          //  關鍵：帶入年月
+      budget_yymm,
       budget: row.budget ?? 0,
       avg_cag_charge_rate: row.avg_cag_charge_rate ?? 0
     });
 
     // 查詢該年月的日明細
     const payload = {
-      talent_id: this.dataForm.controls['talent_id'].value,
-      budget_yymm
+      budget_yymm,
+      talent_id: this.dataForm.controls['talent_id'].value
     };
-
-    // 取得本月的 avg_cag_charge_nurate（抽成額）計算用
-    const avg_cag_charge_nurate = row.avg_cag_charge_nurate ?? 0;
-
     this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
       next: (res) => {
         const apiData = res?.Data || [];
 
         this.currentMonthData.days = {};
+
+        // 取得合約期間
+        const contractStartDate = this.rowdata?.Contract_bdate ? new Date(this.rowdata.Contract_bdate) : null;
+        const contractEndDate = this.rowdata?.Contract_edate ? new Date(this.rowdata.Contract_edate) : null;
+
         apiData.forEach((d: any) => {
           const day = new Date(d.budget_date).getDate();
-          // 若 API 有回傳 commission 欄位，優先帶入，否則用公式計算
+          const rate = row.avg_cag_charge_rate ?? 0;
+
+          // 判斷該日期是否在合約期間內
+          const currentDate = new Date(d.budget_date);
+          const isInContractPeriod = contractStartDate && contractEndDate &&
+            currentDate >= contractStartDate && currentDate <= contractEndDate;
+
           this.currentMonthData.days[day] = {
-            DayID: d.DayID ?? 0,
+            DayID: d.DayID ?? null,
             budget: d.budget ?? null,
-            rate: row.avg_cag_charge_rate ?? 0,
-            commission: d.commission != null ? Number(d.commission) : Number(((d.budget ?? 0) * avg_cag_charge_nurate).toFixed(2)),
-            disabled: !d.DayID
+            rate: rate,
+            commission: d.commission != null ? Number(d.commission) : Number(((d.budget ?? 0) * Number(rate)).toFixed(2)),
+            disabled: !isInContractPeriod
           };
         });
 
@@ -200,13 +224,25 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     if (!this.currentMonthData.days) {
       this.currentMonthData.days = {};
     }
+
+    // 取得合約期間
+    const contractStartDate = this.rowdata?.Contract_bdate ? new Date(this.rowdata.Contract_bdate) : null;
+    const contractEndDate = this.rowdata?.Contract_edate ? new Date(this.rowdata.Contract_edate) : null;
+
     for (let d = 1; d <= days; d++) {
       if (!this.currentMonthData.days[d]) {
+        const currentDate = new Date(year, month - 1, d);
+
+        // 判斷是否在合約期間內
+        const isInContractPeriod = contractStartDate && contractEndDate &&
+          currentDate >= contractStartDate && currentDate <= contractEndDate;
+        const defaultRate = this.currentMonthData.avg_cag_charge_rate ?? 0;
+
         this.currentMonthData.days[d] = {
-          budget: null,
-          rate: 0,
+          budget: isInContractPeriod ? 0 : null,
+          rate: defaultRate,
           commission: 0,
-          disabled: true
+          disabled: !isInContractPeriod
         };
       }
     }
@@ -225,7 +261,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     const rate = this.dataForm.controls['avg_cag_charge_rate'].value || 0;
 
     const budget = Number(data.budget) || 0;
-    const commission = budget * (Number(rate) / 100);
+    // 正確公式：實際預算 × 抽成率 = 抽成額
+    const commission = budget * Number(rate);
 
     // 固定兩位小數
     data.budget = Number(budget.toFixed(2));
@@ -238,7 +275,7 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   private updateMonthTotals() {
     if (!this.currentMonthData?.days) return;
 
-    const values = Object.values(this.currentMonthData.days) as any[];
+    const values = Object.values(this.currentMonthData.days) as DayData[];
 
     const totalBudget = values.reduce((sum, d) => sum + (Number(d.budget) || 0), 0);
     const totalCommission = values.reduce((sum, d) => sum + (Number(d.commission) || 0), 0);
@@ -265,12 +302,11 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     const detailList = Object.keys(this.currentMonthData.days).map(day => {
       const d = this.currentMonthData.days[+day];
       return {
-        DayID: d.DayID && d.DayID !== 0 ? d.DayID : null,
+        DayID: d.DayID && d.DayID !== 0 ? d.DayID : 0,  // 新增記錄使用 0 而不是 null
         budget_date: `${formVal.budget_yy}-${formVal.budget_mm}-${day.toString().padStart(2, '0')}T00:00:00`,
         budget_D: d.budget ?? 0
       };
     });
-
 
     const payload = {
       budget_yymm,
@@ -286,20 +322,42 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
         if (res.Status === '0000' || res.Status === 0) {
           this.messageService.successBubble("更新成功");
 
-          //  只更新前端，不打 query
+          const contractStartDate = this.rowdata?.Contract_bdate ? new Date(this.rowdata.Contract_bdate) : null;
+          const contractEndDate = this.rowdata?.Contract_edate ? new Date(this.rowdata.Contract_edate) : null;
+          const rate = this.dataForm.controls['avg_cag_charge_rate'].value || 0;
+
+          const newDays: any = {};
+
           detailList.forEach(item => {
             const day = new Date(item.budget_date).getDate();
-            this.currentMonthData.days[day] = {
+            const currentDate = new Date(item.budget_date);
+            const isInContractPeriod = contractStartDate && contractEndDate &&
+              currentDate >= contractStartDate && currentDate <= contractEndDate;
+
+            console.log(`處理第 ${day} 天:`, {
+              item,
+              isInContractPeriod,
+              existsInDays: !!this.currentMonthData.days[day]
+            });
+
+            newDays[day] = {
               DayID: item.DayID,
               budget: item.budget_D,
-              rate: this.dataForm.controls['avg_cag_charge_rate'].value,
-              commission: Number(((item.budget_D ?? 0) *
-                ((this.dataForm.controls['avg_cag_charge_rate']?.value ?? 0) / 100)).toFixed(2))
+              rate: rate,
+              commission: Number(((item.budget_D ?? 0) * Number(rate)).toFixed(2)),
+              disabled: !isInContractPeriod
             };
+
+            console.log(`第 ${day} 天新資料:`, newDays[day]);
           });
 
+          this.currentMonthData.days = newDays;
+
+          console.log('更新後的 currentMonthData.days:', JSON.stringify(this.currentMonthData.days));
           this.updateMonthTotals();
 
+          this.cdr.detectChanges();
+          console.log('已觸發變更偵測，完全替換了 days 物件');
         }
       }
     });
