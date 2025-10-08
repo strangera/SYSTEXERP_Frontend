@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -40,6 +41,8 @@ export interface KeyItem {
   KB_Arg2?: string;
   KB_Arg3?: string;
   type?: string;
+  mergeRight?: number;
+  mergeDown?: number;
 }
 
 @Component({
@@ -57,6 +60,7 @@ export interface KeyItem {
     InputTextareaComponent,
     DropdownComponent,
     InputTextComponent,
+    InputNumberComponent,
     NgFor,
     NgClass,
     CommonModule,
@@ -87,19 +91,19 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     KB_Switch: ['Y'],
     KB_Display1: ['', Validators.maxLength(5)],
     KB_Display2: ['', Validators.maxLength(5)],
-    KB_Color: ['RGB:0,0,0'],
+    KB_Color: ['RGB:255,255,255'],
     color: [null],
     KB_Style: ['1'],
     KB_Font: ['Microsoft JhengHei'],
-    KB_Size: [14],
+    KB_Size: [12],
     KB_FontColor: ['RGB:0,0,0'],
     FontColor: [null],
     KB_Fonttyped: ['NNN'],
     KB_Arg1: [''],
     KB_Arg2: [''],
     KB_Arg3: [''],
-    // 修改為單一合併選項控制項
-    KB_MergeType: ['']
+    // 修改為複選合併選項控制項
+    KB_MergeType: [[]]
   });
 
   // ---------------- Grid ----------------
@@ -133,11 +137,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     { label: '啟用', value: 'Y' },
     { label: '不啟用', value: 'N' },
   ];
-  KB_SizeOptions = [
-    { label: '小 (12)', value: 12 },
-    { label: '中 (14)', value: 14 },
-    { label: '大 (16)', value: 16 }
-  ];
   KB_FontOptions = [
     { label: '微軟正黑體', value: 'Microsoft JhengHei' },
     { label: '標楷體', value: 'DFKai-SB' },
@@ -149,11 +148,39 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     { label: '底線', index: 2 },
   ];
 
-  // 新增按鍵合併選項（改為單選）
+  // 新增按鍵合併選項（改為多次合併）
   KB_MergeOptions: { label: string; value: string }[] = [
     { label: '按鍵往右合併', value: 'mergeRight' },
     { label: '按鍵往下合併', value: 'mergeDown' },
   ];
+
+  // 獲取合併按鈕的標籤
+  getMergeButtonLabel(option: {label: string, value: string}): string {
+    if (!this.selected) return option.label;
+
+    if (option.value === 'mergeRight') {
+      const mergeCount = this.selected.mergeRight || 0;
+      return mergeCount > 0 ? `往右合併 (${mergeCount}格)` : option.label;
+    } else if (option.value === 'mergeDown') {
+      const mergeCount = this.selected.mergeDown || 0;
+      return mergeCount > 0 ? `往下合併 (${mergeCount}格)` : option.label;
+    }
+
+    return option.label;
+  }
+
+  // 檢查合併按鈕是否應該顯示為選中狀態
+  isMergeOptionSelected(value: string): boolean {
+    if (!this.selected) return false;
+
+    if (value === 'mergeRight') {
+      return (this.selected.mergeRight || 0) > 0;
+    } else if (value === 'mergeDown') {
+      return (this.selected.mergeDown || 0) > 0;
+    }
+
+    return false;
+  }
 
   constructor(
     formBuilder: FormBuilder,
@@ -188,6 +215,25 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     });
     this.selectedKeyForm.controls['FontColor'].valueChanges.subscribe(v => {
       if (v) this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${v.r},${v.g},${v.b}`);
+    });
+
+    // 新增：即時更新按鍵顏色、字型顏色和字型大小
+    this.selectedKeyForm.controls['KB_Color'].valueChanges.subscribe(color => {
+      if (this.selected) {
+        this.selected.KB_Color = color;
+      }
+    });
+
+    this.selectedKeyForm.controls['KB_FontColor'].valueChanges.subscribe(fontColor => {
+      if (this.selected) {
+        this.selected.KB_FontColor = fontColor;
+      }
+    });
+
+    this.selectedKeyForm.controls['KB_Size'].valueChanges.subscribe(size => {
+      if (this.selected) {
+        this.selected.KB_Size = size;
+      }
     });
 
     // 編輯 / 檢視 模式查 API
@@ -312,10 +358,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Switch: first.KB_Switch ?? 'Y',
         KB_Display1: first.KB_Display1 ?? '',
         KB_Display2: first.KB_Display2 ?? '',
-        KB_Color: first.KB_Color ?? 'RGB:0,0,0',
+        KB_Color: first.KB_Color ?? 'RGB:255,255,255',
         KB_Style: first.KB_Style ?? '1',
         KB_Font: first.KB_Font ?? 'Microsoft JhengHei',
-        KB_Size: first.KB_Size ?? 14,
+        KB_Size: first.KB_Size ?? 12,
         KB_FontColor: first.KB_FontColor ?? 'RGB:0,0,0',
         KB_Fonttyped: first.KB_Fonttyped ?? 'NNN',
         KB_Arg1: first.KB_Arg1 ?? '',
@@ -324,7 +370,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       });
     }
   }
-
   // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem) {
     if (this.crudstatus === CRUDStatus.Read) return;
@@ -337,16 +382,19 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       KB_Switch: k.KB_Switch ?? 'Y',
       KB_Display1: k.KB_Display1 ?? '',
       KB_Display2: k.KB_Display2 ?? '',
-      KB_Color: k.KB_Color ?? 'RGB:0,0,0',
+      KB_Color: k.KB_Color ?? 'RGB:255,255,255',
       KB_Style: k.KB_Style ?? '1',
       KB_Font: k.KB_Font ?? 'Microsoft JhengHei',
-      KB_Size: k.KB_Size ?? 14,
+      KB_Size: k.KB_Size ?? 12,
       KB_FontColor: k.KB_FontColor ?? 'RGB:0,0,0',
       KB_Fonttyped: k.KB_Fonttyped ?? 'NNN',
       KB_Arg1: k.KB_Arg1 ?? '',
       KB_Arg2: k.KB_Arg2 ?? '',
       KB_Arg3: k.KB_Arg3 ?? ''
     });
+
+    // 更新合併選項顯示
+    this.updateMergeDisplay();
   }
 
   onPageChange(newPageIndex: number) {
@@ -379,14 +427,14 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Display1: hasConfig ? k.KB_Display1 : '',
           KB_Display2: hasConfig ? k.KB_Display2 : '',
           KB_Font: hasConfig ? k.KB_Font : 'Microsoft JhengHei',
-          KB_Size: hasConfig ? k.KB_Size : 14,
+          KB_Size: hasConfig ? k.KB_Size : 12,
           KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
           KB_Style: hasConfig ? k.KB_Style || '1' : '1',
           KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
           KB_Width: pos1008.width,
           KB_Height: pos1008.height,
           KB_Merge: k.code,
-          KB_Color: hasConfig ? k.KB_Color : 'RGB:0,0,0',
+          KB_Color: hasConfig ? k.KB_Color : 'RGB:255,255,255',
           KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
           KG_KeyPage: pageIndex + 1
         };
@@ -434,5 +482,122 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     const arr = (this.selectedKeyForm.controls['KB_Fonttyped'].value || 'NNN').split('');
     arr[index] = checked ? 'Y' : 'N';
     this.selectedKeyForm.controls['KB_Fonttyped'].setValue(arr.join(''));
+  }
+
+  toggleMergeOption(value: string) {
+    if (!this.selected) return;
+
+    const keyX = parseInt(this.selected.code.substring(0, 2));
+    const keyY = parseInt(this.selected.code.substring(2, 4));
+
+    if (value === 'mergeRight') {
+      // 檢查是否可以往右合併
+      if (keyX >= this.xCount) {
+        // 已經在最右邊，不能再往右
+        return;
+      }
+
+      // 增加往右合併格數，如果已經是最大值則重置為0
+      const currentMerge = this.selected.mergeRight || 0;
+      const maxMerge = this.xCount - keyX; // 最多可以合併到右邊界
+
+      if (currentMerge >= maxMerge) {
+        this.selected.mergeRight = 0; // 重置
+      } else {
+        this.selected.mergeRight = currentMerge + 1; // 增加一格
+      }
+    }
+    else if (value === 'mergeDown') {
+      // 檢查是否可以往下合併
+      const currentPageY = (keyY - 1) % this.yCount + 1; // 在當前頁面的Y座標
+      if (currentPageY >= this.yCount) {
+        // 已經在最下面，不能再往下
+        return;
+      }
+
+      // 增加往下合併格數
+      const currentMerge = this.selected.mergeDown || 0;
+      const maxMerge = this.yCount - currentPageY; // 最多可以合併到下邊界
+
+      if (currentMerge >= maxMerge) {
+        this.selected.mergeDown = 0; // 重置
+      } else {
+        this.selected.mergeDown = currentMerge + 1; // 增加一格
+      }
+    }
+
+    // 更新表單顯示
+    this.updateMergeDisplay();
+  }
+
+  // 更新合併選項的顯示狀態
+  updateMergeDisplay() {
+    if (!this.selected) return;
+
+    const currentValue = [];
+    if (this.selected.mergeRight && this.selected.mergeRight > 0) {
+      currentValue.push('mergeRight');
+    }
+    if (this.selected.mergeDown && this.selected.mergeDown > 0) {
+      currentValue.push('mergeDown');
+    }
+
+    this.getControl('KB_MergeType').setValue(currentValue);
+  }
+
+  // 檢查按鍵是否應該隱藏（被其他按鍵合併）
+  isKeyHidden(key: KeyItem, page: KeyItem[]): boolean {
+    const keyX = parseInt(key.code.substring(0, 2));
+    const keyY = parseInt(key.code.substring(2, 4));
+
+    for (const k of page) {
+      if (k !== key) {
+        const kX = parseInt(k.code.substring(0, 2));
+        const kY = parseInt(k.code.substring(2, 4));
+
+        // 檢查是否被往右合併覆蓋
+        if (k.mergeRight && k.mergeRight > 0) {
+          if (keyY === kY && keyX > kX && keyX <= kX + k.mergeRight) {
+            return true;
+          }
+        }
+        // 檢查是否被往下合併覆蓋
+        if (k.mergeDown && k.mergeDown > 0) {
+          if (keyX === kX && keyY > kY && keyY <= kY + k.mergeDown) {
+            return true;
+          }
+        }
+        // 檢查是否被同時往右往下合併覆蓋
+        if (k.mergeRight && k.mergeRight > 0 && k.mergeDown && k.mergeDown > 0) {
+          if (keyX > kX && keyX <= kX + k.mergeRight &&
+              keyY > kY && keyY <= kY + k.mergeDown) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  getKeyGridStyle(key: KeyItem): Record<string, string> {
+    const style: Record<string, string> = {};
+    const mergeRight = key.mergeRight || 0;
+    const mergeDown = key.mergeDown || 0;
+    if (mergeRight > 0) {
+      style['grid-column'] = `span ${mergeRight + 1}`;
+    }
+
+    if (mergeDown > 0) {
+      style['grid-row'] = `span ${mergeDown + 1}`;
+    }
+    return style;
+  }
+  convertRGBToCss(rgbString: string): string {
+    if (!rgbString || !rgbString.startsWith('RGB:')) {
+      return '';
+    }
+
+    const rgbValues = rgbString.replace('RGB:', '');
+    return `rgb(${rgbValues})`;
   }
 }
