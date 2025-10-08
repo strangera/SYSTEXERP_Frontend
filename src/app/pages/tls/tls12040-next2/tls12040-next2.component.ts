@@ -152,56 +152,140 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   async ngOnInit(): Promise<void> {
-    this.initializePage('TLS12040', this.dataForm);
-    // console.log('當前 CRUD 狀態:', this.crudstatus);
-    // console.log('是否為唯讀模式:', this.isReadOnlyMode);
-    // console.log('路由狀態:', this.router.getCurrentNavigation()?.extras?.state);
-    this.handleRouterState();
     try {
-      // 1. 先檢查是否有暫存的 Next2 資料
-      const savedNext2Data = this.flowService.getNext2Data();
-      console.log('🔍 檢查暫存的 Next2 資料:', savedNext2Data);
-      this.loadContractInfo();
-      // 2. 先訂閱資料狀態變更
-      this.dataFlowService.state$.subscribe(state => {
-        this.commissionData = state.currentEditData;
-        this.loading = state.uiState.loading;
-        this.dataLoaded = state.uiState.dataLoaded;
-        this.hasUnsavedChanges = state.uiState.hasUnsavedChanges;
-        this.commissionDataLoaded = state.uiState.dataLoaded && state.currentEditData.length >= 0;
-        this.cdr.detectChanges();
-      });
+      console.log('=== TLS12040 Next2 初始化開始 ===');
 
-      // 3. 初始化欄位配置
-      this.initializeColumns();
+      //  第一步:基礎設定
+      this.initializePage('TLS12040', this.dataForm);
+      this.handleRouterState();
 
-      // 4. 載入折扣選項
+      //  第二步:載入必要的選項資料
+      console.log('📋 載入折扣選項...');
       this.discountOptions = await this.dataFlowService.loadDiscountOptions();
       if (this.discountOptions.length === 0) {
-        console.warn('沒有載入到折扣選項');
+        console.warn('⚠️ 沒有載入到折扣選項');
       }
+
+      //  第三步:初始化欄位配置
+      this.initializeColumns();
       this.updateDiscountColumnOptions();
 
-      // 5. 優先檢查暫存資料，如果有則使用暫存資料
-      if (savedNext2Data && this.isValidSavedData(savedNext2Data)) {
-        console.log('📦 發現有效的暫存 Next2 資料，優先使用暫存資料');
-        await this.loadFromSavedData(savedNext2Data);
-      } else {
-        console.log(' 沒有暫存資料或資料無效，從工作流程載入');
-        // 載入工作流程資料
-        await this.loadWorkflowData();
-      }
+      //  第四步:訂閱資料狀態變更(要在載入資料前訂閱)
+      this.subscribeToDataChanges();
 
-      // 6. 設定自動儲存 (僅編輯模式)
+      //  第五步:載入合約基本資訊(獨立載入,不影響抽成資料)
+      this.loadContractInfo();
+
+      //  第六步:決定資料來源並載入
+      await this.loadCommissionData();
+
+      //  新增第七步:確保資料一致性
+      this.ensureDataConsistency();
+
+      //  第八步:設定自動儲存(僅編輯模式)
       if (!this.isReadOnlyMode) {
         this.setupAutoSave();
       }
 
+      console.log(' TLS12040 Next2 初始化完成');
+
     } catch (error) {
-      console.error('初始化失敗:', error);
+      console.error('❌ 初始化失敗:', error);
       this.notificationService.errorBubble('頁面初始化失敗');
     }
   }
+
+  /**
+   *  新增:確保資料一致性（學習 TLS13010）
+   */
+  private ensureDataConsistency(): void {
+    console.log(' 確保資料一致性...');
+
+    this.commissionData.forEach((item, index) => {
+      // 1. 強制重置到 discount 標籤,避免狀態混亂
+      this.selectedSettingTab = 'discount';
+
+      // 2. 確保折扣項目有正確的日期
+      this.fixDiscountItemDates(item);
+
+      // 3. 更新顯示項目
+      this.updateItemDisplayData(item);
+
+      console.log(`  項目 ${index + 1} 已重置到 discount 標籤`);
+    });
+
+    // 4. 同步全域標籤狀態
+    this.selectedSettingTab = 'discount';
+
+    console.log('✅ 資料一致性確保完成');
+  }
+
+  /**
+   *  新增:修復折扣項目的日期（避免日期消失問題）
+   */
+  private fixDiscountItemDates(commissionItem: ChargeSettingBusinessModel): void {
+    const contractStartDate = this.getContractDate('start');
+    const contractEndDate = this.getContractDate('end');
+
+    if (commissionItem.ChargeDetails) {
+      commissionItem.ChargeDetails.forEach((discount: any, index: number) => {
+        // 檢查並修復起始日期
+        if (!discount.tlt_bdate || isNaN(new Date(discount.tlt_bdate).getTime())) {
+          discount.tlt_bdate = contractStartDate;
+          console.log(`  修復項目 ${index} 的起始日期`);
+        }
+        // 檢查並修復結束日期
+        if (!discount.tlt_edate || isNaN(new Date(discount.tlt_edate).getTime())) {
+          discount.tlt_edate = contractEndDate;
+          console.log(`  修復項目 ${index} 的結束日期`);
+        }
+      });
+    }
+  }
+
+  /**
+   *  改進:獨立的資料訂閱方法
+   */
+  private subscribeToDataChanges(): void {
+    const subscription = this.dataFlowService.state$.subscribe(state => {
+      console.log('📊 資料狀態更新:', {
+        dataLoaded: state.uiState.dataLoaded,
+        itemCount: state.currentEditData.length
+      });
+
+      this.commissionData = state.currentEditData;
+      this.loading = state.uiState.loading;
+      this.dataLoaded = state.uiState.dataLoaded;
+      this.hasUnsavedChanges = state.uiState.hasUnsavedChanges;
+      this.commissionDataLoaded = state.uiState.dataLoaded && state.currentEditData.length >= 0;
+
+      this.cdr.detectChanges();
+    });
+
+    this.subscriptions.push(subscription);
+  }
+
+  /**
+   *  改進:統一的抽成資料載入方法
+   */
+  private async loadCommissionData(): Promise<void> {
+    console.log('🔍 開始載入抽成資料...');
+
+    // 1. 優先檢查是否有暫存的 Next2 資料
+    const savedNext2Data = this.flowService.getNext2Data();
+
+    if (savedNext2Data && this.isValidSavedData(savedNext2Data)) {
+      console.log('📦 發現有效的暫存 Next2 資料');
+      await this.loadFromSavedData(savedNext2Data);
+      return;
+    }
+
+    // 2. 沒有暫存資料,從工作流程載入
+    console.log('🔄 沒有暫存資料,從工作流程載入');
+    await this.loadWorkflowData();
+  }
+
+
 
   //獨立的合約資訊載入方法（學習 Next1）
   private loadContractInfo(): void {
@@ -211,7 +295,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     if (cruData) {
       this.prepareContractInfoDisplay(cruData);
-      console.log('✅ 合約資訊載入完成:', this.contractInfoData);
+      console.log(' 合約資訊載入完成:', this.contractInfoData);
     } else {
       console.warn('⚠️ 沒有 CRU 資料');
       this.contractInfoData = [];
@@ -243,10 +327,15 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 4. 新增檢查暫存資料有效性的方法
   private isValidSavedData(savedData: any): boolean {
-    if (!savedData) return false;
+    if (!savedData) {
+      console.log('❌ savedData 為空');
+      return false;
+    }
 
-    const hasCommissionData = savedData.commissionData && Array.isArray(savedData.commissionData);
-    const hasApplyNo = savedData.currentApplyNo && savedData.currentApplyNo.trim() !== '';
+    const hasCommissionData = savedData.commissionData &&
+      Array.isArray(savedData.commissionData);
+
+    const hasApplyNo = savedData.currentApplyNo !== undefined; // 允許 null
 
     console.log('🔍 檢查暫存資料有效性:', {
       hasCommissionData,
@@ -255,31 +344,37 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       applyNo: savedData.currentApplyNo
     });
 
-    return hasCommissionData && hasApplyNo;
+    //  修正:即使 commissionData 為空陣列也是有效的(新增模式)
+    return hasCommissionData && hasApplyNo !== undefined;
   }
 
-  // 5. 新增從暫存資料載入的方法
+
+  /**
+   * 改進:從暫存資料載入
+   */
   private async loadFromSavedData(savedData: any): Promise<void> {
     try {
-      console.log('🔄 開始從暫存資料載入...');
+      console.log('📄 開始從暫存資料載入...');
 
       // 恢復基本狀態
       this.currentApplyNo = savedData.currentApplyNo || '';
       this.selectedSettingTab = savedData.selectedSettingTab || 'discount';
       this.contractInfoData = savedData.contractInfoData || [];
 
-      console.log(' 恢復基本狀態:', {
-        currentApplyNo: this.currentApplyNo,
-        selectedSettingTab: this.selectedSettingTab,
-        contractInfoDataLength: this.contractInfoData.length
-      });
-
-      // 恢復抽成資料 - 透過 dataFlowService 設定
+      //  關鍵修正:直接更新 dataFlowService 的狀態
       if (savedData.commissionData && Array.isArray(savedData.commissionData)) {
         console.log('📊 恢復抽成資料:', savedData.commissionData.length, '筆');
 
-        // 直接更新 dataFlowService 的狀態
-        this.dataFlowService['stateManager'].currentEditData = savedData.commissionData;
+        // 確保每個項目都有完整的子資料結構
+        const validatedData = savedData.commissionData.map((item: any) => ({
+          ...item,
+          ChargeDetails: item.ChargeDetails || [],
+          YearChargeDetails: item.YearChargeDetails || [],
+          LevelChargeDetails: item.LevelChargeDetails || []
+        }));
+
+        // 直接設定到 dataFlowService
+        this.dataFlowService['stateManager'].currentEditData = validatedData;
         this.dataFlowService['stateManager'].uiState.dataLoaded = true;
         this.dataFlowService['stateManager'].uiState.hasUnsavedChanges = false;
 
@@ -287,7 +382,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         this.dataFlowService['notifyStateChange']();
 
         // 同步到組件
-        this.commissionData = savedData.commissionData;
+        this.commissionData = validatedData;
         this.dataLoaded = true;
         this.commissionDataLoaded = true;
       }
@@ -297,14 +392,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         this.hasUnsavedChanges = savedData.additionalSettings.hasUnsavedChanges || false;
       }
 
-      console.log('✅ 暫存資料載入完成');
-
-      // 觸發變更檢測
+      console.log(' 暫存資料載入完成');
       this.cdr.detectChanges();
 
     } catch (error) {
       console.error('❌ 從暫存資料載入失敗:', error);
-      // 如果載入失敗，回退到正常流程
+      // 如果載入失敗,回退到正常流程
       await this.loadWorkflowData();
     }
   }
@@ -317,32 +410,37 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private async loadWorkflowData(): Promise<void> {
-    console.log('開始載入工作流程資料...');
+    console.log('🔄 開始載入工作流程資料...');
 
     const cruData = this.flowService.getCruData<TLS12040DetailModel>();
-    console.log('CRU 資料:', cruData);
+    console.log('📋 CRU 資料:', cruData);
 
-    // 直接設定 apply_no，不管是否為空
+    // 設定 apply_no
     this.currentApplyNo = this.isCreateMode ? null : (cruData?.apply_no || null);
+    console.log('🔖 當前申請編號:', this.currentApplyNo);
 
-    console.log('當前申請編號:', this.currentApplyNo);
+    // 準備合約資訊顯示
     if (cruData) {
-      // 準備合約資訊顯示
       this.prepareContractInfoDisplay(cruData);
     }
-    // 直接載入資料，API 會根據 apply_no 是否為空回傳對應資料
+
+    //  關鍵:載入抽成資料
     try {
       await this.dataFlowService.loadData(
-        this.currentApplyNo, // 空字串或實際編號都可以
+        this.currentApplyNo,
         this.discountOptions,
         cruData?.tlt_contract_bdate || cruData?.tlt_bdate,
         cruData?.tlt_contract_edate || cruData?.tlt_edate
       );
+
+      console.log(' 工作流程資料載入完成');
+
     } catch (error) {
-      console.error('載入抽成資料失敗:', error);
+      console.error('❌ 載入抽成資料失敗:', error);
       this.notificationService.errorBubble('載入抽成資料失敗');
     }
   }
+
 
   /**
  * 更新折扣欄位選項
@@ -404,19 +502,24 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     * 標籤切換處理
     */
   changeSettingTab(tab: string): void {
-    console.log('切換標籤，從', this.selectedSettingTab, '到', tab);
+    console.log('切換標籤,從', this.selectedSettingTab, '到', tab);
 
     if (this.selectedSettingTab === tab) {
       return;
     }
 
-    this.selectedSettingTab = tab;
-    // this.clearProcessedDataCache();
+    //  關鍵:先強制同步當前標籤的數據
+    this.forceSyncCurrentTabData();
 
+    // 切換標籤
+    this.selectedSettingTab = tab;
+
+    // 更新所有項目的顯示
     this.commissionData.forEach(item => {
       this.updateItemDisplayData(item);
     });
 
+    // 觸發變更檢測
     this.cdr.detectChanges();
 
     // 標籤切換後儲存
@@ -424,13 +527,85 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       this.saveToWorkflow();
     }, 100);
   }
+
+  private forceSyncCurrentTabData(): void {
+    const currentTab = this.selectedSettingTab;
+
+    console.log('🔄 強制同步當前標籤數據:', currentTab);
+
+    this.commissionData.forEach(commissionItem => {
+      if (!commissionItem.detailItems || commissionItem.detailItems.length === 0) {
+        return;
+      }
+
+      // 過濾出屬於當前標籤的項目
+      const currentTabItems = commissionItem.detailItems.filter(item =>
+        !item._originalType || item._originalType === currentTab
+      );
+
+      // 根據標籤類型同步到對應數組
+      switch (currentTab) {
+        case 'discount':
+          commissionItem.ChargeDetails = currentTabItems.map(item => ({
+            id: item.id,
+            apply_no: item.apply_no || commissionItem.apply_no,
+            tlt_id: item.tlt_id || commissionItem.tlt_id,
+            cag_barcode: item.cag_barcode || '',
+            tlt_bdate: this.ensureValidDate(item.tlt_bdate),
+            tlt_edate: this.ensureValidDate(item.tlt_edate),
+            cag_charge_rate: item.cag_charge_rate || 0,
+            barcode_desc: item.barcode_desc || '',
+            is_configured: item.is_configured || false,
+            is_enabled: item.is_enabled || false,
+            _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+            is_selected: item.is_selected || false
+          }));
+          break;
+
+        case 'annual':
+          commissionItem.YearChargeDetails = currentTabItems.map(item => ({
+            id: item.id,
+            apply_no: item.apply_no || commissionItem.apply_no,
+            tlt_id: item.tlt_id || commissionItem.tlt_id,
+            tlt_bdate: this.formatDateString(item.tlt_bdate),
+            tlt_edate: this.formatDateString(item.tlt_edate),
+            year_amount: item.year_amount || 0,
+            extra_rate: item.extra_rate || 0,
+            _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+            is_selected: item.is_selected || false
+          }));
+          break;
+
+        case 'level':
+          commissionItem.LevelChargeDetails = currentTabItems.map(item => ({
+            id: item.id,
+            apply_no: item.apply_no || commissionItem.apply_no,
+            tlt_id: item.tlt_id || commissionItem.tlt_id,
+            seq_no: item.seq_no || 1,
+            cag_barcode: item.cag_barcode || '',
+            level_bmount: item.level_bmount || 0,
+            level_eamount: item.level_eamount || 0,
+            level_charge_rate: item.level_charge_rate || 0,
+            barcode_desc: item.barcode_desc || '',
+            is_configured: item.is_configured || false,
+            is_enabled: item.is_enabled || false,
+            _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+            is_selected: item.is_selected || false
+          }));
+          break;
+      }
+    });
+
+    console.log(' 當前標籤數據同步完成');
+  }
+
   /**
  * 更新單個項目的顯示資料
  */
   private updateItemDisplayData(commissionItem: ChargeSettingBusinessModel): void {
     const currentTab = this.selectedSettingTab;
 
-    // 根據當前標籤設定對應的資料到 detailItems（如果表格有使用這個屬性）
+    // 根據當前標籤設定對應的資料到 detailItems(如果表格有使用這個屬性)
     switch (currentTab) {
       case 'discount':
         // 確保有預設的8個折扣選項
@@ -447,7 +622,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         break;
 
       case 'annual':
-        // annual 不需要預設項目，直接使用 API 回來的資料
+        // annual 不需要預設項目,直接使用 API 回來的資料
         if (!commissionItem.YearChargeDetails) {
           commissionItem.YearChargeDetails = [];
         }
@@ -460,15 +635,16 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
  */
   private createDefaultDiscountItems(parentItem: ChargeSettingBusinessModel): any[] {
     if (!this.discountOptions || this.discountOptions.length === 0) {
+      console.warn('⚠️ 沒有折扣選項,無法建立預設項目');
       return [];
     }
 
-    console.log(' TLS12040 創建預設折扣項目 (參考 TLS13010)');
+    console.log('🎯 建立預設折扣項目');
     const contractStartDate = this.getContractDate('start');
     const contractEndDate = this.getContractDate('end');
 
     return this.discountOptions.map((option, index) => {
-      //  修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
+      //  更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
       const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
       const item = {
@@ -483,11 +659,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         is_configured: shouldSelectByDefault,
         is_enabled: shouldSelectByDefault,
         _status: 'new',
-        is_selected: shouldSelectByDefault, // 關鍵：確保勾選狀態正確
+        is_selected: shouldSelectByDefault, // 關鍵:確保勾選狀態正確
         _originalType: 'discount'
       };
 
-      console.log(`創建項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
+      console.log(`建立項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
       return item;
     });
   }
@@ -498,13 +674,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
    */
   private createDefaultLevelItems(parentItem: ChargeSettingBusinessModel): any[] {
     if (!this.discountOptions || this.discountOptions.length === 0) {
+      console.warn('⚠️ 沒有折扣選項,無法建立預設項目');
       return [];
     }
 
-    console.log(' TLS12040 創建預設層級項目 (參考 TLS13010)');
+    console.log('🎯 建立預設層級項目');
 
     return this.discountOptions.map((option, index) => {
-      //  修正：更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
+      //  更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
       const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
       const item = {
@@ -520,11 +697,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         is_configured: shouldSelectByDefault,
         is_enabled: shouldSelectByDefault,
         _status: 'new',
-        is_selected: shouldSelectByDefault, // 關鍵：確保勾選狀態正確
+        is_selected: shouldSelectByDefault, // 關鍵:確保勾選狀態正確
         _originalType: 'level'
       };
 
-      console.log(`創建層級項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
+      console.log(`建立層級項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
       return item;
     });
   }
@@ -729,7 +906,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     const success = this.flowService.setNext2Data(dataToSave);
 
     if (success) {
-      console.log('✅ Next2 資料儲存成功');
+      console.log(' Next2 資料儲存成功');
       this.hasUnsavedChanges = false;
 
       // 立即驗證儲存結果
@@ -1364,37 +1541,58 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
+  /**
+ *  修正:確保 processedCommissionData 正確處理所有狀態
+ */
   get processedCommissionData(): ChargeSettingBusinessModel[] {
     return this.visibleCommissionData.map(item => {
-      // 建立一個新的物件，包含動態的 detailItems
+      // 建立新物件,包含動態的 detailItems
       const processedItem = { ...item };
 
-      // 根據當前選中的標籤，設定對應的資料到一個統一的屬性名稱
+      // 根據當前選中的標籤,設定對應的資料到統一的屬性名稱
       switch (this.selectedSettingTab) {
         case 'discount':
-          // 確保有 8 個折扣選項
+          //  確保有 8 個折扣選項
           if (!processedItem.ChargeDetails || processedItem.ChargeDetails.length === 0) {
             processedItem.ChargeDetails = this.createDefaultDiscountItems(processedItem);
           }
-          // 將資料複製到統一的 detailItems 屬性
-          processedItem.detailItems = processedItem.ChargeDetails.filter(detail => detail._status !== 'deleted');
+
+          //  過濾掉已刪除的項目
+          processedItem.detailItems = processedItem.ChargeDetails
+            .filter(detail => detail._status !== 'deleted')
+            .map(detail => ({
+              ...detail,
+              _originalType: 'discount'
+            }));
           break;
 
         case 'level':
-          // 確保有 8 個層級選項
+          //  確保有 8 個層級選項
           if (!processedItem.LevelChargeDetails || processedItem.LevelChargeDetails.length === 0) {
             processedItem.LevelChargeDetails = this.createDefaultLevelItems(processedItem);
           }
-          // 將資料複製到統一的 detailItems 屬性
-          processedItem.detailItems = processedItem.LevelChargeDetails.filter(detail => detail._status !== 'deleted');
+
+          //  過濾掉已刪除的項目
+          processedItem.detailItems = processedItem.LevelChargeDetails
+            .filter(detail => detail._status !== 'deleted')
+            .map(detail => ({
+              ...detail,
+              _originalType: 'level'
+            }));
           break;
 
         case 'annual':
           if (!processedItem.YearChargeDetails) {
             processedItem.YearChargeDetails = [];
           }
-          // 關鍵：annual 要過濾掉 deleted 的項目
-          processedItem.detailItems = processedItem.YearChargeDetails.filter(detail => detail._status !== 'deleted');
+
+          //  關鍵:annual 要過濾掉 deleted 的項目
+          processedItem.detailItems = processedItem.YearChargeDetails
+            .filter(detail => detail._status !== 'deleted')
+            .map(detail => ({
+              ...detail,
+              _originalType: 'annual'
+            }));
           break;
 
         default:
@@ -1671,74 +1869,6 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return isNaN(date.getTime()) ? new Date() : date;
     } catch {
       return new Date();
-    }
-  }
-
-  /**
-   * 強制同步當前標籤的數據（避免數據遺失）
-   */
-  private forceSyncCurrentTabData(commissionItem: ChargeSettingBusinessModel): void {
-    const currentTab = this.selectedSettingTab;
-
-    if (!commissionItem.detailItems || commissionItem.detailItems.length === 0) {
-      return;
-    }
-
-    // 過濾出屬於當前標籤的項目
-    const currentTabItems = commissionItem.detailItems.filter(item =>
-      !item._originalType || item._originalType === currentTab
-    );
-
-    // 根據標籤類型同步到對應數組
-    switch (currentTab) {
-      case 'discount':
-        commissionItem.ChargeDetails = currentTabItems.map(item => ({
-          id: item.id,
-          apply_no: item.apply_no || commissionItem.apply_no,
-          tlt_id: item.tlt_id || commissionItem.tlt_id,
-          cag_barcode: item.cag_barcode || '',
-          tlt_bdate: this.ensureValidDate(item.tlt_bdate),
-          tlt_edate: this.ensureValidDate(item.tlt_edate),
-          cag_charge_rate: item.cag_charge_rate || 0,
-          barcode_desc: item.barcode_desc || '',
-          is_configured: item.is_configured || false,
-          is_enabled: item.is_enabled || false,
-          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          is_selected: item.is_selected || false
-        }));
-        break;
-
-      case 'annual':
-        commissionItem.YearChargeDetails = currentTabItems.map(item => ({
-          id: item.id,
-          apply_no: item.apply_no || commissionItem.apply_no,
-          tlt_id: item.tlt_id || commissionItem.tlt_id,
-          tlt_bdate: this.formatDateString(item.tlt_bdate),
-          tlt_edate: this.formatDateString(item.tlt_edate),
-          year_amount: item.year_amount || 0,
-          extra_rate: item.extra_rate || 0,
-          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          is_selected: item.is_selected || false
-        }));
-        break;
-
-      case 'level':
-        commissionItem.LevelChargeDetails = currentTabItems.map(item => ({
-          id: item.id,
-          apply_no: item.apply_no || commissionItem.apply_no,
-          tlt_id: item.tlt_id || commissionItem.tlt_id,
-          seq_no: item.seq_no || 1,
-          cag_barcode: item.cag_barcode || '',
-          level_bmount: item.level_bmount || 0,
-          level_eamount: item.level_eamount || 0,
-          level_charge_rate: item.level_charge_rate || 0,
-          barcode_desc: item.barcode_desc || '',
-          is_configured: item.is_configured || false,
-          is_enabled: item.is_enabled || false,
-          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          is_selected: item.is_selected || false
-        }));
-        break;
     }
   }
 

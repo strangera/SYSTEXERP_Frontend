@@ -147,14 +147,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private validateAndProtectCrudStatus(): void {
     const routeState = this.router.lastSuccessfulNavigation?.extras?.state;
     const flowState = this.flowService.getCurrentState();
-
-    // console.log('🔍 狀態驗證:', {
-    //   當前crudstatus: this.crudstatus,
-    //   路由狀態: routeState?.crudstatus,
-    //   工作流程新合約: flowState.isNewContract,
-    //   工作流程申請號: flowState.applyNo
-    // });
-
     // 🔥 如果狀態不一致，以工作流程狀態為準
     if (flowState.isNewContract !== undefined) {
       const expectedStatus = flowState.isNewContract ? CRUDStatus.Create :
@@ -166,20 +158,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         // this.formTitle = this.getFormTitleForNext1(this.crudstatus);
       }
     }
-
-    console.log('✅ 最終狀態:', this.crudstatus);
   }
-
-  // 🔥 新增方法：為 Next1 設置正確的標題
-  private getFormTitleForNext1(crudstatus: CRUDStatus): string {
-    switch (crudstatus) {
-      case CRUDStatus.Create: return '新增專櫃要約書 - 扣款項目';
-      case CRUDStatus.Edit: return '編輯專櫃要約書 - 扣款項目';
-      case CRUDStatus.Read: return '檢視專櫃要約書 - 扣款項目';
-      default: return '專櫃要約書 - 扣款項目';
-    }
-  }
-
   private initializeDataStructure(): void {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     capTypes.forEach(capType => {
@@ -193,11 +172,9 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadOrgOptions(): void {
-    console.log('載入組織選項...');
 
     const subscription = this.locationOptionsService.getOrgOptions().subscribe({
       next: (options) => {
-        console.log('組織選項載入成功:', options);
         this.orgOptions = options;
 
         // 🔥 強制清除所有快取，確保重新生成欄位定義
@@ -217,7 +194,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private clearColumnCache(): void {
-    console.log('🗑️ 清除欄位定義快取');
     this._cachedDeductionAColumns = null;
     this._cachedDeductionBColumns = null;
     this._cachedDeductionCColumns = null;
@@ -229,8 +205,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadWorkflowDataWithRetry(retryCount: number = 0): void {
-    console.log('開始載入工作流程資料，重試次數:', retryCount);
-    console.log('當前 CRUD 狀態:', this.crudstatus);
 
     // 從 SessionStorage 獲得正確的 applyNo
     const saved = sessionStorage.getItem('TLS12040_FLOW');
@@ -255,12 +229,10 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     if (realApplyNo) {
       this.currentApplyNo = realApplyNo;
-      console.log('設定 applyNo:', this.currentApplyNo);
     } else if (currentState.applyNo) {
       this.currentApplyNo = currentState.applyNo;
     } else {
       this.currentApplyNo = '';
-      console.log('新增模式，applyNo 為空');
     }
 
     // 載入合約資訊
@@ -271,18 +243,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadFareDataWithPriority(): void {
-    console.log('開始優先級載入扣款資料...');
-
-    // // 新增模式直接初始化空資料
-    // if (this.isCreateMode) {
-    //   console.log('新增模式：直接初始化空扣款資料');
-    //   this.initializeEmptyData();
-    //   return;
-    // }
-
     // 1. 優先檢查 Next1 步驟的暫存資料
     const savedNext1Data = this.flowService.getNext1Data<Next1Data>();
-    console.log('檢查 Next1 暫存資料:', savedNext1Data);
 
     //  放寬暫存載入條件
     if (savedNext1Data?.fareData) {
@@ -293,25 +255,15 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       );
 
       if (hasAnyFareData) {
-        console.log('✅ 使用 Next1 暫存的扣款資料');
         this.originalFareData = this.deepCloneFareData(savedNext1Data.fareData);
-
-        // // 還原顯示模式
-        // if (savedNext1Data.showMode) {
-        //   this.showMode = savedNext1Data.showMode;
-        // }
-
         this.filterData();
         this.verifyDataIntegrity();
-
         //  載入暫存後，檢查是否需要同步最新的 API 資料
         this.checkAndSyncWithAPI();
         return;
       }
     }
-
     // 2. 沒有有效暫存才從 API 載入
-    console.log('沒有有效暫存資料，從 API 載入');
     this.loadFareDataFromAPI();
   }
 
@@ -321,7 +273,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private checkAndSyncWithAPI(): void {
     // 如果是檢視模式，不需要同步
     if (this.isReadOnlyMode) {
-      console.log('檢視模式，跳過 API 同步檢查');
+      // console.log('檢視模式，跳過 API 同步檢查');
       return;
     }
 
@@ -332,7 +284,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       const maxCacheAge = 5 * 60 * 1000; // 5分鐘
 
       if (cacheAge > maxCacheAge) {
-        console.log('暫存資料超過5分鐘，背景同步 API 資料');
+        // console.log('暫存資料超過5分鐘，背景同步 API 資料');
         this.backgroundSyncWithAPI();
       } else {
         console.log('暫存資料仍新鮮，無需同步');
@@ -349,12 +301,12 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       showAll: true
     };
 
-    console.log('背景同步 API 資料，參數:', queryParams);
+    // console.log('背景同步 API 資料，參數:', queryParams);
 
     const subscription = this.tls12040Service.queryTLS12040Fare(queryParams).subscribe({
       next: (response) => {
         if (response?.Data?.FaresByType) {
-          console.log('背景同步完成，檢查是否有新資料');
+          // console.log('背景同步完成，檢查是否有新資料');
           this.mergeAPIDataWithCache(response.Data.FaresByType);
         }
       },
@@ -373,12 +325,12 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private mergeAPIDataWithCache(apiData: any): void {
     // 這裡可以實作智能合併邏輯
     // 例如：保留使用者的修改，但加入新的可選項目
-    console.log('合併 API 資料與暫存資料');
+    // console.log('合併 API 資料與暫存資料');
 
     // 簡單版本：只在沒有使用者修改時才更新
     const hasUserModifications = this.hasUserModifications();
     if (!hasUserModifications) {
-      console.log('無使用者修改，更新為 API 最新資料');
+      // console.log('無使用者修改，更新為 API 最新資料');
       this.processAPIData(apiData);
       this.filterData();
     } else {
@@ -425,57 +377,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     return cloned;
   }
-
-  /**
-   *  新增：還原已選擇狀態
-   */
-  private restoreSelectionStates(savedData: Next1Data): void {
-    if (!savedData.selectedItems || !Array.isArray(savedData.selectedItems)) {
-      console.log('沒有已選擇項目需要還原');
-      return;
-    }
-
-    const restoredCount = savedData.selectedItems.length;
-    console.log(`🔄 還原 ${restoredCount} 個已選擇項目的狀態`);
-
-    // 確保選擇狀態正確同步
-    savedData.selectedItems.forEach(selectedItem => {
-      const capType = selectedItem.cap_type;
-      const targetItem = this.originalFareData[capType]?.find(item => item.id === selectedItem.id);
-
-      if (targetItem) {
-        targetItem.is_selected = true;
-        console.log(`✅ 還原選擇狀態: ${capType} - ${selectedItem.cap_name || selectedItem.cap_item}`);
-      }
-    });
-  }
-
-  /**
- * 簡化的資料有效性檢查
- */
-  private hasValidFareData(fareData: any): boolean {
-    if (!fareData || typeof fareData !== 'object') {
-      return false;
-    }
-
-    const capTypes = ['A', 'B', 'C', 'D', 'E'];
-    let hasAnyData = false;
-
-    for (const capType of capTypes) {
-      if (fareData[capType] && Array.isArray(fareData[capType]) && fareData[capType].length > 0) {
-        hasAnyData = true;
-        break;
-      }
-    }
-
-    console.log('扣款資料有效性檢查:', {
-      hasValidStructure: true,
-      hasAnyData,
-      dataKeys: Object.keys(fareData)
-    });
-
-    return hasAnyData;
-  }
   /**
    *  新增：資料完整性驗證
    */
@@ -498,8 +399,6 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.messageService.infoBubble('目前沒有可用的扣款項目');
     }
   }
-
-
 
   // 載入合約資訊
   private loadContractInfo(): void {
