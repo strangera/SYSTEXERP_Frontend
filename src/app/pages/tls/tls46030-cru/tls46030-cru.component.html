@@ -72,7 +72,7 @@
         ></app-dropdown>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="原機台內容"
+            label="原設定值"
             controlName="ECR_FLD_OrgVal"
             [control]="dataForm.controls.ECR_FLD_OrgVal"
             [submitted]="submitted"
@@ -82,14 +82,14 @@
           <ng-container [ngSwitch]="selectedType">
             <app-calendar
               *ngSwitchCase="'calendar'"
-              label="新機台內容"
+              label="新設定值"
               calendarType="dateMonthOne"
               [control]="dataForm.controls.ECR_FLD_NewVal"
               [submitted]="submitted"
             ></app-calendar>
             <app-dropdown
               *ngSwitchCase="'dropdown'"
-              label="新機台內容"
+              label="新設定值"
               controlName="ECR_FLD_NewVal"
               [options]="NewValDropdownOptions"
               optionLabel="label"
@@ -99,7 +99,7 @@
             ></app-dropdown>
             <app-input-text
               *ngSwitchCase="'input'"
-              label="新機台內容"
+              label="新設定值"
               controlName="ECR_FLD_NewVal"
               [control]="dataForm.controls.ECR_FLD_NewVal"
               [submitted]="submitted"

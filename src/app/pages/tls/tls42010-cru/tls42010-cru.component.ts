@@ -19,6 +19,7 @@ import { ColorPickerModule } from 'primeng/colorpicker';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { CheckboxModule } from 'primeng/checkbox';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 export interface KeyItem {
   code: string;
@@ -65,7 +66,8 @@ export interface KeyItem {
     ButtonModule,
     DialogModule,
     ColorPickerModule,
-    CheckboxModule
+    CheckboxModule,
+    RadioButtonModule
   ]
 })
 export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -95,7 +97,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     KB_Fonttyped: ['NNN'],
     KB_Arg1: [''],
     KB_Arg2: [''],
-    KB_Arg3: ['']
+    KB_Arg3: [''],
+    // 修改為單一合併選項控制項
+    KB_MergeType: ['']
   });
 
   // ---------------- Grid ----------------
@@ -143,6 +147,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     { label: '粗體', index: 0 },
     { label: '斜體', index: 1 },
     { label: '底線', index: 2 },
+  ];
+
+  // 新增按鍵合併選項（改為單選）
+  KB_MergeOptions: { label: string; value: string }[] = [
+    { label: '按鍵往右合併', value: 'mergeRight' },
+    { label: '按鍵往下合併', value: 'mergeDown' },
   ];
 
   constructor(
