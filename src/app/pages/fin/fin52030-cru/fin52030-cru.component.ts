@@ -88,8 +88,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       header: '科目代號',
       type: 'dropdown',
       options: () => this.service.accNoList(),
-      optionLabel: 'AccCName',
-      optionValue: 'AccNo',
+      optionLabel: 'label',
+      optionValue: 'value',
     },
     { field: 'AccName', header: '科目名稱' },
     {
@@ -102,14 +102,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     { field: 'DetailName', header: '廠商/員工名稱' },
     { field: 'NoteDesc', header: '摘要', type: 'input' },
     {
-      field: 'AccAmt',
+      field: 'AccAmtD',
       header: '借方金額',
       type: 'inputNumber',
       format: d => d.AccDC === 'D' && formatAmount(d.AccAmt) || '',
       isTotal: true,
     },
     {
-      field: 'AccAmt',
+      field: 'AccAmtC',
       header: '貸方金額',
       type: 'inputNumber',
       format: d => d.AccDC === 'C' && formatAmount(d.AccAmt) || '',
@@ -123,7 +123,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       optionLabel: 'label',
       optionValue: 'value',
     },
-    { field: 'SubDetailNo', header: '對象別編號', type: 'input' },
+    {
+      field: 'SubDetailNo',
+      header: '對象別編號',
+      type: 'dropdown',
+      options: () => this.service.subDetailNoList(),
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
     { field: 'recKey', header: '對帳KEY值', type: 'input' },
   ]);
 
@@ -160,7 +167,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const details = this.filteredData().map((item, idx) => ({ ...item, index: idx + 1 }));
+      const details = this.filteredData().map((item, idx) =>
+        ({ ...item, index: idx + 1, AccAmt: (item.AccAmtD ?? 0) + (item.AccAmtC ?? 0) }));
       const payload = {
         ...d,
         TempNo: String(d.TempNo),
@@ -190,9 +198,9 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public onFieldChange(event: FieldChangeEvent<FIN52030DetailTable>): void {
     this.logger.debug(`onFieldChange:`, [event]);
-    if (event.field === 'AccNo') event.rowData.AccDC = this.service.accNoMap().get(String(event.value) ?? '')?.AccCName ?? '';
+    if (event.field === 'AccNo') event.rowData.AccName = this.service.accNoMap().get(String(event.value))?.['Name'] ?? '';
 
-    const exclude = ['AccName', 'DetailName'];
+    const exclude = ['AccName', 'DetailName', 'NoteDesc', 'AccAmtD', 'AccAmtC'];
     const row = event.rowData;
     let allFilled = !0;
     for (const key in row) {
@@ -203,7 +211,13 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         }
       }
     }
-    this.rowEditCanSave = allFilled;
+    const debit = +(row.AccAmtD ?? 0);
+    const credit = +(row.AccAmtC ?? 0);
+    let onlyOneSide = !0;
+    if ((debit > 0 && credit > 0) || (debit > 0 && row.AccDC === 'C') || (credit > 0 && row.AccDC === 'D')) {
+      onlyOneSide = !1;
+    }
+    this.rowEditCanSave = allFilled && onlyOneSide;
   }
 
   public onDelete(event: FIN52030DetailTable[]): void {
@@ -224,6 +238,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public onRowEditInit(event: FIN52030DetailTable[]): void {
     this.onEditing = !0;
+
     this.logger.debug(`onRowEditInit:`, [event, this.tableData()]);
   }
 

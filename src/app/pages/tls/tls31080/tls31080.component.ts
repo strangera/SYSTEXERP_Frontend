@@ -51,6 +51,7 @@ import { TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080
   ]
 })
 
+// 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit{
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday, [Validators.required]],//交易日期_起

@@ -53,10 +53,10 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
   data: Tls46050Response[] = [];
   columns: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'EOS_TmplNo', header: '周邊設定模版編號-機台回傳' },
-    { field: 'ECR_TmplNo', header: '周邊設定模版編號' },
+    { field: 'EOS_TmplNo', header: '環境變數編號-機台回傳' },
+    { field: 'ECR_TmplNo', header: '環境變數編號' },
     { field: 'EOS_KBLevel', header: '鍵盤編號-機台回傳' },
-    { field: 'ECR_KBLevel', header: '機台鍵盤等級' },
+    { field: 'ECR_KBLevel', header: '鍵盤編號' },
     { field: 'EOS_MstSysVer', header: '收銀系統主程式' },
     { field: 'ECR_GrpNo', header: '機台群組編號' },
     { field: 'ECR_GrpName', header: '機台群組名稱' },

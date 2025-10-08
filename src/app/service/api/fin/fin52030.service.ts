@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
-import { AccNoDropdown, FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, VendorList } from '@pages/fin/fin52030/fin52030.model';
 import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -16,14 +16,15 @@ export class FIN52030Service {
   public readonly FIN52030Data = signal<FIN52030Data[]>([]);
   public readonly FIN52030Detail = signal<FIN52030Detail[]>([]);
 
-  public readonly accNoList = signal<AccNoDropdown[]>([]);
+  public readonly accNoList = signal<Option[]>([]);
   public readonly vendorList = signal<Option[]>([]);
   public readonly subpoenaTypes = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
   public readonly usrList = signal<Option[]>([]);
+  public readonly subDetailNoList = signal<Option[]>([]);
 
   public vendorMap = computed(() => new Map(this.vendorList().map(item => [item.value, item])));
-  public accNoMap = computed(() => new Map(this.accNoList().map(item => [item.AccNo, item])));
+  public accNoMap = computed(() => new Map(this.accNoList().map(item => [item.value, item])));
 
   private readonly tableCancel$ = new Subject<void>();
 
@@ -125,9 +126,9 @@ export class FIN52030Service {
   }
 
   public getAccNoList(): void {
-    this.http.post<BaseQueryResponse<AccNoDropdown>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
+    this.dropdownApi.queryGls1005().pipe(
       take(1),
-      tap(res => this.accNoList.set(res.Data)),
+      tap(res => this.accNoList.set(res || [])),
       finalize(() => this.logger.debug('查詢AccNoList結果:', [this.accNoList()])),
     ).subscribe();
   }
@@ -145,10 +146,9 @@ export class FIN52030Service {
 
   public getUsrList(): void {
     this.usrLoading.set(!0);
-    this.dropdownApi.queryTblUser().pipe(
+    this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
       take(1),
-      map(res => <Option[]>(<IDropdownItem[]><unknown>res)?.map(item => ({ value: item.No, label: item.Name })) ?? []),
-      tap(res => this.usrList.set(res)),
+      tap(res => this.usrList.set(res ?? [])),
       finalize(() => this.logger.debug('查詢UsrList結果:', [this.usrList()])),
       finalize(() => this.usrLoading.set(!1)),
     ).subscribe();
@@ -157,9 +157,16 @@ export class FIN52030Service {
   public getOrgNoList(): void {
     this.dropdownApi.querySys3100().pipe(
       take(1),
-      map(res => <Option[]>(<IDropdownItem[]><unknown>res)?.map(item => ({ value: item.No, label: item.Name })) ?? []),
-      tap(res => this.orgNoList.set(res)),
+      tap(res => this.orgNoList.set(res ?? [])),
       finalize(() => this.logger.debug('查詢OrgNoList結果:', [this.orgNoList()])),
+    ).subscribe();
+  }
+
+  public getSubDetailNoList(): void {
+    this.http.post<BaseQueryResponse<Option>>('/queryPOS10015_DropDownList', {}).pipe(
+      take(1),
+      tap(res => this.subDetailNoList.set(res.Data ?? [])),
+      finalize(() => this.logger.debug('查詢SubDetailNoList結果:', [this.subDetailNoList()])),
     ).subscribe();
   }
 }

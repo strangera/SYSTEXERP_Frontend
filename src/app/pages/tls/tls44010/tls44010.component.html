@@ -145,6 +145,10 @@
                       {{ row.ECR_LocNo }}
                     </div>
                     <div>
+                      <b>收銀機號：</b>
+                      {{ row.ECR_No }}
+                    </div>
+                    <div>
                       <b>專櫃編號：</b>
                       {{ row.TLT_No }}
                     </div>
@@ -182,6 +186,7 @@
                   <!-- 主要內容 -->
                   <div class="grid-content">
                     <div class="grid-title">{{ row.ECR_LocNo }}</div>
+                    <div class="grid-subtitle">{{ row.ECR_No }}</div>
                     <div class="grid-subtitle">
                       {{ row.TLT_No }} {{ row.TLT_Name }}
                     </div>
