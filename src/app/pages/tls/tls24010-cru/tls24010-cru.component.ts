@@ -8,7 +8,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { InputTextareaComponent } from "../../../shared/componentkit/input-textarea/input-textarea.component";
 import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
@@ -111,6 +111,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     private readonly validationService: ValidationService,
     private readonly tls24010Service: Tls24010Service,
     private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
@@ -260,6 +261,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             Store_way: this.store_way,
             TXN_GUIPaper: this.TXN_GUIPaper,
             ...frm.getRawValue(),
+            TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd'),
             GUI_Track: frm.getRawValue().GUI_Track || '00',
             TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
             TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
@@ -315,8 +317,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         const body = {
           Store_way: this.store_way || '',
           SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-          // 把TXN_Date轉成字串YYYY-MM-DD
-          TXN_Date: this.dataForm.getRawValue().TXN_Date,
+          TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd'),
           ECR_No: this.dataForm.getRawValue().ECR_No,
           TXN_No: Number(this.dataForm.getRawValue().TXN_No),
           POS5006_ID: rowData.ID,

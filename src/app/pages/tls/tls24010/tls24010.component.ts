@@ -24,12 +24,15 @@ import { TLS41010Service } from '@service/api/tls/tls41010.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
   templateUrl: './tls24010.component.html',
   standalone: true,
   imports: [
+    ButtonModule,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -266,5 +269,68 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
 
   get checkTXN_GUIPaper(): boolean {
     return this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C'
+  }
+  btnLoading = false;
+  onExportPDF(frm: FormGroup): void {
+    this.submitted = true;
+    this.btnLoading = true;
+    this.messageService.blockUi();
+    if (frm.valid) {
+      this.tls24010Service.exportTLS24010PDF(frm.value).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
+        this.handleFileExport(res, '.pdf');
+      })
+      this.submitted = false;
+    } else {
+      this.btnLoading = false;
+    }
+    this.messageService.unblockUi();
+  }
+  // 處理檔案匯出的通用邏輯
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+  // 輔助方法：從 header 獲取檔名
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
+    }
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
   }
 }
