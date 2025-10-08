@@ -226,7 +226,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 必填
     bus_sclass: ['', [Validators.maxLength(2)]],
     contract_no: ['', [Validators.maxLength(12)]], // 必填
-    contract_subno: ['', [Validators.required]], // 必填
+    contract_subno: ['1', [Validators.required]], // 必填
 
     // 洽談階段資訊
     tlt_bdate: ['', [Validators.required]], // 必填
@@ -296,6 +296,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     cap_saletype2: [''],
     cap_saletype3: [''],
     cap_saletype4: [''],
+    cap_saletype5: [''],
+
     open_deposit: [''],
     open_fees: [0], //準時開業保證金
     construct_deposit: [''],
@@ -729,6 +731,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       cap_saletype2: data.cap_saletype2,
       cap_saletype3: data.cap_saletype3,
       cap_saletype4: data.cap_saletype4,
+      cap_saletype5: data.cap_saletype5,
+
     });
 
     // 處理位置資訊（如果需要的話）

@@ -106,6 +106,8 @@ export interface TLS12040DetailModel {
   cap_saletype2?: string;
   cap_saletype3?: string;
   cap_saletype4?: string;
+  cap_saletype5?: string;
+
 
   // ========== 聯絡資訊 ==========
   email?: string;

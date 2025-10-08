@@ -52,7 +52,6 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'ECR_No', header: '後台交易電腦', visible: true },
     { field: 'MIN_TXN_No', header: '後台交易起號', visible: true },
     { field: 'MAX_TXN_No', header: '後台交易迄號', visible: true },
     { field: 'SLE_TxnBegNo', header: '前台清機起號', visible: true },

@@ -124,6 +124,9 @@ export interface CleanContractData {
   cap_saletype3?: string;
   cap_saletype4?: string;
 
+  cap_saletype5?: string;
+
+
   // 聯絡資訊
   email?: string;
   invoice_email?: string;
@@ -384,16 +387,17 @@ export interface ContractInfo {
   open_deposit?: string;
   cap_saletype1?: string;
   cap_saletype2?: string;
-  cap_saletype3?: string;         // FormBuilder 有但介面缺少
-  cap_saletype4?: string;         // FormBuilder 有但介面缺少
+  cap_saletype3?: string;
+  cap_saletype4?: string;
+  cap_saletype5?: string;
   water_flag?: string;
   electric_flag?: string;
   gas_flag?: string;
   check_day?: string;
-  construct_deposit?: string;     // FormBuilder 有但介面缺少
-  expiration_deposit?: string;    // FormBuilder 有但介面缺少
-  expiration_fees?: string;       // FormBuilder 有但介面缺少
-  paymentMethods?: any[];         // FormBuilder 有但介面缺少
+  construct_deposit?: string;
+  expiration_deposit?: string;
+  expiration_fees?: string;
+  paymentMethods?: any[];
 
   total_amt_unit?: string;        // 目標營業額單位(業主)
   total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
@@ -692,6 +696,8 @@ export class DataCleaner {
       cap_saletype2: convertBooleanToYN(rawData.cap_saletype2),
       cap_saletype3: convertBooleanToYN(rawData.cap_saletype3),
       cap_saletype4: convertBooleanToYN(rawData.cap_saletype4),
+      cap_saletype5: convertBooleanToYN(rawData.cap_saletype5),
+
       // 聯絡資訊
       email: rawData.email,
       invoice_email: rawData.invoice_email,

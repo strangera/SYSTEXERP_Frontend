@@ -31,10 +31,10 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
-import { TLS12040QueryRequest } from './models/tls12040.model';
+import { ContractItem, TLS12040QueryRequest } from './models/tls12040.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 2.1.2.4 專櫃要約書維護
@@ -83,7 +83,43 @@ export interface TLS12040Response {
     TranslateModule
   ]
 })
-export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response> implements OnInit {
+export class TLS12040Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: ContractItem) => {
+        console.log('🔘 審核按鈕被點擊:', rowData);
+        this.onApprove(rowData);
+      },
+      disabled: (rowData: ContractItem) => {
+        const isDisabled = rowData.approve_status !== '1';
+        return isDisabled;
+      }
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: ContractItem) => {
+        console.log('🔘 反審核按鈕被點擊:', rowData);
+        this.onUnapprove(rowData);
+      },
+      disabled: (rowData: ContractItem) => {
+        const isDisabled = rowData.approve_status !== '2';
+        return isDisabled;
+      }
+    },
+    {
+      label: '作廢',
+      icon: 'pi pi-times-circle text-red-500',
+      action: (rowData: ContractItem) => {
+        console.log('🔘 作廢按鈕被點擊:', rowData);
+        this.onVoid(rowData);
+      },
+      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData)
+    }
+  ];
 
   // 查詢表單
   queryForm = this.formBuilder.group({
@@ -126,12 +162,15 @@ export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response>
     rece_yn: [false], // 是否開立業主發票
     pos_yn: [false], // 是否使用業主收銀機
     cash_yn: [false], // 是否為業主收現
+
+    ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
   });
 
   // 表格資料
   data: TLS12040Response[] = [];
   filteredData: TLS12040Response[] = [...this.data];
   totalRecords: number = 0;
+  selectedItems: ContractItem[] = [];
   columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -385,5 +424,273 @@ export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response>
     if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
       this.navigateWithState(CRUDStatus.Read, rowData);
     }
+  }
+
+  /**
+     * 審核功能
+     */
+  public onApprove(rowData: ContractItem): void {
+    console.group('🔍 審核流程開始');
+    console.log('資料:', rowData);
+    console.log('approve_status:', rowData.approve_status, typeof rowData.approve_status);
+    console.groupEnd();
+
+    // 狀態檢查
+    if (rowData.approve_status !== '1') {
+      console.warn('⚠️ 審核失敗: 狀態不符', rowData.approve_status);
+      this.messageService.warnBubble('只有未審核狀態的合約才能審核');
+      return;
+    }
+
+    // 確認對話框
+    this.confirmationService.confirm({
+      message: `確定要審核專櫃編號 ${rowData.apply_no} 嗎？`,
+      header: '審核確認',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        console.log('✅ 使用者確認審核，準備呼叫 API');
+        this.performApprove(rowData);
+      },
+      reject: () => {
+        console.log('❌ 使用者取消審核');
+        this.messageService.infoBubble('已取消審核');
+      }
+    });
+  }
+
+  private performApprove(rowData: ContractItem): void {
+    console.log('🚀 開始執行審核 API 呼叫');
+    this.messageService.blockUi();
+
+    const request = { apply_no: rowData.apply_no };
+    console.log('📡 API 請求參數:', request);
+
+    this.apiService.approveTLS12040(request).subscribe({
+      next: (response: any) => {
+        console.group('📥 API 回應');
+        console.log('完整回應:', response);
+        console.log('Status:', response.Status);
+        console.log('Message:', response.Message);
+        console.groupEnd();
+
+        if (response.Status === '0000') {
+          console.log('✅ 審核成功');
+          this.messageService.successBubble('審核成功');
+
+          // 重新查詢以更新資料
+          console.log('🔄 重新查詢資料...');
+          this.onSubmit(this.queryForm);
+        } else {
+          console.error('❌ 審核失敗:', response.Message);
+          this.messageService.errorBubble(
+            `審核失敗: ${response.Message || '未知錯誤'}`
+          );
+        }
+      },
+      error: (err: any) => {
+        console.group('❌ API 錯誤');
+        console.error('錯誤物件:', err);
+        console.error('錯誤狀態:', err.status);
+        console.error('錯誤訊息:', err.message);
+        console.error('錯誤回應:', err.error);
+        console.groupEnd();
+
+        let errorMsg = '審核失敗';
+        if (err.error?.Message) {
+          errorMsg = err.error.Message;
+        } else if (err.message) {
+          errorMsg = err.message;
+        } else if (err.statusText) {
+          errorMsg = `HTTP ${err.status}: ${err.statusText}`;
+        }
+
+        this.messageService.errorBubble(errorMsg);
+      },
+      complete: () => {
+        console.log('🏁 API 呼叫完成');
+        this.messageService.unblockUi();
+      }
+    });
+  }
+
+  public onUnapprove(rowData: ContractItem): void {
+    console.group('🔍 反審核流程開始');
+    console.log('資料:', rowData);
+    console.log('approve_status:', rowData.approve_status, typeof rowData.approve_status);
+    console.groupEnd();
+
+    // 狀態檢查
+    if (rowData.approve_status !== '2') {
+      console.warn('⚠️ 反審核失敗: 狀態不符', rowData.approve_status);
+      this.messageService.warnBubble('只有已審核狀態的合約才能反審核');
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `確定要反審核專櫃編號 ${rowData.apply_no} 嗎？`,
+      header: '反審核確認',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        console.log('✅ 使用者確認反審核，準備呼叫 API');
+        this.performUnapprove(rowData);
+      },
+      reject: () => {
+        console.log('❌ 使用者取消反審核');
+        this.messageService.infoBubble('已取消反審核');
+      }
+    });
+  }
+
+  // 5. 實際執行反審核的方法
+  private performUnapprove(rowData: ContractItem): void {
+    console.log('🚀 開始執行反審核 API 呼叫');
+    this.messageService.blockUi();
+
+    const request = { apply_no: rowData.apply_no };
+    console.log('📡 API 請求參數:', request);
+
+    this.apiService.unapproveTLS12040(request).subscribe({
+      next: (response: any) => {
+        console.group('📥 API 回應');
+        console.log('完整回應:', response);
+        console.log('Status:', response.Status);
+        console.log('Message:', response.Message);
+        console.groupEnd();
+
+        if (response.Status === '0000') {
+          console.log('✅ 反審核成功');
+          this.messageService.successBubble('反審核成功');
+
+          console.log('🔄 重新查詢資料...');
+          this.onSubmit(this.queryForm);
+        } else {
+          console.error('❌ 反審核失敗:', response.Message);
+          this.messageService.errorBubble(
+            `反審核失敗: ${response.Message || '未知錯誤'}`
+          );
+        }
+      },
+      error: (err: any) => {
+        console.group('❌ API 錯誤');
+        console.error('錯誤物件:', err);
+        console.error('錯誤狀態:', err.status);
+        console.error('錯誤訊息:', err.message);
+        console.error('錯誤回應:', err.error);
+        console.groupEnd();
+
+        let errorMsg = '反審核失敗';
+        if (err.error?.Message) {
+          errorMsg = err.error.Message;
+        } else if (err.message) {
+          errorMsg = err.message;
+        } else if (err.statusText) {
+          errorMsg = `HTTP ${err.status}: ${err.statusText}`;
+        }
+
+        this.messageService.errorBubble(errorMsg);
+      },
+      complete: () => {
+        console.log('🏁 API 呼叫完成');
+        this.messageService.unblockUi();
+      }
+    });
+  }
+
+
+  /**
+ * 判斷作廢按鈕是否應該被禁用
+ */
+  private isVoidDisabled(rowData: ContractItem): boolean {
+    // 已作廢的不能再作廢
+    if (rowData.approve_status === '3') {
+      return true;
+    }
+
+    // 未審核的可以作廢
+    if (rowData.approve_status === '1') {
+      return false;
+    }
+
+    // 已審核的需要檢查契約是否已生效
+    if (rowData.approve_status === '2') {
+      const today = new Date();
+      const contractStart = new Date(rowData.tlt_contract_bdate);
+      // 契約已生效就不能作廢
+      return contractStart < today;
+    }
+
+    return true; // 其他情況都禁用
+  }
+
+
+  /**
+   * 作廢功能
+   */
+  public onVoid(rowData: ContractItem): void {
+    // 先檢查是否可以作廢
+    if (this.isVoidDisabled(rowData)) {
+      if (rowData.approve_status === '3') {
+        this.messageService.warnBubble('該合約已作廢');
+      } else if (rowData.approve_status === '2') {
+        this.messageService.warnBubble('合約已生效，無法作廢');
+      }
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
+      accept: () => {
+        // 調用作廢 API
+        this.apiService.voidTLS12040({ apply_no: rowData.apply_no }).subscribe({
+          next: (response: any) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('作廢成功');
+              this.onSubmit(this.queryForm); // 重新查詢更新狀態
+            } else {
+              this.messageService.errorBubble(`作廢失敗: ${response.Message || '未知錯誤'}`);
+            }
+          },
+          error: (err: any) => {
+            console.error('作廢失敗:', err);
+            this.messageService.errorBubble('作廢失敗，請檢查網路連線或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消作廢');
+      }
+    });
+  }
+
+
+  /**
+   * 判斷資料列是否可選取
+   */
+  isRowSelectable(rowData: ContractItem): boolean {
+    return true;
+  }
+
+  /**
+   * 編輯按鈕禁用條件
+   */
+  editDisabled = (rowData: ContractItem): boolean => {
+    return !this.canEditContract(rowData);
+  }
+
+  /**
+  * 判斷合約是否可編輯
+  */
+  canEditContract = (rowData: ContractItem): boolean => {
+    // 方法1: 使用後端傳來的 CanEdit 屬性
+    if (rowData.CanEdit !== undefined) {
+      return rowData.CanEdit;
+    }
+
+    // 方法2: 前端自行判斷 (備用方案)
+    return rowData.approve_status === '1'; // 只有未審核狀態可編輯
   }
 }

@@ -105,6 +105,8 @@ class CruDataCleaner implements TLS12040DataCleaner {
       cap_saletype2: data.cap_saletype2 || '',
       cap_saletype3: data.cap_saletype3 || '',
       cap_saletype4: data.cap_saletype4 || '',
+      cap_saletype5: data.cap_saletype5 || '',
+
       email: data.email || '',
       invoice_email: data.invoice_email || '',
       CHECK_TITLE: data.CHECK_TITLE || '',

@@ -277,6 +277,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     cap_saletype2: [''],
     cap_saletype3: [''],
     cap_saletype4: [''],
+    cap_saletype5: [''],
+
     open_deposit: [''],
     open_fees: [0], //準時開業保證金
     construct_deposit: [''],
@@ -891,6 +893,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       cap_saletype2: queryData['cap_saletype2'] as string,
       cap_saletype3: queryData['cap_saletype3'] as string,
       cap_saletype4: queryData['cap_saletype4'] as string,
+      cap_saletype5: queryData['cap_saletype5'] as string,
+
       contact_USR_No: queryData['contact_USR_No'] as string,
       contact_USR_Name: queryData['contact_USR_Name'] as string,
       total_amt_unit: queryData['total_amt_unit'] as string,
@@ -1168,6 +1172,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       cap_saletype2: convertBooleanToYN(formData.cap_saletype2),
       cap_saletype3: convertBooleanToYN(formData.cap_saletype3),
       cap_saletype4: convertBooleanToYN(formData.cap_saletype4),
+      cap_saletype5: convertBooleanToYN(formData.cap_saletype5),
+
       water_flag: formData.water_flag || '',
       electric_flag: formData.electric_flag || '',
       gas_flag: formData.gas_flag || '',
