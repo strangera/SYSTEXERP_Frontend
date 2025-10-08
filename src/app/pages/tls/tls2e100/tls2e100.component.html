@@ -1,70 +1,122 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="查詢年"
+              calendarType="dateYearOne"
+              [control]="queryForm.controls.salesDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_NoList"
+              [control]="queryForm.controls.TLT_NoList"
+              [submitted]="submitted"
+              [options]="tltNoOptions"
+              optionLabel="label"
+              optionValue="value"
+            />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="樓層"
+              controlName="Floor_No"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Floor_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="館別"
+              controlName="Building_No"
+              [options]="buildingNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Building_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="組織"
+              controlName="org_id"
+              [options]="org_id_Option"
+              optionLabel="label"
+              optionValue="No"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
         </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
+        <div>
+          <div
+            class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
           >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="專櫃編號"
-                  controlName="counterName"
-                  [options]="counterNameOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.counterName"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateYearOne"
-                  label="查詢年"
-                  [control]="queryForm.controls.onedatetyy"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-            </div>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        ></app-table>
+            <app-button btnType="clear" [form]="queryForm"></app-button>
+            <app-button btnType="query" [loading]="loading"></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-table
+      tableKey="TLS2e100"
+      [showManage]="true"
+      [data]="data"
+      [columns]="columns"
+      [multiSortMeta]="[{ field: 'TLT_NoList', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [showReportMode]="false"
+      [showDelete]="false"
+      [showDelete]="true"
+      [showEdit]="false"
+      (detail)="onDetail($event)"
+    >
+  <header>
+      <div
+        class="flex align-items-center justify-content-end w-full  p-2"
+      >
+        <input
+          #fileInput
+          type="file"
+          style="display: none"
+
+        />
+        <p-button
+          type="button"
+          label="匯出EXCEL"
+          icon="pi pi-upload"
+          severity="success"
+          (click)="fileInput.click()"
+        ></p-button>
       </div>
-    </div>
+    </header></app-table>
   </div>
 </div>
+<!-- (change)="onFileSelected($event)" -->
