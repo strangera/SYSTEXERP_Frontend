@@ -33,7 +33,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
     { field: 'check_content', header: '檢查內容' },
     { field: 'isPassed', header: '是否通過' },
   ];
-  cls_date: string | null = null;
+  cls_date?: string;
   expansionColumns: Column[] = [
     { field: 'cls_date', header: '交易日期' },
     { field: 'check_result', header: '結果說明' },
@@ -63,7 +63,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       this.columns = this.columns.map(c => c.field === 'isPassed' ? {
         ...c,
         htmlFormat: true,
-        format: (v) => '<i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>'
+        format: () => '<i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>'
       } : c);
       this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.messageService.successBubble(res.Message);
@@ -108,6 +108,27 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       this.messageService.successBubble(res.Message);
       this.isConfirmDate = true;
       this.showReverseBtn = true;
+      this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
+        this.cls_date = res.Data.CLS_DATE;
+      });
+      this.dataForm.patchValue(res.Data.Data._gls6001);
+      this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
+        ...item,
+        DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
+        CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
+      }));
+    });
+  }
+  queryLoading = false;
+  onQueryVou(frm: FormGroup) {
+    this.queryLoading = true;
+    const body = {
+      TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
+    }
+    this.tls55010Service.queryTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.queryLoading = false)).subscribe((res) => {
+      this.messageService.successBubble(res.Message);
+      this.isConfirmDate = true;
+      this.showReverseBtn = true;
       this.dataForm.patchValue(res.Data.Data._gls6001);
       this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
         ...item,
@@ -137,11 +158,13 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   columns2: Column[] = [
     { field: 'SerNo', header: '序號' },
     { field: 'AccNo', header: '科目代號' },
+    { field: 'ACCCNAME', header: '科目名稱' },
     { field: 'NoteDesc', header: '摘要' },
     { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true },
     { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true },
     { field: 'ORG_ID', header: '組織編號' },
-    { field: 'DetailNo', header: '廠商編號' },
+    { field: 'VEN_NO', header: '廠商編號' },
+    { field: 'VEN_NAME', header: '廠商名稱' },
     { field: 'ProjectNo', header: '活動代號' },
     { field: 'PTA', header: '立沖代號' },
   ]

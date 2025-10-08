@@ -170,7 +170,7 @@ export interface Tls13070Response {
   limitList: Tls13070Limit[];
   rentList: Tls13070Rent[];
 
-  total_amt: number | null; // 目標營業額 (您的 JSON 範例是 total_amt)
+  total_amt: number | null;
   check_day: number; // 結帳後幾天匯款
 
   /**

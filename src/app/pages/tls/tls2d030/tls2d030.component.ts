@@ -8,7 +8,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, createPaginationConfig, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
@@ -26,7 +26,7 @@ import { finalize } from 'rxjs';
 export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [null, [Validators.required]], // 結算年月
-    sam_termno: [null, [Validators.required]], // 結算方式 (對應API的 sam_termno)
+    money_type: [null, [Validators.required]], // 結算方式 (對應API的 sam_termno)
     tlt_no: [null], // 專櫃編號
     tlt_floor: [null], // 樓層 (對應API的 tlt_floor)
     ...createPaginationConfig([{ field: 'sam_yyymm', order: 1 }]),
@@ -37,11 +37,11 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
   totalRecords = 0;
   data: QueryTls2d030DataItem[] = [];
   columns: Column[] = [
-    { field: 'sam_yyymm', header: '結算年月', visible: true },
-    { field: 'sam_termno', header: '結算方式', visible: true },
+    { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
+    // { field: 'money_type', header: '結算方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'CAP_Type', header: '費用型態', visible: true },
-    { field: 'CRT_Date', header: '關帳時間', visible: true },
+    { field: 'CRT_Date', header: '關帳時間', visible: true, format: formatDate },
     { field: 'CRT_USR_Name', header: '關帳者', visible: true },
   ];
   constructor(
@@ -66,7 +66,7 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
       this.loading2 = true;
       const body: ExecuteTls2d030Request = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-        sam_termno: Number(frm.value.sam_termno),
+        money_type: frm.value.money_type,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor,
       };
@@ -85,7 +85,6 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
     this.handleSubmit(frm, () => {
       const body: QueryTls2d030Request = {
         ...frm.value,
-        sam_termno: Number(frm.value.sam_termno),
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       };
       this.tls2d030Service.queryTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {

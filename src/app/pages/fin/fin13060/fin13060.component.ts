@@ -50,22 +50,10 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   selectedItems: any[] = [];
   CounterOptions: any[] = [];
-
-  INV_GUITypeOptions: any[] = [
-   
-  ];
-
-  taxTypeOptions = [
-  
-  ];
-
-  System_IDOptions = [
-  
-  ];
-
-  AssetNoteOptions = [
-
-  ];
+  INV_GUITypeOptions: any[] = [];
+  taxTypeOptions = [];
+  System_IDOptions = [];
+  AssetNoteOptions = [];
 
   // 查詢表單：鍵名與後端一模一樣
   queryForm = this.formBuilder.group({
@@ -177,7 +165,7 @@ private toSlashDateDisplay(d: any): string {
       label: String(x.Name),
     }));
   });
-      this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
+      this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res) => {
       const list = res?.Data ?? [];
       this.taxTypeOptions = list.map((x: any) => ({
         value: String(x.No), // No -> value
@@ -324,6 +312,42 @@ this.fin13060Service.queryFIN13060(payload).subscribe({
       },
       complete: () => {
         this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+  }
+   private normalizeIds(input: any): number[] {
+    if (Array.isArray(input)) {
+      // 可能是選取的列陣列或 ID 陣列
+      return input
+        .map(x => (typeof x === 'number' ? x : Number(x?.ID)))
+        .filter(n => Number.isFinite(n));
+    }
+    if (typeof input === 'number') return [input];
+    const id = Number(input?.ID);
+    return Number.isFinite(id) ? [id] : [];
+  }
+ /** 供 <app-table (delete)> 綁定呼叫 */
+  onDelete(event: any): void {
+    const ids = this.normalizeIds(event);
+    if (!ids.length) {
+      this.messageService.warnBubble('請先選擇要刪除的資料');
+      return;
+    }
+
+    //（如需二次確認，可用 ConfirmationService；這裡直接刪）
+    this.messageService.blockUi();
+    this.fin13060Service.deleteFIN13060(ids).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        // 刪除後重新查詢
+        this.onSubmit(this.queryForm);
+      },
+      error: () => {
+        this.messageService.errorBubble('刪除失敗，請稍後再試');
+        this.messageService.unblockUi();
+      },
+      complete: () => {
         this.messageService.unblockUi();
       },
     });

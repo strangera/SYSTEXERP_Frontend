@@ -89,5 +89,15 @@ export class FIN13060Service {
         // catchError(err => this.errorHandler.handle(err))
       );
   }
+ /** 🔹刪除：以 id 陣列呼叫 API */
+  deleteFIN13060(idList: number[]): Observable<ApiResponse<number>> {
+    const payload = { idList };
+    return this.http
+      .post<ApiResponse<number>>(
+        `${this.apiUrl}/FIN0000/INV1000/deleteFIN13060`,
+        payload
+      )
+      .pipe(tap(res => console.log('刪除結果:', res)));
+  }
 }
 

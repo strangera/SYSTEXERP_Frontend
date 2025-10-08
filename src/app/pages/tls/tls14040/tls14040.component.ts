@@ -50,21 +50,21 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     bus_typeList: [[]], // 大分類
 
     tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
-    org_idList: [[]], // 組織別
-
+    
     contract_subno_start: [''], // 合約附號_起
     contract_subno_end: [''], // 合約附號_迄
-
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)
 
-    tlt_bdate: [yesterday], // 合約期間_起
-    tlt_edate: [yesterday], // 合約期間_迄
+    tlt_bdate: [null], // 合約期間_起
+    tlt_edate: [null], // 合約期間_迄
+
+    org_idList: [[]], // 組織別
 
     approve_statusList: [[]], // 審核狀態 1=未審核  2=已審核
 
-    get_ticket_status_List: [[]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
-    ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
-    ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
+    // get_ticket_status_List: [[]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
+    // ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
+    // ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
 
     // ...createPaginationConfig([{ field: 'talent_id', order: 1 }]), // 分頁和排序參數
   });
@@ -147,6 +147,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     const formValue = frm.getRawValue();
+    console.log('保證票彙總request', formValue);
     this.handleSubmit(frm, () => {
       this.tls14030Service.exportTLS14030(formValue).subscribe({
         next: (response) => {

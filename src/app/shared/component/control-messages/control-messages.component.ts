@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 import { ValidationService } from '../../service/validation.service';
 import { NgIf } from '@angular/common';
@@ -8,7 +8,6 @@ import { NgIf } from '@angular/common';
   templateUrl: './control-messages.component.html',
   standalone: true,
   imports: [NgIf],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ControlMessagesComponent {
   // 是否按下確認

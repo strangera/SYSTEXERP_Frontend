@@ -264,7 +264,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     // 抽成額計算方式
     this.commissionCalculationOptions = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
     // 櫃別
-    this.tltKindOptions = [...TLS13010_DROPDOWN_OPTIONS.tltKind].filter(item => item.value !== '3' && item.value !== '4');
+    this.tltKindOptions = [...TLS13010_DROPDOWN_OPTIONS.tltKind];
     // 裝潢方式
     this.decorationMethodOptions = [...TLS13010_DROPDOWN_OPTIONS.decorationType];
     // 抽成別
