@@ -8,7 +8,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, createPaginationConfig, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
@@ -37,11 +37,11 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
   totalRecords = 0;
   data: QueryTls2d030DataItem[] = [];
   columns: Column[] = [
-    { field: 'sam_yyymm', header: '結算年月', visible: true },
-    { field: 'money_type', header: '結算方式', visible: true },
+    { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
+    // { field: 'money_type', header: '結算方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'CAP_Type', header: '費用型態', visible: true },
-    { field: 'CRT_Date', header: '關帳時間', visible: true },
+    { field: 'CRT_Date', header: '關帳時間', visible: true, format: formatDate },
     { field: 'CRT_USR_Name', header: '關帳者', visible: true },
   ];
   constructor(

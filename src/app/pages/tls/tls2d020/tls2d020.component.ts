@@ -9,7 +9,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount, formatYN } from '@shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { QueryDataItem, Tls2d020Service } from '@service/api/tls/tls2d020.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
@@ -41,7 +41,7 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
     { field: 'CAP_Item', header: '扣款代號', visible: true },
     { field: 'CAP_Name', header: '扣款名稱', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
-    { field: 'sam_yyymm', header: '扣款年月', visible: true },
+    { field: 'sam_yyymm', header: '扣款年月', visible: true, format: formatYYYYMM },
     { field: 'GUI_FLAG', header: '是否開立發票', visible: true, format: formatYN, exportFormat: [{ 'Y': '是' }, { 'N': '否' }] },
     { field: 'tpy_amt', header: '扣款金額(含稅)', visible: true, format: formatAmount },
     { field: 'tpy_tax', header: '稅額', visible: true, format: formatAmount },
