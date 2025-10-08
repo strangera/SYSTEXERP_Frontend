@@ -25,12 +25,12 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [null, [Validators.required]], // 試算年月
-    sam_termno: [null, [Validators.required]], // 試算方式
+    money_type: [null, [Validators.required]], // 試算方式
     tlt_no: [null], // 專櫃編號
     tlt_floor: [null],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
   });
-  sam_termnoOptions = getSYS1000Options('sam_termno')
+  sam_termnoOptions = getSYS1000Options('money_type')
   tlt_noOptions = this.dropdown.queryTltTalent();
   tlt_floorOptions = this.dropdown.querySys3900();
   totalRecords = 0;
@@ -61,7 +61,6 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        sam_termno: Number(frm.value.sam_termno),
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       }
       this.tls2d020Service.queryTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
@@ -77,7 +76,7 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
       this.loading2 = true;
       const body = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-        sam_termno: Number(frm.value.sam_termno),
+        money_type: frm.value.money_type,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor
       }

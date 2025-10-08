@@ -13,8 +13,8 @@
               [control]="queryForm.controls.sam_yyymm" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="結算方式" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="結算方式" controlName="money_type" [options]="sam_termnoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.money_type" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
