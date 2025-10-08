@@ -20,6 +20,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TLS31080DetailRequest, TLS31080DetailResponse, TLS31080PrintDetailRequest, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 
+// 各時段之樓層營業報表
 @Component({
   selector: 'app-tls31080-cru',
   standalone: true,
