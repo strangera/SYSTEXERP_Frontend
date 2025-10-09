@@ -44,6 +44,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { CommonModule } from '@angular/common';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 @UntilDestroy()
 // 型態別報表
@@ -71,6 +72,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     TableComponent,
     ButtonModule,
     CheckboxModule,
+    InputNumberComponent,
     // Table2Component,
     TableReportComponent
   ],
@@ -263,8 +265,8 @@ fetchTLS23010 = (evt: LazyLoadEvent) => {
     TXN_No_End:   val?.TXN_No_End   ?? undefined,
     TLT_No: asStrArr(val?.TLT_No),
 
-    TXN_GUIBegNo: asTrim(val?.TXN_GUIBegNo),
-    TXN_GUIEndNo: asTrim(val?.TXN_GUIEndNo),
+TXN_GUIBegNo: this.toGuiNumber(val?.TXN_GUIBegNo),
+TXN_GUIEndNo: this.toGuiNumber(val?.TXN_GUIEndNo),
 
     TXN_Status:     asStrArr(val?.TXN_Status),
     TXN_FlagStatus: asStrArr(val?.TXN_FlagStatus),
@@ -933,6 +935,13 @@ buildFooterFromTotals(): Record<string, any> | undefined {
    TXN_TotDisc:    this.detailTotals['Total_TXN_TotDisc'] ?? 0,
    TXN_PayAmt:     this.detailTotals['Total_TXN_PayAmt'] ?? 0,
   };
+}
+/** 將輸入轉成數字；非數字回 undefined（保留 0） */
+private toGuiNumber(x: any): number | undefined {
+  if (x === null || x === undefined || x === '') return undefined;
+  // 若輸入是字串，先去非數字字元（保留負號與小數可依需求移除）
+  const n = typeof x === 'number' ? x : Number(String(x).replace(/[^\d.-]/g, ''));
+  return Number.isFinite(n) ? n : undefined;
 }
 
 
