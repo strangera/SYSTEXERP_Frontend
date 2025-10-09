@@ -41,6 +41,7 @@ import { EmailValidationService } from '../tls13010-cru/validation/email-validat
 import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
 import { CrudModeService } from '../tls12040/Workflow/crud-mode.service';
 import { DropdownOption } from '@shared/constants/business.constants';
+import { TLS12040FormInitService } from './services/tls12040-form-init.service';
 
 interface CategoryItem {
   id: number;
@@ -310,6 +311,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   });
   // ----------------------------------------------------------------
   constructor(
+    private formInitService: TLS12040FormInitService,
     private translate: TranslateService,
     // private validationService: ValidationService,
     private sharedDropdownService: SharedDropdownService,
@@ -333,8 +335,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ngOnInit() {
     this.initializePage('TLS12040', this.dataForm, { useReadonly: true });
     this.handleRouterState();
+    this.initializeFormDefaults();
     this.setupVendorUniformListener();
-    // 🔍 調試當前狀態
+    //  調試當前狀態
     console.log('=== CRU 狀態調試 ===');
     console.log('當前 CRUD 狀態:', this.crudstatus);
     console.log('表單標題:', this.formTitle);
@@ -861,8 +864,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       };
       this.flowService.setCruData(completeData);
     }
-
+    this.flowService.clearAll();
     this.router.navigate(['account/tls/tls12040'], extras);
+
   }
 
   onSubmit(frm: FormGroup): void {
@@ -1019,7 +1023,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
 
   searchLocationOptions(searchParams: any): Observable<any[]> {
-    console.log('🔍 CRU 收到搜尋參數:', searchParams);
+    console.log(' CRU 收到搜尋參數:', searchParams);
 
     // 轉換 SortBy 的欄位名稱
     if (searchParams.SortBy && Array.isArray(searchParams.SortBy)) {
@@ -1360,7 +1364,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       item.location_no?.trim() === newLocationNo
     ).length;
 
-    console.log('🔍 重複檢查結果:', {
+    console.log(' 重複檢查結果:', {
       位置編號: newLocationNo,
       重複數量: duplicateCount,
       是否重複: duplicateCount > 0
@@ -1747,5 +1751,43 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.saveCompleteDataToFlow(cruData);
       }
     });
+  }
+
+  // 3. 初始化預設值的方法
+  private initializeFormDefaults(): void {
+    const existingData = this.flowService.getCruData() as any;
+
+    if (existingData && Object.keys(existingData).length > 0) {
+      console.log('✅ 使用暫存資料，跳過預設值設定');
+      this.loadCachedDataWithClassifications(existingData);
+    } else {
+      console.log('🆕 新增模式，設定預設值');
+      this.formInitService.initializeByMode(this.dataForm, this.crudstatus);
+
+      // 立即觸發驗證器
+      this.triggerAllDynamicValidators();
+    }
+  }
+
+  // 4. 監聽抽成別變更，自動更新相關預設值
+  private setupTermTypeListener(): void {
+    this.dataForm.get('tlt_term_type')?.valueChanges.subscribe(termType => {
+      if (termType && this.crudstatus === CRUDStatus.Create) {
+        // 只在新增模式下自動更新
+        this.formInitService.updateDefaultsByTermType(this.dataForm, termType);
+      }
+    });
+  }
+
+  // 5. 清除表單時使用（如果需要）
+  onClearForm(): void {
+    if (confirm('確定要清除所有輸入的資料嗎?此操作無法復原。')) {
+      // 保留某些系統欄位
+      this.formInitService.resetToDefaults(this.dataForm, ['apply_no', 'tlt_no']);
+
+      this.locationData = [];
+      this.flowService.clearAll();
+      this.messageService.infoBubble('表單已清除');
+    }
   }
 }
