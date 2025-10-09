@@ -18,11 +18,11 @@ export class Tls12040FareDataService {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, TLS12040FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('📄 處理 API 資料，設定正確的初始狀態...');
+    // console.log('📄 處理 API 資料，設定正確的初始狀態...');
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {
-        console.log(`📊 處理 ${capType} 類型，共 ${faresByType[capType].length} 筆`);
+        // console.log(`📊 處理 ${capType} 類型，共 ${faresByType[capType].length} 筆`);
 
         processedData[capType] = faresByType[capType].map((item: TLS12040FareItem, index: number) => {
           // 記錄原始選中狀態
@@ -33,7 +33,7 @@ export class Tls12040FareDataService {
 
           if (originalSelected && item.data_source === 'CONTRACT_EXISTING') {
             initialStatus = 'original';
-            console.log(`📋 ${item.cap_item} (${capType}) - 合約原有資料，狀態: original`);
+            // console.log(`📋 ${item.cap_item} (${capType}) - 合約原有資料，狀態: original`);
           }
 
           // 根據 data_source 決定 ID 處理
@@ -63,7 +63,7 @@ export class Tls12040FareDataService {
           return processedItem;
         });
 
-        console.log(`📊 ${capType} 類型處理完成: ${processedData[capType].length} 筆`);
+        // console.log(`📊 ${capType} 類型處理完成: ${processedData[capType].length} 筆`);
       }
     });
 
@@ -77,7 +77,7 @@ export class Tls12040FareDataService {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, TLS12040FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log(' 處理新增模式 API 資料...');
+    // console.log(' 處理新增模式 API 資料...');
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {
@@ -108,7 +108,7 @@ export class Tls12040FareDataService {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const validatedData: Record<string, TLS12040FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('🔍 驗證和修復暫存資料...');
+    // console.log('🔍 驗證和修復暫存資料...');
 
     if (Array.isArray(data)) {
       data.forEach(item => {
@@ -221,7 +221,7 @@ export class Tls12040FareDataService {
    */
   hasDataChanges(item: TLS12040FareItem): boolean {
     if (!item._originalData) {
-      console.log(`⚠️ 項目 ${item.cap_item} 沒有原始資料，視為無變更`);
+      // console.log(`⚠️ 項目 ${item.cap_item} 沒有原始資料，視為無變更`);
       return false;
     }
 
@@ -247,10 +247,10 @@ export class Tls12040FareDataService {
       const normalizedOriginal = this.normalizeValue(originalValue);
 
       if (normalizedCurrent !== normalizedOriginal) {
-        console.log(`🔍 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
-          原始: originalValue,
-          目前: currentValue
-        });
+        // console.log(`🔍 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
+        //   原始: originalValue,
+        //   目前: currentValue
+        // });
         return true;
       }
     }
