@@ -44,6 +44,7 @@ import { HttpResponse } from '@angular/common/http';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { debounceTime } from 'rxjs/operators';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @UntilDestroy()
 @Component({
@@ -68,9 +69,10 @@ import { debounceTime } from 'rxjs/operators';
     DialogModule,
     RadioButtonModule,
     TranslateModule,
-    TableComponent,
-    Table2Component,
+    // TableComponent,
+    // Table2Component,
     ButtonModule,
+    TableReportComponent, // ⬅️ 新增
     
   ],
 })
@@ -177,6 +179,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23020', 'tls/tls23020cru', this.queryForm, (form) =>
       this.onSubmit(form),
     );
+     this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false });
     this.queryForm.valueChanges
   .pipe(untilDestroyed(this), debounceTime(300))
   .subscribe(() => {
@@ -265,7 +268,7 @@ fetchTLS23020 = (evt: LazyLoadEvent) => {
   const payload = {
     ...condPayload,
     pageIndex: evt.pageIndex ?? 1,
-    pageSize : evt.pageSize  ?? 20,
+    pageSize : evt.pageSize  ?? 30,
     SortBy   : normSort,   // ← 這裡一定是乾淨的
   };
 
@@ -330,14 +333,71 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
     })
   );
 };
- 
+ public queryTLS23020ForReport = (body: any) =>
+  this.tls23020Service.queryTLS23020(body).pipe(
+    map((res: any) => {
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+
+      const rows: any[] = [];
+      const totalAgg = { 
+        Total_PLU_SalePrc: 0, 
+        Total_TXN_Net: 0, 
+        Total_TXN_Tax: 0, 
+        Total_TXN_Disc: 0 
+      };
+
+      for (const w of wrappers) {
+        totalAgg.Total_PLU_SalePrc += Number(w?.Total_PLU_SalePrc ?? 0);
+        totalAgg.Total_TXN_Net     += Number(w?.Total_TXN_Net ?? 0);
+        totalAgg.Total_TXN_Tax     += Number(w?.Total_TXN_Tax ?? 0);
+        totalAgg.Total_TXN_Disc    += Number(w?.Total_TXN_Disc ?? 0);
+
+        const subTotals =
+          w?.tLS23020_SubTotals ??
+          w?.TLS23020_SubTotals ??
+          w?.tls23020_SubTotals ?? [];
+
+        for (const st of (Array.isArray(subTotals) ? subTotals : [])) {
+          const details =
+            st?.tLS23020_Details ??
+            st?.TLS23020_Details ??
+            st?.tls23020_Details ?? [];
+          for (const item of (Array.isArray(details) ? details : [])) {
+            const dateKey = String(item.TXN_Date ?? '').slice(0, 19);
+            rows.push({
+              ...item,
+              _rowKey: `${dateKey}|${item.ECR_No ?? ''}|${item.TXN_No ?? ''}`,
+            });
+          }
+        }
+      }
+
+      const candidates = [
+        res?.TotalCount,
+        res?.Data?.TotalCount,
+        Array.isArray(res?.Data) ? res?.Data?.[0]?.TotalCount : undefined,
+        wrappers?.[0]?.TotalCount,
+      ];
+      const totalRecords =
+        candidates.map((n) => Number(n)).find((n) => Number.isFinite(n) && n >= 0) ?? rows.length;
+
+      // 給 app-table-report 用來畫 footer（搭配 [footerData] 或由 GrandTotal 讓元件自行渲染，取決於你的 table-report 實作）
+      const GrandTotal = totalAgg;
+
+      // ✅ 同步到本地（讓 footerData() 可用）——可選
+      this.detailTotals = { ...GrandTotal };
+
+      return { Data: rows, TotalCount: totalRecords, GrandTotal };
+    })
+    
+  );
   onSubmit(form: FormGroup): void {
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     this.handleSubmit(form, () => {
       // ① 組 payload（條件 + 分頁/排序）
       const condPayload = this.buildPayload(this.queryForm.getRawValue());
       const pageIndex = form.value?.pageIndex ?? 1;
-      const pageSize = form.value?.pageSize ?? 20;
+      const pageSize = form.value?.pageSize ?? 30;
       const sortBy = Array.isArray(form.value?.SortBy)
         ? form.value.SortBy
         : this.defaultSort;
@@ -354,8 +414,8 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
 
       this.loading = true;
       this.messageService?.blockUi();
-
-      if (this.showSummary) {
+const isSummary = !!this.queryForm.get('showSummary')?.value;
+      if (isSummary) {
         // ================= 彙總查詢 =================
         this.tls23020Service
           .queryTLS23020Summary(payload)
@@ -515,7 +575,22 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
         });
     });
   }
+detailTotalFieldMap: Record<string, string> = {
+  PLU_SalePrc: 'Total_PLU_SalePrc',
+  TXN_Net:     'Total_TXN_Net',
+  TXN_Tax:     'Total_TXN_Tax',
+  TXN_Disc:    'Total_TXN_Disc',
+};
 
+buildFooterFromTotals(): Record<string, any> | undefined {
+  if (!this.detailTotals) return undefined;
+  return {
+    PLU_SalePrc: this.detailTotals['Total_PLU_SalePrc'] ?? 0,
+    TXN_Net:     this.detailTotals['Total_TXN_Net'] ?? 0,
+    TXN_Tax:     this.detailTotals['Total_TXN_Tax'] ?? 0,
+    TXN_Disc:    this.detailTotals['Total_TXN_Disc'] ?? 0,
+  };
+}
   /** 組查詢 payload（含排序＆分頁鍵） */
   private buildPayload(val: any) {
     const toIso = (x: any) => this.toIso(x);
@@ -561,7 +636,7 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
     };
     if (this.includePagingAndSorting) {
       o.pageIndex = val?.pageIndex ?? 1; // ✅ 當頁
-      o.pageSize = val?.pageSize ?? 20;
+      o.pageSize = val?.pageSize ?? 30;
       o.SortBy = Array.isArray(val?.SortBy) ? val.SortBy : undefined;
     }
     Object.keys(o).forEach((k) => {
@@ -583,6 +658,30 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
   }
 
   // ===== 小工具 =====
+  public queryTLS23020SummaryForReport = (body: any) =>
+  this.tls23020Service.queryTLS23020Summary(body).pipe(
+    map((res: any) => {
+      // 後端回來的是 Data.QueryData（依你現有程式）
+      const arr = Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData : [];
+
+      // rows 直接就是彙總列
+      const rows = arr.map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${i}`,
+      }));
+
+      // 你若有後端總計欄位可組 GrandTotal，沒有就給空物件
+      // 也可以自己把 rows 加總出 GrandTotal（依需求）
+      const GrandTotal = {}; // 或計算合計：{ TXN_TotTax: sum(...), ... }
+
+      const totalRecords = rows.length;
+      // 讓頁尾可以用（可選）
+      // this.detailTotals = {...GrandTotal};
+
+      return { Data: rows, TotalCount: totalRecords, GrandTotal };
+    })
+  );
+
   formatYMD = (val: unknown): string => {
     if (val == null) return '';
     if (val instanceof Date && !isNaN(val.getTime())) {
@@ -619,16 +718,7 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
     };
   }
 onToggleSummary() {
-  // 改用表單控制 showSummary（template 已綁 formControlName）
-  const isSummary = !!this.queryForm.value.showSummary;
-
-  // 切換檢視時，重設頁碼
   this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
-
-  // 儲存目前條件（含 showSummary）
-  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-
-  // 重新查詢
   this.onSubmit(this.queryForm);
 }
 
@@ -653,7 +743,7 @@ onToggleSummary() {
 
     // ✅ 這些會在 footer / groupfooter 顯示總計/小計
     {
-      field: 'PLU_SalePrc',
+      field: 'TXN_SaleAmt',
       header: '單項售價',
       visible: true,
       style: 'text-right',
@@ -738,12 +828,7 @@ onToggleSummary() {
 
   // ① 後端總計（表尾）
   detailTotals: Record<string, number> = {};
-  detailTotalFieldMap: Record<string, string> = {
-    PLU_SalePrc: 'Total_PLU_SalePrc',
-    TXN_Net: 'Total_TXN_Net',
-    TXN_Tax: 'Total_TXN_Tax',
-    TXN_Disc: 'Total_TXN_Disc',
-  };
+
 
   // ② 後端小計（群組尾）
   detailSubtotals: Record<string, Record<string, number>> = {};
@@ -755,6 +840,12 @@ onToggleSummary() {
   };
 
   // ========= 匯出 =========
+private buildExportBody(): any {
+  const src = this.historyRequestBody ?? {};
+  const { pageIndex, pageSize, ...body } = src;
+  return body;
+}
+
 onExportPDF() {
   if (!this.historyRequestBody) {
     this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
@@ -762,9 +853,12 @@ onExportPDF() {
   }
   this.btnLoading = true;
 
-  const obs = this.showSummary
-    ? this.tls23020Service.exportTLS23020SummaryPDF(this.historyRequestBody)
-    : this.tls23020Service.exportTLS23020PDF(this.historyRequestBody);
+  const body = this.buildExportBody();
+  const isSummary = !!this.queryForm.get('showSummary')?.value;
+
+  const obs = isSummary
+    ? this.tls23020Service.exportTLS23020SummaryPDF(body)
+    : this.tls23020Service.exportTLS23020PDF(body);
 
   obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
      .subscribe({
@@ -779,16 +873,18 @@ onExportXLSX() {
   }
   this.btnLoading = true;
 
-  const obs = this.showSummary
-    ? this.tls23020Service.exportTLS23020SummaryExcel(this.historyRequestBody)
-    : this.tls23020Service.exportTLS23020Excel(this.historyRequestBody);
+  const body = this.buildExportBody();
+  const isSummary = !!this.queryForm.get('showSummary')?.value;
+
+  const obs = isSummary
+    ? this.tls23020Service.exportTLS23020SummaryExcel(body)
+    : this.tls23020Service.exportTLS23020Excel(body);
 
   obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
      .subscribe({
        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
      });
 }
-
 
   private handleFileExport(
     response: HttpResponse<Blob>,
