@@ -1,204 +1,125 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="扣款彙總表"
-            class="col"
-          ></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number
-                  [useGrouping]="false"
-                  label="專櫃編號"
-                  controlName="counterID"
-                  [control]="queryForm.controls.counterID"
-                  [submitted]="submitted"
-                ></app-input-number>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-multi-select
-                  label="來源系統別"
-                  controlName="cashSource"
-                  [options]="cashSourceOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.cashSource"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="扣款代號"
-                  controlName="deductionCode"
-                  [options]="deductionCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.deductionCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar-range
-                  calendarType="dateMonthRange"
-                  label="扣款年月"
-                  [startControl]="queryForm.controls.startdate"
-                  [endControl]="queryForm.controls.enddate"
-                  [submitted]="submitted"
-                ></app-calendar-range>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number
-                  [useGrouping]="false"
-                  label="廠商編號"
-                  controlName="venderID"
-                  [control]="queryForm.controls.venderID"
-                  [submitted]="submitted"
-                ></app-input-number>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="活動代碼/名稱"
-                  controlName="eventCode"
-                  [options]="eventCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.eventCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-multi-select
-                  label="是否開立發票"
-                  controlName="releaseInvoice"
-                  [options]="releaseInvoiceOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.releaseInvoice"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-              <hr />
-              <div class="col-12 md:col-4 lg:col-4">
-                <app-radiobutton
-                  label="狀況(For匯總)"
-                  groupname="relyOn"
-                  [control]="queryForm.controls.relyOn"
-                  [options]="relyOnOptions"
-                  [submitted]="submitted"
-                ></app-radiobutton>
-              </div>
-              <div class="col-12 md:col-4 lg:col-4">
-                <app-dropdown
-                  label="組織代號"
-                  controlName="orgCode"
-                  [options]="orgCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.orgCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-4 lg:col-4">
-                <app-radiobutton
-                  label="類型"
-                  groupname="category"
-                  [control]="queryForm.controls.category"
-                  [options]="categoryOptions"
-                  [submitted]="submitted"
-                ></app-radiobutton>
-              </div>
-              <div class="col-12 md:col-4 lg:col-4">
-                <app-dropdown
-                  label="大分類代號"
-                  controlName="businessCode"
-                  [options]="businessCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.businessCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-4 lg:col-4">
-                <app-multi-select
-                  label="專櫃/自營櫃"
-                  controlName="operations"
-                  [options]="operationsOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.operations"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-4 lg:col-4">
-                <p-checkbox
-                  label="只顯示負值(只適用依專櫃統計)"
-                  controlName="onlyNegative"
-                ></p-checkbox>
-              </div>
-              <div class="col-12 md:col-4 lg:col-4">
-                <p-checkbox
-                  label="只顯示當月應收為負值"
-                  controlName="onlyMonthNegative"
-                ></p-checkbox>
-              </div>
-            </div>
-            <hr />
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        ></app-table>
-      </div>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- 專櫃編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted" [options]="tltNoOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+          <!-- 來源系統別 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="來源系統別" controlName="source_type" [control]="queryForm.controls.source_type"
+              [submitted]="submitted" [options]="sourceTypeOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+          <!-- 扣款代碼 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="扣款代碼" controlName="CAP_Item" [control]="queryForm.controls.CAP_Item"
+              [submitted]="submitted" [options]="capItemOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+          <!-- 扣款年月(起訖) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateMonthRange" label="扣款年月" [startControl]="queryForm.controls.tpy_bdate"
+              [endControl]="queryForm.controls.tpy_edate" [submitted]="submitted"></app-calendar-range>
+          </div>
+          <!-- 廠商編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VenNoOptions" optionLabel="Name" optionValue="No"
+              [control]="queryForm.controls.VEN_No" [submitted]="submitted" [editable]="false"></app-dropdown>
+          </div>
+          <!-- 活動代碼/名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="活動代碼/名稱" controlName="pod_no" [options]="podNoOptions" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.pod_no" [submitted]="submitted"
+              [editable]="false"></app-dropdown>
+          </div>
+
+          <span class="col-12 m-0 mt-2 border-top-1 surface-border"></span>
+        </div>
+
+        <div class="grid p-fluid">
+          <!-- 狀況(For匯總) -->
+          <div style="padding: 0.5rem;width: auto;">
+            <app-radiobutton groupname="status" label="狀況(For匯總)" controlName="status" [options]="statusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted">
+            </app-radiobutton>
+          </div>
+          <!-- 會計科目 -->
+          <div class="col-12 md:col-6 lg:col-4" *ngIf="queryForm.controls.status.value === '3'">
+            <app-multi-select label="會計科目" controlName="AccNo" [control]="queryForm.controls.AccNo"
+              [submitted]="submitted" [options]="accNoOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+
+          <span class="col-12 m-0 mt-2 border-top-1 surface-border"></span>
+        </div>
+
+        <div class="grid p-fluid">
+          <!-- 類型 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton groupname='close_flag' label="類型" controlName="close_flag" [options]="closeFlagOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.close_flag" [submitted]="submitted">
+            </app-radiobutton>
+          </div>
+
+          <!-- 是否開立發票 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="是否開立發票" controlName="GUI_FLAG" [options]="guiFlagOptions" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.GUI_FLAG" [submitted]="submitted"
+              [editable]="false"></app-dropdown>
+          </div>
+
+          <!-- 組織代碼 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="組織代碼" controlName="org_id" [control]="queryForm.controls.org_id"
+              [submitted]="submitted" [options]="orgIdOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+          <!-- 大分類代碼 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="大分類代碼" controlName="bus_type" [control]="queryForm.controls.bus_type"
+              [submitted]="submitted" [options]="busTypeOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+          <!-- 專櫃/自營櫃 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="專櫃/自營櫃" controlName="store_way" [options]="storeWayOptions" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.store_way" [submitted]="submitted"
+              [editable]="false"></app-dropdown>
+          </div>
+          <!-- 館別 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="館別" controlName="building_no" [control]="queryForm.controls.building_no"
+              [submitted]="submitted" [options]="buildingNoOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+          <!-- 樓層 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" controlName="FLOOR_NO" [control]="queryForm.controls.FLOOR_NO"
+              [submitted]="submitted" [options]="floorNoOptions" optionLabel="Name" optionValue="No">
+            </app-multi-select>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table tableKey="TLS2D040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showManage]="false">
+  </app-table>
 </div>
