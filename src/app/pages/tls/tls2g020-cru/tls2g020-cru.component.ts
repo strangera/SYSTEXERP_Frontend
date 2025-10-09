@@ -17,6 +17,7 @@ import { NgIf, NgFor } from '@angular/common';
 import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { formatAmount } from '@shared/componentkit/table2/table2.model';
 
 // 定義日期資料的類型
 interface DayData {
@@ -79,9 +80,9 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   /** 月份欄位設定 */
   columns: Column[] = [
     { field: 'Month', header: '月', format: (v: string) => v ? v.slice(-2) : '' },
-    { field: 'budget', header: '月預算' },
-    { field: 'avg_cag_charge_rate', header: '平均抽成' },
-    { field: 'charge_amt', header: '抽成額' },
+    { field: 'budget', header: '月預算', format: formatAmount  },
+    { field: 'avg_cag_charge_rate', header: '平均抽成' , format: formatAmount },
+    { field: 'charge_amt', header: '抽成額', format: formatAmount },
   ];
 
   constructor(
@@ -186,7 +187,7 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
             DayID: d.DayID ?? null,
             budget: d.budget ?? null,
             rate: rate,
-            commission: d.commission != null ? Number(d.commission) : Number(((d.budget ?? 0) * Number(rate)).toFixed(2)),
+            commission: d.commission != null ? Number(d.commission) : Math.round((d.budget ?? 0) * Number(rate)),
             disabled: !isInContractPeriod
           };
         });
@@ -264,10 +265,10 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     // 正確公式：實際預算 × 抽成率 = 抽成額
     const commission = budget * Number(rate);
 
-    // 固定兩位小數
-    data.budget = Number(budget.toFixed(2));
-    data.rate = Number(rate.toFixed(2));
-    data.commission = Number(commission.toFixed(2));
+    // 四捨五入到整數
+    data.budget = budget;
+    data.rate = rate;
+    data.commission = Math.round(commission);
 
     this.updateMonthTotals();
   }
@@ -283,14 +284,14 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     const avgRate = this.currentMonthData.avg_cag_charge_rate ?? 0;
 
     this.dataForm.patchValue({
-      BUDGET_Mbudget: Number(totalBudget.toFixed(2)),
-      charge_amt: Number(totalCommission.toFixed(2)),
-      avg_cag_charge_rate: Number(avgRate.toFixed(2))
+      BUDGET_Mbudget: totalBudget,
+      charge_amt: Math.round(totalCommission),
+      avg_cag_charge_rate: avgRate
     }, { emitEvent: false });
 
-    this.currentMonthData.budget = Number(totalBudget.toFixed(2));
-    this.currentMonthData.charge_amt = Number(totalCommission.toFixed(2));
-    this.currentMonthData.avg_cag_charge_rate = Number(avgRate.toFixed(2));
+    this.currentMonthData.budget = totalBudget;
+    this.currentMonthData.charge_amt = Math.round(totalCommission);
+    this.currentMonthData.avg_cag_charge_rate = avgRate;
   }
   onSubmit(frm: FormGroup): void {
     if (!this.currentMonthData) return;
@@ -344,7 +345,7 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
               DayID: item.DayID,
               budget: item.budget_D,
               rate: rate,
-              commission: Number(((item.budget_D ?? 0) * Number(rate)).toFixed(2)),
+              commission: Math.round((item.budget_D ?? 0) * Number(rate)),
               disabled: !isInContractPeriod
             };
 

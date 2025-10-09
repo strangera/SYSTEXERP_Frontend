@@ -12,6 +12,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
+import { formatAmount } from '@shared/componentkit/table2/table2.model';
 
 @Component({
   selector: 'app-tls2g020',
@@ -56,9 +57,9 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       header: '月',
       format: (value: string) => value ? value.slice(-2) : ''
     },
-    { field: 'budget', header: '月預算', visible: true },
-    { field: 'avg_cag_charge_rate', header: '平均抽成' },
-    { field: 'avg_cag_charge_nurate', header: '抽成額' },
+    { field: 'budget', header: '月預算', visible: true , format: formatAmount },
+    { field: 'avg_cag_charge_rate', header: '平均抽成', format: formatAmount },
+    { field: 'avg_cag_charge_nurate', header: '抽成額', format: formatAmount },
   ];
 
   constructor(

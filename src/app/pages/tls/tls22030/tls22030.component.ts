@@ -5,7 +5,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
-import { environment } from '../../../../environments/environment';
 import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
 import { DisplayService } from '../../../service/basic/display.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
@@ -28,7 +27,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   selector: 'app-tls22030',
   templateUrl: './tls22030.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule,ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableComponent, DropdownComponent, TranslateModule],
+  imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableComponent, DropdownComponent, TranslateModule],
 })
 
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -119,33 +118,36 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   onExportExcel(): void {
     const condition = this.queryForm.getRawValue();
 
+    // 準備與查詢相同格式的參數
     const payload = {
-      query_condition: {
-        ServiceName: 'queryTLS22030',
-        Conditions: condition
-      },
-      report_title: 'TLS22030 序號異常報表',
-      file_name: `TLS22030_${new Date().toISOString().slice(0, 10)}`,
-      columns: this.columns.filter(c => c.visible),
-      config: {
-        print_reportTitle: 'Y',
-        print_reportTitle_per_page: 'N',
-        print_eject: 'Y',
-        print_field_title: 'Y',
-        print_field_title_per_page: 'N',
-      }
+      ...condition,
+      TXN_DateStart: this.toYMD(condition.TXN_DateStart),
+      TXN_DateEnd: this.toYMD(condition.TXN_DateEnd),
     };
 
-    this.http.post(`${environment.ApiUrl}/exportExcel`, payload, {
-      responseType: 'blob'
-    }).subscribe({
-      next: (blob) => {
+    console.log('匯出 Excel 請求參數:', payload);
+
+    this.btnLoading = true;
+
+    this.tls22030Service.exportTLS22030(payload).subscribe({
+      next: (blob: Blob) => {
+
+        if (blob.size === 0) {
+          alert('匯出失敗：沒有資料可匯出');
+          this.btnLoading = false;
+          return;
+        }
+
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${payload.file_name}.xlsx`;
+        a.download = `TLS22030_序號異常報表_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(a);
         a.click();
-      }
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.btnLoading = false;
+      },
     });
   }
 
