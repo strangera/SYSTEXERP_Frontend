@@ -80,6 +80,31 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 
   /** 後端需要分頁/排序參數（✅ 不傳 Offset / OrderBy） */
   private readonly includePagingAndSorting = true;
+  private normalizeSort(sortBy: any[] | undefined): { field: string; order: 1 | -1 }[] {
+  const list = Array.isArray(sortBy) ? [...sortBy] : [];
+  // 轉字串 + 限定 order 僅 1/-1
+  const cleaned = list
+    .map(s => ({
+      field: Array.isArray(s?.field) ? String(s.field[0] ?? '') : String(s?.field ?? ''),
+      order: (s?.order === -1 ? -1 : 1) as 1 | -1,
+    }))
+    .filter(s => !!s.field);
+
+  // 群組欄位優先，且去重複
+  const g = this.groupByField;
+  const seen = new Set<string>();
+  const ensureGroupFirst = [
+    { field: g, order: (cleaned.find(s => s.field === g)?.order ?? 1) as 1 | -1 },
+    ...cleaned.filter(s => s.field !== g),
+  ].filter(s => {
+    if (seen.has(s.field)) return false;
+    seen.add(s.field);
+    return true;
+  });
+
+  return ensureGroupFirst;
+}
+
 
   // Request
   queryForm = this.formBuilder.group({
@@ -195,10 +220,9 @@ fetchTLS23100 = (evt: LazyLoadEvent) => {
   const val = this.queryForm.getRawValue() as any;
 
   // 排序：事件優先 → 表單 → 預設；並強制把群組欄位放第一順位
-  const eventSort = Array.isArray(evt?.SortBy) ? evt.SortBy : [];
-  const baseSort =
-    Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort;
-  const sortBy = this.ensureGroupFirst(eventSort.length ? eventSort : baseSort);
+const eventSort = Array.isArray(evt?.SortBy) ? evt.SortBy : [];
+const baseSort = Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort;
+const sortBy = this.normalizeSort(eventSort.length ? eventSort : baseSort);
 
   // 分頁：事件優先 → 表單 → 預設
   const pageIndex = Number.isFinite(evt?.pageIndex)
@@ -272,10 +296,11 @@ fetchTLS23100 = (evt: LazyLoadEvent) => {
       const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
 
       // 排序：表單 → sortMeta → defaultSort
-      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy
-        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-      ).map((s: any) => ({ ...s }));
+   const sortByArr = this.normalizeSort(
+  Array.isArray(val?.SortBy) && val.SortBy.length
+    ? val.SortBy
+    : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+);
 
       // 組 payload（✅ 僅保留 pageIndex/pageSize/SortBy）
       const payload: any = this.prune({
