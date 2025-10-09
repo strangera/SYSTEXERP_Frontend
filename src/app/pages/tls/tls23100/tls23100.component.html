@@ -105,31 +105,19 @@
   </p-accordion>
 </div>
 
-<!-- 查詢結果表格（✅ app-table2 + 總計/小計；小計依 tlt_no 群組） -->
+<!-- 查詢結果表格（✅ 改用 app-table-report） -->
 <div class="card">
-  <app-table2
+  <app-table-report
     tableKey="TLS23100"
-    [data]="data"
     [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="_rowKey"
-    [multiSortMeta]="sortMeta"
+    [data]="data"
     [totalRecords]="totalRecords"
-    [lazy]="true"
     [loading]="loading"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-    [showTotal]="true"
-    [showSubTotal]="true"
-    [showReportMode]="false"
-    [groupRowsBy]="'tlt_no'"
-    [externalTotals]="detailTotals"
-    [externalTotalFieldMap]="detailTotalFieldMap"
-    [externalSubtotals]="detailSubtotals"
-    [externalSubtotalFieldMap]="detailSubtotalFieldMap"
-    [serverFetch]="fetchTLS23100"  >
-<header>
+    dataKey="_rowKey"
+    [lastQueryBody]="historyRequestBody"
+    [queryFunction]="queryTLS23100ForReport">
+
+    <header>
       <div class="flex justify-content-end gap-2">
         <p-button
           styleClass="p-2"
@@ -139,9 +127,7 @@
           [disabled]="data.length === 0"
           (click)="onExportPDF()">
         </p-button>
-
-
       </div>
     </header>
-  </app-table2>
+  </app-table-report>
 </div>

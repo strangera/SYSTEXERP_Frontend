@@ -2,6 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -151,61 +152,34 @@
 <!-- 檢視模式切換 -->
 <div class="card mb-2">
   <div class="flex gap-4 align-items-center">
-    <p-radioButton
-      name="viewMode"
-      inputId="vm-invoice"
-      label="發票明細"
-      value="invoice"
-      [(ngModel)]="viewMode"
-      [ngModelOptions]="{ standalone: true }"
-      (onClick)="onViewChange()">
+    <p-radioButton name="viewMode" inputId="vm-invoice" label="發票明細"  value="invoice"
+      [(ngModel)]="viewMode" [ngModelOptions]="{ standalone: true }" (onClick)="onViewChange()">
     </p-radioButton>
 
-    <p-radioButton
-      name="viewMode"
-      inputId="vm-payment"
-      label="付款明細"
-      value="payment"
-      [(ngModel)]="viewMode"
-      [ngModelOptions]="{ standalone: true }"
-      (onClick)="onViewChange()">
+    <p-radioButton name="viewMode" inputId="vm-payment" label="付款明細" value="payment"
+      [(ngModel)]="viewMode" [ngModelOptions]="{ standalone: true }" (onClick)="onViewChange()">
     </p-radioButton>
 
-    <p-radioButton
-      name="viewMode"
-      inputId="vm-discount"
-      label="折扣/金額明細"
-      value="discount"
-      [(ngModel)]="viewMode"
-      [ngModelOptions]="{ standalone: true }"
-      (onClick)="onViewChange()">
+    <p-radioButton name="viewMode" inputId="vm-discount" label="折扣/金額明細" value="discount"
+      [(ngModel)]="viewMode" [ngModelOptions]="{ standalone: true }" (onClick)="onViewChange()">
     </p-radioButton>
   </div>
 </div>
 
-<!-- 單一表格：動態欄位/資料/群組/小計/總計 -->
+<!-- 單一 app-table-report（動態欄位/資料/總計） -->
 <div class="card">
-  <app-table2
-    tableKey="TLS23040"
-    [dataKey]="'_rowKey'"
-    [data]="activeData"
+  <app-table-report
+    [tableKey]="'TLS23040_' + viewMode"
+    [lastQueryBody]="historyRequestBody"
+    [data]="activeRows"
     [columns]="activeColumns"
-    [showTotal]="true"
-    [showSubTotal]="activeShowSubTotal"
-    [groupRowsBy]="activeGroupBy"
-    [externalTotals]="activeExternalTotals"
-    [externalTotalFieldMap]="activeExternalTotalFieldMap"
-    [externalSubtotals]="activeExternalSubtotals"
-    [externalSubtotalFieldMap]="activeExternalSubtotalFieldMap"
     [totalRecords]="totalRecords"
     [loading]="loading"
     [showManage]="false"
     [showDelete]="false"
-    [showCheckBox]="false"
-    [multiSortMeta]="sortMeta"
-    [serverFetch]="fetchTLS23040"  
-    [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)">
+    [showReportMode]="false"
+    [queryFunction]="queryTLS23040ForReport"
+    [footerData]="activeFooter">
     <header>
       <div class="flex justify-content-end gap-2">
         <p-button
@@ -227,5 +201,5 @@
         </p-button>
       </div>
     </header>
-  </app-table2>
+  </app-table-report>
 </div>
