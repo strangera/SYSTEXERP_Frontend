@@ -9,6 +9,7 @@ import {
   ValidatorFn,
   AbstractControl,
 } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
@@ -20,7 +21,7 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 import { SortMeta } from 'primeng/api';
-import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
@@ -35,13 +36,15 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Table2Component } from '@shared/componentkit/table2/table2.component';
-
-import {  finalize, map } from 'rxjs/operators';
-import { HttpResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+
+import { finalize, map } from 'rxjs/operators';
+import { HttpResponse } from '@angular/common/http';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+
 @UntilDestroy()
 @Component({
   selector: 'app-tls23110',
@@ -49,6 +52,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
   styleUrls: ['./tls23110.component.scss'],
   standalone: true,
   imports: [
+    CommonModule,
     MenubarComponent,
     AccordionModule,
     FormsModule,
@@ -60,9 +64,9 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     InputTextModule,
     ButtonComponent,
     TranslateModule,
-    Table2Component,
     ButtonModule,
     CalendarComponent,
+    TableReportComponent, // ✅ 使用 app-table-report
   ],
 })
 export class TLS23110Component extends BasicQueryPageComponent<any> {
@@ -75,37 +79,12 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
   data: any[] = [];
   totalRecords = 0;
-      btnLoading = false;
-  historyRequestBody: any | null = null;
 
+  btnLoading = false;
+  historyRequestBody: any | null = null;
 
   // 排序（預設依 Day 升冪）
   sortMeta: SortMeta[] = [{ field: 'Day', order: 1 }];
-
-  // 用 table2 的總計容器（沒有小計）
-  detailTotals: Record<string, number> = {};
-  detailTotalFieldMap: Record<string, string> = {
-    // 欄位 => 總計鍵名（這裡採用 Total_<欄位>）
-    OriginalPrice_TXN_SaleNoTax: 'Total_OriginalPrice_TXN_SaleNoTax',
-    OriginalPrice_TXN_Tax:       'Total_OriginalPrice_TXN_Tax',
-    OriginalPrice_Total:         'Total_OriginalPrice_Total',
-
-    Discount90_TXN_SaleNoTax: 'Total_Discount90_TXN_SaleNoTax',
-    Discount90_TXN_Tax:       'Total_Discount90_TXN_Tax',
-    Discount90_Total:         'Total_Discount90_Total',
-
-    Discount80_TXN_SaleNoTax: 'Total_Discount80_TXN_SaleNoTax',
-    Discount80_TXN_Tax:       'Total_Discount80_TXN_Tax',
-    Discount80_Total:         'Total_Discount80_Total',
-
-    SpecialPrice_TXN_SaleNoTax: 'Total_SpecialPrice_TXN_SaleNoTax',
-    SpecialPrice_TXN_Tax:       'Total_SpecialPrice_TXN_Tax',
-    SpecialPrice_Total:         'Total_SpecialPrice_Total',
-
-    Total_TXN_SaleNoTax: 'Total_Total_TXN_SaleNoTax',
-    Total_TXN_Tax:       'Total_Total_TXN_Tax',
-    Total_Total:         'Total_Total_Total',
-  };
 
   // 表單
   queryForm: any = this.formBuilder.group(
@@ -149,10 +128,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   CounterOpCatOptions: any[] = [];
   WhetherOptions: any[] = [];
 
-  // debounce 防重
-  private lastQuerySig: string | null = null;
-  private lazyTimer: any = null;
-
   constructor(
     private tls23110Service: TLS23110Service,
     private deductionbigCategoryService: DeductionbigCategoryService,
@@ -170,7 +145,8 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23110', 'tls/tls23110', this.queryForm, (form) => this.onSubmit(form));
- // 月份變更 -> 同步到日期範圍（不 emit）
+
+    // 月份變更 -> 同步日期
     this.queryForm.controls.TXN_Month.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((d: Date | null) => {
@@ -182,23 +158,21 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
         );
       });
 
-    // 日期若不是完整整月 -> 清空 TXN_Month（避免誤會）
+    // 若不是整月 -> 清空月份
     this.queryForm.controls.TXN_DateStart.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => this.clearMonthIfNotExactRange());
-
     this.queryForm.controls.TXN_DateEnd.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => this.clearMonthIfNotExactRange());
-    // 限定日期同月（自動矯正）
+
+    // 限定日期同月
     const startCtrl = this.queryForm.controls.TXN_DateStart as FormControl;
     const endCtrl   = this.queryForm.controls.TXN_DateEnd   as FormControl;
-
     const clampEndToStartMonth = () => {
       const s = startCtrl?.value ? new Date(startCtrl.value) : null;
       const e = endCtrl?.value ? new Date(endCtrl.value) : null;
       if (!s || !e || isNaN(s.getTime()) || isNaN(e.getTime())) return;
-
       const sameMonth = (s.getFullYear() === e.getFullYear()) && (s.getMonth() === e.getMonth());
       if (!sameMonth) {
         const lastDay = new Date(s.getFullYear(), s.getMonth() + 1, 0);
@@ -209,21 +183,18 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
         this.queryForm.updateValueAndValidity({ onlySelf: false, emitEvent: false });
       }
     };
-
     startCtrl.valueChanges.subscribe(clampEndToStartMonth);
     endCtrl.valueChanges.subscribe(clampEndToStartMonth);
     clampEndToStartMonth();
 
-    // 載入選項
+    // 選項載入
     this.whetherService.getWhetherOptions().subscribe((data) => (this.WhetherOptions = data));
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe((data) => (this.DeductionbigCategoryOptions = data));
     this.typeService.getTypeOptions().subscribe((data) => (this.TypeOptions = data));
     this.categoryService.getCategories().subscribe((data) => (this.CategoryOptions = data));
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = (res ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
+        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
       }));
     });
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.OrganizationNumberOptions = data));
@@ -232,102 +203,12 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
+        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
       }));
     });
   }
 
-// 提供給 Table2 的 lazy 載入函式（HTML 綁 [fetchData]="fetchTLS23110"）
-fetchTLS23110 = (evt: LazyLoadEvent) => {
-  const val = this.queryForm.getRawValue() as any;
-
-  // 小工具：與 onSubmit 內一致
-  const toIso = (x: any) => {
-    if (!x) return undefined;
-    const d = typeof x === 'string' ? new Date(x) : (x as Date);
-    if (isNaN(d.getTime())) return undefined;
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
-  };
-  const toTF = (x: any) => {
-    if (x === true  || x === 'true'  || x === 1 || x === '1') return true;
-    if (x === false || x === 'false' || x === 0 || x === '0') return false;
-    return undefined;
-  };
-  const asArr = (x: any) => Array.isArray(x) ? x : (x == null || x === '' ? undefined : [x]);
-
-  // 排序（事件優先 → 表單 → 目前 sortMeta）
-  const sortBy =
-    (Array.isArray(evt?.SortBy) && evt!.SortBy!.length) ? evt!.SortBy! :
-    (Array.isArray(val?.SortBy) && val!.SortBy!.length) ? val!.SortBy! :
-    this.sortMeta;
-
-  // 分頁（事件優先 → 表單 → 預設）
-  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
-  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
-
-  // 與 onSubmit 相同規則（✅ 不帶 Offset / OrderBy）
-  const payload: any = {
-    TXN_DateStart: toIso(val?.TXN_DateStart),
-    TXN_DateEnd  : toIso(val?.TXN_DateEnd),
-    tlt_term_type: val?.tlt_term_type ?? undefined,
-    rece_yn      : val?.rece_yn ?? undefined,
-    IsNoPLU_No   : toTF(val?.IsNoPLU_No),
-    TLT_No       : asArr(val?.TLT_No),
-    tlt_building : val?.tlt_building ?? undefined,
-    tlt_floor    : asArr(val?.tlt_floor),
-    org_id       : asArr(val?.org_id),
-    pageIndex,
-    pageSize,
-    SortBy: sortBy,
-  };
-this.historyRequestBody = { ...payload };
-  return this.tls23110Service.queryTLS23110(payload).pipe(
-    map((res: any) => {
-      // 兼容多種包法
-      const rawRows: any[] =
-        Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-        Array.isArray(res?.Data)            ? res.Data :
-        Array.isArray(res?.QueryData)       ? res.QueryData : [];
-
-      // 依需求攤平欄位
-      const preferredOrder = [
-        'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
-        'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
-      ] as const;
-      const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
-
-      const rows = rawRows.map((row: any) => {
-        const flat: any = { Day: row?.Day ?? '' };
-        const d = row?.Discount_List || {};
-        for (const bucket of preferredOrder) {
-          const obj = d[bucket as string];
-          if (!obj) continue;
-          for (const m of metrics) {
-            const key = `${bucket}_${m}`;
-            const num = Number(obj[m as string] ?? 0);
-            if (Number.isFinite(num)) flat[key] = num;
-          }
-        }
-        flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
-        return flat;
-      });
-
-      const totalRecords =
-        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-      // 表尾總計（用目前畫面 rows + columns 中 isTotal 欄位計）
-      const externalTotals = this.buildTotalsFromRows(rows);
-
-      // 本頁沒有群組小計，故不回傳 externalSubtotals
-      return { rows, totalRecords, externalTotals };
-    })
-  );
-};
-
-
-  // 送出查詢（⚠️ 不送 Offset / OrderBy）
+  // ====== 查詢（按鈕）— 固定 pageSize=30 ======
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const val: any = this.queryForm.getRawValue();
@@ -355,43 +236,41 @@ this.historyRequestBody = { ...payload };
         tlt_building : val?.tlt_building ?? undefined,
         tlt_floor    : asArr(val?.tlt_floor),
         org_id       : asArr(val?.org_id),
+        // ✅ 固定 30（大小寫都帶，避免後端鍵名差異）
         pageIndex    : val?.pageIndex ?? 1,
-        pageSize     : val?.pageSize ?? 20,
+        pageSize     : 30,
+        PageIndex    : val?.pageIndex ?? 1,
+        PageSize     : 30,
         SortBy       : Array.isArray(val?.SortBy) ? val.SortBy : this.sortMeta,
       };
-this.historyRequestBody = { ...payload };
-      // 清除空值
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === '' || v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-      });
+
+      // 提供給 app-table-report
+      this.historyRequestBody = { ...payload };
 
       this.loading = true;
       this.messageService?.blockUi();
 
-      this.tls23110Service.queryTLS23110(payload).subscribe({
+      this.tls23110Service.queryTLS23110(payload).pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService?.unblockUi();
+        })
+      ).subscribe({
         next: (res: any) => {
-          // 期待：Data:[{ Day, Discount_List: { OriginalPrice:{...}, Discount90:{...}, ... , Total:{...} } }]
           const rawRows: any[] =
             Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
             Array.isArray(res?.Data)            ? res.Data :
             Array.isArray(res?.QueryData)       ? res.QueryData : [];
 
-          // 欄位順序與指標
           const preferredOrder = [
             'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
             'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
           ] as const;
-          const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const; // 介面顯示的三項
+          const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
 
-          // 將資料攤平成一列一日 Day + 各 bucket_指標
-          const mapped: any[] = [];
-
-          for (const row of rawRows) {
+          const mapped = rawRows.map((row: any) => {
             const flat: any = { Day: row?.Day ?? '' };
             const d = row?.Discount_List || {};
-            // 以 preferredOrder 為主，但只取有資料的
             for (const bucket of preferredOrder) {
               const obj = d[bucket as string];
               if (!obj) continue;
@@ -401,93 +280,140 @@ this.historyRequestBody = { ...payload };
                 if (Number.isFinite(num)) flat[key] = num;
               }
             }
-            // _rowKey
             flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
-            mapped.push(flat);
-          }
+            return flat;
+          });
 
           this.data = mapped;
-          this.totalRecords = mapped.length;
-
-          // ⬇️ 建立總計（對目前畫面欄位求和）
-          this.detailTotals = this.buildTotalsFromRows(mapped);
+          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : mapped.length;
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
-          this.detailTotals = {};
-          this.loading = false;
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService?.unblockUi();
         },
       });
     });
   }
 
-  /** 依目前 columns 裡有標示 isTotal 的欄位進行總計 */
-  private buildTotalsFromRows(rows: any[]): Record<string, number> {
-    const totals: Record<string, number> = {};
-    // 取需要總計的欄位
-    const totalFields = this.columns
-      .filter(c => c.isTotal)
-      .map(c => c.field as string);
+  // ====== 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，回傳 GrandTotal ======
+  public queryTLS23110ForReport = (body: any) =>
+    this.tls23110Service
+      .queryTLS23110({ ...(body || {}), pageSize: 30, PageSize: 30 })
+      .pipe(
+        map((res: any) => {
+          const rawRows: any[] =
+            Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+            Array.isArray(res?.Data)            ? res.Data :
+            Array.isArray(res?.QueryData)       ? res.QueryData : [];
 
-    const toTotalKey = (f: string) => this.detailTotalFieldMap[f] ?? `Total_${f}`;
+          const preferredOrder = [
+            'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
+            'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
+          ] as const;
+          const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
 
+          const rows = rawRows.map((row: any) => {
+            const flat: any = { Day: row?.Day ?? '' };
+            const d = row?.Discount_List || {};
+            for (const bucket of preferredOrder) {
+              const obj = d[bucket as string];
+              if (!obj) continue;
+              for (const m of metrics) {
+                const key = `${bucket}_${m}`;
+                const num = Number(obj[m as string] ?? 0);
+                if (Number.isFinite(num)) flat[key] = num;
+              }
+            }
+            flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+            return flat;
+          });
+
+          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+          // GrandTotal：以欄位(field)為鍵，僅對 columns 中 isTotal=true 的欄位加總
+          const grand = this.computeGrandTotals(rows);
+
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
+
+  // ===== 匯出 PDF：不帶 pageSize/pageIndex（含大小寫） =====
+  private buildExportBody() {
+    if (!this.historyRequestBody) return null;
+    const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = this.historyRequestBody;
+    return rest;
+  }
+
+  onExportPDF(): void {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    const body = this.buildExportBody();
+    this.tls23110Service.exporttls23110PDF(body).pipe(
+      finalize(() => (this.btnLoading = false))
+    ).subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.pdf'),
+      error: () => this.messageService?.warnBubble?.('PDF 匯出失敗。'),
+    });
+  }
+
+  // ===== 下載處理 =====
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+    const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
+    if (filenameStarMatch?.[1]) {
+      const encoded = filenameStarMatch[1].trim();
+      try { return decodeURIComponent(encoded.replace(/^UTF-8''/, '')); } catch { return encoded; }
+    }
+    const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
+    if (filenameMatch?.[1]) {
+      try { return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' ')); } catch { return filenameMatch[1]; }
+    }
+    return `download${defaultExtension}`;
+  }
+
+  /** 以 columns 裡 isTotal=true 的欄位，對目前 rows 求和，回傳 { [field]: total } */
+  private computeGrandTotals(rows: any[]): Record<string, number> {
+    const totalFields = this.columns.filter(c => c.isTotal).map(c => c.field as string);
+    const out: Record<string, number> = {};
+    for (const f of totalFields) out[f] = 0;
     for (const r of rows) {
       for (const f of totalFields) {
         const v = Number(r?.[f] ?? 0);
-        if (!Number.isFinite(v)) continue;
-        const tk = toTotalKey(f);
-        totals[tk] = (totals[tk] ?? 0) + v;
+        if (Number.isFinite(v)) out[f] += v;
       }
     }
-    return totals;
+    return out;
   }
 
-  // ====== 工具 ======
-  private sameMonthValidator(startKey: string, endKey: string): ValidatorFn {
-    return (group: AbstractControl) => {
-      const fg = group as FormGroup;
-      const start = fg.get(startKey)?.value as Date | string | null | undefined;
-      const end   = fg.get(endKey)?.value   as Date | string | null | undefined;
-
-      const clearOurError = () => {
-        const ctrl = fg.get(endKey);
-        if (!ctrl) return;
-        const err = ctrl.errors || {};
-        if ('notSameMonth' in err) {
-          delete err['notSameMonth'];
-          ctrl.setErrors(Object.keys(err).length ? err : null);
-        }
-      };
-
-      if (!start || !end) { clearOurError(); return null; }
-      const s = new Date(start);
-      const e = new Date(end);
-      if (isNaN(s.getTime()) || isNaN(e.getTime())) { clearOurError(); return null; }
-
-      const sameMonth = (s.getFullYear() === e.getFullYear()) && (s.getMonth() === e.getMonth());
-      if (!sameMonth) {
-        const exist = fg.get(endKey)?.errors || {};
-        fg.get(endKey)?.setErrors({ ...exist, notSameMonth: true });
-        return { notSameMonth: true };
-      } else {
-        clearOurError();
-        return null;
-      }
-    };
-  }
-
+  // ====== 欄位 ======
   moneyFormat(value: any): string {
     if (value === null || value === undefined || value === '') return '';
     const num = Number(value);
     return Number.isFinite(num) ? num.toLocaleString('en-US') : '';
   }
 
-  // 欄位（有標註 isTotal 方便 table2 顯示總計）
   columns: any[] = [
     { field: 'Day', header: '日期', visible: true },
 
@@ -511,68 +437,8 @@ this.historyRequestBody = { ...payload };
     { field: 'Total_TXN_Tax',       header: '總計-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'Total_Total',         header: '總計-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
-// ===== 匯出：PDF =====
-  onExportPDF(): void {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    this.tls23110Service.exporttls23110PDF(this.historyRequestBody).pipe(
-      finalize(() => (this.btnLoading = false))
-    ).subscribe({
-      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.pdf'),
-      error: () => this.messageService?.warnBubble?.('PDF 匯出失敗。'),
-    });
-  }
 
-  // ===== 通用下載處理 =====
-  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
-    const blob = response.body;
-
-    if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } else {
-      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
-    }
-  }
-
-  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-    if (!contentDisposition) return `download${defaultExtension}`;
-
-    // RFC 5987: filename*
-    const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
-    if (filenameStarMatch && filenameStarMatch[1]) {
-      const encoded = filenameStarMatch[1].trim();
-      try {
-        return decodeURIComponent(encoded.replace(/^UTF-8''/, ''));
-      } catch {
-        return encoded;
-      }
-    }
-
-    // filename="xxx"
-    const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
-    if (filenameMatch && filenameMatch[1]) {
-      try {
-        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
-      } catch {
-        return filenameMatch[1];
-      }
-    }
-
-    return `download${defaultExtension}`;
-  }
-    /** 取得某日期所在月份的起訖（start: 1號 00:00:00, end: 當月最後一天 23:59:59） */
+  /** 取得某日期所在月份的起訖 */
   private getMonthRange(d: Date) {
     const year = d.getFullYear();
     const month = d.getMonth(); // 0-based
@@ -581,7 +447,7 @@ this.historyRequestBody = { ...payload };
     return { start, end };
   }
 
-  /** 若目前銷售日期不是「完整整月」，就把 TXN_Month 清空（避免顯示誤會） */
+  /** 若目前銷售日期不是完整整月，清空 TXN_Month */
   private clearMonthIfNotExactRange() {
     const start: Date | null = this.queryForm.value.TXN_DateStart ?? null;
     const end: Date | null   = this.queryForm.value.TXN_DateEnd ?? null;
@@ -596,5 +462,18 @@ this.historyRequestBody = { ...payload };
       this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
     }
   }
-}
 
+  /** 驗證兩個日期是否在同一個月份 */
+  private sameMonthValidator(startKey: string, endKey: string): ValidatorFn {
+    return (group: AbstractControl): { [key: string]: any } | null => {
+      const start = group.get(startKey)?.value;
+      const end = group.get(endKey)?.value;
+      if (!start || !end) return null;
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return null;
+      const sameMonth = startDate.getFullYear() === endDate.getFullYear() && startDate.getMonth() === endDate.getMonth();
+      return sameMonth ? null : { notSameMonth: true };
+    };
+  }
+}
