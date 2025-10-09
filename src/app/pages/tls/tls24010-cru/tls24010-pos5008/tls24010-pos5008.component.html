@@ -17,7 +17,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-i="rowIndex">
-    <tr [formGroup]="posFormArrayControls[i]">
+    <tr [formGroup]="posFormArrayControls[i]" [ngClass]="{'row-selected': rowData.selected}">
       <td class="text-center">{{ i + 1 }}</td>
 
       <td class="text-center">
@@ -67,7 +67,6 @@
           [showLabel]="false" [showErrorMessage]="false" customPlaceholder="請輸入應收付款對象" />
         <span *ngIf="!isFormCreateable">
           {{ getCRD_NoTXN_CouponNoTXN_PayDesc(rowData)}}
-          {{ rowData.CRD_No }}
         </span>
       </td>
       <td class="text-center">

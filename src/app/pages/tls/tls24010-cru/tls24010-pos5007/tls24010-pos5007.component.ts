@@ -125,9 +125,10 @@ export class Tls24010Pos5007Component implements OnChanges {
       TXN_Amt: 0,
       TXN_Disc: 0,
       TXN_SaleAmt: 0,
-      tlt_id: undefined,
-      PLU_TaxType: undefined,
-      TXN_DiscCode: undefined,
+      tlt_id: this.tlt_idOptions[0]?.tlt_id,
+      PLU_TaxType: this.tlt_idOptions[0]?.cag_taxtype,
+      TXN_DiscCode: this.tlt_idOptions[0]?.cag_barcode,
+      TXN_DiscCode_Name: this.tlt_idOptions[0]?.cag_barcode_name
     });
     this.index++;
   }
@@ -135,6 +136,7 @@ export class Tls24010Pos5007Component implements OnChanges {
   deleteRow(rowData: POS5007Data[]): void {
     this.POS5007Data = this.POS5007Data.filter(item => !rowData.includes(item));
     this.POS5007SelectedItems = this.POS5007SelectedItems.filter(item => !rowData.includes(item));
+    this.calculateLastYearTotal();
   }
 
   onInput(event: POS5007Data) {
