@@ -44,28 +44,25 @@ export interface FIN52030DetailTable extends FIN52030Detail {
   recKey?: number;
   AccAmtD?: number;
   AccAmtC?: number;
+  displayIndex?: number;
 }
 
 export interface FIN52030Payload extends BaseQueryRequest {
   TempNo: string;
   VouType: string;
   TempName: string;
-  CRT_USR_No: string;
-  UPD_USR_No: string;
+  CRT_USR_No?: string;
+  UPD_USR_No?: string;
 }
 
-export interface FIN52030InsertPayload {
-  TempNo: string;
-  VouType: string;
-  TempName: string;
+export interface FIN52030InsertPayload extends Omit<FIN52030Payload, 'CRT_USR_No' | 'UPD_USR_No'> {
+  CRT_USR_No: string;
   Details: FIN52030Detail[];
 }
 
-export interface FIN52030UpdatePayload {
+export interface FIN52030UpdatePayload extends Omit<FIN52030Payload, 'CRT_USR_No' | 'UPD_USR_No'> {
   id: number;
-  TempNo: string;
-  VouType: string;
-  TempName: string;
+  UPD_USR_No: string;
   Details: FIN52030Detail[];
 }
 

@@ -26,8 +26,8 @@
                       label="傳票種類"
                       controlName="VouType"
                       [options]="service.subpoenaTypes()"
-                      optionLabel="Name"
-                      optionValue="No"
+                      optionLabel="label"
+                      optionValue="value"
                       [showClear]="false"
                       [control]="df().VouType"
                       [submitted]="submitted"></app-dropdown>
@@ -89,8 +89,10 @@
                    (rowEditInit)="onRowEditInit($event)"
                    (rowEditSave)="onRowEditSave($event)"
                    (rowEditCancel)="onRowEditCancel($event)"
+                   [showTotal]="!0"
+                   [showSerialNo]="!1"
                    [rowEditCanSave]="rowEditCanSave"
-                   [data]="filteredData()"
+                   [data]="tableData()"
                    [totalRecords]="totalRecords()"
                    [loading]="service.tableLoading"
                    [dataKey]="'index'"
@@ -127,13 +129,17 @@
              placeholder="搜尋..." />
     </div>
 
-    <div class="max-h-20rem overflow-auto">
+    <div class="max-h-30rem">
       <p-table [value]="getFilteredTemplateData()"
                [scrollable]="true"
-               scrollHeight="300px"
+               scrollHeight="400px"
                selectionMode="single"
-               dataKey="id"
+               dataKey="value"
                styleClass="p-datatable-sm"
+               [paginator]="!0"
+               [rows]="10"
+               [showCurrentPageReport]="!0"
+               currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆"
                [loading]="service.venUsrLoading">
         <ng-template pTemplate="header">
           <tr>
@@ -147,6 +153,11 @@
               (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
             <td>{{ item.value }}</td>
             <td>{{ item.label }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="2" class="text-center p-3">無符合條件的資料</td>
           </tr>
         </ng-template>
       </p-table>
