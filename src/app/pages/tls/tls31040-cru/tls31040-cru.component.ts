@@ -19,6 +19,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TLS31040DetailRequest, TLS31040DetailResponse, TLS31040PrintDetailRequest, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
+import { formatDate } from '@angular/common';
 
 @Component({
   selector: 'app-tls31040-cru',
@@ -159,6 +160,8 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
       ...this.queryConditions,
       IsExcel: isExcel,
       tlt_kind: this.dataForm.get('tlt_kind')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31040PrintDetailRequest;
 
     console.log('單櫃別之營業報表print請求', JSON.stringify(formValue, null, 2));
@@ -179,6 +182,8 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
     const request: TLS31040DetailRequest = {
       ...this.queryConditions,
       tlt_kind: this.dataForm.get('tlt_kind')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };
 
     //用Json顯示request

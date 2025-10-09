@@ -9,17 +9,22 @@ import { environment } from '../../../../environments/environment';
 export class Tls22030Service {
   apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // 查詢 TLS22030 序號異常報表
   queryTLS22030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS22030`, data);
   }
 
-// 匯出 TLS22030 PDF
+  // 匯出 TLS22030 PDF
   exportTLS22030PDF(data: any): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS22030PDF`, data, {
       responseType: 'blob'
     });
-}
+  }
+  exportTLS22030(data: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS22030`, data, {
+      responseType: 'blob'
+    });
+  }
 }

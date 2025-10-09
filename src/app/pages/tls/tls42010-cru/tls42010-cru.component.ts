@@ -102,7 +102,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     KB_Arg1: [''],
     KB_Arg2: [''],
     KB_Arg3: [''],
-    // 修改為複選合併選項控制項
+    KB_Merge: [''],
     KB_MergeType: [[]]
   });
 
@@ -205,6 +205,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.selected = this.pages[0][0];
     this.loadDropdowns();
 
+    // 確保所有現有按鍵都有正確的初始合併屬性
+    this.resetAllMergeProperties();
+
     // 同步選中的 key
     this.selectedKeyForm.valueChanges.subscribe(val => {
       if (this.selected) Object.assign(this.selected, val);
@@ -297,10 +300,26 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     for (let y = 1; y <= this.yCount; y++) {
       for (let x = 1; x <= this.xCount; x++) {
         const code = `${x.toString().padStart(2, '0')}${(y + offsetY).toString().padStart(2, '0')}`;
-        grid.push({ code, x, y: y + offsetY });
+        grid.push({
+          code,
+          x,
+          y: y + offsetY,
+          mergeRight: 0,
+          mergeDown: 0
+        });
       }
     }
     return grid;
+  }
+
+  // 重置所有按鍵的合併屬性
+  private resetAllMergeProperties(): void {
+    this.pages.forEach(page => {
+      page.forEach(key => {
+        if (key.mergeRight === undefined) key.mergeRight = 0;
+        if (key.mergeDown === undefined) key.mergeDown = 0;
+      });
+    });
   }
 
   addPage() {
@@ -327,10 +346,19 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
     detailList.forEach((d: any) => {
       const pageIndex = (d.KG_KeyPage ?? 1) - 1;
-      const scanCode = d.KB_Merge;
+      const scanCode = d.KB_ScanCode; // 使用 KB_ScanCode 而不是 KB_Merge
 
       const key = this.pages[pageIndex].find(k => k.code === scanCode);
       if (key) {
+        // 解析 KB_Merge 欄位 (格式: "mergeRight,mergeDown")
+        let mergeRight = 0;
+        let mergeDown = 0;
+        if (d.KB_Merge && typeof d.KB_Merge === 'string' && d.KB_Merge.includes(',')) {
+          const mergeParts = d.KB_Merge.split(',');
+          mergeRight = parseInt(mergeParts[0]) || 0;
+          mergeDown = parseInt(mergeParts[1]) || 0;
+        }
+
         Object.assign(key, {
           ID: d.ID && d.ID > 0 ? d.ID : 0,
           MID: this.rowdata?.ID ?? 0,
@@ -346,7 +374,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Arg1: d.KB_Arg1,
           KB_Arg2: d.KB_Arg2,
           KB_Arg3: d.KB_Arg3,
-          KB_FontColor: d.KB_FontColor
+          KB_FontColor: d.KB_FontColor,
+          mergeRight: mergeRight,
+          mergeDown: mergeDown
         });
       }
     });
@@ -415,6 +445,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       page.map(k => {
         const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
         const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
+
+        // 組合合併資訊到 KB_Merge
+        const mergeRight = k.mergeRight || 0;
+        const mergeDown = k.mergeDown || 0;
+        const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
+
         return {
           ID: this.crudstatus === CRUDStatus.Create ? 0 : (k.ID ?? 0),
           ECR_KBType: frm.ECR_KBType,
@@ -433,7 +469,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
           KB_Width: pos1008.width,
           KB_Height: pos1008.height,
-          KB_Merge: k.code,
+          KB_Merge: mergeValue,
           KB_Color: hasConfig ? k.KB_Color : 'RGB:255,255,255',
           KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
           KG_KeyPage: pageIndex + 1
@@ -543,6 +579,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     this.getControl('KB_MergeType').setValue(currentValue);
+
+    // 將合併資訊編碼到 KB_Merge 欄位
+    const mergeRight = this.selected.mergeRight || 0;
+    const mergeDown = this.selected.mergeDown || 0;
+    const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
+    this.getControl('KB_Merge').setValue(mergeValue);
   }
 
   // 檢查按鍵是否應該隱藏（被其他按鍵合併）

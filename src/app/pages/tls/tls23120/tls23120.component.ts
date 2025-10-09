@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { debounceTime, distinctUntilChanged, map, Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, Subject, takeUntil, finalize } from 'rxjs';
 
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -19,7 +19,6 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -29,17 +28,17 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { Router } from '@angular/router';
+
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { HttpResponse } from '@angular/common/http';
 
 type FilterMode = 'location' | 'busType' | 'org' | 'counter';
 
-// ====== 排序強型別與工具 ======
+// 排序（若日後 app-table-report 需要用，可保留型別）
 type SortOrder = 1 | -1;
 type SortMeta = { field: string; order: SortOrder };
-
 const normalizeOrder = (o: any): SortOrder => (o === -1 ? -1 : 1);
 const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined): SortMeta[] =>
   Array.isArray(arr) ? arr.map(s => ({ field: String(s.field), order: normalizeOrder(s.order) })) : [];
@@ -61,57 +60,35 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
     InputTextModule,
     ButtonComponent,
     TranslateModule,
-    // TableComponent,
     CalendarComponent,
-    DropdownComponent
-    
+    DropdownComponent,
+    TableReportComponent, // ✅ 使用 app-table-report
   ],
 })
 export class TLS23120Component
   extends BasicQueryPageComponent<any>
   implements OnDestroy
 {
-  private readonly QUERY_KEY = this.ProgNo || 'TLS23120'
-  private reviveDate(x: any) {
-  // 專門處理 TXN_Date 這種單日欄位
-  if (!x) return x;
-  const d = new Date(x);
-  return isNaN(d.getTime()) ? x : d;
-}
-private restoreQueryForm(): void {
-  try {
-    const saved = this.queryStateService.getQueryStateValue(this.QUERY_KEY);
-    if (saved) {
-      // 還原 Date 類型
-      if (saved.TXN_Date) saved.TXN_Date = this.reviveDate(saved.TXN_Date);
-      this.queryForm.patchValue(saved, { emitEvent: false });
-    }
-  } catch { /* 忽略 */ }
-}
-
-private saveQueryForm(): void {
-  try {
-    // 這裡直接存 rawValue，含 pageIndex/pageSize/SortBy 都一起記住
-    const v = this.queryForm.getRawValue();
-    this.queryStateService.setQueryState(this.QUERY_KEY, v);
-  } catch { /* 忽略 */ }
-}
-
+  private readonly QUERY_KEY = this.ProgNo || 'TLS23120';
 
   private destroy$ = new Subject<void>();
 
-  // ---- 排序狀態 ----
+  // ---- 排序狀態（如有需要保留）----
   sortMeta: SortMeta[] = [];
   readonly defaultSort: SortMeta[] = [
     { field: 'TLT_NO', order: 1 as const },
-    // 若要次序：{ field: 'TXN_DATE', order: -1 as const },
   ];
-  private lastQuerySig: string | null = null;
-  private lazyTimer: any = null;
-  private pendingNavigateAfterQuery = false; // ← 新增：查完要不要自動開 CRU
 
   data: any[] = [];
   totalRecords = 0;
+
+  // 匯出/報表共用
+  btnLoading = false;
+  historyRequestBody: any | null = null;
+
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+  private pendingNavigateAfterQuery = false;
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -127,16 +104,14 @@ private saveQueryForm(): void {
     // UI 模式（僅控制啟用/顯示）
     filterMode: ['counter' as FilterMode],
 
-    // 四組查詢條件（值可為空；僅 counter 模式才驗證 TLT_No 必填）
-    TLT_No: [null as string | null],   
-    bus_type: [],                 // 大分類
+    // 四組查詢條件（僅 counter 模式才驗證 TLT_No 必填）
+    TLT_No: [null as string | null],
+    bus_type: [],                  // 大分類
     ShowBusType: true,
-    tlt_building: [],             // 館別
-    area_no: [[] as string[]],    // 區域（多選）
-    tlt_floor: [[] as string[]],  // 樓層（多選）
-    org_id: [],                   // 組織
-
-   
+    tlt_building: [],              // 館別
+    area_no: [[] as string[]],     // 區域（多選）
+    tlt_floor: [[] as string[]],   // 樓層（多選）
+    org_id: [],                    // 組織
   });
 
   // ---- 下拉選項 ----
@@ -164,13 +139,12 @@ private saveQueryForm(): void {
     private floorService: FloorService,
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
-    
   ) {
     super();
   }
 
   ngOnInit(): void {
-      this.restoreQueryForm();
+    this.restoreQueryForm();
     this.initializePage('TLS23120', 'tls/tls23120cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 初始化 sortMeta
@@ -202,12 +176,12 @@ private saveQueryForm(): void {
     // 顯示大分類 → 控制欄位顯示
     this.syncBusTypeColumns(!!this.queryForm.controls.ShowBusType.value);
     this.queryForm.controls.ShowBusType.valueChanges
-      .pipe(takeUntil(this.destroy$),
-     
-      debounceTime(250),
-      map(v => JSON.stringify(v)),               // 粗略判斷是否真的有變化
-      distinctUntilChanged()
-    )
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(250),
+        map(v => JSON.stringify(v)),
+        distinctUntilChanged()
+      )
       .subscribe(v => this.syncBusTypeColumns(!!v));
 
     // Radio 切換：僅在 counter 模式套 required；其他模式移除驗證與錯誤
@@ -219,208 +193,173 @@ private saveQueryForm(): void {
   }
 
   ngOnDestroy(): void {
-    this.saveQueryForm(); // ← 新增：離開時再存一份
+    this.saveQueryForm();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  /** 表格 lazy 事件（分頁/排序） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const incomingSort = toSortMeta(event.SortBy as any);
+  // ===== 提交（固定 pageSize=30；PageSize=30） =====
+  onSubmit(form: FormGroup): void {
+    this.saveQueryForm();
 
-    // 若排序變更 → 回到第 1 頁
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(incomingSort);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+    this.handleSubmit(form, () => {
+      const val = this.queryForm.getRawValue() as any;
 
-    // 同步回表單（不觸發 valueChanges）
-    form.patchValue(
-      {
-        pageIndex: nextPageIndex,
-        pageSize : event.pageSize ?? form.value.pageSize,
-        SortBy   : incomingSort,
-      },
-      { emitEvent: false },
-    );
+      const toIsoOrNull = (x: any) => {
+        if (!x) return null;
+        const d = typeof x === 'string' ? new Date(x) : (x as Date);
+        if (isNaN(d.getTime())) return null;
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 19);
+      };
 
-    // 更新表頭排序狀態（Table 的箭頭會跟著動）
-    this.sortMeta = incomingSort;
+      const fm = this.queryForm.controls.filterMode.value as FilterMode;
 
-    // 去重簽章（pageIndex/pageSize/SortBy）
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+      const payload: any = {
+        TXN_Date: toIsoOrNull(val?.TXN_Date),
 
-    // 0ms debounce：合併排序與分頁的雙事件
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+        TLT_No:       (fm === 'counter')  ? (val?.TLT_No ?? null) : null,
+        tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
+        area_no:      (fm === 'location') ? (Array.isArray(val?.area_no)   ? val.area_no   : null) : null,
+        tlt_floor:    (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
+        bus_type:     (fm === 'busType')  ? (val?.bus_type ?? null) : null,
+        org_id:       (fm === 'org')      ? (val?.org_id ?? null) : null,
 
-  // ===== 提交 =====
- // ===== 提交 =====
-onSubmit(form: FormGroup): void {
-  this.saveQueryForm();
+        ShowBusType:  val?.ShowBusType ?? null,
 
-  this.handleSubmit(form, () => {
-    const val = this.queryForm.getRawValue() as any;
+        // ✅ 固定分頁大小 30（大小寫都帶）
+        pageIndex: 1,
+        PageIndex: 1,
+        pageSize: 30,
+        PageSize: 30,
 
-    // --- 分頁參數 ---
-    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
-    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
-    
+        // 如需排序，可帶 this.sortMeta
+        SortBy: this.sortMeta,
+      };
 
-    // --- 排序（form.SortBy → sortMeta → defaultSort） ---
-    const sortByArr: SortMeta[] =
-      toSortMeta(val?.SortBy).length
-        ? toSortMeta(val?.SortBy)
-        : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+      // 清除空值
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === '' || v === null || v === undefined) delete payload[k];
+        if (Array.isArray(v) && v.length === 0) delete payload[k];
+      });
 
+      // 提供給 app-table-report 的 lastQueryBody
+      this.historyRequestBody = { ...payload };
 
+      this.loading = true;
+      this.messageService?.blockUi();
 
-    // --- 時間轉 ISO（yyyy-MM-ddTHH:mm:ss） ---
-    const toIsoOrNull = (x: any) => {
-      if (!x) return null;
-      const d = typeof x === 'string' ? new Date(x) : (x as Date);
-      if (isNaN(d.getTime())) return null;
-      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 19);
-    };
-
-    // --- 依 Radio 模式決定要帶哪些條件 ---
-    const fm = this.queryForm.controls.filterMode.value as FilterMode;
-
-    const payload: any = {
-      TXN_Date: toIsoOrNull(val?.TXN_Date),
-
-      TLT_No: (fm === 'counter') ? (val?.TLT_No ?? null) : null,
-      tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
-      area_no:      (fm === 'location') ? (Array.isArray(val?.area_no) ? val.area_no : null) : null,
-      tlt_floor:    (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
-      bus_type:     (fm === 'busType')  ? (val?.bus_type ?? null) : null,
-      org_id:       (fm === 'org')      ? (val?.org_id ?? null) : null,
-
-      ShowBusType:  val?.ShowBusType ?? null,
-
-      PageSize : pageSize,
-      PageIndex: pageIndex,
-
-      SortBy   : sortByArr,
- 
-    };
-
-    // --- 清除空值/空陣列/空字串，避免後端被空值覆蓋 ---
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
-
-    // --- 送出查詢 ---
-    this.loading = true;
-    this.messageService?.blockUi();
-
-    this.tls23120Service.queryTLS23120(payload).subscribe({
-      next: (res: any) => {
-  // ✅ 用新結構取出細項
-  const details = this.extractDetails(res);
-
-  // 產生穩定 dataKey 並做欄位歸一
-  this.data = details.map((r: any, i: number) => {
-    const row = this.normalizeRow(r);
-    return {
-      ...row,
-      _rowKey: `${row?.TLT_NO ?? ''}|${row?.TXN_DATE ?? ''}|${i}`,
-    };
-  });
-
-  // 筆數：優先用後端 TotalCount，否則用實際筆數
-  this.totalRecords =
-    (typeof res?.TotalCount === 'number' && res.TotalCount >= 0)
-      ? res.TotalCount
-      : this.data.length;
-
-  // 查詢後自動開報表（原本的流程保留）
-  if (this.pendingNavigateAfterQuery) {
-    this.pendingNavigateAfterQuery = false;
-    if (!this.data?.length) {
-      this.messageService?.warnBubble?.('查無資料');
-      return;
-    }
-    const formRaw = this.queryForm.getRawValue() as any;
-    this.router.navigate(
-      ['/account/tls/tls23120cru'],
-      {
-        state: {
-          data: this.data,
-          queryFormValue: formRaw,
-          pageSize: formRaw?.pageSize ?? 1000,
-        },
-      }
-    );
-  }
-},
-        error: () => {
-          this.pendingNavigateAfterQuery = false;
-                    this.loading = false;
-
-        },
-        complete: () => {
+      this.tls23120Service.queryTLS23120(payload).pipe(
+        finalize(() => {
           this.loading = false;
           this.messageService?.unblockUi();
-        }
+        })
+      ).subscribe({
+        next: (res: any) => {
+          const details = this.extractDetails(res);
+          this.data = details.map((r: any, i: number) => {
+            const row = this.normalizeRow(r);
+            return { ...row, _rowKey: `${row?.TLT_NO ?? ''}|${row?.TXN_DATE ?? ''}|${i}` };
+          });
+
+          this.totalRecords =
+            (typeof res?.TotalCount === 'number' && res.TotalCount >= 0)
+              ? res.TotalCount
+              : this.data.length;
+
+          // 若需查完自動開 CRU
+          if (this.pendingNavigateAfterQuery) {
+            this.pendingNavigateAfterQuery = false;
+            if (!this.data?.length) {
+              this.messageService?.warnBubble?.('查無資料');
+              return;
+            }
+            const formRaw = this.queryForm.getRawValue() as any;
+            this.router.navigate(['/account/tls/tls23120cru'], {
+              state: {
+                data: this.data,
+                queryFormValue: formRaw,
+                pageSize: 30, // 固定 30
+              },
+            });
+          }
+        },
+        error: () => {
+          this.pendingNavigateAfterQuery = false;
+          this.data = [];
+          this.totalRecords = 0;
+        },
       });
     });
   }
 
+  // ===== 提供給 app-table-report 的查詢函式（固定 pageSize=30；回傳 GrandTotal） =====
+  public queryTLS23120ForReport = (body: any) =>
+    this.tls23120Service.queryTLS23120({ ...(body || {}), pageSize: 30, PageSize: 30 }).pipe(
+      map((res: any) => {
+        const rows = this.extractDetails(res).map((r: any, i: number) => {
+          const row = this.normalizeRow(r);
+          return { ...row, _rowKey: `${row?.TLT_NO ?? ''}|${row?.TXN_DATE ?? ''}|${i}` };
+        });
+
+        const totalCount = (typeof res?.TotalCount === 'number' && res.TotalCount >= 0)
+          ? res.TotalCount
+          : rows.length;
+
+        const grand = this.computeGrandTotals(rows);
+
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      })
+    );
+
+ 
 
 
-  // 顯示/隱藏欄位（僅影響 UI）
+
+  // ===== 將回傳格式攤平成明細列 =====
+  private extractDetails(res: any): any[] {
+    const out: any[] = [];
+    const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+    for (const item of dataArr) {
+      const totalsArr = item?.Totals ?? item?.totals ?? [];
+      if (!Array.isArray(totalsArr)) continue;
+
+      for (const tot of totalsArr) {
+        const subs = tot?.SubTotals ?? tot?.subTotals ?? tot?.subtotals ?? [];
+        if (!Array.isArray(subs)) continue;
+
+        for (const sub of subs) {
+          const list =
+            sub?.tLS23120Details ??
+            sub?.TLS23120Details ??
+            sub?.tls23120Details ??
+            [];
+          if (Array.isArray(list)) out.push(...list);
+        }
+      }
+    }
+    return out;
+  }
+
+  // 欄位名稱歸一（讓既有 columns 不用改）
+  private normalizeRow(r: any) {
+    return {
+      ...r,
+      FLOOR_NO: r?.FLOOR_NO ?? r?.floor_desc ?? null,
+      AREA_NO : r?.AREA_NO  ?? r?.area_no    ?? null,
+    };
+  }
+
+  // 動態顯示/隱藏大分類欄位（僅影響 UI）
   private syncBusTypeColumns(show: boolean): void {
     const target = new Set(['bus_type', 'bus_type_name']);
     this.columns = this.columns.map(col =>
       target.has(col.field) ? { ...col, visible: !!show } : col
     );
   }
-  /** 將回傳格式攤平成明細列 */
-private extractDetails(res: any): any[] {
-  const out: any[] = [];
-  const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-
-  for (const item of dataArr) {
-    const totalsArr = item?.Totals ?? item?.totals ?? [];
-    if (!Array.isArray(totalsArr)) continue;
-
-    for (const tot of totalsArr) {
-      const subs = tot?.SubTotals ?? tot?.subTotals ?? tot?.subtotals ?? [];
-      if (!Array.isArray(subs)) continue;
-
-      for (const sub of subs) {
-        const list =
-          sub?.tLS23120Details ??
-          sub?.TLS23120Details ??
-          sub?.tls23120Details ??
-          [];
-        if (Array.isArray(list)) out.push(...list);
-      }
-    }
-  }
-  return out;
-}
-
-/** 欄位名稱歸一（讓既有 columns 不用改） */
-private normalizeRow(r: any) {
-  return {
-    ...r,
-    FLOOR_NO: r?.FLOOR_NO ?? r?.floor_desc ?? null,
-    AREA_NO : r?.AREA_NO  ?? r?.area_no    ?? null,
-  };
-}
-
 
   // 依 Radio 模式啟用/停用欄位 + 動態驗證
   private applyFilterMode(mode: FilterMode): void {
@@ -473,35 +412,79 @@ private normalizeRow(r: any) {
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}/${m}/${day}`;
   }
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
-  onQueryAndOpen(): void {
-  if (this.loading) return;
-  this.pendingNavigateAfterQuery = true;
-  this.onSubmit(this.queryForm);
-}
+  moneyFormat = (value: any): string =>
+    value != null && value !== ''
+      ? Number(value || 0).toLocaleString('en-US')
+      : '0';
 
+  onQueryAndOpen(): void {
+    if (this.loading) return;
+    this.pendingNavigateAfterQuery = true;
+    this.onSubmit(this.queryForm);
+  }
+
+  /** 對 columns 中 isTotal=true 的欄位進行加總，供 app-table-report 的 GrandTotal 使用 */
+  private computeGrandTotals(rows: any[]): Record<string, number> {
+    const totalFields = this.columns.filter(c => c.isTotal).map(c => c.field as string);
+    const out: Record<string, number> = {};
+    for (const f of totalFields) out[f] = 0;
+    for (const r of rows) {
+      for (const f of totalFields) {
+        const v = Number(r?.[f] ?? 0);
+        if (Number.isFinite(v)) out[f] += v;
+      }
+    }
+    return out;
+  }
+
+  // Query 狀態保存/還原（沿用你原本的做法）
+  private reviveDate(x: any) {
+    if (!x) return x;
+    const d = new Date(x);
+    return isNaN(d.getTime()) ? x : d;
+  }
+  private restoreQueryForm(): void {
+    try {
+      const saved = this.queryStateService.getQueryStateValue(this.QUERY_KEY);
+      if (saved) {
+        if (saved.TXN_Date) saved.TXN_Date = this.reviveDate(saved.TXN_Date);
+        this.queryForm.patchValue(saved, { emitEvent: false });
+      }
+    } catch { /* ignore */ }
+  }
+  private saveQueryForm(): void {
+    try {
+      const v = this.queryForm.getRawValue();
+      this.queryStateService.setQueryState(this.QUERY_KEY, v);
+    } catch { /* ignore */ }
+  }
+
+  // ===== 欄位設定（加上 isTotal） =====
   columns = [
-    { field: 'TXN_DATE', header: '銷售日期', visible: true , format: this.formatDateTimeYMDHM.bind(this) },
+    { field: 'TXN_DATE', header: '銷售日期', visible: true, format: this.formatDateTimeYMDHM.bind(this) },
     { field: 'TLT_NO', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'bus_type', header: '大分類編號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'FLOOR_NO', header: '樓層', visible: true },
     { field: 'TLT_ID', header: '抽成類別', visible: true },
-    { field: 'total_count', header: '總交易筆數', visible: true },
-    { field: 'return_qty', header: '退貨件數', visible: true },
-    { field: 'return_amt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
+
+    { field: 'total_count', header: '總交易筆數', visible: true, isTotal: true, style: 'text-right' },
+    { field: 'return_qty', header: '退貨件數', visible: true, isTotal: true, style: 'text-right' },
+    { field: 'return_amt', header: '退貨金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
+
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'SYS_Name', header: '區分', visible: true },
-    { field: 'sad_sale_qty', header: '銷貨筆數', visible: true },
-    { field: 'sad_sale_namt', header: '淨銷貨', visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_sale_tax', header: '營業稅', visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_sale_amt', header: '銷貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_preorder_qty', header: '預售筆數', visible: true },
-    { field: 'sad_preorder_amt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_settle_qty', header: '結帳筆數', visible: true },
-    { field: 'sad_settle_amt', header: '結帳金額', visible: true, style: 'text-right', format: this.moneyFormat },
+
+    { field: 'sad_sale_qty', header: '銷貨筆數', visible: true, isTotal: true, style: 'text-right' },
+    { field: 'sad_sale_namt', header: '淨銷貨', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
+    { field: 'sad_sale_tax', header: '營業稅', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
+    { field: 'sad_sale_amt', header: '銷貨金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
+
+    { field: 'sad_preorder_qty', header: '預售筆數', visible: true, isTotal: true, style: 'text-right' },
+    { field: 'sad_preorder_amt', header: '預售金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
+
+    { field: 'sad_settle_qty', header: '結帳筆數', visible: true, isTotal: true, style: 'text-right' },
+    { field: 'sad_settle_amt', header: '結帳金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
   ];
 }
