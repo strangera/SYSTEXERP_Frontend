@@ -12,6 +12,8 @@ import { createPaginationConfig, Column } from '@shared/componentkit/table/table
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';  // 引入 service
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls42010',
@@ -27,7 +29,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     InputTextareaComponent,
     TableReportComponent,
     TranslateModule,
-    InputTextComponent
+    DropdownComponent
   ]
 })
 export class TLS42010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -48,17 +50,41 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   ];
   override loading = false;
 
+  // 下拉選單選項
+  keyboardOptions: IDropdownItem[] = [];
 
   constructor(
     private validationService: ValidationService,
     private counterCodeService: CounterCodeService,
-    public readonly tls42010Service: Tls42010Service //  注入 service
+    public readonly tls42010Service: Tls42010Service, //  注入 service
+    private dropDownListService: DropDownListService // 注入下拉選單服務
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS42010', '/TLS/TLS42010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadKeyboardOptions();
+  }
+
+  // 載入鍵盤編號下拉選單
+  private loadKeyboardOptions(): void {
+    this.dropDownListService.queryTLS42010DropDownList().subscribe({
+      next: (res) => {
+        // 將 API 回傳的格式轉換為下拉選單需要的格式
+        this.keyboardOptions = (res.Data || []).map(item => ({
+          No: item.KB_Func,
+          Name: item.KB_Desc,
+          value: item.KB_Func,
+          label: item.KB_Desc
+        }));
+        console.log('載入鍵盤編號下拉選單成功:', this.keyboardOptions);
+      },
+      error: (error) => {
+        console.error('載入鍵盤編號下拉選單失敗:', error);
+        this.keyboardOptions = [];
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {

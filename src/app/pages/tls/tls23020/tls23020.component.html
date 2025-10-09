@@ -36,7 +36,7 @@
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
-              optionLabel="label"
+              optionLabel="value"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
@@ -78,8 +78,8 @@
             <app-input-number-range
               [useGrouping]="false"
               label="單項售價"
-              [startControl]="queryForm.controls.PLU_SalePrc_Start"
-              [endControl]="queryForm.controls.PLU_SalePrc_End"
+              [startControl]="queryForm.controls.TXN_SaleAmt_Start"
+              [endControl]="queryForm.controls.TXN_SaleAmt_End"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
@@ -211,107 +211,117 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear"  [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
+     
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-<div class="col-12 md:col-6 lg:col-4">
-  <p-checkbox
-    inputId="showSummary"
-    formControlName="showSummary"
-    binary="true"
-    (onChange)="onToggleSummary()"
-    label="顯示彙總">
-  </p-checkbox>
-</div>
+
 
 <div class="card">
   <div class="col-12">
-    <!-- ✅ 明細表 -->
-    <app-table2
-      *ngIf="!showSummary"
-      tableKey="TLS23020"
-      [data]="data"
-      [columns]="columns"
-      [showCheckBox]="false"
-      dataKey="_rowKey"
-      [multiSortMeta]="sortMeta"
-      [totalRecords]="totalRecords"
-      [lazy]="true"
-      [loading]="loading"
-      [showManage]="false"
-      [showDelete]="false"
-      (lazyLoadData)="onLazyLoadData($event, queryForm)"
-      [showSubTotal]="true"
-      [showTotal]="true"
-      [groupRowsBy]="'tlt_no'"
-      [externalTotals]="detailTotals"
-      [externalTotalFieldMap]="detailTotalFieldMap"
-      [externalSubtotals]="detailSubtotals"
-      [externalSubtotalFieldMap]="detailSubtotalFieldMap"
-      [serverFetch]="fetchTLS23020"
-    >
-      <header>
-        <div class="flex justify-content-end gap-2">
-          <p-button
-            styleClass="p-2"
-            label="匯出折扣別報表.PDF"
-            [loading]="btnLoading"
-            icon="pi pi-file"
-            (click)="onExportPDF()"
-            [disabled]="data.length === 0"
-          ></p-button>
 
-          <p-button
-            styleClass="p-2"
-            label="匯出折扣別報表.XLSX"
-            [loading]="btnLoading"
-            icon="pi pi-file-excel"
-            (click)="onExportXLSX()"
-            [disabled]="data.length === 0"
-          ></p-button>
-        </div>
-      </header>
-    </app-table2>
+<app-table-report
+  *ngIf="!queryForm.get('showSummary')?.value"
+  tableKey="TLS23020"
+  [lastQueryBody]="historyRequestBody"
+  [data]="data"
+  [columns]="columns"
+  [totalRecords]="totalRecords"
+  [showDelete]="false"
+  [showManage]="false"
+  [showReportMode]="false"
+  [queryFunction]="queryTLS23020ForReport"
+  [footerData]="buildFooterFromTotals()"
+>
+  <header>
+    <!-- 左：顯示彙總；右：匯出按鈕 -->
+    <div class="flex justify-content-between align-items-center w-full">
+      <div class="flex align-items-center">
+        <p-checkbox
+          inputId="showSummary"
+          [formControl]="queryForm.controls.showSummary"
+          binary="true"
+          (onChange)="onToggleSummary()"
+          label="顯示彙總">
+        </p-checkbox>
+      </div>
+
+      <div class="flex gap-2">
+        <p-button
+          styleClass="p-2"
+          label="匯出折扣別報表.PDF"
+          [loading]="btnLoading"
+          icon="pi pi-file"
+          (click)="onExportPDF()"
+          [disabled]="data.length === 0"
+        ></p-button>
+
+        <p-button
+          styleClass="p-2"
+          label="匯出折扣別報表.XLSX"
+          [loading]="btnLoading"
+          icon="pi pi-file-excel"
+          (click)="onExportXLSX()"
+          [disabled]="data.length === 0"
+        ></p-button>
+      </div>
+    </div>
+  </header>
+</app-table-report>
+
 
     <!-- ✅ 彙總表 -->
-    <app-table
-  *ngIf="showSummary"
+  <app-table-report
+  *ngIf="queryForm.get('showSummary')?.value"
   tableKey="TLS23020summary"
+  [lastQueryBody]="historyRequestBody"
   [data]="summaryData"
   [columns]="summaryColumns"
   [totalRecords]="summaryData.length || 0"
-  [loading]="loading"
-  [showCheckBox]="false"
-  [showManage]="false"
-  [showTotal]="true"
   [showDelete]="false"
+  [showManage]="false"
+  [showReportMode]="false"
+  [queryFunction]="queryTLS23020SummaryForReport"
+  [footerData]="undefined"
 >
   <header>
-    <div class="flex justify-content-end gap-2">
-      <p-button
-        styleClass="p-2"
-        label="彙總折扣別報表.PDF"
-        [loading]="btnLoading"
-        icon="pi pi-file"
-        (click)="onExportPDF()"
-        [disabled]="summaryData.length === 0"
-      ></p-button>
+    <div class="flex justify-content-between align-items-center w-full">
+      <div class="flex align-items-center">
+        <p-checkbox
+          inputId="showSummary"
+          [formControl]="queryForm.controls.showSummary"
+          binary="true"
+          (onChange)="onToggleSummary()"
+          label="顯示彙總">
+        </p-checkbox>
+      </div>
 
-      <p-button
-        styleClass="p-2"
-        label="彙總折扣別報表.XLSX"
-        [loading]="btnLoading"
-        icon="pi pi-file-excel"
-        (click)="onExportXLSX()"
-        [disabled]="summaryData.length === 0"
-      ></p-button>
+      <div class="flex gap-2">
+        <p-button
+          styleClass="p-2"
+          label="彙總折扣別報表.PDF"
+          [loading]="btnLoading"
+          icon="pi pi-file"
+          (click)="onExportPDF()"
+          [disabled]="summaryData.length === 0"
+        ></p-button>
+
+        <p-button
+          styleClass="p-2"
+          label="彙總折扣別報表.XLSX"
+          [loading]="btnLoading"
+          icon="pi pi-file-excel"
+          (click)="onExportXLSX()"
+          [disabled]="summaryData.length === 0"
+        ></p-button>
+      </div>
     </div>
   </header>
-</app-table>
+</app-table-report>
   </div>
 </div>

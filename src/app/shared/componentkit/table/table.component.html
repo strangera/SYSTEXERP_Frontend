@@ -40,9 +40,9 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="!showSubTotal && !showTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"
+        <th *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"
           rowspan="2"></th>
-        <th class="w-1rem" rowspan="2">序號</th>
+        <th *ngIf="showSerialNo" class="w-1rem" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2"
           *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox />
@@ -102,11 +102,10 @@
       <tr>
         <th *ngIf="
             !showSubTotal &&
-            !showTotal &&
             data.length &&
             (showReorder || showRowEdit)
           " class="w-1rem"></th>
-        <th class="w-1rem">序號</th>
+        <th *ngIf="showSerialNo" class="w-1rem">序號</th>
         <th class="w-1rem" *ngIf="
             IsPrint &&
             showCheckBox &&
@@ -167,13 +166,12 @@
       <ng-container *ngIf="!loading; else loadingTemplate">
         <td *ngIf="
             !showSubTotal &&
-            !showTotal &&
             data.length &&
             (showReorder || showRowEdit)
           ">
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
-        <td class="text-center">{{ rowIndex + 1 }}</td>
+        <td *ngIf="showSerialNo" class="text-center">{{ rowIndex + 1 }}</td>
         <td *ngIf="
             IsPrint &&
             showCheckBox &&

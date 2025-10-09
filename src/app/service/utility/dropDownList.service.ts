@@ -470,6 +470,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<{ TSB_Name: string }[]>>(`${this.apiUrl}/queryPOS1008DropDownList`, {});
   }
 
+  // 查詢鍵盤設定(TLS42010)資料表下拉選單
+  queryTLS42010DropDownList(): Observable<ApiResponse<{ KB_Func: string; KB_Desc: string }[]>> {
+    return this.http.post<ApiResponse<{ KB_Func: string; KB_Desc: string }[]>>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, {});
+  }
+
   // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
     return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);

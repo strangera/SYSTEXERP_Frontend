@@ -19,6 +19,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TLS31070DetailRequest, TLS31070DetailResponse, TLS31070PrintDetailRequest, TLS31070Response, Tls31070Service } from '@service/api/tls/tls31070.service';
+import { formatDate } from '@angular/common';
 
 @Component({
   selector: 'app-tls31070-cru',
@@ -149,6 +150,8 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31070Response
       ...this.queryConditions,
       IsExcel: isExcel,
       paper_type: this.dataForm.get('paper_type')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31070PrintDetailRequest;
 
     console.log('單型態之營業報表print請求', JSON.stringify(formValue, null, 2));
@@ -169,6 +172,8 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31070Response
     const request: TLS31070DetailRequest = {
       ...this.queryConditions,
       paper_type: this.dataForm.get('paper_type')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };
 
     //用Json顯示request

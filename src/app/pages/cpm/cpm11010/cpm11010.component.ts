@@ -85,13 +85,15 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
   }
 
   onSubmit(form: FormGroup) {
-    this.cpm11010Service.queryCPM11010(form.getRawValue())
-      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-      .subscribe(response => {
-        this.data = response.Data;
-        this.totalRecords = response.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-      });
+    this.handleSubmit(form, () => {
+      this.cpm11010Service.queryCPM11010(form.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
   }
 
   onDelete(selectedItems: CPM11010Data[]) {
