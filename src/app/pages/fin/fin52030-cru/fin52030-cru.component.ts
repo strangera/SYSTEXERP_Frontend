@@ -180,7 +180,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         TempNo: String(d.TempNo),
         VouType: String(d.VouType),
         TempName: String(d.TempName),
-        Details: this.tableData().map(({ AccAmtD, AccAmtC, ...rest }, idx) => {
+        Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, idx) => {
           return {
             ...rest,
             index: idx + 1,
