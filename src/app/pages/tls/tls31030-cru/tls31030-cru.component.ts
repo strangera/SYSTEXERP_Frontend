@@ -19,6 +19,7 @@ import { QueryStateService } from '@shared/service/query-state.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { formatDate } from '@angular/common';
 
 @Component({
   selector: 'app-tls31030-cru',
@@ -160,6 +161,8 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030Response
       ...this.queryConditions,
       IsExcel: isExcel,
       bus_type: this.dataForm.get('bus_type')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31030PrintDetailRequest;
 
     console.log('單大分類之營業報表print請求', JSON.stringify(formValue, null, 2));
@@ -180,6 +183,8 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030Response
     const request: TLS31030DetailRequest = {
       ...this.queryConditions,
       bus_type: this.dataForm.get('bus_type')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };
 
     //用Json顯示request

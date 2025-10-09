@@ -19,6 +19,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TLS31020DetailRequest, TLS31020DetailResponse, TLS31020DetialPrintRequest, TLS31020Request, TLS31020Response, Tls31020Service } from '@service/api/tls/tls31020.service';
+import { formatDate } from '@angular/common';
 
 @Component({
   selector: 'app-tls31020cru',
@@ -43,6 +44,9 @@ import { TLS31020DetailRequest, TLS31020DetailResponse, TLS31020DetialPrintReque
 // 各樓層之營業報表 cru
 export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
+    TXN_DateS: [],//交易日期開始
+    TXN_DateE: [],  // 交易日期結束
+
     tlt_floor: [''],//樓層
     floor_desc: [''],//樓層名稱
 
@@ -162,6 +166,8 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
       IsExcel: isExcel,
       IsMerge: true,
       tlt_floor: this.dataForm.get('tlt_floor')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31020DetialPrintRequest;
 
     console.log('單樓層之營業報表print請求', formValue);
@@ -182,6 +188,8 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     const request: TLS31020DetailRequest = {
       ...this.queryConditions,
       tlt_floor: this.dataForm.get('tlt_floor')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };
 
     //用Json顯示request
