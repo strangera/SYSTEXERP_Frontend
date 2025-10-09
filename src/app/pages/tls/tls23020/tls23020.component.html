@@ -78,8 +78,8 @@
             <app-input-number-range
               [useGrouping]="false"
               label="單項售價"
-              [startControl]="queryForm.controls.PLU_SalePrc_Start"
-              [endControl]="queryForm.controls.PLU_SalePrc_End"
+              [startControl]="queryForm.controls.TXN_SaleAmt_Start"
+              [endControl]="queryForm.controls.TXN_SaleAmt_End"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
@@ -211,7 +211,7 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear"  [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
      

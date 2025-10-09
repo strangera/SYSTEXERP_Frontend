@@ -118,8 +118,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     TXN_No_End: [null, [this.validationService.numberValidator]],
     TLT_No: [],
     TXN_GUINo: [''],
-    PLU_SalePrc_Start: [null],
-    PLU_SalePrc_End: [null],
+    TXN_SaleAmt_Start: [null],
+    TXN_SaleAmt_End: [null],
     PLU_TaxType: [],
     PRM_TXN_DiscCode: [],
     TXN_DiscCode: [],
@@ -280,11 +280,11 @@ fetchTLS23020 = (evt: LazyLoadEvent) => {
       const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
 
       const rows: any[] = [];
-      const totalAgg = { Total_PLU_SalePrc: 0, Total_TXN_Net: 0, Total_TXN_Tax: 0, Total_TXN_Disc: 0 };
+      const totalAgg = { Total_TXN_SaleAmt: 0, Total_TXN_Net: 0, Total_TXN_Tax: 0, Total_TXN_Disc: 0 };
       const subMap: Record<string, Record<string, number>> = {};
 
       for (const w of wrappers) {
-        totalAgg.Total_PLU_SalePrc += Number(w?.Total_PLU_SalePrc ?? 0);
+        totalAgg.Total_TXN_SaleAmt += Number(w?.Total_TXN_SaleAmt ?? 0);
         totalAgg.Total_TXN_Net     += Number(w?.Total_TXN_Net ?? 0);
         totalAgg.Total_TXN_Tax     += Number(w?.Total_TXN_Tax ?? 0);
         totalAgg.Total_TXN_Disc    += Number(w?.Total_TXN_Disc ?? 0);
@@ -297,10 +297,10 @@ fetchTLS23020 = (evt: LazyLoadEvent) => {
           const groupKey = String(details?.[0]?.tlt_no ?? 'UNKNOWN');
 
           const curr = subMap[groupKey] ?? {
-            Subtotal_PLU_SalePrc: 0, Subtotal_TXN_Net: 0, Subtotal_TXN_Tax: 0, Subtotal_TXN_Disc: 0
+            Subtotal_TXN_SaleAmt: 0, Subtotal_TXN_Net: 0, Subtotal_TXN_Tax: 0, Subtotal_TXN_Disc: 0
           };
 
-       curr['Subtotal_PLU_SalePrc'] += Number(st?.Subtotal_PLU_SalePrc ?? 0);
+       curr['Subtotal_TXN_SaleAmt'] += Number(st?.Subtotal_TXN_SaleAmt ?? 0);
 curr['Subtotal_TXN_Net']     += Number(st?.Subtotal_TXN_Net ?? 0);
 curr['Subtotal_TXN_Tax']     += Number(st?.Subtotal_TXN_Tax ?? 0);
 curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
@@ -340,14 +340,14 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
 
       const rows: any[] = [];
       const totalAgg = { 
-        Total_PLU_SalePrc: 0, 
+        Total_TXN_SaleAmt: 0, 
         Total_TXN_Net: 0, 
         Total_TXN_Tax: 0, 
         Total_TXN_Disc: 0 
       };
 
       for (const w of wrappers) {
-        totalAgg.Total_PLU_SalePrc += Number(w?.Total_PLU_SalePrc ?? 0);
+        totalAgg.Total_TXN_SaleAmt += Number(w?.Total_TXN_SaleAmt ?? 0);
         totalAgg.Total_TXN_Net     += Number(w?.Total_TXN_Net ?? 0);
         totalAgg.Total_TXN_Tax     += Number(w?.Total_TXN_Tax ?? 0);
         totalAgg.Total_TXN_Disc    += Number(w?.Total_TXN_Disc ?? 0);
@@ -477,7 +477,7 @@ const isSummary = !!this.queryForm.get('showSummary')?.value;
 
             // 總計聚合（避免多個 wrapper）
             const totalAgg = {
-              Total_PLU_SalePrc: 0,
+              Total_TXN_SaleAmt: 0,
               Total_TXN_Net: 0,
               Total_TXN_Tax: 0,
               Total_TXN_Disc: 0,
@@ -487,7 +487,7 @@ const isSummary = !!this.queryForm.get('showSummary')?.value;
             const subMap: Record<string, Record<string, number>> = {};
 
             for (const w of wrappers) {
-              totalAgg.Total_PLU_SalePrc += Number(w?.Total_PLU_SalePrc ?? 0);
+              totalAgg.Total_TXN_SaleAmt += Number(w?.Total_TXN_SaleAmt ?? 0);
               totalAgg.Total_TXN_Net += Number(w?.Total_TXN_Net ?? 0);
               totalAgg.Total_TXN_Tax += Number(w?.Total_TXN_Tax ?? 0);
               totalAgg.Total_TXN_Disc += Number(w?.Total_TXN_Disc ?? 0);
@@ -513,15 +513,15 @@ const isSummary = !!this.queryForm.get('showSummary')?.value;
 
                 // 小計累加（避免同群組被切多段）
                 const curr = subMap[groupKey] ?? {
-                  Subtotal_PLU_SalePrc: 0,
+                  Subtotal_TXN_SaleAmt: 0,
                   Subtotal_TXN_Net: 0,
                   Subtotal_TXN_Tax: 0,
                   Subtotal_TXN_Disc: 0,
                 };
 
                 // 這四行用 bracket 記法
-                curr['Subtotal_PLU_SalePrc'] += Number(
-                  st?.Subtotal_PLU_SalePrc ?? 0,
+                curr['Subtotal_TXN_SaleAmt'] += Number(
+                  st?.Subtotal_TXN_SaleAmt ?? 0,
                 );
                 curr['Subtotal_TXN_Net'] += Number(st?.Subtotal_TXN_Net ?? 0);
                 curr['Subtotal_TXN_Tax'] += Number(st?.Subtotal_TXN_Tax ?? 0);
@@ -576,7 +576,7 @@ const isSummary = !!this.queryForm.get('showSummary')?.value;
     });
   }
 detailTotalFieldMap: Record<string, string> = {
-  PLU_SalePrc: 'Total_PLU_SalePrc',
+  TXN_SaleAmt: 'Total_TXN_SaleAmt',
   TXN_Net:     'Total_TXN_Net',
   TXN_Tax:     'Total_TXN_Tax',
   TXN_Disc:    'Total_TXN_Disc',
@@ -585,7 +585,7 @@ detailTotalFieldMap: Record<string, string> = {
 buildFooterFromTotals(): Record<string, any> | undefined {
   if (!this.detailTotals) return undefined;
   return {
-    PLU_SalePrc: this.detailTotals['Total_PLU_SalePrc'] ?? 0,
+    TXN_SaleAmt: this.detailTotals['Total_TXN_SaleAmt'] ?? 0,
     TXN_Net:     this.detailTotals['Total_TXN_Net'] ?? 0,
     TXN_Tax:     this.detailTotals['Total_TXN_Tax'] ?? 0,
     TXN_Disc:    this.detailTotals['Total_TXN_Disc'] ?? 0,
@@ -611,8 +611,8 @@ buildFooterFromTotals(): Record<string, any> | undefined {
       TXN_No_End: asNum(val?.TXN_No_End),
       TLT_No: asStrArr(val?.TLT_No),
       TXN_GUINo: (val?.TXN_GUINo ?? '').toString().trim() || undefined,
-      PLU_SalePrc_Start: asNum(val?.PLU_SalePrc_Start),
-      PLU_SalePrc_End: asNum(val?.PLU_SalePrc_End),
+      TXN_SaleAmt_Start: asNum(val?.TXN_SaleAmt_Start),
+      TXN_SaleAmt_End: asNum(val?.TXN_SaleAmt_End),
       PLU_TaxType:
         val?.PLU_TaxType == null || val?.PLU_TaxType === ''
           ? undefined
@@ -710,7 +710,7 @@ buildFooterFromTotals(): Record<string, any> | undefined {
     return {
       _rowKey: '__TOTAL__',
       tlt_name: '總計',
-      PLU_SalePrc: Number(src?.Subtotal_PLU_SalePrc ?? 0),
+      TXN_SaleAmt: Number(src?.Subtotal_TXN_SaleAmt ?? 0),
       TXN_Net: Number(src?.Subtotal_TXN_Net ?? 0),
       TXN_Tax: Number(src?.Subtotal_TXN_Tax ?? 0),
       TXN_Disc: Number(src?.Subtotal_TXN_Disc ?? 0),
@@ -833,7 +833,7 @@ onToggleSummary() {
   // ② 後端小計（群組尾）
   detailSubtotals: Record<string, Record<string, number>> = {};
   detailSubtotalFieldMap: Record<string, string> = {
-    PLU_SalePrc: 'Subtotal_PLU_SalePrc',
+    TXN_SaleAmt: 'Subtotal_TXN_SaleAmt',
     TXN_Net: 'Subtotal_TXN_Net',
     TXN_Tax: 'Subtotal_TXN_Tax',
     TXN_Disc: 'Subtotal_TXN_Disc',
