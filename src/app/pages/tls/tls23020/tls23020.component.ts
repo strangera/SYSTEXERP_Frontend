@@ -555,10 +555,7 @@ curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
         val?.cash_yn == null || val?.cash_yn === ''
           ? undefined
           : String(val.cash_yn),
-      tlt_building:
-        val?.tlt_building == null || val?.tlt_building === ''
-          ? undefined
-          : String(val.tlt_building),
+     tlt_building: asStrArr(val?.tlt_building),
       tlt_floor: asStrArr(val?.tlt_floor),
       org_id: asStrArr(val?.org_id),
     };

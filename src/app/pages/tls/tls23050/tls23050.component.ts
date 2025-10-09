@@ -33,7 +33,7 @@ import { HttpResponse } from '@angular/common/http';
     ReactiveFormsModule,
     RadiobuttonComponent,
     MultiSelectComponent,
-    DropdownComponent,
+    // DropdownComponent,
     InputTextModule,
     ButtonComponent,
     TranslateModule,
