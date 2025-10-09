@@ -40,7 +40,7 @@ import { HttpResponse } from '@angular/common/http';
     ReactiveFormsModule,
     CalendarRangeQuickComponent,
     MultiSelectComponent,
-    DropdownComponent,
+    // DropdownComponent,
     InputTextModule,
     ButtonComponent,
     TranslateModule,
