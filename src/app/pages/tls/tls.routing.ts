@@ -366,14 +366,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls2e020cru', loadComponent: () => import('./tls2e020-cru/tls2e020-cru.component').then(m => m.TLS2E020CRUComponent) },
   // 專櫃帳款試算作業 CRU
   { path: 'tls2e030cru', loadComponent: () => import('./tls2e030-cru/tls2e030-cru.component').then(m => m.TLS2E030CRUComponent) },
-  // 專櫃帳款試算彙總表 CRU
-  { path: 'tls2e050cru', loadComponent: () => import('./tls2e050-cru/tls2e050-cru.component').then(m => m.TLS2E050CRUComponent) },
   // 專櫃結帳前調整作業 CRU
   { path: 'tls2e060cru', loadComponent: () => import('./tls2e060-cru/tls2e060-cru.component').then(m => m.TLS2E060CRUComponent) },
   // 專櫃帳款結算作業 CRU
   { path: 'tls2e070cru', loadComponent: () => import('./tls2e070-cru/tls2e070-cru.component').then(m => m.TLS2E070CRUComponent) },
-  // 專櫃帳款結算彙總表 CRU
-  { path: 'tls2e090cru', loadComponent: () => import('./tls2e090-cru/tls2e090-cru.component').then(m => m.TLS2E090CRUComponent) },
   // 年度對帳單 CRU
   { path: 'tls2e100cru', loadComponent: () => import('./tls2e100-cru/tls2e100-cru.component').then(m => m.TLS2E100CRUComponent) },
   // 廠商發票請款登入暨維護作業 CRU

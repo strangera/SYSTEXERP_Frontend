@@ -1,211 +1,109 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="試算報表"
-            class="col"
-          ></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar-range
-                  calendarType="dateMonthRange"
-                  label="查詢年月"
-                  [startControl]="queryForm.controls.startdate"
-                  [endControl]="queryForm.controls.enddate"
-                  [submitted]="submitted"
-                ></app-calendar-range>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="結帳方式"
-                  controlName="checkout"
-                  [options]="checkoutOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.checkout"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="抽成方式"
-                  controlName="commissionMethod"
-                  [options]="commissionMethodOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.commissionMethod"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="廠商編號"
-                  controlName="vendorID"
-                  [options]="counterNameOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.vendorID"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="專櫃編號"
-                  controlName="counterID"
-                  [options]="counterNameOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.counterID"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="組織代號"
-                  controlName="organizationCode"
-                  [options]="organizationCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.organizationCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="樓層"
-                  controlName="floor"
-                  [options]="floorOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.floor"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="大分類/中分類"
-                  controlName="industry"
-                  [options]="industryOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.industry"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-multi-select
-                  label="是否使用業主發票"
-                  controlName="vendorInvoice"
-                  [options]="vendorInvoiceOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.vendorInvoice"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-4 lg:col-4">
-                <p-checkbox
-                  label="只顯示應付帳款小於0"
-                  controlName="showAccount"
-                ></p-checkbox>
-              </div>
-              <div class="col-12 md:col-4 lg:col-4">
-                <p-checkbox
-                  label="只顯示進貨總額小於0"
-                  controlName="showStock"
-                ></p-checkbox>
-              </div>
-              <div class="col-12 md:col-4 lg:col-4">
-                <p-checkbox label="是否NET" controlName="net"></p-checkbox>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="結帳後n天付款"
-                  controlName="payDay"
-                  [options]="payDayOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.payDay"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-multi-select
-                  label="類別"
-                  controlName="category"
-                  [options]="categoryOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.category"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-radiobutton
-                  label="排序方式"
-                  groupname="order"
-                  [control]="queryForm.controls.order"
-                  [options]="orderOptions"
-                  [submitted]="submitted"
-                ></app-radiobutton>
-              </div>
-            </div>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        ></app-table>
-      </div>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateMonthRange" label="查詢年月"
+              [startControl]="queryForm.controls.sam_yyymm_Start" [endControl]="queryForm.controls.sam_yyymm_End"
+              [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="結帳方式" controlName="money_typeList" [options]="money_typeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.money_typeList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="抽成方式" controlName="tlt_term_typeList" [options]="tlt_term_typeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_term_typeList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商編號/名稱" controlName="ven_no" [options]="ven_noOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ven_no" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="專櫃編號/名稱" controlName="tlt_noList" [options]="tlt_noOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_noList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="組織代號/名稱" controlName="org_idList" [options]="org_idOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.org_idList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" controlName="tlt_floorList" [options]="tlt_floorOptions | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.tlt_floorList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="館別" controlName="tlt_buildingList" [options]="tlt_buildingOptions | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.tlt_buildingList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="大分類代碼/名稱" controlName="bus_typeList" [options]="bus_typeOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.bus_typeList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="中分類代碼/名稱" controlName="bus_class" [options]="bus_classOptions" optionLabel="label"
+              [control]="queryForm.controls.bus_classList" [submitted]="submitted" [group]="true"
+              optionGroupLabel="label" optionGroupChildren="items"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="請款單據別" controlName="invoice_type" [options]="invoiceTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.invoice_type" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton-yn [showAll]="true" label="是否開立業主發票" controlName="rece_yn" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.rece_yn" [submitted]="submitted"></app-radiobutton-yn>
+          </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-4 lg:col-4">
+            <p-checkbox label="只顯示應付帳款小於0" [binary]="true" controlName="acc_payableNeg"
+              formControlName="acc_payableNeg"></p-checkbox>
+          </div>
+          <div class="col-12 md:col-4 lg:col-4">
+            <p-checkbox label="只顯示進貨總額小於0" [binary]="true" controlName="sam_ap_amtNeg"
+              formControlName="sam_ap_amtNeg"></p-checkbox>
+          </div>
+          <div class="col-12 md:col-4 lg:col-4">
+            <p-checkbox label="只顯示包底抽成不足" [binary]="true" controlName="isUnderLimitAmt"
+              formControlName="isUnderLimitAmt"></p-checkbox>
+          </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number label="結帳後幾日付款" controlName="check_day" [control]="queryForm.controls.check_day"
+              [submitted]="submitted"></app-input-number>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table dataKey="INV_ItemNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
+    [showDelete]="false" [loading]="loading"></app-table>
 </div>
