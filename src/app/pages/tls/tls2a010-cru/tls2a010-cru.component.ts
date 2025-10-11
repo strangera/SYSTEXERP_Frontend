@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { ReactiveFormsModule, FormGroup, FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -88,7 +88,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
     { field: 'tlt_name', header: '專櫃名稱' },
     { field: 'PAY_NO', header: '付款方式' },
     { field: 'CRD_No', header: '付款卡號' },
-    { field: 'TXN_PayAmt', header: '付款金額' },
+    { field: 'TXN_PayAmt', header: '付款金額', format: formatAmount },
 
     {
       field: 'check_status',
@@ -143,8 +143,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
         TXN_Date: this.formatDate(item.TXN_Date), // 改成 YYYY/MM/DD
         check_status: item.check_status ?? '1'
       }));
-
-      this.totalRecords = this.data.length;
+      this.totalRecords = row.TotalCount || this.data.length;
     }
   }
 

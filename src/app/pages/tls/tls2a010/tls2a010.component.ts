@@ -313,7 +313,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         const detailData = res?.Data ?? [];
         const rowdataWithDetail = {
           ...row,
-          details: detailData
+          details: detailData,
+          TotalCount: res?.TotalCount?? 0
         };
 
         // 呼叫共通的 navigateWithState (不會覆蓋底層)

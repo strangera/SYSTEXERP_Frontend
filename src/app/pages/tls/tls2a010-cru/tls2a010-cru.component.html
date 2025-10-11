@@ -12,11 +12,11 @@
     >
       <div class="card">
         <app-table
-          dataKey="TXN_No"
+          dataKey="id"
           [data]="data"
           [columns]="columns"
           [showCheckBox]="false"
-          [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+          [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
           [totalRecords]="totalRecords"
           [lazy]="true"
           [loading]="loading"
