@@ -76,8 +76,8 @@ export class FIN15010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN15010(data: FIN15010QueryRequest): Observable<BaseQueryResponse<FIN15010Data>> {
-    return this.http.post<BaseQueryResponse<FIN15010Data>>(`${this.apiUrl}/queryFIN15010`, data);
+  queryFIN15010(data: FIN15010QueryRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryFIN15010`, data);
   }
 
   // 列印

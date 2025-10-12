@@ -61,14 +61,14 @@
             [submitted]="submitted">
           </app-input-text-range>
           <!-- 系統別 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
             [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
           </app-multi-select>
           <!-- 使用別 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SYS_ORIGIN"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_Type"
             [options]="salTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted">
+            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
           </app-multi-select>
           <!-- 資產註記 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產註記" controlName="AssetType"

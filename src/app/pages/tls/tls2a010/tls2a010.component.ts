@@ -312,10 +312,11 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
     this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
       next: (res) => {
-        const detailData = res?.Data ?? [];
+        const detailData = res?.Data.mainData ?? [];
         const rowdataWithDetail = {
           ...row,
-          details: detailData
+          details: detailData,
+          TotalCount: res?.TotalCount?? 0
         };
 
         // 呼叫共通的 navigateWithState (不會覆蓋底層)

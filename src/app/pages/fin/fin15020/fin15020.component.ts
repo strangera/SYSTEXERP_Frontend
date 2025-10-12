@@ -53,9 +53,9 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     PUR_GUIDate_S: [null],                                      // 退出/折讓日期起
     PUR_GUIDate_E: [null],                                      // 退出/折讓日期訖
     Credit_Type: [null],                                        // 區別
-    PUR_RepYYYYMM: [null, [Validators.required, this.validationService.evenMonthValidator]],               // 申報年月
-    PUR_GUIDateYYYYMM_S: [null, [Validators.required]],         // 資料所屬年月起
-    PUR_GUIDateYYYYMM_E: [null, [Validators.required]],         // 資料所屬年月訖
+    PUR_RepYYYYMM: ['', [Validators.required, this.validationService.evenMonthValidator]],               // 申報年月
+    PUR_GUIDateYYYYMM_S: ['', [Validators.required]],         // 資料所屬年月起
+    PUR_GUIDateYYYYMM_E: ['', [Validators.required]],         // 資料所屬年月訖
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起
@@ -83,8 +83,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true, format: formatDate },
     { field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
-    { field: 'PUR_Net', header: '退出折讓單金額', visible: true, format: formatAmount },
-    { field: 'PUR_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
+    { field: 'PUR_Net', header: '退出折讓單金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PUR_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount, isTotal: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
@@ -143,8 +143,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
       this.fin15020Service.queryFIN15020(requestData)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
+          this.data = res.Data.APS2002_FIN15020s;
+          this.totalRecords = res.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -205,8 +205,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     });
   }
 
-  // 選完申報年月 載入字軌下拉
   loadGuiTrackOptions(event: any): void {
+    // 選完申報年月 載入字軌下拉
     this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
       GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
       MID: 0,
@@ -215,5 +215,38 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });
+
+    // 自動代入資料所屬年月(起迄)
+    if (this.queryForm.controls.PUR_RepYYYYMM.valid) {
+      const selectedDate = new Date(event);
+      const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
+      this.queryForm.controls.PUR_GUIDateYYYYMM_S.setValue(this.datePipe.transform(startOfMonth, 'yyyy/MM'));
+      this.queryForm.controls.PUR_GUIDateYYYYMM_E.setValue(this.datePipe.transform(selectedDate, 'yyyy/MM'));
+    }
+    else {
+      this.queryForm.controls.PUR_GUIDateYYYYMM_S.setValue('');
+      this.queryForm.controls.PUR_GUIDateYYYYMM_E.setValue('');
+    }
+  }
+
+  onStartControlChange(event: any, controlName: string): void {
+    switch (controlName) {
+
+      case 'PUR_GUIDate_S':
+        this.queryForm.controls.PUR_GUIDate_E.setValue(event);
+        break;
+      case 'TXN_Ret_No_S':
+        this.queryForm.controls.TXN_Ret_No_E.setValue(event);
+        break;
+      case 'PUR_GUINo_S':
+        this.queryForm.controls.PUR_GUINo_E.setValue(event);
+        break;
+      case 'Source_Doc_No_S':
+        this.queryForm.controls.Source_Doc_No_E.setValue(event);
+        break;
+      case 'Voucher_No_S':
+        this.queryForm.controls.Voucher_No_E.setValue(event);
+        break;
+    }
   }
 }
