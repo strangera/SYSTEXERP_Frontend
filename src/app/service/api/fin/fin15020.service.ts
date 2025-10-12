@@ -66,8 +66,8 @@ export class FIN15020Service {
   constructor(private http: HttpClient) { }
 
   // 查詢進貨退出或折讓明細表
-  queryFIN15020(data: FIN15020QueryRequest): Observable<BaseQueryResponse<FIN15020Data>> {
-    return this.http.post<BaseQueryResponse<FIN15020Data>>(`${this.apiUrl}/queryFIN15020`, data);
+  queryFIN15020(data: FIN15020QueryRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryFIN15020`, data);
   }
 
   // 列印進貨退出或折讓明細表
