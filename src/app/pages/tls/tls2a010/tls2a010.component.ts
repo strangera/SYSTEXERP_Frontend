@@ -88,7 +88,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
   ];
 
-  isRowSelectable = (rowData: any) => rowData.check_status === 'N';
+  isRowSelectable(row: any) {
+    return row.check_status === 'N';
+  }
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
@@ -245,20 +247,20 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         PAY_NO: raw.PAY_NO ?? '',
         Building_No: raw.Building_No ?? ''
       };
-      this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this),finalize(() => this.loading = false)).subscribe(response => {
+      this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         // if (response?.Data?.mainData) {
-          this.data = response.Data ? response.Data : [];
-          this.footerData = response.footerData;
-          this.totalRecords = response.TotalCount;
+        this.data = response.Data ? response.Data : [];
+        this.footerData = response.footerData;
+        this.totalRecords = response.TotalCount;
 
-          this.onPayNoChange(payload.PAY_NO);
-          console.log('footerData (API totalData):', response.Data.totalData);
-          console.log('selectedColumns:', this.selectedColumns);
-          this.historyRequestBody = payload;
-          const first = this.data[0];
-          this.PAY_NO = this.queryForm.value.PAY_NO || '';
-          this.TXN_Date = first?.TXN_Date || '';
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        this.onPayNoChange(payload.PAY_NO);
+        console.log('footerData (API totalData):', response.Data.totalData);
+        console.log('selectedColumns:', this.selectedColumns);
+        this.historyRequestBody = payload;
+        const first = this.data[0];
+        this.PAY_NO = this.queryForm.value.PAY_NO || '';
+        this.TXN_Date = first?.TXN_Date || '';
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
 
       });
     });

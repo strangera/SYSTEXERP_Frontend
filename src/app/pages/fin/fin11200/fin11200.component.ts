@@ -48,7 +48,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   queryForm = this.formBuilder.group({
     GUI_YY: [new Date(), [Validators.required]], // 發票年月
     GUI_MM: [getCurrentPeriodCode, [Validators.required]], // 發票年月
-    ECR_No: [null, [Validators.required]], // 收銀機號
+    ECR_No: [null], // 收銀機號
     ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
@@ -105,7 +105,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   }
   manageLoading = false;
   onStop(rowData: Pos1018) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: '是否停用?',
       accept: () => {
         const params = {
