@@ -58,8 +58,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],      // 憑證單號訖
     Voucher_No_S: ['', [Validators.maxLength(16)]],         // 傳票號碼起
     Voucher_No_E: ['', [Validators.maxLength(16)]],         // 傳票號碼訖
-    SAL_Type: [null],                                       // 系統別
-    SYS_ORIGIN: [null],                                    // 使用別
+    SYS_ORIGIN: [null],                                    // 系統別
+    SAL_Type: [null],                                       // 使用別
     CrtVouUsrNo: ['', [Validators.maxLength(20)]],          // 傳票建立者
     AssetType: [null],                                      // 資產註記
     HasUniform: [null],                                     // 是否有統一編號
@@ -152,8 +152,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
       this.fin15040Service.queryFIN15040(requestData)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
+          this.data = res.Data.QueryData;
+          this.totalRecords = res.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
