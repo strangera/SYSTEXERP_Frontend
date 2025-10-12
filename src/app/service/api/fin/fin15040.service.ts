@@ -62,8 +62,8 @@ export class FIN15040Service {
   constructor(private http: HttpClient) { }
 
   // 查詢銷項發票明細表
-  queryFIN15040(data: FIN15040QueryRequest): Observable<BaseQueryResponse<FIN15040Data>> {
-    return this.http.post<BaseQueryResponse<FIN15040Data>>(`${this.apiUrl}/queryFIN15040`, data);
+  queryFIN15040(data: FIN15040QueryRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryFIN15040`, data);
   }
 
   // 產出銷項發票明細表

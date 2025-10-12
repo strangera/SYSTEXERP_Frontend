@@ -12,7 +12,7 @@
           <!-- 退出/折讓單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="退出/折讓單號"
             [startControl]="queryForm.controls.TXN_Ret_No_S" [endControl]="queryForm.controls.TXN_Ret_No_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'TXN_Ret_No_S')">
           </app-input-text-range>
 
           <!-- 發票格式 -->
@@ -36,7 +36,7 @@
           <!-- 發票號碼起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
             [startControl]="queryForm.controls.PUR_GUINo_S" [endControl]="queryForm.controls.PUR_GUINo_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'PUR_GUINo_S')">
           </app-input-text-range>
 
           <!-- 資料所屬年月起迄 (必填) -->
@@ -48,7 +48,7 @@
           <!-- 退出/折讓日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="退出/折讓日期"
             [startControl]="queryForm.controls.PUR_GUIDate_S" [endControl]="queryForm.controls.PUR_GUIDate_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startDateChange)="onStartControlChange($event, 'PUR_GUIDate_S')">
           </app-calendar-range>
 
           <!-- 區別 -->
@@ -60,13 +60,13 @@
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
             [startControl]="queryForm.controls.Source_Doc_No_S" [endControl]="queryForm.controls.Source_Doc_No_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'Source_Doc_No_S')">
           </app-input-text-range>
 
           <!-- 傳票號碼起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="傳票號碼"
             [startControl]="queryForm.controls.Voucher_No_S" [endControl]="queryForm.controls.Voucher_No_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'Voucher_No_S')">
           </app-input-text-range>
 
           <!-- 系統別 -->

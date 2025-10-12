@@ -142,8 +142,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
       this.fin15030Service.queryFIN15030(requestData)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
+          this.data = res.Data.FIN15030s;
+          this.totalRecords = res.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });

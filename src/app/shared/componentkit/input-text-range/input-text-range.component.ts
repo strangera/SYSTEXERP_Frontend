@@ -36,8 +36,8 @@ export class InputTextRangeComponent extends BasicKitComponent implements OnInit
   // 自訂屬性
   @Input() errorForGroup = false;
   // 觸發事件
-  @Output() startChange = new EventEmitter<Event>();
-  @Output() endChange = new EventEmitter<Event>();
+  @Output() startChange = new EventEmitter<string>();
+  @Output() endChange = new EventEmitter<string>();
   // @Output() blurEvent = new EventEmitter<{ start: any, end: any }>(); // 用於觸發輸入框失焦事件
 
   ngOnInit(): void {
@@ -45,11 +45,11 @@ export class InputTextRangeComponent extends BasicKitComponent implements OnInit
     this.checkRequiredValidator(this.endControl, 1);
   }
 
-  onStartInputChange(event: Event) {
+  onStartInputChange(event: string) {
     this.startChange.emit(event);
   }
 
-  onEndInputChange(event: Event) {
+  onEndInputChange(event: string) {
     this.endChange.emit(event);
   }
 
