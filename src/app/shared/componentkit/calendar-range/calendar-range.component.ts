@@ -33,7 +33,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   // 自訂義
   calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';
   // 觸發事件
-  @Output() onStartDateChange = new EventEmitter<any>();
+  @Output() startDateChange = new EventEmitter<any>();
 
   // 元件類型對應
   private readonly calendarConfig = {
