@@ -310,7 +310,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
     this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
       next: (res) => {
-        const detailData = res?.Data ?? [];
+        const detailData = res?.Data.mainData ?? [];
         const rowdataWithDetail = {
           ...row,
           details: detailData,
