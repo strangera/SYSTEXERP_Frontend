@@ -51,7 +51,7 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   override loading = false;
 
   // 下拉選單選項
-  keyboardOptions: IDropdownItem[] = [];
+kbFuncOptions: { label: string; value: string }[] = [];
 
   constructor(
     private validationService: ValidationService,
@@ -67,25 +67,23 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
     this.loadKeyboardOptions();
   }
 
-  // 載入鍵盤編號下拉選單
   private loadKeyboardOptions(): void {
-    this.dropDownListService.queryTLS42010DropDownList().subscribe({
-      next: (res) => {
-        // 將 API 回傳的格式轉換為下拉選單需要的格式
-        this.keyboardOptions = (res.Data || []).map(item => ({
-          No: item.KB_Func,
-          Name: item.KB_Desc,
-          value: item.KB_Func,
-          label: item.KB_Desc
-        }));
-        console.log('載入鍵盤編號下拉選單成功:', this.keyboardOptions);
-      },
-      error: (error) => {
-        console.error('載入鍵盤編號下拉選單失敗:', error);
-        this.keyboardOptions = [];
+  this.dropDownListService.queryTLS42010DropDownList().subscribe({
+    next: (res) => {
+      if (res?.Status === '0000' && res.Data) {
+        this.kbFuncOptions = res.Data.flatMap(item =>
+          item.KB_Func.map(func => ({
+            label: func.toString(),
+            value: func.toString()
+          }))
+        );
+      } else {
+        console.warn('下拉選單API錯誤:', res?.Message);
       }
-    });
-  }
+    },
+    error: (err) => console.error('呼叫API失敗:', err)
+  });
+}
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
