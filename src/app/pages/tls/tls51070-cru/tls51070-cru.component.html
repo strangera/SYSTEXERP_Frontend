@@ -113,7 +113,7 @@
               [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="重量(g)" controlName="PLU_Weight" [control]="dataForm.controls.PLU_Weight"
+            <app-input-number label="寬度(cm)" controlName="PLU_Width" [control]="dataForm.controls.PLU_Width"
               [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -123,11 +123,11 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="容量(ml)" controlName="PLU_Volume" [control]="dataForm.controls.PLU_Volume"
+            <app-input-number label="重量(g)" controlName="PLU_Weight" [control]="dataForm.controls.PLU_Weight"
               [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="寬度(cm)" controlName="PLU_Width" [control]="dataForm.controls.PLU_Width"
+            <app-input-number label="容量(ml)" controlName="PLU_Volume" [control]="dataForm.controls.PLU_Volume"
               [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
         </div>
@@ -180,12 +180,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="進價折數" controlName="PLU_OrderPrcRate" [control]="dataForm.controls.PLU_OrderPrcRate"
               [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="EC商品狀態" controlName="PLU_ECStatus" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="dataForm.controls.PLU_ECStatus" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
       </ng-container>
