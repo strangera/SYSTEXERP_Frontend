@@ -360,10 +360,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2d040cru', loadComponent: () => import('./tls2d040-cru/tls2d040-cru.component').then(m => m.TLS2D040CRUComponent) },
   // 部門使用券類設定作業 CRU
   { path: 'tls2d050cru', loadComponent: () => import('./tls2d050-cru/tls2d050-cru.component').then(m => m.TLS2D050CRUComponent) },
-  // 專櫃租金結算作業 CRU
-  { path: 'tls2e010cru', loadComponent: () => import('./tls2e010-cru/tls2e010-cru.component').then(m => m.TLS2E010CRUComponent) },
-  // 專櫃抽成金額結算作業 CRU
-  { path: 'tls2e020cru', loadComponent: () => import('./tls2e020-cru/tls2e020-cru.component').then(m => m.TLS2E020CRUComponent) },
   // 專櫃帳款試算作業 CRU
   { path: 'tls2e030cru', loadComponent: () => import('./tls2e030-cru/tls2e030-cru.component').then(m => m.TLS2E030CRUComponent) },
   // 專櫃結帳前調整作業 CRU
