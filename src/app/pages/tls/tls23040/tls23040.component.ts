@@ -142,7 +142,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23040', 'tls/tls23040cru', this.queryForm, (form) => this.onSubmit(form));
-
+ this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false }); // ← 加這行
     this.statusFlagService.getStatusFlags().subscribe((d) => (this.statusFlagOptions = d));
     this.floorService.getFloors().subscribe((d) => (this.floorOptions = d));
     this.tls11010Service.getBuildingOptions().subscribe((d) => (this.BUILDING_NO_Options = d));
@@ -216,7 +216,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       ...(this.toNumOrUndef(raw?.TXN_No_End)   != null ? { TXN_No_End:   this.toNumOrUndef(raw?.TXN_No_End)   } : {}),
 
       pageIndex: Number(raw?.pageIndex) || 1,
-      pageSize:  Number(raw?.pageSize)  || 20,
+      pageSize:  Number(raw?.pageSize)  || 30,
       SortBy:    Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [
         { field: 'tlt_no', order: 1 },
         { field: 'TXN_Date', order: 1 },
@@ -300,7 +300,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
   // 提供給 app-table-report 的查詢函式（支援排序/分頁）
   public queryTLS23040ForReport = (body: any) =>
-    this.tls23040Service.queryTLS23040(body).pipe(
+      this.tls23040Service.queryTLS23040({ ...body, pageSize: 30 }).pipe(
       map((res: any) => {
         const packs: any[] = Array.isArray(res?.Data) ? res.Data : [];
 
@@ -388,12 +388,17 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     if (m?.[1]) { try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch { return m[1]; } }
     return `download${def}`;
   }
+  private padTxnNo(v: any): string {
+  const s = String(v ?? '').trim();
+  return s ? s.padStart(6, '0') : '';
+}
+
 
   // === 欄位設定 ===
   invoiceColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
@@ -407,7 +412,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
     { field: 'ORG_TXN_Date', header: '原交易日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
-    { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
+    { field: 'ORG_TXN_No', header: '原交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'TXN_TotPayScoreAmt', header: '會員積點折抵', visible: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
   ];
@@ -415,7 +420,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   paymentColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'PAY_NO', header: '付款別代號', visible: true },
@@ -429,7 +434,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   discountColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },

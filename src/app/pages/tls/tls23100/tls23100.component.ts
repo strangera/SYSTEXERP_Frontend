@@ -149,7 +149,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   // 欄位（總計欄位加上 isTotal）
   columns = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'PAY_NO', header: '付款別', visible: true },
@@ -350,4 +350,9 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     return out as T;
   }
   money = (val: any) => Number(val || 0).toLocaleString('en-US');
+  private padTxnNo(v: any): string {
+  const s = String(v ?? '').trim();
+  return s ? s.padStart(6, '0') : '';
+}
+
 }
