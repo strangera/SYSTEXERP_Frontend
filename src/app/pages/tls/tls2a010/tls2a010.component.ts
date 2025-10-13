@@ -146,7 +146,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             Name: item.Name
           }));
 
-          if (this.systemTypeOptions.length > 0) {
+
+
+          if (this.systemTypeOptions.length > 0 && !this.queryStateService.getQueryStateValue(this.ProgNo)) {
             // 僅保留「全部是數字」的字串
             const values = this.systemTypeOptions
               .map(opt => opt.No)
