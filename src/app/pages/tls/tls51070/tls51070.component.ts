@@ -187,8 +187,18 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     this.queryForm.get('CAT_MNo')?.valueChanges.subscribe((mno) => {
       const lno = this.queryForm.get('CAT_LNo')?.value;
       if (lno && mno) {
+        //新版api改成list傳送
+        const requestPayload = {
+          CATList: [
+            {
+              CAT_LNo: lno,
+              CAT_MNo: mno
+            }
+          ]
+        };
+
         this.tls51070Service
-          .queryCAT_SNo_DropDownList({ CAT_LNo: [lno], CAT_MNo: [mno] })
+          .queryCAT_SNo_DropDownList(requestPayload)
           .subscribe((res) => {
             this.smallOption = res.Data.map((item: apiOption) => ({
               No: item.No,
@@ -196,6 +206,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
               Label: item.No + '-' + item.Name,
             }));
             this.queryForm.get('CAT_SNo')?.setValue('');
+
+            console.log('小分類',this.smallOption);
           });
       } else {
         this.smallOption = [];
@@ -304,7 +316,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('商品單位:', this.unitOptions);
+        // console.log('商品單位:', this.unitOptions);
       });
 
     // 查詢 品牌代碼
@@ -317,7 +329,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('品牌代碼:', this.brandOption);
+        // console.log('品牌代碼:', this.brandOption);
       });
 
     // 查詢 專櫃編號
@@ -326,11 +338,11 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
-      console.log('專櫃編號代碼:', response.Data);
+      // console.log('專櫃編號代碼:', response.Data);
     });  
   }
 
-  //讀取大、中、小 分類整份表單 (該情況禁止 中小下拉選擇)
+  //讀取 大分類表單 (該情況禁止 中小下拉選擇)
   loadCATOptions() {
     {
       //查詢 大分類
@@ -343,31 +355,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
             Label: item.No + '-' + item.Name,
           }));
 
-          console.log('大分類:', this.largeOption);
-        });
-      //查詢 中分類
-      this.tls51070Service
-        .queryCAT_MNo_DropDownList({})
-        .subscribe((response) => {
-          this.middleOption = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
-
-          console.log('中分類:', this.largeOption);
-        });
-      //查詢 小分類
-      this.tls51070Service
-        .queryCAT_SNo_DropDownList({})
-        .subscribe((response) => {
-          this.smallOption = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
-
-          console.log('小分類:', this.largeOption);
+          // console.log('大分類:', this.largeOption);
         });
 
       // 禁用中分類、小分類

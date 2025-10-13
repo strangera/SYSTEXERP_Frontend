@@ -348,9 +348,18 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //觀察表單 小分類變化
     this.dataForm.get('CAT_MNo')?.valueChanges.subscribe((mno) => {
       const lno = this.dataForm.get('CAT_LNo')?.value;
+      //新版api改成list傳送
+        const requestPayload = {
+          CATList: [
+            {
+              CAT_LNo: lno,
+              CAT_MNo: mno
+            }
+          ]
+        };
       if (lno && mno) {
         this.tls51070Service
-          .queryCAT_SNo_DropDownList({ CAT_LNo: [lno], CAT_MNo: [mno] })
+          .queryCAT_SNo_DropDownList(requestPayload)
           .subscribe((res) => {
             this.smallOption = res.Data.map((item: apiOption) => ({
               No: item.No,
@@ -653,7 +662,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('商品單位:', this.unitOptions);
+        // console.log('商品單位:', this.unitOptions);
       });
 
     // 品牌代碼與折扣別
@@ -663,7 +672,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
         PLU_OrderPrcRate: item.PLU_OrderPrcRate, // 折扣別
       }));
-      console.log('品牌詳細代碼:', this.pluLogoOption);
+      // console.log('品牌詳細代碼:', this.pluLogoOption);
     });
 
     // 查詢 專櫃編號
@@ -672,7 +681,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
-      console.log('專櫃編號代碼:', response.Data);
+      // console.log('專櫃編號代碼:', response.Data);
     });
 
     // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag)
@@ -702,11 +711,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           { field: 'Remark', header: '備註', editable: true, type: 'text' },
         ];
       });
-  }
 
-  //讀取大、中、小 分類整份表單 (該情況禁止 中小下拉選擇)
-  loadCATOptions() {
-    {
       //查詢 大分類
       this.tls51070Service
         .queryCAT_LNo_DropDownList({})
@@ -717,32 +722,58 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             Label: item.No + '-' + item.Name,
           }));
 
-          console.log('大分類:', this.largeOption);
+          // console.log('大分類:', this.largeOption);
         });
-      //查詢 中分類
-      this.tls51070Service
-        .queryCAT_MNo_DropDownList({ CAT_LNo: [this.dataForm.get('CAT_LNo')?.value || ''] })
-        .subscribe((response) => {
-          this.middleOption = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
+  }
 
-          console.log('中分類:', this.largeOption);
-        });
-      //查詢 小分類
-      this.tls51070Service
-        .queryCAT_SNo_DropDownList({ CAT_LNo: [this.dataForm.get('CAT_LNo')?.value || ''], CAT_MNo: [this.dataForm.get('CAT_MNo')?.value || ''] })
-        .subscribe((response) => {
-          this.smallOption = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
+  //讀取 中、小 分類整份表單 (該情況禁止 中小下拉選擇)
+  loadCATOptions() {
+    {
+      // 新增模式(卡控)
+      if(this.crudstatus == CRUDStatus.Create){
+        // 禁用中分類、小分類
+        this.dataForm.get('CAT_MNo')?.disable();
+        this.dataForm.get('CAT_SNo')?.disable();
+      }
 
-          console.log('小分類:', this.largeOption);
-        });
+      //有大分類接續查詢 中分類、小分類
+      if(this.dataForm.get('CAT_LNo')?.value){
+        //查詢 中分類
+        this.tls51070Service
+          .queryCAT_MNo_DropDownList({ CAT_LNo: [this.dataForm.get('CAT_LNo')?.value || ''] })
+          .subscribe((response) => {
+            this.middleOption = response.Data.map((item: apiOption) => ({
+              No: item.No,
+              Name: item.Name,
+              Label: item.No + '-' + item.Name,
+            }));
+
+            console.log('中分類:', this.largeOption);
+          });
+          
+        //查詢 小分類
+        //新版api改成list傳送
+        const requestPayload = {
+          CATList: [
+            {
+              CAT_LNo: this.dataForm.get('CAT_LNo')?.value,
+              CAT_MNo: this.dataForm.get('CAT_MNo')?.value
+            }
+          ]
+        };
+
+        this.tls51070Service
+          .queryCAT_SNo_DropDownList(requestPayload)
+          .subscribe((response) => {
+            this.smallOption = response.Data.map((item: apiOption) => ({
+              No: item.No,
+              Name: item.Name,
+              Label: item.No + '-' + item.Name,
+            }));
+
+            console.log('小分類:', this.largeOption);
+          });
+      }
     }
   }
 
