@@ -33,9 +33,11 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
 })
 export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
+    ID: [''],
     TXN_Date: [''],
     ECR_No: [''],
     PAY_NO: [''],
+    PAY_Type: [''],
     ...createPaginationConfig([{ field: 'TXN_No', order: 1 }]),
   });
 
@@ -83,7 +85,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   };
 
   columns: Column[] = [
-    { field: 'group_name', header: '總計',hidden: true },
+    { field: 'group_name', header: '總計', hidden: true },
     { field: 'TXN_Date', header: '日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機代號' },
     { field: 'TXN_No', header: '交易序號' },
@@ -149,31 +151,9 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   }
 
   /** 載入所有資料 */
-  private loadAllData(): void {
+  loadAllData(): void {
     this.loading = true;
-
-    const nav = history.state as any;
-    const rowData = nav?.rowdata;
-    const queryParams = {
-      PageSize: 999, // 設定一個大數值來獲取所有資料
-      PageIndex: 1,
-      OrderBy: "TXN_No",
-      Offset: 0,
-      SortBy: [
-        {
-          field: "TXN_No",
-          order: 1
-        }
-      ],
-      ID: this.ID ? parseInt(this.ID) : 0,
-      TXN_Date: "",
-      ECR_No: "",
-      PAY_NO: rowData?.PAY_NO || rowData?.PAY_Type || "",
-      PAY_Type: this.PAY_Type || ""
-    };
-
-
-    this.tls2a010Service.queryDetailTLS2A010(queryParams).subscribe({
+    this.tls2a010Service.queryDetailTLS2A010(this.dataForm.value).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.data = (response.Data.mainData ?? []).map((item: any) => ({
@@ -181,7 +161,6 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
             TXN_Date: this.formatDate(item.TXN_Date),
             check_status: item.check_status ?? '1'
           }));
-
           this.footerData = (response.Data.totalData ?? []).map((f: any) => ({
             ...f,
             group_name: f.group_name || '總計',

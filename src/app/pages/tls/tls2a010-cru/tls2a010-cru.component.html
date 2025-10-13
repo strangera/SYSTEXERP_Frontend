@@ -5,36 +5,16 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form
-      [formGroup]="dataForm"
-      id="dataFormForm"
-      (ngSubmit)="onSubmit(dataForm)"
-    >
+    <form [formGroup]="dataForm" id="dataFormForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="card">
-        <app-customFooter-table
-          dataKey="TXN_No"
-          [data]="data"
-          [columns]="columns"
-          [showCheckBox]="false"
-          [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
-          [totalRecords]="totalRecords"
-          [lazy]="false"
-          [loading]="loading"
-          [showRowEdit]="true"
-          [showReportMode]="false"
-          [showEdit]="false"
-          [showDetail]="false"
-          [showDelete]="false"
-          [footerData]="footerData"
-          [showTotal]="true"
-          (onSubmit)="onSubmit(dataForm)"
-          [showPaginator]="true"
-          (fieldChange)="onFieldChange($event)"
-        ></app-customFooter-table>
+        <app-customFooter-table dataKey="TXN_No" [data]="data" [columns]="columns" [showCheckBox]="false"
+          [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+          (lazyLoadData)="onLazyLoadData($event, dataForm); loadAllData()" [loading]="loading" [showRowEdit]="true"
+          [showReportMode]="false" [showEdit]="false" [showDetail]="false" [showDelete]="false"
+          [footerData]="footerData" [showTotal]="true" [showPaginator]="true"
+          (fieldChange)="onFieldChange($event)"></app-customFooter-table>
       </div>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="submit" [loading]="false" />
       </div>
     </form>
