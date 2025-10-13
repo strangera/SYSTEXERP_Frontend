@@ -308,7 +308,11 @@ private padTxnNo(v: any): string {
       tlt_floor: ensureArr(raw['tlt_floor']),
       pageSize: 30,
       pageIndex: Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1,
-      SortBy: this.toApiSort(Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [{ field: 'TXN_Date', order: 1 }]),
+     SortBy: this.sanitizeSort(Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [
+  { field: 'TXN_Date', order: 1 },
+  { field: 'ECR_No',   order: 1 },
+  { field: 'TXN_No',   order: 1 },
+]),
     };
 
     // 清除空值
@@ -407,8 +411,10 @@ private padTxnNo(v: any): string {
   // -------------------- 查詢函式（給 app-table-report 用） --------------------
   /** 明細：供 app-table-report infinite scroll / 排序使用 */
 /** 明細：供 app-table-report infinite scroll / 排序使用（不插小計列） */
-public queryTLS23030ForReport = (body: any) =>
-  this.tls23030Service.queryTLS23030({ ...body, pageSize: 30 }).pipe(
+public queryTLS23030ForReport = (body: any) => {
+  const safeBody = { ...body, pageSize: 30 };
+  safeBody.SortBy = this.sanitizeSort(Array.isArray(body?.SortBy) ? body.SortBy : []);
+  return this.tls23030Service.queryTLS23030(safeBody).pipe(
     map((res: any) => {
       // 展平成 rows
       const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
@@ -444,7 +450,7 @@ const rows = rawRows.map((item: any, i: number) => {
     })
   );
 
-
+}
 
 
   /** 彙總：供 app-table-report 使用 */
@@ -683,4 +689,39 @@ public groupKey = (row: any): string => {
   const txn = String(row?.TXN_No ?? '').trim();
   return `${ymd}|${ecr}|${txn}`;
 };
+/** groupKey 對應的後端真實排序欄位 */
+private readonly GROUPKEY_SORT_EXPANSION = ['TXN_Date', 'ECR_No', 'TXN_No'];
+
+/** 將 UI 的 SortBy 轉成後端可接受，會移除 groupKey 並展開成真實欄位 */
+private sanitizeSort(uiSort: Array<{ field: string; order: 1 | -1 }>): Array<{ field: string; order: 1 | -1 }> {
+  const seen = new Set<string>();
+  const out: Array<{ field: string; order: 1 | -1 }> = [];
+
+  for (const s of uiSort ?? []) {
+    if (!s?.field) continue;
+
+    // 遇到 groupKey：展開為 TXN_Date, ECR_No, TXN_No（用同一個 order）
+    if (s.field === 'groupKey') {
+      for (const f of this.GROUPKEY_SORT_EXPANSION) {
+        if (!seen.has(f)) {
+          out.push({ field: f, order: s.order });
+          seen.add(f);
+        }
+      }
+      continue; // 不把 groupKey 自己加進去
+    }
+
+    // 其餘正常欄位去重後加進去
+    if (!seen.has(s.field)) {
+      out.push({ field: s.field, order: s.order });
+      seen.add(s.field);
+    }
+  }
+
+  // 若最後仍然沒有排序（例如 UI 只給了 groupKey），補上預設排序以確保穩定性
+  if (out.length === 0) {
+    for (const f of this.GROUPKEY_SORT_EXPANSION) out.push({ field: f, order: 1 });
+  }
+  return out;
+}
 }
