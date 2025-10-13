@@ -102,13 +102,15 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(form: FormGroup) {
-    this.tls2c040Service.queryTLS2C040(form.getRawValue())
-      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-      .subscribe(response => {
-        this.data = response.Data.map((item: any) => this.restructureData(item));
-        this.totalRecords = response.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-      });
+    this.handleSubmit(form, () => {
+      this.tls2c040Service.queryTLS2C040(form.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data.map((item: any) => this.restructureData(item));
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
   }
 
   restructureData(item: any) {
