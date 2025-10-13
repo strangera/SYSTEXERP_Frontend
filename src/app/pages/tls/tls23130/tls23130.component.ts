@@ -60,7 +60,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     d.setDate(d.getDate() - 1);
     return d;
   })();
-
+groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
   data: any[] = [];
   totalRecords = 0;
 
@@ -68,7 +68,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   historyRequestBody: any | null = null;
 
   // 排序狀態（先按群組欄位 tlt_no，再日期/卡號）
-  readonly groupByField = 'tlt_no';
+  readonly groupByField = 'CRD_No';
   readonly defaultSort: any[] = [
     { field: this.groupByField, order: 1 },
     { field: 'TXN_Date', order: 1 },
@@ -222,10 +222,12 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
           const mapped = this.mapResponseToRowsAndTotals(res);
           this.data = mapped.rows;
           this.totalRecords = mapped.totalRecords;
+           this.groupSubtotals = mapped.groupSub;  
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
+          this.groupSubtotals = {};  
         },
       });
     });
@@ -236,6 +238,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     this.tls23130Service.queryTLS23130({ ...(body || {}), pageSize: 30, PageSize: 30 }).pipe(
       map((res: any) => {
         const { rows, totalRecords, grand, groupSub } = this.mapResponseToRowsAndTotals(res);
+        this.groupSubtotals = groupSub;                        // ⬅️ 可選：保持同步
         return { Data: rows, TotalCount: totalRecords, GrandTotal: grand, GroupSubtotals: groupSub };
       })
     );
