@@ -11,7 +11,7 @@
           [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
           (lazyLoadData)="onLazyLoadData($event, dataForm); loadAllData()" [loading]="loading" [showRowEdit]="true"
           [showReportMode]="false" [showEdit]="false" [showDetail]="false" [showDelete]="false"
-          [footerData]="footerData" [showTotal]="true" [showPaginator]="true"
+          [footerData]="footerData" [showTotal]="true" [showPaginator]="true"[showPage]="false"
           (fieldChange)="onFieldChange($event)"></app-customFooter-table>
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

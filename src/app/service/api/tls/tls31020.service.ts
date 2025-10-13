@@ -46,25 +46,45 @@ export interface TLS31020DetialPrintRequest extends TLS31020DetailRequest {
   "IsExcel": boolean
 }
 
+export interface TLS31020Item {
+  tlt_floor: string;
+  floor_desc: string;
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+}
+
+export interface TLS31020Total {
+  TotalBudget: number;
+  TotalSales: number;
+  AvgAchievementRate: number;
+  TotalTxnCount: number;
+  AvgTicket: number;
+  TotalSpace: number;
+  AvgPSM: number;
+  AvgMonthlyPayment: number;
+  TotalTempCounterSales: number;
+  TotalMonthlyBudget: number;
+  TotalMonthlySales: number;
+  AvgCompletionRate: number;
+}
+
 export interface TLS31020Response {
-  tlt_floor: string,
-  floor_desc: string,
-  budget: number,
-  AVN_TotSaleAmt: number,
-  AchievementRate: number,
-  BudgetRate: number,
-  PerformanceRate: number,
-  TxnCount: number,
-  AvgTicket: number,
-  tlt_space: number,
-  MonthlyPSM: number,
-  MonthlyPayment: number,
-  TempCounterSaleAmt: number,
-  TempCounterSalesRate: number,
-  TempCounterAmtRate: number,
-  MonthlyBudgetTotal: number,
-  MonthlySalesTotal: number,
-  CompletionRate: number
+  QueryData: TLS31020Item[];
+  TotalData: TLS31020Total;
 }
 
 export interface TLS31020DetailResponse {
