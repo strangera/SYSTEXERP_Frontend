@@ -41,7 +41,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     ven_uniform: ['', [Validators.required]], // 原本 vendorUID, 廠商統一編號（必填）
     VEN_Name: ['', Validators.maxLength(60)], // 原本 ven_name
     VEN_EngName: ['', Validators.maxLength(60)],
-    building_no: [''],
+    building_no: ['', [Validators.required]],
     InterviewDateStart: [yesterday], // 原本 contact_Datestart
     InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
     contact_USR_No: [''],
