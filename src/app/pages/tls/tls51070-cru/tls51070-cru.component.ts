@@ -155,7 +155,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //---
     PLU_OrderPrcRate: [{ value: 0, disabled: true }], // 進價折數 預設0 (依照品牌 PLULOGO)
-    PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
+    // PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
+    // 20251013: PLU_ECStatus從顯示移除
     PLU_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
 
     //---必填未列入(都是預設不可編輯)---
@@ -180,7 +181,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   smallOption: apiOption[] = [];
   pluLogoOption: any[] = [];  // 品牌代碼
   unitOptions: apiOption[] = [];  //商品單位
-  statusOptions: option[] = this.dropDown51070.statusOptions;//商品狀態
+  // statusOptions: option[] = this.dropDown51070.statusOptions; // 20251013: PLU_ECStatus 從顯示移除
   TLT_NO_Option: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT
   vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013
   // ---商品規格dropdown---
@@ -675,7 +676,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       // console.log('品牌詳細代碼:', this.pluLogoOption);
     });
 
-    // 查詢 專櫃編號
+    // 查詢 專櫃編號 _1的情況重新篩選
     this.tls51070Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
       this.TLT_NO_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃編號代碼
@@ -684,7 +685,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       // console.log('專櫃編號代碼:', response.Data);
     });
 
-    // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag)
+    // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag) _1
     this.tls51070Service
       .queryPOS2013_DropDownList({ "VEN_Flag": '1' })
       .subscribe((response) => {

@@ -7,12 +7,13 @@ import { option } from '../../../shared/models/sys/sysb000.model';
 })
 export class dropDown51070 {
     // ---基本資料dropdown---
-    statusOptions: option[] = [  //商品狀態
-        { value: '1', label: '正常' },
-        { value: '2', label: '停用' },
-        { value: '3', label: '停進' },
-        { value: '4', label: '下架' },
-    ];
+    // EC商品狀態(ECstatus) 已取消顯示 此項目暫時不使用
+    // statusOptions: option[] = [  //商品狀態
+    //     { value: '1', label: '正常' },
+    //     { value: '2', label: '停用' },
+    //     { value: '3', label: '停進' },
+    //     { value: '4', label: '下架' },
+    // ];
 
     // ---商品規格dropdown---
     attributeOptions: option[] = [ // 商品型態
