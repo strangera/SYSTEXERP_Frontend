@@ -180,7 +180,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   private columnsCredit = [
     { field: 'TXN_Date', header: '銷售日期', format: (v: any) => this.formatDate(v), visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'CRD_Name', header: '信用卡卡別', visible: true },
@@ -585,4 +585,9 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
           .toString()
           .padStart(2, '0')}`;
   }
+  private padTxnNo(v: any): string {
+  const s = String(v ?? '').trim();
+  return s ? s.padStart(6, '0') : '';
+}
+
 }

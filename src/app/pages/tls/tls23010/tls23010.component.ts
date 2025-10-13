@@ -678,6 +678,11 @@ readonly defaultSort: any[] = [
       TXN_PayAmt:     this.detailTotals['Total_TXN_PayAmt'] ?? 0,
     };
   }
+  private padTxnNo(v: any): string {
+  const s = String(v ?? '').trim();
+  return s ? s.padStart(6, '0') : '';
+}
+
 
   // ========= 欄位 =========
 columns = [
@@ -740,7 +745,7 @@ columns = [
   detailcolumns = [
     { field: 'TXN_Date',   header: '銷售日期', format: this.formatDateTimeYMDHM.bind(this) },
     { field: 'ECR_No',     header: '收銀機號' },
-    { field: 'TXN_No',     header: '交易序號', style: 'text-right' },
+    { field: 'TXN_No',     header: '交易序號', style: 'text-right', format: (v:any) => this.padTxnNo(v) },
     { field: 'tlt_no',     header: '專櫃編號' },
     { field: 'tlt_name',   header: '櫃位名稱' },
     { field: 'PAY_NAME',   header: '付款別' },
