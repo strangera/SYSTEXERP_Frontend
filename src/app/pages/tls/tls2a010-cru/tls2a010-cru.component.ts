@@ -87,7 +87,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
     { field: 'TXN_Date', header: '日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機代號' },
     { field: 'TXN_No', header: '交易序號' },
-    { field: 'TLT_NO', header: '專櫃編號' },
+    { field: 'TLT_No', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'PAY_NO', header: '付款方式' },
     { field: 'CRD_No', header: '付款卡號' },
@@ -134,16 +134,11 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
 
   ngOnInit(): void {
     this.initializePage('TLS2A010', this.dataForm);
-
     const nav = history.state as any;
     if (nav?.rowdata) {
       const row = nav.rowdata;
       this.PAY_Type = row.PAY_Type || '';
       this.ID = row.ID || '';
-
-      // 保存完整的 rowdata 以供 API 查詢使用
-      console.log('接收到的 rowdata:', row);
-
       this.loadAllData();
     }
   }
@@ -151,7 +146,6 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   /** 載入所有資料 */
   private loadAllData(): void {
     this.loading = true;
-
     const nav = history.state as any;
     const rowData = nav?.rowdata;
     const queryParams = {
@@ -171,8 +165,6 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
       PAY_NO: rowData?.PAY_NO || rowData?.PAY_Type || "",
       PAY_Type: this.PAY_Type || ""
     };
-
-
     this.tls2a010Service.queryDetailTLS2A010(queryParams).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
