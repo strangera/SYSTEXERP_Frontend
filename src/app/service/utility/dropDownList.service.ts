@@ -30,6 +30,12 @@ export interface IDropdownItem {
   bus_type_name?: string;
   PAY_OverPay?: string;
 }
+
+export interface BusSClass extends IDropdownItem {
+  bus_class: string,
+  bus_class_name: string
+}
+
 export interface ITalentOption extends IDropdownItem {
   tlt_no: string;
   tlt_name: string;
@@ -77,6 +83,17 @@ export interface ITLTBUSCLASSRequest {
 export interface ITLTBUSSCLASSRequest {
   bus_type: string[];
   bus_class: string[];
+}
+
+// 小分類組成['大'+'中'] -- 新版api
+export interface ITLTBUSSCLASSInfo {
+  bus_type: string;
+  bus_class: string;
+}
+
+//小分類Request-- 新版api
+export interface ITLTBUSSCLASSRequest_new {
+  queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[];
 }
 
 export interface ISYS3100TreeRequest {
@@ -238,6 +255,11 @@ export class DropDownListService {
   // 查詢TLTBUSSCLASS資料表 (小分類)
   queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
+  }
+
+  // 查詢TLTBUSSCLASS資料表 (小分類) -- 新版api測試
+  queryTLTBUSSCLASS_DropDownList_new(params: ITLTBUSSCLASSRequest_new): Observable<ApiResponse<BusSClass[]>> {
+    return this.http.post<ApiResponse<BusSClass[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
   }
 
   // 查詢組織代碼(SYS3100)資料表下拉選單
