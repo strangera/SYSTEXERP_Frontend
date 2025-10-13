@@ -307,43 +307,5 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.columnGroup = [];
     }
   }
-override onDetail(row: any): void {
-  console.log('缺單審核被點擊:', row);
-
-  const payload = {
-    SortBy: [{ field: 'TXN_No', order: 1 }],
-    ID: row.ID ?? 0,
-    TXN_Date: row.TXN_Date ?? '',
-    ECR_No: row.ECR_No ?? '',
-    PAY_NO: row.PAY_NO ?? '',
-    PAY_Type: row.PAY_Type ?? ''
-  };
-  console.log('🔍 queryDetailTLS2A010 payload:', payload);
-
-  this.tls2a010Service.queryDetailTLS2A010(payload).subscribe({
-    next: (res) => {
-      const mainData = res?.Data?.mainData ?? [];
-      const footerData = res?.Data?.totalData ?? []; // 保持陣列格式
-      const totalCount = res?.TotalCount ?? 0;
-
-      const rowdataWithDetail = {
-        ...row,
-        details: mainData,
-        footerData,
-        TotalCount: totalCount,
-      };
-
-      console.log('傳遞給 CRU 的 footerData:', footerData);
-      this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
-    },
-    error: (err) => {
-      console.error('查詢明細失敗:', err);
-    }
-  });
-}
-
-
-
-
 }
 
