@@ -196,7 +196,7 @@ groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
         PageSize: 30,
 
         // 排序使用預設
-        SortBy: this.defaultSort,
+       SortBy: this.dedupeSortMeta(this.defaultSort),
       };
 
       // 清除空值
@@ -232,13 +232,35 @@ groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
       });
     });
   }
+  private dedupeSortMeta(meta: Array<{ field?: string; order?: 1 | -1 }> = []) {
+  // 後者優先：若同欄位多次出現，保留最後一次的設定
+  const seen = new Set<string>();
+  const result: Array<{ field: string; order: 1 | -1 }> = [];
+  for (let i = meta.length - 1; i >= 0; i--) {
+    const f = (meta[i]?.field || '').trim();
+    if (!f) continue;
+    const key = f.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.unshift({ field: f, order: meta[i]?.order === -1 ? -1 : 1 });
+  }
+  return result;
+}
+
 
   // ===== 提供給 app-table-report 的查詢函式（固定 pageSize=30；回傳 GrandTotal/GroupSubtotals）=====
-  public queryTLS23130ForReport = (body: any) =>
-    this.tls23130Service.queryTLS23130({ ...(body || {}), pageSize: 30, PageSize: 30 }).pipe(
+public queryTLS23130ForReport = (body: any) =>
+  this.tls23130Service
+    .queryTLS23130({
+      ...(body || {}),
+      pageSize: 30,
+      PageSize: 30,
+      // 若外部有 SortBy 就去重；沒有就用預設
+      SortBy: this.dedupeSortMeta((body && body.SortBy) || this.defaultSort),
+    })
+    .pipe(
       map((res: any) => {
         const { rows, totalRecords, grand, groupSub } = this.mapResponseToRowsAndTotals(res);
-        this.groupSubtotals = groupSub;                        // ⬅️ 可選：保持同步
         return { Data: rows, TotalCount: totalRecords, GrandTotal: grand, GroupSubtotals: groupSub };
       })
     );
