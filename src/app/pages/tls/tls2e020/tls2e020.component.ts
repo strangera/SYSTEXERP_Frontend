@@ -130,6 +130,11 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   onSettle(frm: FormGroup) {
     // NOTE: executeTLS2E020 Request Body 需要 sam_yyymm, sam_termno, money_type, tlt_no
     // 您的 queryForm 沒有 tlt_no，請確保 execute 邏輯中 tlt_no 有正確的預設值或從其他地方取得。
+    this.submitted = true;
+    if (!frm.valid) {
+      this.submitted = false;
+      return;
+    }
     this.settleLoding = true;
 
     const body = {
@@ -146,6 +151,11 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   }
   lockLoding = false;
   onLock(frm: FormGroup) {
+    this.submitted = true;
+    if (!frm.valid) {
+      this.submitted = false;
+      return;
+    }
     this.lockLoding = true;
     const body = {
       ...frm.value,
