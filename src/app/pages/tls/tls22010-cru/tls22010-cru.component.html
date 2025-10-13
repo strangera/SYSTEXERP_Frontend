@@ -18,21 +18,11 @@
         (selectionChange)="selectedItems = $event"
         [showManage]="false"
         [showDelete]="false"
-        [showReportMode]="false"
         [lastQueryBody]="historyRequestBody"
          [footerData]="footerData"
         [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)"
         apiUrl="queryTLS22010_Detail"
-
-      >
-     <header>
-        <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
-          class="p-button-rounded p-button-text p-button-success mr-2" icon="pi pi-file-excel"
-          [disabled]="!canPerformAction('70')" (click)="exportExcel()" />
-        <p-button pButton tooltipPosition="top" pTooltip="匯出PDF" [style.width]="'35px'" [style.height]="'35px'"
-          class="p-button-rounded p-button-text p-button-danger" icon="pi pi-file-pdf"
-          [disabled]="!canPerformAction('70')" (click)="exportPDF()" />
-      </header></app-table-report>
+      ></app-table-report>
     </div>
   </div>
 </div>

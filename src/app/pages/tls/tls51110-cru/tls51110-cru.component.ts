@@ -98,6 +98,10 @@ export class TLS51110CRUComponent
 
   ngOnInit(): void {
     this.initializePage('TLS51110', this.dataForm);
+
+    // 設置預算金額監聽器
+    this.setupBudgetListener();
+
     this.userSubscription = this.authService.user.subscribe(
       (userInfo: UserInfo | null) => {
         this.userInfo = userInfo;
@@ -114,6 +118,24 @@ export class TLS51110CRUComponent
       error: (err) => {
         console.error('載入品牌失敗', err);
       },
+    });
+  }
+
+  private setupBudgetListener(): void {
+    // 監聽預算金額變更，自動設定成本欄位
+    this.dataForm.get('BUDGET')?.valueChanges.subscribe(budgetValue => {
+      console.log('預算金額變更:', budgetValue, '當前CRUD狀態:', this.crudstatus);
+
+      if (budgetValue !== null && budgetValue !== undefined && budgetValue > 0) {
+        const currentCost = this.dataForm.get('BUDGET_Cost')?.value;
+        console.log('目前成本值:', currentCost);
+
+        // 在新增模式下，總是更新成本欄位
+        if (this.crudstatus === CRUDStatus.Create) {
+          console.log('設定成本為:', budgetValue);
+          this.dataForm.get('BUDGET_Cost')?.setValue(budgetValue, { emitEvent: false });
+        }
+      }
     });
   }
 

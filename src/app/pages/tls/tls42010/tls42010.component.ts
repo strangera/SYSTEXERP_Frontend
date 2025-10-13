@@ -51,13 +51,13 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   override loading = false;
 
   // 下拉選單選項
-kbFuncOptions: { label: string; value: string }[] = [];
+  kbFuncOptions: { label: string; value: string }[] = [];
 
   constructor(
     private validationService: ValidationService,
     private counterCodeService: CounterCodeService,
-    public readonly tls42010Service: Tls42010Service, //  注入 service
-    private dropDownListService: DropDownListService // 注入下拉選單服務
+    public readonly tls42010Service: Tls42010Service,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -68,22 +68,20 @@ kbFuncOptions: { label: string; value: string }[] = [];
   }
 
   private loadKeyboardOptions(): void {
-  this.dropDownListService.queryTLS42010DropDownList().subscribe({
-    next: (res) => {
-      if (res?.Status === '0000' && res.Data) {
-        this.kbFuncOptions = res.Data.flatMap(item =>
-          item.KB_Func.map(func => ({
-            label: func.toString(),
-            value: func.toString()
-          }))
-        );
-      } else {
-        console.warn('下拉選單API錯誤:', res?.Message);
-      }
-    },
-    error: (err) => console.error('呼叫API失敗:', err)
-  });
-}
+    this.dropDownListService.queryTLS42010DropDownList().subscribe({
+      next: (res) => {
+        console.log('TLS42010 dropdown 回傳:', res);
+
+        const list = res.Data;
+        this.kbFuncOptions = list.map((func: { KB_Desc: string; KB_Func: string }) => ({
+          label: func.KB_Desc,
+          value: func.KB_Func
+        }));
+      },
+    });
+
+
+  }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -105,7 +103,6 @@ kbFuncOptions: { label: string; value: string }[] = [];
       this.tls42010Service.queryTLS42010M(body).subscribe({
         next: (res) => {
           const rawData: { USR_Level: string;[key: string]: any }[] = res?.Data ?? [];
-          // 以 USR_Level 當 key 過濾掉重複
           const uniqueMap = new Map();
           rawData.forEach((item) => {
             if (!uniqueMap.has(item.USR_Level)) {
@@ -116,7 +113,7 @@ kbFuncOptions: { label: string; value: string }[] = [];
           this.totalRecords = res.TotalCount;
           this.footerTotal = res.FooterTotal;
           this.loading = false;
-          console.log('查詢成功 (過濾後):', this.data);
+
         },
       });
     });
