@@ -1,4 +1,4 @@
-import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { BusSClass, DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -330,14 +330,16 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
-        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+        bus_class: (frm.getRawValue().bus_class || []).map((item: any) => item.No),
+        bus_sclass: (frm.getRawValue().bus_sclass || []).map((item: any) => item.No),
         TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31020Request;
 
       console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data;
+        console.log('回應',res)
+        // this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
