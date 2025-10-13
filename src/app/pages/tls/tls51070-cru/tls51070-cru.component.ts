@@ -428,18 +428,27 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             //自動新增一筆POS2020
             this.onAddPOS2020();
             //鎖定 廠商編號(VEN_No)
-            this.dataForm.get('VEN_No')?.disable();
+            // this.dataForm.get('VEN_No')?.disable();
           }
         }
+        // 重新查詢專櫃編號選單
+        this.tls51070Service.queryTLTTALENT_DropDownList({"VEN_No": value}).subscribe((response) => {
+          this.TLT_NO_Option = response.Data.map((item: any) => ({
+            No: item.No, // 專櫃編號代碼
+            Label: item.No + '-' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('專櫃編號代碼:', response.Data);
+
+          //重製 專櫃編號 內容
+          this.dataForm.get('TLT_NO')?.setValue(null);
+
+        });
       }
     });
 
     // 觀察 國際條碼(PLU_No) 變化 ----20251013 新增
-    // 新增模式 把 POS2004 國際條碼 同步給 POS2005 國際條碼
-    // 修改模式待定
-    if (this.crudstatus === CRUDStatus.Create) {
+    // POS2004 國際條碼 同步給 POS2005 國際條碼
     this.dataForm.get('PLU_No')?.valueChanges.subscribe(value => {
-
       // 若 POS2005Data 尚未存在，就初始化一筆空的
       if (this.POS2005Data.length == 0) {
         this.POS2005Data = [{
@@ -457,8 +466,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         this.POS2005Data[0].PLU_No = value ? value : '';
       }
     });
-}
-
 
     //依照廠商暫存重新計算[標準進價]
     this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
@@ -594,104 +601,104 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 標籤名稱：在輸入商品中文名稱後會自動帶入標籤名稱欄位。
     // 多筆國際條碼：寫入POS2005，商品管理編號、國際條碼兩個欄位皆要寫入，國際條碼PLU_NO是鍵值。
     //--------
-    // switch (this.crudstatus) {
-    //   case CRUDStatus.Create:
-    //     if (this.canAdd()) {
-    //       console.log('讀取表單', frm);
-    //       const formValue = frm.getRawValue();
-    //       //
-    //       // POS2005Data 中所有的 PLU_No
-    //       // 沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)
-    //       if (!formValue.PLU_No || formValue.PLU_No.trim() === '') {
-    //         formValue.PLU_No = formValue.PLU_MagNo; // 國際條碼=商品管理編號
-    //         this.messageService.infoBubble('沒有輸入國際條碼，國際條碼已自動設為商品管理編號');
-    //       }
+    switch (this.crudstatus) {
+      case CRUDStatus.Create:
+        if (this.canAdd()) {
+          console.log('讀取表單', frm);
+          const formValue = frm.getRawValue();
+          //
+          // POS2005Data 中所有的 PLU_No
+          // 沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)
+          if (!formValue.PLU_No || formValue.PLU_No.trim() === '') {
+            formValue.PLU_No = formValue.PLU_MagNo; // 國際條碼=商品管理編號
+            this.messageService.infoBubble('沒有輸入國際條碼，國際條碼已自動設為商品管理編號');
+          }
 
-    //       //將新的資料id指定為0
-    //       const processedPOS2020 = this.POS2020Data.map(item => {
-    //         if (item.status === 'new') {
-    //           return { ...item, id: 0 }; // 把新項目的 id 改為 0
-    //         }
-    //         return item; // 其他不變
-    //       });
+          //將新的資料id指定為0
+          const processedPOS2020 = this.POS2020Data.map(item => {
+            if (item.status === 'new') {
+              return { ...item, id: 0 }; // 把新項目的 id 改為 0
+            }
+            return item; // 其他不變
+          });
 
-    //       // POS2005Data 中所有的 PLU_No
-    //       const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
-    //       console.log('現有的 PLU_No 陣列:', POS2005PLUs);
+          // POS2005Data 中所有的 PLU_No
+          const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
+          console.log('現有的 PLU_No 陣列:', POS2005PLUs);
 
-    //       let requestBody = {}
+          let requestBody = {}
 
-    //       if (POS2005PLUs.length >= 1) {
-    //         requestBody = {
-    //           ...formValue,
-    //           PLU_No: POS2005PLUs,
-    //           POS2020_INFO: processedPOS2020,     // 使用處理過的資料
-    //         }
-    //       } else {
-    //         requestBody = {
-    //           ...formValue,
-    //           PLU_No: [''], //無輸入POS2005送出空字串
-    //           POS2020_INFO: processedPOS2020,     // 使用處理過的資料
-    //         }
-    //       }
+          if (POS2005PLUs.length >= 1) {
+            requestBody = {
+              ...formValue,
+              PLU_No: POS2005PLUs,
+              POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+            }
+          } else {
+            requestBody = {
+              ...formValue,
+              PLU_No: [''], //無輸入POS2005送出空字串
+              POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+            }
+          }
 
-    //       console.log('insert', requestBody);
+          console.log('insert', requestBody);
 
-    //       this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
-    //         this.messageService.successBubble('POS2004主檔新增成功');
+          this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
+            this.messageService.successBubble('POS2004主檔新增成功');
 
-    //         const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
-    //         console.log('新增取號:', newSeqNo);
+            const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+            console.log('新增取號:', newSeqNo);
 
-    //         // 進行圖片檔更新
-    //         await this.createImage(newSeqNo); // 傳入圖片
-    //         this.onCancel();
-    //       });
-    //     }
-    //     break;
-    //   case CRUDStatus.Edit:
-    //     if (this.canEdit()) {
-    //       console.log('讀取表單', frm);
-    //       const formValue = frm.getRawValue();
+            // 進行圖片檔更新
+            await this.createImage(newSeqNo); // 傳入圖片
+            this.onCancel();
+          });
+        }
+        break;
+      case CRUDStatus.Edit:
+        if (this.canEdit()) {
+          console.log('讀取表單', frm);
+          const formValue = frm.getRawValue();
 
-    //       // POS2005Data 中所有的 PLU_No
-    //       const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
-    //       console.log('現有的 PLU_No 陣列:', POS2005PLUs);
+          // POS2005Data 中所有的 PLU_No
+          const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
+          console.log('現有的 PLU_No 陣列:', POS2005PLUs);
 
-    //       //將新的資料id指定為0
-    //       const processedPOS2020 = this.POS2020Data.map(item => {
-    //         if (item.status === 'new') {
-    //           return { ...item, id: 0 }; // 把新項目的 id 改為 0
-    //         }
-    //         return item; // 其他不變
-    //       });
+          //將新的資料id指定為0
+          const processedPOS2020 = this.POS2020Data.map(item => {
+            if (item.status === 'new') {
+              return { ...item, id: 0 }; // 把新項目的 id 改為 0
+            }
+            return item; // 其他不變
+          });
 
-    //       const requestBody = {
-    //         ...formValue,
-    //         PLU_No: POS2005PLUs,
-    //         "POS2020_INFO": processedPOS2020,
-    //       };
+          const requestBody = {
+            ...formValue,
+            PLU_No: POS2005PLUs,
+            "POS2020_INFO": processedPOS2020,
+          };
 
-    //       console.log('update', JSON.stringify(requestBody, null, 2));
+          console.log('update', JSON.stringify(requestBody, null, 2));
 
-    //       this.tls51070Service.updateTLS51070(requestBody).subscribe({
-    //         next: async () => {
-    //           // 用 this.img1001Data 裡的 IMG_SeqNo 呼叫 createImage
-    //           const seqNo = this.dataForm.get('PLU_MagNo')?.value; //圖片編號抓商品管理碼
-    //           if (!seqNo) {
-    //             console.log('IMGData', this.img1001Data);
-    //             console.warn('⚠️ 商品管理碼(PLU_MagNo)為空，無法更新圖片');
-    //             return;
-    //           }
-    //           await this.createImage(seqNo);
-    //           await this.deleteImages();
+          this.tls51070Service.updateTLS51070(requestBody).subscribe({
+            next: async () => {
+              // 用 this.img1001Data 裡的 IMG_SeqNo 呼叫 createImage
+              const seqNo = this.dataForm.get('PLU_MagNo')?.value; //圖片編號抓商品管理碼
+              if (!seqNo) {
+                console.log('IMGData', this.img1001Data);
+                console.warn('⚠️ 商品管理碼(PLU_MagNo)為空，無法更新圖片');
+                return;
+              }
+              await this.createImage(seqNo);
+              await this.deleteImages();
 
-    //           this.onCancel(); // 儲存後，會返回列表
-    //         }
-    //       });
-    //     }
-    //     break;
-    // }
+              this.onCancel(); // 儲存後，會返回列表
+            }
+          });
+        }
+        break;
+    }
 
     this.messageService.unblockUi();
     this.submitted = false;
@@ -730,16 +737,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       // console.log('品牌詳細代碼:', this.pluLogoOption);
     });
 
-    // 查詢 專櫃編號 _1的情況重新篩選
+    // 查詢 專櫃編號 _1的情況重新篩選 _當response(有選到 廠商代碼 就刷新)
     this.tls51070Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
       this.TLT_NO_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
-      // console.log('專櫃編號代碼:', response.Data);
+      console.log('專櫃編號代碼:', response.Data);
     });
 
-    // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag) _1
+    // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag) -- 20251013 更新(request 用專櫃編號 篩選，不要直接下拉) _當request
     this.tls51070Service
       .queryPOS2013_DropDownList({ "VEN_Flag": '1' })
       .subscribe((response) => {
@@ -748,7 +755,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           label: item.VEN_No + '-' + item.Name,
         }));
 
-        console.log('廠商代碼:', this.vendorOptions);
+        console.log('廠商代碼:', response.Data);
 
         // 等廠商編號好了再寫入POS2020欄位(廠商下拉)
         this.POS2020DataColumn = [
@@ -1015,7 +1022,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     const firstValue2020 = this.POS2020Data[0].VEN_No
       if(firstValue2020){
         this.dataForm.get('VEN_No')?.setValue(firstValue2020); //主檔內容進行重設
-        this.dataForm.get('VEN_No')?.disable();
+        // this.dataForm.get('VEN_No')?.disable();
         this.messageService.infoBubble('將主檔廠商編已自動設置');
       }
 

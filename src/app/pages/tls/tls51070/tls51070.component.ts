@@ -76,37 +76,37 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true },
-    { field: 'LOGO_No', header: '品牌代碼', visible: true },
-    { field: 'LOGO_Name', header: '品牌名稱', visible: true },
+    { field: 'LOGO_No', header: '品牌代碼', visible: false },
+    { field: 'LOGO_Name', header: '品牌', visible: true },
     {
-      field: 'CAT_LNo', header: '大分類代碼', visible: true,
-      format: (value: string) =>
-        this.largeOption.find((option) => option.No === value)?.Label ||
-        value,
+      field: 'CAT_LNo', header: '大分類代碼', visible: false,
     },
     {
-      field: 'CAT_MNo', header: '中分類代碼', visible: true,
-      format: (value: string) =>
-        this.middleOption.find((option) => option.No === value)?.Label ||
-        value,
+      field: 'CAT_LName', header: '大分類', visible: true,
     },
     {
-      field: 'CAT_SNo', header: '小分類代碼', visible: true,
-      format: (value: string) =>
-        this.smallOption.find((option) => option.No === value)?.Label ||
-        value,
+      field: 'CAT_MNo', header: '中分類代碼', visible: false,
     },
     {
-      field: 'PLU_Attribute', header: '商品型態', visible: true,
-      format: (value: string) =>
-        this.attributeOptions.find((option) => option.value === value)?.label ||
-        value,
+      field: 'CAT_MName', header: '中分類', visible: true,
     },
     {
-      field: 'PLU_Unit', header: '單位代碼', visible: true,
-      format: (value: string) =>
-        this.unitOptions.find((option) => option.No === value)?.Label ||
-        value,
+      field: 'CAT_SNo', header: '小分類代碼', visible: false,
+    },
+    {
+      field: 'CAT_SName', header: '小分類', visible: true,
+    },
+    {
+      field: 'PLU_Attribute', header: '商品型態代碼', visible: false,
+    },
+    {
+      field: 'PLU_AttributeName', header: '商品型態', visible: true,
+    },
+    {
+      field: 'PLU_Unit', header: '單位代碼', visible: false,
+    },
+    {
+      field: 'PLU_UnitNAME', header: '單位', visible: true,
     },
     {
       field: 'PLU_ECStatus', header: 'EC商品狀態', visible: true,
