@@ -1,4 +1,4 @@
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BusSClass, DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -189,7 +189,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     private readonly dropDownListService: DropDownListService,
     private readonly tls31020Service: Tls31020Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
-        private datePipe: DatePipe,
+    private datePipe: DatePipe,
   ) { super(); }
 
   ngOnInit(): void {
@@ -249,69 +249,71 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       }
     });
     // 監聽中分類變化，獲取小分類並分組
-    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
+    this.queryForm.controls.bus_class.valueChanges.pipe(
+      debounceTime(300),
+      untilDestroyed(this),
       map(selectedMValues => selectedMValues || []),
+
       // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
       switchMap((selectedMValues: IDropdownItem[]) => {
         if (selectedMValues.length === 0) {
           this.bus_sclass_Option = [];
           this.queryForm.controls.bus_sclass.setValue([]);
-          return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
+          //  統一回傳型別，避免 TypeScript 推斷成 never[]
+          return of({ selectedMValues: [], data: [] });
         }
-        const requests = [];
-        // 根據選取的中分類，為每一個中分類組建一個 API 請求
-        for (const mValue of selectedMValues) {
-          if (mValue && mValue.bus_type) {
-            requests.push(
-              this.dropDownListService.queryTLTBUSSCLASS_DropDownList({ bus_type: [mValue.bus_type], bus_class: [mValue.No] }).pipe(
-                map(res => ({
-                  LNo: mValue.bus_type,
-                  LName: mValue.bus_type_name,
-                  MNo: mValue.No,
-                  MName: mValue.Name,
-                  Data: res.Data
-                }))
-              )
-            );
-          }
-        }
-        return forkJoin(requests);
+
+        //  組成符合新 API 的請求格式
+        const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
+          .filter(v => v && v.bus_type) // 過濾 undefined
+          .map(v => ({
+            bus_type: v.bus_type!,   // 非空斷言
+            bus_class: v.No
+          }));
+
+        //  呼叫新 API（一次呼整包）
+        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
+          map(res => ({ selectedMValues, data: res.Data }))
+        );
       }),
-      tap(results => {
-        console.log('所有 API 呼叫結果：', results);
+
+      tap(result => {
+        console.log('所有 API 呼叫結果：', result);
       })
-    ).subscribe(results => {
-      // 處理合併和分組的邏輯
-      const groupedData = results.reduce((accumulator, group) => {
-        const groupKey = `${group.LNo}_${group.MNo}`;
+    ).subscribe(result => {
+      //  result: { selectedMValues: IDropdownItem[], data: IDropdownItem[] }
 
-        if (!accumulator[groupKey]) {
-          accumulator[groupKey] = {
-            label: `${group.LName} - ${group.MName}`,
-            items: []
-          };
-        }
+      const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
+      const groupKey = `${mValue.bus_type}_${mValue.No}`;
+      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
-        const newItems = group.Data.map(item => ({
-          ...item,
-          label: `${item.No} - ${item.Name}`,
-          bus_type: group.LNo,
-          bus_type_name: group.LName,
-          CAT_MNo: group.MNo,
-          CAT_MName: group.MName
-        }));
-        const existingItems = accumulator[groupKey].items;
-        const allItems = [...existingItems, ...newItems];
+        //  過濾小分類資料對應到當前中分類
+        const items = result.data
+          // .filter(item => item.bus_type === mValue.bus_type && item.CAT_MNo === mValue.No)
+          .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
+          .map(item => ({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            bus_type: mValue.bus_type,
+            bus_type_name: mValue.bus_type_name,
+            CAT_MNo: mValue.No,
+            CAT_MName: mValue.Name
+          }));
 
-        const uniqueItemsMap = new Map();
-        allItems.forEach(item => {
-          // 使用 No 作為鍵來去重
+        //  去重
+        const uniqueItemsMap = new Map<string, typeof items[0]>();
+        items.forEach(item => {
           if (!uniqueItemsMap.has(item.No)) {
             uniqueItemsMap.set(item.No, item);
           }
         });
 
-        accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+        // console.log('項目',items);
+
+        accumulator[groupKey] = {
+          label: groupLabel,
+          items: Array.from(uniqueItemsMap.values())
+        };
 
         return accumulator;
       }, {} as Record<string, any>);
@@ -319,6 +321,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       this.bus_sclass_Option = Object.values(groupedData);
       console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
+
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
@@ -327,14 +330,16 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
-        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+        bus_class: (frm.getRawValue().bus_class || []).map((item: any) => item.No),
+        bus_sclass: (frm.getRawValue().bus_sclass || []).map((item: any) => item.No),
         TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31020Request;
 
       console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data;
+        console.log('回應',res)
+        // this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
@@ -369,148 +374,148 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   }
 
   // #region 日期選單事件
-    queryWeek(event: string) {
-      const control = this.dateForm.controls['onedateyy'];
-      if (!control.value) return;
-  
-      const payload = {
-        onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
-        weeks: event,
-      };
-  
-      this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
-        this.dateForm.controls['startdate'].setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
-        this.dateForm.controls['enddate'].setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
-      });
-    }
-  
-    onReportTypeChange(event: any) {
-      // 根據報表類型設定欄位驗證
-      const reportType = event;
-  
-      // 清除所有驗證器
-      Object.keys(this.dateForm.controls).forEach(key => {
-        if (key !== 'reportType') {
-          this.dateForm.get(key)?.clearValidators();
-        }
-      });
-  
-      // 根據報表類型設定必要欄位驗證
-      switch (reportType) {
-        case '1': // 日營業報表
-          this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
-          break;
-        case '2': // 週營業報表
-          this.dateForm.get('onedateyy')?.setValidators([Validators.required]);
-          this.dateForm.get('weeks')?.setValidators([Validators.required]);
-          this.dateForm.get('startdate')?.setValidators([Validators.required]);
-          this.dateForm.get('enddate')?.setValidators([Validators.required]);
-          break;
-        case '3': // 月營業報表
-          this.dateForm.get('onedatemm')?.setValidators([Validators.required]);
-          break;
-        case '4': // 半年營業報表
-          this.dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
-          break;
-        case '5': // 年營業報表
-          this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
-          break;
-        case '6': // 區間營業報表
-          this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
-          this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
-          break;
-        case '7': // 活動區間營業報表
-          this.dateForm.get('event_startdate')?.setValidators([Validators.required]);
-          this.dateForm.get('event_enddate')?.setValidators([Validators.required]);
-          break;
+  queryWeek(event: string) {
+    const control = this.dateForm.controls['onedateyy'];
+    if (!control.value) return;
+
+    const payload = {
+      onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
+      weeks: event,
+    };
+
+    this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
+      this.dateForm.controls['startdate'].setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
+      this.dateForm.controls['enddate'].setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
+    });
+  }
+
+  onReportTypeChange(event: any) {
+    // 根據報表類型設定欄位驗證
+    const reportType = event;
+
+    // 清除所有驗證器
+    Object.keys(this.dateForm.controls).forEach(key => {
+      if (key !== 'reportType') {
+        this.dateForm.get(key)?.clearValidators();
       }
-  
-      // 更新所有欄位驗證狀態
-      Object.keys(this.dateForm.controls).forEach(key => {
-        this.dateForm.get(key)?.updateValueAndValidity();
-      });
+    });
+
+    // 根據報表類型設定必要欄位驗證
+    switch (reportType) {
+      case '1': // 日營業報表
+        this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
+        break;
+      case '2': // 週營業報表
+        this.dateForm.get('onedateyy')?.setValidators([Validators.required]);
+        this.dateForm.get('weeks')?.setValidators([Validators.required]);
+        this.dateForm.get('startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('enddate')?.setValidators([Validators.required]);
+        break;
+      case '3': // 月營業報表
+        this.dateForm.get('onedatemm')?.setValidators([Validators.required]);
+        break;
+      case '4': // 半年營業報表
+        this.dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
+        break;
+      case '5': // 年營業報表
+        this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
+        break;
+      case '6': // 區間營業報表
+        this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
+        break;
+      case '7': // 活動區間營業報表
+        this.dateForm.get('event_startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('event_enddate')?.setValidators([Validators.required]);
+        break;
     }
-  
-    setReadOnlyFields() {
-      this.dateForm.controls['startdate'].disable();
-      this.dateForm.controls['enddate'].disable();
-      this.dateForm.controls['event_startdate'].disable();
-      this.dateForm.controls['event_enddate'].disable();
-    }
-  
-    // 活動下拉改變
-    queryEvent(event: any) {
-      console.log(event);
-      console.log(this.EventIDOptions);
-      this.dateForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateS ?? null);
-      this.dateForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateE ?? null);
-    }
-  
-    // #region 同步日期選單內容給表單日期
-    private syncDateToQueryForm() {
-      const reportType = this.dateForm.get('reportType')?.value;
-  
-      let start: Date | null = null;
-      let end: Date | null = null;
-  
-      switch (reportType) {
-        case '1': // 日報
-          start = this.dateForm.get('onedatedd')?.value ?? null;
-          end = start;
-          break;
-  
-        case '2': // 週報
-          start = this.dateForm.get('startdate')?.value ?? null;
-          end = this.dateForm.get('enddate')?.value ?? null;
-          break;
-  
-        case '3': { // 月報 
-          const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
-          if (onedatemm) {
-            start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
-            end = new Date(onedatemm.getFullYear(), onedatemm.getMonth() + 1, 0);
-          }
-          break;
+
+    // 更新所有欄位驗證狀態
+    Object.keys(this.dateForm.controls).forEach(key => {
+      this.dateForm.get(key)?.updateValueAndValidity();
+    });
+  }
+
+  setReadOnlyFields() {
+    this.dateForm.controls['startdate'].disable();
+    this.dateForm.controls['enddate'].disable();
+    this.dateForm.controls['event_startdate'].disable();
+    this.dateForm.controls['event_enddate'].disable();
+  }
+
+  // 活動下拉改變
+  queryEvent(event: any) {
+    console.log(event);
+    console.log(this.EventIDOptions);
+    this.dateForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateS ?? null);
+    this.dateForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateE ?? null);
+  }
+
+  // #region 同步日期選單內容給表單日期
+  private syncDateToQueryForm() {
+    const reportType = this.dateForm.get('reportType')?.value;
+
+    let start: Date | null = null;
+    let end: Date | null = null;
+
+    switch (reportType) {
+      case '1': // 日報
+        start = this.dateForm.get('onedatedd')?.value ?? null;
+        end = start;
+        break;
+
+      case '2': // 週報
+        start = this.dateForm.get('startdate')?.value ?? null;
+        end = this.dateForm.get('enddate')?.value ?? null;
+        break;
+
+      case '3': { // 月報 
+        const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
+        if (onedatemm) {
+          start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
+          end = new Date(onedatemm.getFullYear(), onedatemm.getMonth() + 1, 0);
         }
-  
-        case '4': { // 半年報
-          const dateValue = this.dateForm.get('halfyear_onedateyy')?.value as Date | string;
-          const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
-          const half = String(this.dateForm.get('halfyear')?.value); // 確保是字串
-  
-          if (year) {
-            if (half === '1') { // 上半年
-              start = new Date(year, 0, 1);
-              end = new Date(year, 5, 30);
-            } else if (half === '2') { // 下半年
-              start = new Date(year, 6, 1);
-              end = new Date(year, 11, 31);
-            }
-          }
-          break;
-        }
-  
-        case '5': { // 年報
-          const dateValue = this.dateForm.get('year_onedateyy')?.value as Date | string;
-          const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
-  
-          if (year) {
+        break;
+      }
+
+      case '4': { // 半年報
+        const dateValue = this.dateForm.get('halfyear_onedateyy')?.value as Date | string;
+        const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+        const half = String(this.dateForm.get('halfyear')?.value); // 確保是字串
+
+        if (year) {
+          if (half === '1') { // 上半年
             start = new Date(year, 0, 1);
+            end = new Date(year, 5, 30);
+          } else if (half === '2') { // 下半年
+            start = new Date(year, 6, 1);
             end = new Date(year, 11, 31);
           }
-          break;
         }
-  
-        case '6': // 區間報
-          start = this.dateForm.get('sad_startdate')?.value ?? null;
-          end = this.dateForm.get('sad_enddate')?.value ?? null;
-          break;
+        break;
       }
-  
-      // 套用到 queryForm
-      if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
-      if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+
+      case '5': { // 年報
+        const dateValue = this.dateForm.get('year_onedateyy')?.value as Date | string;
+        const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
+
+        if (year) {
+          start = new Date(year, 0, 1);
+          end = new Date(year, 11, 31);
+        }
+        break;
+      }
+
+      case '6': // 區間報
+        start = this.dateForm.get('sad_startdate')?.value ?? null;
+        end = this.dateForm.get('sad_enddate')?.value ?? null;
+        break;
     }
+
+    // 套用到 queryForm
+    if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
+    if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+  }
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
