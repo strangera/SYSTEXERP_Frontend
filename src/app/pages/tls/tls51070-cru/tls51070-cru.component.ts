@@ -211,10 +211,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_No: '', // 國際條碼
   };
   // 預設 POS2005 新項目模板
-  createDefaultNew2005(pLU_MagNo: string) {
+  createDefaultNew2005(pLU_MagNo: string, PLU_No?: string) {
     this.defaultNew2005 = {
       PLU_MagNo: pLU_MagNo,
-      PLU_No: '', // 國際條碼
+      PLU_No: PLU_No || '', // 國際條碼
     };
   }
 
@@ -433,6 +433,32 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         }
       }
     });
+
+    // 觀察 國際條碼(PLU_No) 變化 ----20251013 新增
+    // 新增模式 把 POS2004 國際條碼 同步給 POS2005 國際條碼
+    // 修改模式待定
+    if (this.crudstatus === CRUDStatus.Create) {
+    this.dataForm.get('PLU_No')?.valueChanges.subscribe(value => {
+
+      // 若 POS2005Data 尚未存在，就初始化一筆空的
+      if (this.POS2005Data.length == 0) {
+        this.POS2005Data = [{
+          id: 1,
+          PLU_MagNo: this.dataForm.get('PLU_MagNo')?.value || '',
+          PLU_No: value ? value : '',
+        }];
+
+        // console.log('已經創建',this.POS2005Data);
+        return;
+      }
+
+      if (this.POS2005Data && this.POS2005Data.length > 0) {
+        // 若有值就同步並刷新第一筆
+        this.POS2005Data[0].PLU_No = value ? value : '';
+      }
+    });
+}
+
 
     //依照廠商暫存重新計算[標準進價]
     this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
@@ -896,7 +922,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   }
   // 批次刪除 POS2005
   onBatchDelete2005(selectedItems: POS2005Detail[]): void {
-    this.detail2005Handler.deletePOS2005(selectedItems, this.POS2005Data, this.pos2005Table);
+    this.detail2005Handler.deletePOS2005(selectedItems, this.POS2005Data);
   }
 
   //---POS2020表格編輯事件---
