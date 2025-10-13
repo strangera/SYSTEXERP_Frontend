@@ -126,26 +126,53 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     cash_yn: [''],
     tlt_building: [''],
     tlt_floor: [],
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+    ...createPaginationConfig([
+  { field: 'TXN_Date', order: 1 },
+  { field: 'ECR_No',   order: 1 },
+  { field: 'TXN_No',   order: 1 },
+]),
   });
+  // 小計 map（groupKey -> 小計物件）
+detailSubtotals: Record<string, Record<string, number>> = {};
+
+// 欄位對應：畫面欄位 -> 小計欄位鍵
+detailSubtotalFieldMap: Record<string, string> = {
+  TXN_PayAmt:   'Subtotal_TXN_PayAmt',
+  TXN_TaxAlwnc: 'Subtotal_TXN_TaxAlwnc',
+};
+private padTxnNo(v: any): string {
+  const s = String(v ?? '').trim();
+  return s ? s.padStart(6, '0') : '';
+}
 
   // 明細欄位
   columns: any[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_StatusName', header: '交易型態', visible: true },
-    { field: 'PAY_NO', header: '付款別代號', visible: false },
+
     { field: 'PAY_NAME', header: '付款別', visible: true },
-    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (n: number) => this.money(n), isTotal: true },
-    { field: 'TXN_TaxAlwnc', header: '備抵稅額', visible: true, style: 'text-right', format: (n: number) => this.money(n), isTotal: true },
+{ field: 'TXN_PayAmt',   header: '金額',     visible: true, style: 'text-right', format: (n: number) => this.money(n), isTotal: true, isSubTotal: true },
+{ field: 'TXN_TaxAlwnc', header: '備抵稅額', visible: true, style: 'text-right', format: (n: number) => this.money(n), isTotal: true, isSubTotal: true },
+
     { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v) },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
-    { field: 'IsHaveTERM_No', header: '是否分期', visible: true, format: (_: any, row: any) => Number(row?.TERM_No ?? 0) > 1 ? '是' : '否' },
+   { 
+  field: 'IsHaveTERM_No',
+  header: '是否分期',
+  visible: true,
+  format: (_: any, row: any) => {
+    // footer 列（沒有 _rowKey）→ 不顯示
+    if (!row || !row._rowKey) return '';
+    return Number(row?.TERM_No ?? 0) > 1 ? '是' : '否';
+  }
+},
+
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'org_id', header: '組織編號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
@@ -281,7 +308,11 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
       tlt_floor: ensureArr(raw['tlt_floor']),
       pageSize: 30,
       pageIndex: Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1,
-      SortBy: this.toApiSort(Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [{ field: 'TXN_Date', order: 1 }]),
+     SortBy: this.sanitizeSort(Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [
+  { field: 'TXN_Date', order: 1 },
+  { field: 'ECR_No',   order: 1 },
+  { field: 'TXN_No',   order: 1 },
+]),
     };
 
     // 清除空值
@@ -347,13 +378,13 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
       const rawRows = this.extractRows(wrappers);
 
       // 加上 _rowKey
-      const rows = rawRows.map((item: any, i: number) => {
-        const ymd = this.toYMD(item?.TXN_Date) ?? '';
-        const ecr = String(item?.ECR_No ?? '').trim();
-        const txn = String(item?.TXN_No ?? '').trim();
-        const rowKey = `${ymd}|${ecr}|${txn}|${i}`;
-        return { ...item, _rowKey: rowKey };
-      });
+   const rows = rawRows.map((item: any, i: number) => {
+  const ymd = this.toYMD(item?.TXN_Date) ?? '';
+  const ecr = String(item?.ECR_No ?? '').trim();
+  const txn = String(item?.TXN_No ?? '').trim();
+  const key = `${ymd}|${ecr}|${txn}`;
+  return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
+});
 
       // 總筆數
       const totalCount = Number(res?.TotalCount ?? 0);
@@ -379,31 +410,48 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   // -------------------- 查詢函式（給 app-table-report 用） --------------------
   /** 明細：供 app-table-report infinite scroll / 排序使用 */
-  public queryTLS23030ForReport = (body: any) =>
-    this.tls23030Service.queryTLS23030({ ...body, pageSize: 30 }).pipe(
-      map((res: any) => {
-        const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
-        const rawRows = this.extractRows(wrappers);
-        const rows = rawRows.map((item: any, i: number) => {
-          const ymd = this.toYMD(item?.TXN_Date) ?? '';
-          const ecr = String(item?.ECR_No ?? '').trim();
-          const txn = String(item?.TXN_No ?? '').trim();
-          const rowKey = `${ymd}|${ecr}|${txn}|${i}`;
-          return { ...item, _rowKey: rowKey };
-        });
+/** 明細：供 app-table-report infinite scroll / 排序使用（不插小計列） */
+public queryTLS23030ForReport = (body: any) => {
+  const safeBody = { ...body, pageSize: 30 };
+  safeBody.SortBy = this.sanitizeSort(Array.isArray(body?.SortBy) ? body.SortBy : []);
+  return this.tls23030Service.queryTLS23030(safeBody).pipe(
+    map((res: any) => {
+      // 展平成 rows
+      const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+      const rawRows = this.extractRows(wrappers);
 
-        // GrandTotal（回傳給 table，有些版本會自動帶入 footer）
-        const GrandTotal = wrappers.reduce((agg, w) => {
-          const a = Number(w?.Total_TXN_PayAmt ?? 0);
-          const b = Number(w?.Total_TXN_TaxAlwnc ?? 0);
-          agg.Total_TXN_PayAmt = (agg.Total_TXN_PayAmt ?? 0) + a;
-          agg.Total_TXN_TaxAlwnc = (agg.Total_TXN_TaxAlwnc ?? 0) + b;
-          return agg;
-        }, {} as Record<string, number>);
+const rows = rawRows.map((item: any, i: number) => {
+  const ymd = this.toYMD(item?.TXN_Date) ?? '';
+  const ecr = String(item?.ECR_No ?? '').trim();
+  const txn = String(item?.TXN_No ?? '').trim();
+  const key = `${ymd}|${ecr}|${txn}`;
+  return {
+    ...item,
+    _rowKey: `${key}|${i}`,
+    groupKey: key,          // ★ 給 app-table-report 分組用
+  };
+});
 
-        return { Data: rows, TotalCount: Number(res?.TotalCount ?? rows.length), GrandTotal };
-      })
-    );
+      // 彙總 API 回來的包裝物件總計，映射到欄位鍵（避免 TS4111 用 bracket 存取）
+      const grand = wrappers.reduce((agg: Record<string, number>, w: any) => {
+        agg['Total_TXN_PayAmt']   = (agg['Total_TXN_PayAmt']   ?? 0) + Number(w?.['Total_TXN_PayAmt']   ?? w?.Total_TXN_PayAmt   ?? 0);
+        agg['Total_TXN_TaxAlwnc'] = (agg['Total_TXN_TaxAlwnc'] ?? 0) + Number(w?.['Total_TXN_TaxAlwnc'] ?? w?.Total_TXN_TaxAlwnc ?? 0);
+        return agg;
+      }, {});
+
+      // 只回傳需要被加總的欄位（和 columns 裡 isTotal:true 對齊）
+      const GrandTotal = {
+        TXN_PayAmt:   Number(grand[TOTAL_FIELD_MAP.TXN_PayAmt] ?? 0),
+        TXN_TaxAlwnc: Number(grand[TOTAL_FIELD_MAP.TXN_TaxAlwnc] ?? 0),
+      };
+
+      const totalCount = Number.isFinite(Number(res?.TotalCount)) ? Number(res.TotalCount) : rows.length;
+      return { Data: rows, TotalCount: totalCount, GrandTotal };
+    })
+  );
+
+}
+
 
   /** 彙總：供 app-table-report 使用 */
   public queryTLS23030SummaryForReport = (body: any) =>
@@ -550,13 +598,16 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   }
 
   // -------------------- footer builders --------------------
-  buildFooterFromTotals(grand?: Record<string, number>): Record<string, any> | undefined {
-    if (!grand) return undefined;
-    return {
-      TXN_PayAmt: grand[TOTAL_FIELD_MAP.TXN_PayAmt] ?? 0,
-      TXN_TaxAlwnc: grand[TOTAL_FIELD_MAP.TXN_TaxAlwnc] ?? 0,
-    };
-  }
+buildFooterFromTotals(grand?: Record<string, number>): Record<string, any> | undefined {
+  if (!grand) return undefined;
+  return {
+    TXN_PayAmt:   Number(grand[TOTAL_FIELD_MAP.TXN_PayAmt] ?? 0),
+    TXN_TaxAlwnc: Number(grand[TOTAL_FIELD_MAP.TXN_TaxAlwnc] ?? 0),
+    // 這行是關鍵：讓「是否分期」footer 一律空白
+    IsHaveTERM_No: '',
+  };
+}
+
 
   buildSummaryFooter(): Record<string, any> {
     return {
@@ -629,4 +680,48 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     const p = { ...payload }; delete p.pageIndex; delete p.pageSize;
     this.queryTLS23030PaymentSummaryForReport(p).subscribe(); // 直接觸發載入，同步 state
   }
+
+
+
+public groupKey = (row: any): string => {
+  const ymd = this.toYMD(row?.TXN_Date) ?? '';
+  const ecr = String(row?.ECR_No ?? '').trim();
+  const txn = String(row?.TXN_No ?? '').trim();
+  return `${ymd}|${ecr}|${txn}`;
+};
+/** groupKey 對應的後端真實排序欄位 */
+private readonly GROUPKEY_SORT_EXPANSION = ['TXN_Date', 'ECR_No', 'TXN_No'];
+
+/** 將 UI 的 SortBy 轉成後端可接受，會移除 groupKey 並展開成真實欄位 */
+private sanitizeSort(uiSort: Array<{ field: string; order: 1 | -1 }>): Array<{ field: string; order: 1 | -1 }> {
+  const seen = new Set<string>();
+  const out: Array<{ field: string; order: 1 | -1 }> = [];
+
+  for (const s of uiSort ?? []) {
+    if (!s?.field) continue;
+
+    // 遇到 groupKey：展開為 TXN_Date, ECR_No, TXN_No（用同一個 order）
+    if (s.field === 'groupKey') {
+      for (const f of this.GROUPKEY_SORT_EXPANSION) {
+        if (!seen.has(f)) {
+          out.push({ field: f, order: s.order });
+          seen.add(f);
+        }
+      }
+      continue; // 不把 groupKey 自己加進去
+    }
+
+    // 其餘正常欄位去重後加進去
+    if (!seen.has(s.field)) {
+      out.push({ field: s.field, order: s.order });
+      seen.add(s.field);
+    }
+  }
+
+  // 若最後仍然沒有排序（例如 UI 只給了 groupKey），補上預設排序以確保穩定性
+  if (out.length === 0) {
+    for (const f of this.GROUPKEY_SORT_EXPANSION) out.push({ field: f, order: 1 });
+  }
+  return out;
+}
 }

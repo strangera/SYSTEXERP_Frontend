@@ -616,6 +616,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls57100', loadComponent: () => import('./tls57100/tls57100.component').then(m => m.TLS57100Component) },
   // 存貨月結庫存表
   { path: 'tls57110', loadComponent: () => import('./tls57110/tls57110.component').then(m => m.TLS57110Component) },
+  { path: 'tls57110cru', loadComponent: () => import('./tls57110-cru/tls57110-cru.component').then(m => m.TLS57110CRUComponent) },
   // 滯銷商品統計表
   { path: 'tls57120', loadComponent: () => import('./tls57120/tls57120.component').then(m => m.TLS57120Component) },
   // 銷售排行報表
