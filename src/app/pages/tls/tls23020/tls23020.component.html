@@ -231,12 +231,14 @@
   [lastQueryBody]="historyRequestBody"
   [data]="data"
   [columns]="columns"
+  [dataKey]="'_rowKey'"
   [totalRecords]="totalRecords"
   [showDelete]="false"
   [showManage]="false"
   [showReportMode]="false"
   [queryFunction]="queryTLS23020ForReport"
   [footerData]="buildFooterFromTotals()"
+  [groupRowsBy]="'tlt_no'"
 >
   <header>
     <!-- 左：顯示彙總；右：匯出按鈕 -->
