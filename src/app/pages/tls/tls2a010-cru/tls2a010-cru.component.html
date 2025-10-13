@@ -11,22 +11,26 @@
       (ngSubmit)="onSubmit(dataForm)"
     >
       <div class="card">
-        <app-table
-          dataKey="id"
+        <app-customFooter-table
+          dataKey="TXN_No"
           [data]="data"
           [columns]="columns"
           [showCheckBox]="false"
           [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
           [totalRecords]="totalRecords"
-          [lazy]="true"
+          [lazy]="false"
           [loading]="loading"
           [showRowEdit]="true"
           [showReportMode]="false"
           [showEdit]="false"
           [showDetail]="false"
           [showDelete]="false"
+          [footerData]="footerData"
+          [showTotal]="true"
+          (onSubmit)="onSubmit(dataForm)"
+          [showPaginator]="true"
           (fieldChange)="onFieldChange($event)"
-        ></app-table>
+        ></app-customFooter-table>
       </div>
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"

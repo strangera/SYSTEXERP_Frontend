@@ -30,7 +30,7 @@ export const defaultColumns = [
   { header: '總計', field: 'group_name', hidden: true },
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
-  { header: '專櫃名稱', field: 'tlt_name' },
+  { header: '櫃位名稱', field: 'tlt_name' },
   { header: '系統帳', field: 'BOOK_PayAmt', isTotal: true, format: formatAmount },
   { header: '實收帳', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
   { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true, format: formatAmount },
@@ -55,7 +55,7 @@ export const creditCardColumns: Column[] = [
   { header: '總計', field: 'group_name', hidden: true },
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
-  { header: '專櫃名稱', field: 'tlt_name' },
+  { header: '櫃位名稱', field: 'tlt_name' },
 
   { header: '信用卡', field: 'BOOK_PayAmt1', groupField: 'BOOK', isTotal: true, format: formatAmount },
   { header: 'AE', field: 'BOOK_PayAmt2', groupField: 'BOOK', isTotal: true, format: formatAmount },

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Column, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
-import { ReactiveFormsModule, FormGroup, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -9,14 +9,16 @@ import { PanelModule } from 'primeng/panel';
 import { TLS2A010Data } from '../tls2a010/tls2a010.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { Router } from '@angular/router';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+
 
 @Component({
   selector: 'app-tls2a010-cru',
   templateUrl: './tls2a010-cru.component.html',
+  styleUrls: ['./tls2a010-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -25,9 +27,8 @@ import { Router } from '@angular/router';
     AccordionModule,
     TranslateModule,
     ReactiveFormsModule,
-    TableComponent,
     TooltipModule,
-    FormsModule
+    CustomFooterTableComponent
   ],
 })
 export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> implements OnInit {
@@ -35,10 +36,11 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
     TXN_Date: [''],
     ECR_No: [''],
     PAY_NO: [''],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    ...createPaginationConfig([{ field: 'TXN_No', order: 1 }]),
   });
 
-  /** 各分類對應的下拉選單 */
+  footerData: any[] = [];
+
   checkStatusOptions: Record<string, any[]> = {
     CREDIT: [
       { label: '已繳回', value: '1' },
@@ -81,15 +83,15 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   };
 
   columns: Column[] = [
+    { field: 'group_name', header: '總計',hidden: true },
     { field: 'TXN_Date', header: '日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機代號' },
     { field: 'TXN_No', header: '交易序號' },
     { field: 'TLT_NO', header: '專櫃編號' },
-    { field: 'tlt_name', header: '專櫃名稱' },
+    { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'PAY_NO', header: '付款方式' },
     { field: 'CRD_No', header: '付款卡號' },
-    { field: 'TXN_PayAmt', header: '付款金額', format: formatAmount },
-
+    { field: 'TXN_PayAmt', header: '付款金額', isTotal: true, format: formatAmount },
     {
       field: 'check_status',
       header: '審核狀態',
@@ -138,13 +140,63 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
       const row = nav.rowdata;
       this.PAY_Type = row.PAY_Type || '';
       this.ID = row.ID || '';
-      this.data = (row.details ?? []).map((item: any) => ({
-        ...item,
-        TXN_Date: this.formatDate(item.TXN_Date), // 改成 YYYY/MM/DD
-        check_status: item.check_status ?? '1'
-      }));
-      this.totalRecords = row.TotalCount || this.data.length;
+
+      // 保存完整的 rowdata 以供 API 查詢使用
+      console.log('接收到的 rowdata:', row);
+
+      this.loadAllData();
     }
+  }
+
+  /** 載入所有資料 */
+  private loadAllData(): void {
+    this.loading = true;
+
+    const nav = history.state as any;
+    const rowData = nav?.rowdata;
+    const queryParams = {
+      PageSize: 999, // 設定一個大數值來獲取所有資料
+      PageIndex: 1,
+      OrderBy: "TXN_No",
+      Offset: 0,
+      SortBy: [
+        {
+          field: "TXN_No",
+          order: 1
+        }
+      ],
+      ID: this.ID ? parseInt(this.ID) : 0,
+      TXN_Date: "",
+      ECR_No: "",
+      PAY_NO: rowData?.PAY_NO || rowData?.PAY_Type || "",
+      PAY_Type: this.PAY_Type || ""
+    };
+
+
+    this.tls2a010Service.queryDetailTLS2A010(queryParams).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.data = (response.Data.mainData ?? []).map((item: any) => ({
+            ...item,
+            TXN_Date: this.formatDate(item.TXN_Date),
+            check_status: item.check_status ?? '1'
+          }));
+
+          this.footerData = (response.Data.totalData ?? []).map((f: any) => ({
+            ...f,
+            group_name: f.group_name || '總計',
+          }));
+
+          this.totalRecords = response.TotalCount || this.data.length;
+          console.log('載入完整資料:', this.data.length, '筆，總計:', this.totalRecords);
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('載入資料失敗:', error);
+        this.loading = false;
+      }
+    });
   }
 
   /** 格式化日期字串 → 回傳 Date 物件 */
@@ -202,11 +254,6 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
           this.loading = false;
           this.onCancel();
         },
-        error: (err) => {
-          console.error('新增失敗:', err);
-          this.messageService.errorBubble('新增失敗，請稍後再試');
-          this.loading = false;
-        }
       });
     });
   }
