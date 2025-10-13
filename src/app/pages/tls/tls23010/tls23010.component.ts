@@ -92,11 +92,12 @@ export class TLS23010Component
 
   // ===== 排序（重點）=====
   sortMeta: any[] = [];
-  readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order:  1 },
-    { field: 'ECR_No',   order:  1 },
-    { field: 'TXN_No',   order:  1 },
-  ];
+readonly defaultSort: any[] = [
+  { field: 'TXN_Date', order: 1 },
+  { field: 'tlt_no',   order: 1 },  // 以專櫃編號群組
+  { field: 'ECR_No',   order: 1 },
+  { field: 'TXN_No',   order: 1 },
+];
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -134,9 +135,10 @@ export class TLS23010Component
 
     // ✅ 預設排序（與 defaultSort 一致）
     ...createPaginationConfig([
-      { field: 'TXN_Date', order:  1 },
-      { field: 'ECR_No',   order:  1 },
-      { field: 'TXN_No',   order:  1 },
+    { field: 'TXN_Date', order: 1 },
+    { field: 'tlt_no',   order: 1 }, // ✅ 同步
+    { field: 'ECR_No',   order: 1 },
+    { field: 'TXN_No',   order: 1 },
     ]),
     pageSize: [30],  // ✅ 一律 30
   });
@@ -678,55 +680,62 @@ export class TLS23010Component
   }
 
   // ========= 欄位 =========
-  columns = [
-    { field: 'TXN_Date',       header: '銷售日期',      visible: true, format: this.formatYMD },
-    { field: 'ECR_No',         header: '收銀機號',      visible: true },
-    { field: 'TXN_No',         header: '交易序號',      visible: true, style: 'text-right' },
-    { field: 'tlt_no',         header: '專櫃編號',      visible: true },
-    { field: 'tlt_name',       header: '櫃位名稱',      visible: true, style: 'text-left' },
-    { field: 'TXN_Uniform',    header: '統一編號',      visible: true },
-    { field: 'gui_track',      header: '字軌',          visible: true },
-    { field: 'GUIBegNo',       header: '發票起始號碼',  visible: true },
-    { field: 'GUIEndNo',       header: '發票結束號碼',  visible: true },
-    { field: 'TXN_TotGUI',     header: '發票金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
-    { field: 'TXN_TotSaleAmt', header: '銷售金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
-    { field: 'TXN_TotOver',    header: '溢收金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
+columns = [
+  { field: 'TXN_Date',       header: '銷售日期',  visible: true, format: this.formatYMD },
+  { field: 'ECR_No',         header: '收銀機號',  visible: true },
+  { field: 'TXN_No',         header: '交易序號',  visible: true, style: 'text-right' },
 
-    { field: 'TXN_VIP',        header: '外交官零稅',    visible: true, format: this.nyToYesNo },
-    { field: 'TXN_Mode',       header: '事後登錄',      visible: true, format: this.pToYesNoSafe,   noTotal: true },
-    { field: 'TXN_PreOrder',   header: '預售',          visible: true, format: this.nullpToYesNoSafe, noTotal: true },
+  { field: 'tlt_no',         header: '專櫃編號',  visible: true },        // ✅ 群組鍵(不需 isSubTotal)
+  { field: 'tlt_name',       header: '櫃位名稱',  visible: true, style: 'text-left' },
 
-    { field: 'TXN_StatusName',   header: '交易型態',     visible: true },
-    { field: 'TXN_TaxFreeCertNo',header: '外交官免稅卡號',visible: true },
+  { field: 'TXN_Uniform',    header: '統一編號',  visible: true },
+  { field: 'gui_track',      header: '字軌',      visible: true },
+  { field: 'GUIBegNo',       header: '發票起始號碼', visible: true },
+  { field: 'GUIEndNo',       header: '發票結束號碼', visible: true },
 
-    { field: 'TXN_Time',       header: '交易時間',      visible: true, format: this.formatISOToHHMMSS },
-    { field: 'USR_No',         header: '收銀員',        visible: true, style: 'text-left' },
-    { field: 'TXN_PreOrderNo', header: '預售/訂金單號', visible: true },
+  // ✅ 金額欄位：同時支援小計與總計
+  { field: 'TXN_TotGUI',     header: '發票金額',    visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+  { field: 'TXN_TotSaleAmt', header: '銷售金額',    visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+  { field: 'TXN_TotOver',    header: '溢收金額',    visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
 
-    { field: 'ORG_TXN_Date',   header: '原交易日期',    visible: true, format: this.formatYMD },
-    { field: 'ORG_ECR_No',     header: '原收銀機號',    visible: true },
-    { field: 'ORG_TXN_No',     header: '原交易序號',    visible: true, style: 'text-right' },
+  { field: 'TXN_VIP',        header: '外交官零稅',  visible: true, format: this.nyToYesNo },
+  { field: 'TXN_Mode',       header: '事後登錄',    visible: true, format: this.pToYesNoSafe, noTotal: true },
+  { field: 'TXN_PreOrder',   header: '預售',        visible: true, format: this.nullpToYesNoSafe, noTotal: true },
 
-    { field: 'TXN_PkngUID',    header: '停車車牌',      visible: true },
-    { field: 'TXN_MemID',      header: '會員卡號',      visible: true },
+  { field: 'TXN_StatusName', header: '交易型態',    visible: true },
+  { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
 
-    { field: 'TXN_TotDisc',    header: '折扣/讓金額',   visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
+  { field: 'TXN_Time',       header: '交易時間',    visible: true, format: this.formatISOToHHMMSS },
+  { field: 'USR_No',         header: '收銀員',      visible: true, style: 'text-left' },
+  { field: 'TXN_PreOrderNo', header: '預售/訂金單號', visible: true },
 
-    { field: 'GUILoveStatus',  header: '捐贈狀態',      visible: true, format: this.nyToYesNo },
-    { field: 'TXN_GUILoveCode',header: '捐贈社福團體代碼', visible: true },
-    { field: 'TXN_GUIRemark',  header: '防偽隨機碼',     visible: true },
+  { field: 'ORG_TXN_Date',   header: '原交易日期',  visible: true, format: this.formatYMD },
+  { field: 'ORG_ECR_No',     header: '原收銀機號',  visible: true },
+  { field: 'ORG_TXN_No',     header: '原交易序號',  visible: true, style: 'text-right' },
 
-    { field: 'TXN_GUI_CarrType', header: '載具種類',     visible: true, format: (v: any) => this.getLabelFromOptions(v, this.carrierTypeOptions) },
-    { field: 'TXN_GUIVehicle', header: '載具號碼',       visible: true },
+  { field: 'TXN_PkngUID',    header: '停車車牌',    visible: true },
+  { field: 'TXN_MemID',      header: '會員卡號',    visible: true },
 
-    { field: 'TXN_PrintTimes', header: '發票列印次數',    visible: true, style: 'text-right' },
-    { field: 'TXN_PrintGUI',   header: '電子發票是否列印', visible: true, format: this.getYesNoLabel },
+  { field: 'TXN_TotDisc',    header: '折扣/讓金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
 
-    { field: 'CRD_Name',       header: '信用卡別',      visible: true },
-    { field: 'CRD_No',         header: '號碼',          visible: true },
-    { field: 'TERM_No',        header: '分期期數',       visible: true, style: 'text-right' },
-    { field: 'TXN_PayAmt',     header: '金額',          visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
-  ];
+  { field: 'GUILoveStatus',  header: '捐贈狀態',    visible: true, format: this.nyToYesNo },
+  { field: 'TXN_GUILoveCode', header: '捐贈社福團體代碼', visible: true },
+  { field: 'TXN_GUIRemark',  header: '防偽隨機碼',   visible: true },
+
+  { field: 'TXN_GUI_CarrType', header: '載具種類',   visible: true, format: (v: any) => this.getLabelFromOptions(v, this.carrierTypeOptions) },
+  { field: 'TXN_GUIVehicle', header: '載具號碼',     visible: true },
+
+  { field: 'TXN_PrintTimes', header: '發票列印次數', visible: true, style: 'text-right' },
+  { field: 'TXN_PrintGUI',   header: '電子發票是否列印', visible: true, format: this.getYesNoLabel },
+
+  { field: 'CRD_Name',       header: '信用卡別',    visible: true },
+  { field: 'CRD_No',         header: '號碼',        visible: true },
+  { field: 'TERM_No',        header: '分期期數',     visible: true, style: 'text-right' },
+
+  // ✅ 支付金額也做小計+總計
+  { field: 'TXN_PayAmt',     header: '金額',        visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+];
+
 
   detailcolumns = [
     { field: 'TXN_Date',   header: '銷售日期', format: this.formatDateTimeYMDHM.bind(this) },

@@ -134,6 +134,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     org_id: [],
     showSummary: [false],
     ...createPaginationConfig([
+      { field: 'tlt_no',   order: 1 },
       { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No', order: 1 },
       { field: 'TXN_No', order: 1 },
@@ -180,6 +181,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       this.onSubmit(form),
     );
      this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false });
+     this.queryForm.patchValue({ SortBy: this.defaultSort }, { emitEvent: false });
     this.queryForm.valueChanges
   .pipe(untilDestroyed(this), debounceTime(300))
   .subscribe(() => {

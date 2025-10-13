@@ -109,6 +109,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     tlt_floor: [],
     org_id: [],
     ...createPaginationConfig([
+      { field: 'tlt_no', order: 1 }, 
       { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No', order: 1 },
       { field: 'TXN_No', order: 1 },
@@ -217,6 +218,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       pageIndex: Number(raw?.pageIndex) || 1,
       pageSize:  Number(raw?.pageSize)  || 20,
       SortBy:    Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [
+        { field: 'tlt_no', order: 1 },
         { field: 'TXN_Date', order: 1 },
         { field: 'ECR_No', order: 1 },
         { field: 'TXN_No', order: 1 },
@@ -397,8 +399,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
     { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
-    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) , isSubTotal: true },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
     { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
     { field: 'USR_No', header: '收銀員', visible: true },
@@ -418,7 +420,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'PAY_NO', header: '付款別代號', visible: true },
     { field: 'PAY_NAME', header: '付款別', visible: true },
-    { field: 'TXN_PayAmt', header: '金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
+    { field: 'TXN_PayAmt', header: '金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
     { field: 'TERM_No', header: '分期', visible: true },
@@ -431,13 +433,13 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    { field: 'PLU_SalePrc', header: '單項售價', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
-    { field: 'TXN_Net', header: '未稅(免稅)金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
-    { field: 'TXN_Tax', header: '稅額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
+    { field: 'TXN_SaleAmt', header: '單項售價', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
+    { field: 'TXN_Net', header: '未稅(免稅)金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
+    { field: 'TXN_Tax', header: '稅額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
     { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
     { field: 'PRM_TXN_discode', header: '原折扣', visible: true },
     { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },
-    { field: 'PLU_TaxTypeName', header: '稅別名稱', visible: true },
+    { field: 'PLU_TaxTypeName', header: '稅別', visible: true },
     { field: 'PLU_MagNo', header: '單品編號', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
   ];
@@ -454,7 +456,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         : undefined;
     } else {
       this.activeFooter = this.discountTotals
-        ? { PLU_SalePrc: this.discountTotals.TotalSalePrc, TXN_Net: this.discountTotals.TotalNet, TXN_Tax: this.discountTotals.TotalTax }
+        ? { TXN_SaleAmt: this.discountTotals.TotalSalePrc, TXN_Net: this.discountTotals.TotalNet, TXN_Tax: this.discountTotals.TotalTax }
         : undefined;
     }
   }
