@@ -630,6 +630,7 @@ export class TLS12040DataFlowService {
           sst_rate: null,
           cap_saletype1: 'N',
           cap_saletype2: 'N',
+          cap_saletype5: 'N',
           cag_remark: '',
           _status: 'new',
           ChargeDetails: [],

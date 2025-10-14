@@ -30,6 +30,7 @@ export interface CommissionMasterApiItem {
   sst_rate: number | null;
   cap_saletype1: string | null;
   cap_saletype2: string | null;
+  cap_saletype5: string | null;
   cag_remark: string | null;
 }
 

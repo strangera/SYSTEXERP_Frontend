@@ -639,7 +639,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    console.log('🎯 建立預設折扣項目');
+    console.log(' 建立預設折扣項目');
     const contractStartDate = this.getContractDate('start');
     const contractEndDate = this.getContractDate('end');
 
@@ -678,7 +678,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    console.log('🎯 建立預設層級項目');
+    console.log(' 建立預設層級項目');
 
     return this.discountOptions.map((option, index) => {
       //  更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
@@ -1038,6 +1038,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       sst_rate: null,
       cap_saletype1: 'N',
       cap_saletype2: 'N',
+      cap_saletype5: 'N',
       cag_remark: '',
       _status: 'new',
       ChargeDetails: this.createDefaultDiscountItems({
@@ -1366,41 +1367,33 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
 
-    //  新增：保護 cag_barcode 不被意外修改
-    if (fieldName === 'cag_barcode' && rowData.cag_barcode && rowData.cag_barcode !== newValue) {
-      console.warn('⚠️ 嘗試修改 cag_barcode，這可能不是預期的行為:', {
-        itemId: rowData.id,
-        originalValue: rowData.cag_barcode,
-        newValue: newValue,
-        stackTrace: new Error().stack
-      });
-
-      // 如果不是明確的用戶操作，則阻止修改
-      if (fieldName === 'cag_barcode' && this.selectedSettingTab !== 'annual') {
-        console.log('阻止 cag_barcode 的意外修改');
-        return;
-      }
-    }
-
     // 判斷是主檔還是明細
-    const isDetail = this.isDetailItem(event.rowData);
+    const isDetail = this.isDetailItem(rowData);
 
     if (isDetail) {
       this.handleDetailFieldChange(event);
     } else {
-      this.dataFlowService.updateField(
-        rowData.id,
-        'master',
-        fieldName,
-        newValue
-      );
+      //  處理 cap_saletype 的 checkbox
+      if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype5') {
+        const ynValue = newValue ? 'Y' : 'N';
+        rowData[fieldName] = ynValue;
+
+        // 只有新增的項目才同步
+        if (rowData._status === 'new') {
+          this.commissionData.forEach(master => {
+            if (master._status === 'new' && master.id !== rowData.id) {
+              master[fieldName] = ynValue;
+            }
+          });
+        }
+
+        this.dataFlowService.updateField(rowData.id, 'master', fieldName, ynValue);
+      } else {
+        this.dataFlowService.updateField(rowData.id, 'master', fieldName, newValue);
+      }
     }
 
-    setTimeout(() => {
-      if (this.commissionData.length > 0) {
-        this.saveToWorkflow();
-      }
-    }, 200);
+    setTimeout(() => this.saveToWorkflow(), 200);
   }
 
   /**
@@ -1548,7 +1541,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     return this.visibleCommissionData.map(item => {
       // 建立新物件,包含動態的 detailItems
       const processedItem = { ...item };
-
+      (processedItem as any).cap_saletype1 = item.cap_saletype1 === 'Y';
+      (processedItem as any).cap_saletype2 = item.cap_saletype2 === 'Y';
+      (processedItem as any).cap_saletype5 = item.cap_saletype5 === 'Y';
       // 根據當前選中的標籤,設定對應的資料到統一的屬性名稱
       switch (this.selectedSettingTab) {
         case 'discount':

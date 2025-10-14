@@ -216,6 +216,7 @@ export interface TLS12040CommissionMaster {
   sst_rate?: number;
   cap_saletype1?: string;
   cap_saletype2?: string;
+  cap_saletype5?: string;
   cag_bdate: string;
   cag_edate: string;
 }
