@@ -190,7 +190,7 @@
         </p-divider>
         <div class="grid p-fluid">
           <app-img-upload class="col-12" (uploadFiles)="files = $event" [images]="img1001Data"
-            [fileLimit]="10 - img1001Data.length" (imagesChange)="img1001Data = $event"
+            [fileLimit]="10 - img1001Data.length" (imagesChange)="img1001Data = $event" [showEdit]="!isFormReadable"
             (imagesDeleteChange)="confirmDeleteImages = $event" [disabled]="img1001Data.length < 10"></app-img-upload>
         </div>
       </ng-container>
