@@ -86,7 +86,11 @@
               optionLabel="label" optionValue="value" [control]="queryForm.controls.pay_taxtype" [submitted]="submitted">
             </app-dropdown>
           </div>
-
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions"
+              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted">
+            </app-multi-select>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="是否開立業主發票" controlName="rece_yn" [options]="WhetherOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.rece_yn" [submitted]="submitted">
@@ -111,11 +115,7 @@
             </app-multi-select>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions"
-              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted">
-            </app-multi-select>
-          </div>
+
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -128,57 +128,70 @@
 </div>
 
 <!-- 明細/彙總切換 -->
-<div class="col-12 md:col-6 lg:col-4">
-  <p-checkbox
-    inputId="showSummary"
-    [ngModelOptions]="{ standalone: true }"
-    [(ngModel)]="showSummary"
-    binary="true"
-    (onChange)="onToggleSummary()"
-    label="顯示彙總">
-  </p-checkbox>
-</div>
+
 
 <div class="card">
   <!-- 明細表 -->
-  <app-table-report
-    *ngIf="!showSummary"
-    tableKey="TLS23030"
-    [lastQueryBody]="historyRequestBody"
-    [data]="data"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [showDelete]="false"
-    [showManage]="false"
-    [showReportMode]="false"
-    [queryFunction]="queryTLS23030ForReport"
-    [footerData]="detailFooter"
-    [groupRowsBy]="'groupKey'">
-    <header>
-      <div class="flex justify-content-end gap-2">
+<app-table-report
+  *ngIf="!queryForm.get('showSummary')?.value"
+  tableKey="TLS23030"
+  [lastQueryBody]="historyRequestBody"
+  [data]="data"
+  [columns]="columns"
+  [totalRecords]="totalRecords"
+  [showDelete]="false"
+  [showManage]="false"
+  [showReportMode]="false"
+  [queryFunction]="queryTLS23030ForReport"
+  [footerData]="detailFooter"
+  [groupRowsBy]="'groupKey'">
+  <header>
+    <div class="flex justify-content-between align-items-center w-full">
+      <div class="flex align-items-center">
+        <p-checkbox
+          inputId="showSummary"
+          [formControl]="queryForm.controls.showSummary"
+          binary="true"
+          (onChange)="onToggleSummary()"
+          label="顯示彙總">
+        </p-checkbox>
+      </div>
+      <div class="flex gap-2">
         <p-button styleClass="p-2" label="匯出付款別報表.PDF" [loading]="btnLoading" icon="pi pi-file"
           (click)="onExportPDF()" [disabled]="data.length === 0"></p-button>
         <p-button styleClass="p-2" label="匯出付款別報表.XLSX" [loading]="btnLoading" icon="pi pi-file-excel"
           (click)="onExportXLSX()" [disabled]="data.length === 0"></p-button>
       </div>
-    </header>
-  </app-table-report>
+    </div>
+  </header>
+</app-table-report>
 
   <!-- 彙總表（修正：只在 showSummary 顯示，綁定彙總資料/欄位/函式） -->
-  <app-table-report
-    *ngIf="showSummary"
-    tableKey="TLS23030_SUMMARY"
-    [lastQueryBody]="historyRequestBody"
-    [data]="summaryData"
-    [columns]="summaryColumns"
-    [totalRecords]="summaryData.length"
-    [showDelete]="false"
-    [showManage]="false"
-    [showReportMode]="false"
-    [queryFunction]="queryTLS23030SummaryForReport"
-    [footerData]="buildSummaryFooter()">
-    <header>
-      <div class="flex gap-4 justify-content-end align-items-center pr-2">
+ <app-table-report
+  *ngIf="queryForm.get('showSummary')?.value"
+  tableKey="TLS23030_SUMMARY"
+  [lastQueryBody]="historyRequestBody"
+  [data]="summaryData"
+  [columns]="summaryColumns"
+  [totalRecords]="summaryData.length"
+  [showDelete]="false"
+  [showManage]="false"
+  [showReportMode]="false"
+  [queryFunction]="queryTLS23030SummaryForReport"
+  [footerData]="buildSummaryFooter()">
+  <header>
+    <div class="flex justify-content-between align-items-center w-full">
+      <div class="flex align-items-center">
+        <p-checkbox
+          inputId="showSummary"
+          [formControl]="queryForm.controls.showSummary"
+          binary="true"
+          (onChange)="onToggleSummary()"
+          label="顯示彙總">
+        </p-checkbox>
+      </div>
+
+      <div class="flex gap-4 align-items-center pr-2">
         <span>總金額：{{ summaryTotals.totalPayAmt | number:'1.0-0' }}</span>
         <span>總備抵稅額：{{ summaryTotals.totalTaxAlwnc | number:'1.0-0' }}</span>
 
@@ -188,8 +201,9 @@
         <p-button styleClass="p-2" label="彙總付款別報表.XLSX" [loading]="btnLoading" icon="pi pi-file-excel"
           (click)="onExportXLSX()" [disabled]="summaryData.length === 0"></p-button>
       </div>
-    </header>
-  </app-table-report>
+    </div>
+  </header>
+</app-table-report>
 
   <!-- 付款別彙總（小表） -->
   <app-table-report
