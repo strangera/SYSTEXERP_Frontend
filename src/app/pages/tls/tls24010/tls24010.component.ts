@@ -26,7 +26,6 @@ import { AsyncPipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
-import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -106,7 +105,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     const body = { ECR_No: event };
     this.tLS41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Data.length !== 0) {
-        this.queryForm.get('TLT_No')?.setValue(res.Data[0].ECR_TLT_No || null);
+        const ECR_TLT_No = this.TLT_NoOptions.filter(option => option.No === res.Data[0].ECR_TLT_No);
+        this.queryForm.get('TLT_No')?.setValue(ECR_TLT_No.length > 0 ? ECR_TLT_No[0].No : null);
       }
     });
   }

@@ -6,32 +6,18 @@
 
 <!-- 一般模式 -->
 <ng-container *ngIf="!readonly; else readonlyMode">
-  <p-dropdown
-    styleClass="w-full"
-    [id]="controlName"
-    [formControl]="control"
-    [placeholder]="customPlaceholder || placeholder"
-    [options]="options"
-    [optionLabel]="optionLabel"
-    [optionValue]="optionValue"
-    [showClear]="showClear"
+  <p-dropdown styleClass="w-full" [id]="controlName" [formControl]="control"
+    [placeholder]="customPlaceholder || placeholder" [options]="options" [optionLabel]="optionLabel"
+    [optionValue]="optionValue" [showClear]="showClear"
     [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
-    [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'"
-    (onChange)="onDropdownChange($event)"
-    [dataKey]="optionValue"
-    appendTo="body"
-    [resetFilterOnHide]="true"
-    [virtualScroll]="true"
-    [virtualScrollItemSize]="40"
-    [editable]="editable"
-    [loading]="loading"
-    [filter]="filter"
-  >
+    [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
+    [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="true"
+    [virtualScrollItemSize]="40" [editable]="editable" [loading]="loading" [filter]="filter">
     <ng-template let-options pTemplate="item">
       <div class="flex align-items-center gap-2">
         <div>
           {{
-            templateLabel !== "" ? options[templateLabel] : options[optionLabel]
+          templateLabel !== "" ? options[templateLabel] : options[optionLabel]
           }}
         </div>
       </div>
@@ -42,22 +28,11 @@
 <!-- 唯讀模式 -->
 <ng-template #readonlyMode>
   <div class="readonly-dropdown">
-    <input
-      type="text"
-      [id]="controlName"
-      [value]="selectedOptionLabel"
-      [placeholder]="customPlaceholder || placeholder"
-      [class]="dropdownClasses"
-      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
-      pInputText
-      readonly
-    />
+    <input type="text" [id]="controlName" [value]="selectedOptionLabel" [placeholder]="customPlaceholder || placeholder"
+      [class]="dropdownClasses" [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" pInputText
+      readonly />
   </div>
 </ng-template>
 
-<app-control-messages
-  [hidden]="!showErrorMessage"
-  [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"
-  [errorForGroup]="errorForGroup"
-></app-control-messages>
+<app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control" [errorForGroup]="errorForGroup"></app-control-messages>
