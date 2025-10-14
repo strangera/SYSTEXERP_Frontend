@@ -932,6 +932,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('🔄 重新生成 deductionDColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      columns = TLS12040FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions);
       if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }

@@ -29,43 +29,12 @@ export class CommissionTableService {
     // 更新欄位值
     rowData[fieldName] = newValue;
 
-    // 特殊處理：如果是 cap_saletype1 或 cap_saletype2，需要同步到 step1Data
-    if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2') {
-      this.syncCapSaletypeToStep1(fieldName, newValue);
-      // 同步到所有其他抽成項目
-      this.syncCapSaletypeToAllItems(fieldName, newValue, commissionData, rowData.id);
-    }
-
     // 更新狀態
     this.updateItemStatus(rowData);
 
     // 更新主數組中的項目
     this.updateItemInArray(rowData, commissionData);
   }
-
-  /**
-  * 同步 cap_saletype 到 step1Data
-  */
-  private syncCapSaletypeToStep1(fieldName: string, newValue: any): void {
-    const step1Data = this.contractFlowService.getStep1Data();
-    if (step1Data) {
-      step1Data[fieldName] = newValue;
-      this.contractFlowService.saveStep1Data(step1Data);
-    }
-  }
-
-  /**
-   * 同步 cap_saletype 到所有抽成項目
-   */
-  private syncCapSaletypeToAllItems(fieldName: string, newValue: any, commissionData: CommissionItem[], excludeId?: string): void {
-    commissionData.forEach(item => {
-      if (item.id !== excludeId && item._status !== 'deleted') {
-        item[fieldName] = newValue;
-        this.updateItemStatus(item);
-      }
-    });
-  }
-
 
   /**
    * 處理明細欄位變更事件
@@ -124,8 +93,9 @@ export class CommissionTableService {
     const step1Data = this.contractFlowService.getStep1Data();
 
     // 統一轉換為 Y/N 字串格式
-    const defaultCapSaletype1 = this.convertToYN(step1Data?.cap_saletype1);
-    const defaultCapSaletype2 = this.convertToYN(step1Data?.cap_saletype2);
+    const defaultCapSaletype1 = this.convertToBoolean(step1Data?.cap_saletype1);
+    const defaultCapSaletype2 = this.convertToBoolean(step1Data?.cap_saletype2);
+    const defaultCapSaletype5 = this.convertToBoolean(step1Data?.cap_saletype5);
 
     console.log(' 新增抽成項目時的 cap_saletype 預設值:', {
       step1原始資料: {
@@ -151,6 +121,7 @@ export class CommissionTableService {
       // 關鍵修正：使用 Y/N 字串格式
       cap_saletype1: defaultCapSaletype1,
       cap_saletype2: defaultCapSaletype2,
+      cap_saletype5: defaultCapSaletype5,
 
       selectedSettingOption: 'discount',
       currentTab: 'discount',
@@ -173,10 +144,14 @@ export class CommissionTableService {
     };
   }
 
-  private convertToYN(value: any): string {
-    if (value === true || value === 'true' || value === 'Y') return 'Y';
-    if (value === false || value === 'false' || value === 'N') return 'N';
-    return 'N'; // 預設為 N
+  /**
+   * 統一轉換為 boolean（處理 Y/N 或 true/false）
+   */
+  private convertToBoolean(value: any): boolean {
+    if (value === 'Y' || value === 'y' || value === true || value === 'true') {
+      return true;
+    }
+    return false;
   }
 
   /**

@@ -1021,10 +1021,13 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    const cruData = this.flowService.getCruData<SimpleContractInfo>();
+    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
 
     // 修正：新增模式下 apply_no 可以是空的，後端會生成
     const applyNo = cruData?.apply_no || '';  // 允許空字串
+    const defaultCapSaletype1 = cruData?.cap_saletype1 || 'N';
+    const defaultCapSaletype2 = cruData?.cap_saletype2 || 'N';
+    const defaultCapSaletype5 = cruData?.cap_saletype5 || 'N';
 
     const newItem: ChargeSettingBusinessModel = {
       id: this.generateTempId(),
@@ -1036,9 +1039,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       cag_taxtype: '1',
       sst_amount: null,
       sst_rate: null,
-      cap_saletype1: 'N',
-      cap_saletype2: 'N',
-      cap_saletype5: 'N',
+      // 使用從 CRU 資料讀取的預設值
+      cap_saletype1: defaultCapSaletype1,
+      cap_saletype2: defaultCapSaletype2,
+      cap_saletype5: defaultCapSaletype5,
       cag_remark: '',
       _status: 'new',
       ChargeDetails: this.createDefaultDiscountItems({

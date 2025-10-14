@@ -95,7 +95,8 @@ export class TLS13010Next2ColumnsConfig {
       { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
       { field: 'sst_rate', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true, decimalPlaces: 3 },
       { field: 'cap_saletype2', header: '全館消費滿額集點活動', editable: true, type: 'checkbox' },
-      { field: 'cap_saletype1', header: '滿件送佰', editable: true, type: 'checkbox' }
+      { field: 'cap_saletype1', header: '滿件送佰', editable: true, type: 'checkbox' },
+      { field: 'cap_saletype5', header: '參加提貨單', editable: true, type: 'checkbox' }
     ];
   }
 }

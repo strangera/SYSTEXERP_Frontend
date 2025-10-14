@@ -71,9 +71,7 @@ export class CommissionDataService {
       // 第一優先：嘗試載入暫存資料
       const savedResult = await this.tryLoadFromSavedData();
       if (savedResult.success) {
-        // 重要：即使是暫存資料，也要確保 cap_saletype 與 step1 同步
-        const syncedData = this.syncCapSaletypeWithStep1(savedResult.data);
-        return { ...savedResult, data: syncedData };
+        return savedResult;
       }
 
       // 第二優先：根據模式載入
@@ -88,50 +86,6 @@ export class CommissionDataService {
       return this.createErrorResult(error);
     }
   }
-
-  /**
-   * 新增：確保所有抽成項目的 cap_saletype 與 step1 同步
-   */
-  private syncCapSaletypeWithStep1(commissionData: CommissionItem[]): CommissionItem[] {
-    const step1Data = this.contractFlowService.getStep1Data();
-
-    if (!step1Data) {
-      console.warn('⚠️ 無法取得 Step1 資料，跳過 cap_saletype 同步');
-      return commissionData;
-    }
-
-    // 修正：統一轉換為 Y/N 字串格式
-    const step1CapSaletype1 = this.convertToYN(step1Data.cap_saletype1);
-    const step1CapSaletype2 = this.convertToYN(step1Data.cap_saletype2);
-
-    console.log('🔄 同步 cap_saletype 到所有抽成項目:', {
-      step1原始值: {
-        cap_saletype1: step1Data.cap_saletype1,
-        cap_saletype2: step1Data.cap_saletype2,
-        type1: typeof step1Data.cap_saletype1,
-        type2: typeof step1Data.cap_saletype2
-      },
-      轉換後YN值: {
-        step1CapSaletype1,
-        step1CapSaletype2
-      },
-      itemCount: commissionData.length
-    });
-
-    return commissionData.map(item => ({
-      ...item,
-      cap_saletype1: step1CapSaletype1,
-      cap_saletype2: step1CapSaletype2
-    }));
-  }
-
-  // 新增轉換方法到 commission-data.service.ts
-  private convertToYN(value: any): string {
-    if (value === true || value === 'true' || value === 'Y') return 'Y';
-    if (value === false || value === 'false' || value === 'N') return 'N';
-    return 'N'; // 預設為 N
-  }
-
   /**
    * 載入折扣選項 - 使用現代語法
    */
@@ -294,9 +248,6 @@ export class CommissionDataService {
     let commissionData: CommissionItem[] = [];
     if (response.Data?.ChargeSettings) {
       commissionData = this.convertChargeAPIData(response.Data, options);
-
-      // 重要：確保與 step1 同步
-      commissionData = this.syncCapSaletypeWithStep1(commissionData);
     }
 
     return {
@@ -318,19 +269,6 @@ export class CommissionDataService {
       return result;
     }
 
-    // 從 step1 取得最新的 cap_saletype 值（最高優先級）
-    const step1Data = this.contractFlowService.getStep1Data();
-    const finalCapSaletype1 = step1Data?.cap_saletype1 !== undefined ?
-      Boolean(step1Data.cap_saletype1) : false;
-    const finalCapSaletype2 = step1Data?.cap_saletype2 !== undefined ?
-      Boolean(step1Data.cap_saletype2) : false;
-
-    console.log('🎯 使用 Step1 的 cap_saletype 值:', {
-      cap_saletype1: finalCapSaletype1,
-      cap_saletype2: finalCapSaletype2,
-      step1HasData: !!step1Data
-    });
-
     apiData.ChargeSettings.forEach((chargeSetting: ChargeSettingApiItem, index: number) => {
       const commissionItem: CommissionItem = {
         id: chargeSetting.id || (index + 1),
@@ -342,8 +280,9 @@ export class CommissionDataService {
         sst_rate: chargeSetting.sst_rate || 0,
 
         // 關鍵修正：優先使用 step1 的值，確保同步
-        cap_saletype1: finalCapSaletype1,
-        cap_saletype2: finalCapSaletype2,
+        cap_saletype1: this.convertYNToBoolean(chargeSetting.cap_saletype1),
+        cap_saletype2: this.convertYNToBoolean(chargeSetting.cap_saletype2),
+        cap_saletype5: this.convertYNToBoolean(chargeSetting.cap_saletype5),
 
         selectedSettingOption: 'discount',
         currentTab: 'discount',
@@ -361,6 +300,16 @@ export class CommissionDataService {
     });
 
     return result;
+  }
+
+  /**
+   * 將 Y/N 字串轉換為 boolean
+   */
+  private convertYNToBoolean(value: any): boolean {
+    if (value === 'Y' || value === 'y' || value === true) {
+      return true;
+    }
+    return false;
   }
 
   /**
