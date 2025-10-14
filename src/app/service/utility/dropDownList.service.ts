@@ -491,9 +491,8 @@ export class DropDownListService {
   queryPOS1008DropDownList(): Observable<ApiResponse<{ TSB_Name: string }[]>> {
     return this.http.post<ApiResponse<{ TSB_Name: string }[]>>(`${this.apiUrl}/queryPOS1008DropDownList`, {});
   }
-  queryTLS42010DropDownList(): Observable<ApiResponse<any>> {
-    const body = { "KB_Func": [] };
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, body);
+  queryTLS42010DropDownList(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
 
   // 載入活動清單 (TALPORDERM)
