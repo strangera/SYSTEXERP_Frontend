@@ -12,7 +12,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
 // Permissions
 // Shared
 
@@ -36,9 +35,6 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     // PLU_OrderPrcRate: [, [Validators.maxLength(100)]], // 標準進貨折數 預設100
     HOS_No: [[], [Validators.maxLength(10)]], // 倉別代碼(建議倉別) POS2034倉庫設定檔(O)
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
-
-    // 20251014: 新增專櫃編號欄位
-    // TLT_NO: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]), // 分頁和排序參數
@@ -64,9 +60,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   selectedItems: PluLogo[] = [];// 多選項目
 
   // ----------------------------------------------------------------
-  constructor(
-    private tls51060Service: Tls51060Service,
-    private validationService: ValidationService) {
+  constructor(private tls51060Service: Tls51060Service) {
     super();
   }
 

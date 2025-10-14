@@ -33,10 +33,6 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號" controlName="TLT_NO" [options]="TLT_NO_Option" optionLabel="Label"
-              optionValue="No" [control]="dataForm.controls.TLT_NO" [submitted]="submitted"></app-dropdown>  
-          </div>
-        <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="標準進貨折數"
             controlName="PLU_OrderPrcRate"
@@ -56,8 +52,6 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-      </div>
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="備註說明"

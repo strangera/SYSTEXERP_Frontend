@@ -1,4 +1,3 @@
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -39,21 +38,16 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     HOS_No: ['', [Validators.maxLength(10)]], // 建議倉別代碼/名稱 POS2034倉庫設定檔(O)
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
-    // 20251014: 新增 專櫃編號欄位
-    TLT_NO: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
-
     CanDel: [null],  //能否刪除(僅顯示) 卡控
   });
   //
   storageOptions: apiOption[] = [];
-  TLT_NO_Option: any[] = []; // 專櫃編號
   allquery: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
   constructor(
     private tls51060Service: Tls51060Service,
-    private validationService: ValidationService,
-    private dropDownListService: DropDownListService,
+    private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -135,15 +129,6 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
             Label: item.No + '-' + item.Name,
           }));
         });
-
-      // 查詢 專櫃編號
-      this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((response) => {
-        this.TLT_NO_Option = response.Data.map((item: any) => ({
-          No: item.No, // 專櫃編號代碼
-          Label: item.No + '-' + item.Name, // 組合成顯示用的Label
-        }));
-        console.log('專櫃編號代碼:', response.Data);
-      });    
     }
   }
 }
