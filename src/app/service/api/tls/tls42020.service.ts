@@ -141,110 +141,12 @@ export class TLS42020Service {
 
   // 查詢POS1027M資料表
   queryTLS42020(data: TLS42020QueryRequest): Observable<BaseQueryResponse<TLS42020Data>> {
-    // return this.http.post<BaseQueryResponse<TLS42020Data>>(`${this.apiUrl}/queryTLS42020`, data);
-
-    // 回傳假資料
-    return of({
-      Status: '0000',
-      Message: '查詢成功',
-      Data: [
-        {
-          crt_date: '2024-01-15',
-          crt_usr_no: 'U001',
-          crt_usr_name: '張三',
-          upd_date: '2024-01-16',
-          upd_usr_no: 'U002',
-          upd_usr_name: '李四',
-          id: 1,
-          mid: 101,
-          STO_No: 'S001',
-          SBM_Type: 1,
-          TLT_No: '000001',
-          SBM_BegDate: '2024-01-01',
-          SBM_EndDate: '2024-12-31',
-          TLT_Name: '美食專櫃',
-        },
-        {
-          crt_date: '2024-01-15',
-          crt_usr_no: 'U001',
-          crt_usr_name: '張三',
-          upd_date: '2024-01-16',
-          upd_usr_no: 'U002',
-          upd_usr_name: '李四',
-          id: 2,
-          mid: 102,
-          STO_No: 'S002',
-          SBM_Type: 2,
-          TLT_No: '000002',
-          SBM_BegDate: '2024-02-01',
-          SBM_EndDate: '2024-12-31',
-          TLT_Name: '服飾專櫃',
-        }
-      ],
-      TotalCount: 2,
-      TotalPage: 1
-    })
+    return this.http.post<BaseQueryResponse<TLS42020Data>>(`${this.apiUrl}/queryTLS42020`, data);
   }
 
   // 查詢POS10271資料表
   queryTLS42020Detail(data: TLS42020DetailQueryRequest): Observable<BaseQueryResponse<TLS42020DetailData>> {
-    // return this.http.post<BaseQueryResponse<TLS42020DetailData>>(`${this.apiUrl}/queryTLS42020_Detail`, data);
-
-    // 回傳假資料
-    return of({
-      Status: '0000',
-      Message: '查詢成功',
-      Data: [
-        {
-          CRT_Date: '2024-01-15T00:00:00.000Z',
-          CRT_USR_No: 'U001',
-          CRT_USR_Name: '張三',
-          UPD_Date: '2024-01-16T00:00:00.000Z',
-          UPD_USR_No: 'U002',
-          UPD_USR_Name: '李四',
-          ID: 1,
-          MID: 101,
-          STO_No: 'S001',
-          SBM_Type: 1,
-          TLT_No: '000001',
-          SBM_BegDate: '2024-01-01T00:00:00.000Z',
-          SBM_EndDate: '2024-12-31T00:00:00.000Z',
-          SBM_SeqNo: '001',
-          PLU_MagNo: 'M001',
-          PLU_No: '1234567890123',
-          PLU_Name: '招牌牛肉麵',
-          PLU_PrnName: '牛肉麵',
-          PLU_FixPrc: '2000',
-          PLU_SalePrc: '1800',
-          SBM_BtnNo: '01'
-        },
-        {
-          CRT_Date: '2024-01-15T00:00:00.000Z',
-          CRT_USR_No: 'U001',
-          CRT_USR_Name: '張三',
-          UPD_Date: '2024-01-16T00:00:00.000Z',
-          UPD_USR_No: 'U002',
-          UPD_USR_Name: '李四',
-          ID: 2,
-          MID: 102,
-          STO_No: 'S001',
-          SBM_Type: 1,
-          TLT_No: '000002',
-          SBM_BegDate: '2024-01-01T00:00:00.000Z',
-          SBM_EndDate: '2024-12-31T00:00:00.000Z',
-          SBM_SeqNo: '002',
-          PLU_MagNo: 'M002',
-          PLU_No: '1234567890124',
-          PLU_Name: '蔥爆牛肉',
-          PLU_PrnName: '蔥爆牛肉',
-          PLU_FixPrc: '2500',
-          PLU_SalePrc: '2200',
-          SBM_BtnNo: '02'
-        }
-      ],
-      TotalCount: 2,
-      TotalPage: 1
-    });
+    return this.http.post<BaseQueryResponse<TLS42020DetailData>>(`${this.apiUrl}/queryTLS42020_Detail`, data);
   }
 
   // 新增POS1027M資料表
