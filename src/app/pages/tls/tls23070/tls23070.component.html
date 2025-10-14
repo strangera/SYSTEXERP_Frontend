@@ -86,19 +86,20 @@
 
 <div class="card">
   <!-- ✅ 改用 app-table-report；補上必填的 lastQueryBody / queryFunction -->
-  <app-table-report
-    tableKey="TLS23070"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    dataKey="_rowKey"
-    [lastQueryBody]="historyRequestBody"
-    [queryFunction]="queryTLS23070ForReport"
-      [showManage]="false"
+<app-table-report
+  tableKey="TLS23070"
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="totalRecords"
+  [loading]="loading"
+  dataKey="_rowKey"
+  [lastQueryBody]="historyRequestBody"
+  [queryFunction]="queryTLS23070ForReport"
+  [showManage]="false"
   [showDelete]="false"
-     [groupRowsBy]="'TXN_Date'"
-     >
+  [groupRowsBy]="'TXN_Date'"
+  [footerData]="footerData"
+>
 
     <header>
       <div class="flex justify-content-end gap-2">

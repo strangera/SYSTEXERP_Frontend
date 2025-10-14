@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
@@ -78,7 +79,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query', JSON.stringify(frm.value, null, 2));
-      this.tls51060Service.queryTLS51060(frm.value).subscribe({
+      this.tls51060Service.queryTLS51060(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
@@ -182,4 +183,5 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   isRowSelectable(rowData: PluLogo): boolean {
     return rowData.CanDel
   }
+
 }

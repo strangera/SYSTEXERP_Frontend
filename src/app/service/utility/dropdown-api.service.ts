@@ -450,8 +450,8 @@ export class DropdownApiService {
   }
 
   /** 查詢專櫃主檔(TLTTALENT) (Store_way=2 and approve_status=2) */
-  queryTltTalentStoreWay2Approve(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryTLTTALENT__StoreWay2_Approve_DropDownList').pipe(
+  queryTltTalentStoreWay2Approve(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT__StoreWay2_Approve_DropDownList', 'No', 'Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
