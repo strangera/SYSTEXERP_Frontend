@@ -1,12 +1,9 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -14,11 +11,7 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -31,6 +24,7 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
@@ -42,6 +36,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="區域"
@@ -53,6 +48,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="位置代碼"
@@ -60,6 +56,7 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
@@ -71,6 +68,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="用途代碼/名稱"
@@ -82,6 +80,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
               label="簽約坪數"
@@ -118,15 +117,10 @@
             ></app-multi-select>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmit(queryForm)"
-            [loading]="loading"
-          ></app-button>
+          <app-button btnType="query" (onClick)="onSubmit(queryForm)" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>

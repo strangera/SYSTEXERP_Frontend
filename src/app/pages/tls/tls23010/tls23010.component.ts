@@ -43,7 +43,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 // 1) imports 補上 shareReplay
 import { forkJoin } from 'rxjs';
 import { map, finalize, shareReplay } from 'rxjs/operators'; // <= 若你是 RxJS7，也可以從 'rxjs' 直接匯入 shareReplay
-  
+import { untilDestroyed } from '@ngneat/until-destroy';  
 
 @UntilDestroy()
 // 型態別報表
@@ -206,7 +206,8 @@ ngOnInit(): void {
   }
 
   // 不論 ngOnInit 被叫幾次，這裡都只用同一份結果
-  this.dropdownInit$.subscribe((res) => {
+  this.dropdownInit$.pipe(untilDestroyed(this))
+  .subscribe((res) => {
     this.floorOptions        = res.floors || [];
     this.statusFlagOptions   = res.flags || [];
     this.whetherOptions      = res.whether || [];
@@ -293,8 +294,11 @@ onSubmit(frm: FormGroup) {
     if (isSummary) {
       this.tls23010Service
         .queryTLS23010Summary(payload)
-        .pipe(finalize(() => (this.loading = false)))
-        .subscribe({
+        .pipe(
+    untilDestroyed(this),
+    finalize(() => (this.loading = false))
+  )
+  .subscribe({
           next: (resp) => {
             const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
             const head = dataArr[0] ?? {};
@@ -317,8 +321,11 @@ onSubmit(frm: FormGroup) {
     } else {
       this.tls23010Service
         .queryTLS23010(payload)
-        .pipe(finalize(() => (this.loading = false)))
-        .subscribe({
+        .pipe(
+    untilDestroyed(this),
+    finalize(() => (this.loading = false))
+  )
+  .subscribe({
           next: (resp) => {
             const queryData = Array.isArray(resp?.Data?.QueryData)
               ? resp.Data.QueryData
@@ -421,10 +428,13 @@ private dropdownInit$?: import('rxjs').Observable<{
     : this.tls23010Service.exportTLS23010PDF(exportBody);
 
   obs
-    .pipe(finalize(() => (this.btnLoading = false)))
-    .subscribe({
+      .pipe(
+    untilDestroyed(this),
+    finalize(() => (this.btnLoading = false))
+  )
+  .subscribe({
       next: (resp) => this.handleFileExport(resp, '.pdf'),
-      
+
     });
 }
 
@@ -450,8 +460,11 @@ onExportXLSX() {
     : this.tls23010Service.exportTLS23010Excel(exportBody);
 
   obs
-    .pipe(finalize(() => (this.btnLoading = false)))
-    .subscribe({
+      .pipe(
+    untilDestroyed(this),
+    finalize(() => (this.btnLoading = false))
+  )
+  .subscribe({
       next: (resp) => this.handleFileExport(resp, '.xlsx'),
       
     });
@@ -656,7 +669,10 @@ private updatePdfSummary(): void {
       return;
     }
 
-    this.tls23010Service.queryOtherData(req).subscribe({
+    this.tls23010Service
+  .queryOtherData(req)
+  .pipe(untilDestroyed(this))
+  .subscribe({
       next: (data: TLS23010OtherData | null) => {
         if (!data) {
           this.buildSummaryFromLocal();

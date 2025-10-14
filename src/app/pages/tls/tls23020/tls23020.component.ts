@@ -22,7 +22,7 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { finalize, map } from 'rxjs/operators';
+import { finalize, map, debounceTime } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -43,7 +43,6 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { HttpResponse } from '@angular/common/http';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { debounceTime } from 'rxjs/operators';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @UntilDestroy()
@@ -97,7 +96,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   private lazyTimer: any = null;
 
   // 後端是否接收分頁/排序（提供 OrderBy & SortBy）
-
   readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -182,6 +180,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       { SortBy: this.defaultSort },
       { emitEvent: false },
     );
+
     this.queryForm.valueChanges
       .pipe(untilDestroyed(this), debounceTime(300))
       .subscribe(() => {
@@ -190,6 +189,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
           this.queryForm.getRawValue(),
         );
       });
+
     this.queryForm.controls.TXN_Month.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((d: Date | null) => {
@@ -202,6 +202,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
           { emitEvent: false },
         );
       });
+
     this.queryForm.controls.TXN_DateStart.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => this.clearMonthIfNotExactRange());
@@ -213,58 +214,82 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     // 初始化 sortMeta
     this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
 
+    // ===== 下面所有初始化資料訂閱都加上 untilDestroyed(this) =====
     this.tls11010Service
       .getBuildingOptions()
+      .pipe(untilDestroyed(this))
       .subscribe((res) => (this.BUILDING_NO_Options = res));
 
     this.discountService
       .getLocalDiscountOptions()
+      .pipe(untilDestroyed(this))
       .subscribe((data) => (this.discountOptions = data));
+
     this.deductionbigCategoryService
       .getLocalDeductionCategories()
+      .pipe(untilDestroyed(this))
       .subscribe((data) => (this.deductionbigCategoryOptions = data));
+
     this.whetherService
       .getWhetherOptions()
+      .pipe(untilDestroyed(this))
       .subscribe((data) => (this.whetherOptions = data));
+
     this.txnStatusService
       .getTxnStatusOptions()
+      .pipe(untilDestroyed(this))
       .subscribe((data) => (this.txnStatusOptions = data));
+
     this.floorService
       .getFloors()
+      .pipe(untilDestroyed(this))
       .subscribe((data) => (this.floorOptions = data));
 
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      }));
-    });
+    this.tls11010Service
+      .getOrgOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
 
-    this.commissionTypeService.getCommissionTypes().subscribe((res) => {
-      this.commissionTypeOptions = (res ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      }));
-    });
+    this.commissionTypeService
+      .getCommissionTypes()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.commissionTypeOptions = (res ?? []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
 
-    this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions = (res ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      }));
-    });
+    this.ECRNoService
+      .getECRNo()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.ECRNoOptions = (res ?? []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
 
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions = (res ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      }));
-    });
+    this.counterNameService
+      .getCounters()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.CounterOptions = (res ?? []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
   }
+
   fetchTLS23020 = (evt: LazyLoadEvent) => {
     // 把畫面上的查詢條件組 payload（你原本的 buildPayload）
     const condPayload = this.buildPayload(this.queryForm.getRawValue());
@@ -277,7 +302,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       SortBy: this.toBackendSort(normSort),
     };
 
-    // 呼叫原本的 service
+    // 呼叫原本的 service（此函式回傳 Observable 交由 table-report 訂閱，不在這裡 unsubscribe）
     return this.tls23020Service.queryTLS23020(payload).pipe(
       map((res: any) => {
         const wrappers = Array.isArray(res?.Data)
@@ -362,6 +387,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       }),
     );
   };
+
   /** 後端可吃的排序：移除 groupKey，確保 TXN_Date、ECR_No、TXN_No 排在最前 */
   private toBackendSort(sortBy: any[] | undefined) {
     const src = (Array.isArray(sortBy) ? sortBy : []).filter(
@@ -508,6 +534,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
         this.tls23020Service
           .queryTLS23020Summary(payload)
           .pipe(
+            untilDestroyed(this),
             finalize(() => {
               this.loading = false;
               this.messageService?.unblockUi();
@@ -546,6 +573,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       this.tls23020Service
         .queryTLS23020(payload)
         .pipe(
+          untilDestroyed(this),
           finalize(() => {
             this.loading = false;
             this.messageService?.unblockUi();
@@ -656,6 +684,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       TXN_Disc: this.detailTotals['Total_TXN_Disc'] ?? 0,
     };
   }
+
   /** 組查詢 payload（含排序＆分頁鍵） */
   private buildPayload(val: any) {
     const toIso = (x: any) => this.toIso(x);
@@ -742,9 +771,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
         const GrandTotal = {}; // 或計算合計：{ TXN_TotTax: sum(...), ... }
 
         const totalRecords = rows.length;
-        // 讓頁尾可以用（可選）
-        // this.detailTotals = {...GrandTotal};
-
         return { Data: rows, TotalCount: totalRecords, GrandTotal };
       }),
     );
@@ -784,10 +810,12 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       __isBackendTotal: true,
     };
   }
+
   onToggleSummary() {
     this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
     this.onSubmit(this.queryForm);
   }
+
   private padTxnNo(v: any): string {
     const s = String(v ?? '').trim();
     return s ? s.padStart(6, '0') : '';
@@ -1028,6 +1056,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
 
     return `download${defaultExtension}`;
   }
+
   private ensureGroupFirst(sortBy: any[] | undefined): any[] {
     const g = this.groupByField;
     const list = Array.isArray(sortBy) ? [...sortBy] : [];
@@ -1037,6 +1066,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     const order = exist?.order ?? 1;
     return [{ field: g, order }, ...rest];
   }
+
   /** 取得某日期所在月份的起訖（start: 1號 00:00:00, end: 當月最後一天 23:59:59） */
   private getMonthRange(d: Date) {
     const year = d.getFullYear();
@@ -1061,6 +1091,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
     }
   }
+
   private normalizeSortBy(
     input: any,
     groupField: string,
