@@ -49,6 +49,7 @@ export interface TLS31020DetialPrintRequest extends TLS31020DetailRequest {
 export interface TLS31020Item {
   tlt_floor: string;
   floor_desc: string;
+  
   budget: number;
   AVN_TotSaleAmt: number;
   AchievementRate: number;
@@ -67,33 +68,14 @@ export interface TLS31020Item {
   CompletionRate: number;
 }
 
-export interface TLS31020Total {
-  TotalBudget: number;
-  TotalSales: number;
-  AvgAchievementRate: number;
-  TotalTxnCount: number;
-  AvgTicket: number;
-  TotalSpace: number;
-  AvgPSM: number;
-  AvgMonthlyPayment: number;
-  TotalTempCounterSales: number;
-  TotalMonthlyBudget: number;
-  TotalMonthlySales: number;
-  AvgCompletionRate: number;
-}
-
-export interface TLS31020Response {
-  QueryData: TLS31020Item[];
-  TotalData: TLS31020Total;
-}
-
-export interface TLS31020DetailResponse {
+export interface TLS31020DetailItem {
   building_desc: string;
   org_name: string;
   tlt_kind: string;
   tlt_no: string;
   location_no: string;
   tlt_name: string;
+
   budget: number;
   AVN_TotSaleAmt: number;
   AchievementRate: number;
@@ -109,6 +91,34 @@ export interface TLS31020DetailResponse {
   CompletionRate: number;
 }
 
+export interface TLS31020Total {
+  TotalBudget: number;
+  TotalSales: number;
+  AvgAchievementRate: number;
+  TotalTxnCount: number;
+  AvgTicket: number;
+  TotalSpace: number;
+  AvgPSM: number;
+  AvgMonthlyPayment: number;
+  TotalTempCounterSales: number;
+  TotalMonthlyBudget: number;
+  TotalMonthlySales: number;
+  AvgCompletionRate: number;
+
+  //前端要接收一樣的名稱才能收到
+  budget?: number,
+}
+
+export interface TLS31020Response {
+  QueryData: TLS31020Item[];
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31020DetailResponse {
+  QueryData: TLS31020DetailItem[];
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -122,8 +132,8 @@ export class Tls31020Service {
     }
 
     //查詢 單樓層之營業報表
-    queryTLS31020Detail(body: TLS31020DetailRequest): Observable<ApiResponse<TLS31020DetailResponse[]>> {
-      return this.http.post<ApiResponse<TLS31020DetailResponse[]>>(`${this.apiUrl}/queryTLS31020Detail`, body);
+    queryTLS31020Detail(body: TLS31020DetailRequest): Observable<ApiResponse<TLS31020DetailResponse>> {
+      return this.http.post<ApiResponse<TLS31020DetailResponse>>(`${this.apiUrl}/queryTLS31020Detail`, body);
     }
 
     //產出各樓層之營業報表

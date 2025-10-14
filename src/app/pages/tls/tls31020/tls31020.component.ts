@@ -145,7 +145,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
+    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },    
 
     { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
@@ -343,12 +343,15 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
       console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        
         this.data = res.Data?.QueryData ?? [];               // 查詢資料
-        this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
+        // this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
+        const totalData = res.Data?.TotalData;
+        this.footerTotal = totalData ? { ...totalData, budget: totalData.TotalBudget } : null;
+
         this.historyRequestBody = formValue;                 // 查詢條件
-        console.log('查詢資料',this.data)
+        console.log('查詢結果',this.data);
         console.log('查詢總計',this.footerTotal);
-        console.log('查詢條件',this.historyRequestBody);
         
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
