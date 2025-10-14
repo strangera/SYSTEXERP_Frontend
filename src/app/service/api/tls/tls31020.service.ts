@@ -117,8 +117,8 @@ export class Tls31020Service {
     constructor(private http: HttpClient) { }
   
     //查詢各樓層之營業報表
-    queryTLS31020(body: TLS31020Request): Observable<ApiResponse<TLS31020Response[]>> {
-      return this.http.post<ApiResponse<TLS31020Response[]>>(`${this.apiUrl}/queryTLS31020`, body);
+    queryTLS31020(body: TLS31020Request): Observable<ApiResponse<TLS31020Response>> {
+      return this.http.post<ApiResponse<TLS31020Response>>(`${this.apiUrl}/queryTLS31020`, body);
     }
 
     //查詢 單樓層之營業報表

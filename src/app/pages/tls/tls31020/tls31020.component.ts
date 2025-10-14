@@ -1,4 +1,4 @@
-import { BusSClass, DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -14,16 +14,17 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { environment } from 'src/environments/environment';
-import { TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service } from '@service/api/tls/tls31020.service';
+import { TLS31020Item, TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls31020',
@@ -42,6 +43,7 @@ import { TLS26050Service } from '@service/api/tls/tls26050.service';
     InputTextComponent,
     ButtonComponent,
     TableModule,
+    TableReportComponent,
     RadiobuttonYNComponent,
     RadiobuttonComponent,
     TranslateModule,
@@ -127,7 +129,10 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   ];
 
   totalRecords = 0;
-  data: TLS31020Response[] = [];
+  data: TLS31020Item[] = [];
+  footerTotal: TLS31020Total | null = null; // 總計
+  historyRequestBody: TLS31020Request | null = null; //歷史查詢條件
+
   columns: Column[] = [
     { field: 'tlt_floor', header: '樓層代碼', visible: false },
     { field: 'floor_desc', header: '樓層名稱', visible: true },
@@ -187,7 +192,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls31020Service: Tls31020Service,
+    public readonly tls31020Service: Tls31020Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
   ) { super(); }
@@ -338,19 +343,24 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
       console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        console.log('回應',res)
-        // this.data = res.Data;
+        this.data = res.Data?.QueryData ?? [];               // 查詢資料
+        this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
+        this.historyRequestBody = formValue;                 // 查詢條件
+        console.log('查詢資料',this.data)
+        console.log('查詢總計',this.footerTotal);
+        console.log('查詢條件',this.historyRequestBody);
+        
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     })
   }
   btnLoading = false;
-  onReport(frm: FormGroup) {
+  onReport(frm: FormGroup, isExcel: boolean){
     const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
     const formValue = {
       ...printData,
-      IsExcel: true,
+      IsExcel: isExcel,
       IsMerge: true,
       SortBy: undefined,
       pageIndex: undefined,
