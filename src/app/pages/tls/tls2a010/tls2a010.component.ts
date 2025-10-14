@@ -147,6 +147,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           }));
 
 
+
           if (this.systemTypeOptions.length > 0 && !this.queryStateService.getQueryStateValue(this.ProgNo)) {
             // 僅保留「全部是數字」的字串
             const values = this.systemTypeOptions
@@ -166,6 +167,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
         }
       });
+
 
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.floorOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
@@ -211,7 +213,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       });
 
     const today = new Date();
-    const mm = today.getMonth() + 1;
+    const mm = today.getMonth() + 1; // 月份是從 0 開始的
     const dd = today.getDate();
     this.todayDisplay = `${mm}/${dd}`;
 
@@ -280,7 +282,11 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         PAY_NO: item.PAY_NO,
       }))
     };
+
+    console.log('送出審核資料:', payload);
+
     this.loading = true;
+
     this.tls2a010Service.updateTLS2A010(payload).subscribe({
       next: () => {
         this.messageService.successBubble('審核完成');
