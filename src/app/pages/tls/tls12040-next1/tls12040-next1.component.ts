@@ -32,6 +32,7 @@ import { Tls12040FareCalculationService } from './services/tls12040-fare-calcula
 import { Tls12040FareValidationService } from './services/tls12040-fare-validation.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Tls12040FareDataService } from './services/tls12040-fare-data.service';
+import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
 
 interface CategoryItem {
   id: number;
@@ -55,6 +56,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   showCalculationDialog: boolean = false;
 
   orgOptions: any[] = [];
+  payNoOptions: any[] = [];
 
 
   fareData: { [key: string]: TLS12040FareItem[] } = {
@@ -80,6 +82,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private _cachedDeductionEColumns: ColumnDef[] | null = null;
 
   private _lastOrgOptionsLength = 0;
+  private _lastPayNoOptionsLength = 0;
   private _lastViewMode: boolean | null = null;
   private _lastContractInfoLength = 0;
   // 檢視模式用 要換方式
@@ -110,6 +113,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     private fareCalculationService: Tls12040FareCalculationService,
 
     private locationOptionsService: LocationOptionsService,
+    private negotiatorService: NegotiatorOptionsService,
 
   ) {
     super();
@@ -125,29 +129,30 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 先調用父類的初始化，這會設置正確的 crudstatus
     this.initializePage('TLS12040', this.dataForm);
 
-    // 🔥 保護和驗證 CRUD 狀態
+    //  保護和驗證 CRUD 狀態
     this.validateAndProtectCrudStatus();
 
-    console.log('=== CRUD 狀態調試 ===');
-    console.log('當前 CRUD 狀態:', this.crudstatus);
-    console.log('路由狀態:', this.router.lastSuccessfulNavigation?.extras?.state);
-    console.log('isReadOnlyMode:', this.isReadOnlyMode);
-    console.log('isEditMode:', this.isEditMode);
-    console.log('isCreateMode:', this.isCreateMode);
+    // console.log('=== CRUD 狀態調試 ===');
+    // console.log('當前 CRUD 狀態:', this.crudstatus);
+    // console.log('路由狀態:', this.router.lastSuccessfulNavigation?.extras?.state);
+    // console.log('isReadOnlyMode:', this.isReadOnlyMode);
+    // console.log('isEditMode:', this.isEditMode);
+    // console.log('isCreateMode:', this.isCreateMode);
 
     this.initializeDataStructure();
     this.contractInfoColumns = TLS12040FareColumnDefinitions.getContractInfoColumns();
 
     // 其他初始化邏輯...
     this.loadOrgOptions();
+    this.loadPayNoOptions();
     this.loadWorkflowDataWithRetry();
   }
 
-  // 🔥 新增方法：驗證和保護 CRUD 狀態
+  //  新增方法：驗證和保護 CRUD 狀態
   private validateAndProtectCrudStatus(): void {
     const routeState = this.router.lastSuccessfulNavigation?.extras?.state;
     const flowState = this.flowService.getCurrentState();
-    // 🔥 如果狀態不一致，以工作流程狀態為準
+    //  如果狀態不一致，以工作流程狀態為準
     if (flowState.isNewContract !== undefined) {
       const expectedStatus = flowState.isNewContract ? CRUDStatus.Create :
         (flowState.applyNo ? CRUDStatus.Edit : CRUDStatus.Create);
@@ -177,16 +182,38 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       next: (options) => {
         this.orgOptions = options;
 
-        // 🔥 強制清除所有快取，確保重新生成欄位定義
+        //  強制清除所有快取，確保重新生成欄位定義
         this.clearColumnCache();
 
-        // 🔥 觸發變更檢測
+        //  觸發變更檢測
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('載入組織選項失敗:', error);
         this.messageService.warnBubble('載入組織選項失敗');
         this.orgOptions = [];
+      }
+    });
+
+    this.subscriptions.push(subscription);
+  }
+
+  private loadPayNoOptions(): void {
+    const subscription = this.negotiatorService.getPOS1006Options().subscribe({
+      next: (response: any[]) => {
+        this.payNoOptions = response;
+        console.log('✅ 支付編號選項載入完成:', this.payNoOptions.length);
+
+        //  強制清除所有快取，確保重新生成欄位定義
+        this.clearColumnCache();
+
+        //  觸發變更檢測
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error('❌ 載入支付編號選項失敗:', error);
+        this.messageService.warnBubble('載入支付編號選項失敗');
+        this.payNoOptions = [];
       }
     });
 
@@ -202,6 +229,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 重置快取標記
     this._lastOrgOptionsLength = -1;
+    this._lastPayNoOptionsLength = -1;
   }
 
   private loadWorkflowDataWithRetry(retryCount: number = 0): void {
@@ -639,9 +667,26 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 模式切換
   toggleCommonMode(): void {
-    this.showMode = this.showMode === 'common' ? 'all' : 'common';
-    console.log('切換顯示模式到:', this.showMode);
-    this.filterData();
+    console.log('切換顯示模式，當前模式:', this.showMode);
+
+    // 顯示載入提示
+    this.loading = true;
+    this.messageService.blockUi();
+
+    // 延遲執行，讓載入提示先顯示
+    setTimeout(() => {
+      if (this.showMode === 'common') {
+        this.showMode = 'all';
+      } else {
+        this.showMode = 'common';
+      }
+
+      console.log('已切換到:', this.showMode);
+      this.filterData();
+
+      this.loading = false;
+      this.messageService.unblockUi();
+    }, 500); // 給予 500ms 的延遲，讓畫面有時間顯示 loading
   }
 
   getCommonModeText(): string {
@@ -880,6 +925,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionDColumns(): ColumnDef[] {
     if (!this._cachedDeductionDColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastPayNoOptionsLength !== this.payNoOptions.length ||
       this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
@@ -904,6 +950,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('🔄 重新生成 deductionEColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      columns = TLS12040FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions);
       if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
@@ -915,6 +962,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private _updateCacheFlags(): void {
     this._lastOrgOptionsLength = this.orgOptions.length;
+    this._lastPayNoOptionsLength = this.payNoOptions.length;
     this._lastViewMode = this.isReadOnlyMode;
     this._lastContractInfoLength = this.contractInfoData.length;
   }
@@ -1242,7 +1290,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // A類型金額計算 - 任何相關欄位變更都觸發
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
-      // 🔥 關鍵：確保預設值存在
+      //  關鍵：確保預設值存在
       if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
         rowData.tpy_qty = 1;
         console.log('A類型計算：自動設定數量預設值為 1');
@@ -1276,7 +1324,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
-      // 🔥 同樣確保預設值
+      //  同樣確保預設值
       if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
         rowData.tpy_qty = 1;
       }
