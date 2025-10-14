@@ -158,6 +158,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     }
   }
+  isTotal = 0;
   loadMoreData() {
     if (!this.queryFunction || !this.lastQueryBody) {
       return;
@@ -172,6 +173,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.data = [...this.data, ...res.Data];
+        this.isTotal += this.data.reduce((a: number, b: any) => a + (b.STK_CURRENTQTY ?? 0), 0);
+        console.log(this.isTotal);
         this.totalRecords = res.TotalCount; // 確保總筆數同步更新
         this.virtualData = Array(this.data.length).fill(null);
         setTimeout(() => {
