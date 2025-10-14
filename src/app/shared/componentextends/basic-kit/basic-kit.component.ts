@@ -1,4 +1,4 @@
-import { inject, Input } from '@angular/core';
+import { ChangeDetectorRef, inject, Input } from '@angular/core';
 import { AbstractControl, FormControl, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FormLabelService } from '@shared/service/form-label.service';
@@ -17,9 +17,12 @@ export class BasicKitComponent {
   @Input() controlName = '';
   @Input() label = '';
   protected formLabelService = inject(FormLabelService);
+  cdr = inject(ChangeDetectorRef)
 
   initControl(control: FormControl): void {
     if (this.controlName && this.label) {
+      console.log(`註冊標籤: ${this.controlName} -> ${this.label}`);
+
       this.formLabelService.registerLabel(this.controlName, this.label);
     }
     // 訂閱 control 的狀態變化

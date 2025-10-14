@@ -17,7 +17,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-i="rowIndex">
-    <tr [formGroup]="posFormArrayControls[i]">
+    <tr [formGroup]="posFormArrayControls[i]" [ngClass]="{'row-selected': rowData.selected}">
       <td class="text-center">{{ i + 1 }}</td>
 
       <td class="text-center">
@@ -57,7 +57,8 @@
         <app-input-text *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="CRD_No"
           [control]="getFormControl(posFormArrayControls[i], 'CRD_No')" [submitted]="submitted && rowData.selected"
           [showLabel]="false" [showErrorMessage]="false" customPlaceholder="請輸入信用卡卡號" />
-        <app-input-text *ngIf="rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A' && isFormCreateable"
+        <app-input-text
+          *ngIf="rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A' && isFormCreateable && rowData.PAY_No !== '10'"
           controlName="TXN_CouponNo" [control]="getFormControl(posFormArrayControls[i], 'TXN_CouponNo')"
           [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
           customPlaceholder="請輸入券號" />
@@ -66,7 +67,6 @@
           [showLabel]="false" [showErrorMessage]="false" customPlaceholder="請輸入應收付款對象" />
         <span *ngIf="!isFormCreateable">
           {{ getCRD_NoTXN_CouponNoTXN_PayDesc(rowData)}}
-          {{ rowData.CRD_No }}
         </span>
       </td>
       <td class="text-center">

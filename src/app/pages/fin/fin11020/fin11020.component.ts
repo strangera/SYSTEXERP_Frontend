@@ -17,6 +17,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { YearMonthComponent } from './query-year-month/query-year-month.component';
+import { finalize } from 'rxjs';
 
 
 
@@ -110,9 +111,11 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
     })
   }
 
+  uploadLoading = false;
   onFileUpload(event: FileSelectEvent) {
     const file = event.files[0];
-    this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe(res => {
+    this.uploadLoading = true;
+    this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this), finalize(() => this.uploadLoading = false)).subscribe(res => {
       if (res.Data) {
         this.messageService.successBubble(res.Message);
       } else {

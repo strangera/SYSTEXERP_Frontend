@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS5008Data } from '@service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
@@ -23,29 +23,38 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   private previousData: POS5008Data[] = [];
   columns: Column[] = [
     { field: 'ID', header: 'ID', hidden: true },
-    { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', disabled: (rowData) => Number(rowData.ID) !== 0 },
-    { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber' },
+    { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', onChange: (data) => this.handlePayNoChange(data) },
+    // { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', disabled: (rowData) => Number(rowData.ID) !== 0 },
+    { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber', disabled: () => true },
     { field: 'CRD_Type', header: '信用卡別', type: 'dropdown', options: CRD_TypeOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => rowData.PAY_Type !== "0" },
     { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', type: 'input' },
-    { field: 'TERM_No', header: '分期數', type: 'dropdown', options: SystemOptionsService.getOptions('T109'), optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (rowData) => rowData.PAY_Type !== "0" },
+    { field: 'TERM_No', header: '分期數', type: 'dropdown', options: SystemOptionsService.getOptions('T109'), optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (rowData) => rowData.PAY_Type !== "0" || rowData.PAY_No === "12" || rowData.PAY_No === "14" },
   ]
+  handlePayNoChange(rowData: POS5008Data): void {
+    if (rowData.PAY_No === "12" || rowData.PAY_No === "14") {
+      rowData.TERM_No = undefined;
+    }
+  }
+
   PAY_TypeOptions: IDropdownItem[] = [];
-  defaultInsertData: POS5008Data = {
-    ID: 0,
-    PAY_No: undefined,
-    PAY_Name: undefined,
-    TXN_PayAmt: undefined,
-    CRD_Type: undefined,
-    CRD_No: undefined,
-    TXN_CouponNo: undefined,
-    TXN_PayDesc: undefined,
-    TERM_No: undefined,
-    PAY_Type: undefined,
-    CRD_NoTXN_CouponNoTXN_PayDesc: undefined
-  };
+  // defaultInsertData: POS5008Data = {
+  //   ID: 0,
+  //   PAY_No: undefined,
+  //   PAY_Name: undefined,
+  //   TXN_PayAmt: undefined,
+  //   CRD_Type: undefined,
+  //   CRD_No: undefined,
+  //   TXN_CouponNo: undefined,
+  //   TXN_PayDesc: undefined,
+  //   TERM_No: undefined,
+  //   PAY_Type: undefined,
+  //   PAY_OverPay: undefined,
+  //   CRD_NoTXN_CouponNoTXN_PayDesc: undefined
+  // };
 
   constructor(
     private readonly dropDownListService: DropDownListService,
+    private readonly cdr: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
@@ -67,13 +76,14 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
         const mappedPAYType = this.PAY_TypeOptions.find(i => i.No === item.PAY_No)?.PAY_Type;
         return {
           ...item,
+          PAY_OverPay: this.PAY_TypeOptions.find(i => i.No === item.PAY_No)?.PAY_OverPay,
           TERM_No: String(item.TERM_No),
           PAY_Type: mappedPAYType,
           CRD_NoTXN_CouponNoTXN_PayDesc:
             mappedPAYType === '0' ? item.CRD_No || '' :
               mappedPAYType === 'A' ? item.TXN_PayDesc || '' :
                 item.TXN_CouponNo || '',
-        };
+        }; // CRD_No TXN_CouponNo TXN_PayDesc
       });
       this.previousData = newData; // 更新快取版本
     }
@@ -86,18 +96,38 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
 
   onFieldChange(event: { rowData: POS5008Data, field: string, value: string, index?: number }): void {
     const selectedItem = this.PAY_TypeOptions.find(item => item.No === event.rowData.PAY_No);
+    let shouldUpdateView = false;
     if (selectedItem) {
       event.rowData.PAY_Type = selectedItem.PAY_Type;
       if (event.field === 'PAY_No') {
-        event.rowData.TXN_PayAmt = undefined;
-        event.rowData.CRD_Type = undefined;
-        event.rowData.CRD_NoTXN_CouponNoTXN_PayDesc = undefined;
-        event.rowData.TERM_No = undefined;
+        event.rowData.CRD_Type = null;
+        event.rowData.CRD_NoTXN_CouponNoTXN_PayDesc = null;
+        event.rowData.TERM_No = null;
+        shouldUpdateView = true;
       }
+    }
+    // 修正點 2.b: 確保如果是 12 或 14 則清空 TERM_No (這段邏輯應該與上面的 PAY_No 變動邏輯合併)
+    // 由於上面的 PAY_No 變動時已經清空 TERM_No，這裡只需要處理特殊的清空邏輯。
+    // 但是，由於 PAY_No 的 `onChange` 通常只會觸發一次，因此我們將主要清空邏輯放在這裡。
+
+    // 關鍵的清空邏輯 (針對 12 和 14)
+    if (event.rowData.PAY_No === "12" || event.rowData.PAY_No === "14") {
+      if (event.rowData.TERM_No !== undefined) {
+        event.rowData.TERM_No = null;
+        shouldUpdateView = true;
+      }
+    }
+
+    // 修正點 3: 執行變更偵測
+    if (shouldUpdateView) {
+      // 由於您使用的是 OnPush 策略，我們必須手動標記或強制檢查
+      this.cdr.markForCheck();
+      // 另外，為了讓外部 TableComponent 絕對更新，我們可以重新賦值給 payNoData (雖然不優雅但可靠)
+      this.payNoData = [...this.payNoData];
     }
   }
 
-  isRowSelectable(rowData: POS5008Data): boolean {
-    return rowData.ID === 0;
-  }
+  // isRowSelectable(rowData: POS5008Data): boolean {
+  //   return rowData.ID === 0;
+  // }
 }

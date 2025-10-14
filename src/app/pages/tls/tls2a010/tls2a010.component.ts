@@ -88,7 +88,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
   ];
 
-  isRowSelectable = (rowData: any) => rowData.check_status === 'N';
+  isRowSelectable(row: any) {
+    return row.check_status === 'N';
+  }
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
@@ -144,7 +146,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             Name: item.Name
           }));
 
-          if (this.systemTypeOptions.length > 0) {
+
+          if (this.systemTypeOptions.length > 0 && !this.queryStateService.getQueryStateValue(this.ProgNo)) {
             // 僅保留「全部是數字」的字串
             const values = this.systemTypeOptions
               .map(opt => opt.No)
@@ -163,7 +166,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
         }
       });
-
 
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.floorOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
@@ -209,7 +211,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       });
 
     const today = new Date();
-    const mm = today.getMonth() + 1; // 月份是從 0 開始的
+    const mm = today.getMonth() + 1;
     const dd = today.getDate();
     this.todayDisplay = `${mm}/${dd}`;
 
@@ -245,20 +247,20 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         PAY_NO: raw.PAY_NO ?? '',
         Building_No: raw.Building_No ?? ''
       };
-      this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this),finalize(() => this.loading = false)).subscribe(response => {
+      this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         // if (response?.Data?.mainData) {
-          this.data = response.Data ? response.Data : [];
-          this.footerData = response.footerData;
-          this.totalRecords = response.TotalCount;
+        this.data = response.Data ? response.Data : [];
+        this.footerData = response.footerData;
+        this.totalRecords = response.TotalCount;
 
-          this.onPayNoChange(payload.PAY_NO);
-          console.log('footerData (API totalData):', response.Data.totalData);
-          console.log('selectedColumns:', this.selectedColumns);
-          this.historyRequestBody = payload;
-          const first = this.data[0];
-          this.PAY_NO = this.queryForm.value.PAY_NO || '';
-          this.TXN_Date = first?.TXN_Date || '';
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        this.onPayNoChange(payload.PAY_NO);
+        console.log('footerData (API totalData):', response.Data.totalData);
+        console.log('selectedColumns:', this.selectedColumns);
+        this.historyRequestBody = payload;
+        const first = this.data[0];
+        this.PAY_NO = this.queryForm.value.PAY_NO || '';
+        this.TXN_Date = first?.TXN_Date || '';
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
 
       });
     });
@@ -278,11 +280,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         PAY_NO: item.PAY_NO,
       }))
     };
-
-    console.log('送出審核資料:', payload);
-
     this.loading = true;
-
     this.tls2a010Service.updateTLS2A010(payload).subscribe({
       next: () => {
         this.messageService.successBubble('審核完成');
@@ -305,22 +303,5 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.columnGroup = [];
     }
   }
-  override onDetail(row: any): void {
-    console.log('缺單審核被點擊:', row);
-
-    this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
-      next: (res) => {
-        const detailData = res?.Data ?? [];
-        const rowdataWithDetail = {
-          ...row,
-          details: detailData
-        };
-
-        // 呼叫共通的 navigateWithState (不會覆蓋底層)
-        this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
-      },
-    });
-  }
-
 }
 

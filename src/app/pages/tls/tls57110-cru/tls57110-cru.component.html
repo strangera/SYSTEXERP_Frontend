@@ -1,0 +1,51 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+
+  <div class="card">
+    <div class="col-12">
+      <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+        [multiSortMeta]="[{ field: 'HOS_NAME', order: 1 }]" [showReportMode]="false"
+        (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+        [showManage]="false" [showDelete]="false">
+        <!-- <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button styleClass="p-2" label="產出進貨/退貨單據統計表.PDF" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportPDF()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+        <p-button styleClass="p-2" label="產出進貨/退貨單據統計表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportXLSX()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+      </div>
+    </header> -->
+      </app-table>
+      <!-- <app-table-report
+        tableKey="TLS57110CRU"
+        [data]="data"
+        [columns]="columns"
+        [showCheckBox]="false"
+        dataKey="TXN_No"
+        [totalRecords]="totalRecords"
+        [loading]="loading"
+        [selectedItems]="selectedItems"
+        (selectionChange)="selectedItems = $event"
+        [showManage]="false"
+        [showDelete]="false"
+        [showReportMode]="false"
+        [lastQueryBody]="historyRequestBody"
+         [footerData]="footerData"
+        [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)"
+        apiUrl="queryTLS22010_Detail"
+
+      >
+     <header>
+        <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
+          class="p-button-rounded p-button-text p-button-success mr-2" icon="pi pi-file-excel"
+          [disabled]="!canPerformAction('70')" (click)="exportExcel()" />
+        <p-button pButton tooltipPosition="top" pTooltip="匯出PDF" [style.width]="'35px'" [style.height]="'35px'"
+          class="p-button-rounded p-button-text p-button-danger" icon="pi pi-file-pdf"
+          [disabled]="!canPerformAction('70')" (click)="exportPDF()" />
+      </header></app-table-report> -->
+    </div>
+  </div>
+</div>

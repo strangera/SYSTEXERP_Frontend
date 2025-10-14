@@ -81,43 +81,33 @@
   </p-accordion>
 </div>
 
+<!-- ✅ 改用 app-table-report -->
 <div class="card">
-  <!-- ✅ 改用 table2；加總 &（有就）小計 -->
-  <app-table2
-    tableKey="TLS23130"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="_rowKey"
-    [multiSortMeta]="sortMeta"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-    [showTotal]="true"
-    [showSubTotal]="hasSubtotals"
-    [groupRowsBy]="'tlt_no'"
-    [externalTotals]="detailTotals"
-    [externalTotalFieldMap]="detailTotalFieldMap"
-    [externalSubtotals]="detailSubtotals"
-    [externalSubtotalFieldMap]="detailSubtotalFieldMap"
-    [serverFetch]="fetchTLS23130"  
-    >
+<app-table-report
+  tableKey="TLS23130"
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="totalRecords"
+  [loading]="loading"
+  dataKey="_rowKey"
+  [showManage]="false"
+  [showDelete]="false"
+  [lastQueryBody]="historyRequestBody"
+  [queryFunction]="queryTLS23130ForReport"
+  [groupRowsBy]="'CRD_No'"
+
+>
   <header>
-      <div class="flex justify-content-end gap-2">
-        <p-button
-          styleClass="p-2"
-          label="匯出信用卡銷貨月報表 .PDF"
-          icon="pi pi-file"
-          [loading]="btnLoading"
-          [disabled]="data.length === 0"
-          (click)="onExportPDF()">
-        </p-button>
-
-
-      </div>
-    </header>
-  </app-table2>
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        styleClass="p-2"
+        label="匯出信用卡銷貨月報表 .PDF"
+        icon="pi pi-file"
+        [loading]="btnLoading"
+        [disabled]="!data.length"
+        (click)="onExportPDF()"
+      ></p-button>
+    </div>
+  </header>
+</app-table-report>
 </div>

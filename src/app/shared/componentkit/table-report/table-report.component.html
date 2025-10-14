@@ -100,13 +100,13 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
     let-expanded="expanded">
     <tr [attr.data-key]="dataKey ? rowData[dataKey] : undefined" [pSelectableRow]="rowData"
-      [style]="{ height: showManage ? '40.6px' : '24px' }"
-      [pSelectableRowDisabled]="!rowSelectableWrapper(rowData) || disabled" [pReorderableRow]="index"
-      [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: showManage ? '40.6px' : '24px' }"
+      [pSelectableRowDisabled]="!rowSelectableWrapper || disabled" [pReorderableRow]="index" [pSelectableRow]="rowData"
+      [pSelectableRowIndex]="rowIndex">
       <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <td *ngIf="showCheckBox">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!rowSelectableWrapper(rowData) || disabled" />
+          [value]="rowData" [disabled]="!rowSelectableWrapper || disabled" />
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"

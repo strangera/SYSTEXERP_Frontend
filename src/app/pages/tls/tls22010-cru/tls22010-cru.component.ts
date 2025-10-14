@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {  FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
 import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
@@ -64,7 +64,7 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
   data: ITxnData[] = [];
   totalRecords = 0;
   selectedItems: ITxnData[] = [];
-  footerData = [];
+  footerData: any[] = [];
   historyRequestBody: unknown = null;
   columnscru: ReportColumn[] = [
     { field: 'TXN_No', header: '交易序號', visible: true },
@@ -89,7 +89,7 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
 
 
   constructor(
-     public readonly tls22010Service: Tls22010Service,
+    public readonly tls22010Service: Tls22010Service,
     private queryStateService: QueryStateService,
   ) {
     super();
@@ -134,19 +134,123 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
     this.loading = true;
     this.tls22010Service.queryTLS22010_Detail(body).subscribe({
       next: (res) => {
-        this.data = res.Data; // 不需要 ?? [] 因為 service 已經處理過了
-        this.totalRecords = res.TotalCount; // 不需要 ?? 0 因為 service 已經處理過了
-        this.footerData = res.footerData ?? []; // 處理 footerData
-        this.loading = false;
+        const dataWrapper = res.Data || res;
+        this.data = dataWrapper.queryTLS22010_DetailDataList || [];
+        this.totalRecords = this.data.length || 0;
+        this.footerData = dataWrapper.queryTLS22010_DetailSum
+          ? dataWrapper.queryTLS22010_DetailSum
+          : {};
 
+        this.loading = false;
         const viewOnly = true;
         if (viewOnly) this.queryForm.disable();
       },
-      error: (err) => {
-        console.error('查詢失敗:', err);
-        this.loading = false;
+
+    });
+
+  }
+
+  exportExcel(): void {
+    // 修改日期格式為後端期望的 DateTime 格式
+    const toApiDate = (v: Date | string | null | undefined) => {
+      if (!v) return null;
+      if (v instanceof Date) {
+        // 轉換為 ISO 日期格式 (YYYY-MM-DD)
+        const y = v.getFullYear();
+        const m = String(v.getMonth() + 1).padStart(2, '0');
+        const d = String(v.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
       }
+      // 如果是字串，嘗試轉換為 YYYY-MM-DD 格式
+      const dateStr = String(v);
+      if (dateStr.length === 8 && /^\d{8}$/.test(dateStr)) {
+        // 20250801 -> 2025-08-01
+        return `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      }
+      return dateStr; // 其他格式直接返回
+    };
+
+    // 使用與查詢明細相同的參數格式
+    const body = {
+      PageSize: 0, // 匯出全部資料
+      PageIndex: 1,
+      SortBy: [{ field: 'TXN_No', order: 1 }],
+      TXN_Date: toApiDate(this.rowdata?.TXN_DATE),
+      ECR_No: this.rowdata?.ECR_No ?? "",
+      floor_no: this.rowdata?.FLOOR_NO ?? ""
+    };
+
+    this.tls22010Service.exportTLS22010Detail(body).subscribe({
+      next: (res: Blob) => {
+        if (res.size === 0) {
+          alert('匯出失敗：沒有資料可匯出');
+          return;
+        }
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `收銀機對帳明細_${this.rowdata?.TXN_DATE || 'unknown'}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        console.log(' Excel 檔案下載完成');
+      },
     });
   }
+
+  exportPDF(): void {
+    // 修改日期格式為後端期望的 DateTime 格式
+    const toApiDate = (v: Date | string | null | undefined) => {
+      if (!v) return null;
+      if (v instanceof Date) {
+        // 轉換為 ISO 日期格式 (YYYY-MM-DD)
+        const y = v.getFullYear();
+        const m = String(v.getMonth() + 1).padStart(2, '0');
+        const d = String(v.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      // 如果是字串，嘗試轉換為 YYYY-MM-DD 格式
+      const dateStr = String(v);
+      if (dateStr.length === 8 && /^\d{8}$/.test(dateStr)) {
+        // 20250801 -> 2025-08-01
+        return `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      }
+      return dateStr; // 其他格式直接返回
+    };
+
+    // 使用與查詢明細相同的參數格式
+    const body = {
+      PageSize: 0, // 匯出全部資料
+      PageIndex: 1,
+      SortBy: [{ field: 'TXN_No', order: 1 }],
+      TXN_Date: toApiDate(this.rowdata?.TXN_DATE),
+      ECR_No: this.rowdata?.ECR_No ?? "",
+      floor_no: this.rowdata?.FLOOR_NO ?? ""
+    };
+
+
+    this.tls22010Service.exportTLS22010DetailPDF(body).subscribe({
+      next: (res: Blob) => {
+        if (res.size === 0) {
+          alert('匯出失敗：沒有資料可匯出');
+          return;
+        }
+
+        const blob = new Blob([res], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `收銀機對帳明細_${this.rowdata?.TXN_DATE || 'unknown'}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+      },
+    });
+  }
+
 
 }

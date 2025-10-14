@@ -16,6 +16,7 @@ import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { environment } from 'src/environments/environment';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 
 
 @Component({
@@ -49,7 +50,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
     { field: 'CRD_BinCode', header: '信用卡 BIN 碼', visible: true },
     { field: 'BNK_No', header: '發卡銀行代號', visible: true },
     { field: 'CRD_Type', header: '信用卡卡別', visible: true, format: (value: string) => this.cardTypeOptions.find(item => item.value === value)?.label || value },
-    { field: 'CRD_Kind', header: '信用卡卡種', visible: true, format: (value: string) => this.cardCategoryOptions.find(item => item.value === value)?.label || value },
+    { field: 'CRD_Kind', header: '信用卡卡種', visible: true, format: (value: string) => getSYS1000('CRD_Kind', value) },
     { field: 'Active_Date', header: '生效日期', visible: true, format: formatDate },
     { field: 'Disable_Date', header: '終止日期', visible: true, format: formatDate },
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
@@ -69,16 +70,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
     { value: 'N', label: '聯合簽帳卡' },
     { value: 'O', label: '其他' },
   ];
-  cardCategoryOptions: { value: string, label: string }[] = [
-    { value: 'B', label: '商務卡' },
-    { value: 'C', label: '普卡' },
-    { value: 'G', label: '金卡' },
-    { value: 'I', label: '無限卡' },
-    { value: 'O', label: '其他' },
-    { value: 'P', label: '白金卡' },
-    { value: 'S', label: '御璽、鈦金、晶緻卡' },
-    { value: 'T', label: '鈦金卡' },
-  ];
+  cardCategoryOptions = getSYS1000Options('CRD_Kind');
   bankOptions: { BNK_No: string, BNK_Name: string }[] = [];
   constructor(
     private sysbc00Service: Sysbc00Service,

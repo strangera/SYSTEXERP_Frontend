@@ -84,7 +84,7 @@
           [submitted]="submitted" controlName="TXN_Uniform" />
         <!-- 銷售時段 → POS5006.TXN_Time -->
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售時段" [control]="dataForm.controls.TXN_Time"
-          [submitted]="submitted" calendarType="timeOne" controlName="TXN_Time" />
+          [submitted]="submitted" calendarType="timeOne" controlName="TXN_Time" customPlaceholder="HH:MM" />
       </div>
       <div class="grid p-fluid" *ngIf="TXN_GUIPaper === 'E'">
         <p-divider type="solid" class="col-12" />
@@ -95,8 +95,8 @@
         <!-- 電子發票載具卡號 → POS5006.TXN_GUIVehicle -->
         <!-- <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具卡號" [control]="dataForm.controls.TXN_GUIVehicle"
           [submitted]="submitted" controlName="TXN_GUIVehicle" /> -->
-        <!-- 載具編號顯碼 → POS5006.TXN_GUI_CarrIdEx -->
-        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號顯碼" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
+        <!-- 電子發票載具編號 → POS5006.TXN_GUI_CarrIdEx -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具編號" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
           [submitted]="submitted" controlName="TXN_GUI_CarrIdEx" />
         <!-- 載具編號隠碼 → POS5006.TXN_GUI_CarrId -->
         <!-- <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"

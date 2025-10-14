@@ -10,14 +10,16 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-     <app-calendar
-  label="銷售月份"
-  calendarType="dateMonthOne"
-  [control]="queryForm.controls.TXN_Month"
-  [submitted]="submitted">
-</app-calendar>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="銷售月份"
+              calendarType="dateMonthOne"
+              [control]="queryForm.controls.TXN_Month"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
+
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
@@ -83,30 +85,22 @@
 </div>
 
 <div class="card">
-  <!-- ✅ 改用 table2 並啟用總計/小計；依 tlt_no 群組 -->
-  <app-table2
+  <!-- ✅ 改用 app-table-report；補上必填的 lastQueryBody / queryFunction -->
+  <app-table-report
     tableKey="TLS23070"
-    [data]="data"
     [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="_rowKey"
-    [multiSortMeta]="sortMeta"
+    [data]="data"
     [totalRecords]="totalRecords"
-    [lazy]="true"
     [loading]="loading"
-    [showDetail]="false"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-    [showTotal]="true"
-    [showSubTotal]="true"
-    [groupRowsBy]="'tlt_no'"
-    [externalTotals]="detailTotals"
-    [externalTotalFieldMap]="detailTotalFieldMap"
-    [externalSubtotals]="detailSubtotals"
-    [externalSubtotalFieldMap]="detailSubtotalFieldMap"
-    [serverFetch]="fetchTLS23070"  >
-  <header>
+    dataKey="_rowKey"
+    [lastQueryBody]="historyRequestBody"
+    [queryFunction]="queryTLS23070ForReport"
+      [showManage]="false"
+  [showDelete]="false"
+     [groupRowsBy]="'TXN_Date'"
+     >
+
+    <header>
       <div class="flex justify-content-end gap-2">
         <p-button
           styleClass="p-2"
@@ -116,9 +110,7 @@
           [disabled]="data.length === 0"
           (click)="onExportPDF()">
         </p-button>
-
-
       </div>
     </header>
-  </app-table2>
+  </app-table-report>
 </div>

@@ -198,7 +198,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
           const contentDisposition = response.headers.get('content-disposition');
           let filename = `${payload.FileName}.xlsx`; // 副檔名改為 .xlsx
           if (contentDisposition) {
-            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;  //  正則匹配.xlsx
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;
             const matches = contentDisposition.match(filenameRegex);
             if (matches) {
               filename = matches[1] || matches[2] || filename;
@@ -206,15 +206,11 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
             }
             filename = filename.replace(/["']/g, '');
           }
-          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); // 正確的 MIME 類型
+          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
           saveAs(blob, filename);
         } else {
           console.error("Response body is empty!");
         }
-        this.exportExcelLoading = false;
-      },
-      error: (err) => {
-        console.error('TLS22050 匯出失敗', err);
         this.exportExcelLoading = false;
       },
     });

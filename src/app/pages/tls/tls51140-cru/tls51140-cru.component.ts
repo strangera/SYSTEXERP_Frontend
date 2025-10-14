@@ -1,3 +1,4 @@
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -5,10 +6,10 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { QueryTLS51140ResponseData, Tls51140Service } from '@service/api/tls/tls51140.service';
-import { IDropdownItem, DropDownListService, POS1002Item } from '@service/utility/dropDownList.service';
+import { DropDownListService, POS1002Item } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
@@ -17,7 +18,7 @@ import { debounceTime, finalize, tap } from 'rxjs';
 @Component({
   selector: 'app-tls51140-cru',
   standalone: true,
-  imports: [DialogComponent, TableComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule],
+  imports: [AsyncPipe, DialogComponent, TableComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule],
   templateUrl: './tls51140-cru.component.html'
 })
 export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140ResponseData> implements OnInit {
@@ -25,11 +26,11 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
     TLT_NO: [null, [Validators.required]], // 專櫃編號
     HOS_No: [null, [Validators.required]], // 倉庫代碼
   });
-  TLT_NoOptions: IDropdownItem[] = [];
-  warehouseOptions: IDropdownItem[] = [];
-  buildingOptions: IDropdownItem[] = [];
-  floorOptions: IDropdownItem[] = [];
-  areaOptions: IDropdownItem[] = [];
+  TLT_NoOptions$ = this.dropdown.queryTltTalent();
+  warehouseOptions$ = this.dropdown.queryPos2034();
+  buildingOptions$ = this.dropdown.querySys3800();
+  floorOptions$ = this.dropdown.querySys3900();
+  areaOptions$ = this.dropdown.querySys3A00();
 
   data: POS1002Item[] = []
   selectedItems: POS1002Item[] = []
@@ -40,7 +41,8 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
   ];
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls51140Service: Tls51140Service
+    private readonly tls51140Service: Tls51140Service,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -61,21 +63,6 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
         }));
       })
     }
-    this.dropDownListService.queryTLTTALENT__StoreWay2_Approve_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    })
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    })
-    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.buildingOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    })
-    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.floorOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    })
-    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.areaOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    })
     this.dialogQueryForm.valueChanges
       .pipe(untilDestroyed(this), tap(() => this.dialogLoading = true), debounceTime(500), finalize(() => this.dialogLoading = false))
       .subscribe(formValues => {
@@ -113,10 +100,10 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
       });
     });
   }
-  dialogQueryForm = this.formBuilder.group({
-    building_no: [''], // 館別
-    floor_no: [''], // 樓層
-    area_no: [''] // 區域
+  dialogQueryForm = this.formBuilder.nonNullable.group({
+    building_no: [null as string | null], // 館別
+    floor_no: [null as string | null], // 樓層
+    area_no: [null as string | null] // 區域
   });
   dialogData: POS1002Item[] = [];
   selectedItemsDialog: POS1002Item[] = [];

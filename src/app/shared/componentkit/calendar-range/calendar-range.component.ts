@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgIf, NgStyle } from '@angular/common';
@@ -32,6 +32,8 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   @Input() disabled = false;  // ← 新增
   // 自訂義
   calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';
+  // 觸發事件
+  @Output() startDateChange = new EventEmitter<any>();
 
   // 元件類型對應
   private readonly calendarConfig = {

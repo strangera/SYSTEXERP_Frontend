@@ -44,7 +44,8 @@ import {
   Pos1006Item,
   Pos2013Query,
   Pos2013Item,
-  BusSClassItem
+  BusSClassItem,
+  TALPORDERMQuery
 } from './dropdown-api.model';
 import { ApiResponse } from '@service/system/auth.service';
 import { environment } from 'src/environments/environment';
@@ -524,6 +525,13 @@ export class DropdownApiService {
   queryTblUserOrgid(): Observable<TblUserOrgidItem[] | null> {
     return this.queryDropdown<TblUserOrgidItem>('/queryTBLUSER_Orgid_DropDownList').pipe(
       shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢專櫃活動編號資料表下拉選單() */
+  queryTALPORDERM_DropDownList(body?: TALPORDERMQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, TALPORDERMQuery>('/queryTALPORDERM_DropDownList', 'No', 'Name', body).pipe(
+      shareReplay(1)// 避免重複查詢
     );
   }
 }

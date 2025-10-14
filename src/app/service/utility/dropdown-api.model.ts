@@ -369,3 +369,11 @@ export interface Pos2004LogoItem {
   PLU_PageNum: string | null;
   PLU_LocNo: number | null;
 }
+
+/**
+ * 查詢 queryTALPORDERM_DropDownList 時的請求 body
+ */
+export interface TALPORDERMQuery {
+  pod_typeList: string[];
+  pod_statusList: string[];
+}

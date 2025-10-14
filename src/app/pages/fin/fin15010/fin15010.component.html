@@ -12,7 +12,7 @@
           <!-- 發票日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="發票日期"
             [startControl]="queryForm.controls.PUR_GUIDate_S" [endControl]="queryForm.controls.PUR_GUIDate_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startDateChange)="onStartControlChange($event, 'PUR_GUIDate_S')">
           </app-calendar-range>
 
           <!-- 發票格式 -->
@@ -36,7 +36,7 @@
           <!-- 發票號碼起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
             [startControl]="queryForm.controls.InvoiceNo_S" [endControl]="queryForm.controls.InvoiceNo_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'InvoiceNo_S')">
           </app-input-text-range>
 
           <!-- 資料所屬年月起迄 -->
@@ -48,7 +48,7 @@
           <!-- 廠商統一編號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="廠商統一編號"
             [startControl]="queryForm.controls.PUR_Uniform_S" [endControl]="queryForm.controls.PUR_Uniform_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'PUR_Uniform_S')">
           </app-input-text-range>
 
           <!-- 扣抵代號 -->
@@ -72,13 +72,13 @@
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
             [startControl]="queryForm.controls.Source_Doc_No_S" [endControl]="queryForm.controls.Source_Doc_No_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'Source_Doc_No_S')">
           </app-input-text-range>
 
           <!-- 傳票號碼起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="傳票號碼"
             [startControl]="queryForm.controls.Voucher_No_S" [endControl]="queryForm.controls.Voucher_No_E"
-            [submitted]="submitted">
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'Voucher_No_S')">
           </app-input-text-range>
 
           <!-- 傳票建立者 -->
@@ -101,7 +101,7 @@
           <!-- 建立日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="建立日期"
             [startControl]="queryForm.controls.CRT_Date_S" [endControl]="queryForm.controls.CRT_Date_D"
-            [submitted]="submitted">
+            [submitted]="submitted" (startDateChange)="onStartControlChange($event, 'CRT_Date_S')">
           </app-calendar-range>
         </div>
 

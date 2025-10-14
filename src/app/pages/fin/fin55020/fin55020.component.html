@@ -1,118 +1,54 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate"
-              [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="日期" controlName="accountsummary"
+              [startControl]="queryForm.controls.VOUDATE_Start" [endControl]="queryForm.controls.VOUDATE_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門"
-              controlName="department"
-              [options]="departmentOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.department"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="部門" controlName="ORG_ID" [options]="ORG_IDOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="活動代碼"
-              controlName="activity"
-              [options]="activity"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.activity"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="活動代碼" controlName="ProjectNo" [options]="ProjectNoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ProjectNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳票號碼"
-              [startControl]="queryForm.controls.startserialticket"
-              [endControl]="queryForm.controls.endserialticket"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-text label="傳票號碼" controlName="vouno" [control]="queryForm.controls.vouno"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="廠商代號"
-              controlName="vander"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.vander"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="廠商代號" controlName="DetailNo" [options]="DetailNoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.DetailNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票型態"
-              controlName="Subpoenastatus"
-              [options]="Subpoenastatus"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenastatus"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="傳票型態" controlName="VOUCHER_KIND" [options]="VOUCHER_KINDOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VOUCHER_KIND" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票狀態"
-              controlName="Subpoenatype2"
-              [options]="Subpoenatype2"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenatype2"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="PostFlagOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
           </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report tableKey="tls57090" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
+    [queryFunction]="fin55020Service.queryFIN55020.bind(fin55020Service)">
+  </app-table-report>
 </div>

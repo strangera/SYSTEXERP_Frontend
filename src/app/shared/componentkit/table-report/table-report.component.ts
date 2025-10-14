@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
 import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
 import { TableReportUtilityService } from './table-report-utility.service';
@@ -43,7 +43,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showCheckBox = false;
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
-  @Input() rowSelectableWrapper: (row: any) => boolean = () => true;
+  @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
+  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => {
+    if (data) { return this.isRowSelectable(data); }
+    return false; //
+  };
   // Header 相關
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   @Input() showSort = true;                                                     // 是否顯示 排序

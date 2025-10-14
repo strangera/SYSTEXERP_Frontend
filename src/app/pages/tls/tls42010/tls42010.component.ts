@@ -12,6 +12,8 @@ import { createPaginationConfig, Column } from '@shared/componentkit/table/table
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';  // 引入 service
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls42010',
@@ -27,7 +29,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     InputTextareaComponent,
     TableReportComponent,
     TranslateModule,
-    InputTextComponent
+    DropdownComponent
   ]
 })
 export class TLS42010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -48,17 +50,37 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   ];
   override loading = false;
 
+  // 下拉選單選項
+  kbFuncOptions: { label: string; value: string }[] = [];
 
   constructor(
     private validationService: ValidationService,
     private counterCodeService: CounterCodeService,
-    public readonly tls42010Service: Tls42010Service //  注入 service
+    public readonly tls42010Service: Tls42010Service,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS42010', '/TLS/TLS42010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadKeyboardOptions();
+  }
+
+  private loadKeyboardOptions(): void {
+    this.dropDownListService.queryTLS42010DropDownList().subscribe({
+      next: (res) => {
+        console.log('TLS42010 dropdown 回傳:', res);
+
+        const list = res.Data;
+        this.kbFuncOptions = list.map((func: { KB_Desc: string; KB_Func: string }) => ({
+          label: func.KB_Desc,
+          value: func.KB_Func
+        }));
+      },
+    });
+
+
   }
 
   onSubmit(frm: FormGroup) {
@@ -81,7 +103,6 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
       this.tls42010Service.queryTLS42010M(body).subscribe({
         next: (res) => {
           const rawData: { USR_Level: string;[key: string]: any }[] = res?.Data ?? [];
-          // 以 USR_Level 當 key 過濾掉重複
           const uniqueMap = new Map();
           rawData.forEach((item) => {
             if (!uniqueMap.has(item.USR_Level)) {
@@ -92,7 +113,7 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
           this.totalRecords = res.TotalCount;
           this.footerTotal = res.FooterTotal;
           this.loading = false;
-          console.log('查詢成功 (過濾後):', this.data);
+
         },
       });
     });

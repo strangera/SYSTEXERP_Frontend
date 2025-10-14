@@ -26,3 +26,6 @@
     background-color: #2196f3 !important;
   }
 }
+:host ::ng-deep .row-selected {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+}

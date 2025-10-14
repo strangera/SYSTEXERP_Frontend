@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DividerModule } from 'primeng/divider';
@@ -28,7 +28,8 @@ import { DropdownComponent } from '../../../../shared/componentkit/dropdown/drop
     DropdownComponent,
     NgIf,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
+    NgClass
   ],
   templateUrl: './tls24010-pos5008.component.html',
   styleUrls: ['./tls24010-pos5008.component.scss'],
@@ -78,7 +79,8 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
           TXN_PayDesc: '',
           TERM_No: '',
           PAY_Type: item.PAY_Type,
-          selected: false
+          selected: false,
+          PAY_OverPay: item.PAY_OverPay,
         };
         this.POS5008FormArray.push(this.createRowForm(row));
         return row;
@@ -102,7 +104,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
       this.posFormArrayControls.forEach(formGroup => {
         Object.keys(formGroup.controls).forEach(controlName => {
           const control = formGroup.get(controlName);
-          if (controlName !== 'PAY_Name' && controlName !== 'PAY_No') {
+          if (controlName !== 'PAY_Name' && controlName !== 'PAY_No' && controlName !== 'PAY_OverPay') {
             if (isDisabled) {
               control?.disable({ emitEvent: false })
             } else {
@@ -151,13 +153,14 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
 
     return this.fb.group({
       PAY_Name: [{ value: row.PAY_Name, disabled: true }],
-      PAY_No: [{ value: row.PAY_No, disabled: true }],
+      PAY_No: [{ value: row.PAY_No, disabled: true }, [Validators.min(0)]],
       TXN_PayAmt: [{ value: null, disabled: isDisabled }],
       CRD_Type: [{ value: null, disabled: isDisabled }],
       CRD_No: [{ value: null, disabled: isDisabled }, [Validators.maxLength(20)]],
       TXN_CouponNo: [{ value: null, disabled: isDisabled }, [Validators.maxLength(50)]],
       TXN_PayDesc: [{ value: null, disabled: isDisabled }, [Validators.maxLength(100)]],
-      TERM_No: [{ value: null, disabled: isDisabled }]
+      TERM_No: [{ value: null, disabled: isDisabled }],
+      PAY_OverPay: [{ value: row.PAY_OverPay, disabled: true }],
     });
   }
 
@@ -172,29 +175,52 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     return ctrl;
   }
   onRowSelect(event: TableRowSelectEvent): void {
+    this.submitted = false;
     const rowData = event.data as POS5008Data;
     rowData.selected = true;
-    const rowIndex = this.POS5008Data.findIndex(d => d.ID === rowData.ID);
+    const rowIndex = this.POS5008Data.findIndex(d => d.PAY_No === rowData.PAY_No);
+    if (rowIndex === -1) return;
     const formGroup = this.posFormArrayControls[rowIndex];
-    // 通用驗證
-    formGroup.get('TXN_PayAmt')?.setValidators([Validators.required, Validators.min(0)]);
-    // 條件驗證
+    // 獲取所有相關控制項
+    const txnPayAmtControl = formGroup.get('TXN_PayAmt');
+    const crdTypeControl = formGroup.get('CRD_Type');
+    const termNoControl = formGroup.get('TERM_No');
+    const crdNoControl = formGroup.get('CRD_No');
+    const txnPayDescControl = formGroup.get('TXN_PayDesc');
+    const txnCouponNoControl = formGroup.get('TXN_CouponNo');
+    // 1. 通用驗證：TXN_PayAmt 必須
+    txnPayAmtControl?.setValidators([Validators.required, Validators.min(0)]);
+
+    // 2. 條件驗證
     if (rowData.PAY_Type === '0') {
-      formGroup.get('CRD_No')?.setValidators([Validators.required, Validators.maxLength(20)]);// 信用卡
-      formGroup.get('CRD_Type')?.setValidators([Validators.required]);
-      formGroup.get('TERM_No')?.setValidators([Validators.required]);
+      // 信用卡
+      crdNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+      crdTypeControl?.setValidators([Validators.required]);
+      termNoControl?.setValidators([Validators.required]);
     } else if (rowData.PAY_Type === 'A') {
-      formGroup.get('TXN_PayDesc')?.setValidators([Validators.required, Validators.maxLength(100)]);// 應收付款對象
+      // 應收付款對象
+      txnPayDescControl?.setValidators([Validators.required, Validators.maxLength(100)]);
     } else {
-      formGroup.get('TXN_CouponNo')?.setValidators([Validators.maxLength(50)]);// 其他券號
+      // 其他券號
+      txnCouponNoControl?.setValidators([Validators.maxLength(50)]);
     }
+    // 3. 【修正點】：強制重新檢查控制項的有效性 (關鍵)
+    // 在設置了 required 驗證器後，必須呼叫 updateValueAndValidity 讓控制項立即驗證當前的 null 值
+    txnPayAmtControl?.updateValueAndValidity();
+    crdTypeControl?.updateValueAndValidity();
+    termNoControl?.updateValueAndValidity();
+    crdNoControl?.updateValueAndValidity();
+    txnPayDescControl?.updateValueAndValidity();
+    txnCouponNoControl?.updateValueAndValidity();
     formGroup.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
   }
   onRowUnselect(event: TableRowUnSelectEvent): void {
+    this.submitted = false;
     const rowData = event.data as POS5008Data;
     rowData.selected = false;
-    const rowIndex = this.POS5008Data.findIndex(d => d.ID === rowData.ID);
+    const rowIndex = this.POS5008Data.findIndex(d => d.PAY_No === rowData.PAY_No);
+    if (rowIndex === -1) return;
     const formGroup = this.posFormArrayControls[rowIndex];
     formGroup.get('TXN_PayAmt')?.clearValidators();
     formGroup.get('CRD_Type')?.clearValidators();
@@ -202,6 +228,16 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     formGroup.get('CRD_No')?.clearValidators();
     formGroup.get('TXN_PayDesc')?.clearValidators();
     formGroup.get('TXN_CouponNo')?.clearValidators();
+    formGroup.get('TXN_CouponNo')?.setValidators([Validators.maxLength(50)]);
+    // 清空取消選擇的資料
+    formGroup.patchValue({
+      TXN_PayAmt: null,
+      CRD_Type: null,
+      CRD_No: null,
+      TXN_CouponNo: null,
+      TXN_PayDesc: null,
+      TERM_No: null
+    }, { emitEvent: false });
     formGroup.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
   }

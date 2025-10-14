@@ -166,9 +166,14 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
         ...frm.value,
         YYYYMM: formattedYYYYMM,
       });
+
+      console.log('查詢參數:', frm.value);
+
       this.apiService.queryTLS51110(frm.value).subscribe({
         next: (response) => {
           console.log('查詢成功', response);
+          console.log('回傳資料筆數:', response.Data?.length, '總筆數:', response.TotalCount);
+
           this.loading = false;
           this.data = response.Data.map((item: any) => ({
             ...item,
@@ -176,10 +181,6 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
           }));
           this.totalRecords = response.TotalCount || this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        },
-        error: (err) => {
-          console.error('查詢失敗', err);
-          this.loading = false;
         },
       });
     });
@@ -193,12 +194,16 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     this.apiService.uploadTLS51110(file).subscribe({
       next: (res) => {
         console.log('匯入成功', res);
-        // 成功後可自動重新查詢
-        this.onSubmit(this.queryForm);
+
+        // 檢查匯入結果
+        if (res.Data?.SuccessCount > 0) {
+          this.messageService.successBubble(`匯入成功，共${res.Data.SuccessCount}筆資料。請重新查詢以查看匯入結果。`);
+        }
+
+        if (res.Data?.ErrorCount > 0) {
+          this.messageService.warnBubble(`匯入完成，但有${res.Data.ErrorCount}筆資料失敗`);
+        }
       },
-      error: (err) => {
-        console.error('匯入失敗', err);
-      }
     });
   }
 
@@ -209,9 +214,6 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
         const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         saveAs(blob, 'TLS51110_Template.xlsx');
       },
-      error: (err) => {
-        console.error('下載範例檔案失敗', err);
-      }
     });
   }
   statusChange(row: LogoBudget, status: string) {
@@ -239,10 +241,6 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
         const msg = status === "1" ? '審核成功' : '反審核成功';
         this.onSubmit(this.queryForm);
         this.messageService.successBubble(`${msg}（ID: ${id}）`);
-      },
-      error: (err) => {
-        const apiMsg = err?.error?.Message || err?.message || '';
-        this.messageService.errorBubble(`更新失敗（ID: ${id}）：${apiMsg}`);
       },
     });
   }

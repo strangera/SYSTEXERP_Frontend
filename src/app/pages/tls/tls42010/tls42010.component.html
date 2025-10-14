@@ -17,12 +17,16 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-dropdown
               label="鍵盤編號"
               controlName="USR_Level"
               [control]="queryForm.controls.USR_Level"
               [submitted]="submitted"
-            ></app-input-text>
+              [options]="kbFuncOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="請選擇鍵盤編號"
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">

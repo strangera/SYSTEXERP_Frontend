@@ -73,7 +73,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     check_statusList: [[]],                           // 狀況
     Floor_No: [null],                                 // 樓層
     Building_No: [null],                              // 館別
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    ...createPaginationConfig([{ field: 'TXN_No', order: 1 }]),
 
   });
 
@@ -89,7 +89,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_GUIBegNo', header: '發票號碼' },
     { field: 'CRD_No', header: '信用卡卡號' },
     { field: 'TXN_PayAmt', header: '金額' },
-    { field: 'check_status', header: '狀況' },
+    { field: 'check_status_label', header: '狀況' },
     { field: 'check_remark', header: '備註' }
   ];
 
@@ -166,7 +166,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
             return {
               ...item,
               TXN_GUIBegNo: item.TXN_GUIBegNo ?? '--',
-              check_status: statusOption ? statusOption.label : item.check_status,  // 顯示中文
+              check_status_label: statusOption ? statusOption.label : item.check_status,  // 顯示中文
               TXN_No: item.TXN_No != null ? item.TXN_No.toString().padStart(6, '0') : '' // 補零
             };
           });

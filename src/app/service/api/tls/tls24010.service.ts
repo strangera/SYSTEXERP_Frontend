@@ -87,13 +87,14 @@ export interface POS5008Data {
   PAY_Name?: string; // 付款名稱
   PAY_Type?: string; // 付款別
   TXN_PayAmt?: number; // 付款金額       // 傳給後端
-  CRD_Type?: string; // 信用卡別         // 傳給後端
+  CRD_Type?: string | null; // 信用卡別         // 傳給後端
   CRD_No?: string,                      // 傳給後端
   TXN_CouponNo?: string,               // 傳給後端
   TXN_PayDesc?: string,               // 傳給後端
-  TERM_No?: string; // 期別              // 傳給後端
-  selected?: boolean
-  CRD_NoTXN_CouponNoTXN_PayDesc?: string;
+  TERM_No?: string | null; // 期別              // 傳給後端
+  selected?: boolean,
+  PAY_OverPay?: string;
+  CRD_NoTXN_CouponNoTXN_PayDesc?: string | null;
 }
 
 export interface InsertTLS24010Payload {

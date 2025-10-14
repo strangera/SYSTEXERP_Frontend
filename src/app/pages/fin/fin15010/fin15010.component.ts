@@ -44,9 +44,9 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     GUI_Track: [null],                                          // 字軌
     InvoiceNo_S: ['', [Validators.maxLength(8)]],               // 發票號碼_起
     InvoiceNo_E: ['', [Validators.maxLength(8)]],               // 發票號碼_迄
-    PUR_RepYYYYMM: [null, [Validators.required, this.validationService.evenMonthValidator]], // 申報年月
-    PUR_GUIDateYYYYMM_S: [null],         // 資料所屬年月_起
-    PUR_GUIDateYYYYMM_E: [null],         // 資料所屬年月_迄
+    PUR_RepYYYYMM: ['', [Validators.required, this.validationService.evenMonthValidator]], // 申報年月
+    PUR_GUIDateYYYYMM_S: [''],         // 資料所屬年月_起
+    PUR_GUIDateYYYYMM_E: [''],         // 資料所屬年月_迄
     PUR_Uniform_S: ['', [Validators.maxLength(10)]],            // 廠商統一編號_起
     PUR_Uniform_E: ['', [Validators.maxLength(10)]],            // 廠商統一編號_迄
     PUR_DiscNo: [null],                                         // 扣抵代號
@@ -83,9 +83,9 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_GUIDateYYYYMM', header: '資料所屬年月', visible: true },
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
     { field: 'PUR_Uniform', header: '廠商統一編號', visible: true },
-    { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount },
-    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount },
+    { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
@@ -148,8 +148,8 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
       this.fin15010Service.queryFIN15010(requestData)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
+          this.data = response.Data.APS2002_FIN15010s;
+          this.totalRecords = response.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -212,8 +212,8 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     });
   }
 
-  // 選完申報年月 載入字軌下拉
   loadGuiTrackOptions(event: any): void {
+    // 選完申報年月 載入字軌下拉
     this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
       GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
       MID: 0,
@@ -222,5 +222,40 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });
+
+    // 自動代入資料所屬年月(起迄)
+    if (this.queryForm.controls.PUR_RepYYYYMM.valid) {
+      const selectedDate = new Date(event);
+      const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
+      this.queryForm.controls.PUR_GUIDateYYYYMM_S.setValue(this.datePipe.transform(startOfMonth, 'yyyy/MM'));
+      this.queryForm.controls.PUR_GUIDateYYYYMM_E.setValue(this.datePipe.transform(selectedDate, 'yyyy/MM'));
+    }
+    else {
+      this.queryForm.controls.PUR_GUIDateYYYYMM_S.setValue('');
+      this.queryForm.controls.PUR_GUIDateYYYYMM_E.setValue('');
+    }
+  }
+
+  onStartControlChange(event: any, controlName: string): void {
+    switch (controlName) {
+      case 'PUR_GUIDate_S':
+        this.queryForm.controls.PUR_GUIDate_E.setValue(event);
+        break;
+      case 'InvoiceNo_S':
+        this.queryForm.controls.InvoiceNo_E.setValue(event);
+        break;
+      case 'PUR_Uniform_S':
+        this.queryForm.controls.PUR_Uniform_E.setValue(event);
+        break;
+      case 'Source_Doc_No_S':
+        this.queryForm.controls.Source_Doc_No_E.setValue(event);
+        break;
+      case 'Voucher_No_S':
+        this.queryForm.controls.Voucher_No_E.setValue(event);
+        break;
+      case 'CRT_Date_S':
+        this.queryForm.controls.CRT_Date_D.setValue(event);
+        break;
+    }
   }
 }

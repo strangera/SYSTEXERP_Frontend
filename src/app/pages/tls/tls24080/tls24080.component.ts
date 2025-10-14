@@ -106,6 +106,7 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
           case 'VoidEdit': this.data = res.Data[0].VoidEdit as VoidEditItem[]; break;
           default: this.data = [];
         }
+        this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     });

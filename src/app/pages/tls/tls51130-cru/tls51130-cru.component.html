@@ -9,7 +9,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="品牌"
+            label="品牌 (編號/名稱)"
             [options]="LOGOOptions"
             [control]="dataForm.controls.LOGO_No"
             optionLabel="label"
@@ -20,7 +20,7 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="大分類編號/名稱"
+            label="大分類 (編號/名稱)"
             [options]="CAT_LOptions"
             [control]="dataForm.controls.CAT_LNo"
             optionLabel="label"
@@ -31,7 +31,7 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="中分類編號/名稱"
+            label="中分類 (編號/名稱)"
             [options]="CAT_MOptions"
             [control]="dataForm.controls.CAT_MNo"
             optionLabel="label"
@@ -42,7 +42,7 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="小分類編號/名稱"
+            label="小分類 (編號/名稱)"
             [options]="CAT_SOptions"
             [control]="dataForm.controls.CAT_SNo"
             optionLabel="label"
@@ -54,10 +54,9 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="進貨折數"
-            
-              [minFractionDigits]="0"
-  [maxFractionDigits]="2"
-  [step]="0.01"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            [step]="0.01"
             controlName="PLU_OrderPrcRate"
             [control]="dataForm.controls.PLU_OrderPrcRate"
             [submitted]="submitted">

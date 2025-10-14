@@ -19,9 +19,9 @@
           <app-calendar class="col-12 md:col-6" label="銷售日期" [control]="queryForm.controls.TXN_Date"
             [submitted]="submitted" [maxDate]="today"></app-calendar>
           <!-- 收銀機號 → POS5006.ECR_No -->
-          <app-dropdown class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
+          <app-auto-complete class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
             [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value"
-            (changeEvent)="onECRNoChange($event)" />
+            (valueChange)="onECRNoChanged($event)"></app-auto-complete>
           <!-- 專櫃編號 → POS5006.TLT_No -->
           <app-dropdown class="col-12 md:col-6" label="專櫃編號" [control]="queryForm.controls.TLT_No"
             [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label" optionValue="No" />

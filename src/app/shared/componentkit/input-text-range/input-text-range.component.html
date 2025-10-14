@@ -13,8 +13,8 @@
 <div class="grid p-fluid">
   <div class="col pb-0">
     <p-inputGroup id="input-text-start">
-      <app-input-text class="w-full" [controlName]="startControlName" [control]="startControl" [submitted]="submitted"
-        (inputChange)="onStartInputChange($event)" />
+      <app-input-text class="w-full" [label]="startLabel" [showLabel]="false" [controlName]="startControlName"
+        [control]="startControl" [submitted]="submitted" (blurEvent)="onStartInputChange($event)" />
     </p-inputGroup>
   </div>
   <div class="flex flex-column justify-content-center align-items-center pt-3" [ngStyle]="{ 'height': '33.56px' }">
@@ -22,8 +22,8 @@
   </div>
   <div class="col pb-0">
     <p-inputGroup id="input-text-end">
-      <app-input-text class="w-full" [controlName]="endControlName" [control]="endControl" [submitted]="submitted"
-        (inputChange)="onEndInputChange($event)" />
+      <app-input-text class="w-full" [label]="startLabel" [showLabel]="false" [controlName]="endControlName"
+        [control]="endControl" [submitted]="submitted" (blurEvent)="onEndInputChange($event)" />
     </p-inputGroup>
   </div>
 </div>

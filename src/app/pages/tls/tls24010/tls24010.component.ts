@@ -19,13 +19,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
 import { yesterday } from '@shared/models/system/query-form.model';
-import { DropdownChangeEvent } from 'primeng/dropdown';
 import { TLS41010Service } from '@service/api/tls/tls41010.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -45,7 +45,8 @@ import { HttpResponse } from '@angular/common/http';
     MenuModule,
     TranslateModule,
     TableReportComponent,
-    AsyncPipe
+    AsyncPipe,
+    AutoCompleteComponent
   ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
@@ -96,17 +97,17 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       });
     });
   }
-  onECRNoChange(event: DropdownChangeEvent): void {
-    if (!event.value || event.value === '') {
+  onECRNoChanged(event: string): void {
+    if (!event) {
       this.queryForm.get('TLT_No')?.setValue(null);
       return;
     }
-    const body = { ECR_No: event.value };
+    const body = { ECR_No: event };
     this.tLS41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
-      if (res.Data[0].ECR_Type === '1') {
-        return;
+      if (res.Data.length !== 0) {
+        const ECR_TLT_No = this.TLT_NoOptions.filter(option => option.No === res.Data[0].ECR_TLT_No);
+        this.queryForm.get('TLT_No')?.setValue(ECR_TLT_No.length > 0 ? ECR_TLT_No[0].No : null);
       }
-      this.queryForm.get('TLT_No')?.setValue(res.Data[0].ECR_TLT_No || '');
     });
   }
 

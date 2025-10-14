@@ -55,6 +55,9 @@ export interface Column<T = Record<string, any>> {
   templateRef?: TemplateRef<any>; // 自定義模板
   templateDisplayField?: string; // 用於顯示名稱的欄位
   tableTemplate?: () => TemplateRef<any>; // 自定義表格模板
+
+  // 觸法事件
+  onChange?: (rowData: any, value: any, col: Column) => void;
 }
 
 export interface ColumnGroup {

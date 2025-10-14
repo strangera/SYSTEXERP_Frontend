@@ -1,0 +1,17 @@
+:host ::ng-deep {
+  .p-button {
+    color: #000000;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    font-size: 12px;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      border-color 0.2s,
+      box-shadow 0.2s;
+    border-radius: 6px;
+    outline-color: transparent;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}

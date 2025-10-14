@@ -70,7 +70,8 @@
       <td class="text-center">
         <span *ngIf="isFormCreateable">
           <p-inputNumber class="min-w-max" [(ngModel)]="rowData.TXN_Qty" placeholder="請輸入數量"
-            (onInput)="onInput(rowData)" [disabled]="!rowData.PLU_MagNo || !isFormCreateable" [max]="9999999999"
+            (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)"
+            [disabled]="!rowData.PLU_MagNo || !isFormCreateable" [max]="9999999999"
             [maxlength]="getAllowedMaxLength(rowData, 'TXN_Qty')" />
         </span>
         <span *ngIf="!isFormCreateable">
@@ -81,7 +82,8 @@
         <span *ngIf="isFormCreateable">
           <p-inputNumber class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc" placeholder="請輸入單價金額"
             [disabled]="!rowData.PLU_MagNo || store_way === '2' || !isFormCreateable" [max]="9999999999" [min]="0"
-            (onInput)="onInput(rowData)" [maxlength]="getAllowedMaxLength(rowData, 'PLU_SalePrc')" />
+            (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)"
+            [maxlength]="getAllowedMaxLength(rowData, 'PLU_SalePrc')" />
         </span>
         <span *ngIf="!isFormCreateable">
           $ {{ rowData.PLU_SalePrc }}
@@ -93,8 +95,8 @@
       <td class="text-right">
         <span *ngIf="isFormCreateable">
           <p-inputNumber [(ngModel)]="rowData.TXN_Disc" placeholder="請輸入單價折扣讓金額" (onInput)="onInput(rowData)"
-            [disabled]="!rowData.PLU_MagNo" [max]="9999999999" [disabled]="!isFormCreateable"
-            [maxlength]="getAllowedMaxLength(rowData, 'TXN_Disc')" />
+            (onBlur)="onInput(rowData)" [disabled]="!rowData.PLU_MagNo" [max]="9999999999"
+            [disabled]="!isFormCreateable" [maxlength]="getAllowedMaxLength(rowData, 'TXN_Disc')" />
         </span>
         <span *ngIf="!isFormCreateable">
           {{ rowData.TXN_Disc }}
@@ -107,9 +109,8 @@
         <td class="text-center">
           <span *ngIf="isFormCreateable">
             <p-dropdown [(ngModel)]="rowData.tlt_id" styleClass="w-full" placeholder="請選擇類別" [options]="tlt_idOptions"
-              optionLabel="tlt_id_desc" optionValue="tlt_id" appendTo="body" [showClear]="true"
-              [resetFilterOnHide]="true" [filter]="false" (onChange)="onChangeTLT_ID(rowData)" required
-              [disabled]="!isFormCreateable" />
+              optionLabel="tlt_id_desc" optionValue="tlt_id" appendTo="body" [resetFilterOnHide]="true" [filter]="false"
+              (onChange)="onChangeTLT_ID(rowData)" required [disabled]="!isFormCreateable" />
           </span>
           <span *ngIf="!isFormCreateable">
             {{ rowData.tlt_id_desc }}
@@ -133,7 +134,10 @@
   </ng-template>
   <ng-template pTemplate="footer">
     <tr>
-      <td [attr.colspan]="isFormCreateable ? store_way === '2' ? 8 : 8 : 7" class="text-right">總計</td>
+      <td [attr.colspan]="isFormCreateable ? store_way === '2' ? 8 : 8 : 7" class="text-right">
+        <span class="text-red-500" *ngIf="TXN_SaleAmtTotal < 0">銷售總計不得為負數</span>
+        總計
+      </td>
       <td class="text-right">$ {{TXN_SaleAmtTotal | number:'1.0-0'}}</td>
       <td *ngIf="store_way !== '2'" [attr.colspan]="3"></td>
     </tr>

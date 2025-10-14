@@ -47,6 +47,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() loading = false;
   /** 是否禁用 table @default false */
   @Input() disabled = false;
+  /** 是否顯示序號 @default true */
+  @Input() showSerialNo = true;
 
   // select 選擇Row相關
   /** 是否顯示 checkbox @default false */

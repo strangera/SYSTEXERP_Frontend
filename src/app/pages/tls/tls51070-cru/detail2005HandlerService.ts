@@ -43,7 +43,7 @@ export class detail2005HandlerService {
         }, 0);
     }
 
-    deletePOS2005(selectedItems: any[], data: any[], messageService: any): void {
+    deletePOS2005(selectedItems: any[], data: any[]): void {
         if (confirm(`確定要刪除 ${selectedItems.length} 個國際條碼項目嗎？`)) {
             selectedItems.forEach(item => {
                 const index = data.findIndex(d => d.id === item.id);
@@ -51,7 +51,6 @@ export class detail2005HandlerService {
                     data.splice(index, 1);
                 }
             });
-            messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
         }
     }
 }

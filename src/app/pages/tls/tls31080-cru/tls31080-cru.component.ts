@@ -19,6 +19,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TLS31080DetailRequest, TLS31080DetailResponse, TLS31080PrintDetailRequest, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
+import { formatDate } from '@angular/common';
 
 // 各時段之樓層營業報表
 @Component({
@@ -150,6 +151,8 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
       ...this.queryConditions,
       IsExcel: isExcel,
       paper_type: this.dataForm.get('paper_type')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31080PrintDetailRequest;
 
     console.log('單型態之營業報表print請求', JSON.stringify(formValue, null, 2));
@@ -172,6 +175,8 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     const request: TLS31080DetailRequest = {
       ...this.queryConditions,
       paper_type: this.dataForm.get('paper_type')?.value ?? '',
+      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };
 
     //用Json顯示request

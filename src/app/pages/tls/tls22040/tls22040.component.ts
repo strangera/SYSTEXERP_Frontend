@@ -48,8 +48,8 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     { field: 'MIG_Type', header: '發票類型', visible: true, groupField: '111' },
     { field: 'MIG_Type_Name', header: '發票類型名稱', visible: false },
     { field: 'InvoiceNum', header: '發票張數', visible: true, groupField: '111' },
-    { field: 'UpMaxNum', header: '上傳大平台筆數', visible: true, groupField: '333' },
     { field: 'LastBagTime', header: '最後打包時間', visible: true, groupField: '222' },
+    { field: 'UpMaxNum', header: '上傳大平台筆數', visible: true, groupField: '333' },
     { field: 'LastUpTime', header: '最後上傳大平台筆數', visible: true, groupField: '333' },
     { field: 'DiffNum', header: '差異筆數', visible: true },
   ];
