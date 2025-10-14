@@ -66,7 +66,6 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       header: '位置編號',
       type: 'selector-panel',  // 改用 selector-panel
       editable: true,
-      directEdit: true,
       style: 'min-width: 200px',
       selectorConfig: {
         valuePropertyName: 'value',

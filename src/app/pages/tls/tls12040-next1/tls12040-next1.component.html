@@ -120,11 +120,11 @@
                 (edit)="onFareTableEdit($event, capType)"
                 (cancel)="onFareTableCancel($event, capType)"
                 (beforeSave)="onBeforeSave($event, capType)"
-                [forceEditMode]="true"
+                [forceEditMode]="!isReadOnlyMode"
                 [showActionColumn]="false"
               ></app-expandable-edit-table>
             </div>
-
+            <!-- TODO:forceEditMode 沒有正確 明天要改 -->
             <!-- 底部操作按鈕 -->
             <div
               *ngIf="hasDataForType(capType)"
