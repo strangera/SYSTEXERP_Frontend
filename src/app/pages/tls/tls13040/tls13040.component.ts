@@ -132,8 +132,10 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     // 大/中分類緊鄰排列
     { field: 'bus_type', header: '大分類編號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'bus_class_name', header: '中分類（商品類別）', visible: true },
-    { field: 'tlt_id_desc', header: '小分類(抽成別)', visible: true },
+    { field: 'bus_class', header: '中分類編號', visible: true },
+    { field: 'bus_class_name', header: '中分類名稱', visible: true },
+    { field: 'bus_sclass', header: '小分類編號', visible: true },
+     { field: 'bus_sclass_name', header: '小分類名稱', visible: true },
 
     { field: 'tlt_bdate', header: '合約起始日期', visible: true },
     { field: 'tlt_edate', header: '合約終止日期', visible: true },
