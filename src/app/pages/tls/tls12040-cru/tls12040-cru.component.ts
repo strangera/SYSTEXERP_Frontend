@@ -897,11 +897,11 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmitNext(): void {
     // 確保表單有效性
-    // if (this.dataForm.invalid) {
-    //   this.messageService.warnBubble('請檢查必填欄位');
-    //   this.markFormGroupTouched(this.dataForm);
-    //   return;
-    // }
+    if (this.dataForm.invalid) {
+      this.messageService.warnBubble('請檢查必填欄位');
+      this.markFormGroupTouched(this.dataForm);
+      return;
+    }
 
     const completeData = {
       ...this.dataForm.value,

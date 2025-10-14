@@ -945,9 +945,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    if (!confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
-      return;
-    }
+    // if (!confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
+    //   return;
+    // }
 
     selectedItems.forEach(item => {
       if (this.hasValidId(item)) {
@@ -975,9 +975,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     const { selectedDetails, parentData } = event;
 
-    if (!confirm(`確定要刪除選取的 ${selectedDetails.length} 個明細項目嗎？`)) {
-      return;
-    }
+    // if (!confirm(`確定要刪除選取的 ${selectedDetails.length} 個明細項目嗎？`)) {
+    //   return;
+    // }
 
     // 處理刪除邏輯
     selectedDetails.forEach(detail => {
