@@ -126,6 +126,11 @@ export interface TLS42020DeleteRequest {
   idList: number[];               // ID清單
 }
 
+// Dropdown request interface for TLS42020
+export interface TLS42020DropdownRequest {
+  TLT_NO: number[];               // 專櫃編號清單
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -136,7 +141,7 @@ export class TLS42020Service {
 
   // 查詢POS1027M資料表
   queryTLS42020(data: TLS42020QueryRequest): Observable<BaseQueryResponse<TLS42020Data>> {
-    return this.http.post<BaseQueryResponse<TLS42020Data>>(`${this.apiUrl}/queryTLS42020`, data);
+    // return this.http.post<BaseQueryResponse<TLS42020Data>>(`${this.apiUrl}/queryTLS42020`, data);
 
     // 回傳假資料
     return of({
@@ -183,7 +188,7 @@ export class TLS42020Service {
 
   // 查詢POS10271資料表
   queryTLS42020Detail(data: TLS42020DetailQueryRequest): Observable<BaseQueryResponse<TLS42020DetailData>> {
-    return this.http.post<BaseQueryResponse<TLS42020DetailData>>(`${this.apiUrl}/queryTLS42020_Detail`, data);
+    // return this.http.post<BaseQueryResponse<TLS42020DetailData>>(`${this.apiUrl}/queryTLS42020_Detail`, data);
 
     // 回傳假資料
     return of({
@@ -268,5 +273,10 @@ export class TLS42020Service {
   // 下載收銀觸控按鍵設定作業Excel規範
   downloadRule(): Observable<any> {
     return this.http.post(`${this.apiUrl}/downloadRule`, {});
+  }
+
+  // 專櫃編號下拉選單
+  dropdownTLS42020(data: TLS42020DropdownRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/dropdownTLS42020`, data);
   }
 }
