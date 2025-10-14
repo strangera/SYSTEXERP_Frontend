@@ -86,7 +86,11 @@
               optionLabel="label" optionValue="value" [control]="queryForm.controls.pay_taxtype" [submitted]="submitted">
             </app-dropdown>
           </div>
-
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions"
+              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted">
+            </app-multi-select>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="是否開立業主發票" controlName="rece_yn" [options]="WhetherOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.rece_yn" [submitted]="submitted">
@@ -111,11 +115,7 @@
             </app-multi-select>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions"
-              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted">
-            </app-multi-select>
-          </div>
+
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
