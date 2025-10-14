@@ -11,6 +11,7 @@ export interface LocationDetails {
   area_desc: string;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
   _isNew?: boolean;
+  _isEmpty?: boolean
 }
 
 export interface TLS12040RequestModel {

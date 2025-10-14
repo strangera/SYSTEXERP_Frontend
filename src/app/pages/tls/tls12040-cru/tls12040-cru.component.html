@@ -48,8 +48,9 @@
                 controlName="tlt_no"
                 [control]="dataForm.controls.tlt_no"
                 [submitted]="submitted"
-                [customPlaceholder]="'待確認自己填還是由系統產生'"
+                [customPlaceholder]="'審核過系統自動產生'"
                 [alwaysShowPlaceholder]="true"
+                [readonly]="true"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -340,10 +341,9 @@
             [data]="getDisplayLocationData()"
             [mainColumns]="locationColumns"
             [showCheckBox]="true"
-            [showPaginator]="false"
-            [showAddButton]="true"
-            [showBatchDelete]="true"
             [autoEditOnAdd]="true"
+            [forceEditMode]="!this.crudModeService.isReadOnlyMode"
+            [showActionColumn]="false"
             [loading]="loading"
             dataKey="id"
             [readonly]="false"
@@ -358,7 +358,7 @@
             [showPaginator]="false"
             [showAddButton]="!this.crudModeService.isReadOnlyMode"
             [showBatchDelete]="!this.crudModeService.isReadOnlyMode"
-            [showActionColumn]="!this.crudModeService.isReadOnlyMode"
+            [showActionColumn]="false"
             (dropdownChange)="onLocationDropdownChange($event)"
           ></app-expandable-edit-table>
         </div>
