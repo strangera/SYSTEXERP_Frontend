@@ -70,17 +70,18 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   private loadKeyboardOptions(): void {
     this.dropDownListService.queryTLS42010DropDownList().subscribe({
       next: (res) => {
-        console.log('TLS42010 dropdown 回傳:', res);
-
-        const list = res.Data;
-        this.kbFuncOptions = list.map((func: { KB_Desc: string; KB_Func: string }) => ({
-          label: func.KB_Desc,
-          value: func.KB_Func
-        }));
+        if (res?.Status === '0000' && res.Data) {
+          this.kbFuncOptions = res.Data.map((item: any) => ({
+            label: item.valueUSR_Level, // 顯示文字
+            value: item.keyUSR_Level    // 實際值
+          }));
+          console.log('下拉選單內容:', this.kbFuncOptions);
+        } else {
+          console.warn('API 無資料或回傳錯誤:', res?.Message);
+        }
       },
+
     });
-
-
   }
 
   onSubmit(frm: FormGroup) {
