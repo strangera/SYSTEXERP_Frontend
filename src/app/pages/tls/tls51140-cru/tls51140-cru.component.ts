@@ -26,7 +26,7 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
     TLT_NO: [null, [Validators.required]], // 專櫃編號
     HOS_No: [null, [Validators.required]], // 倉庫代碼
   });
-  TLT_NoOptions$ = this.dropdown.queryTltTalent();
+  TLT_NoOptions$ = this.dropdown.queryTltTalentStoreWay2Approve();
   warehouseOptions$ = this.dropdown.queryPos2034();
   buildingOptions$ = this.dropdown.querySys3800();
   floorOptions$ = this.dropdown.querySys3900();
@@ -51,7 +51,7 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
     this.initializePage('TLS51140', this.dataForm);
     if (!this.isFormCreateable && this.rowdata) {
       this.dataForm.disable();
-      this.tls51140Service.queryTLS51140ByTltNo(this.rowdata?.TLT_NO).pipe(untilDestroyed(this)).subscribe(res => {
+      this.tls51140Service.queryTLS51140ByTltNo(this.rowdata?.TLT_NO, this.rowdata?.HOS_No).pipe(untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.map(item => ({
           ...item,
           ID: item.id,

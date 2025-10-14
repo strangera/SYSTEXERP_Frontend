@@ -92,9 +92,9 @@ export class Tls51140Service {
     return this.http.post<ApiResponse<number>>(url, data);
   }
 
-  queryTLS51140ByTltNo(TltNo: string): Observable<ApiResponse<QueryTLS51140ResponseData[]>> {
+  queryTLS51140ByTltNo(TltNo: string, HOS_No: string): Observable<ApiResponse<QueryTLS51140ResponseData[]>> {
     const url = `${this.apiUrl}/queryTLS51140ByTltNo`;
-    return this.http.post<ApiResponse<QueryTLS51140ResponseData[]>>(url, { TLT_NO: TltNo });
+    return this.http.post<ApiResponse<QueryTLS51140ResponseData[]>>(url, { TLT_NO: TltNo, HOS_No: HOS_No });
   }
 
   /**

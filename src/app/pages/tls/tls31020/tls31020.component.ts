@@ -145,7 +145,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },    
+    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
 
     { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
@@ -289,8 +289,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       //  result: { selectedMValues: IDropdownItem[], data: IDropdownItem[] }
 
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-      const groupKey = `${mValue.bus_type}_${mValue.No}`;
-      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+        const groupKey = `${mValue.bus_type}_${mValue.No}`;
+        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
         //  過濾小分類資料對應到當前中分類
         const items = result.data
@@ -343,23 +343,23 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
       console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        
+
         this.data = res.Data?.QueryData ?? [];               // 查詢資料
         // this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
         const totalData = res.Data?.TotalData;
         this.footerTotal = totalData ? { ...totalData, budget: totalData.TotalBudget } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
-        console.log('查詢結果',this.data);
-        console.log('查詢總計',this.footerTotal);
-        
+        console.log('查詢結果', this.data);
+        console.log('查詢總計', this.footerTotal);
+
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     })
   }
   btnLoading = false;
-  onReport(frm: FormGroup, isExcel: boolean){
+  onReport(frm: FormGroup, isExcel: boolean) {
     const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
     const formValue = {
       ...printData,
@@ -482,7 +482,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
         end = this.dateForm.get('enddate')?.value ?? null;
         break;
 
-      case '3': { // 月報 
+      case '3': { // 月報
         const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
         if (onedatemm) {
           start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
