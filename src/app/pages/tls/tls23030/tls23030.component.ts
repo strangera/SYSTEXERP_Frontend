@@ -84,7 +84,6 @@ const TOTAL_FIELD_MAP = {
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
   // 狀態
-  showSummary = false;
   data: any[] = [];               // 明細資料
   totalRecords = 0;               // 明細總筆數
   summaryData: any[] = [];        // 彙總明細資料
@@ -126,6 +125,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     cash_yn: [''],
     tlt_building: [''],
     tlt_floor: [],
+    showSummary: [false],
     ...createPaginationConfig([
   { field: 'TXN_Date', order: 1 },
   { field: 'ECR_No',   order: 1 },
@@ -273,95 +273,126 @@ private padTxnNo(v: any): string {
   }
 
   // -------------------- main actions --------------------
-  onSubmit(form: FormGroup): void {
-    this.loading = true;
+onSubmit(form: FormGroup): void {
+  this.loading = true;
 
-    const raw: any = { ...form.getRawValue() };
-    raw['TXN_DateStart'] = this.toYMD(raw['TXN_DateStart']);
-    raw['TXN_DateEnd'] = this.toYMD(raw['TXN_DateEnd']);
+  // 1) 讀取表單 & 正規化
+  const raw: any = { ...form.getRawValue() };
+  const isSummary = !!this.queryForm.get('showSummary')?.value;
 
-    const ensureArr = (v: any) => Array.isArray(v) ? v : v == null || v === '' ? [] : [v];
-    const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
-    const emptyToNull = (v: any) => (v === '' ? null : v);
+  // 日期轉 yyyy-MM-dd
+  raw['TXN_DateStart'] = this.toYMD(raw['TXN_DateStart']);
+  raw['TXN_DateEnd']   = this.toYMD(raw['TXN_DateEnd']);
 
-    const payload: any = {
-      TXN_DateStart: raw['TXN_DateStart'],
-      TXN_DateEnd: raw['TXN_DateEnd'],
-      ECR_No: ensureArr(raw['ECR_No']),
-      TXN_No_Start: toNumOrNull(raw['TXN_No_Start']),
-      TXN_No_End: toNumOrNull(raw['TXN_No_End']),
-      TLT_No: ensureArr(raw['TLT_No']),
-      PAY_NO: ensureArr(raw['PAY_NO']),
-      TXN_PayAmt_Start: toNumOrNull(raw['TXN_PayAmt_Start']),
-      TXN_PayAmt_End: toNumOrNull(raw['TXN_PayAmt_End']),
-      TXN_Status: ensureArr(raw['TXN_Status']),
-      TXN_MemCard: emptyToNull(raw['TXN_MemCard']),
-      CRD_Type: ensureArr(raw['CRD_Type']),
-      CRD_No: emptyToNull(raw['CRD_No']),
-      IsHaveTERM_No: this.toBoolOrNull(raw['IsHaveTERM_No']),
-      pay_taxtype: emptyToNull(raw['pay_taxtype']),
-      org_id: ensureArr(raw['org_id']),
-      VOU_Check: this.toBoolOrNull(raw['VOU_Check']),
-      rece_yn: emptyToNull(raw['rece_yn']),
-      cash_yn: emptyToNull(raw['cash_yn']),
-      tlt_building: emptyToNull(raw['tlt_building']),
-      tlt_floor: ensureArr(raw['tlt_floor']),
-      pageSize: 30,
-      pageIndex: Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1,
-     SortBy: this.sanitizeSort(Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [
-  { field: 'TXN_Date', order: 1 },
-  { field: 'ECR_No',   order: 1 },
-  { field: 'TXN_No',   order: 1 },
-]),
-    };
+  const ensureArr   = (v: any) => Array.isArray(v) ? v : v == null || v === '' ? [] : [v];
+  const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
+  const emptyToNull = (v: any) => (v === '' ? null : v);
 
-    // 清除空值
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
+  // 2) 組 payload（基礎條件）
+  const payload: any = {
+    TXN_DateStart: raw['TXN_DateStart'],
+    TXN_DateEnd:   raw['TXN_DateEnd'],
+    ECR_No:        ensureArr(raw['ECR_No']),
+    TXN_No_Start:  toNumOrNull(raw['TXN_No_Start']),
+    TXN_No_End:    toNumOrNull(raw['TXN_No_End']),
+    TLT_No:        ensureArr(raw['TLT_No']),
+    PAY_NO:        ensureArr(raw['PAY_NO']),
+    TXN_PayAmt_Start: toNumOrNull(raw['TXN_PayAmt_Start']),
+    TXN_PayAmt_End:   toNumOrNull(raw['TXN_PayAmt_End']),
+    TXN_Status:    ensureArr(raw['TXN_Status']),
+    TXN_MemCard:   emptyToNull(raw['TXN_MemCard']),
+    CRD_Type:      ensureArr(raw['CRD_Type']),
+    CRD_No:        emptyToNull(raw['CRD_No']),
+    IsHaveTERM_No: this.toBoolOrNull(raw['IsHaveTERM_No']),
+    pay_taxtype:   emptyToNull(raw['pay_taxtype']),
+    org_id:        ensureArr(raw['org_id']),
+    VOU_Check:     this.toBoolOrNull(raw['VOU_Check']),
+    rece_yn:       emptyToNull(raw['rece_yn']),
+    cash_yn:       emptyToNull(raw['cash_yn']),
+    tlt_building:  emptyToNull(raw['tlt_building']),
+    tlt_floor:     ensureArr(raw['tlt_floor']),
+    // 分頁/排序（明細才送；彙總不需要）
+    pageSize: 30,
+    pageIndex: Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1,
+    SortBy: this.sanitizeSort(
+      Array.isArray(raw?.SortBy) && raw.SortBy.length
+        ? raw.SortBy
+        : [
+            { field: 'TXN_Date', order: 1 },
+            { field: 'ECR_No',   order: 1 },
+            { field: 'TXN_No',   order: 1 },
+          ]
+    ),
+  };
 
-    this.historyRequestBody = { ...payload };
+  // 不送 showSummary 給後端
+  delete (payload as any).showSummary;
 
-    // 同步載入付款別彙總（小表）
-    this.loadPaymentSummary(this.historyRequestBody);
+  // 彙總模式：移除分頁鍵
+  if (isSummary) {
+    delete payload.pageIndex;
+    delete payload.pageSize;
+  }
 
-    if (this.showSummary) {
-      // 彙總模式
-      this.tls23030Service.queryTLS23030Summary(payload).pipe(
+  // 3) 清除空值
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === '' || v === null || v === undefined) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+
+  // 4) 記錄最後查詢、載入付款別小表
+  this.historyRequestBody = { ...payload };
+  this.loadPaymentSummary(this.historyRequestBody);
+
+  // 5) 彙總 / 明細 分支
+  if (isSummary) {
+    // ===== 彙總 =====
+    this.tls23030Service
+      .queryTLS23030Summary(payload)
+      .pipe(
         timeout(60_000),
         catchError((err) => {
           console.error('TLS23030 Summary 失敗:', err);
           return of({ Data: [] });
         }),
         finalize(() => (this.loading = false)),
-      ).subscribe((res: any) => {
+      )
+      .subscribe((res: any) => {
         const packs = Array.isArray(res?.Data) ? res.Data : [];
+
+        // 頁面上顯示的總金額/備抵稅額
         const totals = packs.reduce(
           (acc: any, p: any) => ({
-            totalPayAmt: acc.totalPayAmt + Number(p?.totalPayAmt ?? 0),
+            totalPayAmt:   acc.totalPayAmt   + Number(p?.totalPayAmt   ?? 0),
             totalTaxAlwnc: acc.totalTaxAlwnc + Number(p?.totalTaxAlwnc ?? 0),
           }),
           { totalPayAmt: 0, totalTaxAlwnc: 0 },
         );
         this.summaryTotals = totals;
 
-        const details = packs.flatMap((p: any) => Array.isArray(p?.SummaryDetails) ? p.SummaryDetails : []);
+        // 彙總列
+        const details = packs.flatMap((p: any) =>
+          Array.isArray(p?.SummaryDetails) ? p.SummaryDetails : []
+        );
         this.summaryData = details.map((r: any, i: number) => ({
-          ...r, _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${r?.PAY_NO ?? ''}|${i}`,
+          ...r,
+          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${r?.PAY_NO ?? ''}|${i}`,
         }));
 
-        // 清空明細
+        // 清空明細狀態
         this.data = [];
         this.totalRecords = this.summaryData.length;
-        this.detailFooter = undefined; // 切到彙總時不需要明細總計
+        this.detailFooter = undefined;
       });
-      return;
-    }
 
-    // 明細模式
-    this.tls23030Service.queryTLS23030(payload).pipe(
+    return;
+  }
+
+  // ===== 明細 =====
+  this.tls23030Service
+    .queryTLS23030(payload)
+    .pipe(
       timeout(60_000),
       catchError((err) => {
         console.error('TLS23030 查詢失敗:', err);
@@ -372,36 +403,36 @@ private padTxnNo(v: any): string {
         return of({ Data: [], TotalCount: 0 });
       }),
       finalize(() => (this.loading = false)),
-    ).subscribe((res: any) => {
-      // 展平 rows
+    )
+    .subscribe((res: any) => {
+      // 展平成 rows
       const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
       const rawRows = this.extractRows(wrappers);
 
-      // 加上 _rowKey
-   const rows = rawRows.map((item: any, i: number) => {
-  const ymd = this.toYMD(item?.TXN_Date) ?? '';
-  const ecr = String(item?.ECR_No ?? '').trim();
-  const txn = String(item?.TXN_No ?? '').trim();
-  const key = `${ymd}|${ecr}|${txn}`;
-  return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
-});
+      // 加上 _rowKey / groupKey（供表格分組與唯一鍵）
+      const rows = rawRows.map((item: any, i: number) => {
+        const ymd = this.toYMD(item?.TXN_Date) ?? '';
+        const ecr = String(item?.ECR_No ?? '').trim();
+        const txn = String(item?.TXN_No ?? '').trim();
+        const key = `${ymd}|${ecr}|${txn}`;
+        return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
+      });
 
       // 總筆數
       const totalCount = Number(res?.TotalCount ?? 0);
       this.data = rows;
       this.totalRecords = Number.isFinite(totalCount) ? totalCount : rows.length;
 
-      // === 明細總計列（關鍵新增）===
+      // 明細總計（由包裝層累加）
       const grand = wrappers.reduce((agg, w) => {
-        const a = Number(w?.Total_TXN_PayAmt ?? 0);
-        const b = Number(w?.Total_TXN_TaxAlwnc ?? 0);
-        agg.Total_TXN_PayAmt = (agg.Total_TXN_PayAmt ?? 0) + a;
-        agg.Total_TXN_TaxAlwnc = (agg.Total_TXN_TaxAlwnc ?? 0) + b;
+        agg.Total_TXN_PayAmt   = (agg.Total_TXN_PayAmt   ?? 0) + Number(w?.Total_TXN_PayAmt   ?? 0);
+        agg.Total_TXN_TaxAlwnc = (agg.Total_TXN_TaxAlwnc ?? 0) + Number(w?.Total_TXN_TaxAlwnc ?? 0);
         return agg;
       }, {} as Record<string, number>);
       this.detailFooter = this.buildFooterFromTotals(grand);
     });
-  }
+}
+
 
   onToggleSummary() {
     this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
@@ -538,35 +569,51 @@ const rows = rawRows.map((item: any, i: number) => {
     return rest;
   }
 
-  onExportPDF() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    const exportBody = this.buildExportBody();
-    const obs = this.showSummary
-      ? this.tls23030Service.exportTLS23030SummaryPDF(exportBody)
-      : this.tls23030Service.exportTLS23030PDF(exportBody);
-
-    obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-      .subscribe({ next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.pdf') });
+ onExportPDF() {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
 
-  onExportXLSX() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    const exportBody = this.buildExportBody();
-    const obs = this.showSummary
-      ? this.tls23030Service.exportTLS23030SummaryExcel(exportBody)
-      : this.tls23030Service.exportTLS23030Excel(exportBody);
+  this.btnLoading = true;
 
-    obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-      .subscribe({ next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.xlsx') });
+  const exportBody = this.buildExportBody(); // 會移除 pageIndex/pageSize
+  const isSummary = !!this.queryForm.get('showSummary')?.value;
+
+  const obs = isSummary
+    ? this.tls23030Service.exportTLS23030SummaryPDF(exportBody)
+    : this.tls23030Service.exportTLS23030PDF(exportBody);
+
+  obs
+    .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (response: HttpResponse<Blob>) =>
+        this.handleFileExport(response, '.pdf'),
+    });
+}
+
+onExportXLSX() {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
+
+  this.btnLoading = true;
+
+  const exportBody = this.buildExportBody(); // 會移除 pageIndex/pageSize
+  const isSummary = !!this.queryForm.get('showSummary')?.value;
+
+  const obs = isSummary
+    ? this.tls23030Service.exportTLS23030SummaryExcel(exportBody)
+    : this.tls23030Service.exportTLS23030Excel(exportBody);
+
+  obs
+    .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (response: HttpResponse<Blob>) =>
+        this.handleFileExport(response, '.xlsx'),
+    });
+}
 
   private handleFileExport(response: HttpResponse<Blob>, ext: string): void {
     const cd = response.headers.get('Content-Disposition');
