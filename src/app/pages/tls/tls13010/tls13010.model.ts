@@ -420,6 +420,10 @@ export interface LocationItem {
   area_desc: string;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
   _isNew?: boolean;
+  _isEmpty?: boolean;  // ✅ 新增
+  _hasDuplicateError?: boolean;  // ✅ 新增
+  _hasError?: boolean;  // ✅ 新增
+  _errorMessage?: string;  // ✅ 新增
 }
 
 export interface FareItem {

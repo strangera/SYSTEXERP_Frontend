@@ -1186,12 +1186,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       locationInfo: this.prepareLocationDataForSubmit(), // 新增總營業坪數
     };
     this.contractFlowService.saveStep1Data(contractInfo);
-    console.log('✅ 已暫存到工作流程，cap_saletype 格式:', {
-      cap_saletype1: contractInfo.cap_saletype1,
-      cap_saletype2: contractInfo.cap_saletype2,
-      type1: typeof contractInfo.cap_saletype1,
-      type2: typeof contractInfo.cap_saletype2
-    });
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -1401,7 +1395,20 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   onAddLocationItem(): void {
     if (this.isViewMode) return;
-    this.updateDisplayLocationData(); // ✅ 手動更新
+    this.updateDisplayLocationData();
+    const hasEmptyNewRow = this.locationData.some(item =>
+      item._isNew &&
+      item._isEmpty &&
+      !item.location_no
+    );
+
+    if (hasEmptyNewRow) {
+      this.messageService.warnBubble('請先完成目前新增的櫃位資料後再新增下一筆');
+      console.log('❌ 阻止新增: 已有未填寫的新增行');
+      return;
+    }
+
+
     const newLocationItem: LocationItem = {
       id: this.generateTempId(),
       location_no: '',
@@ -1419,6 +1426,145 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.locationData = [...this.locationData, newLocationItem];
     this.saveToWorkflow();
     this.messageService.infoBubble('已新增位置項目，請選擇位置編號');
+  }
+
+  /**
+ * 🔥 櫃位欄位變更時的處理
+ */
+  onLocationFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
+    const { fieldName, newValue, rowData } = event;
+
+    console.log('🔄 櫃位欄位變更:', {
+      欄位: fieldName,
+      新值: newValue,
+      行ID: rowData.id
+    });
+
+    // 🚨 特別處理櫃位編號的重複檢查
+    if (fieldName === 'location_no' && newValue) {
+      const isDuplicate = this.validateDuplicateLocationNo(newValue, rowData);
+
+      if (isDuplicate) {
+        // 🔥 發現重複,立即移除這筆資料
+        console.log('❌ 發現重複櫃位,準備移除');
+
+        // 延遲一點點確保訊息顯示
+        setTimeout(() => {
+          this.removeLocationItem(String(rowData.id));
+        }, 100);
+
+        return; // 不繼續處理
+      }
+    }
+
+    // 🔄 如果是新增行且有填值,移除空白標記
+    if (rowData._isNew && newValue) {
+      rowData._isEmpty = false;
+      console.log('✅ 移除空白標記');
+    }
+
+    // 🔄 任何欄位變更都自動儲存
+    this.saveToWorkflow();
+  }
+
+  /**
+   * 🔍 驗證櫃位編號是否重複(即時驗證)
+   */
+  private validateDuplicateLocationNo(locationNo: string, currentRow: any): boolean {
+    if (!locationNo || locationNo.trim() === '') {
+      this.clearLocationError(currentRow);
+      return false;
+    }
+
+    // 檢查是否有其他行使用相同的櫃位編號
+    const duplicates = this.locationData.filter(item =>
+      item.id !== currentRow.id && // 排除自己
+      item._status !== 'deleted' && // 排除已刪除的
+      item.location_no &&
+      item.location_no.trim().toLowerCase() === locationNo.trim().toLowerCase()
+    );
+
+    if (duplicates.length > 0) {
+      // 🚨 發現重複
+      currentRow._hasDuplicateError = true;
+      currentRow._hasError = true;
+      currentRow._errorMessage = `櫃位編號「${locationNo}」已存在`;
+
+      this.messageService.warnBubble(`櫃位編號「${locationNo}」已存在, 已自動移除重複項`);
+
+      console.warn('❌ 櫃位編號重複:', {
+        當前行: currentRow.id,
+        重複編號: locationNo,
+        重複數量: duplicates.length
+      });
+
+      return true; // 重複
+    } else {
+      // ✅ 沒有重複
+      this.clearLocationError(currentRow);
+      console.log('✅ 櫃位編號可用:', locationNo);
+      return false; // 不重複
+    }
+  }
+
+  /**
+   * 🧹 清除櫃位錯誤標記
+   */
+  private clearLocationError(rowData: any): void {
+    delete rowData._hasDuplicateError;
+    delete rowData._hasError;
+    delete rowData._errorMessage;
+  }
+
+  /**
+   * 🗑️ 焦點失去時自動清理空白新增行
+   */
+  onLocationTableCancel(rowData: LocationItem): void {
+    console.log('⬅️ 取消編輯櫃位地點:', rowData.location_no);
+
+    // 🔥 檢查是否為空白新增行
+    const isEmptyNewRow = this.isEmptyLocationRow(rowData);
+
+    if (isEmptyNewRow) {
+      console.log('🗑️ 偵測到空白新增行, 自動移除');
+
+      const index = this.locationData.findIndex(item => item.id === rowData.id);
+      if (index > -1) {
+        this.locationData.splice(index, 1);
+        this.locationData = [...this.locationData];
+        console.log(`✅ 已從索引 ${index} 移除空白櫃位資料`);
+      }
+
+      this.messageService.infoBubble('已取消新增櫃位');
+      return;
+    }
+
+    // 📋 清除錯誤標記
+    this.clearLocationError(rowData);
+
+    console.log('✅ 取消編輯完成(非空白行)');
+  }
+
+  /**
+   * 🔍 判斷是否為空白櫃位新增行
+   */
+  private isEmptyLocationRow(locationData: LocationItem): boolean {
+    if (!locationData._isNew) {
+      return false;
+    }
+
+    const keyFields = ['location_no', 'tlt_space'];
+
+    const isEmpty = keyFields.every(field => {
+      const value = (locationData as any)[field];
+      return value === null ||
+        value === undefined ||
+        value === '' ||
+        value === 0 ||
+        (typeof value === 'string' && value.trim() === '');
+    });
+
+    return isEmpty;
   }
 
   /**
@@ -1686,18 +1832,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     console.log('開始編輯位置資料:', rowData);
   }
 
-  // 位置表格取消事件
-  onLocationTableCancel(rowData: LocationItem): void {
-    console.log('取消編輯位置資料:', rowData);
-  }
-
   // 處理下拉選單變更（位置編號選擇時自動帶入）
   onLocationDropdownChange(event: {
     rowData: LocationItem;
     field: string;
     newValue: string;
     oldValue: string;
-    selectedOption?: any; // 關鍵：selector-panel 應該提供這個
+    selectedOption?: any;
   }): void {
     const { rowData, field, newValue, oldValue, selectedOption } = event;
 
@@ -1710,13 +1851,78 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     });
 
     if (field === 'location_no' && newValue) {
-      // 優先使用 selectedOption（來自 selector-panel）
+      // 🔥 關鍵:先檢查是否重複(在更新資料之前)
+      const isDuplicate = this.isLocationNoDuplicate(newValue, String(rowData.id));
+
+      if (isDuplicate) {
+        console.log('❌ 發現重複位置,阻止選擇');
+
+        // 🔥 重點1:立即阻止並清空
+        rowData.location_no = '';
+
+        // 🔥 重點2:如果是新增的空行,直接移除
+        if (rowData._isNew && !rowData.location_no) {
+          console.log('🗑️ 移除重複的新增空行');
+          this.removeLocationItem(String(rowData.id));
+        }
+
+        // 顯示錯誤訊息
+        this.messageService.errorBubble(`位置編號 ${newValue} 已存在!`);
+
+        return; // ❌ 中斷,不繼續處理
+      }
+
+      // ✅ 沒有重複,正常處理
       if (selectedOption) {
         console.log('📋 使用 selector-panel 提供的完整資料:', selectedOption);
         this.handleLocationSelectionFromSelectorPanel(rowData, selectedOption);
       }
+
+      // 移除空資料標記
+      delete rowData._isEmpty;
+      delete rowData._isNew;
+
+      // 更新狀態
+      if (rowData._status === 'new') {
+        // 保持 new 狀態
+      } else if (!rowData._status) {
+        rowData._status = 'modified';
+      }
     }
+
     this.saveToWorkflow();
+  }
+
+  /**
+   * 🔍 檢查位置編號是否重複
+   */
+  private isLocationNoDuplicate(locationNo: string, currentId: string): boolean {
+    if (!locationNo || !locationNo.trim()) {
+      return false;
+    }
+
+    const trimmedLocationNo = locationNo.trim();
+
+    // 檢查是否有其他行使用相同的位置編號
+    const hasDuplicate = this.locationData.some(item =>
+      item.id !== currentId &&              // 排除自己
+      item._status !== 'deleted' &&         // 排除已刪除
+      item.location_no?.trim() === trimmedLocationNo
+    );
+
+    console.log('🔍 重複檢查:', {
+      檢查位置: trimmedLocationNo,
+      當前ID: currentId,
+      是否重複: hasDuplicate,
+      現有位置: this.locationData
+        .filter(item => item._status !== 'deleted')
+        .map(item => ({
+          id: item.id,
+          location_no: item.location_no
+        }))
+    });
+
+    return hasDuplicate;
   }
 
   // 新增：專門處理來自 selector-panel 的選擇

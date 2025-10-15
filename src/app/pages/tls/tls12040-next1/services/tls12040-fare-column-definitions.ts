@@ -17,49 +17,43 @@ export class TLS12040FareColumnDefinitions {
         field: 'apply_no',
         header: '專櫃招募編號',
         type: 'text',
-        editable: false,
         autoWidth: true
       },
       {
         field: 'tlt_no',
         header: '專櫃編號',
         type: 'text',
-        editable: false,
         autoWidth: true
       },
       {
         field: 'tlt_name',
         header: '品牌(專櫃)名稱',
         type: 'text',
-        editable: false,
         autoWidth: true
       },
       {
         field: 'ven_uniform',
         header: '廠商統編',
         type: 'text',
-        editable: false,
         autoWidth: true
       },
       {
         field: 'VEN_Name',
         header: '廠商名稱',
         type: 'text',
-        editable: false,
         autoWidth: true
       },
       {
         field: 'contract_subno',
         header: '版本編號',
         type: 'text',
-        editable: false,
         autoWidth: true
       },
       {
         field: 'tlt_term_type',
         header: '抽成別',
         type: 'dropdown',
-        editable: false,
+
         options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
         autoWidth: true
       },
@@ -67,7 +61,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tlt_bdate',
         header: '合約起始日',
         type: 'date',
-        editable: false,
+
         autoWidth: true,
         dateFormat: 'full-date'
       },
@@ -75,7 +69,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tlt_edate',
         header: '合約終止日',
         type: 'date',
-        editable: false,
+
         autoWidth: true,
         dateFormat: 'full-date'
       },
@@ -83,7 +77,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tlt_contract_bdate',
         header: '營運起始日',
         type: 'date',
-        editable: false,
+
         autoWidth: true,
         dateFormat: 'full-date'
       },
@@ -91,7 +85,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tlt_contract_edate',
         header: '營運終止日',
         type: 'date',
-        editable: false,
+
         autoWidth: true,
         dateFormat: 'full-date'
       }
@@ -107,7 +101,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
+
         autoWidth: true,
       },
       {
@@ -125,14 +119,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
-        editable: false,
+
 
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-        editable: false,
+
         autoWidth: true,
 
       },
@@ -140,7 +134,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_bdate',
         header: '起始年月',
         type: 'date',
-        editable: true,
+
         dateFormat: 'year-month',
         required: true,
 
@@ -159,7 +153,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
-        editable: true,
+
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         required: true,
 
@@ -168,7 +162,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_unitamt',
         header: '單價',
         type: 'number',
-        editable: true,
+
         required: true,
 
         validators: [TableValidators.positive('單價必須大於0')]
@@ -177,7 +171,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_qty',
         header: '數量',
         type: 'number',
-        editable: true,
+
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
         defaultValue: 1,
@@ -189,7 +183,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_amount',
         header: '扣款金額',
         type: 'number',
-        editable: false,
+
         autoWidth: true,
         required: true,
 
@@ -198,7 +192,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-        editable: true,
+
         options: [], // 需要動態設定
         required: true,
 
@@ -207,7 +201,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'gui_flag',
         header: '開立發票',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: [
           { label: '開立', value: 'Y' },
@@ -229,7 +223,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
+
 
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
@@ -249,20 +243,20 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
-        editable: false,
+
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-        editable: false,
+
         autoWidth: true,
       },
       {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
-        editable: true,
+
         autoWidth: true,
         dateFormat: 'year-month',
         required: true,
@@ -282,7 +276,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_edate',
         header: '扣款結束年月',
         type: 'date',
-        editable: true,
+
         dateFormat: 'year-month',
         required: true,
 
@@ -301,7 +295,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
-        editable: true,
+
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -311,7 +305,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_unitamt',
         header: '單價',
         type: 'number',
-        editable: true,
+
         required: true,
         validators: [TableValidators.positive('單價必須大於0')],
         defaultValue: 0,
@@ -322,7 +316,7 @@ export class TLS12040FareColumnDefinitions {
         header: '數量',
         type: 'number',
         allowDecimal: true,
-        editable: true,
+
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
         defaultValue: 1,
@@ -332,7 +326,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_amount',
         header: '扣款金額(未稅)',
         type: 'number',
-        editable: false,
+
         defaultValue: 0,
 
       },
@@ -340,7 +334,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'gui_flag',
         header: '是否開立發票',
         type: 'dropdown',
-        editable: true,
+
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
@@ -353,7 +347,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'day_account',
         header: '是否以日計算',
         type: 'dropdown',
-        editable: true,
+
         options: [
           { label: '是', value: 'Y' },
           { label: '否', value: 'N' }
@@ -366,7 +360,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'interval',
         header: '扣款週期數(月)',
         type: 'number',
-        editable: true,
+
         required: true,
         defaultValue: 1,
 
@@ -383,7 +377,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
+
 
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
@@ -412,14 +406,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
-        editable: false,
+
 
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-        editable: false,
+
         autoWidth: true,
 
       },
@@ -427,7 +421,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
-        editable: true,
+
         dateFormat: 'year-month',
         required: true,
 
@@ -443,7 +437,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_edate',
         header: '扣款結束年月',
         type: 'date',
-        editable: true,
+
         dateFormat: 'year-month',
         required: true,
 
@@ -459,7 +453,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_totalamt',
         header: '總金額',
         type: 'number',
-        editable: true,
+
         autoWidth: true,
         required: true,
 
@@ -468,7 +462,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'period_nos',
         header: '期數',
         type: 'number',
-        editable: false, // 設為不可編輯，因為要自動計算
+        // 設為不可編輯，因為要自動計算
         // 關鍵：為期數添加動態預設值函數
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
@@ -518,7 +512,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_amount',
         header: '每月金額',
         type: 'number',
-        editable: true,
+
         autoWidth: true,
         required: true,
 
@@ -527,14 +521,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'down_payment',
         header: '首期金額',
         type: 'number',
-        editable: false,
+
         required: true,
       },
       {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-        editable: true,
+
         options: [], // 需要動態設定
         required: true,
 
@@ -543,7 +537,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'gui_flag',
         header: '是否開立發票',
         type: 'dropdown',
-        editable: true,
+
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
@@ -564,7 +558,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
+
 
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
@@ -583,13 +577,13 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
-        editable: false,
+
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-        editable: false,
+
         autoWidth: true,
         style: 'white-space: normal; word-break: break-word; line-height: 1.3; max-width: 150px; min-width: 100px;'
       },
@@ -597,7 +591,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_saletype',
         header: '銷售類型',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptions,
       },
@@ -605,7 +599,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'instms_type',
         header: '期數',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: TLS13010_DROPDOWN_OPTIONS.instmsTypeOptions,
       },
@@ -613,7 +607,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'edc_bank',
         header: '收單行',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: TLS13010_DROPDOWN_OPTIONS.edcBankOptions,
       },
@@ -621,7 +615,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'pay_no',
         header: '支付編號',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: [],
       },
@@ -629,7 +623,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'calc_type',
         header: '券類計算方式',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: TLS13010_DROPDOWN_OPTIONS.calcTypeOptions,
       },
@@ -637,14 +631,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'over_base_rate',
         header: '超過基準比率',
         type: 'number',
-        editable: true,
+
         autoWidth: true,
       },
       {
         field: 'rent_plus_rate',
         header: '加抽比率',
         type: 'number',
-        editable: true,
+
         required: true,
         allowDecimal: true,
         decimalPlaces: 3,
@@ -655,14 +649,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'down_payment',
         header: '超過基準金額',
         type: 'number',
-        editable: true,
+
         autoWidth: true,
       },
       {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
-        editable: true,
+
         autoWidth: true,
         dateFormat: 'year-month',
         style: 'min-width: 120px; width: 140px;',
@@ -680,7 +674,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_edate',
         header: '扣款結束年月',
         type: 'date',
-        editable: true,
+
         dateFormat: 'year-month',
         required: true,
         style: 'min-width: 120px; width: 140px;',
@@ -696,7 +690,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
-        editable: true,
+
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -706,7 +700,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_rate',
         header: '比率',
         type: 'number',
-        editable: true,
+
         required: true,
         allowDecimal: true,
         decimalPlaces: 3,
@@ -716,7 +710,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-        editable: true,
+
         options: [], // 需要動態設定
         required: true,
 
@@ -725,7 +719,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'gui_flag',
         header: '是否開立發票',
         type: 'dropdown',
-        editable: true,
+
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
@@ -746,7 +740,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
+
       },
       {
         field: 'copy_button',
@@ -761,20 +755,20 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
-        editable: false,
+
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-        editable: false,
+
         autoWidth: true,
       },
       {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
-        editable: true,
+
         dateFormat: 'year-month',
         required: true,
 
@@ -790,7 +784,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_edate',
         header: '扣款結束年月',
         type: 'date',
-        editable: true,
+
         dateFormat: 'year-month',
         required: true,
 
@@ -806,7 +800,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_saletype',
         header: '銷售類型',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptionsE,
       },
@@ -814,7 +808,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
-        editable: true,
+
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -824,7 +818,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_rate',
         header: '比率',
         type: 'number',
-        editable: true,
+
         required: true,
         allowDecimal: true,
         decimalPlaces: 3,
@@ -834,7 +828,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'pay_no',
         header: '支付編號',
         type: 'dropdown',
-        editable: true,
+
         autoWidth: true,
         options: [],
       },
@@ -842,7 +836,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-        editable: true,
+
         options: [], // 需要動態設定
         required: true,
 
@@ -851,7 +845,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'gui_flag',
         header: '是否開立發票',
         type: 'dropdown',
-        editable: true,
+
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }

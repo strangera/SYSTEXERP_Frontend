@@ -101,6 +101,10 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     return this.crudstatus === CRUDStatus.Create;
   }
 
+  get canToEdit(): boolean {
+    return this.isReadOnlyMode; // 檢視模式時不允許編輯，其他模式允許
+  }
+
   constructor(
     private route: ActivatedRoute,
     private tls12040Service: TLS12040Service,

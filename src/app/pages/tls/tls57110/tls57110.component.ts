@@ -43,7 +43,7 @@ export class TLS57110Component extends BasicQueryPageComponent<any> implements O
   footerData: any = null;
   lastQueryBody: any;
 
-  columns: ReportColumn[] = [
+  baseColumns: ReportColumn[] = [
     { field: 'LOGO_CH_NAME', header: '品牌', visible: true, showSort: true },
     { field: 'STK_PRIORQTY', header: '期初存貨', visible: true, format: formatAmount, isSubTotal: true },
     { field: 'STK_STOCKQTY', header: '進貨量', visible: true, format: formatAmount, isSubTotal: true },
@@ -59,6 +59,8 @@ export class TLS57110Component extends BasicQueryPageComponent<any> implements O
     { field: 'STK_TRDOUTQTY', header: '同業調出量', visible: true, format: formatAmount, isSubTotal: true },
     { field: 'STK_CURRENTQTY', header: '期末存貨', visible: true, format: formatAmount, isSubTotal: true },
   ];
+  columns: ReportColumn[] = [...this.baseColumns];
+
   displayModeOptions = [
     { value: 'M', label: '彙總' },
     { value: 'D', label: '明細' },
@@ -75,14 +77,37 @@ export class TLS57110Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS57110', 'tls/tls57110cru');
-    // this.queryFunction = (body) => this.tls57110Service.queryTLS57110(body);
+
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
       this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
     });
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandCodeOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
     });
+    this.queryForm.get('ShowType')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(val => this.updateColumnsByShowType(val));
   }
+
+  updateColumnsByShowType(type: string): void {
+    if (type === 'D') {
+      const insertIndex = this.baseColumns.findIndex(c => c.field === 'LOGO_CH_NAME');
+
+      const detailExtraCols: ReportColumn[] = [
+        { field: 'PLU_MagNo', header: '管理編號', visible: true, showSort: true },
+        { field: 'PLU_Name', header: '品名', visible: true, showSort: true },
+      ];
+
+      this.columns = [
+        ...this.baseColumns.slice(0, insertIndex + 1),
+        ...detailExtraCols,
+        ...this.baseColumns.slice(insertIndex + 1),
+      ];
+    } else {
+      this.columns = [...this.baseColumns];
+    }
+  }
+
   isTotal = 0;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
