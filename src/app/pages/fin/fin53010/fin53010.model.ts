@@ -2,9 +2,12 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 
 export interface FIN53010Data {
   id: number;
-  TempNo: string;
+  /** 傳票號碼 yyyyMMddssss */
+  VouNo: string;
+  /** 傳票類別 */
   VouType: string;
-  TempName: string;
+  Remark: string;
+  AccAmt: number;
   DetailCount: number;
 }
 
@@ -48,21 +51,33 @@ export interface FIN53010DetailTable extends FIN53010Detail {
 }
 
 export interface FIN53010Payload extends BaseQueryRequest {
-  TempNo: string;
-  VouType: string;
-  TempName: string;
+  /** 傳票類別 */
+  VouType?: string;
+  /** 登帳狀態 */
+  PostFlag?: string;
+  /** RPC/IFRS */
+  VouAccType?: string;
+  Remark?: string;
   CRT_USR_No?: string;
   UPD_USR_No?: string;
+  VouNoStart?: number;
+  VouNoEnd?: number;
+  VouDateStart?: Date;
+  VouDateEnd?: Date;
+  CrtDateStart?: Date;
+  CrtDateEnd?: Date;
+  UpdDateStart?: Date;
+  UpdDateEnd?: Date;
 }
 
-export interface FIN53010InsertPayload extends Omit<FIN53010Payload, 'CRT_USR_No' | 'UPD_USR_No'> {
-  CRT_USR_No: string;
+export interface FIN53010InsertPayload extends Omit<FIN53010Payload, 'creator' | 'modifier'> {
+  creator: string;
   Details: FIN53010Detail[];
 }
 
-export interface FIN53010UpdatePayload extends Omit<FIN53010Payload, 'CRT_USR_No' | 'UPD_USR_No'> {
+export interface FIN53010UpdatePayload extends Omit<FIN53010Payload, 'creator' | 'modifier'> {
   id: number;
-  UPD_USR_No: string;
+  creator: string;
   Details: FIN53010Detail[];
 }
 
@@ -74,4 +89,9 @@ export interface VendorList {
   VEN_Name: string;
   VEN_ShortName: string;
   VEN_Uniform: string;
+}
+
+export interface AccNoList {
+  AccNo: string;
+  AccName: string;
 }

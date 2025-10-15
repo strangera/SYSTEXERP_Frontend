@@ -16,9 +16,10 @@ import { AuthinterceptorService } from './app/core/interceptors/authinterceptor.
 import { CustomheaderinterceptorService } from './app/core/interceptors/customheaderinterceptor.service';
 import { DateToISOStringInterceptor } from './app/core/interceptors/dateToISOStringInterceptor.interceptor';
 import { ErrorinterceptorService } from './app/core/interceptors/errorinterceptor.service';
+import { HTTPRequestInterceptorService } from './app/core/interceptors/httpRequest.interceptor';
+import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
 import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
-import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -85,6 +86,11 @@ bootstrapApplication(AppComponent, {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: QueryCacheInterceptorService, // 查詢快取攔截器
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: HTTPRequestInterceptorService, // 路由變更時取消請求攔截器
       multi: true
     },
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },

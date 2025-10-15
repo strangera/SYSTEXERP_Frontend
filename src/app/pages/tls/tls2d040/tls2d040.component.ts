@@ -3,7 +3,6 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -17,6 +16,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CommonModule, DatePipe } from '@angular/common';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @Component({
   selector: 'app-tls2d040',
@@ -28,14 +28,14 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     MultiSelectComponent,
     TableComponent,
     TranslateModule,
     CalendarRangeComponent,
     DropdownComponent,
     RadiobuttonComponent,
-    CommonModule
+    CommonModule,
+    CheckboxModule
   ]
 })
 export class TLS2D040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -56,6 +56,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     building_no: [[]],        // 館別
     FLOOR_NO: [[]],           // 樓層
     status: ['0'],        // 狀況(For匯總) 0=依專櫃 1=依扣款項目 2=依部門
+    ShowNeg1: [false],          // 只顯示負值(只適用於專櫃統計)
+    ShowNeg2: [false],          // 只顯示當月應收為負值
     ...createPaginationConfig([])
   });
 
@@ -193,7 +195,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
       const payload = {
         ...form.getRawValue(),
         tpy_bdate: form.value.tpy_bdate ? this.datepipe.transform(form.value.tpy_bdate, 'yyyyMM') : '',
-        tpy_edate: form.value.tpy_edate ? this.datepipe.transform(form.value.tpy_edate, 'yyyyMM') : ''
+        tpy_edate: form.value.tpy_edate ? this.datepipe.transform(form.value.tpy_edate, 'yyyyMM') : '',
+        ShowNeg: form.value.status === '0' ? form.value.ShowNeg1 : form.value.ShowNeg2,
       }
 
       switch (form.value.status) {
@@ -201,7 +204,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_TLT(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('0');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -211,7 +214,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_ChargeItem(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('1');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -221,7 +224,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_Department(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('2');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -232,7 +235,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_Detail(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('3');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());

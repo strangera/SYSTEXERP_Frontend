@@ -5,17 +5,18 @@ import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } fro
 import { NgIf, NgClass } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-calendar',
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush, //使用這個的時候 下面要做調整
   standalone: true,
   imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit {
-
+  private valueChangeSubscription?: Subscription;
   @Input() readonly = false;  // 新增：唯讀模式
   // 必填
   @Input() override label = '';
@@ -68,6 +69,14 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     if (this.control.value && typeof this.control.value === 'string') {
       this.control.setValue(new Date(this.control.value));
     }
+
+    //關鍵：監聽 control 值變化，觸發變更檢測
+    this.valueChangeSubscription = this.control.valueChanges.subscribe(() => {
+      this.cdr.markForCheck();  // 標記需要檢查
+    });
+
+    //初始化時也觸發一次
+    this.cdr.markForCheck();
   }
   onClose() {
     if (this.readonly) return; // 唯讀模式下不處理事件
@@ -165,5 +174,12 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     }
 
     return classes.join(' ');
+  }
+
+  ngOnDestroy() {
+    // 清理訂閱
+    if (this.valueChangeSubscription) {
+      this.valueChangeSubscription.unsubscribe();
+    }
   }
 }

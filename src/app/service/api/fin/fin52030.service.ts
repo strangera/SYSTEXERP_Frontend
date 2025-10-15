@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, Injectable, signal } from '@angular/core';
-import { FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, VendorList } from '@pages/fin/fin52030/fin52030.model';
-import { Option } from '@service/utility/dropdown-api.model';
+import { AccNoList, FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { Option, TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
@@ -16,25 +16,25 @@ export class FIN52030Service {
   public readonly FIN52030Data = signal<FIN52030Data[]>([]);
   public readonly FIN52030Detail = signal<FIN52030Detail[]>([]);
 
-  public readonly accNoList = signal<Option[]>([]);
-  public readonly vendorList = signal<Option[]>([]);
+  public readonly accNoList = signal<AccNoList[]>([]);
+  public readonly vendorList = signal<VendorList[]>([]);
   public readonly subpoenaTypes = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
   public readonly usrList = signal<Option[]>([]);
-  public readonly subDetailNoList = signal<Option[]>([]);
+  public readonly tblUserOrgidList = signal<TblUserOrgidItem[]>([]);
 
-  public accNoMap = new Map<string, Option>([]);
-  public vendorMap = new Map<string, Option>([]);
+  public accNoMap = new Map<string, AccNoList>([]);
+  public vendorMap = new Map<string, VendorList>([]);
   public usrMap = new Map<string, Option>([]);
 
   public usrEffect = effect(() => {
     this.usrMap = new Map(this.usrList().map(item => [item.value, item]));
   });
   public vendorEffect = effect(() => {
-    this.vendorMap = new Map(this.vendorList().map(item => [item.value, item]));
+    this.vendorMap = new Map(this.vendorList().map(item => [item.VEN_No, item]));
   });
   public accNoEffect = effect(() => {
-    this.accNoMap = new Map(this.accNoList().map(item => [item.value, item]));
+    this.accNoMap = new Map(this.accNoList().map(item => [item.AccNo, item]));
   });
 
   private readonly tableCancel$ = new Subject<void>();
@@ -83,8 +83,7 @@ export class FIN52030Service {
 
     const vendor$ = !this.vendorList().length
       ? this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
-        map(({ Data }) => Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-        tap(res => this.vendorList.set(res))
+        tap(res => this.vendorList.set(res.Data))
       )
       : of(void 0);
 
@@ -146,9 +145,9 @@ export class FIN52030Service {
   }
 
   public getAccNoList(): void {
-    this.dropdownApi.queryGls1005().pipe(
+    this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoList`, {}).pipe(
       take(1),
-      tap(res => this.accNoList.set(res || [])),
+      tap(res => this.accNoList.set(res.Data)),
       finalize(() => this.logger.debug('查詢AccNoList結果:', [this.accNoList()])),
     ).subscribe();
   }
@@ -157,8 +156,7 @@ export class FIN52030Service {
     this.venLoading.set(!0);
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
-      map(({ Data }) => Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-      tap(res => this.vendorList.set(res)),
+      tap(res => this.vendorList.set(res.Data)),
       finalize(() => this.logger.debug('查詢VendorList結果:', [this.vendorList()])),
       finalize(() => this.venLoading.set(!1)),
     ).subscribe();
@@ -183,11 +181,11 @@ export class FIN52030Service {
     ).subscribe();
   }
 
-  public getSubDetailNoList(): void {
-    this.http.post<BaseQueryResponse<Option>>('/queryPOS10015_DropDownList', {}).pipe(
+  public getTblUserOrgid(): void {
+    this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      tap(res => this.subDetailNoList.set(res.Data ?? [])),
-      finalize(() => this.logger.debug('查詢SubDetailNoList結果:', [this.subDetailNoList()])),
+      tap(res => this.tblUserOrgidList.set(res ?? [])),
+      finalize(() => this.logger.debug('查詢TblUserOrgidList結果:', [this.tblUserOrgidList()])),
     ).subscribe();
   }
 }

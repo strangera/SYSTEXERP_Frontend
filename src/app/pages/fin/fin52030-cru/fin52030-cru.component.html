@@ -35,25 +35,25 @@
                         label="建立者"
                         controlName="CRT_USR_No"
                         [control]="df().CRT_USR_No"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       label="建立日"
                       controlName="createDate"
                       [control]="df().createDate"
-                      [disabled]="true"
+                      [disabled]="!0"
                       [submitted]="submitted"></app-calendar>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="修改者"
                         controlName="UPD_USR_No"
                         [control]="df().UPD_USR_No"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       label="修改日"
                       controlName="modifyDate"
                       [control]="df().modifyDate"
-                      [disabled]="true"
+                      [disabled]="!0"
                       [submitted]="submitted"></app-calendar>
       </div>
 
@@ -63,7 +63,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [disabled]="!dataForm.valid || this.onEditing"
+                    [disabled]="!dataForm.valid || onEditing"
                     [loading]="service.tableLoading"></app-button>
       </div>
       }
@@ -77,8 +77,7 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <app-table #tb
-                   [showManage]="!isFormReadable"
+        <app-table [showManage]="!isFormReadable"
                    [showCheckBox]="!isFormReadable"
                    [showRowEdit]="!isFormReadable"
                    [showInsert]="!isFormReadable"

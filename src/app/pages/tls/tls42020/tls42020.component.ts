@@ -50,7 +50,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     SBM_BegDate_e: [null, Validators.required],  // 開始日期(迄)
     SBM_EndDate_s: [null, Validators.required],  // 結束日期(起)
     SBM_EndDate_e: [null, Validators.required],  // 結束日期(迄)
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: "TLT_No", order: 0 }])
   });
 
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;

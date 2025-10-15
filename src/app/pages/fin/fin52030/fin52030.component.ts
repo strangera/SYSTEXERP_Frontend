@@ -42,34 +42,7 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  public filteredData = computed(() => {
-    const data = this.service.FIN52030Data();
-
-    const hasTempNo = this.qf().TempNo.value && this.qf().TempNo.value?.trim() !== '';
-    const hasVouType = this.qf().VouType.value && this.qf().VouType.value?.trim() !== '';
-    const hasTempName = this.qf().TempName.value && this.qf().TempName.value?.trim() !== '';
-    const hasCreator = this.qf().CRT_USR_No.value && this.qf().CRT_USR_No.value?.trim() !== '';
-    const hasModifier = this.qf().UPD_USR_No.value && this.qf().UPD_USR_No.value?.trim() !== '';
-
-    if (!hasTempNo && !hasVouType && !hasTempName && !hasCreator && !hasModifier) {
-      return data;
-    }
-
-    // 有篩選條件時進行篩選
-    return data.filter(item => {
-      let matches = !0;
-
-      // if (hasTypeCode) matches = matches && item.typeCode === this.qf().typeCode.value;
-      // if (hasSubpoenaName) matches = matches && !!item.subpoenaName && item.subpoenaName.includes(this.qf().subpoenaName.value!);
-      // if (hasSubpoenaType) matches = matches && item.subpoenaType === this.qf().subpoenaType.value;
-      // if (hasCreator) matches = matches && item.creator === this.qf().creator.value;
-      // if (hasModifier) matches = matches && item.modifier === this.qf().modifier.value;
-
-      return matches;
-    });
-  });
-
-  public readonly totalRecords = computed(() => this.filteredData().length);
+  public readonly totalRecords = computed(() => this.service.FIN52030Data().length);
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
@@ -97,7 +70,8 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = <FIN52030Payload>{
+      this.loading = !0;
+      const raw = <FIN52030Payload>{
         ...this.queryForm.getRawValue(),
         TempNo: String(this.qf().TempNo.value ?? ''),
         VouType: String(this.qf().VouType.value ?? ''),
@@ -105,14 +79,19 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
         CRT_USR_No: String(this.qf().CRT_USR_No.value ?? ''),
         UPD_USR_No: String(this.qf().UPD_USR_No.value ?? ''),
       };
-      this.loading = !0;
+      const payload = <FIN52030Payload>Object.keys(raw).reduce((acc, key) => {
+        const v = raw[key as keyof typeof raw];
+        if (v !== void 0 && v !== null && !(typeof v === 'string' && v.trim() === '')) acc[key as keyof typeof raw] = v;
+        return acc;
+      }, {} as any);
+
       this.logger.debug(`onSubmit:`, [payload]);
       this.service.FIN52030Data.set([]);
 
       this.service.loadFIN52030(payload).pipe(
         finalize(() => {
           this.loading = !1;
-          this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.filteredData()]);
+          this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue()]);
         }),
       ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());

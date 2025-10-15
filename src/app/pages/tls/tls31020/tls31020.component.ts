@@ -69,9 +69,9 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     org_id: [[]],  // 組織
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
-
-
-    ...createPaginationConfig([{ field: 'tlt_floor', order: 1 }])
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_floor', order: 1 }]],
   });
 
   // 日期查詢條件表單
@@ -345,8 +345,9 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
-        this.data = res.Data?.QueryData ?? [];               // 查詢資料
-        this.footerTotal = res.Data?.TotalData ?? null;;    // 總計資料
+        // this.data = res.Data?.QueryData ?? [];               // 查詢資料
+        this.data = res.Data ?? [];               // 查詢資料
+        this.footerTotal = res.TotalData ?? null;;    // 總計資料
 
         this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
           budget: this.footerTotal.TotalBudget,
@@ -360,11 +361,13 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
           MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-        } : null;
-        this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
         } : null;
+        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+
+        // } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
         console.log('查詢結果', this.data);
