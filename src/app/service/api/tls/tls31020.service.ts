@@ -104,9 +104,26 @@ export interface TLS31020Total {
   TotalMonthlyBudget: number;
   TotalMonthlySales: number;
   AvgCompletionRate: number;
+}
 
+export interface footerShowTotal{
   //前端要接收一樣的名稱才能收到
-  budget?: number,
+  budget: number;               //TotalBudget 營業目標總計
+  AVN_TotSaleAmt: number;       //TotalSales 營業實績總計
+  AchievementRate: number;      //AvgAchievementRate 平均達成率
+  // BudgetRate: number; 
+  // PerformanceRate: number; 
+  TxnCount: number;             // TotalTxnCount 交易筆數總計
+  AvgTicket: number;            //AvgTicket 平均客單價
+  tlt_space: number;            //TotalSpace 坪數總計
+  MonthlyPSM: number;           //AvgPSM 平均月坪效
+  MonthlyPayment: number;       //AvgMonthlyPayment 平均月坪貢獻
+  TempCounterSaleAmt: number;   //TotalTempCounterSales 臨時櫃營業實績總計
+  // TempCounterSalesRate: number; 
+  // TempCounterAmtRate: number;   
+  MonthlyBudgetTotal: number;   //TotalMonthlyBudget 月累計營業目標總計
+  MonthlySalesTotal: number;    //TotalMonthlySales 月累計營業實績總計
+  CompletionRate: number;       //AvgCompletionRate 平均完成率
 }
 
 export interface TLS31020Response {

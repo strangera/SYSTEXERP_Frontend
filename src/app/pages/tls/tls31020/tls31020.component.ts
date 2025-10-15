@@ -17,7 +17,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { environment } from 'src/environments/environment';
-import { TLS31020Item, TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { footerShowTotal, TLS31020Item, TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -130,11 +130,13 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
   totalRecords = 0;
   data: TLS31020Item[] = [];
-  footerTotal: TLS31020Total | null = null; // 總計
+  footerTotal: TLS31020Total | null = null; // 總計取得原始資料
+  footershowTotal: footerShowTotal| null = null; // 總計資料轉換名稱
+
   historyRequestBody: TLS31020Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'tlt_floor', header: '樓層代碼', visible: false },
+    // { field: 'tlt_floor', header: '樓層代碼', visible: false },
     { field: 'floor_desc', header: '樓層名稱', visible: true },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
@@ -345,13 +347,28 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
         this.data = res.Data?.QueryData ?? [];               // 查詢資料
-        // this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
-        const totalData = res.Data?.TotalData;
-        this.footerTotal = totalData ? { ...totalData, budget: totalData.TotalBudget } : null;
+        this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
+        
+        this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
+          budget: this.footerTotal.TotalBudget,
+          AVN_TotSaleAmt: this.footerTotal.TotalSales,
+          AchievementRate: this.footerTotal.AvgAchievementRate,
+          TxnCount: this.footerTotal.TotalTxnCount,
+          AvgTicket: this.footerTotal.AvgTicket,
+          tlt_space: this.footerTotal.TotalSpace,
+          MonthlyPSM: this.footerTotal.AvgPSM,
+          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+          TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+          
+          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+          CompletionRate: this.footerTotal.AvgCompletionRate,
+        } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
         console.log('查詢結果', this.data);
         console.log('查詢總計', this.footerTotal);
+        console.log('查詢總計(轉換後)', this.footershowTotal);
 
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
