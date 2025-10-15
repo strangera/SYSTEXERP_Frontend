@@ -167,9 +167,12 @@
         <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
           <span class="font-bold">小計</span>
         </td>
+        <td *ngIf="expansionColumns.length"></td>
         <ng-container *ngFor="let col of columns">
-          <td *ngIf="!col.hidden" class="text-center" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
-            pFrozenColumn [frozen]="col.frozen || false">
+          <td *ngIf="!col.hidden" class="text-center" [ngClass]="[
+          col.style || '',
+          col.cellClass ? col.cellClass(rowData) || '' : '',
+        ]" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen || false">
             <span class="font-bold">
               {{ getGroupSubtotal(rowData, col) }}
             </span>
@@ -193,15 +196,17 @@
       </td>
     </tr>
   </ng-template>
-  <ng-template pTemplate="footer">
+  <ng-template pTemplate="footer" let-columns let-rowData>
     <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
       <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
         <span class="font-bold">總計</span>
       </td>
       <td *ngIf="expansionColumns.length"></td>
       <ng-container *ngFor="let col of columns">
-        <td *ngIf="!col.hidden" class="text-center" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
-          pFrozenColumn [frozen]="col.frozen || false">
+        <td *ngIf="!col.hidden" class="text-center" [ngClass]="[
+          col.style || '',
+          col.cellClass ? col.cellClass(rowData) || '' : '',
+        ]" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen || false">
           <span class="font-bold">
             {{
             col.format
