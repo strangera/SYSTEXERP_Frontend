@@ -43,8 +43,9 @@ export interface FIN15030Data {
   TXN_Tax?: number;            // 退出折讓單稅額
   Source_Doc_No?: string;      // 憑證單號
   Voucher_No?: string;         // 傳票編號
-  SAL_Type?: string;           // 系統別
+  SAL_Type?: string;           // 使用別
   TXN_Uniform?: string;        // 統一編號
+  SYS_ORIGIN?: string;         // 系統別
 }
 
 export interface FIN15030PrintRequest extends FIN15030QueryRequest {
