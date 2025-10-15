@@ -11,7 +11,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -20,6 +19,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 export interface Option {
   label: string;
@@ -37,14 +37,14 @@ export interface Option {
     AccordionModule,
     InputTextRangeComponent,
     CalendarRangeComponent,
-    TableComponent,
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
     DropdownComponent,
     CalendarComponent,
     MultiSelectComponent,
-    CommonModule
+    CommonModule,
+    CustomFooterTableComponent
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
@@ -79,6 +79,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
   data: FIN15030Data[] = [];
   selectedItems: FIN15030Data[] = [];
   btnLoading = false;
+  footerData: any[] = [];
 
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
@@ -89,8 +90,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'TXN_Date', header: '退出/折讓日期', visible: true, format: formatDate },
     { field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'INV_YM', header: '申報年月', visible: true },
-    { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount },
-    { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
+    { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount, isTotal: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
@@ -149,6 +150,11 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
           this.data = res.Data.FIN15030s;
+          this.footerData = [{
+            group_name: '合計',
+            TXN_Net: res.Data.TotalNet,
+            TXN_Tax: res.Data.TotalTax,
+          }];
           this.totalRecords = res.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });

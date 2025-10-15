@@ -151,7 +151,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
         .subscribe((res) => {
           this.data = res.Data.APS2002_FIN15020s;
           this.footerData = [{
-            group_name: '總計',
+            group_name: '合計',
             PUR_Net: res.Data.TotalNet,
             PUR_Tax: res.Data.TotalTax,
           }];
