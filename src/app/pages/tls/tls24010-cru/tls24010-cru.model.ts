@@ -1,3 +1,4 @@
+import { ValidationErrors } from "@angular/forms";
 import { Column } from "../../../shared/componentkit/table/table.model";
 
 export const txnStatusOptions = [
@@ -49,4 +50,53 @@ export enum TLS24010_EDIT_TYPE {
   付款別修正 = "PayNoEdit",
   是否為預售交易修正 = "PreOrderEdit",
   交易資料作廢 = "VoidEdit"
+}
+
+
+// TXN_GUIVehicle 檢核邏輯(基本檢核邏輯：以/為起始作為判斷，目前總長度共為8碼，條碼除第1碼為/外只會有0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ + - .這39個字元)
+// 宣告一個驗證方法給TXN_GUIVehicle表單欄位使用並回傳錯誤訊息
+// ValidationService.ts - 新增方法
+
+/**
+ * TXN_GUIVehicle 檢核邏輯
+ * 1. 總長度為 8 碼
+ * 2. 第 1 碼為 '/'
+ * 3. 第 2 碼後只允許 [0-9 A-Z a-z + - .]
+ */
+export function guiVehicleValidator(control: { value: string | null }): ValidationErrors | null {
+  const value = control.value;
+
+  // 1. 如果值為空，則不進行驗證，交由 required 處理
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  // 將值轉換為字串並 trim
+  const vehicle = value.toString().trim();
+
+  // 2. 檢核長度必須為 8 碼
+  if (vehicle.length !== 8) {
+    return { invalidGuiVehicle: true };
+  }
+
+  // 3. 檢核第 1 碼必須是 '/'
+  if (vehicle.charAt(0) !== '/') {
+    return { invalidGuiVehicle: true };
+  }
+
+  // 4. 檢核第 2 碼到第 8 碼的字元內容
+  // Regex 解讀:
+  // ^: 字串開頭
+  // \/: 第一個字元必須是 /
+  // [0-9A-Za-z+-\.] 會匹配 0-9, A-Z, a-z, +, -, .
+  // {7}: 緊接著必須是 7 個符合前面字元集的字元
+  // $: 字串結尾
+  const vehicleBodyRegex = /^\/([0-9A-Za-z+\-.]){7}$/;
+
+  if (!vehicleBodyRegex.test(vehicle)) {
+    return { invalidGuiVehicle: true };
+  }
+
+  // 驗證通過
+  return null;
 }
