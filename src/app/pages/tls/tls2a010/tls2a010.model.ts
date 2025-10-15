@@ -94,11 +94,7 @@ export const creditCardColumns: Column[] = [
     },
   },
   { header: '審核人員', field: 'check_usr_name' },
-  {
-    header: '是否有缺單',
-    field: 'onAbnormalClick',
-    format: (v) => v === 'Y' ? '是' : v === 'N' ? '否' : v
-  }
+  { header: '是否有缺單', field: 'lose_doc' }
 ];
 
 export const creditCardGroup: ColumnGroup[] = [

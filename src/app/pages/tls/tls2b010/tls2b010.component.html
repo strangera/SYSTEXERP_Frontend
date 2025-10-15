@@ -136,25 +136,51 @@
     }}
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 1">
-    <app-tls2b010table
-      tableKey="TLS2B010"
-      [data]="data"
-      [columns]="columns"
-      dataKey="ID"
-      [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
-      [totalRecords]="totalRecords"
-      [lazy]="true"
-      [rows]="data.length || 20"
-      [loading]="loading"
-      [groupPageSize]="queryForm.get('pageSize')?.value || 20"
-      (edit)="onEdit($event)"
-      [showManage]="false"
-       [groupRowsBy]="'ECR_No'"
-[mergedColumns]="['building_desc','floor_desc','ECR_No','TLT_NO','TLT_Name']"
-      [showDelete]="false"
-      [showCheckBox]="false"
-       (lazyLoadData)="handleLazyLoad($event, queryForm)"
-    ></app-tls2b010table>
+   <app-tls2b010table
+  tableKey="TLS2B010"
+  [data]="data"
+  [columns]="columns"
+  dataKey="ID"
+  [showReportMode]="false"
+  [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
+  [totalRecords]="totalRecords"
+  [lazy]="true"
+  [rows]="data.length || 20"
+  [loading]="loading"
+  [groupPageSize]="queryForm.get('pageSize')?.value || 20"
+  (edit)="onEdit($event)"
+  [showManage]="false"
+  [groupRowsBy]="'ECR_No'"
+  [mergedColumns]="['building_desc','floor_desc','ECR_No','TLT_NO','TLT_Name']"
+  [showDelete]="false"
+  [showCheckBox]="false"
+  (lazyLoadData)="handleLazyLoad($event, queryForm)"
+  [showFooter]="true"          
+    [showTotal]="true"
+  [totals]="detailTotals"  
+>
+  <header>
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        styleClass="p-2"
+        label="匯出收銀員溢欠表(日)明細表 PDF"
+        icon="pi pi-file"
+        [loading]="btnLoading"
+        (click)="downloadTLS2B010PDF()"
+        [disabled]="data.length === 0"
+      ></p-button>
+
+      <p-button
+        styleClass="p-2"
+        label="匯出收銀員溢欠表(日)明細表 Excel"
+        icon="pi pi-file-excel"
+        [loading]="btnLoading"
+        (click)="downloadTLS2B010Excel()"
+        [disabled]="data.length === 0"
+      ></p-button>
+    </div>
+  </header>
+</app-tls2b010table>
   </div>
 <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
   <app-table
@@ -167,6 +193,7 @@
     [showDelete]="false"
     [showCheckBox]="false"
     [showManage]="false"
+    [showReportMode]="false"
 
 
     [totalRecords]="totalRecords"
@@ -176,6 +203,28 @@
 
 
     [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }, { field: 'ECR_No', order: 1 }]"
-  ></app-table>
+  >
+ <header>
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        styleClass="p-2"
+        label="匯出收銀員溢欠表(日)簡表 PDF"
+        icon="pi pi-file"
+        [loading]="btnLoading"
+        (click)="downloadTLS2B010PDF()"
+        [disabled]="data.length === 0"
+      ></p-button>
+
+      <p-button
+        styleClass="p-2"
+        label="匯出收銀員溢欠表(日)簡表 Excel"
+        icon="pi pi-file-excel"
+        [loading]="btnLoading"
+        (click)="downloadTLS2B010Excel()"
+        [disabled]="data.length === 0"
+      ></p-button>
+    </div>
+  </header>
+</app-table>
 </div>
 </div>

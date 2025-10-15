@@ -190,7 +190,7 @@ export const formatTimeHHMMSS = (value: string | number | Date): string => {
 // 000,000,000
 export const formatAmount = (val: number | string): string => {
   const num = Number(val);
-  if (isNaN(num)) return '0';
+  if (isNaN(num)) return '';
   return num.toLocaleString(); // eg. 1,000,000
 };
 export const formatYN = (value: string): string => {

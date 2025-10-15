@@ -85,6 +85,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() buttonsLoading = false;           // 按鈕們 loading
   @Input() footerData: any;                  // (總計)頁尾資料
+  @Input() footerPercentData: any;                  // (百分比)頁尾資料
   @Input() groupRowsBy?: string;              // (小計)群組欄位
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Input() disabled = false;

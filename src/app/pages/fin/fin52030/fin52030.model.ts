@@ -75,3 +75,8 @@ export interface VendorList {
   VEN_ShortName: string;
   VEN_Uniform: string;
 }
+
+export interface AccNoList {
+  AccNo: string;
+  AccName: string;
+}

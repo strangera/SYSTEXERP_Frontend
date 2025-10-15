@@ -108,6 +108,16 @@
             </app-multi-select>
           </div>
         </div>
+
+        <div class="grid p-fluid">
+          <span class="col-12 m-0 mt-2 border-top-1 surface-border"></span>
+          <div class="col-12">
+            <p-checkbox class="mr-2" [binary]="true" label="只顯示負值(只適用於專櫃統計)" formControlName="ShowNeg1">
+            </p-checkbox>
+            <p-checkbox [binary]="true" label="只顯示當月應收為負值" formControlName="ShowNeg2">
+            </p-checkbox>
+          </div>
+        </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -120,6 +130,6 @@
   <app-table tableKey="TLS2D040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showManage]="false">
+    [loading]="loading" [showManage]="false" [apiUrl]="'queryTLS2D040_Detail'">
   </app-table>
 </div>

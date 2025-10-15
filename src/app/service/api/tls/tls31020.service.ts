@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
 
@@ -49,7 +49,7 @@ export interface TLS31020DetialPrintRequest extends TLS31020DetailRequest {
 export interface TLS31020Item {
   tlt_floor: string;
   floor_desc: string;
-  
+
   budget: number;
   AVN_TotSaleAmt: number;
   AchievementRate: number;
@@ -104,9 +104,26 @@ export interface TLS31020Total {
   TotalMonthlyBudget: number;
   TotalMonthlySales: number;
   AvgCompletionRate: number;
+}
 
+export interface footerShowTotal {
   //前端要接收一樣的名稱才能收到
-  budget?: number,
+  budget?: number;               //TotalBudget 營業目標總計
+  AVN_TotSaleAmt?: number;       //TotalSales 營業實績總計
+  AchievementRate?: number;      //AvgAchievementRate 平均達成率
+  // BudgetRate: number;
+  // PerformanceRate: number;
+  TxnCount?: number;             // TotalTxnCount 交易筆數總計
+  AvgTicket?: number;            //AvgTicket 平均客單價
+  tlt_space?: number;            //TotalSpace 坪數總計
+  MonthlyPSM?: number;           //AvgPSM 平均月坪效
+  MonthlyPayment?: number;       //AvgMonthlyPayment 平均月坪貢獻
+  TempCounterSaleAmt?: number;   //TotalTempCounterSales 臨時櫃營業實績總計
+  // TempCounterSalesRate: number;
+  // TempCounterAmtRate: number;
+  MonthlyBudgetTotal?: number;   //TotalMonthlyBudget 月累計營業目標總計
+  MonthlySalesTotal?: number;    //TotalMonthlySales 月累計營業實績總計
+  CompletionRate?: number;       //AvgCompletionRate 平均完成率
 }
 
 export interface TLS31020Response {
@@ -124,25 +141,43 @@ export interface TLS31020DetailResponse {
 })
 export class Tls31020Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
-    constructor(private http: HttpClient) { }
-  
-    //查詢各樓層之營業報表
-    queryTLS31020(body: TLS31020Request): Observable<ApiResponse<TLS31020Response>> {
-      return this.http.post<ApiResponse<TLS31020Response>>(`${this.apiUrl}/queryTLS31020`, body);
-    }
+  constructor(private http: HttpClient) { }
 
-    //查詢 單樓層之營業報表
-    queryTLS31020Detail(body: TLS31020DetailRequest): Observable<ApiResponse<TLS31020DetailResponse>> {
-      return this.http.post<ApiResponse<TLS31020DetailResponse>>(`${this.apiUrl}/queryTLS31020Detail`, body);
-    }
+  //查詢各樓層之營業報表
+  queryTLS31020(body: TLS31020Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31020`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.QueryData,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData 
+        };
+      })
+    );
+  }
 
-    //產出各樓層之營業報表
-    printTLS31020(body: TLS31020PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
-      return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31020`, body);
-    }
+  //查詢 單樓層之營業報表
+  queryTLS31020Detail(body: TLS31020DetailRequest): Observable<any> {
+    return this.http.post<ApiResponse<TLS31020DetailResponse>>(`${this.apiUrl}/queryTLS31020Detail`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.QueryData,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData,
+        };
+      })
+    );
+  }
 
-    //產出 單樓層之營業報表
-    printTLS31020Detail(body: TLS31020DetialPrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
-      return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31020Detail`, body);
-    }
+  //產出各樓層之營業報表
+  printTLS31020(body: TLS31020PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31020`, body);
+  }
+
+  //產出 單樓層之營業報表
+  printTLS31020Detail(body: TLS31020DetialPrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31020Detail`, body);
+  }
 }
