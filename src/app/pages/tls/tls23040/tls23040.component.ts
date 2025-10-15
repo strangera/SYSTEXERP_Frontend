@@ -445,7 +445,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'PRM_TXN_discode', header: '原折扣', visible: true },
     { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },
     { field: 'PLU_TaxTypeName', header: '稅別', visible: true },
-    { field: 'PLU_MagNo', header: '單品編號', visible: true },
+    { field: 'PLU_No', header: '報帳條碼', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
   ];
 
