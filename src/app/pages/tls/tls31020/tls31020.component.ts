@@ -29,7 +29,6 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 @Component({
   selector: 'app-tls31020',
   templateUrl: './tls31020.component.html',
-  styleUrl: './tls31020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -131,8 +130,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   totalRecords = 0;
   data: TLS31020Item[] = [];
   footerTotal: TLS31020Total | null = null; // 總計取得原始資料
-  footershowTotal: footerShowTotal| null = null; // 總計資料轉換名稱
-
+  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
+  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31020Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
@@ -347,21 +346,23 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
         this.data = res.Data?.QueryData ?? [];               // 查詢資料
-        this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
-        
+        this.footerTotal = res.Data?.TotalData ?? null;;    // 總計資料
+
         this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
           budget: this.footerTotal.TotalBudget,
           AVN_TotSaleAmt: this.footerTotal.TotalSales,
-          AchievementRate: this.footerTotal.AvgAchievementRate,
           TxnCount: this.footerTotal.TotalTxnCount,
           AvgTicket: this.footerTotal.AvgTicket,
           tlt_space: this.footerTotal.TotalSpace,
           MonthlyPSM: this.footerTotal.AvgPSM,
           MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
           TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
-          
+
           MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+        } : null;
+        this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+          AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
         } : null;
 
