@@ -345,8 +345,9 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       console.log('送出query請求', formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
-        this.data = res.Data?.QueryData ?? [];               // 查詢資料
-        this.footerTotal = res.Data?.TotalData ?? null;;    // 總計資料
+        // this.data = res.Data?.QueryData ?? [];               // 查詢資料
+        this.data = res.Data ?? [];               // 查詢資料
+        this.footerTotal = res.TotalData ?? null;;    // 總計資料
 
         this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
           budget: this.footerTotal.TotalBudget,

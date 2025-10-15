@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
 
@@ -144,13 +144,31 @@ export class Tls31020Service {
   constructor(private http: HttpClient) { }
 
   //查詢各樓層之營業報表
-  queryTLS31020(body: TLS31020Request): Observable<ApiResponse<TLS31020Response>> {
-    return this.http.post<ApiResponse<TLS31020Response>>(`${this.apiUrl}/queryTLS31020`, body);
+  queryTLS31020(body: TLS31020Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31020`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.QueryData,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData 
+        };
+      })
+    );
   }
 
   //查詢 單樓層之營業報表
-  queryTLS31020Detail(body: TLS31020DetailRequest): Observable<ApiResponse<TLS31020DetailResponse>> {
-    return this.http.post<ApiResponse<TLS31020DetailResponse>>(`${this.apiUrl}/queryTLS31020Detail`, body);
+  queryTLS31020Detail(body: TLS31020DetailRequest): Observable<any> {
+    return this.http.post<ApiResponse<TLS31020DetailResponse>>(`${this.apiUrl}/queryTLS31020Detail`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.QueryData,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData,
+        };
+      })
+    );
   }
 
   //產出各樓層之營業報表

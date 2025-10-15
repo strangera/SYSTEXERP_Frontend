@@ -202,8 +202,8 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
 
     this.tls31020Service.queryTLS31020Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單樓層之營業報表response', res.Data);
-      this.data = res.Data?.QueryData ?? [];               // 查詢資料
-      this.footerTotal = res.Data?.TotalData ?? null;;    // 總計資料
+      this.data = res.Data ?? [];               // 查詢資料
+      this.footerTotal = res.TotalData ?? null;;    // 總計資料
       this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
           budget: this.footerTotal.TotalBudget,
           AVN_TotSaleAmt: this.footerTotal.TotalSales,
