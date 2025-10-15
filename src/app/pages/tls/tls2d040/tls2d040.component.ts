@@ -17,6 +17,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CommonModule, DatePipe } from '@angular/common';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @Component({
   selector: 'app-tls2d040',
@@ -35,7 +36,8 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     CalendarRangeComponent,
     DropdownComponent,
     RadiobuttonComponent,
-    CommonModule
+    CommonModule,
+    CheckboxModule
   ]
 })
 export class TLS2D040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -56,6 +58,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     building_no: [[]],        // 館別
     FLOOR_NO: [[]],           // 樓層
     status: ['0'],        // 狀況(For匯總) 0=依專櫃 1=依扣款項目 2=依部門
+    ShowNeg1: [false],          // 只顯示負值(只適用於專櫃統計)
+    ShowNeg2: [false],          // 只顯示當月應收為負值
     ...createPaginationConfig([])
   });
 
@@ -193,7 +197,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
       const payload = {
         ...form.getRawValue(),
         tpy_bdate: form.value.tpy_bdate ? this.datepipe.transform(form.value.tpy_bdate, 'yyyyMM') : '',
-        tpy_edate: form.value.tpy_edate ? this.datepipe.transform(form.value.tpy_edate, 'yyyyMM') : ''
+        tpy_edate: form.value.tpy_edate ? this.datepipe.transform(form.value.tpy_edate, 'yyyyMM') : '',
+        ShowNeg: form.value.status === '0' ? form.value.ShowNeg1 : form.value.ShowNeg2,
       }
 
       switch (form.value.status) {
