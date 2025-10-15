@@ -13,7 +13,7 @@ import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/c
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls2c040',
@@ -64,16 +64,7 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
 
   // 下拉選單選項
   // 傳票種類
-  srcSheetTypeOptions: IDropdownItem[] = [
-    { No: 'SD', Name: '每日營收傳票' },
-    { No: 'MR', Name: '租金傳票' },
-    { No: 'MD', Name: '代扣款傳票' },
-    { No: 'PR', Name: '抽成傳票' },
-    { No: 'PN', Name: '進貨帳款-暫估應付傳票' },
-    { No: 'PNC', Name: '進貨帳款-成本結轉' },
-    { No: 'PT', Name: '每日營收傳票' },
-    { No: 'WD', Name: '自營日結暫存傳票' },
-  ];
+  srcSheetTypeOptions: IDropdownItem[] = [];
   // 傳票狀態
   postFlagOptions: IDropdownItem[] = [
     { No: '0', Name: '作廢' },
@@ -93,12 +84,19 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls2c040Service: TLS2C040Service,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2C040', 'tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
+    // 載入傳票種類
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.srcSheetTypeOptions = response.Data;
+      });
   }
 
   onSubmit(form: FormGroup) {

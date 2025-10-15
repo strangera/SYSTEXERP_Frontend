@@ -130,6 +130,6 @@
   <app-table tableKey="TLS2D040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showManage]="false">
+    [loading]="loading" [showManage]="false" [apiUrl]="'queryTLS2D040_Detail'">
   </app-table>
 </div>

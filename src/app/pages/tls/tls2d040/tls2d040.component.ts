@@ -3,7 +3,6 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -29,7 +28,6 @@ import { CheckboxModule } from 'primeng/checkbox';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     MultiSelectComponent,
     TableComponent,
     TranslateModule,
@@ -206,7 +204,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_TLT(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('0');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -216,7 +214,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_ChargeItem(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('1');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -226,7 +224,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_Department(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('2');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -237,7 +235,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           this.tls2d040Service.queryTLS2D040_Detail(payload)
             .pipe(untilDestroyed(this), finalize(() => this.loading = false))
             .subscribe(response => {
-              this.setColumns(form.value.status);
+              this.setColumns('3');
               this.data = response.Data.mainData;
               this.totalRecords = response.TotalCount;
               this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
