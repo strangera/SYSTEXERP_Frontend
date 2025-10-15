@@ -1,5 +1,3 @@
-
-// --Commonly used imports--
 import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
@@ -146,46 +144,27 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   ];
 
-  //寫死用getter API 用附值
-  get decorationOptions() { return this.sharedDropdownService.decorationOptions; }  // 裝潢方式
+  decorationOptions = this.sharedDropdownService.decorationOptions; // 裝潢方式
+  moneyTypeOptions = this.sharedDropdownService.moneyTypeOptions;   // 結帳方式
+  checkTypeOptions = this.sharedDropdownService.checkTypeOptions;   // 對帳方式
+  storeWayOptions = this.sharedDropdownService.storeWayOptions;     // 抽成別
+  paytypeOptions = this.sharedDropdownService.paytypeOptions;       // 抽成別
+  invoiceTypeOptions = this.sharedDropdownService.invoiceTypeOptions; // 抽成別
+  tltKindOptions = this.sharedDropdownService.tltKindOptions;       // 抽成別
+  tltopenflagOption = this.sharedDropdownService.openflagOptions;   // 抽成別
+  commCompTypeDropdown = this.sharedDropdownService.commCompTypeOptions;
+  approveStatusOptions = this.sharedDropdownService.approveStatusOptions;
+  yesNoOptions = this.sharedDropdownService.yesNoOptions;
+  tltTermTypeOptions = this.sharedDropdownService.tltTermTypeOptions;
+  tltctypemtotalOptions = this.sharedDropdownService.tltctypemtotalOptions; // 包底類別
+  totalAmtOptions = this.sharedDropdownService.totalAmtOptions;             // 目標營業額單位(廠商)
+  totalAmtVendorOptions = this.sharedDropdownService.totalAmtVendorOptions; // 目標營業額單位(業主)
+  depositPaymentOptions = this.sharedDropdownService.depositPaymentOptions; // 保證金
+  overallStatusOptions = this.sharedDropdownService.overallStatusOptions;
+  applyTypeOptions = this.sharedDropdownService.applyTypeOptions;
+  contractTypeOptions = this.sharedDropdownService.contractTypeOptions;
+  applyStatusOptions = this.sharedDropdownService.applyStatusOptions;
 
-  get moneyTypeOptions() { return this.sharedDropdownService.moneyTypeOptions; }  // 結帳方式
-
-  get checkTypeOptions() { return this.sharedDropdownService.checkTypeOptions; }  // 對帳方式
-
-  get storeWayOptions() { return this.sharedDropdownService.storeWayOptions; }  // 抽成別
-
-  get paytypeOptions() { return this.sharedDropdownService.paytypeOptions; }  // 抽成別
-
-  get invoiceTypeOptions() { return this.sharedDropdownService.invoiceTypeOptions; }  // 抽成別
-
-  get tltKindOptions() { return this.sharedDropdownService.tltKindOptions; }  // 抽成別
-
-  get tltopenflagOption() { return this.sharedDropdownService.openflagOptions; }  // 抽成別
-
-  get commCompTypeDropdown() { return this.sharedDropdownService.commCompTypeOptions; }
-
-  get approveStatusOptions() { return this.sharedDropdownService.approveStatusOptions; }
-
-  get yesNoOptions() { return this.sharedDropdownService.yesNoOptions; }
-
-  get tltTermTypeOptions() { return this.sharedDropdownService.tltTermTypeOptions; }
-
-  get tltctypemtotalOptions() { return this.sharedDropdownService.tltctypemtotalOptions; }  // 包底類別
-
-  get totalAmtOptions() { return this.sharedDropdownService.totalAmtOptions; }  // 目標營業額單位(廠商)
-
-  get totalAmtVendorOptions() { return this.sharedDropdownService.totalAmtVendorOptions; }  // 目標營業額單位(業主)
-
-  get depositPaymentOptions() { return this.sharedDropdownService.depositPaymentOptions; }  // 保證金
-
-  get overallStatusOptions() { return this.sharedDropdownService.overallStatusOptions; }
-
-  get applyTypeOptions() { return this.sharedDropdownService.applyTypeOptions; }
-
-  get contractTypeOptions() { return this.sharedDropdownService.contractTypeOptions; }
-
-  get applyStatusOptions() { return this.sharedDropdownService.applyStatusOptions; }
   // API 選項
   bustypeOptions: any[] = [];
   busClassOptions: any[] = [];
@@ -334,9 +313,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   ngOnInit() {
     this.initializePage('TLS12040', this.dataForm, { useReadonly: true });
-    this.handleRouterState();
-    this.initializeFormDefaults();
-    this.setupVendorUniformListener();
+    this.handleRouterState();  // 1. 先處理路由狀態
+    this.initializeFormDefaults();  // 2. 再初始化預設值
+    this.setupVendorUniformListener();  // 3. 設定監聽器
     //  調試當前狀態
     console.log('=== CRU 狀態調試 ===');
     console.log('當前 CRUD 狀態:', this.crudstatus);
@@ -399,7 +378,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
-  // 🔥 新增方法：按順序載入分類鏈
+  //  新增方法：按順序載入分類鏈
   private loadClassificationChain(cruData: any): void {
     console.log('🏷️ 開始載入分類鏈:', {
       bus_type: cruData.bus_type,
@@ -453,7 +432,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
   }
 
-  // 🔥 新增方法：保存完整資料到流程
+  //  新增方法：保存完整資料到流程
   private saveCompleteDataToFlow(originalData: any): void {
     const completeData = {
       ...originalData,
@@ -469,16 +448,11 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private handleRouterState(): void {
     const state = this.router.lastSuccessfulNavigation?.extras?.state;
 
-    // 先檢查是否已經有工作流程在進行
-    const currentState = this.flowService.getCurrentState();
-    const hasExistingFlow = currentState.contractId && currentState.contractId !== '';
-
     console.log('=== 路由狀態處理開始 ===');
     console.log('路由狀態:', state);
-    console.log('是否有現有流程:', hasExistingFlow);
 
     if (state) {
-      const rowdata = state['rowdata'] as TLS12040Response;
+      const rowdata = state['rowdata'] as TLS12040DetailModel;
       const crudstatus = state['crudstatus'] as CRUDStatus;
 
       console.log('接收到的狀態:', { crudstatus, rowdata });
@@ -488,49 +462,35 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.crudstatus = crudstatus;
         this.formTitle = this.getFormTitle(crudstatus);
         this.crudModeService.setCrudStatus(this.crudstatus);
-        console.log('設定 CRUD 狀態:', this.crudstatus);
-        console.log('表單標題:', this.formTitle);
 
-        // 工作流程處理：只在沒有現有流程時才初始化新流程
-        if (!hasExistingFlow) {
-          console.log('初始化新的工作流程');
-          this.flowService.startFlow({
-            applyNo: rowdata.apply_no,
-            isNewContract: crudstatus === CRUDStatus.Create
-          }, rowdata);
-        } else {
-          console.log('使用現有工作流程，跳過重新初始化');
-        }
+        // 移除 hasExistingFlow 檢查，每次都重新初始化
+        console.log('初始化工作流程');
+        this.flowService.startFlow({
+          applyNo: rowdata.apply_no,
+          isNewContract: crudstatus === CRUDStatus.Create
+        }, rowdata);
 
         // 載入詳細資料
         this.loadContractDetail(rowdata);
       } else {
-        // 沒有 rowdata，但有路由狀態 - 通常是新增模式
+        // 新增模式
         this.crudstatus = CRUDStatus.Create;
         this.formTitle = '新增專櫃要約書';
-        console.log('無 rowdata，設定為新增模式');
 
-        if (!hasExistingFlow) {
-          this.flowService.startFlow({
-            applyNo: '',
-            isNewContract: true
-          });
-          console.log('初始化空流程（新增模式）');
-        }
-      }
-    } else {
-      // 沒有路由狀態 - 直接訪問頁面，預設為新增模式
-      this.crudstatus = CRUDStatus.Create;
-      this.formTitle = '新增專櫃要約書';
-      console.log('無路由狀態，預設新增模式');
-
-      if (!hasExistingFlow) {
         this.flowService.startFlow({
           applyNo: '',
           isNewContract: true
         });
-        console.log('預設初始化空流程');
       }
+    } else {
+      // 無路由狀態 - 直接訪問頁面，預設為檢視模式
+      this.crudstatus = CRUDStatus.Create;
+      this.formTitle = '新增專櫃要約書';
+
+      this.flowService.startFlow({
+        applyNo: '',
+        isNewContract: true
+      });
     }
 
     console.log('=== 路由狀態處理完成 ===');
@@ -558,8 +518,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }, 3000);
   }
 
-  private loadContractDetail(rowData: TLS12040Response): void {
-    console.log(' 開始載入合約詳細資料:', rowData);
+  private loadContractDetail(rowData: TLS12040DetailModel): void {
+    console.log('🔍 開始載入合約詳細資料:', rowData);
     this.loading = true;
 
     const request: TLS12040RequestModel = {
@@ -567,42 +527,61 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       apply_no: rowData.apply_no
     };
 
-    if (!this.tls12040Service) {
-      console.error('❌ tls12040Service 未正確注入!');
-      this.messageService.errorBubble('服務未正確初始化');
-      this.loading = false;
-      return;
-    }
-
     this.tls12040Service.queryTLS12040Detail(request).subscribe({
       next: (response: any) => {
         if (response && response.Status === '0000' && response.Data) {
-          console.log(' API 回應:', response.Data);
-          console.log('📍 LocationDetails:', response.Data.LocationDetails);
+          console.log('📅 API 返回的日期資料:', {
+            apply_date: response.Data.apply_date,
+            tlt_bdate: response.Data.tlt_bdate,
+            feedback_date: response.Data.feedback_date,
+            類型檢查: {
+              apply_date: typeof response.Data.apply_date,
+              tlt_bdate: typeof response.Data.tlt_bdate
+            }
+          });
+          console.log('📦 完整 API 回應:', response.Data);
           this.populateForm(response.Data);
-          this.loadLocationData(response.Data.LocationDetails || []); // 使用 LocationDetails
+          console.log('📅 填充後表單的日期值:', {
+            apply_date: this.dataForm.get('apply_date')?.value,
+            tlt_bdate: this.dataForm.get('tlt_bdate')?.value,
+            feedback_date: this.dataForm.get('feedback_date')?.value
+          });
+          this.loadLocationData(response.Data.LocationDetails || []);
           this.loadDependentDropdowns(response.Data);
-          console.log(' 合約資料載入完成');
-        } else {
-          const errorMessage = response?.Message || '未知錯誤';
-          console.error('❌ API 返回錯誤:', errorMessage);
-          this.messageService.errorBubble(`載入資料失敗：${errorMessage}`);
-          this.handleLoadError();
+
+          // 強制重新賦值選項（確保 Angular 知道要更新）
+          this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+          this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
+          this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
+          this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+          this.decorationOptions = [...this.sharedDropdownService.decorationOptions]; // 裝潢方式
+          this.moneyTypeOptions = [...this.sharedDropdownService.moneyTypeOptions];   // 結帳方式
+          this.checkTypeOptions = [...this.sharedDropdownService.checkTypeOptions];   // 對帳方式
+          this.storeWayOptions = [...this.sharedDropdownService.storeWayOptions];     // 抽成別
+          this.paytypeOptions = [...this.sharedDropdownService.paytypeOptions];       // 抽成別
+          this.invoiceTypeOptions = [...this.sharedDropdownService.invoiceTypeOptions]; // 抽成別
+          this.tltKindOptions = [...this.sharedDropdownService.tltKindOptions];       // 抽成別
+          this.tltopenflagOption = [...this.sharedDropdownService.openflagOptions];   // 抽成別
+          this.commCompTypeDropdown = [...this.sharedDropdownService.commCompTypeOptions];
+          this.approveStatusOptions = [...this.sharedDropdownService.approveStatusOptions];
+          this.yesNoOptions = [...this.sharedDropdownService.yesNoOptions];
+          this.tltTermTypeOptions = [...this.sharedDropdownService.tltTermTypeOptions];
+          this.tltctypemtotalOptions = [...this.sharedDropdownService.tltctypemtotalOptions]; // 包底類別
+          this.totalAmtOptions = [...this.sharedDropdownService.totalAmtOptions];             // 目標營業額單位(廠商)
+          this.totalAmtVendorOptions = [...this.sharedDropdownService.totalAmtVendorOptions]; // 目標營業額單位(業主)
+          this.depositPaymentOptions = [...this.sharedDropdownService.depositPaymentOptions]; // 保證金
+          this.overallStatusOptions = [...this.sharedDropdownService.overallStatusOptions];
+          this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+          this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
+          this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
+          // 強制變更檢測
+          this.cdr.detectChanges();
+
+          console.log('合約資料載入完成');
         }
-      },
-      error: (error) => {
-        console.error('❌ API 請求錯誤:', error);
-        this.messageService.errorBubble('載入資料失敗');
-        this.handleLoadError();
-      },
-      complete: () => {
-        this.loading = false;
-        console.log('🏁 API 請求完成');
       }
     });
   }
-
-
 
   private loadDependentDropdowns(data: TLS12040DetailModel): void {
     if (data.bus_type) {
@@ -676,7 +655,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // 其他條件
       deco_type: data.deco_type,
       money_type: data.money_type,
-      check_typeList: data.check_typeList || [],
+      check_typeList: data.check_type
+        ? data.check_type.split(',').map(item => item.trim())
+        : [],
       edc_yn: data.edc_yn,
       tlt_openflag: data.tlt_openflag,
       comm_yn: data.comm_yn,
@@ -771,8 +752,27 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   private initializeDropdownOptions() {
-    // 固定選項不需要任何處理，直接通過 getter 使用
-    // API 選項需要載入
+    this.applyTypeOptions = this.sharedDropdownService.applyTypeOptions;
+    this.decorationOptions = this.sharedDropdownService.decorationOptions; // 裝潢方式
+    this.moneyTypeOptions = this.sharedDropdownService.moneyTypeOptions;   // 結帳方式
+    this.checkTypeOptions = this.sharedDropdownService.checkTypeOptions;   // 對帳方式
+    this.storeWayOptions = this.sharedDropdownService.storeWayOptions;     // 抽成別
+    this.paytypeOptions = this.sharedDropdownService.paytypeOptions;       // 抽成別
+    this.invoiceTypeOptions = this.sharedDropdownService.invoiceTypeOptions; // 抽成別
+    this.tltKindOptions = this.sharedDropdownService.tltKindOptions;       // 抽成別
+    this.tltopenflagOption = this.sharedDropdownService.openflagOptions;   // 抽成別
+    this.commCompTypeDropdown = this.sharedDropdownService.commCompTypeOptions;
+    this.approveStatusOptions = this.sharedDropdownService.approveStatusOptions;
+    this.yesNoOptions = this.sharedDropdownService.yesNoOptions;
+    this.tltTermTypeOptions = this.sharedDropdownService.tltTermTypeOptions;
+    this.tltctypemtotalOptions = this.sharedDropdownService.tltctypemtotalOptions; // 包底類別
+    this.totalAmtOptions = this.sharedDropdownService.totalAmtOptions;             // 目標營業額單位(廠商)
+    this.totalAmtVendorOptions = this.sharedDropdownService.totalAmtVendorOptions; // 目標營業額單位(業主)
+    this.depositPaymentOptions = this.sharedDropdownService.depositPaymentOptions; // 保證金
+    this.overallStatusOptions = this.sharedDropdownService.overallStatusOptions;
+    this.applyTypeOptions = this.sharedDropdownService.applyTypeOptions;
+    this.contractTypeOptions = this.sharedDropdownService.contractTypeOptions;
+    this.applyStatusOptions = this.sharedDropdownService.applyStatusOptions;
     this.loadApiOptions();
   }
 
@@ -1052,7 +1052,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onAddLocationItem(): void {
     console.log('🆕 準備新增櫃位地點項目');
 
-    // 🚨 檢查是否已有未填寫的新增行
+    //  檢查是否已有未填寫的新增行
     const hasEmptyNewRow = this.locationData.some(item =>
       item._isNew &&
       item._isEmpty &&
@@ -1065,7 +1065,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       return;
     }
 
-    // ✅ 沒有未填寫的行,允許新增
+    //  沒有未填寫的行,允許新增
     const newId = `new_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     const newLocationItem: LocationDetails = {
@@ -1086,7 +1086,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     this.locationData = [...this.locationData, newLocationItem];
 
-    console.log('✅ 櫃位地點項目新增成功:', {
+    console.log(' 櫃位地點項目新增成功:', {
       新增ID: newId,
       當前資料數量: this.locationData.length
     });
@@ -1297,16 +1297,16 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
 
     if (field === 'location_no' && newValue) {
-      // 🔥 關鍵：先檢查是否重複（在更新資料之前）
+      //  關鍵：先檢查是否重複（在更新資料之前）
       const isDuplicate = this.isLocationNoDuplicate(newValue, rowData.id);
 
       if (isDuplicate) {
         console.log('❌ 發現重複位置，阻止選擇');
 
-        // 🔥 重點1：立即阻止並清空
+        //  重點1：立即阻止並清空
         rowData.location_no = '';
 
-        // 🔥 重點2：如果是新增的空行，直接移除
+        //  重點2：如果是新增的空行，直接移除
         if (rowData._isNew && !rowData.location_no) {
           console.log('🗑️ 移除重複的新增空行');
           this.removeLocationItem(String(rowData.id));
@@ -1321,7 +1321,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         return; // ❌ 中斷，不繼續處理
       }
 
-      // ✅ 沒有重複，正常處理
+      //  沒有重複，正常處理
       if (selectedOption) {
         console.log('📋 使用 selector-panel 提供的完整資料:', selectedOption);
         this.handleLocationSelectionFromSelectorPanel(rowData, selectedOption);
@@ -1410,7 +1410,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 儲存到工作流程
     this.autoSaveToWorkflow();
 
-    console.log('✅ 櫃位項目移除完成');
+    console.log(' 櫃位項目移除完成');
   }
 
   private isLocationNoDuplicate(locationNo: string, currentId: string): boolean {
@@ -1837,6 +1837,11 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('🆕 新增模式，設定預設值');
       this.formInitService.initializeByMode(this.dataForm, this.crudstatus);
 
+      //自動帶入當前使用者為洽談者
+      if (this.crudstatus === CRUDStatus.Create) {
+        this.setCurrentUserAsNegotiator();
+      }
+
       // 立即觸發驗證器
       this.triggerAllDynamicValidators();
     }
@@ -1871,18 +1876,18 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onLocationFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
 
-    console.log('🔄 櫃位欄位變更:', {
+    console.log(' 櫃位欄位變更:', {
       欄位: fieldName,
       新值: newValue,
       行ID: rowData.id
     });
 
-    // 🚨 特別處理櫃位編號的重複檢查
+    //  特別處理櫃位編號的重複檢查
     if (fieldName === 'location_no' && newValue) {
       const isDuplicate = this.validateDuplicateLocationNo(newValue, rowData);
 
       if (isDuplicate) {
-        // 🔥 發現重複,立即移除這筆資料
+        //  發現重複,立即移除這筆資料
         console.log('❌ 發現重複櫃位,準備移除');
 
         // 延遲一點點確保訊息顯示
@@ -1894,13 +1899,13 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       }
     }
 
-    // 🔄 如果是新增行且有填值,移除空白標記
+    //  如果是新增行且有填值,移除空白標記
     if (rowData._isNew && newValue) {
       rowData._isEmpty = false;
-      console.log('✅ 移除空白標記');
+      console.log(' 移除空白標記');
     }
 
-    // 🔄 任何欄位變更都自動儲存
+    //  任何欄位變更都自動儲存
     this.autoSaveToWorkflow();
   }
 
@@ -1922,7 +1927,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     );
 
     if (duplicates.length > 0) {
-      // 🚨 發現重複
+      //  發現重複
       currentRow._hasDuplicateError = true;
       currentRow._hasError = true;
       currentRow._errorMessage = `櫃位編號「${locationNo}」已存在`;
@@ -1937,9 +1942,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
       return true; // 重複
     } else {
-      // ✅ 沒有重複
+      //  沒有重複
       this.clearLocationError(currentRow);
-      console.log('✅ 櫃位編號可用:', locationNo);
+      console.log(' 櫃位編號可用:', locationNo);
       return false; // 不重複
     }
   }
@@ -1954,37 +1959,12 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   /**
-   *  驗證櫃位資料
-   */
-  private validateLocationData(locationData: any): {
-    isValid: boolean;
-    errorMessage: string;
-    errors: string[]
-  } {
-    const errors: string[] = [];
-
-    // 必填欄位檢查
-    if (!locationData.location_no || locationData.location_no.trim() === '') {
-      errors.push('櫃位編號為必填');
-    }
-
-    if (!locationData.tlt_space || locationData.tlt_space <= 0) {
-      errors.push('坪數必須大於 0');
-    }
-
-    const isValid = errors.length === 0;
-    const errorMessage = errors.join('、');
-
-    return { isValid, errorMessage, errors };
-  }
-
-  /**
    * 🗑️ 焦點失去時自動清理空白新增行
    */
   onLocationCancel(locationData: any): void {
     console.log('⬅️ 取消編輯櫃位地點:', locationData.location_no);
 
-    // 🔥 檢查是否為空白新增行
+    //  檢查是否為空白新增行
     const isEmptyNewRow = this.isEmptyLocationRow(locationData);
 
     if (isEmptyNewRow) {
@@ -1994,7 +1974,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       if (index > -1) {
         this.locationData.splice(index, 1);
         this.locationData = [...this.locationData];
-        console.log(`✅ 已從索引 ${index} 移除空白櫃位資料`);
+        console.log(` 已從索引 ${index} 移除空白櫃位資料`);
       }
 
       this.messageService.infoBubble('已取消新增櫃位');
@@ -2005,7 +1985,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 📋 清除錯誤標記
     this.clearLocationError(locationData);
 
-    console.log('✅ 取消編輯完成(非空白行)');
+    console.log(' 取消編輯完成(非空白行)');
   }
 
   /**
@@ -2029,21 +2009,41 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     return isEmpty;
   }
 
-  // /**
-  //  *  檢查是否有櫃位資料錯誤(用於顯示錯誤提示)
-  //  */
-  // hasLocationErrors(): boolean {
-  //   return this.locationData.some(item =>
-  //     item._hasError || item._hasDuplicateError
-  //   );
-  // }
+  /**
+ * 設定當前使用者為洽談者
+ */
+  private setCurrentUserAsNegotiator(): void {
+    const currentUser = this.authService.currentUserValue;
 
-  // /**
-  //  * 📊 取得所有錯誤訊息
-  //  */
-  // getLocationErrors(): string[] {
-  //   return this.locationData
-  //     .filter(item => item._errorMessage)
-  //     .map(item => `${item.location_no || '(未填寫)'}: ${item._errorMessage}`);
-  // }
+    if (!currentUser) {
+      console.warn('⚠️ 無法取得當前使用者資訊');
+      return;
+    }
+
+    console.log('👤 當前使用者資訊:', {
+      user_No: currentUser.user_No,
+      user_Name: currentUser.user_Name,
+      // user_CName: currentUser.user_CName
+    });
+
+    // 設定洽談者欄位
+    this.dataForm.patchValue({
+      contact_USR_No: currentUser.user_No,
+      contact_USR_Name: currentUser.user_Name,
+      // 如果還需要設定洽談日期為今天
+      // contact_Date: new Date()
+    });
+
+    // 標記為已觸碰(顯示驗證樣式)
+    this.dataForm.get('contact_USR_No')?.markAsTouched();
+    this.dataForm.get('contact_USR_Name')?.markAsTouched();
+
+    console.log(' 已自動設定洽談者:', {
+      編號: currentUser.user_No,
+      姓名: currentUser.user_Name
+    });
+
+    // 自動保存
+    this.autoSaveToWorkflow();
+  }
 }

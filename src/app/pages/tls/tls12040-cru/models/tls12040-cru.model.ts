@@ -68,6 +68,7 @@ export interface TLS12040DetailModel {
   deco_type?: string;             // 裝潢方式
   money_type?: string;            // 結帳方式
   check_typeList?: string[];      // 支票類型
+  check_type?: string;      // 支票類型
   edc_yn?: string;                // 是否支援EDC
   tlt_openflag?: string;          // 營運狀況
   comm_yn?: string;
