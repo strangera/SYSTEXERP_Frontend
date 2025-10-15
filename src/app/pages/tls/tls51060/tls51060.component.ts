@@ -142,7 +142,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
     };
-    this.tls51060Service.deleteTLS51060(deleteBody).subscribe({
+    this.tls51060Service.deleteTLS51060(deleteBody).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
@@ -167,7 +167,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     {
       //倉別 下拉選單
       this.tls51060Service
-        .queryPOS2034_DropDownList({})
+        .queryPOS2034_DropDownList({}).pipe(untilDestroyed(this))
         .subscribe((response) => {
           this.storageOptions = response.Data.map((item: apiOption) => ({
             No: item.No,
