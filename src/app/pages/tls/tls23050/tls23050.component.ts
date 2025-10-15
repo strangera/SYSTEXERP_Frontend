@@ -338,6 +338,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_PrePayAmt', header: '預售訂金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
 

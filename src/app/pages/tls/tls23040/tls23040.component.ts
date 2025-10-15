@@ -236,16 +236,20 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
         // 發票
         const inv = packs.flatMap(p => Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : [])
-          .map((r: any, i: number) => {
-            const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
-            return {
-              ...r,
-              ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
-              ORG_ECR_No:   isNormal ? '' : (r?.ORG_ECR_No   ?? ''),
-              ORG_TXN_No:   isNormal ? '' : (r?.ORG_TXN_No   ?? ''),
-              _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-            };
-          });
+.map((r: any, i: number) => {
+  const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+  const dateOnly = this.formatDate(r?.TXN_Date);        // yyyy/MM/dd
+  const txnNoPadded = this.padTxnNo(r?.TXN_No);         // 6 碼左補 0
+  return {
+    ...r,
+    ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
+    ORG_ECR_No:   isNormal ? '' : (r?.ORG_ECR_No   ?? ''),
+    ORG_TXN_No:   isNormal ? '' : (r?.ORG_TXN_No   ?? ''),
+    TXN_DateOnly: dateOnly,
+    _grpKey: `${dateOnly}/${r?.ECR_No ?? ''}/${txnNoPadded}`,
+    _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+  };
+});
         this.invoiceRows = inv;
         this.invoiceTotals = {
           TotalGUI:     packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI     ?? 0), 0),
@@ -254,10 +258,16 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
         // 付款
         const pay = packs.flatMap(p => Array.isArray(p?.payment?.PaymentDetail) ? p.payment.PaymentDetail : [])
-          .map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-          }));
+  .map((r: any, i: number) => {
+  const dateOnly = this.formatDate(r?.TXN_Date);
+  const txnNoPadded = this.padTxnNo(r?.TXN_No);
+  return {
+    ...r,
+    TXN_DateOnly: dateOnly,
+    _grpKey: `${dateOnly}/${r?.ECR_No ?? ''}/${txnNoPadded}`,
+    _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+  };
+});
         this.paymentRows = pay;
         this.paymentTotals = {
           TotalPayAmt: packs.reduce((s, p) => s + Number(p?.payment?.TotalPayAmt ?? 0), 0),
@@ -404,8 +414,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
     { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) , isSubTotal: true },
-    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n)},
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
     { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
     { field: 'USR_No', header: '收銀員', visible: true },
@@ -445,7 +455,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'PRM_TXN_discode', header: '原折扣', visible: true },
     { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },
     { field: 'PLU_TaxTypeName', header: '稅別', visible: true },
-    { field: 'PLU_MagNo', header: '單品編號', visible: true },
+    { field: 'PLU_No', header: '報帳條碼', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
   ];
 
