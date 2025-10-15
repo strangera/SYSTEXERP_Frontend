@@ -80,14 +80,15 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       field: 'TXN_Date',
       header: '日期',
       textAlign: 'center',
-      format: formatDateToYYYY_MM_DD},
+      format: formatDateToYYYY_MM_DD
+    },
     { field: 'ECR_No', header: '收銀機代號', textAlign: 'center', type: undefined },
     { field: 'TXN_No', header: '交易序號', textAlign: 'center', type: undefined },
     { field: 'TLT_No', header: '專櫃編號', textAlign: 'center', type: undefined },
     { field: 'tlt_name', header: '櫃位名稱', textAlign: 'center', type: undefined },
     { field: 'PAY_NO', header: '付款方式', textAlign: 'center', type: undefined },
     { field: 'CRD_No', header: '付款卡號', textAlign: 'center', type: undefined },
-    { field: 'TXN_PayAmt',header: '付款金額',textAlign: 'right',type: undefined,format: formatAmount},
+    { field: 'TXN_PayAmt', header: '付款金額', textAlign: 'right', type: undefined, format: formatAmount },
     {
       field: 'check_status',
       header: '審核狀態',
@@ -106,6 +107,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       type: 'input',
       textAlign: 'left',
       maxLength: 10,
+      width: '200px',
       validate: [
         (value: any) => {
           if (!value) return { isValid: true, errorMessage: [] };
@@ -118,6 +120,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       ],
     },
   ];
+  footerData: any;
 
   constructor(
     private tls2a010Service: Tls2a010Service,
@@ -150,6 +153,9 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
             TXN_Date: this.formatDate(item.TXN_Date),
             check_status: item.check_status ?? '1',
           }));
+          this.footerData = {
+            TXN_PayAmt: this.data.reduce((sum, item) => sum + (item.TXN_PayAmt || 0), 0),
+          };
         }
         this.loading = false;
       },
