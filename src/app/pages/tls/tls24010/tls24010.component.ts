@@ -1,5 +1,5 @@
 import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -79,6 +79,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     private readonly dropDown: DropdownApiService,
     public readonly tls24010Service: Tls24010Service,
     private readonly tLS41010Service: TLS41010Service,
+    private readonly cdr: ChangeDetectorRef,
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
@@ -156,7 +157,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
   // 查看補登資料
   onDetailData(rowdata: TLS24010Data): void {
-    this.onDetail(rowdata);
+    this.onDetail(rowdata, this.historyRequestBody);
   }
   // 編輯補登資料
   onEditData(rowData: TLS24010Data, type: string): void {
@@ -269,7 +270,30 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
 
   get checkTXN_GUIPaper(): boolean {
-    return this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C'
+    return this.queryForm.get('TXN_GUIPaper')?.value === 'R' ||
+      this.queryForm.get('TXN_GUIPaper')?.value === 'C' ||
+      this.queryForm.get('TXN_GUIPaper')?.value === 'M';
+  }
+  onTXNGuipaperChanged(value: string): void {
+    this.submitted = false;
+    const form = this.queryForm;
+    if (value === 'M' && form) {
+      // 加入本身的驗證規則以及額外加入必填
+      form.get('ECR_No')?.setValidators([Validators.required]);
+      form.get('TXN_No')?.setValidators([Validators.required, Validators.maxLength(8), Validators.max(99999999)]);
+      form.updateValueAndValidity();
+      this.cdr.markForCheck();
+      form.get('ECR_No')?.setValue(null);
+      form.get('TXN_No')?.setValue(null);
+    } else {
+      // 移除必填驗證規則，保留其他規則
+      form.get('ECR_No')?.setValidators(null);
+      form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
+      form.updateValueAndValidity();
+      this.cdr.markForCheck();
+      form.get('ECR_No')?.setValue(null);
+      form.get('TXN_No')?.setValue(null);
+    }
   }
   btnLoading = false;
   onExportPDF(frm: FormGroup): void {

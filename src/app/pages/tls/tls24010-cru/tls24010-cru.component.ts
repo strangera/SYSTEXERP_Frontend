@@ -116,7 +116,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
-    this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+    console.log(this.queryData);
+    this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
     this.TLT_Name = rowDataTyped.TLT_Name;
     this.store_way = rowDataTyped.store_way;
     this.talent_id = rowDataTyped.talent_id;
@@ -126,6 +127,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
       });
     }
+    // 新增時候
     if (this.isFormCreateable) {
       this.dataForm.patchValue({
         TXN_Date: rowDataTyped.TXN_Date,
@@ -133,10 +135,12 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         TLT_No: rowDataTyped.TLT_No,
       });
     }
+    // 編輯時候
     if (this.isFormEditable) {
       this.type = rowDataTyped?.type;
       this.dataForm.get('TXN_Remark')?.enable();
     }
+    // 不是新增時候
     if (!this.isFormCreateable) {
       this.dataForm.disable();
       const body = {
@@ -151,11 +155,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       })
     }
     this.listenForChanges();
-    if (this.type === FIX_TYPE.專櫃編號修正) {
-      if (this.store_way === STORE_WAY.專櫃) {
-        this.dataForm.get('TLT_No')?.enable();
-      }
-    } else if (this.type === FIX_TYPE.預售交易修正) {
+    if (this.type === FIX_TYPE.預售交易修正) {
       this.dataForm.get('TXN_PreOrder')?.enable();
     }
   }
@@ -232,6 +232,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.pos5007Comp?.POS5007Data.forEach(item => {
         if (item.TXN_Qty === null || item.TXN_Qty === undefined || item.TXN_Qty <= 0) {
           this.messageService.errorBubble('請輸入正確的銷售數量', '銷售數量必須大於1');
+          return
+        }
+        if (item.TXN_SaleAmt === null || item.TXN_SaleAmt === undefined || item.TXN_SaleAmt <= 0) {
+          this.messageService.errorBubble('請輸入正確的單價金額', '單價金額必須大於1');
           return
         }
       });

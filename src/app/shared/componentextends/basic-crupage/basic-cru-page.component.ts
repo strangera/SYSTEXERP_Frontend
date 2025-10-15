@@ -30,6 +30,7 @@ export abstract class BasicCruPageComponent<T> {
   ProgNo = '';
   funInfo?: FunsrightInfo;
   rowdata: T | null = null;
+  queryData: any;
   user: UserInfo = this.authService.currentUserValue!;
   // CRU----------------------------------------------------------------
   crudstatus: CRUDStatus = CRUDStatus.Read;
@@ -75,6 +76,7 @@ export abstract class BasicCruPageComponent<T> {
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
     this.rowdata = state?.['rowdata'];
+    this.queryData = state?.['queryConditions']
     console.log(state?.['rowdata'])
     switch (state?.['crudstatus']) {
       case CRUDStatus.Create:

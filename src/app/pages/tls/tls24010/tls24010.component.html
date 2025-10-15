@@ -12,7 +12,8 @@
         <div class="grid p-fluid">
           <!-- 補登類別 -->
           <app-radiobutton class="col-12" label="補登類別" [control]="queryForm.controls.TXN_GUIPaper"
-            [submitted]="submitted" [options]="TXN_GUIPaperOptions" optionLabel="label" optionValue="value" />
+            (valueChange)="onTXNGuipaperChanged($event)" [submitted]="submitted" [options]="TXN_GUIPaperOptions"
+            optionLabel="label" optionValue="value" />
         </div>
         <div class="grid p-fluid">
           <!-- 銷售日期 → POS5006.SalesDate -->
