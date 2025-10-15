@@ -164,7 +164,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
         .subscribe(response => {
           this.data = response.Data.APS2002_FIN15010s;
           this.footerData = [{
-            group_name: '總計',
+            group_name: '合計',
             PUR_Net: response.Data.TotalNet,
             PUR_Tax: response.Data.TotalTax,
             PUR_Amt: response.Data.TotalAmt
