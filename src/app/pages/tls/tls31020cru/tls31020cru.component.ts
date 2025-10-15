@@ -216,11 +216,13 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
 
           MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-        } : null;
-        this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
         } : null;
+        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+          
+        // } : null;
 
       this.historyRequestBody = request;                 // 查詢條件
       console.log('明細資料',this.data)
