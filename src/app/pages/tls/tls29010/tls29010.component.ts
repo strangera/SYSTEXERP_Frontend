@@ -103,14 +103,15 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     { label: '刪除', value: '9' },
   ];
 
+  // 20251015 更新: 本作業固定操作的活動類型為 8=期間開放折扣
   podTypeOptions = [
-    { label: '1 預售', value: '1' },
-    { label: '2 滿千送百(發行)', value: '2' },
-    { label: '3 滿千送百(兌回)', value: '3' },
-    { label: '4 會員卡集點-銷售', value: '4' },
-    { label: '5 會員卡集點-點數', value: '5' },
-    { label: '6 全館集點-銷售', value: '6' },
-    { label: '7 全館集點-點數', value: '7' },
+    // { label: '1 預售', value: '1' },
+    // { label: '2 滿千送百(發行)', value: '2' },
+    // { label: '3 滿千送百(兌回)', value: '3' },
+    // { label: '4 會員卡集點-銷售', value: '4' },
+    // { label: '5 會員卡集點-點數', value: '5' },
+    // { label: '6 全館集點-銷售', value: '6' },
+    // { label: '7 全館集點-點數', value: '7' },
     { label: '8 期間開放折扣', value: '8' }, //新增用這個
   ];
 
@@ -133,7 +134,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   columns: Column[] = [
     // { field: 'id', header: '流水號', visible: false },
     // { field: 'mid', header: 'MID', visible: false },
-    { field: 'str_no', header: '店部編號', visible: true },
+    // { field: 'str_no', header: '店部編號', visible: true }, // 20251015 此欄位不顯示調整
     { field: 'pod_no', header: '活動申請編號', visible: true },
     {
       field: 'pod_type',
@@ -225,7 +226,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 刪除項目
   onDelete(data: TALPORDERM | TALPORDERM[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+    // console.log('Delete data:', JSON.stringify(data, null, 2));
 
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
@@ -249,6 +250,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
     };
+
+    console.log('刪除資料',deleteBody);
     this.tls29010Service.deleteTLS29010(deleteBody).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
