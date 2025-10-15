@@ -136,8 +136,8 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
           }));
         });
 
-      // 查詢 專櫃編號
-      this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((response) => {
+      // 查詢 專櫃編號(這邊要用這支_後端提供的queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList )
+      this.tls51060Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).subscribe((response) => {
         this.TLT_NO_Option = response.Data.map((item: any) => ({
           No: item.No, // 專櫃編號代碼
           Label: item.No + '-' + item.Name, // 組合成顯示用的Label
