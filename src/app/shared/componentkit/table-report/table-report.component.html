@@ -167,12 +167,12 @@
         <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
           <span class="font-bold">小計</span>
         </td>
+        <td *ngIf="expansionColumns.length"></td>
         <ng-container *ngFor="let col of columns">
-          <td *ngIf="!col.hidden" class="text-center" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
-            pFrozenColumn [frozen]="col.frozen || false">
-            <span class="font-bold">
-              {{ getGroupSubtotal(rowData, col) }}
-            </span>
+          <td *ngIf="!col.hidden" class="text-center"
+            [ngClass]="[  col.style || '',  col.cellClass ? col.cellClass(rowData) || '' : '',]"
+            [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen || false">
+            <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
           </td>
         </ng-container>
         <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
@@ -181,33 +181,41 @@
   </ng-template>
   <ng-template *ngIf="expansionColumns.length" pTemplate="rowexpansion" let-rowData>
     <tr id="expansion-row">
-      <td [attr.colspan]="
-          this.columns.length +
-          (showManage ? 1 : 0) +
-          (showCheckBox ? 1 : 0) +
-          1
-        " class="p-0">
+      <td [attr.colspan]="this.columns.length +  (showManage ? 1 : 0) + (showCheckBox ? 1 : 0) +  1" class="p-0">
         <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
           [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta"
           scrollHeight="300px"></app-table-expansion>
       </td>
     </tr>
   </ng-template>
-  <ng-template pTemplate="footer">
+  <ng-template pTemplate="footer" let-columns let-rowData>
     <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
       <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
         <span class="font-bold">總計</span>
       </td>
       <td *ngIf="expansionColumns.length"></td>
       <ng-container *ngFor="let col of columns">
-        <td *ngIf="!col.hidden" class="text-center" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
-          pFrozenColumn [frozen]="col.frozen || false">
+        <td *ngIf="!col.hidden" class="text-center"
+          [ngClass]="[  col.style || '',  col.cellClass ? col.cellClass(rowData) || '' : '',]"
+          [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen || false">
           <span class="font-bold">
-            {{
-            col.format
-            ? col.format(footerData[col.field])
-            : footerData[col.field]
-            }}
+            {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
+          </span>
+        </td>
+      </ng-container>
+      <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
+    </tr>
+    <tr *ngIf="footerPercentData" class="font-bold text-center text-sm bg-gray-200 text-primary">
+      <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
+        <span class="font-bold">百分比</span>
+      </td>
+      <td *ngIf="expansionColumns.length"></td>
+      <ng-container *ngFor="let col of columns">
+        <td *ngIf="!col.hidden" class="text-center"
+          [ngClass]="[  col.style || '',  col.cellClass ? col.cellClass(rowData) || '' : '',]"
+          [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen || false">
+          <span class="font-bold">
+            {{ col.format ? col.format(footerPercentData[col.field]) : footerPercentData[col.field] }}
           </span>
         </td>
       </ng-container>
@@ -221,9 +229,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td [attr.colspan]="
-          1 + columns.length + (showManage ? 1 : 0) + (showCheckBox ? 1 : 0)
-        ">
+      <td [attr.colspan]="1 + columns.length + (showManage ? 1 : 0) + (showCheckBox ? 1 : 0)">
         <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
           查無資料
         </div>

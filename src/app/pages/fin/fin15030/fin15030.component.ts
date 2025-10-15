@@ -2,19 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
-
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { FIN15030Data, FIN15030Service, FIN15030QueryRequest, FIN15030PrintRequest } from '@service/api/fin/fin15030.service';
 import { environment } from '../../../../environments/environment';
-
-// Components
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -36,9 +32,19 @@ export interface Option {
   styleUrl: './fin15030.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent, CommonModule, MultiSelectComponent
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    InputTextRangeComponent,
+    CalendarRangeComponent,
+    TableComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    DropdownComponent,
+    CalendarComponent,
+    MultiSelectComponent,
+    CommonModule
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
@@ -179,7 +185,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     if (this.queryForm.invalid) {
       const errors: string[] = [];
       if (!this.queryForm.get('INV_YM')?.value) errors.push('請填寫申報年月');
-
+      if (!this.queryForm.get('INV_Data_YM_S')?.value) errors.push('請填寫資料所屬年月_起');
+      if (!this.queryForm.get('INV_Data_YM_E')?.value) errors.push('請填寫資料所屬年月_訖');
       if (errors.length > 0) {
         this.messageService.errorBubble(errors.join('<br>'));
         return false;

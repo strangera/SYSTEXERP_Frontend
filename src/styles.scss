@@ -158,7 +158,8 @@ input[disabled],
   }
   &.p-datatable-sm {
     .p-datatable-thead > tr > th,
-    .p-datatable-tbody > tr > td {
+    .p-datatable-tbody > tr > td,
+    .p-datatable-tfoot > tr > td {
       padding: 0.2rem;
     }
   }

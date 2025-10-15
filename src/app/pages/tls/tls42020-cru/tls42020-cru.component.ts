@@ -238,14 +238,6 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
           name: item.Name
         }));
       });
-
-    // TODO: 待確認
-    // this.dropDownListService.queryPOS2004_DropDownList("POS1027M")
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(res => {
-    //     this.PLU_MagNoOptions = res.Data
-    //     this.changeDetectorRef?.detectChanges();
-    //   });
   }
 
   //#region CRUD 操作
@@ -364,5 +356,17 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       isValid: !!value,
       errorMessage: [errorMessage]
     });
+  }
+
+  loadPLU_MagNoOptions(tltNo: string): void {
+    console.log('loadPLU_MagNoOptions', tltNo);
+    this.tls42020Service.dropdownTLS42020({ TLT_NO: [parseInt(tltNo)] })
+      .pipe(
+        untilDestroyed(this)
+      )
+      .subscribe(options => {
+        this.PLU_MagNoOptions = options;
+        console.log('PLU_MagNoOptions', this.PLU_MagNoOptions);
+      });
   }
 }

@@ -31,6 +31,8 @@ export class Tls51060Service {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS51060`, body);
   }
 
+  // ---下拉選單---
+
   // 查詢 POS2034 倉別 下拉選單
   queryPOS2034_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2034_DropDownList`, body);
@@ -39,5 +41,10 @@ export class Tls51060Service {
   // 查詢 PLULOGO 資料表 (包含折扣別)
   queryPLULOGO_OrderPrcRate_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_OrderPrcRate_DropDownList`, body);
+  }
+
+  // 20251015 新增 (專櫃編號下拉)
+  queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, body);
   }
 }

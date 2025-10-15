@@ -24,6 +24,9 @@
     }
   }
   .p-datatable {
+    &.p-datatable-sm .p-datatable-footer {
+      padding: 0;
+    }
     .p-datatable-header {
       background: transparent;
       border: none;

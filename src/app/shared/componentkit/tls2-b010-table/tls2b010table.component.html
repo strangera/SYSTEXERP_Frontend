@@ -321,6 +321,30 @@
       </td>
     </tr>
   </ng-template>
+  <ng-template pTemplate="footer" *ngIf="showTotal">
+  <tr class="font-bold surface-100">
+    <!-- 左側拖曳或行號等欄位：你的元件沒有拖曳欄，只有“序號/勾選/expansion” -->
+    <td class="text-center">總計</td>
+
+    <!-- 勾選欄位（若存在） -->
+    <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
+
+
+
+    <!-- 資料欄位：只有 isTotal 的欄位會顯示總計 -->
+    <td *ngFor="let col of selectedColumns"
+        class="text-center pr-2"
+        [ngClass]="col.style">
+      <ng-container *ngIf="col.isTotal">
+        {{ col.format ? col.format(getFooterTotal(col.field)) : getFooterTotal(col.field) }}
+      </ng-container>
+    </td>
+
+    <!-- 管理欄（若存在） -->
+    <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
+        [hidden]="!IsPrint || !showManage"></td>
+  </tr>
+</ng-template>
 
   <!-- ===== 空資料 ===== -->
   <ng-template pTemplate="emptymessage">
