@@ -28,8 +28,10 @@ export class BasicKitComponent {
     // 訂閱 control 的狀態變化
     control.statusChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.updateControlState(control);
+      this.cdr.markForCheck();
     });
     this.updateControlState(control);
+    this.cdr.markForCheck();
   }
 
   updateControlState(...controls: FormControl[]) {

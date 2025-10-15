@@ -72,6 +72,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   // 資料小計
   @Input() groupRowsBy = '';                                                    // table 群組資料
+  @Input() subTotalData: any[] = []; // 後端提供的小計資料
   groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
   @Input() showSubTotal = false;                                                // 是否顯示群組小計
   // 資料總計
@@ -404,4 +405,12 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
       .filter(r => r[this.groupRowsBy] === groupKey)
       .reduce((sum, row) => sum + (row[field] || 0), 0);
   }
+  /** 根據群組名稱與欄位，取得後端小計資料；若無則 fallback 前端計算 */
+
+  getGroupSubtotalValue(groupKey: string, field: string): number | string {
+    if (!this.subTotalData?.length) return '';
+    const match = this.subTotalData.find(item => item.LOGO_CH_NAME === groupKey);
+    return match ? (match[field as keyof typeof match] ?? 0) : 0;
+  }
+
 }
