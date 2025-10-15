@@ -17,6 +17,10 @@ export interface QueryTLS2C040Request extends BaseQueryRequest {
 export interface UpdateTLS2C040Request {
   id: number;
   Remark: string;
+  GLS6002List: {
+    id: number;
+    NoteDesc: string;
+  }[];
 }
 
 @Injectable({

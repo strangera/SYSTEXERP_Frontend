@@ -86,7 +86,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
       field: 'AccNo', header: '科目代號',
       format: (v, i, r) => `${v} ${r.AccNotes}`,
     },
-    { field: 'NoteDesc', header: '摘要' },
+    { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
       field: 'AccAmt', header: '借方金額',
       format: (v, i, r) => r.AccDC === 'D' ? formatAmount(v) : '0',
@@ -100,6 +100,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'PTA', header: '立沖代號' }
   ]
 
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   data: any[] = [];
   selectedItems: any[] = [];
 
@@ -121,19 +122,29 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
 
   onSubmit(form: FormGroup): void {
     const formValue = form.getRawValue();
+    // 送出前先驗證明細table
+    const valid = this.tableEditComponent.validateAndShowErrors()
+    if (!valid) {
+      this.loading = false
+      return;
+    }
     this.handleSubmit(form, () => {
       // 僅更新傳票摘要
       if (this.crudstatus === CRUDStatus.Edit) {
-        const updateRequest = {
-          id: this.rowdata.id,
-          Remark: formValue.Remark || ''
+        if (this.canEdit()) {
+          const updateRequest = {
+            id: this.rowdata.id,
+            Remark: formValue.Remark || '',
+            GLS6002List: this.data.map(d => ({ id: d.id, NoteDesc: d.NoteDesc }))  // 傳票摘要
+          };
+
+          this.tls2c040Service.updateTLS2C040(updateRequest)
+            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+            .subscribe(() => {
+              this.messageService.successBubble('修改成功');
+              this.onCancel();  // 返回查詢頁
+            });
         }
-        this.tls2c040Service.updateTLS2C040(updateRequest)
-          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-          .subscribe(() => {
-            this.messageService.successBubble('修改成功');
-            this.onCancel();  // 返回查詢頁
-          });
       }
     });
   }

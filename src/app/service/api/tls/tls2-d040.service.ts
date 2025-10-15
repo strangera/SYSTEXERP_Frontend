@@ -21,6 +21,7 @@ export interface QueryTLS2D040Request extends BaseQueryRequest {
   store_way?: string;          // 專櫃/自營櫃(1=專櫃 2=自營)
   building_no?: string[];      // 館別 (陣列)
   FLOOR_NO?: string[];         // 樓層 (陣列)
+  ShowNeg?: boolean;          // 只顯示負值
 }
 
 @Injectable({
