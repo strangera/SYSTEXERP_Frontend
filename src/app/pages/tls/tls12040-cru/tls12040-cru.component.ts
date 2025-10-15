@@ -530,6 +530,10 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.tls12040Service.queryTLS12040Detail(request).subscribe({
       next: (response: any) => {
         if (response && response.Status === '0000' && response.Data) {
+          this.dataForm.patchValue({
+            apply_date: response.Data.apply_date,  // 保持字串
+            tlt_bdate: response.Data.tlt_bdate,
+          });
           console.log('📅 API 返回的日期資料:', {
             apply_date: response.Data.apply_date,
             tlt_bdate: response.Data.tlt_bdate,
@@ -615,6 +619,12 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   private populateForm(data: TLS12040DetailModel): void {
+    console.log('📝 populateForm 開始前的表單狀態:', {
+      apply_date當前值: this.dataForm.get('apply_date')?.value,
+      apply_date類型: typeof this.dataForm.get('apply_date')?.value,
+      API回傳的apply_date: data.apply_date,
+      API回傳類型: typeof data.apply_date
+    });
     // 基本資訊
     this.dataForm.patchValue({
       talent_id: data.talent_id,
