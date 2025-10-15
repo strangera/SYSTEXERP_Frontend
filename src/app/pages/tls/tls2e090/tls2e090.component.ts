@@ -67,7 +67,7 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
     { field: 'ven_no', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '專櫃名稱' },
+    { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'tlt_term_type_Name', header: '抽成方式' },
     { field: 'money_type_Name', header: '結帳方式' },
     { field: 'sam_yyymm', header: '結帳年月' },
