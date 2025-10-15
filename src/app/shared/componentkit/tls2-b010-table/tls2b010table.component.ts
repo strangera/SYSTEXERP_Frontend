@@ -139,6 +139,7 @@ export class tls2b010tableComponent
   @Input() showHeader = true;
   @Input() showReportMode = true;
   @Input() showFilter = true;
+    @Input() showCustomHeader = true;
 
   // Insert / Delete
   @Input() showInsert = false;
@@ -201,6 +202,23 @@ export class tls2b010tableComponent
   @Input() serverFetch?: (payload: LazyLoadEvent) => Observable<{ rows: any[]; totalRecords: number }>;
   @Output() serverError = new EventEmitter<unknown>();
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
+  /** 是否顯示總計列（footer） @default false */
+@Input() showTotal = false;
+/** 後端回來的總計：{ 欄位名稱: 數值 }，例如 { BOOK_PayAmt: 123, ACT_PayAmt: 456, OVER_PayAmt: 789 } */
+@Input() totals: Record<string, number> = {};
+
+/** 取得 footer 總計：優先吃 this.totals[col.field]；沒有就用前端加總（排除 __isTotal 資料列） */
+getFooterTotal(field: string): number {
+  if (this.totals && Object.prototype.hasOwnProperty.call(this.totals, field)) {
+    const v = this.totals[field];
+    return typeof v === 'number' ? v : Number(v || 0);
+  }
+  // fallback：前端加總（不含你可能插入的 __isTotal 列）
+  return (this.data || [])
+    .filter(r => !r?.__isTotal)
+    .reduce((sum, r) => sum + Number(r?.[field] || 0), 0);
+}
+
 
   /* ===== 內部旗標 ===== */
   private _skipFirstLazy = true;
