@@ -109,6 +109,9 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Input() errorMessage = '至少輸入一筆資料'; // 錯誤訊息
+  // 總計
+  @Input() footerData: any;                  // (總計)頁尾資料
+
   constructor(
     private readonly tableUtilityService: TableUtilityService,
     private readonly cdr: ChangeDetectorRef,

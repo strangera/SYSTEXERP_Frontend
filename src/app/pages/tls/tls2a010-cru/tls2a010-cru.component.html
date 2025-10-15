@@ -7,18 +7,9 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataFormForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="card">
-        <app-table-edit
-          [title]="'交易明細'"
-          [columns]="columns"
-          [(data)]="data"
-          [loading]="loading"
-          [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
-          [showCheckBox]="false"
-          [showInsert]="false"
-          [showDelete]="false"
-          [showExcel]="false"
-          [disabled]="false"
-          [canInsert]="false"
+        <app-table-edit [title]="'交易明細'" [columns]="columns" [(data)]="data" [loading]="loading"
+          [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]" [showCheckBox]="false" [showInsert]="false"
+          [showDelete]="false" [showExcel]="false" [disabled]="false" [canInsert]="false" [footerData]="footerData"
           (fieldChange)="onFieldChange($event)">
         </app-table-edit>
       </div>
