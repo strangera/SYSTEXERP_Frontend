@@ -14,11 +14,10 @@ import { ButtonModule } from 'primeng/button';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { QueryStateService } from '@shared/service/query-state.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS31020DetailItem, TLS31020DetailRequest, TLS31020DetialPrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { footerShowTotal, TLS31020DetailItem, TLS31020DetailRequest, TLS31020DetialPrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { formatDate } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
@@ -74,6 +73,8 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
   totalRecords = 0;
   data: TLS31020DetailItem[] = [];
   footerTotal: TLS31020Total | null = null; // 總計
+  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
+  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31020DetailRequest | null = null; //歷史查詢條件
   
   columns: Column[] = [
@@ -201,12 +202,33 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
 
     this.tls31020Service.queryTLS31020Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單樓層之營業報表response', res.Data);
-      this.data = res.Data?.QueryData ?? [];               // 查詢資料
-      this.footerTotal =  res.Data?.TotalData ?? null;;    // 總計資料
+      this.data = res.Data ?? [];               // 查詢資料
+      this.footerTotal = res.TotalData ?? null;;    // 總計資料
+      this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
+          budget: this.footerTotal.TotalBudget,
+          AVN_TotSaleAmt: this.footerTotal.TotalSales,
+          TxnCount: this.footerTotal.TotalTxnCount,
+          AvgTicket: this.footerTotal.AvgTicket,
+          tlt_space: this.footerTotal.TotalSpace,
+          MonthlyPSM: this.footerTotal.AvgPSM,
+          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+          // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+
+          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+
+          AchievementRate: this.footerTotal.AvgAchievementRate,
+          CompletionRate: this.footerTotal.AvgCompletionRate,
+        } : null;
+        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+          
+        // } : null;
+
       this.historyRequestBody = request;                 // 查詢條件
-      console.log('查詢資料',this.data)
-      console.log('查詢總計',this.footerTotal);
-      console.log('查詢條件',this.historyRequestBody);
+      console.log('明細資料',this.data)
+      console.log('明細總計',this.footerTotal);
+      console.log('明細總計(轉換後)', this.footershowTotal);
+      // console.log('明細條件',this.historyRequestBody);
       this.totalRecords = res.TotalCount;
     })
   }
