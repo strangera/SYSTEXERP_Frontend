@@ -1,4 +1,4 @@
-import { BaseQueryRequest } from "@shared/models/api/base-api.interface";
+import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 
 export interface FIN52030Data {
   id: number;

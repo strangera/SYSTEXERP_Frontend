@@ -45,6 +45,8 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="補發票"
                       controlName="subpoenaReissue"
+                      [showClear]="!1"
+                      [filter]="!1"
                       [options]="service.subpoenaReissueOptions()"
                       optionLabel="label"
                       optionValue="value"

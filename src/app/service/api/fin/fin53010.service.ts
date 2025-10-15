@@ -17,7 +17,7 @@ export class FIN53010Service {
   public readonly FIN53010Detail = signal<FIN53010Detail[]>([]);
 
   public readonly accNoList = signal<AccNoList[]>([]);
-  public readonly vendorList = signal<Option[]>([]);
+  public readonly vendorList = signal<VendorList[]>([]);
   /** 傳票種類 */
   public readonly VouTypes = signal<Option[]>([]);
   /** 傳票型態 */
@@ -30,18 +30,18 @@ export class FIN53010Service {
   public readonly vouAccTypes = signal<Option[]>([]);
   public readonly subpoenaReissueOptions = signal<Option[]>([]);
 
-  public accNoMap = new Map<string, Option>([]);
-  public vendorMap = new Map<string, Option>([]);
+  public accNoMap = new Map<string, AccNoList>([]);
+  public vendorMap = new Map<string, VendorList>([]);
   public usrMap = new Map<string, Option>([]);
 
   public usrEffect = effect(() => {
     this.usrMap = new Map(this.usrList().map(item => [item.value, item]));
   });
   public vendorEffect = effect(() => {
-    this.vendorMap = new Map(this.vendorList().map(item => [item.value, item]));
+    this.vendorMap = new Map(this.vendorList().map(item => [item.VEN_No, item]));
   });
   public accNoEffect = effect(() => {
-    this.accNoMap = new Map(this.accNoList().map(item => [item.AccNo, { value: item.AccNo, label: item.AccName }]));
+    this.accNoMap = new Map(this.accNoList().map(item => [item.AccNo, item]));
   });
 
   private readonly tableCancel$ = new Subject<void>();
@@ -113,13 +113,15 @@ export class FIN53010Service {
     this.tableCancel$.next();
     this.tableLoading = !0;
     const usr$ = !this.usrList().length
-      ? this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(tap(res => this.usrList.set(res ?? [])))
+      ? this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
+        take(1),
+        tap(res => this.usrList.set(res ?? [])))
       : of(void 0);
 
     const vendor$ = !this.vendorList().length
       ? this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
-        map(({ Data }) => Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-        tap(res => this.vendorList.set(res))
+        take(1),
+        tap(res => this.vendorList.set(res.Data))
       )
       : of(void 0);
 
@@ -192,8 +194,7 @@ export class FIN53010Service {
     this.venLoading.set(!0);
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
-      map(({ Data }) => Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-      tap(res => this.vendorList.set(res)),
+      tap(res => this.vendorList.set(res.Data)),
       finalize(() => this.logger.debug('查詢VendorList結果:', [this.vendorList()])),
       finalize(() => this.venLoading.set(!1)),
     ).subscribe();
