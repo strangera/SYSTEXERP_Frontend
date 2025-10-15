@@ -54,7 +54,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     VouType: new FormControl<string | void>(void 0, [Validators.required]),
     VouDate: new FormControl<Date | void>(void 0, [Validators.required]),
     Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
-    PostReissue: new FormControl<'N' | 'Y'>('N', [Validators.required]),
+    INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
     VouAccType: new FormControl<'0' | '1' | '2'>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
@@ -91,7 +91,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       options: () => this.service.accNoList(),
       optionLabel: 'AccNo',
       optionValue: 'AccNo',
-      templateLabel: 'AccName',
+      templateLabel: 'AccCName',
     },
     { field: 'AccName', header: '科目名稱' },
     {
@@ -160,7 +160,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     this.service.getAccNoList();
     this.service.getOrgNoList();
     this.service.getTblUserOrgid();
-    this.service.getSubpoenaReissueOptions();
+    this.service.getINVOptions();
 
     if (this.isFormCreateable) {
       this.service.getUsrList();
@@ -176,7 +176,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
             ...d,
             AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
             AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-            AccName: this.service.accNoMap.get(String(d.AccNo))?.AccName ?? '',
+            AccCName: this.service.accNoMap.get(String(d.AccNo))?.AccCName ?? '',
             DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
               ?? this.service.usrMap.get(String(d.DetailNo))?.label ?? '',
             displayIndex: d.index,
@@ -234,7 +234,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
 
     // 自動帶入科目名稱
     if (event.field === 'AccNo') {
-      row.AccName = this.service.accNoMap.get(String(event.value))?.AccName ?? '';
+      row.AccName = this.service.accNoMap.get(String(event.value))?.AccCName ?? '';
     }
 
     // 自動互斥借貸方金額
