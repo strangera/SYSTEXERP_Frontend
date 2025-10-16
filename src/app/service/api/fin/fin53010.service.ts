@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, effect, Injectable, signal } from '@angular/core';
-import { AccNoList, FIN53010Data, FIN53010Detail, FIN53010InsertPayload, FIN53010Payload, FIN53010UpdatePayload, VendorList } from '@pages/fin/fin53010/fin53010.model';
-import { Option, TblUserOrgidItem } from '@service/utility/dropdown-api.model';
+import { effect, Injectable, Query, signal } from '@angular/core';
+import { AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010Detail, FIN53010InsertPayload, FIN53010Payload, FIN53010UpdatePayload, VendorList } from '@pages/fin/fin53010/fin53010.model';
+import { IDropdownItem, Option, TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
@@ -21,7 +21,7 @@ export class FIN53010Service {
   /** 傳票種類 */
   public readonly VouTypes = signal<Option[]>([]);
   /** 傳票型態 */
-  public readonly vouForm = signal<Option[]>([]);
+  public readonly VoucherTypes = signal<Option[]>([]);
   /** 傳票狀態 */
   public readonly postFlags = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
@@ -29,10 +29,12 @@ export class FIN53010Service {
   public readonly tblUserOrgidList = signal<TblUserOrgidItem[]>([]);
   public readonly vouAccTypes = signal<Option[]>([]);
   public readonly INVOptions = signal<Option[]>([]);
+  public readonly sys1000List = signal<IDropdownItem[]>([]);
 
   public accNoMap = new Map<string, AccNoList>([]);
   public vendorMap = new Map<string, VendorList>([]);
   public usrMap = new Map<string, Option>([]);
+  public sys1000Map = new Map<string, IDropdownItem>([]);
 
   public usrEffect = effect(() => {
     this.usrMap = new Map(this.usrList().map(item => [item.value, item]));
@@ -42,6 +44,9 @@ export class FIN53010Service {
   });
   public accNoEffect = effect(() => {
     this.accNoMap = new Map(this.accNoList().map(item => [item.AccNo, item]));
+  });
+  public sys1000Effect = effect(() => {
+    this.sys1000Map = new Map(this.sys1000List().map(item => [item.No, item]));
   });
 
   private readonly tableCancel$ = new Subject<void>();
@@ -71,11 +76,6 @@ export class FIN53010Service {
       { value: '1', label: '現金收入傳票' },
       { value: '2', label: '現金支出傳票' },
       { value: '3', label: '轉帳傳票' }
-    ]);
-  }
-
-  public getVouForm(): void {
-    this.vouForm.set([
     ]);
   }
 
@@ -109,7 +109,7 @@ export class FIN53010Service {
     );
   };
 
-  public loadFIN53010Detail(id: number): Observable<BaseQueryResponse<FIN53010Detail>> {
+  public loadFIN53010Detail(id: number): Observable<FIN53010DataDetail> {
     this.tableCancel$.next();
     this.tableLoading = !0;
     const usr$ = !this.usrList().length
@@ -127,10 +127,10 @@ export class FIN53010Service {
 
     return forkJoin([usr$, vendor$]).pipe(
       concatMap(() =>
-        this.http.post<BaseQueryResponse<FIN53010Detail>>(`${apiUrl}/queryFIN53010Detail`, { id }).pipe(
+        this.http.post<FIN53010DataDetail>(`${apiUrl}/queryFIN53010Detail`, { id }).pipe(
           take(1),
           takeUntil(this.tableCancel$),
-          tap(res => this.FIN53010Detail.set(res.Data)),
+          tap(res => this.FIN53010Detail.set(res.Data.Details)),
           finalize(() => {
             this.tableLoading = !1;
             this.logger.debug('查詢FIN53010 Detail結果:', [this.FIN53010Detail()]);
@@ -224,6 +224,14 @@ export class FIN53010Service {
       take(1),
       tap(res => this.tblUserOrgidList.set(res ?? [])),
       finalize(() => this.logger.debug('查詢TblUserOrgidList結果:', [this.tblUserOrgidList()])),
+    ).subscribe();
+  }
+
+  public getSYS1000(SYS_Type: string): void {
+    this.dropdownApi.querySys1000({ SYS_Type }).pipe(
+      take(1),
+      tap(res => this.sys1000List.set(res ?? [])),
+      finalize(() => this.logger.debug('查詢SYS1000結果:', [this.sys1000List()])),
     ).subscribe();
   }
 }

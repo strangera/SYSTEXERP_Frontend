@@ -107,14 +107,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       field: 'AccAmtD',
       header: '借方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'D' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {
       field: 'AccAmtC',
       header: '貸方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'C' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {

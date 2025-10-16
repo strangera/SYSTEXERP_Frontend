@@ -8,7 +8,8 @@
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing" [scrollable]="scrollable"
   [scrollHeight]="scrollHeight" [showCurrentPageReport]="IsPrint && showPaginator" [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions" [(rows)]="rows" [(first)]="first" (onLazyLoad)="loadDataLazy($event)"
-  [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)" tableStyleClass="h-full"
+  [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
+  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
   [styleClass]="
     'p-datatable-sm' +
     (IsPrint ? ' p-datatable-gridlines' : ' ') +
