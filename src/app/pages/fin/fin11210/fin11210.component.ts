@@ -1,72 +1,117 @@
 import { Component, OnInit } from '@angular/core';
-import { FIN11210Data } from '../../../service/api/fin/fin11210.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { FIN11210Service } from '../../../service/api/fin/fin11210.service';
-import { DropdownOption } from '../../tls/tls13010/tls13010.dropdown';
+import { FIN11210Service, FIN11210Data } from '../../../service/api/fin/fin11210.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
-    selector: 'app-fin11210',
-    templateUrl: './fin11210.component.html',
-    styleUrl: './fin11210.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-fin11210',
+  templateUrl: './fin11210.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+    MultiSelectComponent
+  ]
 })
 export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    code: ['', [Validators.maxLength(20)]], // 參數代碼
-    description: ['', [Validators.maxLength(100)]], // 參數說明
-    cashierNo: ['', [Validators.maxLength(20)]], // 收銀機號
-    ...createPaginationConfig([{ field: 'code', order: 0 }]), // 分頁和排序參數
+    ECR_No: [null],     // 收銀機號
+    ARG_No: [null],     // 參數代號
+    ARG_Desc: [null],  // 參數說明
+    ...createPaginationConfig([])
   });
-  totalRecords = 0;
+
   data: FIN11210Data[] = [];
   selectedItems: FIN11210Data[] = [];
+  totalRecords = 0;
+
+  ECR_No_Options: any[] = [
+    { Name: '全機台', No: 'ALL' }
+  ];
+  ARG_No_Options: any[] = [];
+
   columns: Column[] = [
-    { field: 'code', header: '參數代碼', visible: true },
-    { field: 'description', header: '參數說明', visible: true },
-    { field: 'content', header: '參數內容', visible: true },
+    { field: 'ID', header: '序號', hidden: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'ARG_No', header: '參數代號', visible: true },
+    { field: 'ARG_Data', header: '參數內容', visible: true },
+    { field: 'ARG_Desc', header: '參數說明', visible: true },
+    { field: 'CRT_Date', header: '建立日期', hidden: true, format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員', hidden: true },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', hidden: true },
+    { field: 'UPD_Date', header: '變更日期', hidden: true, format: formatDate },
+    { field: 'UPD_USR_No', header: '變更人員', hidden: true },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', hidden: true }
   ];
 
   constructor(
-    private FIN11210Service: FIN11210Service,
+    private fin11210Service: FIN11210Service,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN11210', 'fin/fin11210cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.FIN11210Service.queryFIN11210(frm.value).pipe(finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data;
-        this.totalRecords = response.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      this.fin11210Service.queryFIN11210(form.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
+  }
+
+  onDelete(selectedItems: FIN11210Data[]) {
+    this.confirmationService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const idList = selectedItems.map(item => item.ID);
+        this.fin11210Service.deleteFIN11210({ idList })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
+  }
+
+  loadOptions() {
+    // 取得收銀機號下拉選單資料
+    this.dropDownListService.queryPOS1002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.ECR_No_Options.push(...response.Data);
       });
-    })
-  }
-
-  isRowSelectable(rowData: FIN11210Data): boolean {
-    return true;
-  }
-
-  get codeOptions(): DropdownOption[] {
-    return [
-      { label: '本期發票年月結束前幾天自動分配下期發票', value: 'EcrGUIAutoCnfgDayBeforeMonEnd' },
-      { label: '電子發票應用API APP ID', value: 'EInvAppApiAppId' },
-      { label: '電子發票應用API Key', value: 'EInvAppApiKey' },
-      { label: '電子發票應用API路徑', value: 'EInvAppApiPath' },
-    ];
+    // 取得參數代號下拉選單資料
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ARG_NO' })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.ARG_No_Options = response.Data;
+      });
   }
 }

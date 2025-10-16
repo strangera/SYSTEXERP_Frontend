@@ -56,7 +56,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     PAY_NO: ['', Validators.required],
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
-    pageSize: [30],
+    pageSize: [100],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
@@ -252,7 +252,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         this.data = response.Data ? response.Data : [];
         this.footerData = response.footerData;
         this.totalRecords = response.TotalCount;
-
+        this.selectedItems = [];
         this.onPayNoChange(payload.PAY_NO);
         console.log('footerData (API totalData):', response.Data.totalData);
         console.log('selectedColumns:', this.selectedColumns);

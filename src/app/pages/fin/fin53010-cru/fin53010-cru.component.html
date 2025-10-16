@@ -21,16 +21,21 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="傳票種類"
                       controlName="VouType"
+                      [showClear]="!1"
                       [options]="service.VouTypes()"
                       optionLabel="label"
                       optionValue="value"
                       [control]="df().VouType"
                       [submitted]="submitted"></app-dropdown>
-        <app-input-text class="col-12 md:col-6 lg:col-4"
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="傳票型態"
                         controlName="PostFlag"
+                        [showClear]="!1"
                         [control]="df().PostFlag"
-                        [submitted]="submitted"></app-input-text>
+                        [options]="service.postFlags()"
+                        optionLabel="label"
+                        optionValue="value"
+                        [submitted]="submitted"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       calendarType="dateOne"
                       label="傳票日期"
@@ -44,18 +49,23 @@
                         [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="補發票"
-                      controlName="subpoenaReissue"
-                      [options]="service.subpoenaReissueOptions()"
+                      controlName="INVOptions"
+                      [showClear]="!1"
+                      [filter]="!1"
+                      [options]="service.INVOptions()"
                       optionLabel="label"
                       optionValue="value"
-                      [control]="df().PostReissue"
+                      [control]="df().INV_YN"
                       [submitted]="submitted"></app-dropdown>
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="建立者"
-                        controlName="CRT_USR_No"
-                        [control]="df().CRT_USR_No"
-                        [disabled]="!0"
-                        [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="建立者"
+                      controlName="CRT_USR_No"
+                      [control]="df().CRT_USR_No"
+                      [disabled]="!0"
+                      [options]="service.usrList()"
+                      optionLabel="label"
+                      optionValue="value"
+                      [submitted]="submitted"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       calendarType="dateOne"
                       label="建立日期"
@@ -63,12 +73,15 @@
                       [control]="df().CrtDate"
                       [disabled]="!0"
                       [submitted]="submitted"></app-calendar>
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="修改者"
-                        controlName="UPD_USR_No"
-                        [control]="df().UPD_USR_No"
-                        [disabled]="!0"
-                        [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="修改者"
+                      controlName="UPD_USR_No"
+                      [control]="df().UPD_USR_No"
+                      [disabled]="!0"
+                      [options]="service.usrList()"
+                      optionLabel="label"
+                      optionValue="value"
+                      [submitted]="submitted"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       calendarType="dateOne"
                       label="修改日期"
@@ -90,7 +103,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [disabled]="!dataForm.valid || onEditing"
+                    [disabled]="!dataForm.valid || onEditing || !isBalanced()"
                     [loading]="service.tableLoading"></app-button>
       </div>
       }
@@ -177,8 +190,8 @@
                      let-item>
           <tr class="cursor-pointer hover:surface-hover"
               (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
-            <td>{{ item.value }}</td>
-            <td>{{ item.label }}</td>
+            <td>{{ item.VEN_No ?? item.AccNo }}</td>
+            <td>{{ item.VEN_Name ?? item.AccCName }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">

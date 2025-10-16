@@ -1,0 +1,112 @@
+<p-table #dt [columns]="selectedColumns" [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true"
+  scrollHeight="700px" [rows]="30" sortMode="multiple" (onSort)="onSort($event)" [resizableColumns]="true"
+  [reorderableColumns]="true" [loading]="isLoading" (onColReorder)="onColReorder($event)" [totalRecords]="totalRecords"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [lazy]="totalRecords < 30 ? false : true"
+  [virtualScrollItemSize]="24" [virtualScrollOptions]="{  delay: 50,  inline: true, onScroll: onScroll}"
+  rowGroupMode="rowspan" groupRowsBy="VouNo">
+  <ng-template pTemplate="caption">
+    <app-table-caption [data]="data" [columns]="columns" [showDelete]="false" (columnsEvent)="columns = $event"
+      [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"
+      [showPage]="false" [totalRecords]="dt.totalRecords" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)">
+      <header><ng-content select="header"></ng-content></header>
+    </app-table-caption>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th class="w-1rem text-center" pFrozenColumn>序號</th>
+      <th *ngFor="let col of columns" pReorderableColumn pResizableColumn [pSortableColumn]="col.field"
+        class="text-center wrap-header" pFrozenColumn style="min-width: 55px">
+        {{ col.header }}
+        <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-rowspan="rowspan" let-rowgroup="rowgroup">
+    <tr [pSelectableRow]="rowData" [style]="{ height: '24px' }" [pSelectableRowIndex]="rowIndex">
+
+      <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
+
+      <td *ngIf="rowgroup" [attr.rowspan]="rowspan" [ngStyle]="{'text-align': 'center', 'vertical-align': 'top'}">
+        <span>
+          {{ rowData['VouDate'] | date:'yyyy/MM/dd' }}
+        </span>
+      </td>
+
+      <td *ngIf="rowgroup" [attr.rowspan]="rowspan" [ngStyle]="{'text-align': 'center', 'vertical-align': 'top'}">
+        <span>
+          {{ rowData['VouNo'] }}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'center'}">
+        <span>
+          {{ getSYS1000('PostFlag', rowData['PostFlag']) }}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'left'}">
+        <span>
+          {{ rowData['AccCName'] }}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'center'}">
+        <span>
+          {{ rowData['ORG_ID'] }}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'left'}">
+        <span>
+          {{ rowData['Org_Name'] }}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'center'}">
+        <span>
+          {{ rowData['ProjectNo'] }}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'left'}">
+        <span>
+          {{ rowData['NoteDesc'] }}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'right'}">
+        <span>
+          {{ formatAmountNo0(rowData['D_AMT'])}}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'right'}">
+        <span>
+          {{formatAmountNo0(rowData['C_AMT'] | number:'1.2-2')}}
+        </span>
+      </td>
+
+      <td [ngStyle]="{'text-align': 'center'}">
+        <span>
+          {{ rowData['PTA'] }}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
+    <div class="flex align-items-center justify-content-end p-2">
+      總筆數: {{ totalRecords }} 筆
+    </div>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="1 + columns.length">
+        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+          查無資料
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

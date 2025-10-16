@@ -2,7 +2,7 @@ import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate, AddButton } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -88,6 +88,11 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     //分頁查詢
     ...createPaginationConfig([{ field: 'pod_no', order: 1 }]), // 分頁和排序參數
   });
+
+  // 20251016 審核按鈕  (狀態不是未審核都不能點)
+  addButton: AddButton[] = [
+    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData, '已審核'); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' }, // 審核
+  ]
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -103,14 +108,15 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     { label: '刪除', value: '9' },
   ];
 
+  // 20251015 更新: 本作業固定操作的活動類型為 8=期間開放折扣
   podTypeOptions = [
-    { label: '1 預售', value: '1' },
-    { label: '2 滿千送百(發行)', value: '2' },
-    { label: '3 滿千送百(兌回)', value: '3' },
-    { label: '4 會員卡集點-銷售', value: '4' },
-    { label: '5 會員卡集點-點數', value: '5' },
-    { label: '6 全館集點-銷售', value: '6' },
-    { label: '7 全館集點-點數', value: '7' },
+    // { label: '1 預售', value: '1' },
+    // { label: '2 滿千送百(發行)', value: '2' },
+    // { label: '3 滿千送百(兌回)', value: '3' },
+    // { label: '4 會員卡集點-銷售', value: '4' },
+    // { label: '5 會員卡集點-點數', value: '5' },
+    // { label: '6 全館集點-銷售', value: '6' },
+    // { label: '7 全館集點-點數', value: '7' },
     { label: '8 期間開放折扣', value: '8' }, //新增用這個
   ];
 
@@ -133,7 +139,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   columns: Column[] = [
     // { field: 'id', header: '流水號', visible: false },
     // { field: 'mid', header: 'MID', visible: false },
-    { field: 'str_no', header: '店部編號', visible: true },
+    // { field: 'str_no', header: '店部編號', visible: true }, // 20251015 此欄位不顯示調整
     { field: 'pod_no', header: '活動申請編號', visible: true },
     {
       field: 'pod_type',
@@ -182,8 +188,9 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
 
-
   selectedItems: TALPORDERM[] = [];// 多選項目
+
+  btnLoading = false; //審核按鈕的讀取
 
   // ----------------------------------------------------------------
   constructor(
@@ -225,7 +232,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 刪除項目
   onDelete(data: TALPORDERM | TALPORDERM[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+    // console.log('Delete data:', JSON.stringify(data, null, 2));
 
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
@@ -249,6 +256,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
     };
+
+    console.log('刪除資料',deleteBody);
     this.tls29010Service.deleteTLS29010(deleteBody).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
@@ -274,6 +283,26 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     return true;
     // return false; //不予許刪除
   }
+
+  // 20251016 審核按鈕狀態切換
+  statusChange(rowData: TALPORDERM, status: string) {
+      this.btnLoading = true;
+      this.messageService.infoBubble('審核測試，等待api連接');
+      // const body = {
+      //   _DetailList: [
+      //     {
+      //       PO_No: rowData.PO_No,
+      //       PO_Status: status,
+      //       PO_Status_Ori: rowData.PO_Status
+      //     }
+      //   ]
+      // }
+      // this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+      //   this.messageService.successBubble(response.Message);
+      //   this.onSubmit(this.queryForm);
+      // });
+      this.btnLoading = false;
+    }
 
   loadOption() {
     // 專櫃編號

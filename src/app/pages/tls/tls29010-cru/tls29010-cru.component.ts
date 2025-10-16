@@ -31,8 +31,8 @@ export interface TALPORDERM {
   str_no: string; // 店部編號
   pod_no: string; // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
   pod_type: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8';
-  // 活動類型:
-  // 1=預售 (只有預售才下到 pos)
+  // 活動類型: 作業固定操作的活動類型為 8=期間開放折扣
+  // 1=預售 (只有預售才下到 pos) 
   // 2=滿千送百發行
   // 3=滿千送百兌回
   // 4=會員卡集點-銷售 (不用)
@@ -104,16 +104,19 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   dataForm = this.formBuilder.group({
     id: [{ value: null, disabled: true }], // 主鍵，自動編號
     mid: [{ value: null, disabled: true }], // 主檔關聯 ID
-    str_no: [{ value: '', disabled: true }], // 店部編號
+    str_no: [{ value: '', disabled: true }], // 店部編號 // 20251015 此欄位不顯示調整
     // --先選 專櫃活動設定主檔TALPORDERM--
     //欄位用這些就好
     pod_no: [{ value: null, disabled: true }], // 活動申請編號 (YYYYMMDDSSS)
     pod_type: ['', [Validators.required]], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
-    // pod_desc: ['',[Validators.required, Validators.maxLength(100)]], // 活動名稱(新增時開放下拉選取) 抓 [TALPORDERD]
+
+    //20251015 新增 (act_no、pod_desc 欄位)
+    act_no: ['',[Validators.maxLength(10),this.validationService.noChineseValidator]], // 活動編號(使用者輸入)
+    pod_desc: ['',[Validators.maxLength(100)]], // 活動名稱(使用者輸入)
+
     pod_sdate: [null, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [null, [Validators.required]], // 活動終止日 (Date)
     org_id: [''], // 組織-部門(SYS3100)
-    act_no: [''], // 活動編號(群組)  // 券類才會用到
     // pod_busdate: [null], // 活動正檔日期  // 券類才會用到
     // pod_back_sdate: [null], // 活動兌回起始日期
     // pod_back_edate: [null], // 活動兌回終止日期
@@ -168,7 +171,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     //---要使用的---
     // [專櫃編號] 帶出 下面這坨
     { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true, options: this.tlt_No_Option }, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
-    { field: 'cag_barcode', header: '折數', type: 'text', editable: false, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
+    { field: 'cag_barcode', header: '折數條碼', type: 'text', editable: false, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
     { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: false, autoWidth: true, hidden: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
     { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
   ];
@@ -224,11 +227,11 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       //設定初始直
     }
 
-
     //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
-    if (this.crudstatus === CRUDStatus.Create) {
+    const userInfo = this.authService?.getUserInfo?.();
+    if(userInfo){
+      if (this.crudstatus === CRUDStatus.Create) {
       this.dataForm.get('pod_desc')?.enable();
-      const userInfo = this.authService?.getUserInfo?.();
       this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
 
       this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
@@ -242,6 +245,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.dataForm.get('pod_type')?.disable();
     } else {
       this.dataForm.get('pod_desc')?.disable();
+    }
     }
   }
 

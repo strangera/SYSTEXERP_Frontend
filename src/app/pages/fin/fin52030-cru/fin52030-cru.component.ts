@@ -64,7 +64,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public readonly tableData = signal<FIN52030DetailTable[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
-  public selectedItems: Record<string, any>[] = [];
+  public selectedItems: FIN52030Data[] = [];
   public onEditing = !1;
   public rowEditCanSave = !1;
 
@@ -107,14 +107,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       field: 'AccAmtD',
       header: '借方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'D' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {
       field: 'AccAmtC',
       header: '貸方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'C' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {
@@ -166,8 +166,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
             ...d,
             AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
             AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-            AccName: this.service.accNoMap.get(String(d.AccNo))?.['Name'] ?? '',
-            DetailName: this.service.vendorMap.get(String(d.DetailNo))?.label
+            AccName: this.service.accNoMap.get(String(d.AccNo))?.AccName ?? '',
+            DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
               ?? this.service.usrMap.get(String(d.DetailNo))?.label ?? '',
             displayIndex: d.index,
             UPD_USR_No: this.user.user_Name,
@@ -214,7 +214,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     // 自動帶入科目名稱
     if (event.field === 'AccNo') {
-      row.AccName = this.service.accNoMap.get(String(event.value))?.['Name'] ?? '';
+      row.AccName = this.service.accNoMap.get(String(event.value))?.AccName ?? '';
     }
 
     // 自動互斥借貸方金額

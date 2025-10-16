@@ -13,8 +13,8 @@ export interface TLS22020Data {
 export const payNoDataList = [
   { Pay_No: "10", Pay_Name: "現金" },
   { Pay_No: "07", Pay_Name: "會員折抵" },
-  { Pay_No: "12", Pay_Name: "聯信紅利" },
-  { Pay_No: "14", Pay_Name: "中信紅利" },
+  { Pay_No: "12", Pay_Name: "聯合信用卡" },
+  { Pay_No: "14", Pay_Name: "中信信用卡" },
   { Pay_No: "22", Pay_Name: "外來提貨單-高夢" },
   { Pay_No: "23", Pay_Name: "外來禮券-高夢" },
   { Pay_No: "24", Pay_Name: "禮券餘代卡" },
@@ -68,7 +68,7 @@ const baseColumns: Column[] = [
 const paymentColumns: Column[] = payNoDataList.flatMap((item) => [
   { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
   { header: '帳單', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
-  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount,},
+  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
 ]);
 
 // 固定欄位

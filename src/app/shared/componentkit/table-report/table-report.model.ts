@@ -12,6 +12,7 @@ export interface ReportColumn {
   isTotal?: boolean; // 是否為總計欄位
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
+  align?: 'left' | 'center' | 'right';
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
@@ -164,6 +165,35 @@ export const formatAmount = (val: number | string): string => {
 export const formatYN = (value: string): string => {
   return value === 'Y' ? '是' : '否';
 };
+
+/**
+ * 將數字格式化為帶有千分位逗號的字串，並控制小數點位數。
+ * @param value 要格式化的數字或字串。
+ * @param decimals 小數點位數 (預設為 2 位)。
+ * @returns 格式化後的字串，如果輸入為 null/undefined 則返回空字串。
+ */
+export function formatAmountWithDecimals(value: any, decimals = 2): string {
+  // 1. 處理 null, undefined, 或空字串
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  // 嘗試將輸入轉換為數字
+  const num = Number(value);
+
+  // 2. 處理非數字輸入
+  if (isNaN(num)) {
+    return String(value);
+  }
+
+  // 3. 使用 Intl.NumberFormat 進行格式化
+  // 這確保了千分位 (useGrouping) 和指定小數點位數 (minimum/maximumFractionDigits)
+  return new Intl.NumberFormat('zh-TW', { // 使用台灣或您習慣的區域設置
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+    useGrouping: true, // 啟用千分位逗號
+  }).format(num);
+}
 
 export const formatTimeToHHMMSS = (date: Date): string => {
   const hh = date.getHours().toString().padStart(2, '0');

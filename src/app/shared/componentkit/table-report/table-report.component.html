@@ -121,8 +121,8 @@
             (!expansionLoadFn && !rowData[expansionDataKey]?.length)
           " />
       </td>
-      <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis; min-width: 55px"
-        (dblclick)="detail.emit(rowData)" [ngClass]="[
+      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+        style="text-overflow: ellipsis; min-width: 55px" (dblclick)="detail.emit(rowData)" [ngClass]="[
           col.style || '',
           col.cellClass ? col.cellClass(rowData) || '' : '',
         ]" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen">
@@ -207,7 +207,7 @@
     </tr>
     <tr *ngIf="footerPercentData" class="font-bold text-center text-sm bg-gray-200 text-primary">
       <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
-        <span class="font-bold">百分比</span>
+        <span class="font-bold">平均</span>
       </td>
       <td *ngIf="expansionColumns.length"></td>
       <ng-container *ngFor="let col of columns">

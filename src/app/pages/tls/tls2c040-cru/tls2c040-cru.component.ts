@@ -82,18 +82,32 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 明細table相關
   editColumns: EditColumn[] = [
-    {
-      field: 'AccNo', header: '科目代號',
-      format: (v, i, r) => `${v} ${r.AccNotes}`,
-    },
+    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccNotes', header: '科目名稱' },
     { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
-      field: 'AccAmt', header: '借方金額',
-      format: (v, i, r) => r.AccDC === 'D' ? formatAmount(v) : '0',
+      field: 'debitAmount', header: '借方金額',
+      format: (v, i, r) => {
+        if (r?.AccDC) {
+          // 一般資料行
+          return r.AccDC === 'D' ? formatAmount(r.AccAmt) : '0';
+        } else {
+          // footer 資料
+          return v ? formatAmount(v) : '0';
+        }
+      },
     },
     {
-      field: 'AccAmt', header: '貸方金額',
-      format: (v, i, r) => r.AccDC === 'C' ? formatAmount(v) : '0'
+      field: 'creditAmount', header: '貸方金額',
+      format: (v, i, r) => {
+        if (r?.AccDC) {
+          // 一般資料行
+          return r.AccDC === 'C' ? formatAmount(r.AccAmt) : '0';
+        } else {
+          // footer 資料
+          return v ? formatAmount(v) : '0';
+        }
+      }
     },
     { field: 'ORG_ID', header: '組織代碼' },
     { field: 'ProjectNo', header: '活動代號' },
@@ -103,6 +117,10 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   data: any[] = [];
   selectedItems: any[] = [];
+  footerData = {
+    debitAmount: 0, // 借方總金額
+    creditAmount: 0, // 貸方總金額
+  }
 
   constructor(
     private tls2c040Service: TLS2C040Service,
@@ -117,6 +135,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     // 編輯時 帶回明細資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       this.data = this.rowdata._GLS6002List;
+      this.footerData.debitAmount = this.totalDebitAmount;
+      this.footerData.creditAmount = this.totalCreditAmount;
     }
   }
 
@@ -161,5 +181,13 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('CRT_Date')?.disable();
     this.dataForm.get('UPD_USR_No')?.disable();
     this.dataForm.get('UPD_Date')?.disable();
+  }
+
+  get totalDebitAmount() {
+    return this.data.reduce((sum, item) => sum + (item.AccDC === 'D' ? item.AccAmt : 0), 0);
+  }
+
+  get totalCreditAmount() {
+    return this.data.reduce((sum, item) => sum + (item.AccDC === 'C' ? item.AccAmt : 0), 0);
   }
 }

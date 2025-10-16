@@ -20,7 +20,7 @@ export interface TLS31010Request {
   IsRece_Yn: string
 }
 
-export interface TLS31010Response {
+export interface TLS31010QueryData {
   building_desc: string
   org_name: string
   tlt_kind: string
@@ -41,6 +41,24 @@ export interface TLS31010Response {
   CompletionRate: number
 }
 
+export interface TLS31010TotalData {
+  TotalBudget: number,
+  TotalSales: number,
+  AvgAchievementRate: number,
+  TotalTxnCount: number,
+  AvgTicket: number,
+  TotalSpace: number,
+  AvgPSM: number,
+  TotalMonthlyBudget: number,
+  TotalMonthlySales: number,
+  AvgCompletionRate: number
+}
+
+export interface TLS31010Response {
+  QueryData: TLS31010QueryData[];
+  TotalData: TLS31010TotalData;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -48,8 +66,8 @@ export class Tls31010Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
   constructor(private http: HttpClient) { }
 
-  queryTLS31010(body: TLS31010Request): Observable<ApiResponse<TLS31010Response[]>> {
-    return this.http.post<ApiResponse<TLS31010Response[]>>(`${this.apiUrl}/queryTLS31010`, body);
+  queryTLS31010(body: TLS31010Request): Observable<ApiResponse<TLS31010Response>> {
+    return this.http.post<ApiResponse<TLS31010Response>>(`${this.apiUrl}/queryTLS31010`, body);
   }
 
   printTLS31010(body: TLS31010Request): Observable<ApiResponse<{ Print_URL: string }>> {

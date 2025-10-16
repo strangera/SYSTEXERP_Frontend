@@ -1,5 +1,4 @@
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -8,21 +7,20 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { FIN55020Data, Fin55020Service } from '@service/api/fin/fin55020.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Fin55020TableReportComponent } from './fin55020-table-report/fin55020-table-report.component';
+import { formatAmountNo0, formatDate, ReportColumn } from './fin55020-table-report/fin55020-table-report.model';
 @Component({
   selector: 'app-fin55020',
   templateUrl: './fin55020.component.html',
   standalone: true,
-  imports: [AsyncPipe, InputTextComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, ButtonComponent, TranslateModule]
+  imports: [AsyncPipe, InputTextComponent, Fin55020TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, ButtonComponent, TranslateModule]
 })
 export class FIN55020Component extends BasicQueryPageComponent<FIN55020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -44,16 +42,16 @@ export class FIN55020Component extends BasicQueryPageComponent<FIN55020Data> imp
   historyRequestBody: any;
   data: FIN55020Data[] = [];
   columns: ReportColumn[] = [
-    { field: 'VouDate', header: '傳票日期', format: formatDate },
-    { field: 'VouNo', header: '傳票號碼' },
+    { field: 'VouDate', header: '傳票日期', format: formatDate, rowgroup: true },
+    { field: 'VouNo', header: '傳票號碼', rowgroup: true },
     { field: 'PostFlag', header: '狀態', format: (value: string) => getSYS1000('PostFlag', value) },
-    { field: 'AccCName', header: '科目名稱' },
+    { field: 'AccCName', header: '科目名稱', align: 'left' },
     { field: 'ORG_ID', header: '部門' },
-    { field: 'Org_Name', header: '部門名稱' },
+    { field: 'Org_Name', header: '部門名稱', align: 'left' },
     { field: 'ProjectNo', header: '活動' },
-    { field: 'NoteDesc', header: '摘要' },
-    { field: 'D_AMT', header: '借方金額', format: formatAmount },
-    { field: 'C_AMT', header: '貸方金額', format: formatAmount },
+    { field: 'NoteDesc', header: '摘要', align: 'left' },
+    { field: 'D_AMT', header: '借方金額', format: formatAmountNo0, align: 'right' },
+    { field: 'C_AMT', header: '貸方金額', format: formatAmountNo0, align: 'right' },
     { field: 'PTA', header: '立沖代號' }
   ];
 
@@ -76,9 +74,11 @@ export class FIN55020Component extends BasicQueryPageComponent<FIN55020Data> imp
         SortBy: [{ field: 'VouDate', order: 1 }, { field: 'VouNo', order: 1 }]
       }
       this.fin55020Service.queryFIN55020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data;
+        this.data = response.Data
         this.totalRecords = response.TotalCount;
-        this.historyRequestBody = body;
+        if (response.Data.length > 0) {
+          this.historyRequestBody = body;
+        }
       });
     });
   }

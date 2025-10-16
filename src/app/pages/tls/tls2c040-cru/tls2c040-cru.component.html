@@ -70,7 +70,7 @@
         <app-table-edit tableKey="TLS2C040Detail" [columns]="editColumns" [data]="data"
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
           [disabled]="isFormReadable" [showInsert]="false" [canInsert]="false" [showCheckBox]="false"
-          [showDelete]="false" />
+          [showDelete]="false" [footerData]="footerData" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

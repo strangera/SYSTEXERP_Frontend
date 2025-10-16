@@ -135,6 +135,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     TXN_OverAmt:   'totalOverAmt',
     TXN_ReturnAmt: 'totalReturnAmt',
     TXN_CancelAmt: 'totalCancelAmt',
+    TXN_ExchgAmt:  'totalExchgAmt',
   };
 
   // 下拉
@@ -443,10 +444,11 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
   { field: 'TXN_PayAmt23', header: '外來禮券-高夢',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
 
-  { field: 'TXN_PrePayAmt', header: '預售訂金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
-  { field: 'TXN_OverAmt',   header: '溢收',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
-  { field: 'TXN_ReturnAmt', header: '退貨',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
-  { field: 'TXN_CancelAmt', header: '作廢',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
+  { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
+  { field: 'TXN_OverAmt',   header: '溢收金額',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
+  { field: 'TXN_ReturnAmt', header: '退貨金額',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
+  { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'TXN_CancelAmt', header: '作廢金額',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true, isSubTotal: true },
 ];
 
 

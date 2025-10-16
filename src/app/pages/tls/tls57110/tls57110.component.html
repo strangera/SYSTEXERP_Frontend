@@ -3,28 +3,72 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="ShowType"
-            [options]="displayModeOptions" optionLabel="label" optionValue="value" [filter]="false"
-            [control]="queryForm.controls.ShowType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="顯示方式"
+            controlName="ShowType"
+            [options]="displayModeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [filter]="false"
+            [control]="queryForm.controls.ShowType"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="存貨年月" controlName="STK_YM"
-            [control]="queryForm.controls.STK_YM" [submitted]="submitted"></app-calendar>
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateMonthOne"
+            label="存貨年月"
+            controlName="STK_YM"
+            [control]="queryForm.controls.STK_YM"
+            [submitted]="submitted"
+          ></app-calendar>
 
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_NOList"
-            [options]="warehouseOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.HOS_NOList"
-            [submitted]="submitted"></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="倉庫代碼/名稱"
+            controlName="HOS_NOList"
+            [options]="warehouseOptions"
+            optionLabel="label"
+            optionValue="No"
+            [control]="queryForm.controls.HOS_NOList"
+            [submitted]="submitted"
+          ></app-multi-select>
 
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_NoList"
-            [options]="brandCodeOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.LOGO_NoList"
-            [submitted]="submitted" />
-          <!-- <app-input-number class="col-12 md:col-6 lg:col-4" label="顯示行數" controlName="pgSize"
-            [control]="queryForm.controls.pgSize" [useGrouping]="false" [submitted]="submitted"></app-input-number> -->
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="品牌代碼/名稱"
+            controlName="LOGO_NoList"
+            [options]="brandCodeOptions"
+            optionLabel="label"
+            optionValue="No"
+            [control]="queryForm.controls.LOGO_NoList"
+            [submitted]="submitted"
+          />
+          <app-input-number
+            class="col-12 md:col-6 lg:col-4"
+            label="顯示行數"
+            controlName="pgSize"
+            [control]="queryForm.controls.pgSize"
+            [useGrouping]="false"
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -33,40 +77,47 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls57110" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [footerData]="footerData" [loading]="loading" [queryFunction]="tls57110Service.queryTLS57110.bind(tls57110Service)"
-    [showReportMode]="false" [lastQueryBody]="lastQueryBody" dataKey="LOGO_No" [showManage]="false" [showDelete]="false"
-    [groupRowsBy]="queryForm.value.ShowType === 'M' ? undefined : 'LOGO_No'">
-    <header>
-      <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="匯出存貨庫存月結表.PDF" icon="pi pi-file" (click)="onExportPDF()"
-          [disabled]="data.length === 0" [loading]="pdfBtnLoading"></p-button>
-        <p-button styleClass="p-2" label="匯出存貨庫存月結表.XLSX" icon="pi pi-file" (click)="onExportXLSX()"
-          [disabled]="data.length === 0" [loading]="excelBtnLoading"></p-button>
-      </div>
-    </header>
-  </app-table-report>
-
-
-  <!-- <app-table
+  <app-customFooter-table
+    *ngIf="columns?.length && columns.length > 0"
+    tableKey="tls57110"
+    dataKey="LOGO_No"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"
-    [multiSortMeta]="[{ field: 'HOS_NAME', order: 1 }]"
-    [showReportMode]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [footerData]="footerData"
+    [rows]="queryForm.value.pgSize ?? 20"
     [lazy]="true"
     [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    [showReportMode]="false"
     [showManage]="false"
     [showDelete]="false"
-  > -->
-  <!-- <header>
-      <div class="flex justify-content-end gap-2">
-        <p-button styleClass="p-2" label="產出進貨/退貨單據統計表.PDF" [loading]="btnLoading" icon="pi pi-file"
-          (click)="onExportPDF()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-        <p-button styleClass="p-2" label="產出進貨/退貨單據統計表.XLSX" [loading]="btnLoading" icon="pi pi-file"
-          (click)="onExportXLSX()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+    [subTotalData]="subTotalData"
+    [showTotal]="true"
+    [groupRowsBy]="showType === 'D' ? 'LOGO_CH_NAME' : ''"
+    [multiSortMeta]="[
+      { field: showType === 'M' ? 'LOGO_CH_NAME' : 'LOGO_No', order: 1 },
+    ]"
+  >
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button
+          styleClass="p-2"
+          label="匯出存貨庫存月結表.PDF"
+          icon="pi pi-file"
+          (click)="onExportPDF()"
+          [disabled]="data.length === 0"
+          [loading]="pdfBtnLoading"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="匯出存貨庫存月結表.XLSX"
+          icon="pi pi-file"
+          (click)="onExportXLSX()"
+          [disabled]="data.length === 0"
+          [loading]="excelBtnLoading"
+        ></p-button>
       </div>
-    </header> -->
-  <!-- </app-table> -->
+    </header>
+  </app-customFooter-table>
 </div>

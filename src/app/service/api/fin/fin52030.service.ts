@@ -17,24 +17,24 @@ export class FIN52030Service {
   public readonly FIN52030Detail = signal<FIN52030Detail[]>([]);
 
   public readonly accNoList = signal<AccNoList[]>([]);
-  public readonly vendorList = signal<Option[]>([]);
+  public readonly vendorList = signal<VendorList[]>([]);
   public readonly subpoenaTypes = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
   public readonly usrList = signal<Option[]>([]);
   public readonly tblUserOrgidList = signal<TblUserOrgidItem[]>([]);
 
-  public accNoMap = new Map<string, Option>([]);
-  public vendorMap = new Map<string, Option>([]);
+  public accNoMap = new Map<string, AccNoList>([]);
+  public vendorMap = new Map<string, VendorList>([]);
   public usrMap = new Map<string, Option>([]);
 
   public usrEffect = effect(() => {
     this.usrMap = new Map(this.usrList().map(item => [item.value, item]));
   });
   public vendorEffect = effect(() => {
-    this.vendorMap = new Map(this.vendorList().map(item => [item.value, item]));
+    this.vendorMap = new Map(this.vendorList().map(item => [item.VEN_No, item]));
   });
   public accNoEffect = effect(() => {
-    this.accNoMap = new Map(this.accNoList().map(item => [item.AccNo, { value: item.AccNo, label: item.AccName }]));
+    this.accNoMap = new Map(this.accNoList().map(item => [item.AccNo, item]));
   });
 
   private readonly tableCancel$ = new Subject<void>();
@@ -83,8 +83,7 @@ export class FIN52030Service {
 
     const vendor$ = !this.vendorList().length
       ? this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
-        map(({ Data }) => Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-        tap(res => this.vendorList.set(res))
+        tap(res => this.vendorList.set(res.Data))
       )
       : of(void 0);
 
@@ -157,8 +156,7 @@ export class FIN52030Service {
     this.venLoading.set(!0);
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
-      map(({ Data }) => Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-      tap(res => this.vendorList.set(res)),
+      tap(res => this.vendorList.set(res.Data)),
       finalize(() => this.logger.debug('查詢VendorList結果:', [this.vendorList()])),
       finalize(() => this.venLoading.set(!1)),
     ).subscribe();

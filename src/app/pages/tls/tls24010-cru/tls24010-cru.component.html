@@ -26,12 +26,8 @@
         <app-input-text class="col-12 md:col-6 lg:col-3" label="收銀機號" [control]="dataForm.controls.ECR_No"
           [submitted]="submitted" controlName="ECR_No" />
         <!-- 專櫃編號 → POS5006.TLT_No -->
-        <app-dropdown *ngIf="type === '01'" class="col-12 md:col-6 lg:col-3" label="專櫃編號"
-          [control]="dataForm.controls.TLT_No" [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label"
-          optionValue="No" [showClear]="false" controlName="TLT_No" />
-        <!-- 專櫃編號 → POS5006.TLT_No -->
-        <app-input-text *ngIf="type !== '01'" class="col-12 md:col-6 lg:col-3" label="專櫃編號"
-          [control]="dataForm.controls.TLT_No" [submitted]="submitted" controlName="TLT_No" />
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="專櫃編號" [control]="dataForm.controls.TLT_No"
+          [submitted]="submitted" controlName="TLT_No" />
         <!-- 交易序號 → POS5006.TXN_No -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="交易序號" [control]="dataForm.controls.TXN_No"
           [submitted]="submitted" controlName="TXN_No" />
@@ -93,11 +89,11 @@
           [submitted]="submitted" [options]="TXN_GUI_CarrTypeOptions" optionLabel="label" optionValue="value"
           controlName="TXN_GUI_CarrType" />
         <!-- 電子發票載具卡號 → POS5006.TXN_GUIVehicle -->
-        <!-- <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具卡號" [control]="dataForm.controls.TXN_GUIVehicle"
-          [submitted]="submitted" controlName="TXN_GUIVehicle" /> -->
-        <!-- 電子發票載具編號 → POS5006.TXN_GUI_CarrIdEx -->
-        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具編號" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
-          [submitted]="submitted" controlName="TXN_GUI_CarrIdEx" />
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具編號" [control]="dataForm.controls.TXN_GUIVehicle"
+          [submitted]="submitted" controlName="TXN_GUIVehicle" />
+        <!-- 載具編號顯碼 → POS5006.TXN_GUI_CarrIdEx -->
+        <!-- <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號顯碼" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
+          [submitted]="submitted" controlName="TXN_GUI_CarrIdEx" /> -->
         <!-- 載具編號隠碼 → POS5006.TXN_GUI_CarrId -->
         <!-- <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"
           [submitted]="submitted" controlName="TXN_GUI_CarrId" /> -->

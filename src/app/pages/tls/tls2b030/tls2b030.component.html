@@ -132,13 +132,16 @@
   [showManage]="false"
   [showHeader]="true"
   [showFilter]="true"
-  [showReportMode]="true"
+
   [showExcel]="false"
   [footerData]="footerData"
 
   [queryFunction]="queryTLS2B030ForReport"  
   [lastQueryBody]="lastQueryBody"          
+    [showDelete]="false"
 
+
+    [showReportMode]="false"
   [showCheckBox]="false"
   [selectedItems]="selectedItems"
   (selectionChange)="selectedItems = $event"

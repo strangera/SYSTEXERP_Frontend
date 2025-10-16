@@ -42,7 +42,7 @@ import { formatDate } from '@angular/common';
   ],
   templateUrl: './tls31080-cru.component.html'
 })
-export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response> implements OnInit{
+export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     paper_type: [''],//型態
     paper_type_desc: [''],//型態名稱
@@ -158,7 +158,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     console.log('單型態之營業報表print請求', JSON.stringify(formValue, null, 2));
 
     this.btnLoading = true;
-    
+
     console.log('還沒有後端API');
     // this.tls31080Service.printTLS31080Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
     //   .subscribe(res => {
