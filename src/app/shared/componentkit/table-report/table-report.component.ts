@@ -136,6 +136,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.totalRecords = 0;
         this.groupTotals = {}; // 沒資料時也要清空小計
       }
+      this.selectedItems = [];
     }
   }
 
@@ -225,6 +226,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         // 5. API 成功後，更新資料和狀態
         this.groupTotals = {};
         this.data = res.Data;
+        this.selectedItems = [];
         this.totalRecords = res.TotalCount;
         this.lastQueryBody = body; // 更新最後一次的查詢條件
         this.updateGroupTotals(this.data);
