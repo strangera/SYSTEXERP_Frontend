@@ -548,47 +548,44 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private handleRouterState(): void {
     const state = this.router.lastSuccessfulNavigation?.extras?.state;
 
-    console.log('=== CRU 路由狀態處理 ===');
-    console.log('路由狀態:', state);
-
     if (state) {
       const crudstatus = state['crudstatus'] as CRUDStatus;
       const fromNext1 = state['fromNext1'] as boolean;
 
-      // 🔴 來自 Next1 的返回
       if (fromNext1) {
-        console.log('⬅️ 從 Next1 返回，保持原狀態');
+        console.log('⬅️ 從 Next1 返回,保持原狀態');
         this.crudstatus = crudstatus;
         this.formTitle = this.getFormTitle(crudstatus);
         this.crudModeService.setCrudStatus(this.crudstatus);
 
-        // 🟢 直接載入暫存資料
         const cruData = this.flowService.getCruData();
         if (cruData) {
           console.log('💾 載入暫存的 CRU 資料');
-          console.log('位置資料數量:', cruData.locationInfo?.length || 0);
 
-          // 特別處理位置資料 - 確保陣列存在
+          // ✅ 根據模式選擇載入方式
+          if (this.crudstatus === CRUDStatus.Read) {
+            // Readonly 模式
+            this.dataForm.enable(); // 暫時啟用
+            this.loadCachedDataWithClassifications(cruData);
+            this.dataForm.disable(); // 重新禁用
+          } else {
+            // Edit 模式
+            this.loadCachedDataWithClassifications(cruData);
+          }
+
+          // 處理位置資料
           if (cruData.locationInfo && Array.isArray(cruData.locationInfo)) {
             this.locationInfo = cruData.locationInfo.map(item => ({
               ...item,
-              // 確保必要屬性存在
               id: item.id || this.generateTempId(),
               _status: item._status || 'original',
               _isNew: item._isNew || false,
               _isEmpty: item._isEmpty || false
             }));
             console.log('✅ 位置資料已恢復:', this.locationInfo.length, '筆');
-          } else {
-            console.log('⚠️ 沒有位置資料或格式不正確');
-            this.locationInfo = [];
           }
 
-          // 更新顯示資料
           this.updateDisplayLocationData();
-
-          // 載入表單資料（含分類）
-          this.loadCachedDataWithClassifications(cruData);
           return;
         } else {
           console.warn('⚠️ 沒有暫存的 CRU 資料');
@@ -677,6 +674,75 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }, 3000);
   }
 
+  // private loadContractDetail(rowData: TLS12040DetailModel): void {
+  //   console.log('🔍 開始載入合約詳細資料:', rowData);
+  //   this.loading = true;
+
+  //   const request: TLS12040RequestModel = {
+  //     id: rowData.id,
+  //     apply_no: rowData.apply_no
+  //   };
+
+  //   this.tls12040Service.queryTLS12040Detail(request).subscribe({
+  //     next: (response: any) => {
+  //       if (response && response.Status === '0000' && response.Data) {
+  //         this.dataForm.patchValue({
+  //           apply_date: response.Data.apply_date,  // 保持字串
+  //           tlt_bdate: response.Data.tlt_bdate,
+  //         });
+  //         console.log('📅 API 返回的日期資料:', {
+  //           apply_date: response.Data.apply_date,
+  //           tlt_bdate: response.Data.tlt_bdate,
+  //           feedback_date: response.Data.feedback_date,
+  //           類型檢查: {
+  //             apply_date: typeof response.Data.apply_date,
+  //             tlt_bdate: typeof response.Data.tlt_bdate
+  //           }
+  //         });
+  //         console.log('📦 完整 API 回應:', response.Data);
+  //         this.populateForm(response.Data);
+  //         console.log('📅 填充後表單的日期值:', {
+  //           apply_date: this.dataForm.get('apply_date')?.value,
+  //           tlt_bdate: this.dataForm.get('tlt_bdate')?.value,
+  //           feedback_date: this.dataForm.get('feedback_date')?.value
+  //         });
+  //         this.loadLocationData(response.Data.LocationDetails || []);
+  //         this.loadDependentDropdowns(response.Data);
+
+  //         // 強制重新賦值選項（確保 Angular 知道要更新）
+  //         this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+  //         this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
+  //         this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
+  //         this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+  //         this.decorationOptions = [...this.sharedDropdownService.decorationOptions]; // 裝潢方式
+  //         this.moneyTypeOptions = [...this.sharedDropdownService.moneyTypeOptions];   // 結帳方式
+  //         this.checkTypeOptions = [...this.sharedDropdownService.checkTypeOptions];   // 對帳方式
+  //         this.storeWayOptions = [...this.sharedDropdownService.storeWayOptions];     // 抽成別
+  //         this.paytypeOptions = [...this.sharedDropdownService.paytypeOptions];       // 抽成別
+  //         this.invoiceTypeOptions = [...this.sharedDropdownService.invoiceTypeOptions]; // 抽成別
+  //         this.tltKindOptions = [...this.sharedDropdownService.tltKindOptions];       // 抽成別
+  //         this.tltopenflagOption = [...this.sharedDropdownService.openflagOptions];   // 抽成別
+  //         this.commCompTypeDropdown = [...this.sharedDropdownService.commCompTypeOptions];
+  //         this.approveStatusOptions = [...this.sharedDropdownService.approveStatusOptions];
+  //         this.yesNoOptions = [...this.sharedDropdownService.yesNoOptions];
+  //         this.tltTermTypeOptions = [...this.sharedDropdownService.tltTermTypeOptions];
+  //         this.tltctypemtotalOptions = [...this.sharedDropdownService.tltctypemtotalOptions]; // 包底類別
+  //         this.totalAmtOptions = [...this.sharedDropdownService.totalAmtOptions];             // 目標營業額單位(廠商)
+  //         this.totalAmtVendorOptions = [...this.sharedDropdownService.totalAmtVendorOptions]; // 目標營業額單位(業主)
+  //         this.depositPaymentOptions = [...this.sharedDropdownService.depositPaymentOptions]; // 保證金
+  //         this.overallStatusOptions = [...this.sharedDropdownService.overallStatusOptions];
+  //         this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+  //         this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
+  //         this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
+  //         // 強制變更檢測
+  //         this.cdr.detectChanges();
+
+  //         console.log('合約資料載入完成');
+  //       }
+  //     }
+  //   });
+  // }
+
   private loadContractDetail(rowData: TLS12040DetailModel): void {
     console.log('🔍 開始載入合約詳細資料:', rowData);
     this.loading = true;
@@ -689,61 +755,64 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.tls12040Service.queryTLS12040Detail(request).subscribe({
       next: (response: any) => {
         if (response && response.Status === '0000' && response.Data) {
-          this.dataForm.patchValue({
-            apply_date: response.Data.apply_date,  // 保持字串
-            tlt_bdate: response.Data.tlt_bdate,
-          });
-          console.log('📅 API 返回的日期資料:', {
-            apply_date: response.Data.apply_date,
-            tlt_bdate: response.Data.tlt_bdate,
-            feedback_date: response.Data.feedback_date,
-            類型檢查: {
-              apply_date: typeof response.Data.apply_date,
-              tlt_bdate: typeof response.Data.tlt_bdate
-            }
-          });
-          console.log('📦 完整 API 回應:', response.Data);
-          this.populateForm(response.Data);
-          console.log('📅 填充後表單的日期值:', {
-            apply_date: this.dataForm.get('apply_date')?.value,
-            tlt_bdate: this.dataForm.get('tlt_bdate')?.value,
-            feedback_date: this.dataForm.get('feedback_date')?.value
-          });
+          console.log('📦 API 回應資料:', response.Data);
+
+          // ✅ 根據模式選擇載入方式
+          if (this.crudstatus === CRUDStatus.Read) {
+            // Readonly 模式:使用特殊載入方法
+            this.populateFormForReadMode(response.Data);
+          } else {
+            // Edit 模式:使用一般載入方法
+            this.populateForm(response.Data);
+          }
+
           this.loadLocationData(response.Data.LocationDetails || []);
           this.loadDependentDropdowns(response.Data);
 
-          // 強制重新賦值選項（確保 Angular 知道要更新）
-          this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
-          this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
-          this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
-          this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
-          this.decorationOptions = [...this.sharedDropdownService.decorationOptions]; // 裝潢方式
-          this.moneyTypeOptions = [...this.sharedDropdownService.moneyTypeOptions];   // 結帳方式
-          this.checkTypeOptions = [...this.sharedDropdownService.checkTypeOptions];   // 對帳方式
-          this.storeWayOptions = [...this.sharedDropdownService.storeWayOptions];     // 抽成別
-          this.paytypeOptions = [...this.sharedDropdownService.paytypeOptions];       // 抽成別
-          this.invoiceTypeOptions = [...this.sharedDropdownService.invoiceTypeOptions]; // 抽成別
-          this.tltKindOptions = [...this.sharedDropdownService.tltKindOptions];       // 抽成別
-          this.tltopenflagOption = [...this.sharedDropdownService.openflagOptions];   // 抽成別
-          this.commCompTypeDropdown = [...this.sharedDropdownService.commCompTypeOptions];
-          this.approveStatusOptions = [...this.sharedDropdownService.approveStatusOptions];
-          this.yesNoOptions = [...this.sharedDropdownService.yesNoOptions];
-          this.tltTermTypeOptions = [...this.sharedDropdownService.tltTermTypeOptions];
-          this.tltctypemtotalOptions = [...this.sharedDropdownService.tltctypemtotalOptions]; // 包底類別
-          this.totalAmtOptions = [...this.sharedDropdownService.totalAmtOptions];             // 目標營業額單位(廠商)
-          this.totalAmtVendorOptions = [...this.sharedDropdownService.totalAmtVendorOptions]; // 目標營業額單位(業主)
-          this.depositPaymentOptions = [...this.sharedDropdownService.depositPaymentOptions]; // 保證金
-          this.overallStatusOptions = [...this.sharedDropdownService.overallStatusOptions];
-          this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
-          this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
-          this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
-          // 強制變更檢測
-          this.cdr.detectChanges();
+          // 強制更新選項
+          this.refreshAllDropdownOptions();
 
-          console.log('合約資料載入完成');
+          this.cdr.detectChanges();
+          console.log('✅ 合約資料載入完成');
         }
+      },
+      error: (error) => {
+        console.error('❌ 載入合約資料失敗:', error);
+        this.messageService.errorBubble('載入資料失敗');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
       }
     });
+  }
+
+
+  private refreshAllDropdownOptions(): void {
+    this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+    this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
+    this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
+    this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+    this.decorationOptions = [...this.sharedDropdownService.decorationOptions]; // 裝潢方式
+    this.moneyTypeOptions = [...this.sharedDropdownService.moneyTypeOptions];   // 結帳方式
+    this.checkTypeOptions = [...this.sharedDropdownService.checkTypeOptions];   // 對帳方式
+    this.storeWayOptions = [...this.sharedDropdownService.storeWayOptions];     // 抽成別
+    this.paytypeOptions = [...this.sharedDropdownService.paytypeOptions];       // 抽成別
+    this.invoiceTypeOptions = [...this.sharedDropdownService.invoiceTypeOptions]; // 抽成別
+    this.tltKindOptions = [...this.sharedDropdownService.tltKindOptions];       // 抽成別
+    this.tltopenflagOption = [...this.sharedDropdownService.openflagOptions];   // 抽成別
+    this.commCompTypeDropdown = [...this.sharedDropdownService.commCompTypeOptions];
+    this.approveStatusOptions = [...this.sharedDropdownService.approveStatusOptions];
+    this.yesNoOptions = [...this.sharedDropdownService.yesNoOptions];
+    this.tltTermTypeOptions = [...this.sharedDropdownService.tltTermTypeOptions];
+    this.tltctypemtotalOptions = [...this.sharedDropdownService.tltctypemtotalOptions]; // 包底類別
+    this.totalAmtOptions = [...this.sharedDropdownService.totalAmtOptions];             // 目標營業額單位(廠商)
+    this.totalAmtVendorOptions = [...this.sharedDropdownService.totalAmtVendorOptions]; // 目標營業額單位(業主)
+    this.depositPaymentOptions = [...this.sharedDropdownService.depositPaymentOptions]; // 保證金
+    this.overallStatusOptions = [...this.sharedDropdownService.overallStatusOptions];
+    this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
+    this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
+    this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
   }
 
   private loadDependentDropdowns(data: TLS12040DetailModel): void {
@@ -778,139 +847,40 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   private populateForm(data: any): void {
-    console.log('🔍 populateForm 開始，原始資料:', data);
+    console.log('🔍 populateForm 開始,原始資料:', data);
 
-    // 基本資訊
-    this.dataForm.patchValue({
-      talent_id: data.talent_id,
-      apply_no: data.apply_no,
-      tlt_no: data.tlt_no,
-      tlt_name: data.tlt_name,
-      ven_uniform: data.ven_uniform,
-      ven_no: data.ven_no,
-      VEN_Name: data.VEN_Name,
-      contract_subno: data.contract_subno || '1',
-      approve_status: data.approve_status || '1',
-      apply_type: data.apply_type,
-      apply_date: data.apply_date,
-      apply_status: data.apply_status,
-      contract_type: data.contract_type,
-      contract_no: data.contract_no,
+    // 📅 日期欄位預處理:確保格式正確
+    const dateFields = [
+      'apply_date', 'tlt_bdate', 'tlt_edate',
+      'tlt_contract_bdate', 'tlt_contract_edate',
+      'feedback_date', 'due_date', 'contact_Date'
+    ];
 
-      // 日期欄位
-      tlt_bdate: data.tlt_bdate,
-      tlt_edate: data.tlt_edate,
-      tlt_contract_bdate: data.tlt_contract_bdate,
-      tlt_contract_edate: data.tlt_contract_edate,
-      feedback_date: data.feedback_date,
-      due_date: data.due_date,
-      contact_Date: data.contact_Date,
+    const processedData = { ...data };
 
-      // 分類與商務條件
-      tlt_term_type: data.tlt_term_type?.trim() || '',
-      comm_comp_type: data.comm_comp_type || '2',
-      paper_type: data.paper_type,
-      bus_type: data.bus_type,
-      bus_class: data.bus_class,
-      bus_sclass: data.bus_sclass,
-
-      // 組織與人員
-      org_id: data.org_id,
-      contact_USR_No: data.contact_USR_No,
-      contact_USR_Name: data.contact_USR_Name,
-
-      // 其他條件
-      deco_type: data.deco_type,
-      money_type: data.money_type,
-      check_typeList: data.check_type
-        ? data.check_type.split(',').map((item: string) => item.trim())
-        : [],
-      check_type: data.check_type,
-      edc_yn: data.edc_yn || 'N',
-      tlt_openflag: data.tlt_openflag,
-      comm_yn: data.comm_yn || 'N',
-      rece_yn: data.rece_yn || 'N',
-      pos_yn: data.pos_yn || 'N',
-      cash_yn: data.cash_yn || 'N',
-      store_way: data.store_way,
-      paytype: data.paytype,
-      vip_yn: data.vip_yn || 'N',
-
-      // 費用相關
-      base_rent: data.base_rent || 0,
-      deposit: data.deposit || 0,
-      credit_card: data.credit_card || 0,
-      check_day: data.check_day || 0,
-      open_fees: data.open_fees || 0,
-      total_amt: data.total_amt || 0,
-      total_amt_vendor: data.total_amt_vendor || 0,
-      construct_deposit: data.construct_deposit,
-      construct_fees: data.construct_fees || 0,
-      expiration_deposit: data.expiration_deposit,
-      expiration_fees: data.expiration_fees || 0,
-      open_deposit: data.open_deposit,
-
-      // 其他設定
-      invoice_type: data.invoice_type || '0',
-      tlt_kind: data.tlt_kind,
-      tlt_ctype_mtotal: data.tlt_ctype_mtotal,
-      overall_status: data.overall_status,
-      rent_ahead: data.rent_ahead || 'N',
-      rent_period: data.rent_period || 0,
-      water_flag: data.water_flag || 'N',
-      electric_flag: data.electric_flag || 'N',
-      gas_flag: data.gas_flag || 'N',
-
-      // 聯絡資訊
-      email: data.email,
-      invoice_email: data.invoice_email,
-      CHECK_TITLE: data.CHECK_TITLE,
-      store_tel: data.store_tel,
-      bank_id: data.bank_id,
-      vendor_acct_name: data.vendor_acct_name,
-      vendor_acct_no: data.vendor_acct_no,
-      contact_tel: data.contact_tel,
-      contact_fax: data.contact_fax,
-      contact_addr: data.contact_addr,
-      tlt_remark: data.tlt_remark,
-      ticket_remarks: data.ticket_remarks,
-      total_amt_unit: data.total_amt_unit,
-      total_amt_vendor_unit: data.total_amt_vendor_unit,
-      VEN_Address: data.VEN_Address,
-
-      // 狀態欄位
-      cap_saletype1: data.cap_saletype1 || 'N',
-      cap_saletype2: data.cap_saletype2 || 'N',
-      cap_saletype3: data.cap_saletype3 || 'N',
-      cap_saletype4: data.cap_saletype4 || 'N',
-      cap_saletype5: data.cap_saletype5 || 'N',
+    dateFields.forEach(field => {
+      if (processedData[field]) {
+        // 如果是字串,保持原樣 (Calendar component 會自動轉換)
+        // 如果是 Date,也保持原樣
+        console.log(`📅 日期欄位 ${field}:`, {
+          原始值: processedData[field],
+          型別: typeof processedData[field]
+        });
+      }
     });
 
-    // 處理位置資訊 - 統一轉換為 locationInfo
-    let locationData = null;
+    // 填充表單
+    this.dataForm.patchValue(processedData);
 
-    // 優先順序：LocationDetails（API） > locationInfo（暫存）
-    if (data.LocationDetails && Array.isArray(data.LocationDetails)) {
-      console.log('📍 使用 LocationDetails（API 回傳）載入位置資料');
-      locationData = data.LocationDetails;
-    } else if (data.locationInfo && Array.isArray(data.locationInfo)) {
-      console.log('📍 使用 locationInfo（暫存資料）載入位置資料');
-      locationData = data.locationInfo;
+    // ✅ 在 readonly 模式下,立即保存到 session
+    if (this.crudstatus === CRUDStatus.Read) {
+      setTimeout(() => {
+        this.forceSaveToSession();
+      }, 100);
     }
 
-    if (locationData) {
-      this.loadLocationData(locationData);
-      console.log(`✅ 成功載入 ${this.locationInfo.length} 筆位置資料`);
-    } else {
-      console.log('⚠️ 沒有找到位置資料');
-      this.locationInfo = [];
-      this.updateDisplayLocationData();
-    }
-
-    // 觸發驗證器更新
+    // ... 其他處理邏輯
     this.triggerAllDynamicValidators();
-
-    // 標記表單為原始狀態
     this.dataForm.markAsPristine();
 
     console.log('✅ populateForm 完成');
@@ -2316,5 +2286,50 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 自動保存
     this.autoSaveToWorkflow();
+  }
+
+  private populateFormForReadMode(data: any): void {
+    console.log('🔍 Readonly 模式載入資料');
+
+    // 1️⃣ 暫時啟用所有表單控制項
+    this.dataForm.enable();
+
+    // 2️⃣ 填充資料 (包含日期欄位)
+    this.populateForm(data);
+
+    // 3️⃣ 重新禁用表單 (readonly 模式)
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.dataForm.disable();
+    }
+
+    // 4️⃣ 強制保存到 session
+    this.forceSaveToSession();
+  }
+
+  /**
+ * 🔧 強制保存到 session (即使在 readonly 模式)
+ */
+  private forceSaveToSession(): void {
+    // 暫時移除 viewMode 檢查
+    const originalViewMode = this.flowService.isViewMode();
+    this.flowService.setViewMode(false);
+
+    // 構建完整資料
+    const completeData = {
+      ...this.dataForm.getRawValue(), // ⚠️ 使用 getRawValue() 取得 disabled 欄位的值
+      locationInfo: this.locationInfo
+    };
+
+    console.log('💾 強制保存資料到 session:', {
+      tlt_bdate: completeData.tlt_bdate,
+      tlt_edate: completeData.tlt_edate,
+      日期型別: typeof completeData.tlt_bdate
+    });
+
+    // 保存
+    this.flowService.setCruData(completeData);
+
+    // 恢復 viewMode
+    this.flowService.setViewMode(originalViewMode);
   }
 }
