@@ -188,10 +188,23 @@ export const formatTimeHHMMSS = (value: string | number | Date): string => {
 
 
 // 000,000,000
-export const formatAmount = (val: number | string): string => {
+export const formatAmount = (val: number | string | null | undefined): string => {
+  // 1. 檢查並處理 null, undefined 或空字串
+  // 如果是這些值，直接回傳空字串 ''
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
   const num = Number(val);
-  if (isNaN(num)) return '';
-  return num.toLocaleString(); // eg. 1,000,000
+
+  // 2. 檢查 NaN (如輸入 'abc') 或數值為 0
+  // 如果是 NaN 或 num 等於 0 (符合您「不要給我自動有0」的需求)
+  if (isNaN(num) || num === 0) {
+    return '';
+  }
+
+  // 3. 格式化其他大於 0 的數值
+  return num.toLocaleString(); // e.g. 1,000,000
 };
 export const formatYN = (value: string): string => {
   return value === 'Y' ? '是' : '否';

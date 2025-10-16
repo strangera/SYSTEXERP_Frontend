@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface QueryFIN55020Request {
@@ -40,6 +40,16 @@ export class Fin55020Service {
   ) { }
 
   queryFIN55020(data: QueryFIN55020Request): Observable<ApiResponse<FIN55020Data[]>> {
-    return this.http.post<ApiResponse<FIN55020Data[]>>(`${this.apiUrl}/queryFIN55020`, data);
+    return this.http.post<ApiResponse<FIN55020Data[]>>(`${this.apiUrl}/queryFIN55020`, data).pipe(
+      map(response => ({
+        ...response,
+        Data: response.Data.map((item) => ({
+          ...item,
+          D_AMT: item.D_AMT ?? null,
+          C_AMT: item.C_AMT ?? null,
+        })),
+
+      }))
+    );
   }
 }
