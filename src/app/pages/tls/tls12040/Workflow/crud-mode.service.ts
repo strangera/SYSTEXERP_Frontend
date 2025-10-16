@@ -6,15 +6,17 @@ import { Injectable } from '@angular/core';
 })
 export class CrudModeService {
   // 接收 crudstatus 並提供模式判斷
-  private crudstatus: CRUDStatus = CRUDStatus.Edit; // 預設為 Edit，可根據需要修改
+  private crudstatus: CRUDStatus = CRUDStatus.Read; // 修正：預設為 Read
 
   // 設置當前 CRUD 狀態
   setCrudStatus(status: CRUDStatus): void {
     this.crudstatus = status;
+    console.log('CrudModeService setCrudStatus:', status);
   }
 
   // 取得當前 CRUD 狀態
   getCrudStatus(): CRUDStatus {
+    console.log('CrudModeService getCrudStatus:', this.crudstatus);
     return this.crudstatus;
   }
 

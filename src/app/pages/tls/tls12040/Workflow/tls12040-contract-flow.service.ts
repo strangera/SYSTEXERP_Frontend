@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { TLS12040DetailModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BehaviorSubject } from 'rxjs';
+import { CrudModeService } from './crud-mode.service';
 // 核心資料介面 - 用 interface 控制結構
 export interface TLS12040CoreData {
   readonly applyNo: string;
@@ -124,8 +125,8 @@ class CruDataCleaner implements TLS12040DataCleaner {
       total_amt_vendor_unit: data.total_amt_vendor_unit || '',
       approve_status: data.approve_status || '',
       VEN_Address: data.VEN_Address || '',
-      locationData: Array.isArray(data.locationData) ?
-        data.locationData
+      locationInfo: Array.isArray(data.locationInfo) ?
+        data.locationInfo
           .filter((item: any) => {
             const hasLocationNo = item.location_no && item.location_no.trim() !== '';
             if (!hasLocationNo) {
@@ -244,7 +245,7 @@ export class TLS12040FlowService {
   private readonly STORAGE_KEY = 'TLS12040_FLOW';
 
   // 新增 CRUDStatus$ 屬性
-  public CRUDStatus$ = new BehaviorSubject<CRUDStatus>(CRUDStatus.Edit);
+  public CRUDStatus$ = new BehaviorSubject<CRUDStatus>(CRUDStatus.Read);
 
   // 使用 readonly 的 state，避免外部直接修改
   private _state: TLS12040FlowState = this.createInitialState();
@@ -265,7 +266,7 @@ export class TLS12040FlowService {
   private viewModeSubject = new BehaviorSubject<boolean>(false);
   public isViewMode$ = this.viewModeSubject.asObservable();
 
-  constructor() {
+  constructor(private crudModeService: CrudModeService) {
     this.loadFromStorage();
   }
 
@@ -373,13 +374,6 @@ export class TLS12040FlowService {
    */
   isStepCompleted(stepName: string): boolean {
     return this._state.completedSteps.has(stepName);
-  }
-
-  /**
-   * 取得當前狀態 - 唯讀
-   */
-  getCurrentState(): Readonly<TLS12040FlowState> {
-    return this._state;
   }
 
   // ========== 便利方法 ==========
@@ -1030,6 +1024,12 @@ export class TLS12040FlowService {
           });
         }
 
+        // 載入 crudstatus，並提供 fallback
+        const loadedCrudStatus = data.crudstatus || this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;
+        console.log('載入 crudstatus:', loadedCrudStatus);
+        this.CRUDStatus$.next(loadedCrudStatus);
+        this.crudModeService.setCrudStatus(loadedCrudStatus);  // 同步到 CrudModeService
+
         // 修正：從 CRU 資料取得正確的 applyNo
         let correctedApplyNo = data.applyNo || '';
         const cruStepData = stepDataMap.get('cru');
@@ -1038,8 +1038,14 @@ export class TLS12040FlowService {
           console.log('從 CRU 資料修正 applyNo:', correctedApplyNo);
         }
 
-        // 修正：根據是否有 apply_no 決定 isNewContract
-        const correctedIsNewContract = !correctedApplyNo || correctedApplyNo === '';
+        // 修正 isNewContract：如果 crudstatus 為 Read，則設為 false，避免推斷為 Edit
+        let correctedIsNewContract: boolean;
+        if (loadedCrudStatus === CRUDStatus.Read) {
+          correctedIsNewContract = false;  // Read 模式下不視為新合約
+          console.log('Read 模式：強制 isNewContract = false');
+        } else {
+          correctedIsNewContract = !correctedApplyNo || correctedApplyNo === '';
+        }
 
         this._state = {
           ...data,
@@ -1047,7 +1053,8 @@ export class TLS12040FlowService {
           completedSteps: completedStepsSet,
           applyNo: correctedApplyNo,
           isNewContract: correctedIsNewContract,
-          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo
+          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo,
+          status: loadedCrudStatus  // 儲存載入的 crudstatus
         };
 
         this.notifyStateChange();
@@ -1056,5 +1063,33 @@ export class TLS12040FlowService {
     } catch (error) {
       console.error('載入失敗:', error);
     }
+  }
+
+  setCurrentState(state: any) {
+    const currentCrudStatus = this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;  // fallback 為 Read
+    const currentState = {
+      ...state,
+      crudstatus: currentCrudStatus  // 強制儲存 crudstatus
+    };
+    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(currentState));
+    console.log('儲存狀態到 SessionStorage，包含 crudstatus:', currentCrudStatus);
+    this.CRUDStatus$.next(currentCrudStatus);  // 同步到 BehaviorSubject
+  }
+
+  // 修正 getCurrentState：提供 crudstatus fallback
+  getCurrentState(): any {
+    const saved = sessionStorage.getItem(this.STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const fallbackCrudStatus = parsed.crudstatus || this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;
+      console.log('從 getCurrentState 獲取 crudstatus:', fallbackCrudStatus);
+      return {
+        ...parsed,
+        crudstatus: fallbackCrudStatus
+      };
+    }
+    const fallbackCrudStatus = this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;
+    console.log('從 fallback 獲取 crudstatus:', fallbackCrudStatus);
+    return { crudstatus: fallbackCrudStatus };
   }
 }

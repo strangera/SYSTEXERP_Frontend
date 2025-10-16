@@ -37,6 +37,7 @@ export interface TLS12040DetailModel {
   ven_no: string;
   VEN_Name: string;
   contract_subno?: string;
+  contract_no?: string;
   apply_type: string; // 申請案件內容
   apply_date: string; // 申請日期
   contract_type?: string; // 合約類型
