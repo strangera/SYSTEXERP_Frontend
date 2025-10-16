@@ -56,6 +56,6 @@
     (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'PST_No', order: -1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" [addButton]="addButton" [expansionColumns]="expansionColumns" [expansionLoadFn]="loadDetails"
-    [expansionDataKey]="'PLU_MagNo'">
+    [expansionDataKey]="'PLU_MagNo'" [editDisabled]="editDisabled">
   </app-table>
 </div>
