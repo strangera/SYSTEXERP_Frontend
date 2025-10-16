@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
+import { TLS31020Total } from './tls31020.service'; //總計的部分會和TLS31020Total共用
 
 export interface TLS31030Request {
   TXN_DateS: string | Date;
@@ -45,7 +46,7 @@ export interface TLS31030PrintDetailRequest extends TLS31030DetailRequest {
   IsExcel: boolean;
 }
 
-export interface TLS31030Response {
+export interface TLS31030Item {
   bus_type: string;
   bus_type_name: string;
   
@@ -58,6 +59,7 @@ export interface TLS31030Response {
   AvgTicket: number;
   tlt_space: number;
   MonthlyPSM: number;
+  MonthlyPayment: number;
   TempCounterSaleAmt: number;
   TempCounterSalesRate: number;
   TempCounterAmtRate: number;
@@ -66,7 +68,7 @@ export interface TLS31030Response {
   CompletionRate: number;
 }
 
-export interface TLS31030DetailResponse {
+export interface TLS31030DetailItem {
   building_desc: string;
   org_name: string;
   tlt_kind: string;
@@ -89,6 +91,16 @@ export interface TLS31030DetailResponse {
   CompletionRate: number;
 }
 
+export interface TLS31020Response {
+  QueryData: TLS31030Item[];
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31020DetailResponse {
+  QueryData: TLS31030DetailItem[];
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -97,14 +109,32 @@ export class Tls31030Service {
   constructor(private http: HttpClient) { }
   
   // 查詢各大分類之營業報表
-  queryTLS31030(body: TLS31030Request): Observable<ApiResponse<TLS31030Response[]>> {
-    return this.http.post<ApiResponse<TLS31030Response[]>>(`${this.apiUrl}/queryTLS31030`, body);
-  }
+  queryTLS31030(body: TLS31030Request): Observable<any> {
+      return this.http.post<any>(`${this.apiUrl}/queryTLS31030`, body).pipe(
+        map(res => {
+          return {
+            Data: res.Data?.QueryData,
+            TotalCount: res.TotalCount,
+            Message: res.Message,
+            TotalData: res.Data?.TotalData 
+          };
+        })
+      );
+    }
 
   // 查詢單大分類展開之營業報表
-  queryTLS31030Detail(body: TLS31030DetailRequest): Observable<ApiResponse<TLS31030DetailResponse[]>> {
-    return this.http.post<ApiResponse<TLS31030DetailResponse[]>>(`${this.apiUrl}/queryTLS31030Detail`, body);
-  }
+  queryTLS31030Detail(body: TLS31030DetailRequest): Observable<any> {
+      return this.http.post<ApiResponse<TLS31020DetailResponse>>(`${this.apiUrl}/queryTLS31030Detail`, body).pipe(
+        map(res => {
+          return {
+            Data: res.Data?.QueryData,
+            TotalCount: res.TotalCount,
+            Message: res.Message,
+            TotalData: res.Data?.TotalData,
+          };
+        })
+      );
+    }
 
   // 產出各大分類之營業報表
   printTLS31030(body: TLS31030PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
