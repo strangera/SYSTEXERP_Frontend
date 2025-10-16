@@ -45,7 +45,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    TableReportComponent, // ✅ 使用 app-table-report
+    TableReportComponent,
   ]
 })
 export class TLS23080Component extends BasicQueryPageComponent<any> {
@@ -54,7 +54,10 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
   // 匯出用
   btnLoading = false;
-  historyRequestBody: any | null = null; // 也供 app-table-report 的 [lastQueryBody]
+  historyRequestBody: any | null = null;
+
+  // 總計列來源（由 query 回來的 GrandTotal 同步）
+  private grandTotal: Record<string, number> = {};
 
   // 下拉來源
   WhetherOptions: any[] = [];
@@ -64,10 +67,10 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
 
-  // 預設排序（若 table-report 會回傳 SortBy 也會帶入）
+  // 預設排序
   readonly defaultSort: any[] = [{ field: 'TXN_Date', order: 1 }];
 
-  // 後端 Total* 欄位對應到前端欄位（用於組 GrandTotal）
+  // 後端 Total* 欄位對應到前端欄位（用於組 GrandTotal/表尾）
   private detailTotalFieldMap: Record<string, string> = {
     // 現金
     ACT_PayAmt10: 'TotalPayAmt10',
@@ -210,18 +213,23 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
           const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
           const rows = this.extractRows(wrappers);
 
+          // 同步總計列（用第一包的 Total* 欄位）
+          const first = wrappers[0] ?? {};
+          this.grandTotal = this.mapTotalsFromWrapper(first);
+
           this.data = rows;
           this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
+          this.grandTotal = {};
         }
       });
     });
   }
 
-  // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30
+  // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，並帶回 GrandTotal
   public queryTLS23080ForReport = (body: any) =>
     this.tls23080Service
       .queryTLS23080({ ...(body || {}), pageSize: 30 }) // 強制 30
@@ -233,10 +241,10 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
           // GrandTotal（用第一包的 Total* 欄位）
           const first = wrappers[0] ?? {};
-          const grand: Record<string, number> = {};
-          Object.entries(this.detailTotalFieldMap).forEach(([field, apiKey]) => {
-            grand[field] = Number(first?.[apiKey] ?? 0);
-          });
+          const grand = this.mapTotalsFromWrapper(first);
+
+          // 同步到本地，給 footerData 用
+          this.grandTotal = { ...grand };
 
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
@@ -278,77 +286,34 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
       });
   }
-  formatDate = (val: string | Date | number): string => {
-    if (!val) return '';
-    const d = val instanceof Date ? val : new Date(val);
-    if (isNaN(d.getTime())) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}/${m}/${day}`;
-  };
 
-  // ===== 欄位（加上 isTotal 以顯示總計列）=====
-  columns = [
-    { field: 'TXN_Date', header: '日期', visible: true, style: 'text-left', format: this.formatDate },
+  // ======= 總計列 Footer 組裝 =======
+  /** 把 wrapper 內的 Total* 欄位轉成表尾需要的 GrandTotal 結構（用 columns 的 field 名） */
+  private mapTotalsFromWrapper(wrapper: any): Record<string, number> {
+    const grand: Record<string, number> = {};
+    Object.entries(this.detailTotalFieldMap).forEach(([field, apiKey]) => {
+      grand[field] = Number(wrapper?.[apiKey] ?? 0);
+    });
+    return grand;
+  }
 
-    // 現金
-    { field: 'ACT_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-
-    // 聯信（41/42/12）
-    { field: 'UnionGeneral', header: '聯信(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'UnionAE',      header: '聯信(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'UnionDiner',   header: '聯信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-
-    // 中信（43/44/14）
-    { field: 'CTBCGeneral', header: '中信(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCAE',      header: '中信(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCDiner',   header: '中信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-
-    // 中信-停車場（81）
-    { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCParkingAE',      header: '中信-停車場(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCParkingDiner',   header: '中信-停車場(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-
-    // 其他付款別
-    { field: 'ACT_PayAmt52', header: '一卡通',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt82', header: '一卡通-停車場',          visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt20', header: '禮券',                   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt62', header: '商品提貨單',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt77', header: '感熱紙抵用券',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt71', header: '商品抵用券',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt30', header: '貴賓提貨單(應收帳款)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt73', header: '外來禮券(抵用券)',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt72', header: '外來提貨單(抵用券)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt74', header: '活動券(自營)',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt75', header: '折價券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt76', header: '現抵',                   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt24', header: '禮券餘代卡',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt25', header: '提貨單餘代卡',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt07', header: '會員折抵',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt55', header: 'LINE Pay',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt83', header: 'LINE Pay-停車場',        visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt78', header: 'APP抵用券',              visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt79', header: 'APP提貨單',              visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt21', header: 'APP禮券',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt53', header: '悠遊卡',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt57', header: '台灣Pay',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt58', header: '南紡錢包',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt59', header: '即享券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt60', header: '喜客券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt22', header: '外來提貨單-高夢',        visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt23', header: '外來禮券-高夢',          visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-
-    // 總金額
-    { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-  ];
+  /** 提供給 [footerData]，只吐需要的合計欄位鍵值 */
+  buildFooterFromGrandTotal(): Record<string, any> | undefined {
+    if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
+    // 只回傳在欄位上標記 isTotal 的欄位，以免多餘鍵值干擾
+    const footer: Record<string, any> = {};
+    for (const col of this.columns) {
+      if (col?.isTotal) {
+        footer[col.field] = this.grandTotal[col.field] ?? 0;
+      }
+    }
+    return footer;
+  }
 
   // ===== 工具 =====
   moneyFormat(value: number): string {
     return value != null ? Number(value || 0).toLocaleString('en-US') : '0';
   }
-
 
   private toIso(dateLike: any): string | undefined {
     if (!dateLike) return undefined;
@@ -416,4 +381,70 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
     return `download${defaultExtension}`;
   }
+
+  // ===== 欄位（加上 isTotal 以顯示總計列）=====
+  formatDate = (val: string | Date | number): string => {
+    if (!val) return '';
+    const d = val instanceof Date ? val : new Date(val);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}/${m}/${day}`;
+  };
+
+  columns = [
+    { field: 'TXN_Date', header: '日期', visible: true, style: 'text-left', format: this.formatDate },
+
+    // 現金
+    { field: 'ACT_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    // 聯信（41/42/12）
+    { field: 'UnionGeneral', header: '聯信(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'UnionAE',      header: '聯信(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'UnionDiner',   header: '聯信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    // 中信（43/44/14）
+    { field: 'CTBCGeneral', header: '中信(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCAE',      header: '中信(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCDiner',   header: '中信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    // 中信-停車場（81）
+    { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCParkingAE',      header: '中信-停車場(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCParkingDiner',   header: '中信-停車場(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    // 其他付款別
+    { field: 'ACT_PayAmt52', header: '一卡通',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt82', header: '一卡通-停車場',          visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt20', header: '禮券',                   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt62', header: '商品提貨單',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt77', header: '感熱紙抵用券',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt71', header: '商品抵用券',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt30', header: '貴賓提貨單(應收帳款)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt73', header: '外來禮券(抵用券)',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt72', header: '外來提貨單(抵用券)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt74', header: '活動券(自營)',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt75', header: '折價券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt76', header: '現抵',                   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt24', header: '禮券餘代卡',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt25', header: '提貨單餘代卡',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt07', header: '會員折抵',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt55', header: 'LINE Pay',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt83', header: 'LINE Pay-停車場',        visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt78', header: 'APP抵用券',              visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt79', header: 'APP提貨單',              visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt21', header: 'APP禮券',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt53', header: '悠遊卡',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt57', header: '台灣Pay',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt58', header: '南紡錢包',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt59', header: '即享券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt60', header: '喜客券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt22', header: '外來提貨單-高夢',        visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt23', header: '外來禮券-高夢',          visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    // 總金額
+    { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  ];
 }
