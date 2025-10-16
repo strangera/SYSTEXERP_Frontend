@@ -28,9 +28,8 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     TLT_NO: [''], // 專櫃編號
     TLT_Name: [{ value: '', disabled: true }], // 櫃位名稱
     magneticCard: [''], // 磁卡編號 目前資料庫沒有
-    ACT_PayAmt_ori: [{ value: '', disabled: true }], /*顯示用金額*/
-    ACT_PayAmt: [null, [Validators.max(99999999), Validators.required]], /*實際金額*/
-    MOD_PayAmt: [null],
+    PayAmt: [{ value: '', disabled: true }], /*顯示用金額*/
+    MOD_PayAmt: [null, [Validators.max(99999999), Validators.required]], /*實際金額*/
   });
   now = new Date();
   TLTTALENT_DropDownList: ITalentOption[] = [];
@@ -111,9 +110,8 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     return {
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
       ...frm.value,
-      ACT_PayAmt_ori: this.isFormCreateable ? undefined : frm.getRawValue().ACT_PayAmt_ori,
-      MOD_PayAmt: this.isFormCreateable ? undefined : frm.getRawValue().MOD_PayAmt,
-      magneticCard: undefined, // 磁卡編號 目前資料庫沒有
+      ACT_PayAmt: frm.getRawValue().MOD_PayAmt,
+      magneticCard: undefined, //! 磁卡編號 目前資料庫沒有
       Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || '',
     }
   }
@@ -121,9 +119,6 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     return {
       id: this.rowdata?.id ?? 0,
       ...frm.value,
-      ACT_PayAmt_ori: this.rowdata?.ACT_PayAmt_ori ?? 0,
-      BOOK_PayAmt: this.rowdata?.BOOK_PayAmt ?? 0,
-      ACT_PayAmt: frm.getRawValue().ACT_PayAmt,
       MOD_PayAmt: frm.getRawValue().MOD_PayAmt,
       Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || '',
     };
