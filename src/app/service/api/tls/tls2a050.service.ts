@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -9,7 +9,7 @@ import { environment } from '../../../../environments/environment';
 export class Tls2A050Service {
   private apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ================= TLS2A050 =================
 
@@ -19,9 +19,10 @@ export class Tls2A050Service {
   }
 
   // 匯出 TLS2A050 第三方支付帳差報表
-  exportTLS2A050(data: any): Observable<Blob> {
+  exportTLS2A050(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS2A050`, data, {
-      responseType: 'blob'
+      responseType: 'blob',
+      observe: 'response'
     });
   }
 

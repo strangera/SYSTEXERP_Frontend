@@ -34,12 +34,13 @@
       </div>
       <hr />
       <div class="grid p-fluid">
-        <!-- 金額 -->
+        <!-- 編輯畫面的金額(disable) -->
         <app-input-number *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="金額"
-          controlName="ACT_PayAmt_ori" [control]="dataForm.controls.ACT_PayAmt_ori" [submitted]="submitted"
+          controlName="PayAmt" [control]="dataForm.controls.PayAmt" [submitted]="submitted"
           [max]="99999999" [maxFractionDigits]="4"></app-input-number>
+        <!-- 新增畫面時的金額，編輯畫面時的修改金額 -->
         <app-input-number *ngIf="!isFormReadable" class="col-12 md:col-6 lg:col-4"
-          [label]="isFormCreateable ? '金額' : '修改金額'" controlName="ACT_PayAmt" [control]="dataForm.controls.ACT_PayAmt"
+          [label]="isFormCreateable ? '金額' : '修改金額'" controlName="MOD_PayAmt" [control]="dataForm.controls.MOD_PayAmt"
           [submitted]="submitted" [max]="99999999" [maxFractionDigits]="4"></app-input-number>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

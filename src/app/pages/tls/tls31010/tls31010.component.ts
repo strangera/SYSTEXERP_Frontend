@@ -15,10 +15,9 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { TLS31010Request, TLS31010Response, Tls31010Service } from '@service/api/tls/tls31010.service';
+import { TLS31010QueryData, TLS31010Request, Tls31010Service } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
 import { formatDate } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
@@ -43,7 +42,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
   ]
 })
 
-export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response> implements OnInit {
+export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_Date: [yesterday],//交易日期
     tlt_building: [[]],// 館別
@@ -60,7 +59,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
     ...createPaginationConfig([{ field: 'tlt_building', order: 1 }])
   });
   totalRecords = 0;
-  data: TLS31010Response[] = [];
+  data: TLS31010QueryData[] = [];
   columns: Column[] = [
     { field: 'building_desc', header: '館別', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
@@ -112,7 +111,6 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly tls31010Service: Tls31010Service,
-    private readonly httpClient: HttpClient
   ) { super(); }
 
   ngOnInit(): void {
@@ -191,49 +189,44 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
           }
         }
         return forkJoin(requests);
-      }),
-      tap(results => {
-        console.log('所有 API 呼叫結果：', results);
-      })
-    ).subscribe(results => {
-      // 處理合併和分組的邏輯
-      const groupedData = results.reduce((accumulator, group) => {
-        const groupKey = `${group.LNo}_${group.MNo}`;
+      })).subscribe(results => {
+        // 處理合併和分組的邏輯
+        const groupedData = results.reduce((accumulator, group) => {
+          const groupKey = `${group.LNo}_${group.MNo}`;
 
-        if (!accumulator[groupKey]) {
-          accumulator[groupKey] = {
-            label: `${group.LName} - ${group.MName}`,
-            items: []
-          };
-        }
-
-        const newItems = group.Data.map(item => ({
-          ...item,
-          label: `${item.No} - ${item.Name}`,
-          bus_type: group.LNo,
-          bus_type_name: group.LName,
-          CAT_MNo: group.MNo,
-          CAT_MName: group.MName
-        }));
-        const existingItems = accumulator[groupKey].items;
-        const allItems = [...existingItems, ...newItems];
-
-        const uniqueItemsMap = new Map();
-        allItems.forEach(item => {
-          // 使用 No 作為鍵來去重
-          if (!uniqueItemsMap.has(item.No)) {
-            uniqueItemsMap.set(item.No, item);
+          if (!accumulator[groupKey]) {
+            accumulator[groupKey] = {
+              label: `${group.LName} - ${group.MName}`,
+              items: []
+            };
           }
-        });
 
-        accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+          const newItems = group.Data.map(item => ({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            bus_type: group.LNo,
+            bus_type_name: group.LName,
+            CAT_MNo: group.MNo,
+            CAT_MName: group.MName
+          }));
+          const existingItems = accumulator[groupKey].items;
+          const allItems = [...existingItems, ...newItems];
 
-        return accumulator;
-      }, {} as Record<string, any>);
+          const uniqueItemsMap = new Map();
+          allItems.forEach(item => {
+            // 使用 No 作為鍵來去重
+            if (!uniqueItemsMap.has(item.No)) {
+              uniqueItemsMap.set(item.No, item);
+            }
+          });
 
-      this.bus_sclass_Option = Object.values(groupedData);
-      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
-    });
+          accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+
+          return accumulator;
+        }, {} as Record<string, any>);
+
+        this.bus_sclass_Option = Object.values(groupedData);
+      });
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
@@ -247,7 +240,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
         TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
       } as TLS31010Request;
       this.tls31010Service.queryTLS31010(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data;
+        this.data = res.Data.QueryData;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })

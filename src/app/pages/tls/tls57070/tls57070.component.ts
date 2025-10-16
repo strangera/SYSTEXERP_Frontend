@@ -13,7 +13,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ColumnGroup, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
 import { convertDateToYYYYMM, formatAmount } from '@shared/componentkit/table/table.model';
@@ -60,6 +60,22 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
   footerData: any
   data: Tls57070DataItem[] = [];
   columns: ReportColumn[] = [];
+  columnGroup: ColumnGroup[] = [
+    { field: 'STK_PRIOR', header: '期初' },
+    { field: 'STK_STOCK', header: '進貨' },
+    { field: 'STK_REJECT', header: '退貨' },
+    { field: 'STK_SALE', header: '銷貨' },
+    { field: 'STK_MOVEIN', header: '調入' },
+    { field: 'STK_MOVEOUT', header: '調出' },
+    { field: 'STK_DIFF', header: '盤點' },
+    { field: 'STK_SCRAP', header: '報廢' },
+    { field: 'STK_TAKE', header: '領用' },
+    { field: 'STK_RETAKE', header: '領用退回' },
+    { field: 'STK_TRDIN', header: '同業調撥(入)' },
+    { field: 'STK_TRDOUT', header: '同業調撥(出)' },
+    { field: 'STK_CURRENT', header: '期末' },
+    { field: 'PLU_SALEPRC', header: '期末售價' },
+  ]
 
   constructor(
     public readonly tls57070Service: Tls57070Service,
@@ -78,48 +94,48 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
         { field: 'LOGO_No', header: '品牌' },
         { field: 'LOGO_CH_NAME', header: '品牌名稱' },
         // 期初庫存
-        { field: 'STK_PRIORQTY', header: '期初數量', isSubTotal: true },
-        { field: 'STK_PRIORCOST', header: '期初成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_PRIORQTY', header: '數量', isSubTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_PRIOR' },
 
         // 異動 - 進貨/退貨/銷貨
-        { field: 'STK_STOCKQTY', header: '進貨數量', isSubTotal: true },
-        { field: 'STK_STOCKCOST', header: '進貨成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_REJECTQTY', header: '退貨數量', isSubTotal: true },
-        { field: 'STK_REJECTCOST', header: '退貨成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SALEQTY', header: '銷貨數量', isSubTotal: true },
-        { field: 'STK_SALECOST', header: '銷貨成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SALENET', header: '銷貨售價', format: formatAmount, isSubTotal: true },
+        { field: 'STK_STOCKQTY', header: '數量', isSubTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_STOCKCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_REJECTQTY', header: '數量', isSubTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_REJECTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_SALEQTY', header: '數量', isSubTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALECOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
 
         // 異動 - 調撥
-        { field: 'STK_MOVEINQTY', header: '調入數量', isSubTotal: true },
-        { field: 'STK_MOVEINCOST', header: '調入成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_MOVEOUTQTY', header: '調出數量', isSubTotal: true },
-        { field: 'STK_MOVEOUTCOST', header: '調出成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_MOVEINQTY', header: '數量', isSubTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEINCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEOUTQTY', header: '數量', isSubTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEOUTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEOUT' },
 
         // 異動 - 盤點/報廢
-        { field: 'STK_DIFFQTY', header: '盤點數量', isSubTotal: true },
-        { field: 'STK_DIFFCOST', header: '盤點成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SCRAPQTY', header: '報廢數量', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SCRAPCOST', header: '報廢成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_DIFFQTY', header: '數量', isSubTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_DIFFCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_SCRAPCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_SCRAP' },
 
         // 異動 - 領用
-        { field: 'STK_TAKEQTY', header: '領用數量', isSubTotal: true },
-        { field: 'STK_TAKECOST', header: '領用成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_RETAKEQTY', header: '領用退回數量', isSubTotal: true },
-        { field: 'STK_RETAKECOST', header: '領用退回成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_TAKEQTY', header: '數量', isSubTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_TAKECOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_RETAKEQTY', header: '數量', isSubTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_RETAKECOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_RETAKE' },
 
         // 異動 - 同業調撥
-        { field: 'STK_TRDINQTY', header: '同業調撥(入)數量', isSubTotal: true },
-        { field: 'STK_TRDINCOST', header: '同業調撥(入)成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_TRDOUTQTY', header: '同業調撥(出)數量', isSubTotal: true },
-        { field: 'STK_TRDOUTCOST', header: '同業調撥(出)成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_TRDINQTY', header: '數量', isSubTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDINCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDOUTQTY', header: '數量', isSubTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDOUTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDOUT' },
 
         // 期末結算與利潤
         { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_CURRENTQTY', header: '期末數量', isSubTotal: true },
-        { field: 'STK_CURRENTCOST', header: '期末成本', format: formatAmount, isSubTotal: true },
-        { field: 'PLU_SALEPRCNET', header: '期末售價未稅', format: formatAmount, isSubTotal: true },
-        { field: 'PLU_SALEPRC', header: '期末售價含稅', format: formatAmount, isSubTotal: true },
+        { field: 'STK_CURRENTQTY', header: '期末數量', isSubTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'STK_CURRENTCOST', header: '期末成本', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
+        { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
         { field: 'STK_UNITCOST', header: '平均成本', format: formatAmount, isSubTotal: true },
         { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true }, // (銷售金額 / 1.05)
         { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true },
@@ -135,48 +151,48 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
         { field: 'PLU_Name', header: '品名' },
 
         // 期初庫存
-        { field: 'STK_PRIORQTY', header: '期初數量', isSubTotal: true },
-        { field: 'STK_PRIORCOST', header: '期初成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_PRIORQTY', header: '數量', isSubTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_PRIOR' },
 
         // 異動 - 進貨/退貨/銷貨
-        { field: 'STK_STOCKQTY', header: '進貨數量', isSubTotal: true },
-        { field: 'STK_STOCKCOST', header: '進貨成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_REJECTQTY', header: '退貨數量', isSubTotal: true },
-        { field: 'STK_REJECTCOST', header: '退貨成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SALEQTY', header: '銷貨數量', isSubTotal: true },
-        { field: 'STK_SALECOST', header: '銷貨成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SALENET', header: '銷貨售價', format: formatAmount, isSubTotal: true },
+        { field: 'STK_STOCKQTY', header: '數量', isSubTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_STOCKCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_REJECTQTY', header: '數量', isSubTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_REJECTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_SALEQTY', header: '數量', isSubTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALECOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
 
         // 異動 - 調撥
-        { field: 'STK_MOVEINQTY', header: '調入數量', isSubTotal: true },
-        { field: 'STK_MOVEINCOST', header: '調入成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_MOVEOUTQTY', header: '調出數量', isSubTotal: true },
-        { field: 'STK_MOVEOUTCOST', header: '調出成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_MOVEINQTY', header: '數量', isSubTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEINCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEOUTQTY', header: '數量', isSubTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEOUTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEOUT' },
 
         // 異動 - 盤點/報廢
-        { field: 'STK_DIFFQTY', header: '盤點數量', isSubTotal: true },
-        { field: 'STK_DIFFCOST', header: '盤點成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SCRAPQTY', header: '報廢數量', format: formatAmount, isSubTotal: true },
-        { field: 'STK_SCRAPCOST', header: '報廢成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_DIFFQTY', header: '數量', isSubTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_DIFFCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_SCRAPCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_SCRAP' },
 
         // 異動 - 領用
-        { field: 'STK_TAKEQTY', header: '領用數量', isSubTotal: true },
-        { field: 'STK_TAKECOST', header: '領用成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_RETAKEQTY', header: '領用退回數量', isSubTotal: true },
-        { field: 'STK_RETAKECOST', header: '領用退回成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_TAKEQTY', header: '數量', isSubTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_TAKECOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_RETAKEQTY', header: '數量', isSubTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_RETAKECOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_RETAKE' },
 
         // 異動 - 同業調撥
-        { field: 'STK_TRDINQTY', header: '同業調撥(入)數量', isSubTotal: true },
-        { field: 'STK_TRDINCOST', header: '同業調撥(入)成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_TRDOUTQTY', header: '同業調撥(出)數量', isSubTotal: true },
-        { field: 'STK_TRDOUTCOST', header: '同業調撥(出)成本', format: formatAmount, isSubTotal: true },
+        { field: 'STK_TRDINQTY', header: '數量', isSubTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDINCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDOUTQTY', header: '數量', isSubTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDOUTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDOUT' },
 
         // 期末結算與利潤
         { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_CURRENTQTY', header: '期末數量', isSubTotal: true },
-        { field: 'STK_CURRENTCOST', header: '期末成本', format: formatAmount, isSubTotal: true },
-        { field: 'PLU_SALEPRCNET', header: '期末售價未稅', format: formatAmount, isSubTotal: true },
-        { field: 'PLU_SALEPRC', header: '期末售價含稅', format: formatAmount, isSubTotal: true },
+        { field: 'STK_CURRENTQTY', header: '期末數量', isSubTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'STK_CURRENTCOST', header: '期末成本', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
+        { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
         { field: 'STK_UNITCOST', header: '平均成本', format: formatAmount, isSubTotal: true },
         { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true }, // (銷售金額 / 1.05)
         { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true },

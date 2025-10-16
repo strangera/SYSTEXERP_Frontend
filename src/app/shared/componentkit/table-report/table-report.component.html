@@ -121,8 +121,8 @@
             (!expansionLoadFn && !rowData[expansionDataKey]?.length)
           " />
       </td>
-      <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis; min-width: 55px"
-        (dblclick)="detail.emit(rowData)" [ngClass]="[
+      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+        style="text-overflow: ellipsis; min-width: 55px" (dblclick)="detail.emit(rowData)" [ngClass]="[
           col.style || '',
           col.cellClass ? col.cellClass(rowData) || '' : '',
         ]" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen">
