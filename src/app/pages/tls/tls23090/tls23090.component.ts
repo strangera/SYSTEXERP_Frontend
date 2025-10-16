@@ -60,7 +60,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     TranslateModule,
     ButtonModule,
     NgIf,
-    TableReportComponent, // ✅ 使用 app-table-report
+    TableReportComponent,
   ],
 })
 export class TLS23090Component extends BasicQueryPageComponent<any> {
@@ -71,6 +71,9 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
   // 匯出沿用最後一次查詢的 payload + 提供給 app-table-report 的 lastQueryBody
   historyRequestBody: any | null = null;
+
+  // ✅ 總計列暫存（由兩個 queryFunction 同步）
+  private grandTotal: Record<string, number> = {};
 
   // 檢視模式（信用卡明細 / 專櫃卡別分析）
   private _viewMode: 'credit' | 'counter' = 'credit';
@@ -319,6 +322,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
         this.messageService?.unblockUi();
       })).subscribe({
         next: (res: any) => {
+          // 直接查詢（非 table-report）時只更新 rows/totalRecords；總計列交給 table-report 的 queryFunction 計算
           if (this.viewMode === 'counter') {
             const items: any[] =
               Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
@@ -379,7 +383,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- 給 app-table-report 的查詢函式（固定 30） ----------------- */
 
-  /** 信用卡明細 */
+  /** 信用卡明細（✅ 產出 GrandTotal 並同步本地） */
   public queryTLS23090CreditForReport = (body: any) =>
     this.tls23090Service
       .queryTLS23090({ ...(body || {}), PageSize: 30, pageSize: 30 })
@@ -398,18 +402,21 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
           const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          // GrandTotal：用 API 的 Total* 對應到欄位
+          // GrandTotal：用 API 的 Total* 對應到欄位（多 wrapper 就累加）
           const grand: Record<string, number> = {};
           Object.entries(this.creditTotalFieldMap).forEach(([field, apiKey]) => {
             const sum = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
             grand[field] = sum;
           });
 
+          // 同步到 footer
+          this.grandTotal = { ...grand };
+
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
       );
 
-  /** 專櫃卡別分析 */
+  /** 專櫃卡別分析（✅ 產出 GrandTotal 並同步本地） */
   public queryTLS23090CounterForReport = (body: any) =>
     this.tls23090Service
       .queryTLS23090CounterCard({ ...(body || {}), PageSize: 30, pageSize: 30 })
@@ -455,6 +462,9 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
             );
           });
 
+          // 同步到 footer
+          this.grandTotal = { ...grand };
+
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
       );
@@ -467,6 +477,9 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
     this.columns = this.viewMode === 'credit' ? this.columnsCredit : this.columnsCounter;
     this.sortMeta = nextDefault.map(x => ({ ...x }));
+
+    // 切換時清空 footer，避免殘留
+    this.grandTotal = {};
 
     // 重設分頁 & 排序到表單，並立即重新查詢
     this.queryForm.patchValue({ pageIndex: 1, SortBy: this.sortMeta }, { emitEvent: false });
@@ -586,8 +599,17 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
           .padStart(2, '0')}`;
   }
   private padTxnNo(v: any): string {
-  const s = String(v ?? '').trim();
-  return s ? s.padStart(6, '0') : '';
-}
+    const s = String(v ?? '').trim();
+    return s ? s.padStart(6, '0') : '';
+  }
 
+  /** ✅ 提供給 [footerData] 的總計列資料，只輸出有標 isTotal 的欄位 */
+  buildFooterFromGrandTotal(): Record<string, any> | undefined {
+    if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
+    const footer: Record<string, any> = {};
+    for (const col of this.columns) {
+      if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
+    }
+    return footer;
+  }
 }
