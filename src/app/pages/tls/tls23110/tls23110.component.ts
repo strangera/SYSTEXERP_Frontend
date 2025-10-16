@@ -76,7 +76,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     d.setDate(d.getDate() - 1);
     return d;
   })();
-
+private grandTotal: Record<string, number> = {};
   data: any[] = [];
   totalRecords = 0;
 
@@ -85,7 +85,15 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
   // 排序（預設依 Day 升冪）
   sortMeta: SortMeta[] = [{ field: 'Day', order: 1 }];
-
+buildFooterFromGrandTotal(): Record<string, any> | undefined {
+  if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
+  const footer: Record<string, any> = {};
+  for (const col of this.columns) {
+    if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
+  }
+  // 若想在某欄顯示「總計」字樣，可加：footer['Day'] = '總計';
+  return footer;
+}
   // 表單
   queryForm: any = this.formBuilder.group(
     {
@@ -257,36 +265,45 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
         })
       ).subscribe({
         next: (res: any) => {
-          const rawRows: any[] =
-            Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-            Array.isArray(res?.Data)            ? res.Data :
-            Array.isArray(res?.QueryData)       ? res.QueryData : [];
+  const rawRows: any[] =
+    Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+    Array.isArray(res?.Data)            ? res.Data :
+    Array.isArray(res?.QueryData)       ? res.QueryData : [];
 
-          const preferredOrder = [
-            'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
-            'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
-          ] as const;
-          const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
+  const preferredOrder = [
+    'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
+    'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
+  ] as const;
+  const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
 
-          const mapped = rawRows.map((row: any) => {
-            const flat: any = { Day: row?.Day ?? '' };
-            const d = row?.Discount_List || {};
-            for (const bucket of preferredOrder) {
-              const obj = d[bucket as string];
-              if (!obj) continue;
-              for (const m of metrics) {
-                const key = `${bucket}_${m}`;
-                const num = Number(obj[m as string] ?? 0);
-                if (Number.isFinite(num)) flat[key] = num;
-              }
-            }
-            flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
-            return flat;
-          });
+  const mapped = rawRows.map((row: any) => {
+    const flat: any = { Day: row?.Day ?? '' };
+    const d = row?.Discount_List || {};
+    for (const bucket of preferredOrder) {
+      const obj = d[bucket as string];
+      if (!obj) continue;
+      for (const m of metrics) {
+        const key = `${bucket}_${m}`;
+        const num = Number(obj[m as string] ?? 0);
+        if (Number.isFinite(num)) flat[key] = num;
+      }
+    }
+    flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+    return flat;
+  });
 
-          this.data = mapped;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : mapped.length;
-        },
+  this.data = mapped;
+  this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : mapped.length;
+
+  // 🔴 關鍵：首次 onSubmit 也要把總計算好，讓 footer 有資料
+  const grandFromApi = this.buildGrandFromTotalSummary(res?.Data?.TotalSummary);
+  const fallbackGrand = this.computeGrandTotals(mapped);
+  this.grandTotal = Object.keys(grandFromApi).length ? grandFromApi : fallbackGrand;
+
+  // （可選）如果想在第一欄顯示「總計」兩字：
+  // const footer = this.buildFooterFromGrandTotal();
+  // if (footer) footer['Day'] = '總計';
+},
         error: () => {
           this.data = [];
           this.totalRecords = 0;
@@ -296,46 +313,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   }
 
   // ====== 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，回傳 GrandTotal ======
-  public queryTLS23110ForReport = (body: any) =>
-    this.tls23110Service
-      .queryTLS23110({ ...(body || {}), pageSize: 30, PageSize: 30 })
-      .pipe(
-        map((res: any) => {
-          const rawRows: any[] =
-            Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-            Array.isArray(res?.Data)            ? res.Data :
-            Array.isArray(res?.QueryData)       ? res.QueryData : [];
-
-          const preferredOrder = [
-            'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
-            'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
-          ] as const;
-          const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
-
-          const rows = rawRows.map((row: any) => {
-            const flat: any = { Day: row?.Day ?? '' };
-            const d = row?.Discount_List || {};
-            for (const bucket of preferredOrder) {
-              const obj = d[bucket as string];
-              if (!obj) continue;
-              for (const m of metrics) {
-                const key = `${bucket}_${m}`;
-                const num = Number(obj[m as string] ?? 0);
-                if (Number.isFinite(num)) flat[key] = num;
-              }
-            }
-            flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
-            return flat;
-          });
-
-          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-          // GrandTotal：以欄位(field)為鍵，僅對 columns 中 isTotal=true 的欄位加總
-          const grand = this.computeGrandTotals(rows);
-
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        })
-      );
 
   // ===== 匯出 PDF：不帶 pageSize/pageIndex（含大小寫） =====
   private buildExportBody() {
@@ -476,4 +453,69 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
       return sameMonth ? null : { notSameMonth: true };
     };
   }
+  public queryTLS23110ForReport = (body: any) =>
+  this.tls23110Service
+    .queryTLS23110({ ...(body || {}), pageSize: 30, PageSize: 30 })
+    .pipe(
+      map((res: any) => {
+        const rawRows: any[] =
+          Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+          Array.isArray(res?.Data)            ? res.Data :
+          Array.isArray(res?.QueryData)       ? res.QueryData : [];
+
+        const preferredOrder = [
+          'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
+          'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
+        ] as const;
+        const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
+
+        const rows = rawRows.map((row: any) => {
+          const flat: any = { Day: row?.Day ?? '' };
+          const d = row?.Discount_List || {};
+          for (const bucket of preferredOrder) {
+            const obj = d[bucket as string];
+            if (!obj) continue;
+            for (const m of metrics) {
+              const key = `${bucket}_${m}`;
+              const num = Number(obj[m as string] ?? 0);
+              if (Number.isFinite(num)) flat[key] = num;
+            }
+          }
+          flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+          return flat;
+        });
+
+        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+        // ✅ 優先用 API 的 TotalSummary 轉成對應欄位；沒有就用當頁加總
+        const grandFromApi = this.buildGrandFromTotalSummary(res?.Data?.TotalSummary);
+        const pageGrand = this.computeGrandTotals(rows);
+        const grand = Object.keys(grandFromApi).length ? grandFromApi : pageGrand;
+
+        // ✅ 只在第一頁同步到 component 狀態，避免後面分頁覆蓋
+        const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
+        if (isFirstPage) this.grandTotal = { ...grand };
+
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      })
+    );
+    /** 把 API 的 TotalSummary 轉成 { [field]: number }，只產出 columns 中 isTotal 的欄位 */
+private buildGrandFromTotalSummary(totalSummary: any): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!totalSummary) return out;
+
+  for (const col of this.columns) {
+    if (!col?.isTotal) continue;
+    const field: string = col.field;
+    const [bucket, metric] = field.split('_'); // e.g. "OriginalPrice_TXN_SaleNoTax"
+    if (!bucket || !metric) continue;
+
+    const bucketObj = totalSummary[bucket];
+    const val = Number(bucketObj?.[metric] ?? 0);
+    if (Number.isFinite(val)) out[field] = val;
+  }
+  return out;
+}
+
+
 }

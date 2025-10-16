@@ -78,13 +78,13 @@
 
       <td [ngStyle]="{'text-align': 'right'}">
         <span>
-          {{ rowData['D_AMT'] | number:'1.2-2'}}
+          {{ formatAmountNo0(rowData['D_AMT'])}}
         </span>
       </td>
 
       <td [ngStyle]="{'text-align': 'right'}">
         <span>
-          {{rowData['C_AMT'] | number:'1.2-2'}}
+          {{formatAmountNo0(rowData['C_AMT'] | number:'1.2-2')}}
         </span>
       </td>
 

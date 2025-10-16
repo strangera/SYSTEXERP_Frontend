@@ -10,7 +10,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { Tls57070DataItem, Tls57070Service } from '@service/api/tls/tls57070.service';
 import { HttpResponse } from '@angular/common/http';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
 import { ColumnGroup, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -132,8 +132,8 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
 
         // 期末結算與利潤
         { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: formatAmount, isSubTotal: true },
-        { field: 'STK_CURRENTQTY', header: '期末數量', isSubTotal: true, groupField: 'STK_CURRENT' },
-        { field: 'STK_CURRENTCOST', header: '期末成本', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
+        // { field: 'STK_CURRENTQTY', header: '期末數量', isSubTotal: true, groupField: 'STK_CURRENT' },
+        // { field: 'STK_CURRENTCOST', header: '期末成本', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
         { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
         { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
         { field: 'STK_UNITCOST', header: '平均成本', format: formatAmount, isSubTotal: true },
@@ -215,7 +215,10 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
         console.log(res);
         this.DetailSumData = res.DetailSumData;
         this.lastQueryBody = body;
-        this.footerData = res.SumData;
+        this.footerData = {
+          ...res.SumData,
+          STK_UNITCOST: '--',
+        };
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
       })
