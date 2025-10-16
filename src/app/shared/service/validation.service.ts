@@ -50,6 +50,7 @@ export class ValidationService {
       max: `最大值為${validatorValue.max}`,
       min: `最小值為${validatorValue.min}`,
       textRange: '起號不可大於迄號',
+      invalidGuiVehicle: '格式錯誤：需以「/」為開頭，長度8碼，且第2碼後只能包含半形英數字+-.等符號',
     };
     return config[validatorName];
   }

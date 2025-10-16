@@ -135,6 +135,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     TXN_OverAmt:   'totalOverAmt',
     TXN_ReturnAmt: 'totalReturnAmt',
     TXN_CancelAmt: 'totalCancelAmt',
+    TXN_ExchgAmt:  'totalExchgAmt',
   };
 
   // 下拉

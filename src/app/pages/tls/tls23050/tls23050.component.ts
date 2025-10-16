@@ -402,6 +402,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
       TXN_OverAmt:    n(first?.totalOverAmt),
       TXN_ReturnAmt:  n(first?.totalReturnAmt),
       TXN_CancelAmt:  n(first?.totalCancelAmt),
+      TXN_ExchgAmt:  n(first?.totalExchgAmt),
     };
   }
 
