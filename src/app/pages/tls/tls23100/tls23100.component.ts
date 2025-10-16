@@ -55,6 +55,11 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 private grandTotal: Record<string, number> = {};
+// ① 新增：總計欄位對應（之後可擴充）
+private readonly totalFieldMap: Record<string, string> = {
+  TXN_PayAmt: 'totalPayAmt',
+};
+
   // 預設日期（昨天）
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -205,21 +210,32 @@ private grandTotal: Record<string, number> = {};
           this.messageService?.unblockUi();
         })
       ).subscribe({
-        next: (res: any) => {
-          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
+next: (res: any) => {
+  const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
 
-          const rows = wrappers
-            .flatMap((w: any) =>
-              w?.tLS23100Details ?? w?.TLS23100Details ?? w?.tls23100Details ?? []
-            )
-            .map((row: any, idx: number) => ({
-              ...row,
-              _rowKey: `row|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
-            }));
+  const rows = wrappers
+    .flatMap((w: any) =>
+      w?.tLS23100Details ?? w?.TLS23100Details ?? w?.tls23100Details ?? []
+    )
+    .map((row: any, idx: number) => ({
+      ...row,
+      _rowKey: `row|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
+    }));
 
-          this.data = rows;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-        },
+  this.data = rows;
+  this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+  // ✅ 這裡就把整體總計同步到頁尾（用 wrapper 的 totalPayAmt；若後端沒給，退回用這一頁加總）
+  const totalFromWrapper = wrappers.reduce(
+    (s: number, w: any) => s + Number(w?.totalPayAmt ?? 0),
+    0
+  );
+  const fallbackPageSum = rows.reduce(
+    (s: number, r: any) => s + Number(r?.TXN_PayAmt ?? 0),
+    0
+  );
+  this.grandTotal = { TXN_PayAmt: totalFromWrapper || fallbackPageSum };
+},
         error: () => {
           this.data = [];
           this.totalRecords = 0;
@@ -322,6 +338,17 @@ private grandTotal: Record<string, number> = {};
   return s ? s.padStart(6, '0') : '';
 }
 
+// ✅ 提供給 [footerData] 的資料，只輸出有 isTotal 的欄位
+buildFooterFromGrandTotal(): Record<string, any> | undefined {
+  if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
+  const footer: Record<string, any> = {};
+  for (const col of this.columns) {
+    if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
+  }
+  // 想在某欄顯示「總計」字樣可加：例如 footer['tlt_name'] = '總計';
+  return footer;
+}
+
 public queryTLS23100ForReport = (body: any) =>
   this.tls23100Service
     .queryTLS23100({ ...(body || {}), pageSize: 30, PageSize: 30 })
@@ -338,7 +365,7 @@ public queryTLS23100ForReport = (body: any) =>
 
         const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-        // ✅ 用 wrapper 的 totalPayAmt；若後端沒給，退回用目前頁面的加總
+        // ✅ 以 API 的 totalPayAmt 為準（多 wrapper 相加），沒有就用當頁加總做後援
         const totalFromWrapper = wrappers.reduce(
           (s: number, w: any) => s + Number(w?.totalPayAmt ?? 0),
           0
@@ -349,22 +376,14 @@ public queryTLS23100ForReport = (body: any) =>
         );
         const grand = { TXN_PayAmt: totalFromWrapper || fallbackPageSum };
 
-        // ✅ 同步給 footer builder 使用
-        this.grandTotal = { ...grand };
+        // ✅ 僅在第一頁同步到 component 狀態，避免捲動載入把整體總計覆蓋成分頁值
+        const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
+        if (isFirstPage) {
+          this.grandTotal = { ...grand };
+        }
 
         return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
       })
     );
-
-// ✅ 提供給 [footerData] 的資料，只輸出有 isTotal 的欄位
-buildFooterFromGrandTotal(): Record<string, any> | undefined {
-  if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
-  const footer: Record<string, any> = {};
-  for (const col of this.columns) {
-    if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
-  }
-  // 想在某欄顯示「總計」字樣可加：例如 footer['tlt_name'] = '總計';
-  return footer;
-}
 
 }

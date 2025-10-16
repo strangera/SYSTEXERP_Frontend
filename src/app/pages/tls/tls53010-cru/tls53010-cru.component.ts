@@ -56,7 +56,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   }
 
   dataForm = this.formBuilder.nonNullable.group({
-    PST_No: [''], // 盤點單編號
+    PST_No: ['系統自動產生'], // 盤點單編號
     HOS_No: [null, Validators.required], // 倉別代碼 - 必填
     LOGO_No: [null, Validators.required], // 品牌代碼 - 必填
     PST_Date: [this.yesterday.toString(), Validators.required], // 盤點基準日期 - 必填
@@ -77,6 +77,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
 
   data: POS2004Info[] = [];
   selectedItems: POS2004Info[] = [];
+  detailLoading = false;
 
   constructor(
     private tls53010Service: TLS53010Service,
@@ -93,14 +94,10 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     this.loadOptions();
     this.setReadOnlyFields();
 
-    if (this.crudstatus === 'Create') {
-      // 新增時產生盤點單編號
-      this.dataForm.patchValue({ PST_No: '系統自動產生' });
-    }
-
     // 編輯跟檢視時 帶回明細資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       if (this.rowdata) {
+        this.detailLoading = true;
         const payload: TLS53010DetailQueryRequest = {
           MID: 0,
           PST_No: this.rowdata.PST_No,
@@ -108,7 +105,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
           HOS_No: this.rowdata.HOS_No
         };
         this.tls53010Service.queryTLS53010Detail(payload)
-          .pipe(untilDestroyed(this))
+          .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
           .subscribe(response => {
             this.data = response.Data;
           });

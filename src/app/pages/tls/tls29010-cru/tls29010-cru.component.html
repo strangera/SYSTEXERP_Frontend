@@ -95,7 +95,8 @@
             [loading]="expandDetailLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
             [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
             [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"
-            (batchDelete)="onBatchDeleteDetail($event)" (addMainItem)="onAddPotentialCustomerDetail()"></app-expandable-edit-table>
+            (batchDelete)="onBatchDeleteDetail($event)" (addMainItem)="onAddPotentialCustomerDetail()"
+            ></app-expandable-edit-table>
 
 
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"

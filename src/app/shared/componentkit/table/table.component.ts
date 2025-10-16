@@ -5,7 +5,7 @@ import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
-import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowReorderEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
 import { COMMON_IMPORTS } from './import-table';
@@ -69,6 +69,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();
   /** 資料點選(事件) */
   @Output() itemClick = new EventEmitter<any>();
+  /** 資料重新排序(事件) */
+  @Output() rowReorder = new EventEmitter<TableRowReorderEvent>();
 
   // Header 相關
   /** 是否顯示 Caption @default true */
@@ -505,5 +507,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as Column[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
+  }
+
+  // 資料列重新排序
+  onRowReorder(event: TableRowReorderEvent): void {
+    this.rowReorder.emit(event);
   }
 }

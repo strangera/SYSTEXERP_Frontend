@@ -67,6 +67,6 @@
       (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
       [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'pod_no', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [isRowSelectable]="isRowSelectable"></app-table>
+      [isRowSelectable]="isRowSelectable" [addButton]="addButton" [buttonsLoading]="btnLoading"></app-table>
   </div>
 </div>
