@@ -12,6 +12,7 @@ export interface ReportColumn {
   isTotal?: boolean; // 是否為總計欄位
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
+  align?: 'left' | 'center' | 'right';
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
