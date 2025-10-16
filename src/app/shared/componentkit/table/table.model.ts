@@ -200,15 +200,12 @@ export const formatAmountNo0 = (val: number | string | null | undefined): string
   if (val === null || val === undefined || val === '') {
     return '';
   }
-
   const num = Number(val);
-
   // 2. 檢查 NaN (如輸入 'abc') 或數值為 0
   // 如果是 NaN 或 num 等於 0 (符合您「不要給我自動有0」的需求)
   if (isNaN(num) || num === 0) {
     return '';
   }
-
   // 3. 格式化其他大於 0 的數值
   return num.toLocaleString(); // e.g. 1,000,000
 };
