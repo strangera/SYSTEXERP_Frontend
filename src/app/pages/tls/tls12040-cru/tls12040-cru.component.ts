@@ -189,6 +189,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
+    id: [''], // 必填但系統自動給號
     talent_id: [''], // 必填但系統自動給號
     apply_no: [''], // 必填但系統自動給號
     apply_type: [''],
@@ -269,6 +270,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     contact_tel: ['', [Validators.maxLength(20)]],
     contact_fax: ['', [Validators.maxLength(15)]],
     contact_addr: ['', [Validators.maxLength(100)]],
+    company_addr: ['', [Validators.maxLength(100)]],
     tlt_remark: ['', [Validators.maxLength(2000)]],
 
     // 狀態欄位
@@ -312,41 +314,137 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   ) { super(); }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.initializePage('TLS12040', this.dataForm, { useReadonly: true });
-    this.handleRouterState();  // 1. 先處理路由狀態
-    this.initializeFormDefaults();  // 2. 再初始化預設值
-    this.setupVendorUniformListener();  // 3. 設定監聽器
-    //  調試當前狀態
+    this.handleRouterState(); // 1. 處理路由狀態
+
+    // 先獲取暫存資料
+    const existingData = this.flowService.getCruData() as TLS12040DetailModel | undefined;
+    console.log('CRU ngOnInit，檢查 sessionStorage:',
+      JSON.stringify(existingData?.locationInfo || [], null, 2));
+
+    // 初始化表單和下拉選項
+    this.initializeFormDefaults(); // 2. 初始化預設值，包含 existingData 處理
+    this.initializeDropdownOptions(); // 3. 初始化下拉選項
+    this.setupVendorUniformListener(); // 4. 設定監聽器
+    this.setupDynamicValidators(); // 5. 設定動態驗證
+
+    // 調試當前狀態
     console.log('=== CRU 狀態調試 ===');
     console.log('當前 CRUD 狀態:', this.crudstatus);
     console.log('表單標題:', this.formTitle);
     console.log('表單是否禁用:', this.dataForm.disabled);
-    this.flowService.setCruData(this.dataForm.value);
-    this.setupDynamicValidators();
-    // 先保護現有資料
-    const existingData = this.flowService.getCruData() as any;
+    console.log('當前 locationInfo:', JSON.stringify(this.locationInfo, null, 2));
 
-    // 先初始化下拉選項
-    this.initializeDropdownOptions();
+    // 構造 rawData，確保符合 TLS12040DetailModel
+    const formValue = this.dataForm.value;
+    const rawData: TLS12040DetailModel = {
+      id: formValue.id || null,
+      talent_id: formValue.talent_id || '',
+      apply_no: formValue.apply_no || '',
+      tlt_no: formValue.tlt_no || undefined,
+      tlt_name: formValue.tlt_name || '',
+      ven_uniform: formValue.ven_uniform || '',
+      ven_no: formValue.ven_no || '',
+      VEN_Name: formValue.VEN_Name || '',
+      contract_subno: formValue.contract_subno || undefined,
+      contract_no: formValue.contract_no || undefined,
+      apply_type: formValue.apply_type || '',
+      apply_date: formValue.apply_date || '',
+      contract_type: formValue.contract_type || undefined,
+      apply_status: formValue.apply_status || '',
+      tlt_bdate: formValue.tlt_bdate || '',
+      tlt_edate: formValue.tlt_edate || '',
+      tlt_contract_bdate: formValue.tlt_contract_bdate || '',
+      tlt_contract_edate: formValue.tlt_contract_edate || '',
+      feedback_date: formValue.feedback_date || null,
+      due_date: formValue.due_date || null,
+      contact_Date: formValue.contact_Date || null,
+      tlt_term_type: formValue.tlt_term_type || '',
+      comm_comp_type: formValue.comm_comp_type || '',
+      paper_type: formValue.paper_type || undefined,
+      bus_type: formValue.bus_type || '',
+      bus_class: formValue.bus_class || '',
+      bus_sclass: formValue.bus_sclass || undefined,
+      org_id: formValue.org_id || undefined,
+      contact_USR_No: formValue.contact_USR_No || undefined,
+      contact_USR_Name: formValue.contact_USR_Name || undefined,
+      deco_type: formValue.deco_type || undefined,
+      money_type: formValue.money_type || undefined,
+      check_typeList: formValue.check_typeList || undefined,
+      check_type: formValue.check_type || undefined,
+      edc_yn: formValue.edc_yn || undefined,
+      tlt_openflag: formValue.tlt_openflag || undefined,
+      comm_yn: formValue.comm_yn || undefined,
+      rece_yn: formValue.rece_yn || undefined,
+      pos_yn: formValue.pos_yn || undefined,
+      cash_yn: formValue.cash_yn || undefined,
+      store_way: formValue.store_way || undefined,
+      paytype: formValue.paytype || undefined,
+      vip_yn: formValue.vip_yn || undefined,
+      base_rent: formValue.base_rent || undefined,
+      deposit: formValue.deposit || undefined,
+      credit_card: formValue.credit_card || undefined,
+      check_day: formValue.check_day || undefined,
+      total_amt: formValue.total_amt || undefined,
+      total_amt_vendor: formValue.total_amt_vendor || undefined,
+      construct_deposit: formValue.construct_deposit || undefined,
+      construct_fees: formValue.construct_fees || undefined,
+      expiration_deposit: formValue.expiration_deposit || undefined,
+      expiration_fees: formValue.expiration_fees || undefined,
+      open_deposit: formValue.open_deposit || undefined,
+      open_fees: formValue.open_fees || undefined,
+      invoice_type: formValue.invoice_type || undefined,
+      tlt_kind: formValue.tlt_kind || undefined,
+      tlt_ctype_mtotal: formValue.tlt_ctype_mtotal || undefined,
+      overall_status: formValue.overall_status || undefined,
+      rent_ahead: formValue.rent_ahead || undefined,
+      rent_period: formValue.rent_period || undefined,
+      water_flag: formValue.water_flag || undefined,
+      electric_flag: formValue.electric_flag || undefined,
+      gas_flag: formValue.gas_flag || undefined,
+      cap_saletype1: formValue.cap_saletype1 || undefined,
+      cap_saletype2: formValue.cap_saletype2 || undefined,
+      cap_saletype3: formValue.cap_saletype3 || undefined,
+      cap_saletype4: formValue.cap_saletype4 || undefined,
+      cap_saletype5: formValue.cap_saletype5 || undefined,
+      email: formValue.email || undefined,
+      invoice_email: formValue.invoice_email || undefined,
+      CHECK_TITLE: formValue.CHECK_TITLE || undefined,
+      store_tel: formValue.store_tel || undefined,
+      bank_id: formValue.bank_id || undefined,
+      vendor_acct_name: formValue.vendor_acct_name || undefined,
+      vendor_acct_no: formValue.vendor_acct_no || undefined,
+      contact_tel: formValue.contact_tel || undefined,
+      contact_fax: formValue.contact_fax || undefined,
+      contact_addr: formValue.contact_addr || undefined,
+      company_addr: formValue.company_addr || undefined,
+      tlt_remark: formValue.tlt_remark || undefined,
+      ticket_remarks: formValue.ticket_remarks || undefined,
+      total_amt_unit: formValue.total_amt_unit || undefined,
+      total_amt_vendor_unit: formValue.total_amt_vendor_unit || undefined,
+      approve_status: formValue.approve_status || '',
+      VEN_Address: formValue.VEN_Address || '',
+      locationInfo: this.locationInfo || []
+    };
 
-    // 如果之前有資料，確保不被覆蓋
+    console.log('儲存 cru 前，rawData.locationInfo:', JSON.stringify(rawData.locationInfo, null, 2));
+    this.flowService.setCruData(rawData);
+
+    // 如果有暫存資料，載入分類和選項
     if (existingData && Object.keys(existingData).length > 0) {
-      console.log(' 使用暫存資料，跳過 API 載入');
-
-      // 直接載入暫存資料（包含分類）
+      console.log('使用暫存資料，跳過 API 載入');
       this.loadCachedDataWithClassifications(existingData);
-
-      // ⚠️ 關鍵：延遲載入 selector panel 選項（背景執行）
       setTimeout(() => {
         this.updateSelectorPanelOptions();
       }, 100);
-
     } else {
-      console.log(' 首次載入，需要打 API');
-      // 首次載入才打 API
-      this.initializeDropdownOptions();
+      console.log('首次載入，需要打 API');
+      // 打 API 載入資料
+      // 假設這會更新 this.dataForm 和 this.locationInfo
     }
+
+    this.cdr.detectChanges();
   }
 
   private loadCachedDataWithClassifications(cruData: any): void {
@@ -465,7 +563,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.crudModeService.setCrudStatus(this.crudstatus);
 
         // 🟢 直接載入暫存資料
-        const cruData = this.flowService.getCruData<TLS12040DetailModel>();
+        const cruData = this.flowService.getCruData();
         if (cruData) {
           console.log('💾 載入暫存的 CRU 資料');
           console.log('位置資料數量:', cruData.locationInfo?.length || 0);
@@ -531,7 +629,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       }
     } else {
       // 沒有路由狀態，檢查是否有暫存資料
-      const savedData = this.flowService.getCruData<TLS12040DetailModel>();
+      const savedData = this.flowService.getCruData();
       if (savedData) {
         console.log('📦 使用暫存資料初始化');
 
@@ -1062,7 +1160,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
 
     // 🔍 驗證保存後的資料
-    const savedData = this.flowService.getCruData<TLS12040DetailModel>();
+    const savedData = this.flowService.getCruData();
     console.log('✅ 保存後驗證:', {
       tlt_bdate: savedData?.tlt_bdate,
       tlt_edate: savedData?.tlt_edate,
@@ -1998,21 +2096,24 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // 3. 初始化預設值的方法
   private initializeFormDefaults(): void {
-    const existingData = this.flowService.getCruData() as any;
+    const existingData = this.flowService.getCruData() as TLS12040DetailModel;
+    console.log('CRU 初始化時 cruData:', JSON.stringify(existingData?.locationInfo, null, 2));
 
     if (existingData && Object.keys(existingData).length > 0) {
-      console.log(' 使用暫存資料，跳過預設值設定');
+      console.log('使用暫存資料，跳過預設值設定');
+      this.dataForm.patchValue(existingData);
+      this.locationInfo = existingData.locationInfo || [];
+      this.displayLocationData = this.locationInfo.filter(item => item._status !== 'deleted');
+      this.cdr.detectChanges();
       this.loadCachedDataWithClassifications(existingData);
     } else {
       console.log('🆕 新增模式，設定預設值');
       this.formInitService.initializeByMode(this.dataForm, this.crudstatus);
 
-      //自動帶入當前使用者為洽談者
       if (this.crudstatus === CRUDStatus.Create) {
         this.setCurrentUserAsNegotiator();
       }
 
-      // 立即觸發驗證器
       this.triggerAllDynamicValidators();
     }
   }

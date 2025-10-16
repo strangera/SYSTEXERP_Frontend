@@ -40,7 +40,34 @@ export interface TLS12040DataCleaner<T = any> {
 
 // 各步驟的資料清理器
 class CruDataCleaner implements TLS12040DataCleaner {
-  clean(data: any) {
+  clean(data: TLS12040DetailModel) {
+    console.log('清理前的 locationInfo:', JSON.stringify(data.locationInfo, null, 2));
+    const cleanedLocationInfo = Array.isArray(data.locationInfo)
+      ? data.locationInfo
+        .filter((item: any) => {
+          const hasLocationNo = item.location_no && item.location_no.trim() !== '';
+          if (!hasLocationNo) {
+            console.warn('過濾掉無效位置項目:', JSON.stringify(item, null, 2));
+          }
+          return hasLocationNo;
+        })
+        .map((item: any) => ({
+          id: item.id || '',
+          apply_no: item.apply_no || '',
+          location_no: item.location_no.trim(),
+          tlt_building: item.tlt_building || '',
+          tlt_floor: item.tlt_floor || '',
+          area_no: item.area_no || '',
+          tlt_space: Number(item.tlt_space) || 0,
+          building_desc: item.building_desc || '',
+          floor_desc: item.floor_desc || '',
+          area_desc: item.area_desc || '',
+          _status: item._status || 'original',
+          _isNew: Boolean(item._isNew)
+        }))
+      : [];
+    console.log('清理後的 locationInfo:', JSON.stringify(cleanedLocationInfo, null, 2));
+
     return {
       apply_no: data.apply_no || '',
       apply_date: data.apply_date || '',
@@ -53,6 +80,7 @@ class CruDataCleaner implements TLS12040DataCleaner {
       ven_no: data.ven_no || '',
       VEN_Name: data.VEN_Name || '',
       contract_subno: data.contract_subno || '',
+      check_type: data.check_type || '',
       tlt_bdate: data.tlt_bdate || '',
       tlt_edate: data.tlt_edate || '',
       tlt_contract_bdate: data.tlt_contract_bdate || '',
@@ -107,7 +135,6 @@ class CruDataCleaner implements TLS12040DataCleaner {
       cap_saletype3: data.cap_saletype3 || '',
       cap_saletype4: data.cap_saletype4 || '',
       cap_saletype5: data.cap_saletype5 || '',
-
       email: data.email || '',
       invoice_email: data.invoice_email || '',
       CHECK_TITLE: data.CHECK_TITLE || '',
@@ -125,33 +152,17 @@ class CruDataCleaner implements TLS12040DataCleaner {
       total_amt_vendor_unit: data.total_amt_vendor_unit || '',
       approve_status: data.approve_status || '',
       VEN_Address: data.VEN_Address || '',
-      locationInfo: Array.isArray(data.locationInfo) ?
-        data.locationInfo
-          .filter((item: any) => {
-            const hasLocationNo = item.location_no && item.location_no.trim() !== '';
-            if (!hasLocationNo) {
-              console.log('過濾掉空位置編號的資料:', item);
-            }
-            return hasLocationNo;
-          })
-          .map((item: any) => ({
-            id: item.id || '',
-            apply_no: item.apply_no || '',
-            location_no: item.location_no.trim(),
-            tlt_building: item.tlt_building || '',
-            tlt_floor: item.tlt_floor || '',
-            area_no: item.area_no || '',
-            tlt_space: Number(item.tlt_space) || 0,
-            building_desc: item.building_desc || '',
-            floor_desc: item.floor_desc || '',
-            area_desc: item.area_desc || '',
-            _status: item._status || 'original',
-            _isNew: Boolean(item._isNew)
-          })) : []
+      locationInfo: cleanedLocationInfo
     };
   }
+
   validate(data: any): boolean {
-    return true;
+    // 添加簡單驗證邏輯，確保 locationInfo 不為空時至少有一個有效項目
+    const isValidLocationInfo = Array.isArray(data.locationInfo) && data.locationInfo.length > 0;
+    if (!isValidLocationInfo && data.apply_no) {
+      console.warn('驗證失敗：apply_no 存在但 locationInfo 為空', { apply_no: data.apply_no });
+    }
+    return true; // 保留原始邏輯，根據需要可加強驗證
   }
 }
 
@@ -319,7 +330,12 @@ export class TLS12040FlowService {
     }
 
     try {
-      // 自動清理資料
+      // 🔍 儲存前記錄 cru 資料
+      const originalCruData = this._state.stepData.get('cru');
+      console.log(`儲存 ${stepName} 前，cru locationInfo:`,
+        JSON.stringify(originalCruData?.data?.locationInfo || [], null, 2));
+
+      // 清理資料
       const cleanedData = cleaner.clean(rawData);
       const isValid = cleaner.validate(cleanedData);
 
@@ -330,15 +346,22 @@ export class TLS12040FlowService {
         isValid
       };
 
-      // 更新 state - 創建新物件保持 immutable
+      // ✅ 建立新的 stepData Map，保留所有現有步驟
       const newStepData = new Map(this._state.stepData);
       newStepData.set(stepName, stepData);
+
+      // ⚠️ 確保 cru 資料不被清空
+      if (stepName !== 'cru' && originalCruData && !newStepData.get('cru')) {
+        console.warn('檢測到 cru 資料丟失，自動恢復');
+        newStepData.set('cru', originalCruData);
+      }
 
       const newCompletedSteps = new Set(this._state.completedSteps);
       if (isValid) {
         newCompletedSteps.add(stepName);
       }
 
+      // 更新狀態
       this._state = {
         ...this._state,
         stepData: newStepData,
@@ -351,12 +374,20 @@ export class TLS12040FlowService {
         }
       };
 
+      // 🔍 儲存後檢查 cru 資料
+      const updatedCruData = this._state.stepData.get('cru');
+      console.log(`儲存 ${stepName} 後，cru locationInfo:`,
+        JSON.stringify(updatedCruData?.data?.locationInfo || [], null, 2));
+
+      if (originalCruData && !updatedCruData?.data?.locationInfo?.length) {
+        console.error('🚨 cru locationInfo 在儲存後變空！');
+      }
+
       this.notifyStateChange();
       this.saveToStorage();
       return true;
-
     } catch (error) {
-      console.error(`步驟 ${stepName} 資料清理失敗:`, error);
+      console.error(`步驟 ${stepName} 資料儲存失敗:`, error);
       return false;
     }
   }
@@ -364,11 +395,11 @@ export class TLS12040FlowService {
   /**
    * 取得步驟資料 - 統一方法
    */
-  getStepData<T>(stepName: string): T | null {
+  getStepData<T = any>(stepName: string): TLS12040StepData<T> | undefined {
     const stepData = this._state.stepData.get(stepName);
-    return stepData?.data as T || null;
+    console.log(`獲取 ${stepName} 步驟資料:`, stepData);
+    return stepData as TLS12040StepData<T> | undefined;
   }
-
   /**
    * 檢查步驟是否完成
    */
@@ -380,7 +411,11 @@ export class TLS12040FlowService {
 
   // CRU 資料
   setCruData = (data: any) => this.setStepData('cru', data);
-  getCruData = <T>() => this.getStepData<T>('cru');
+  getCruData(): TLS12040DetailModel | undefined {
+    const cruStep = this.getStepData('cru');
+    console.log('getCruData 獲取 cru 資料:', cruStep?.data?.locationInfo);
+    return cruStep?.data;
+  }
 
   // Next1 資料
   setNext1Data = (data: any) => this.setStepData('next1', data);
@@ -464,7 +499,7 @@ export class TLS12040FlowService {
     console.log('開始生成 TLS12040 提交資料...');
 
     // 取得各步驟資料
-    const cruData = this.getCruData<TLS12040DetailModel>();
+    const cruData = this.getCruData();
     const next1Data = this.getNext1Data();
     const next2Data = this.getNext2Data();
     const next3Data = this.getNext3Data();

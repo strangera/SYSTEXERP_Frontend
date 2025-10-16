@@ -547,7 +547,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('載入合約資訊...');
 
     // 指定型別
-    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
+    const cruData = this.flowService.getCruData();
     console.log('CRU 資料:', cruData);
 
     if (cruData) {
@@ -709,36 +709,30 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 儲存到工作流程
   private saveFareDataToWorkflow(): void {
-    try {
-      // console.log('準備儲存 Next1 資料到工作流程...');
+    console.log('儲存 next1 資料前檢查 cru:');
+    const cruBefore = this.flowService.getStepData('cru');
+    console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
 
-      if (!this.hasAnyData()) {
-        console.log('沒有資料需要儲存');
-        return;
+    const next1Data = {
+      fareData: this.fareData,
+      selectedItems: Object.values(this.fareData).flat().filter(item => item.is_selected),
+      contractInfo: this.contractInfoData
+    };
+
+    const saveResult = this.flowService.setStepData('next1', next1Data);
+
+    if (saveResult) {
+      console.log('✅ next1 資料儲存成功');
+      const cruAfter = this.flowService.getStepData('cru');
+      console.log('儲存 next1 後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
+      if (
+        cruBefore?.data?.locationInfo?.length > 0 &&
+        (!cruAfter?.data?.locationInfo || cruAfter.data.locationInfo.length === 0)
+      ) {
+        console.error('🚨 next1 儲存導致 cru locationInfo 清空！');
       }
-
-      const next1Data: Next1Data = {
-        fareData: { ...this.originalFareData },
-        selectedItems: this.getSelectedItems(),
-        contractInfo: this.currentContractData,
-        timestamp: new Date().getTime(),
-        applyNo: this.currentApplyNo
-      };
-
-      // 儲存到工作流程服務
-      const saveResult = this.flowService.setNext1Data(next1Data);
-
-      if (saveResult) {
-        // console.log(' Next1 資料已儲存到工作流程:', {
-        //   扣款項目總數: this.getTotalItemCount(),
-        //   已選項目數: this.getTotalSelectedCount(),
-        //   時間戳: new Date(next1Data.timestamp).toLocaleString()
-        // });
-      }
-
-    } catch (error) {
-      console.error('儲存 Next1 資料失敗:', error);
-      this.messageService.warnBubble('儲存扣款資料失敗');
+    } else {
+      console.error('❌ next1 資料儲存失敗');
     }
   }
 
@@ -1698,15 +1692,15 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private getTotalLocationSpace(): number {
     // 從工作流程服務取得 CRU 資料
-    const cruData = this.flowService.getCruData<any>();
+    const cruData = this.flowService.getCruData();
 
-    if (!cruData || !cruData.locationData || !Array.isArray(cruData.locationData)) {
+    if (!cruData || !cruData.locationInfo || !Array.isArray(cruData.locationInfo)) {
       console.log('沒有位置資料可計算坪數');
       return 0;
     }
 
     // 計算所有有效位置的坪數總和
-    const totalSpace = cruData.locationData
+    const totalSpace = cruData.locationInfo
       .filter((item: any) =>
         item._status !== 'deleted' && // 排除已刪除的項目
         item.location_no && // 確保有位置編號
@@ -1718,8 +1712,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       }, 0);
 
     console.log('計算位置總坪數:', {
-      位置數量: cruData.locationData.length,
-      有效位置: cruData.locationData.filter((item: any) =>
+      位置數量: cruData.locationInfo.length,
+      有效位置: cruData.locationInfo.filter((item: any) =>
         item._status !== 'deleted' && item.location_no && item.location_no.trim() !== ''
       ).length,
       總坪數: totalSpace
@@ -1729,8 +1723,15 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnDestroy(): void {
-    console.log('TLS12040Next1Component 銷毀');
+    console.log('next1 銷毀前檢查 cru:');
+    const cruBefore = this.flowService.getStepData('cru');
+    console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
+
     this.saveFareDataToWorkflow();
+
+    const cruAfter = this.flowService.getStepData('cru');
+    console.log('next1 銷毀後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
+
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 

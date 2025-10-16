@@ -15,7 +15,7 @@ export interface LocationDetails {
 }
 
 export interface TLS12040RequestModel {
-  id: number | string;
+  id: number | string | undefined | null;
   apply_no: string;
 }
 
@@ -27,7 +27,7 @@ export interface Tls12040SelectorTableColumn {
 
 
 export interface TLS12040DetailModel {
-  id: number | string;
+  id?: string | null;
   // ========== 基本資訊 ==========
   talent_id: string;
   apply_no: string;     // 專櫃招募編號

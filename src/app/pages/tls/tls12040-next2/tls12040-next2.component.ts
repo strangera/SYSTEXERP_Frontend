@@ -133,7 +133,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   get currentCommissionType(): string {
     // 1. 優先從 flowService 的 CRU 資料取得（最可靠的來源）
-    const step1Data = this.flowService.getCruData<TLS12040DetailModel>();
+    const step1Data = this.flowService.getCruData();
     if (step1Data?.tlt_term_type) {
       // console.log('從 flowService CRU 資料取得 tlt_term_type:', step1Data.tlt_term_type);
       return step1Data.tlt_term_type.toString();
@@ -291,7 +291,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private loadContractInfo(): void {
     console.log('載入合約資訊...');
 
-    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
+    const cruData = this.flowService.getCruData();
 
     if (cruData) {
       this.prepareContractInfoDisplay(cruData);
@@ -412,7 +412,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private async loadWorkflowData(): Promise<void> {
     console.log('🔄 開始載入工作流程資料...');
 
-    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
+    const cruData = this.flowService.getCruData();
     console.log('📋 CRU 資料:', cruData);
 
     // 設定 apply_no
@@ -1021,7 +1021,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
+    const cruData = this.flowService.getCruData();
 
     // 修正：新增模式下 apply_no 可以是空的，後端會生成
     const applyNo = cruData?.apply_no || '';  // 允許空字串
@@ -1798,7 +1798,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private getContractDate(type: 'start' | 'end'): string {
-    const cruData = this.flowService.getCruData<SimpleContractInfo>();
+    const cruData = this.flowService.getCruData();
     const fieldName = type === 'start' ? 'tlt_bdate' : 'tlt_edate';
 
     if (cruData?.[fieldName]) {
