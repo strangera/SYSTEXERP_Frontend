@@ -114,14 +114,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       field: 'AccAmtD',
       header: '借方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'D' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {
       field: 'AccAmtC',
       header: '貸方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'C' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {
@@ -168,6 +168,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       this.df().CRT_USR_No.setValue(this.user.user_Name);
       this.df().CrtDate.setValue(new Date());
     } else {
+      if (this.isFormEditable) {
+        this.df().UPD_USR_No.setValue(this.user.user_Name);
+        this.df().UpdDate.setValue(new Date());
+      }
       this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
         finalize(() => this.loading = !1),
         tap(res => {
@@ -233,17 +237,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     const row = event.rowData;
 
     // 自動帶入科目名稱
-    if (event.field === 'AccNo') {
+    if (event.field === 'AccNo')
       row.AccName = this.service.accNoMap.get(String(event.value))?.AccCName ?? '';
-    }
 
     // 自動互斥借貸方金額
-    else if (event.field === 'AccAmtD' && row.AccAmtC) {
-      row.AccAmtC = void 0;
-    }
-    else if (event.field === 'AccAmtC' && row.AccAmtD) {
-      row.AccAmtD = void 0;
-    }
+    else if (event.field === 'AccAmtD' && event.value) row.AccAmtC = void 0;
+    else if (event.field === 'AccAmtC' && event.value) row.AccAmtD = void 0;
 
     // 設定目前選擇的組織代號
     else if (event.field === 'ORG_ID') {
@@ -290,12 +289,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     const result = [...current];
 
     for (const item of newItems) {
-      const existingIndex = indexMap.get(item.index);
-      if (existingIndex !== undefined) {
-        result[existingIndex] = { ...result[existingIndex], ...item };
-      } else {
-        result.push(item);
-      }
+      const index = indexMap.get(item.index);
+      if (index !== void 0) result[index] = { ...result[index], ...item };
+      else result.push(item);
     }
 
     this.tableData.set(result);
