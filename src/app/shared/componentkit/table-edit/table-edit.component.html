@@ -188,7 +188,7 @@
   </ng-template>
   <ng-template pTemplate="footer">
     <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
-      <td class="text-center" [colSpan]="(showCheckBox ? 1 : 0) + (showReorder ? 1 : 0)" pFrozenColumn>
+      <td class="text-center" [colSpan]="1 + (showCheckBox ? 1 : 0) + (showReorder ? 1 : 0)" pFrozenColumn>
         <span class="font-bold">總計</span>
       </td>
       <ng-container *ngFor="let col of columns">
