@@ -38,17 +38,11 @@ import saveAs from 'file-saver';
   ]
 })
 export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> implements OnInit {
-  get sixMonthsAgo(): Date {
-    const date = new Date();
-    date.setMonth(date.getMonth() - 6);
-    return date;
-  }
-
   queryForm = this.formBuilder.group({
     PST_No: ['', Validators.maxLength(15)],                     // 盤點單編號
     HOS_No: [[]],                                               // 倉別代碼 (改為陣列)
     LOGO_No: [[]],                                              // 品牌代碼 (改為陣列)
-    PST_DateStart: [this.sixMonthsAgo, Validators.required],    // 盤點基準日期(起)
+    PST_DateStart: ['', Validators.required],    // 盤點基準日期(起)
     PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
     PST_Status: [[]],                                           // 盤點單狀態 (多選)
     ...createPaginationConfig([{ field: 'PST_No', order: -1 }]) // 分頁和排序參數
@@ -74,14 +68,10 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   columns: Column[] = [
     { field: 'id', header: '序號', visible: false },
     { field: 'PST_No', header: '盤點單編號', visible: true },
-    {
-      field: 'HOS_No', header: '倉別代碼/名稱', visible: true,
-      format: (v, i, r) => `${r.HOS_No}-${r.HOS_NAME}`,
-    },
-    {
-      field: 'LOGO_No', header: '品牌代碼/名稱', visible: true,
-      format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_CH_NAME}`,
-    },
+    { field: 'HOS_No', header: '倉別代碼', visible: true },
+    { field: 'HOS_NAME', header: '倉別名稱', visible: true },
+    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     {
       field: 'PST_Date',
       header: '盤點基準日期',
@@ -267,5 +257,9 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
       SYS_StoreNo: rowData.SYS_StoreNo || '',
       HOS_No: rowData.HOS_No || ''
     };
+  }
+
+  editDisabled(rowdata: TLS53010Data) {
+    return rowdata.PST_Status !== '0';
   }
 }

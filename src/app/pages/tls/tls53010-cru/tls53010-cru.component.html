@@ -39,7 +39,7 @@
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
           [disabled]="isFormReadable" (insert)="dialogVisible = true" [showInsert]="isFormCreateable || isFormEditable"
           [canInsert]="false" [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true"
-          (dataChange)="data = $event" />
+          (dataChange)="data = $event" [loading]="detailLoading" />
       </div>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
