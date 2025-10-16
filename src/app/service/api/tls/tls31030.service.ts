@@ -91,12 +91,12 @@ export interface TLS31030DetailItem {
   CompletionRate: number;
 }
 
-export interface TLS31020Response {
+export interface TLS31030Response {
   QueryData: TLS31030Item[];
   TotalData: TLS31020Total;
 }
 
-export interface TLS31020DetailResponse {
+export interface TLS31030DetailResponse {
   QueryData: TLS31030DetailItem[];
   TotalData: TLS31020Total;
 }
@@ -124,7 +124,7 @@ export class Tls31030Service {
 
   // 查詢單大分類展開之營業報表
   queryTLS31030Detail(body: TLS31030DetailRequest): Observable<any> {
-      return this.http.post<ApiResponse<TLS31020DetailResponse>>(`${this.apiUrl}/queryTLS31030Detail`, body).pipe(
+      return this.http.post<ApiResponse<TLS31030DetailResponse>>(`${this.apiUrl}/queryTLS31030Detail`, body).pipe(
         map(res => {
           return {
             Data: res.Data?.QueryData,
