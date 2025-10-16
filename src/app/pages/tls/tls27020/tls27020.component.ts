@@ -36,7 +36,7 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'TLT_NO', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
-    { field: 'ACT_PayAmt_ori', header: '實收金額', format: formatAmount },
+    { field: 'PayAmt', header: '實收金額', format: formatAmount },
     { field: 'crt_usr_name', header: '建立人員姓名' }
   ];
   ECR_NoOptions: { No: string, Name: string, label: string; }[] = [];
