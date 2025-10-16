@@ -23,11 +23,11 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 })
 export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    TXN_Date: [null],  // 銷售日期
+    TXN_Date: [''],  // 銷售日期
     TLT_NOList: [null], // 專櫃編號
     ECR_NoList: [null],       // 收銀機號
     ACT_PayAmt: [null, [Validators.max(99999999)]],
-    ...createPaginationConfig([{ field: 'id', order: 1 }]),
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
   totalRecords = 0;
   data: TLS27020Data[] = [];
@@ -35,6 +35,7 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
     { field: 'TXN_Date', header: '交易日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'TLT_NO', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'ACT_PayAmt_ori', header: '實收金額', format: formatAmount },
     { field: 'crt_usr_name', header: '建立人員姓名' }
   ];
@@ -55,8 +56,15 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
         ...item, label: `${item.No} - ${item.Name}`
       }));
     });
+    this.tls27020Service.queryClsDate().pipe(untilDestroyed(this)).subscribe(res => {
+      const rawDate = res.Data;
+      if(this.queryForm.get('TXN_Date')?.value && this.queryStateService.getQueryStateValue(this.ProgNo)) return; // 若有查詢紀錄則不預設
+      this.queryForm.patchValue({ TXN_Date: formatDate(rawDate) }); // 預設日期
+    });
   }
-
+  editDisabled = (rowData: any): boolean => {
+    return (rowData.Check_Status === 'Y'); // 若 Check_Status 為 'Y'已審核，則禁用編輯按鈕
+  };
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls27020Service.queryTLS27020(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
