@@ -188,7 +188,13 @@ export const formatTimeHHMMSS = (value: string | number | Date): string => {
 
 
 // 000,000,000
-export const formatAmount = (val: number | string | null | undefined): string => {
+export const formatAmount = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '';
+  return num.toLocaleString(); // eg. 1,000,000
+};
+// 000,000,000 如果是0就不顯示
+export const formatAmountNo0 = (val: number | string | null | undefined): string => {
   // 1. 檢查並處理 null, undefined 或空字串
   // 如果是這些值，直接回傳空字串 ''
   if (val === null || val === undefined || val === '') {

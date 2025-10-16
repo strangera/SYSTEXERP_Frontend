@@ -3,7 +3,7 @@ import { DatePipe, DecimalPipe, NgFor, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
-import { ReportColumn } from './fin55020-table-report.model';
+import { formatAmountNo0, ReportColumn } from './fin55020-table-report.model';
 import { ImageModule } from 'primeng/image';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -41,6 +41,7 @@ export class Fin55020TableReportComponent extends BasicPrintDataComponent implem
   virtualData: any = [];
   isLoading = false;
   getSYS1000 = getSYS1000;
+  formatAmountNo0 = formatAmountNo0
   constructor(
     private readonly route: ActivatedRoute,
   ) {
