@@ -1,10 +1,8 @@
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
 import { saveAs } from 'file-saver';
-import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -13,12 +11,13 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { creditCardColumns, creditCardGroup, TLS22020Data } from './tls22020.model';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -43,7 +42,6 @@ yesterday.setDate(yesterday.getDate() - 1);
 })
 
 export class TLS22020Component extends BasicQueryPageComponent<any> implements OnInit {
-
   queryForm = this.formBuilder.group({
     ECR_No: [null],
     TXN_Date: [yesterday, [Validators.required]],
@@ -57,8 +55,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
 
   // 表格資料
   data: TLS22020Data[] = [];
-  ECRNoOptions: any[] = [];
-  columns: any[] = [
+  ECRNoOptions: IDropdownItem[] = [];
+  columns: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
@@ -68,7 +66,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   private skipAutoQueryOnce = false;
   exportExcelLoading = false;
   // 下拉選單選項
-  whetherOptions: any[] = [];
   totalRecords = 0;
   statusOptions = [
     { label: '是', value: 'Y' },
@@ -83,22 +80,15 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   };
 
   constructor(
-
-    private validationService: ValidationService,
-    private whetherService: WhetherService,
-    private ECRNoService: ECRNoService,
-
+    private readonly dropDownListService: DropDownListService,
     private tls22020Service: TLS22020Service,
   ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm);
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-    });
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
+    this.dropDownListService.queryPOS1002_DropDownList().subscribe((data) => {
+      this.ECRNoOptions = data.Data;
     });
     // 自動預帶 ECR_No_End
     this.queryForm.controls.ECR_No_Start.valueChanges.subscribe(val => {
@@ -178,7 +168,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
 
     const payload = {
       FileName: "string",
-      ReportTitle: "string",
+      ReportTitle: "第三方支付帳差報表",
       queryTLS22020Request: {
         ...raw,
         TXN_DateStart: raw.TXN_DateStart
