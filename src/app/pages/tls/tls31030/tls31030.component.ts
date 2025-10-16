@@ -17,13 +17,15 @@ import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs'
 import { ButtonModule } from 'primeng/button';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TLS31030PrintRequest, TLS31030Request, TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
+import { TLS31030Item, TLS31030PrintRequest, TLS31030Request, Tls31030Service } from '@service/api/tls/tls31030.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 
 @Component({
   selector: 'app-tls31030',
@@ -43,6 +45,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
     InputTextComponent,
     ButtonComponent,
     TableModule,
+    TableReportComponent,
     RadiobuttonYNComponent,
     TranslateModule,
     TableComponent,
@@ -52,7 +55,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 })
 
 // 各大分類之營業報表
-export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response> implements OnInit {
+export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
     TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
@@ -127,7 +130,12 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
   ];
 
   totalRecords = 0;
-  data: TLS31030Response[] = [];
+  data: TLS31030Item[] = [];
+  footerTotal: TLS31020Total | null = null; // 總計取得原始資料
+  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
+  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
+  historyRequestBody: TLS31030Request | null = null; //歷史查詢條件
+
   columns: Column[] = [
     { field: 'bus_type', header: '大分類代碼', visible: false }, // queryTLS31030
     { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
@@ -185,7 +193,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls31030Service: Tls31030Service,
+    public readonly tls31030Service: Tls31030Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
   ) { super(); }
@@ -332,10 +340,38 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
 
       console.log('送出請求', formValue);
       this.tls31030Service.queryTLS31030(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        console.log('各大分類之營業報表response', res.Data);
-        this.data = res.Data;
+
+        // this.data = res.Data?.QueryData ?? [];               // 查詢資料
+        this.data = res.Data ?? [];               // 查詢資料
+        this.footerTotal = res.TotalData ?? null;;    // 總計資料
+
+        this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
+          budget: this.footerTotal.TotalBudget,
+          AVN_TotSaleAmt: this.footerTotal.TotalSales,
+          TxnCount: this.footerTotal.TotalTxnCount,
+          AvgTicket: this.footerTotal.AvgTicket,
+          tlt_space: this.footerTotal.TotalSpace,
+          MonthlyPSM: this.footerTotal.AvgPSM,
+          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+          TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+
+          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+
+          AchievementRate: this.footerTotal.AvgAchievementRate,
+          CompletionRate: this.footerTotal.AvgCompletionRate,
+        } : null;
+        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+
+        // } : null;
+
+        this.historyRequestBody = formValue;                 // 查詢條件
+        console.log('查詢結果', this.data);
+        console.log('查詢總計', this.footerTotal);
+        console.log('查詢總計(轉換後)', this.footershowTotal);
+
         this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, formValue);
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     })
   }

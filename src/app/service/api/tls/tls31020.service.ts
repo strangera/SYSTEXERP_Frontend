@@ -91,6 +91,7 @@ export interface TLS31020DetailItem {
   CompletionRate: number;
 }
 
+// ---營業報表統計(response和mapping response) 和 footerShowTotal 會和後面的-70一起共用---
 export interface TLS31020Total {
   TotalBudget: number;
   TotalSales: number;
