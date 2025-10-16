@@ -268,8 +268,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls21050cru', loadComponent: () => import('./tls21050-cru/tls21050-cru.component').then(m => m.TLS21050CRUComponent) },
   // 收銀機對帳查詢作業 CRU
   { path: 'tls22010cru', loadComponent: () => import('./tls22010-cru/tls22010-cru.component').then(m => m.TLS22010CRUComponent) },
-  // 系統監控報表 CRU
-  { path: 'tls22020cru', loadComponent: () => import('./tls22020-cru/tls22020-cru.component').then(m => m.TLS22020CRUComponent) },
   //電子發票上送筆數檢核表 CRU
   { path: 'tls22040cru', loadComponent: () => import('./tls22040-cru/tls22040-cru.component').then(m => m.TLS22040CRUComponent) },
   // 型態別報表 CRU
