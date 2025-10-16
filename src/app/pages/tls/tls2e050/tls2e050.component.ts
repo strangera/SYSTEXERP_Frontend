@@ -1,5 +1,5 @@
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { Tls2e050Data, Tls2e050Service } from '../../../service/api/tls/tls2e050.service';
+import { MainData, Tls2e050Data, Tls2e050Service } from '../../../service/api/tls/tls2e050.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -28,7 +28,7 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
   standalone: true,
   imports: [InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TableComponent, TranslateModule]
 })
-export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050Data> implements OnInit {
+export class TLS2E050Component extends BasicQueryPageComponent<MainData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm_Start: [], // 查詢年月(起)
     sam_yyymm_End: [], // 查詢年月(迄)
@@ -50,7 +50,7 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050Data> imp
     ...createPaginationConfig([{ field: 'ven_no', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  data: Tls2e050Data[] = [];
+  data: MainData[] = [];
   columns: Column[] = [
     // 廠商及專櫃基本資訊
     { field: 'ven_no', header: '廠商編號' },
@@ -160,7 +160,7 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050Data> imp
     }
     this.handleSubmit(frm, () => {
       this.tls2e050Service.queryTls2e050(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data;
+        this.data = response.Data.mainData;
         this.totalRecords = response.TotalCount;
         this.messageService.successBubble(response.Message);
       })
