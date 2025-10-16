@@ -18,7 +18,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { finalize, tap } from 'rxjs';
-import { FIN53010Data, FIN53010DetailTable, VendorList } from '../fin53010/fin53010.model';
+import { AccNoList, FIN53010Data, FIN53010DetailTable, VendorList } from '../fin53010/fin53010.model';
 
 @Component({
   selector: 'app-fin53010-cru',
@@ -55,7 +55,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     VouDate: new FormControl<Date | void>(void 0, [Validators.required]),
     Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
     INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
-    VouAccType: new FormControl<'0' | '1' | '2'>('0', [Validators.required]),
+    VouAccType: new FormControl<'0' | '1' | '2' | '3'>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
     CrtDate: new FormControl<Date | void>(void 0),
@@ -63,7 +63,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  public readonly tableData = signal<any[]>([]);
+  public readonly tableData = signal<FIN53010DetailTable[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
   public selectedItems: FIN53010Data[] = [];
@@ -73,6 +73,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
   private readonly filteredTblUserOrgidList = computed(() => this.service.tblUserOrgidList().filter(v => v.Org_ID === this.selectedOrgId()));
 
   public readonly totalRecords = computed(() => this.tableData.length);
+
+  // 計算借貸方總額
+  public readonly debitTotal = computed(() => {
+    return this.tableData().reduce((sum, row) => sum + (row.AccAmtD || 0), 0);
+  });
+
+  public readonly creditTotal = computed(() => {
+    return this.tableData().reduce((sum, row) => sum + (row.AccAmtC || 0), 0);
+  });
+
+  // 檢查借貸是否平衡
+  public readonly isBalanced = computed(() => {
+    return this.debitTotal() === this.creditTotal();
+  });
 
   // Template 相關屬性
   public selectedTemplateType = 'vendor';
@@ -87,6 +101,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     {
       field: 'AccNo',
       header: '科目代號',
+      required: !0,
       type: 'dropdown',
       options: () => this.service.accNoList(),
       optionLabel: 'AccNo',
@@ -114,19 +129,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       field: 'AccAmtD',
       header: '借方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'D' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {
       field: 'AccAmtC',
       header: '貸方金額',
       type: 'inputNumber',
-      format: d => +(d.AccDC === 'C' && formatAmount(d.AccAmt) || ''),
+      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       isTotal: !0,
     },
     {
       field: 'ORG_ID',
       header: '組織代號',
+      required: !0,
       type: 'dropdown',
       options: () => this.service.orgNoList(),
       optionLabel: 'label',
@@ -140,7 +156,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       optionLabel: 'user_Name',
       optionValue: 'user_No',
     },
-    { field: 'recKey', header: '對帳KEY值', type: 'input' },
+    // { field: 'recKey', header: '對帳KEY值', type: 'input' },
   ]);
 
   constructor(
@@ -165,23 +181,29 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     if (this.isFormCreateable) {
       this.service.getUsrList();
       this.service.getVendorList();
-      this.df().CRT_USR_No.setValue(this.user.user_Name);
+      this.df().CRT_USR_No.setValue(this.user.user_No);
       this.df().CrtDate.setValue(new Date());
     } else {
+      if (this.isFormEditable) {
+        this.df().UPD_USR_No.setValue(this.user.user_No);
+        this.df().UpdDate.setValue(new Date());
+      }
       this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
         finalize(() => this.loading = !1),
         tap(res => {
-          this.logger.debug(`loadFIN53010Detail:`, [res]);
-          this.tableData.set(res.Data.map(d => ({
+          this.df().PostFlag.setValue(res.Data.PostFlag ?? '');
+          this.df().VouAccType.setValue(res.Data.VouAccType ?? '0');
+          this.df().CRT_USR_No.setValue(res.Data.CRT_USR_No ?? '');
+          this.df().UPD_USR_No.setValue(res.Data.UPD_USR_No ?? '');
+
+          this.tableData.set(res.Data?.Details.map(d => ({
             ...d,
             AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
             AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-            AccCName: this.service.accNoMap.get(String(d.AccNo))?.AccCName ?? '',
+            AccName: this.service.accNoMap.get(String(d.AccNo))?.AccCName ?? '',
             DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
               ?? this.service.usrMap.get(String(d.DetailNo))?.label ?? '',
-            displayIndex: d.index,
-            modifier: this.user.user_Name,
-            modifyDate: new Date(),
+            displayIndex: d.SerNo / 10 - 1,
           })));
         })
       ).subscribe();
@@ -233,17 +255,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     const row = event.rowData;
 
     // 自動帶入科目名稱
-    if (event.field === 'AccNo') {
+    if (event.field === 'AccNo')
       row.AccName = this.service.accNoMap.get(String(event.value))?.AccCName ?? '';
-    }
 
     // 自動互斥借貸方金額
-    else if (event.field === 'AccAmtD' && row.AccAmtC) {
-      row.AccAmtC = void 0;
-    }
-    else if (event.field === 'AccAmtC' && row.AccAmtD) {
-      row.AccAmtD = void 0;
-    }
+    else if (event.field === 'AccAmtD' && event.value) row.AccAmtC = void 0;
+    else if (event.field === 'AccAmtC' && event.value) row.AccAmtD = void 0;
 
     // 設定目前選擇的組織代號
     else if (event.field === 'ORG_ID') {
@@ -252,16 +269,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     }
 
     // 檢查是否可儲存
-    this.rowEditCanSave = !!row.AccNo;
+    this.rowEditCanSave = !!row.AccNo && !!row.ORG_ID;
   }
 
   public onDelete(event: FIN53010DetailTable[]): void {
     let ids: number[] = [];
     for (let e of event) {
-      if (RegExp(/^[^0-9]/).test(String(e.index))) continue;
+      if (RegExp(/^[^0-9]/).test(String(e.SerNo))) continue;
 
       const data = this.tableData();
-      const idx = data.findIndex(d => d.index === e.index);
+      const idx = data.findIndex(d => d.SerNo === e.SerNo);
       if (idx > -1) ids.push(idx + 1);
     }
     this.logger.debug(`onDelete:`, [event, ids]);
@@ -276,7 +293,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     if (this.isFormCreateable) event.ORG_ID = '100000';
     this.selectedOrgId.set(event.ORG_ID);
     const arr = this.tableData();
-    event.displayIndex = Array.isArray(arr) && arr.length > 0 && (arr[arr.length - 1]?.index ?? 0) + 1 || 0;
+    event.displayIndex = Array.isArray(arr) && arr.length > 0 && (arr[arr.length - 1]?.displayIndex ?? 0) + 1 || 0;
     this.logger.debug(`onRowEditInit:`, [event, arr]);
   }
 
@@ -286,16 +303,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     const newItems = Array.isArray(event.data) ? event.data : [event.data];
     const current = this.tableData();
 
-    const indexMap = new Map(current.map((item, idx) => [item.index, idx]));
+    const indexMap = new Map(current.map((item, idx) => [item.SerNo / 10, idx]));
     const result = [...current];
 
     for (const item of newItems) {
-      const existingIndex = indexMap.get(item.index);
-      if (existingIndex !== undefined) {
-        result[existingIndex] = { ...result[existingIndex], ...item };
-      } else {
-        result.push(item);
-      }
+      const index = indexMap.get(item.SerNo / 10);
+      if (index !== void 0) result[index] = { ...result[index], ...item };
+      else result.push(item);
     }
 
     this.tableData.set(result);
@@ -331,231 +345,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
   }
 
   /** 選中的項目 */
-  public selectTemplateItem(rowData: FIN53010DetailTable, item?: Option): void {
+  public selectTemplateItem(rowData: FIN53010DetailTable, item?: VendorList | AccNoList): void {
     this.logger.debug('selectTemplateItem:', [rowData, item]);
-    [rowData.DetailNo, rowData.DetailName] = [item?.value || '', item?.['short'] || ''];
+    [rowData.DetailNo, rowData.DetailName] = [
+      (item && 'VEN_No' in item ? item.VEN_No : item && 'AccNo' in item ? item.AccNo : '') || '',
+      (item && 'VEN_Name' in item ? item.VEN_Name : item && 'AccCName' in item ? item.AccCName : '') || ''
+    ];
   };
-
-
-  // ngOnInit(): void {
-  //   // 初始化
-  //   this.ProgNo = '150016';
-  //   //
-  //   // ----------------------------------------------------------------
-  //   this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-  //   this.userCodeService
-  //     .getUserCode()
-  //     .subscribe((data) => (this.usercode = data));
-
-  //   // ----------------------------------------------------------------
-  //   const state = this.router.lastSuccessfulNavigation?.extras.state as {
-  //     crudstatus: CRUDStatus;
-  //     rowdata: any;
-  //   };
-
-  //   switch (state.crudstatus) {
-  //     // 創建
-  //     case CRUDStatus.Create:
-  //       this.formTitle = 'create-conditions';
-  //       this.accordionTabCss = 'create-accordionTab';
-  //       this.crudstatus = CRUDStatus.Create;
-  //       this.showConfirm = this.canAdd();
-  //       break;
-  //     // 修改
-  //     case CRUDStatus.Edit:
-  //       this.formTitle = 'edit-conditions';
-  //       this.accordionTabCss = 'edit-accordionTab';
-  //       this.crudstatus = CRUDStatus.Edit;
-  //       this.showConfirm = this.canEdit();
-  //       this.Edit(state.rowdata);
-  //       break;
-  //     // 讀檔
-  //     case CRUDStatus.Read:
-  //       this.formTitle = 'display-conditions';
-  //       this.crudstatus = CRUDStatus.Read;
-  //       this.Read(state.rowdata);
-  //       break;
-  //   }
-
-  //   console.log(this.accordionTabCss);
-  // }
-  // createItem(): FormGroup {
-  //   return this.formBuilder.group({
-  //     Accountcode: [],
-  //     vendorCodeOptions: [],
-  //     summary: [],
-  //     Debitamount: [],
-  //     Creditamount: [],
-  //     Organizationcode: [],
-  //     StandingInstructionCode: [],
-  //     Activitycode: [],
-  //     Objectnumber: [],
-  //     ReconciliationKEYvalue: [],
-  //   });
-  // }
-
-  // // ----------------------------------------------------------------
-  // dataForm = this.formBuilder.nonNullable.group({
-  //   Subpoenanumber: [],
-  //   Subpoenatype: [],
-  //   Subpoenadate: [],
-  //   Subpoenastatus: [],
-  //   Subpoenasummary: [],
-  //   Makeupinvoice: [],
-  //   builder: [],
-  //   modifyer: [],
-  //   builddate: [],
-  //   modifydate: [],
-  //   uickMenu: [],
-
-  //   // ----------------------------------------------------------------
-  //   items: this.formBuilder.array([this.createItem()]),
-  // });
-  // // Dropdown options
-  // Activitycode: any[] = [
-  //   { value: 1, label: '001' },
-  //   { value: 2, label: '002' },
-  //   { value: 3, label: '003' },
-  //   { value: 4, label: '004' },
-  //   { value: 5, label: '005' },
-  //   { value: 6, label: '006' },
-  //   { value: 7, label: '007' },
-  //   { value: 8, label: '008' },
-  //   { value: 9, label: '009' },
-  //   { value: 10, label: '010' },
-  // ];
-  // StandingInstructionCode: any[] = [];
-  // Organizationcode: any[] = [
-  //   { value: 1, label: '100000' },
-  //   { value: 2, label: '100100' },
-  //   { value: 3, label: '101000' },
-  //   { value: 4, label: '101100' },
-  //   { value: 5, label: '101200' },
-  //   { value: 6, label: '101300' },
-  //   { value: 7, label: '101400' },
-  //   { value: 8, label: '101500' },
-  //   { value: 9, label: '101600' },
-  //   { value: 10, label: '101700' },
-  // ];
-  // usercode: any[] = [];
-  // Accountcode: any[] = [
-  //   { value: 1, label: '110101' },
-  //   { value: 2, label: '110102' },
-  //   { value: 3, label: '110103' },
-  //   { value: 4, label: '110111' },
-  //   { value: 5, label: '110112' },
-  //   { value: 6, label: '110199' },
-  //   { value: 7, label: '110200' },
-  //   { value: 8, label: '110201' },
-  //   { value: 9, label: '110210' },
-  //   { value: 10, label: '110220' },
-  // ];
-  // Makeupinvoice: any[] = [
-  //   { value: 1, label: '是' },
-  //   { value: 2, label: '否' },
-  // ];
-  // Subpoenatype: any[] = [
-  //   { value: 1, label: '現金收入傳票' },
-  //   { value: 2, label: '現金支出傳票' },
-  //   { value: 3, label: '轉帳傳票' },
-  // ];
-  // Subpoenastatus: any[] = [
-  //   { value: 1, label: '現金收入傳票' },
-  //   { value: 2, label: '現金支出傳票' },
-  //   { value: 3, label: '轉帳傳票' },
-  // ];
-  // vendorCodeOptions: any[] = [
-  //   { value: 1, label: '00000000-1' },
-  //   { value: 2, label: '00000000-2' },
-  //   { value: 3, label: '00000000-4' },
-  //   { value: 4, label: '00000000-5' },
-  //   { value: 5, label: '00000000-7' },
-  //   { value: 6, label: '00000000-8' },
-  //   { value: 7, label: '00852492-1' },
-  //   { value: 8, label: '01052878-1' },
-  //   { value: 9, label: '01508949-1' },
-  //   { value: 10, label: '01515462-1' },
-  // ];
-  // // ----------------------------------------------------------------
-  // constructor(
-  //   private router: Router,
-  //   private formBuilder: FormBuilder,
-  //   private messageService: NotificationService,
-  //   private authService: AuthService,
-  //   private translate: TranslateService,
-  //   private userCodeService: UserCodeService
-  // ) {
-  //   super(); // 呼叫父類建構子
-  // }
-
-  // // ----------------------------------------------------------------
-  // get items(): FormArray {
-  //   return this.dataForm.get('items') as FormArray;
-  // }
-
-  // getFormControl(index: number, controlName: string): FormControl {
-  //   return this.items.at(index).get(controlName) as FormControl;
-  // }
-  // // ----------------------------------------------------------------
-
-  // onRemoveItem(index: number) {
-  //   this.items.removeAt(index);
-  // }
-  // // ----------------------------------------------------------------
-  // Edit(rowdata: any) {
-  //   this.dataForm.patchValue(rowdata);
-  // }
-
-  // Read(rowdata: any) {
-  //   this.dataForm.patchValue(rowdata);
-  //   this.dataForm.disable();
-  // }
-
-  // onAddItem(): void {
-  //   this.items.push(this.createItem());
-  // }
-
-  // onSubmit(frm: FormGroup) {
-  //   this.messageService.blockUi();
-  //   this.submitted = true;
-
-  //   if (this.dataForm.invalid) {
-  //     this.messageService.errorBubble(
-  //       this.translate.instant('form_error_message')
-  //     );
-  //     this.messageService.unblockUi();
-  //     return;
-  //   }
-
-  //   switch (this.crudstatus) {
-  //     case CRUDStatus.Create:
-  //       if (this.canAdd()) {
-  //         // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-  //         this.messageService.successBubble(
-  //           this.translate.instant('success_message')
-  //         );
-  //       }
-  //       break;
-  //     case CRUDStatus.Edit:
-  //       if (this.canEdit()) {
-  //         // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-  //         this.messageService.successBubble(
-  //           this.translate.instant('updated-successfully')
-  //         );
-  //       }
-  //       break;
-  //   }
-
-  //   this.messageService.unblockUi();
-  //   this.submitted = false;
-  // }
-
-  // submitForm(frm: FormGroup) {
-  //   // 查詢邏輯
-  //   this.onSubmit(frm);
-  // } //CRU
-
-  // onCancel() {
-  //   this.router.navigate(['FIN5000/FIN53010']);
-  // }
 }
