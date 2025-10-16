@@ -397,7 +397,7 @@ export class TLS12040FlowService {
    */
   getStepData<T = any>(stepName: string): TLS12040StepData<T> | undefined {
     const stepData = this._state.stepData.get(stepName);
-    console.log(`獲取 ${stepName} 步驟資料:`, stepData);
+    // console.log(`獲取 ${stepName} 步驟資料:`, stepData);
     return stepData as TLS12040StepData<T> | undefined;
   }
   /**
@@ -413,7 +413,7 @@ export class TLS12040FlowService {
   setCruData = (data: any) => this.setStepData('cru', data);
   getCruData(): TLS12040DetailModel | undefined {
     const cruStep = this.getStepData('cru');
-    console.log('getCruData 獲取 cru 資料:', cruStep?.data?.locationInfo);
+    // console.log('getCruData 獲取 cru 資料:', cruStep?.data?.locationInfo);
     return cruStep?.data;
   }
 

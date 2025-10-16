@@ -165,7 +165,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       if (this.discountOptions.length === 0) {
         console.warn('⚠️ 沒有載入到折扣選項');
       }
-
+      console.log('=== CRUD 狀態調試 ===');
+      console.log('當前 CRUD 狀態:', this.crudstatus);
+      console.log('isReadOnlyMode:', this.isReadOnlyMode);
+      console.log('isEditMode:', this.isEditMode);
+      console.log('isCreateMode:', this.isCreateMode);
       //  第三步:初始化欄位配置
       this.initializeColumns();
       this.updateDiscountColumnOptions();

@@ -210,18 +210,18 @@ export class TLS12040SmartDateSegmentationService {
     const contractEnd = new Date(contractEndDate);
 
     // 基本日期邏輯檢查
-    if (start >= end) {
-      errors.push('開始日期必須小於結束日期');
-    }
+    // if (start >= end) {
+    //   errors.push('開始日期必須小於結束日期');
+    // }
 
     // 契約日期範圍檢查
     if (start < contractStart) {
       errors.push('開始日期不能早於契約起始日');
     }
 
-    if (end > contractEnd) {
-      errors.push('結束日期不能晚於契約終止日');
-    }
+    // if (end > contractEnd) {
+    //   errors.push('結束日期不能晚於契約終止日');
+    // }
 
     return {
       isValid: errors.length === 0,

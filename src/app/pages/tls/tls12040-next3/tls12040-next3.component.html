@@ -95,6 +95,8 @@
               (fieldChange)="
                 onTableFieldChange($event, tableConfig.commissionType)
               "
+              [showBatchDelete]="!isReadOnlyMode"
+              [showAddButton]="!isReadOnlyMode"
             ></app-expandable-edit-table>
           </div>
         </p-accordionTab>
