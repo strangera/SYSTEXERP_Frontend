@@ -70,4 +70,8 @@ export class TLS27020Service {
   queryIsExist(checkValue: CheckValue): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/queryIsExist`, checkValue);
   }
+
+  queryClsDate(): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/queryClsDate`, {});
+  }
 }

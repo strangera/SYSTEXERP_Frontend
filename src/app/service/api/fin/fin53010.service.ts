@@ -28,7 +28,7 @@ export class FIN53010Service {
   public readonly usrList = signal<Option[]>([]);
   public readonly tblUserOrgidList = signal<TblUserOrgidItem[]>([]);
   public readonly vouAccTypes = signal<Option[]>([]);
-  public readonly subpoenaReissueOptions = signal<Option[]>([]);
+  public readonly INVOptions = signal<Option[]>([]);
 
   public accNoMap = new Map<string, AccNoList>([]);
   public vendorMap = new Map<string, VendorList>([]);
@@ -88,8 +88,8 @@ export class FIN53010Service {
     ]);
   }
 
-  public getSubpoenaReissueOptions(): void {
-    this.subpoenaReissueOptions.set([
+  public getINVOptions(): void {
+    this.INVOptions.set([
       { value: 'N', label: '否' },
       { value: 'Y', label: '是' },
     ]);

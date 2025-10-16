@@ -13,26 +13,30 @@ export interface FIN53010Data {
 
 /**
  * FIN53010 明細檔
- * index: 序號 (以10為單位序編) 起始0
- * SerNo: 序號 (以10為單位序編)
- * AccNo: 科目代號 (GLS1005)
- * DetailNo: 廠商/員工編號(廠商讀取 pos2013.ven_no, 員工讀取 tblUser.user_no
- * NoteDesc: 摘要
+ * index: table 排序 起始0
+ * SerNo: 顯示用序號 10為單位序編
  * AccDC: 借貸方D/C
+ * AccNo: 科目代號 (GLS1005)
  * AccAmt: 借貸方D/C 金額
- * ORG_ID: 組織代號
- * SubDetailNo: 對象編號
+ * ORG_ID: 部門代號
+ * DetailNo: 細項編號
+ * SubDetailNo: 次細項編號
+ * ProjectNo: 專案代號
+ * NoteDesc: 摘要
+ * PTA: PTA編號
  */
 export interface FIN53010Detail {
   index: number;
   SerNo: number;
-  AccNo: string;
   AccDC: string;
-  DetailNo: string;
-  NoteDesc: string;
+  AccNo: string;
   AccAmt: number;
   ORG_ID: string;
+  DetailNo: string;
   SubDetailNo: string;
+  ProjectNo: string;
+  NoteDesc: string;
+  PTA: string;
 }
 
 /**
@@ -70,14 +74,31 @@ export interface FIN53010Payload extends BaseQueryRequest {
   UpdDateEnd?: Date;
 }
 
-export interface FIN53010InsertPayload extends Omit<FIN53010Payload, 'creator' | 'modifier'> {
-  creator: string;
+export interface FIN53010Insert {
+  VouNo: string;
+  /** 傳票類別 */
+  VouType: string;
+  VouDateEnd: Date;
+  /** 登帳狀態 */
+  PostFlag: string;
+  /** 傳票種類 */
+  VoucherType: string;
+  /** 補發票 (Y/N) */
+  INV_YN: string;
+  Remark?: string;
+  /** RPC/IFRS */
+  VouAccType?: string;
   Details: FIN53010Detail[];
 }
 
-export interface FIN53010UpdatePayload extends Omit<FIN53010Payload, 'creator' | 'modifier'> {
+export interface FIN53010InsertPayload extends Omit<FIN53010Payload, 'CRT_USR_No'> {
+  CRT_USR_No: string;
+  Details: FIN53010Detail[];
+}
+
+export interface FIN53010UpdatePayload extends Omit<FIN53010Payload, 'UPD_USR_No'> {
   id: number;
-  creator: string;
+  UPD_USR_No: string;
   Details: FIN53010Detail[];
 }
 
@@ -93,5 +114,5 @@ export interface VendorList {
 
 export interface AccNoList {
   AccNo: string;
-  AccName: string;
+  AccCName: string;
 }
