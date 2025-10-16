@@ -91,19 +91,19 @@ export class TableReportUtilityService {
  * @param col 當前的欄位定義。
  * @returns 該欄位的小計數值，如果找不到或不是數值欄位則回傳空字串。
  */
-  getGroupSubtotal(rowData: any, col: ReportColumn, groupRowsBy: string, data: any): any {
-    // 2. 找到屬於同一個群組的所有資料
-    const groupValue = rowData[groupRowsBy];
-    // 這裡使用 'this.data' 是關鍵，它必須在正確的元件上下文裡
-    const groupRows = data.filter((item: any) => item[groupRowsBy!] === groupValue);
-    // 3. 對找到的資料進行加總，並將值轉為數字
-    const total = groupRows.reduce((sum: number, item: Record<string, any>) => {
-      const value = Number(item[col.field]) || 0;
-      return sum + value;
-    }, 0);
-    // 4. 回傳加總後的數值
-    return col.format ? col.format(total) : total;
-  }
+  // getGroupSubtotal(rowData: any, col: ReportColumn, groupRowsBy: string, data: any): any {
+  //   // 2. 找到屬於同一個群組的所有資料
+  //   const groupValue = rowData[groupRowsBy];
+  //   // 這裡使用 'this.data' 是關鍵，它必須在正確的元件上下文裡
+  //   const groupRows = data.filter((item: any) => item[groupRowsBy!] === groupValue);
+  //   // 3. 對找到的資料進行加總，並將值轉為數字
+  //   const total = groupRows.reduce((sum: number, item: Record<string, any>) => {
+  //     const value = Number(item[col.field]) || 0;
+  //     return sum + value;
+  //   }, 0);
+  //   // 4. 回傳加總後的數值
+  //   return col.format ? col.format(total) : total;
+  // }
   /**
      * 處理單一行的展開/收合邏輯。
      * @param rowData 該行資料

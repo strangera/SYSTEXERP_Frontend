@@ -102,7 +102,7 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="!0"
-               [data]="filteredData()"
+               [data]="service.FIN53010Data()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"

@@ -56,7 +56,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     PAY_NO: ['', Validators.required],
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
-    pageSize: [30],
+    pageSize: [100],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });

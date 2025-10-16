@@ -45,6 +45,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() submitted = false; // 檢查欄位是否標準
   // PrimeNG 下拉選單屬性
   @Input() showClear = true; // 是否顯示清除按鈕
+  @Input() filterBy = 'label'; // 預設提示文字
   @Input() filter = true; // 是否啟用過濾功能
   @Input() disabled = false; // 是否禁用
   @Input() loading = false;// 是否載入中

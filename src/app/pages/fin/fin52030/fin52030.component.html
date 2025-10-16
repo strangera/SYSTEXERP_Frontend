@@ -64,7 +64,7 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="filteredData()"
+    <app-table [data]="service.FIN52030Data()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"

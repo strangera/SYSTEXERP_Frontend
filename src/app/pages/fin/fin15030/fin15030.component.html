@@ -106,10 +106,10 @@
     </div>
   </form>
 
-  <app-table tableKey="FIN15030" dataKey="No" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
+  <app-customFooter-table tableKey="FIN15030" dataKey="No" [data]="data" [columns]="columns"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [multiSortMeta]="[{ field: 'INV_GUIType', order: 1 },{ field: 'TXN_GUINo', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showManage]="false" [showDelete]="false" [showCaption]="false">
-  </app-table>
+    [loading]="loading" [showManage]="false" [showDelete]="false" [showCaption]="false" [footerData]="footerData">
+  </app-customFooter-table>
 </div>

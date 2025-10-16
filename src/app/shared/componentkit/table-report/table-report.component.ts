@@ -87,6 +87,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() footerData: any;                  // (總計)頁尾資料
   @Input() footerPercentData: any;                  // (百分比)頁尾資料
   @Input() groupRowsBy?: string;              // (小計)群組欄位
+  groupTotals: Record<string, Record<string, number>> = {}; // <<< 新增：用於儲存每個群組的總計
+  @Input() subTotalData: any;               // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Input() disabled = false;
   // 展開
@@ -116,18 +118,24 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
-    if (changes['data'] && this.data.length > 0) {
-      if (this.data.length >= 30) {
-        this.virtualData = Array(this.data.length).fill(null); // ! 清空虛擬資料
-        setTimeout(() => {
-          this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-        })
-      } else {
-        this.virtualData = [...this.data];
+    if (changes['data'] && this.data !== undefined) {
+      if (this.data.length > 0) {
+        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
+        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+
+        if (this.data.length >= 30) {
+          this.virtualData = Array(this.data.length).fill(null);
+          setTimeout(() => {
+            this.virtualData.splice(0, this.data.length, ...this.data);
+          });
+        } else {
+          this.virtualData = [...this.data];
+        }
+      } else if (this.data.length === 0) {
+        this.virtualData = Array(0).fill(null);
+        this.totalRecords = 0;
+        this.groupTotals = {}; // 沒資料時也要清空小計
       }
-    } else if (changes['data'] && this.data.length === 0) {
-      this.virtualData = Array(0).fill(null);
-      this.totalRecords = 0;
     }
   }
 
@@ -173,9 +181,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     };
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
+        this.updateGroupTotals(res.Data);
         this.data = [...this.data, ...res.Data];
         this.isTotal += this.data.reduce((a: number, b: any) => a + (b.STK_CURRENTQTY ?? 0), 0);
-        console.log(this.isTotal);
         this.totalRecords = res.TotalCount; // 確保總筆數同步更新
         this.virtualData = Array(this.data.length).fill(null);
         setTimeout(() => {
@@ -187,8 +195,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onSort(event: any) {
-    console.log('🚨 DEBUG - onSort event:', event);
-
     // 1. 核心修正：確保單點擊只保留單一排序
     // PrimeNG 在 sortMode="multiple" 時，event.multisortmeta 包含所有排序。
     // 如果我們只想要單一排序，就只取最後一個元素作為新的排序狀態。
@@ -217,10 +223,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
       if (res && res.Data) {
         // 5. API 成功後，更新資料和狀態
+        this.groupTotals = {};
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.lastQueryBody = body; // 更新最後一次的查詢條件
-
+        this.updateGroupTotals(this.data);
         // 重新處理虛擬滾動資料
         if (this.data.length > 0) {
           if (this.data.length >= 30) {
@@ -258,12 +265,61 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   }
   getGroupSubtotal(rowData: any, col: ReportColumn): any {
     if (!this.groupRowsBy || !col.isSubTotal) {
-      return ''; // 1. 基本檢查：如果沒有分組依據，或不是小計欄位，直接回傳空字串。
+      return ''; // 1. 基本檢查
     }
-    return this.tableUtility.getGroupSubtotal(rowData, col, this.groupRowsBy, this.data);
+    if (this.subTotalData && this.subTotalData.length > 0 && this.groupRowsBy) {
+      const groupKey = rowData[this.groupRowsBy];
+      const field = col.field;
+      const subtotalRow = this.subTotalData.find((item: any) => item[this.groupRowsBy as string] === groupKey);
+      const subtotal = subtotalRow ? subtotalRow[field] : 0;
+      return col.format ? col.format(subtotal) : subtotal;
+    }
+
+    const groupKey = rowData[this.groupRowsBy];
+    const field = col.field;
+
+    // 2. 從預先計算的結果中獲取總計
+    const total = this.groupTotals[groupKey]?.[field] ?? 0;
+
+    // 3. 應用格式化
+    return col.format ? col.format(total) : total;
   }
   // 切換行展開
   toggleRowExpansion(rowData: any) {
     this.tableUtility.toggleRowExpansionLogic(rowData, this.dataKey ?? 'id', this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
+  }
+  /**
+ * 對新載入的資料進行增量計算，並更新 groupTotals。
+ * @param newData 這次 API 呼叫新載入的資料陣列。
+ */
+  updateGroupTotals(newData: any[]): void {
+    if (!this.groupRowsBy || !this.columns.some(col => col.isSubTotal)) {
+      return;
+    }
+
+    newData.forEach(row => {
+      const groupKey = (row[this.groupRowsBy!] as string)?.trim() ?? 'UNKNOWN_GROUP'; // 進行 trim 處理
+
+      if (groupKey === undefined) return;
+
+      if (!this.groupTotals[groupKey]) {
+        this.groupTotals[groupKey] = {};
+      }
+
+      this.columns.forEach(col => {
+        if (col.isSubTotal) {
+          const field = col.field;
+          // !!! 關鍵修正：處理資料轉換 !!!
+          const value = Number(row[field]) || 0;
+
+          // 增量加總
+          this.groupTotals[groupKey][field] = (this.groupTotals[groupKey][field] || 0) + value;
+        }
+      });
+    });
+
+    // 由於資料變動，我們可能需要觸發變更偵測，確保小計行更新
+    // (PrimeNG 通常會處理，但如果發現小計行沒有更新，可能需要手動觸發)
+    // this.cdr.detectChanges();
   }
 }

@@ -30,7 +30,7 @@ export const finRoutes: Routes = [
   { path: 'fin11200cru', loadComponent: () => import('./fin11200-cru/fin11200-cru.component').then(m => m.FIN11200CRUComponent) },
   // 電子發票參數維護作業
   { path: 'fin11210', loadComponent: () => import('./fin11210/fin11210.component').then(m => m.FIN11210Component) },
-  { path: 'fin11210cru', loadComponent: () => import('./fin11210-cru/fin11210-cru.component').then(m => m.FIN11210CruComponent) },
+  { path: 'fin11210cru', loadComponent: () => import('./fin11210-cru/fin11210-cru.component').then(m => m.FIN11210CRUComponent) },
   // 電子式發票各系統配號維護
   { path: 'fin12010', loadComponent: () => import('./fin12010/fin12010.component').then(m => m.FIN12010Component) },
   { path: 'fin12010cru', loadComponent: () => import('./fin12010-cru/fin12010-cru.component').then(m => m.FIN12010CRUComponent) },

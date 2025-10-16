@@ -63,11 +63,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  public readonly filteredData = computed(() => {
-    return this.service.FIN53010Data();
-  });
-
-  public readonly totalRecords = computed(() => this.filteredData().length);
+  public readonly totalRecords = computed(() => this.service.FIN53010Data().length);
 
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼' },

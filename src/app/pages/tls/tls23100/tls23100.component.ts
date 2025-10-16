@@ -54,7 +54,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   // 資料
   data: any[] = [];
   totalRecords = 0;
-
+private grandTotal: Record<string, number> = {};
   // 預設日期（昨天）
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -228,40 +228,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  // ====== 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，回傳 GrandTotal ======
-  public queryTLS23100ForReport = (body: any) =>
-    this.tls23100Service
-      .queryTLS23100({ ...(body || {}), pageSize: 30, PageSize: 30 })
-      .pipe(
-        map((res: any) => {
-          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
-
-          const rows = wrappers
-            .flatMap((w: any) =>
-              w?.tLS23100Details ?? w?.TLS23100Details ?? w?.tls23100Details ?? []
-            )
-            .map((row: any, idx: number) => ({
-              ...row,
-              _rowKey: `row|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
-            }));
-
-          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-          // GrandTotal：以欄位名為鍵（TableReport 會用 columns 裡 isTotal=true 的欄位）
-          const totalFromWrapper = wrappers.reduce(
-            (s: number, w: any) => s + Number(w?.totalPayAmt ?? 0),
-            0
-          );
-          const fallbackPageSum = rows.reduce(
-            (s: number, r: any) => s + Number(r?.TXN_PayAmt ?? 0),
-            0
-          );
-          const grand = { TXN_PayAmt: totalFromWrapper || fallbackPageSum };
-
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        })
-      );
-
+  
   // ===== 匯出：PDF（不帶 pageSize/pageIndex/大小寫） =====
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
@@ -353,6 +320,51 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   private padTxnNo(v: any): string {
   const s = String(v ?? '').trim();
   return s ? s.padStart(6, '0') : '';
+}
+
+public queryTLS23100ForReport = (body: any) =>
+  this.tls23100Service
+    .queryTLS23100({ ...(body || {}), pageSize: 30, PageSize: 30 })
+    .pipe(
+      map((res: any) => {
+        const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
+
+        const rows = wrappers
+          .flatMap((w: any) => w?.tLS23100Details ?? w?.TLS23100Details ?? w?.tls23100Details ?? [])
+          .map((row: any, idx: number) => ({
+            ...row,
+            _rowKey: `row|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
+          }));
+
+        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+        // ✅ 用 wrapper 的 totalPayAmt；若後端沒給，退回用目前頁面的加總
+        const totalFromWrapper = wrappers.reduce(
+          (s: number, w: any) => s + Number(w?.totalPayAmt ?? 0),
+          0
+        );
+        const fallbackPageSum = rows.reduce(
+          (s: number, r: any) => s + Number(r?.TXN_PayAmt ?? 0),
+          0
+        );
+        const grand = { TXN_PayAmt: totalFromWrapper || fallbackPageSum };
+
+        // ✅ 同步給 footer builder 使用
+        this.grandTotal = { ...grand };
+
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      })
+    );
+
+// ✅ 提供給 [footerData] 的資料，只輸出有 isTotal 的欄位
+buildFooterFromGrandTotal(): Record<string, any> | undefined {
+  if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
+  const footer: Record<string, any> = {};
+  for (const col of this.columns) {
+    if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
+  }
+  // 想在某欄顯示「總計」字樣可加：例如 footer['tlt_name'] = '總計';
+  return footer;
 }
 
 }

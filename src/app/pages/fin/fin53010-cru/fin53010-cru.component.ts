@@ -49,24 +49,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
   public readonly dataForm = this.formBuilder.nonNullable.group({
     VouNo: new FormControl<string>('自動給號'),
     /** 傳票種類 */
-    PostFlag: new FormControl<string | void>(void 0),
+    PostFlag: new FormControl<string | void>(void 0, [Validators.required]),
     /** 傳票型態 */
-    VouType: new FormControl<string | void>(void 0),
-    VouDate: new FormControl<Date | void>(void 0),
+    VouType: new FormControl<string | void>(void 0, [Validators.required]),
+    VouDate: new FormControl<Date | void>(void 0, [Validators.required]),
     Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
-    PostReissue: new FormControl<'N' | 'Y'>('N'),
+    INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
+    VouAccType: new FormControl<'0' | '1' | '2'>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
-    CrtDate: new FormControl<Date | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
+    CrtDate: new FormControl<Date | void>(void 0),
     UpdDate: new FormControl<Date | void>(void 0),
-    VouAccType: new FormControl<'0' | '1' | '2'>('0'),
   });
   public readonly df = computed(() => this.dataForm.controls);
 
   public readonly tableData = signal<any[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
-  public selectedItems: Record<string, any>[] = [];
+  public selectedItems: FIN53010Data[] = [];
   public onEditing = !1;
   public rowEditCanSave = !1;
 
@@ -91,7 +91,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       options: () => this.service.accNoList(),
       optionLabel: 'AccNo',
       optionValue: 'AccNo',
-      templateLabel: 'AccName',
+      templateLabel: 'AccCName',
     },
     { field: 'AccName', header: '科目名稱' },
     {
@@ -155,12 +155,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
 
     this.service.getVouTypes();
     this.service.getPostFlags();
-    // this.service.getSubpoenaTypes2();
     this.service.getVouAccTypes(!0);
 
     this.service.getAccNoList();
     this.service.getOrgNoList();
     this.service.getTblUserOrgid();
+    this.service.getINVOptions();
 
     if (this.isFormCreateable) {
       this.service.getUsrList();
@@ -176,8 +176,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
             ...d,
             AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
             AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-            AccName: this.service.accNoMap.get(String(d.AccNo))?.['Name'] ?? '',
-            DetailName: this.service.vendorMap.get(String(d.DetailNo))?.label
+            AccCName: this.service.accNoMap.get(String(d.AccNo))?.AccCName ?? '',
+            DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
               ?? this.service.usrMap.get(String(d.DetailNo))?.label ?? '',
             displayIndex: d.index,
             modifier: this.user.user_Name,
@@ -234,7 +234,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
 
     // 自動帶入科目名稱
     if (event.field === 'AccNo') {
-      row.AccName = this.service.accNoMap.get(String(event.value))?.['Name'] ?? '';
+      row.AccName = this.service.accNoMap.get(String(event.value))?.AccCName ?? '';
     }
 
     // 自動互斥借貸方金額

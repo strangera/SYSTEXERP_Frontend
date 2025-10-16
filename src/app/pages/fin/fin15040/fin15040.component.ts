@@ -163,7 +163,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
         .subscribe((res) => {
           this.data = res.Data.QueryData;
           this.footerData = [{
-            group_name: '總計',
+            group_name: '合計',
             TXN_Net: res.Data.TotalNet,
             TXN_Tax: res.Data.TotalTax,
             TXN_SaleAmt: res.Data.TotalAmt

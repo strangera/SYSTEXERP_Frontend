@@ -3,16 +3,29 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-4">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數代碼" controlName="code"
-            [control]="dataForm.controls.code" [submitted]="submitted" />
+        <!-- 收銀機號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECR_No_Options" optionLabel="Name" optionValue="No"
+            [control]="dataForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
         </div>
-        <div class="col-12 md:col-4">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數內容" controlName="content"
-            [control]="dataForm.controls.content" [submitted]="submitted" />
+        <!-- 參數代號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="參數代號" controlName="ARG_No" [options]="ARG_No_Options" optionLabel="No" optionValue="No"
+            [control]="dataForm.controls.ARG_No" [submitted]="submitted"
+            (valueChange)="onARGNoChange($event)"></app-dropdown>
+        </div>
+        <!-- 參數說明 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="參數說明" controlName="ARG_Desc" [control]="dataForm.controls.ARG_Desc"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 參數內容 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="參數內容" controlName="ARG_Data" [control]="dataForm.controls.ARG_Data"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

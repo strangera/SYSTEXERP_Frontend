@@ -44,11 +44,13 @@
                         [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="補發票"
-                      controlName="subpoenaReissue"
-                      [options]="service.subpoenaReissueOptions()"
+                      controlName="INVOptions"
+                      [showClear]="!1"
+                      [filter]="!1"
+                      [options]="service.INVOptions()"
                       optionLabel="label"
                       optionValue="value"
-                      [control]="df().PostReissue"
+                      [control]="df().INV_YN"
                       [submitted]="submitted"></app-dropdown>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="建立者"

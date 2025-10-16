@@ -60,6 +60,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     d.setDate(d.getDate() - 1);
     return d;
   })();
+  private grandTotal: Record<string, number> = {};  // ⬅️ 新增
 groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
   data: any[] = [];
   totalRecords = 0;
@@ -223,11 +224,13 @@ groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
           this.data = mapped.rows;
           this.totalRecords = mapped.totalRecords;
            this.groupSubtotals = mapped.groupSub;  
+            this.grandTotal = mapped.grand;       
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
           this.groupSubtotals = {};  
+           this.grandTotal = {};     
         },
       });
     });
@@ -255,15 +258,25 @@ public queryTLS23130ForReport = (body: any) =>
       ...(body || {}),
       pageSize: 30,
       PageSize: 30,
-      // 若外部有 SortBy 就去重；沒有就用預設
       SortBy: this.dedupeSortMeta((body && body.SortBy) || this.defaultSort),
     })
     .pipe(
       map((res: any) => {
         const { rows, totalRecords, grand, groupSub } = this.mapResponseToRowsAndTotals(res);
-        return { Data: rows, TotalCount: totalRecords, GrandTotal: grand, GroupSubtotals: groupSub };
+
+        // ⬅️ 同步到 component 狀態，讓 [footerData]/[groupSubtotals] 立即生效
+        this.grandTotal = { ...grand };
+        this.groupSubtotals = { ...groupSub };
+
+        return {
+          Data: rows,
+          TotalCount: totalRecords,
+          GrandTotal: grand,           // 供 app-table-report 內部需要時也可用
+          GroupSubtotals: groupSub,    // 供 app-table-report 內部需要時也可用
+        };
       })
     );
+
 
   // ===== 共同轉換器：把 API 轉 rows / totals / 小計 =====
 private mapResponseToRowsAndTotals(res: any) {
@@ -281,37 +294,31 @@ private mapResponseToRowsAndTotals(res: any) {
     for (const it of details) {
       const rec = { ...it } as any;
 
-      // 穩定 rowKey
       const dateKey = String(rec.TXN_Date ?? '').slice(0, 19);
       rec._rowKey = `${dateKey}|${rec.CRD_No ?? ''}|${rec.tlt_no ?? ''}`;
 
-      // 欄位數值
       const pay  = Number(rec.TXN_PayAmt ?? 0);
       const head = Number(rec.EDC_InstHeadAmt ?? 0);
       const each = Number(rec.EDC_InstEachAmt ?? 0);
-      sumPay  += Number.isFinite(pay)  ? pay  : 0;
-      sumHead += Number.isFinite(head) ? head : 0;
-      sumEach += Number.isFinite(each) ? each : 0;
+      if (Number.isFinite(pay))  sumPay  += pay;
+      if (Number.isFinite(head)) sumHead += head;
+      if (Number.isFinite(each)) sumEach += each;
 
-      // 小計（by tlt_no）
-      const gk = String(rec.tlt_no ?? 'UNKNOWN');
+      // ✅ 小計 key 改為按 groupByField（CRD_No）
+      const gk = String(rec[this.groupByField] ?? 'UNKNOWN');
       const g  = groupSub[gk] ?? { TXN_PayAmt: 0, EDC_InstHeadAmt: 0, EDC_InstEachAmt: 0 };
-
-      // ✅ 改用中括號，避免 TS4111
       g['TXN_PayAmt']      = (g['TXN_PayAmt']      ?? 0) + (Number.isFinite(pay)  ? pay  : 0);
       g['EDC_InstHeadAmt'] = (g['EDC_InstHeadAmt'] ?? 0) + (Number.isFinite(head) ? head : 0);
-      g['EDC_InstEachAmt'] = (g['EDC_InstEachAmt'] ?? 0) + (Number.isFinite(each) ? each : 0);
-
+      g['EDC_InstEachAmt'] = (g['EDC_InstEachAmt'] ?? 0) + (Number.isFinite(each)? each : 0);
       groupSub[gk] = g;
 
       rows.push(rec);
     }
   }
 
-  const totalRecords =
-    typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+  const totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-  // GrandTotal（優先採用 wrapper 的 TotalPayAmt 聚合）
+  // ✅ 總計：優先用 wrapper 的 TotalPayAmt，沒有就落回本頁加總
   const grand = {
     TXN_PayAmt:      (wrapTotalPay > 0 ? wrapTotalPay : sumPay),
     EDC_InstHeadAmt: sumHead,
@@ -320,6 +327,9 @@ private mapResponseToRowsAndTotals(res: any) {
 
   return { rows, totalRecords, grand, groupSub };
 }
+
+
+
 
 
   // ===== 匯出：PDF（不傳 pageSize/pageIndex；含大小寫） =====
@@ -441,4 +451,16 @@ private mapResponseToRowsAndTotals(res: any) {
     { field: 'TXN_Time', header: '銷售時間', visible: true, format: this.formatISOToHHMMSS },
     { field: 'TERM_No', header: '分期數', visible: true },
   ];
+
+
+// 給 [footerData] 用，只輸出 columns 中 isTotal=true 的欄位
+buildFooterFromGrandTotal(): Record<string, any> | undefined {
+  if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
+  const footer: Record<string, any> = {};
+  for (const col of this.columns) {
+    if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
+  }
+  // 如果想在某欄顯示「總計」兩字（例如櫃位名稱），可加：footer['tlt_name'] = '總計';
+  return footer;
+}
 }

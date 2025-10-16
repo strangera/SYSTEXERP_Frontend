@@ -1,4 +1,4 @@
-import { Component, Host, Input, OnChanges, OnInit, Optional, SimpleChanges } from '@angular/core';
+import { Component, Host, Input, OnChanges, Optional, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS2004ForUpdateResponse, POS5007Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
@@ -17,7 +17,7 @@ import { IDropdownItem, POS2004Item } from '@service/utility/dropDownList.servic
   ],
   templateUrl: './tls24010-tltno.component.html',
 })
-export class Tls24010TltnoComponent implements OnInit, OnChanges {
+export class Tls24010TltnoComponent implements OnChanges {
   @Input() data: POS5007Data[] = [];
   @Input() talent_id?: number;
   @Input() store_way?: string;
@@ -41,60 +41,11 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
     private readonly tls24010Service: Tls24010Service,
     @Optional() @Host() public tls24010?: TLS24010CRUComponent
   ) { }
-  ngOnInit(): void {
-    if (this.store_way === STORE_WAY.專櫃) {
-      const txnDate = this.TXN_Date as unknown as Date
-      const body = {
-        Store_way: STORE_WAY.專櫃,
-        TXN_Date: txnDate ? txnDate.toISOString().split('T')[0] : '',
-        TLT_No: this.TLT_No
-      }
-      this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
-        this.POS2004Options = response.Data.map((item, index) => ({
-          ...item,
-          id: index,
-          label: `${item.TLT_No} - ${item.TLT_Name}`
-        }));
-        this.columns[0].type = 'dropdown';
-        this.columns[0].options = this.POS2004Options;
-        this.columns[0].templateLabel = 'label';
-        this.columns[0].optionLabel = 'TLT_No';
-      });
-    } else {
-      this.columns[0].optionValue = 'PLU_MagNo';
-      this.columns[0].type = 'autoComplete';
-    }
-  }
   ngOnChanges(changes: SimpleChanges): void {
     const newData: POS5007Data[] = changes['data']?.currentValue;
-
     if (newData?.length > 0 && !this.isSameData(newData, this.previousData)) {
-      this.tltIdData = newData.map((item) => ({
-        ...item,
-        PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options.find((option) => option.TLT_No === item.PLU_MagNo) : item.PLU_MagNo,
-        PLU_Name: this.store_way === STORE_WAY.專櫃 ? this.TLT_NoOptions?.find((option) => option.No === item.PLU_MagNo)?.Name : item.PLU_Name
-      }));
+      this.tltIdData = newData;
       this.previousData = newData; // 更新快取版本
-    }
-    if (changes['TLT_No']?.currentValue && this.store_way === STORE_WAY.專櫃) {
-      const txnDate = this.TXN_Date as unknown as Date
-      const body = {
-        Store_way: STORE_WAY.專櫃,
-        TXN_Date: txnDate ? txnDate.toISOString().split('T')[0] : '',
-        TLT_No: this.TLT_No
-      }
-      this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
-        this.POS2004Options = response.Data.map((item, index) => ({
-          ...item,
-          id: index, label: `${item.TLT_No} - ${item.TLT_Name}`,
-        }));
-        this.columns[0].options = this.POS2004Options;
-        this.tltIdData = this.tltIdData.map((item) => ({
-          ...item,
-          PLU_MagNo: this.POS2004Options.find((option) => option.TLT_No === item.PLU_MagNo),
-          PLU_Name: this.TLT_NoOptions?.find((option) => option.No === item.PLU_MagNo)?.Name || ''
-        }))
-      });
     }
 
     if (changes['store_way']?.currentValue === STORE_WAY.專櫃) {
@@ -139,30 +90,20 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
     });
   }
   onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {
-    if (event.field === 'PLU_MagNo' && this.store_way === STORE_WAY.自營) {
-      const selectedItem = this.POS2004Options.find(item => item.PLU_MagNo === event.value?.value.PLU_MagNo);
-      if (selectedItem) {
-        event.rowData.PLU_Name = selectedItem.PLU_Name;
-        event.rowData.TLT_No = selectedItem.TLT_No;
-        event.rowData.PLU_No = selectedItem.PLU_No;
-        event.rowData.Talent_ID = selectedItem.talent_id;
-        event.rowData.Contract_No = selectedItem.Contract_No;
-        event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
-        if (event.index === 0) {
-          this.tls24010?.dataForm.patchValue({ TLT_No: selectedItem.TLT_No });
-        }
-      }
-    } else {
+    const selectedItem = this.POS2004Options.find(item => item.PLU_MagNo === event.value?.value.PLU_MagNo);
+    if (selectedItem) {
+      event.rowData.PLU_Name = selectedItem.PLU_Name;
+      event.rowData.TLT_No = selectedItem.TLT_No;
+      event.rowData.PLU_No = selectedItem.PLU_No;
+      event.rowData.Talent_ID = selectedItem.talent_id;
+      event.rowData.Contract_No = selectedItem.Contract_No;
+      event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
+    }
+    if (this.store_way === STORE_WAY.專櫃) {
       const selectedItem = this.POS2004Options.find(item => item.id === (event.value as unknown as POS2004Item).id);
       if (selectedItem) {
-        event.rowData.PLU_Name = selectedItem.TLT_Name;
-        event.rowData.TLT_No = selectedItem.TLT_No;
-        event.rowData.PLU_No = selectedItem.PLU_No;
-        event.rowData.Talent_ID = selectedItem.talent_id;
         event.rowData.tlt_id_desc = selectedItem.tlt_id_desc;
         event.rowData.TXN_DiscName = selectedItem.cag_barcode_name;
-        event.rowData.Contract_No = selectedItem.Contract_No;
-        event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
       }
     }
   }

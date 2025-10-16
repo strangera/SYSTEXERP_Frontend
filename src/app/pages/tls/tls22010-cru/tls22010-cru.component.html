@@ -6,23 +6,12 @@
 
   <div class="card">
     <div class="col-12">
-      <app-table-report
-        tableKey="TLS22010CRU"
-        [data]="data"
-        [columns]="columnscru"
-        [showCheckBox]="false"
-        dataKey="TXN_No"
-        [totalRecords]="totalRecords"
-        [loading]="loading"
-        [selectedItems]="selectedItems"
-        (selectionChange)="selectedItems = $event"
-        [showManage]="false"
-        [showDelete]="false"
-        [lastQueryBody]="historyRequestBody"
-         [footerData]="footerData"
+      <app-table-report tableKey="TLS22010CRU" [data]="data" [columns]="columnscru" [showCheckBox]="false"
+        dataKey="TXN_No" [totalRecords]="totalRecords" [loading]="loading" [selectedItems]="selectedItems"
+        (selectionChange)="selectedItems = $event" [showManage]="false" [showDelete]="false"
+        [lastQueryBody]="historyRequestBody" [footerData]="footerData"
         [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)"
-        apiUrl="queryTLS22010_Detail"
-      ></app-table-report>
+        apiUrl="queryTLS22010_Detail"></app-table-report>
     </div>
   </div>
 </div>

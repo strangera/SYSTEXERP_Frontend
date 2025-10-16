@@ -16,7 +16,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { DropDownListService, IDropdownItem, POS2004Item } from '../../../service/utility/dropDownList.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { STORE_WAY, TLS24010_EDIT_TYPE, TXN_GUI_CarrTypeOptions, txnStatusOptions } from './tls24010-cru.model';
+import { guiVehicleValidator, STORE_WAY, TLS24010_EDIT_TYPE, TXN_GUI_CarrTypeOptions, txnStatusOptions } from './tls24010-cru.model';
 import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -94,7 +94,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
     TXN_Time: [null as Date | null], //銷售時段今日的時間
     TXN_GUI_CarrType: [null as string | null], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
-    TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
+    TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20), guiVehicleValidator]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
     TXN_GUI_CarrId: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
     TXN_GUIRemark: ['', [Validators.maxLength(4), this.validationService.alphanumericValidator]], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
@@ -116,7 +116,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
-    this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+    console.log(this.queryData);
+    this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
     this.TLT_Name = rowDataTyped.TLT_Name;
     this.store_way = rowDataTyped.store_way;
     this.talent_id = rowDataTyped.talent_id;
@@ -126,6 +127,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
       });
     }
+    // 新增時候
     if (this.isFormCreateable) {
       this.dataForm.patchValue({
         TXN_Date: rowDataTyped.TXN_Date,
@@ -133,10 +135,12 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         TLT_No: rowDataTyped.TLT_No,
       });
     }
+    // 編輯時候
     if (this.isFormEditable) {
       this.type = rowDataTyped?.type;
       this.dataForm.get('TXN_Remark')?.enable();
     }
+    // 不是新增時候
     if (!this.isFormCreateable) {
       this.dataForm.disable();
       const body = {
@@ -151,11 +155,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       })
     }
     this.listenForChanges();
-    if (this.type === FIX_TYPE.專櫃編號修正) {
-      if (this.store_way === STORE_WAY.專櫃) {
-        this.dataForm.get('TLT_No')?.enable();
-      }
-    } else if (this.type === FIX_TYPE.預售交易修正) {
+    if (this.type === FIX_TYPE.預售交易修正) {
       this.dataForm.get('TXN_PreOrder')?.enable();
     }
   }
@@ -232,6 +232,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.pos5007Comp?.POS5007Data.forEach(item => {
         if (item.TXN_Qty === null || item.TXN_Qty === undefined || item.TXN_Qty <= 0) {
           this.messageService.errorBubble('請輸入正確的銷售數量', '銷售數量必須大於1');
+          return
+        }
+        if (item.TXN_SaleAmt === null || item.TXN_SaleAmt === undefined || item.TXN_SaleAmt <= 0) {
+          this.messageService.errorBubble('請輸入正確的單價金額', '單價金額必須大於1');
           return
         }
       });
