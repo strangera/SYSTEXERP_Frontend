@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -11,13 +11,13 @@ import { Tls57070DataItem, Tls57070Service } from '@service/api/tls/tls57070.ser
 import { HttpResponse } from '@angular/common/http';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
 import { ColumnGroup, ReportColumn, formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
-import { convertDateToYYYYMM, formatAmount } from '@shared/componentkit/table/table.model';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 @Component({
   selector: 'app-tls57070',
@@ -31,17 +31,18 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
     MultiSelectComponent,
     CalendarComponent,
     ButtonComponent,
-    TableReportComponent,
+    NgIf,
     ButtonModule,
     TranslateModule,
     AsyncPipe,
-    DropdownComponent
+    DropdownComponent,
+    CustomFooterTableComponent
   ],
 })
 export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     pageIndex: [1],
-    pageSize: [30],
+    pageSize: [20],
     SortBy: [[{ field: 'LOGO_No', order: 1 }]], // 預設排序
     STK_YM: [new Date(), [Validators.required]], // 存貨年月
     HOS_NOList: [null], // 倉別條件
@@ -80,12 +81,25 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
   constructor(
     public readonly tls57070Service: Tls57070Service,
     private readonly dropdown: DropdownApiService,
+    private readonly cdr: ChangeDetectorRef,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS57070');
+    this.updateTableColumns('M');
+    this.queryForm.get('ShowType')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(val => {
+        setTimeout(() => {
+          this.updateTableColumns(val);
+          this.data = [];
+          this.footerData = [];
+          this.totalRecords = 0;
+          this.cdr.detectChanges();
+        });
+      });
   }
   updateTableColumns(displayMode: string | null) {
     if (displayMode === 'M') { // 彙總模式
@@ -94,52 +108,52 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
         { field: 'LOGO_No', header: '品牌' },
         { field: 'LOGO_CH_NAME', header: '品牌名稱' },
         // 期初庫存
-        { field: 'STK_PRIORQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_PRIOR' },
-        { field: 'STK_PRIORCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
 
         // 異動 - 進貨/退貨/銷貨
-        { field: 'STK_STOCKQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_STOCK' },
-        { field: 'STK_STOCKCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_STOCK' },
-        { field: 'STK_REJECTQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_REJECT' },
-        { field: 'STK_REJECTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_REJECT' },
-        { field: 'STK_SALEQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
-        { field: 'STK_SALECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_SALE' },
-        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_STOCKQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_STOCKCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_REJECTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_REJECTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_SALEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
 
         // 異動 - 調撥
-        { field: 'STK_MOVEINQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEIN' },
-        { field: 'STK_MOVEINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_MOVEIN' },
-        { field: 'STK_MOVEOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEOUT' },
-        { field: 'STK_MOVEOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
 
         // 異動 - 盤點/報廢
-        { field: 'STK_DIFFQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_DIFF' },
-        { field: 'STK_DIFFCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_DIFF' },
-        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_SCRAP' },
-        { field: 'STK_SCRAPCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_DIFFQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_DIFFCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_SCRAPCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
 
         // 異動 - 領用
-        { field: 'STK_TAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_TAKE' },
-        { field: 'STK_TAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_TAKE' },
-        { field: 'STK_RETAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_RETAKE' },
-        { field: 'STK_RETAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_TAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_TAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_RETAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_RETAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
 
         // 異動 - 同業調撥
-        { field: 'STK_TRDINQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDIN' },
-        { field: 'STK_TRDINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_TRDIN' },
-        { field: 'STK_TRDOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDOUT' },
-        { field: 'STK_TRDOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
 
         // 期末結算與利潤
-        { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true },
-        { field: 'STK_CURRENTQTY', header: '數量', isSubTotal: true, groupField: 'STK_CURRENT' },
-        { field: 'STK_CURRENTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
-        // { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
-        // { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
-        { field: 'STK_UNITCOST', header: '平均成本', format: formatAmount, isSubTotal: true },
-        { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true }, // (銷售金額 / 1.05)
-        { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true },
-        { field: 'GROSSPROFITMARGIN', header: '毛利率', isSubTotal: true }
+        { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true },
+        { field: 'STK_CURRENTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'STK_CURRENTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        // { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, isTotal: true,  groupField: 'PLU_SALEPRC' },
+        // { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, isTotal: true,  groupField: 'PLU_SALEPRC' },
+        { field: 'STK_UNITCOST', header: '平均成本', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true },
+        { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true, isTotal: true }, // (銷售金額 / 1.05)
+        { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true, isTotal: true },
+        { field: 'GROSSPROFITMARGIN', header: '毛利率', isSubTotal: true, isTotal: true }
       ];
       this.data = [];
     } else if (displayMode === 'D') { // 明細模式
@@ -151,58 +165,64 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
         { field: 'PLU_Name', header: '品名' },
 
         // 期初庫存
-        { field: 'STK_PRIORQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_PRIOR' },
-        { field: 'STK_PRIORCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
 
         // 異動 - 進貨/退貨/銷貨
-        { field: 'STK_STOCKQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_STOCK' },
-        { field: 'STK_STOCKCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_STOCK' },
-        { field: 'STK_REJECTQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_REJECT' },
-        { field: 'STK_REJECTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_REJECT' },
-        { field: 'STK_SALEQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
-        { field: 'STK_SALECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_SALE' },
-        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_STOCKQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_STOCKCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_REJECTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_REJECTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_SALEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
 
         // 異動 - 調撥
-        { field: 'STK_MOVEINQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEIN' },
-        { field: 'STK_MOVEINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_MOVEIN' },
-        { field: 'STK_MOVEOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_MOVEOUT' },
-        { field: 'STK_MOVEOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
 
         // 異動 - 盤點/報廢
-        { field: 'STK_DIFFQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_DIFF' },
-        { field: 'STK_DIFFCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_DIFF' },
-        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_SCRAP' },
-        { field: 'STK_SCRAPCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_DIFFQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_DIFFCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_SCRAPCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
 
         // 異動 - 領用
-        { field: 'STK_TAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_TAKE' },
-        { field: 'STK_TAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_TAKE' },
-        { field: 'STK_RETAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_RETAKE' },
-        { field: 'STK_RETAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_TAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_TAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_RETAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_RETAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
 
         // 異動 - 同業調撥
-        { field: 'STK_TRDINQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDIN' },
-        { field: 'STK_TRDINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_TRDIN' },
-        { field: 'STK_TRDOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_TRDOUT' },
-        { field: 'STK_TRDOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
 
         // 期末結算與利潤
-        { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true },
-        { field: 'STK_CURRENTQTY', header: '期末數量', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
-        { field: 'STK_CURRENTCOST', header: '期末成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_CURRENT' },
-        { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
-        { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
-        { field: 'STK_UNITCOST', header: '平均成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true },
-        { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true }, // (銷售金額 / 1.05)
-        { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true },
-        { field: 'GROSSPROFITMARGIN', header: '毛利率', isSubTotal: true }
+        { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true },
+        { field: 'STK_CURRENTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'STK_CURRENTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'PLU_SALEPRCNET', header: '未稅', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true, groupField: 'PLU_SALEPRC' },
+        { field: 'PLU_SALEPRC', header: '含稅', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true, groupField: 'PLU_SALEPRC' },
+        { field: 'STK_UNITCOST', header: '平均成本', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true },
+        { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true, isTotal: true }, // (銷售金額 / 1.05)
+        { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true, isTotal: true },
+        { field: 'GROSSPROFITMARGIN', header: '毛利率', isSubTotal: true, isTotal: true }
       ];
       this.data = [];
     } else {
       this.columns = [];
       this.data = [];
     }
+  }
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup) {
+    form.value.pageIndex = event.pageIndex;
+    form.value.pageSize = event.pageSize;
+    form.value.SortBy = event.SortBy;
+    this.onSubmit(form);
   }
   onSubmit(frm: FormGroup) {
     this.updateTableColumns(frm.value.ShowType);
@@ -212,13 +232,21 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
         STK_YM: convertDateToYYYYMM(frm.value.STK_YM),
       }
       this.tls57070Service.queryTLS57070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        console.log(res);
-        this.DetailSumData = res.DetailSumData.map((item: any) => ({ ...item, STK_UNITCOST: '--' }));
-        this.lastQueryBody = body;
-        this.footerData = {
-          ...res.SumData,
+        this.DetailSumData = res.DetailSumData.map((item: any) => ({
+          ...item,
           STK_UNITCOST: '--',
-        };
+          PLU_SALEPRCNET: '--',
+          PLU_SALEPRC: '--',
+        }));
+        this.lastQueryBody = body;
+        this.footerData = [
+          {
+            ...res.SumData,
+            STK_UNITCOST: '--',
+            PLU_SALEPRCNET: '--',
+            PLU_SALEPRC: '--',
+          }
+        ]
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
       })
