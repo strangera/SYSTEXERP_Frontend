@@ -119,14 +119,13 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
-
-
+        editable: false
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-
+        editable: false,
         autoWidth: true,
 
       },
@@ -183,7 +182,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_amount',
         header: '扣款金額',
         type: 'number',
-
+        editable: false,
         autoWidth: true,
         required: true,
 
@@ -243,13 +242,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
+        editable: false,
 
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-
+        editable: false,
         autoWidth: true,
       },
       {
@@ -326,7 +326,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_amount',
         header: '扣款金額(未稅)',
         type: 'number',
-
+        editable: false,
         defaultValue: 0,
 
       },
@@ -406,14 +406,13 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
-
-
+        editable: false,
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-
+        editable: false,
         autoWidth: true,
 
       },
@@ -577,13 +576,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
+        editable: false,
 
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
-
+        editable: false,
         autoWidth: true,
         style: 'white-space: normal; word-break: break-word; line-height: 1.3; max-width: 150px; min-width: 100px;'
       },
@@ -755,12 +755,14 @@ export class TLS12040FareColumnDefinitions {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
+        editable: false,
 
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
+        editable: false,
 
         autoWidth: true,
       },

@@ -15,7 +15,7 @@ export interface LocationDetails {
 }
 
 export interface TLS12040RequestModel {
-  id: number | string;
+  id: number | string | undefined | null;
   apply_no: string;
 }
 
@@ -27,7 +27,7 @@ export interface Tls12040SelectorTableColumn {
 
 
 export interface TLS12040DetailModel {
-  id: number | string;
+  id?: string | null;
   // ========== 基本資訊 ==========
   talent_id: string;
   apply_no: string;     // 專櫃招募編號
@@ -37,6 +37,7 @@ export interface TLS12040DetailModel {
   ven_no: string;
   VEN_Name: string;
   contract_subno?: string;
+  contract_no?: string;
   apply_type: string; // 申請案件內容
   apply_date: string; // 申請日期
   contract_type?: string; // 合約類型

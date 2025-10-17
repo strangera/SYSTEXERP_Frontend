@@ -103,9 +103,14 @@
               (dropdownChange)="onDropdownChange($event)"
               (detailButtonClick)="onDetailButtonClick($event)"
               (fieldChange)="onFieldChange($event)"
-              [forceEditMode]="true"
+              [forceEditMode]="!isReadOnlyMode"
               [showActionColumn]="false"
               [showDetailActionColumn]="false"
+              [showBatchDelete]="isReadOnlyMode"
+              [showAddButton]="!isReadOnlyMode"
+              [showBatchDelete]="!isReadOnlyMode"
+              [showDetailAddButton]="!isReadOnlyMode"
+              [showDetailBatchDelete]="!isReadOnlyMode"
             ></app-expandable-edit-table>
           </div>
 

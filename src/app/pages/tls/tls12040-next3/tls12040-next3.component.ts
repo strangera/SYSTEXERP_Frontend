@@ -273,7 +273,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   private prepareContractInfoDisplay(): void {
     console.log('準備合約資訊顯示');
 
-    const cruData = this.contractFlowService.getCruData<TLS12040DetailModel>();
+    const cruData = this.contractFlowService.getCruData();
 
     const contractInfo = {
       apply_no: cruData?.apply_no || this.currentContractData?.apply_no || '',
