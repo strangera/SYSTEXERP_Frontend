@@ -343,6 +343,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- Submit（固定 pageSize=30） ----------------- */
  /* ----------------- Submit（固定 pageSize=30） ----------------- */
+/* ----------------- Submit（固定 pageSize=30） ----------------- */
 onSubmit(frm: FormGroup) {
   this.submitted = true;
 
@@ -357,7 +358,6 @@ onSubmit(frm: FormGroup) {
   const raw = this.queryForm.getRawValue();
   const payload = this.buildPayload(raw);
 
-  // 固定首查 30 筆
   payload.pageIndex = 1;
   payload.pageSize = 30;
 
@@ -366,7 +366,7 @@ onSubmit(frm: FormGroup) {
   this.data = [];
   this.selectedItems = [];
   this.footerData = undefined;
-  this.totalRecords = 0;       // 避免殘留前次筆數
+  this.totalRecords = 0; // 暫時清零，防止虛擬容器亂撐
 
   // ===== 執行查詢 =====
   this.tls2b030Service
@@ -378,23 +378,24 @@ onSubmit(frm: FormGroup) {
         const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
         const sumRaw = dataAny?.SumPayDiffs ?? null;
 
-        // 攤平 PayDiffs 欄位
         const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
           const flat: any = { ...r };
           if (r?.PayDiffs) {
             Object.entries(r.PayDiffs).forEach(([k, v]) => (flat[k] = (v as number) ?? 0));
           }
-          // 加穩定 key
           flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
           return flat as TLS2B030Row;
         });
 
         this.data = rows;
 
-        // ===== 設定總筆數 =====
-        this.totalRecords = Number(response?.TotalCount ?? rows.length) || rows.length;
+        // 🧩 延遲設定 totalRecords，確保 table-report 建立後才撐高度
+        const total = Number(response?.TotalCount ?? rows.length) || rows.length;
+        setTimeout(() => {
+          this.totalRecords = total;
+        });
 
-        // ===== 總計列（SumPayDiffs） =====
+        // ===== 總計列 =====
         if (sumRaw) {
           const footer: any = {};
           Object.keys(sumRaw).forEach((k) => {
@@ -412,9 +413,7 @@ onSubmit(frm: FormGroup) {
           this.lastQueryBody = { ...payload };
         });
 
-        // ===== 保存查詢條件（返回頁面時保留） =====
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-
         this.loading = false;
       },
       error: (err) => {
@@ -426,6 +425,7 @@ onSubmit(frm: FormGroup) {
       },
     });
 }
+
 
 
   onClear(frm: FormGroup) {
