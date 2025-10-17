@@ -42,7 +42,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     PST_No: ['', Validators.maxLength(15)],                     // 盤點單編號
     HOS_No: [[]],                                               // 倉別代碼 (改為陣列)
     LOGO_No: [[]],                                              // 品牌代碼 (改為陣列)
-    PST_DateStart: ['', Validators.required],    // 盤點基準日期(起)
+    PST_DateStart: [null],    // 盤點基準日期(起)
     PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
     PST_Status: [[]],                                           // 盤點單狀態 (多選)
     ...createPaginationConfig([{ field: 'PST_No', order: -1 }]) // 分頁和排序參數
@@ -171,8 +171,13 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   }
 
   onSubmit(frm: FormGroup) {
+    const queryRequest = {
+      ...frm.getRawValue(),
+      PST_DateStart: this.datePipe.transform(frm.get('PST_DateStart')?.value, 'yyyy-MM-dd') || null,
+      PST_DateEnd: this.datePipe.transform(frm.get('PST_DateEnd')?.value, 'yyyy-MM-dd') || null
+    }
     this.handleSubmit(frm, () => {
-      this.tls53010Service.queryTLS53010(frm.getRawValue())
+      this.tls53010Service.queryTLS53010(queryRequest)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
