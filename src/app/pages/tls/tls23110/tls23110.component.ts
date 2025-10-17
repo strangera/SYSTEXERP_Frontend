@@ -270,27 +270,34 @@ buildFooterFromGrandTotal(): Record<string, any> | undefined {
     Array.isArray(res?.Data)            ? res.Data :
     Array.isArray(res?.QueryData)       ? res.QueryData : [];
 
-  const preferredOrder = [
-    'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
-    'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
-  ] as const;
-  const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
+const preferredOrder = [
+  'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
+  'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
+] as const;
+const metrics = ['TXN_Net','TXN_Tax','Total'] as const;  // ⬅ 改這裡
 
-  const mapped = rawRows.map((row: any) => {
-    const flat: any = { Day: row?.Day ?? '' };
-    const d = row?.Discount_List || {};
-    for (const bucket of preferredOrder) {
-      const obj = d[bucket as string];
-      if (!obj) continue;
-      for (const m of metrics) {
-        const key = `${bucket}_${m}`;
-        const num = Number(obj[m as string] ?? 0);
-        if (Number.isFinite(num)) flat[key] = num;
-      }
+const mapped = rawRows.map((row: any) => {
+  const flat: any = { Day: row?.Day ?? '' };
+  const d = row?.Discount_List || {};
+  for (const bucket of preferredOrder) {
+    const obj = d[bucket as string];
+    if (!obj) continue;
+
+    // ⬅ 兼容：優先 TXN_Net，沒有就退回 TXN_SaleNoTax
+    const pick = (o: any, k: 'TXN_Net' | 'TXN_Tax' | 'Total') =>
+      k === 'TXN_Net'
+        ? Number(o?.TXN_Net ?? o?.TXN_SaleNoTax ?? 0)
+        : Number(o?.[k] ?? 0);
+
+    for (const m of metrics) {
+      const key = `${bucket}_${m}`;
+      const num = pick(obj, m);
+      if (Number.isFinite(num)) flat[key] = num;
     }
-    flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
-    return flat;
-  });
+  }
+  flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+  return flat;
+});
 
   this.data = mapped;
   this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : mapped.length;
@@ -391,29 +398,30 @@ buildFooterFromGrandTotal(): Record<string, any> | undefined {
     return Number.isFinite(num) ? num.toLocaleString('en-US') : '';
   }
 
-  columns: any[] = [
-    { field: 'Day', header: '日期', visible: true },
+columns: any[] = [
+  { field: 'Day', header: '日期', visible: true },
 
-    { field: 'OriginalPrice_TXN_SaleNoTax', header: '正品-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'OriginalPrice_TXN_Tax',       header: '正品-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'OriginalPrice_Total',         header: '正品-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'OriginalPrice_TXN_Net', header: '正品-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'OriginalPrice_TXN_Tax', header: '正品-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'OriginalPrice_Total',   header: '正品-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'Discount90_TXN_SaleNoTax', header: '9折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'Discount90_TXN_Tax',       header: '9折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'Discount90_Total',         header: '9折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Discount90_TXN_Net', header: '9折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Discount90_TXN_Tax', header: '9折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Discount90_Total',   header: '9折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'Discount80_TXN_SaleNoTax', header: '8折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'Discount80_TXN_Tax',       header: '8折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'Discount80_Total',         header: '8折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Discount80_TXN_Net', header: '8折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Discount80_TXN_Tax', header: '8折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Discount80_Total',   header: '8折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'SpecialPrice_TXN_SaleNoTax', header: '特價-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'SpecialPrice_TXN_Tax',       header: '特價-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'SpecialPrice_Total',         header: '特價-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'SpecialPrice_TXN_Net', header: '特價-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'SpecialPrice_TXN_Tax', header: '特價-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'SpecialPrice_Total',   header: '特價-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'Total_TXN_SaleNoTax', header: '總計-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'Total_TXN_Tax',       header: '總計-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'Total_Total',         header: '總計-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-  ];
+  { field: 'Total_TXN_Net', header: '總計-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Total_TXN_Tax', header: '總計-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Total_Total',   header: '總計-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+];
+
 
   /** 取得某日期所在月份的起訖 */
   private getMonthRange(d: Date) {
@@ -467,23 +475,30 @@ buildFooterFromGrandTotal(): Record<string, any> | undefined {
           'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
           'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
         ] as const;
-        const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
+   const metrics = ['TXN_Net','TXN_Tax','Total'] as const;
 
-        const rows = rawRows.map((row: any) => {
-          const flat: any = { Day: row?.Day ?? '' };
-          const d = row?.Discount_List || {};
-          for (const bucket of preferredOrder) {
-            const obj = d[bucket as string];
-            if (!obj) continue;
-            for (const m of metrics) {
-              const key = `${bucket}_${m}`;
-              const num = Number(obj[m as string] ?? 0);
-              if (Number.isFinite(num)) flat[key] = num;
-            }
-          }
-          flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
-          return flat;
-        });
+const rows = rawRows.map((row: any) => {
+  const flat: any = { Day: row?.Day ?? '' };
+  const d = row?.Discount_List || {};
+  for (const bucket of preferredOrder) {
+    const obj = d[bucket as string];
+    if (!obj) continue;
+
+    // 取值：優先用 TXN_Net，沒有就退回 TXN_SaleNoTax（相容）
+    const pick = (o: any, k: 'TXN_Net' | 'TXN_Tax' | 'Total') =>
+      k === 'TXN_Net'
+        ? Number(o?.TXN_Net ?? o?.TXN_SaleNoTax ?? 0)
+        : Number(o?.[k] ?? 0);
+
+    for (const m of metrics) {
+      const key = `${bucket}_${m}`;
+      const num = pick(obj, m);
+      if (Number.isFinite(num)) flat[key] = num;
+    }
+  }
+  flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+  return flat;
+});
 
         const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
@@ -506,16 +521,32 @@ private buildGrandFromTotalSummary(totalSummary: any): Record<string, number> {
 
   for (const col of this.columns) {
     if (!col?.isTotal) continue;
-    const field: string = col.field;
-    const [bucket, metric] = field.split('_'); // e.g. "OriginalPrice_TXN_SaleNoTax"
-    if (!bucket || !metric) continue;
+    const field = col.field as string;
+
+    // 只切第一個底線
+    const underscore = field.indexOf('_');
+    if (underscore <= 0) continue; // 防呆，例如 "Day"
+
+    const bucket = field.slice(0, underscore);         // e.g. "OriginalPrice"
+    const metric = field.slice(underscore + 1);        // e.g. "TXN_Net" / "TXN_Tax" / "Total"
 
     const bucketObj = totalSummary[bucket];
-    const val = Number(bucketObj?.[metric] ?? 0);
+    if (!bucketObj) continue;
+
+    let val: number;
+    if (metric === 'TXN_Net') {
+      // 相容後端可能用 TXN_SaleNoTax 的情況
+      val = Number(bucketObj?.TXN_Net ?? bucketObj?.TXN_SaleNoTax ?? 0);
+    } else {
+      val = Number(bucketObj?.[metric] ?? 0);
+    }
+
     if (Number.isFinite(val)) out[field] = val;
   }
+
   return out;
 }
+
 
 
 }

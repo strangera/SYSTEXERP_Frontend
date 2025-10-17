@@ -191,7 +191,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
     { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
     { field: 'TXN_Point', header: '紅利', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
-    { field: 'TERM_No', header: '分期', visible: true },
+
     { field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
     { field: 'EDC_InstEachAmt', header: '每期分期金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
