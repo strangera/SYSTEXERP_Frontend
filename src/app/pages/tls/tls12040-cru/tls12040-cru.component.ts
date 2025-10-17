@@ -449,7 +449,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   private loadCachedDataWithClassifications(cruData: any): void {
     console.log('📄 開始載入暫存表單資料（含分類處理）');
-
+    if (cruData.check_type && !cruData.check_typeList) {
+      cruData.check_typeList = cruData.check_type.split(',').map((s: string) => s.trim());
+    }
     // 先載入基本資料（不包括分類）
     const basicData = { ...cruData };
     delete basicData.bus_type;
@@ -674,75 +676,6 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }, 3000);
   }
 
-  // private loadContractDetail(rowData: TLS12040DetailModel): void {
-  //   console.log('🔍 開始載入合約詳細資料:', rowData);
-  //   this.loading = true;
-
-  //   const request: TLS12040RequestModel = {
-  //     id: rowData.id,
-  //     apply_no: rowData.apply_no
-  //   };
-
-  //   this.tls12040Service.queryTLS12040Detail(request).subscribe({
-  //     next: (response: any) => {
-  //       if (response && response.Status === '0000' && response.Data) {
-  //         this.dataForm.patchValue({
-  //           apply_date: response.Data.apply_date,  // 保持字串
-  //           tlt_bdate: response.Data.tlt_bdate,
-  //         });
-  //         console.log('📅 API 返回的日期資料:', {
-  //           apply_date: response.Data.apply_date,
-  //           tlt_bdate: response.Data.tlt_bdate,
-  //           feedback_date: response.Data.feedback_date,
-  //           類型檢查: {
-  //             apply_date: typeof response.Data.apply_date,
-  //             tlt_bdate: typeof response.Data.tlt_bdate
-  //           }
-  //         });
-  //         console.log('📦 完整 API 回應:', response.Data);
-  //         this.populateForm(response.Data);
-  //         console.log('📅 填充後表單的日期值:', {
-  //           apply_date: this.dataForm.get('apply_date')?.value,
-  //           tlt_bdate: this.dataForm.get('tlt_bdate')?.value,
-  //           feedback_date: this.dataForm.get('feedback_date')?.value
-  //         });
-  //         this.loadLocationData(response.Data.LocationDetails || []);
-  //         this.loadDependentDropdowns(response.Data);
-
-  //         // 強制重新賦值選項（確保 Angular 知道要更新）
-  //         this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
-  //         this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
-  //         this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
-  //         this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
-  //         this.decorationOptions = [...this.sharedDropdownService.decorationOptions]; // 裝潢方式
-  //         this.moneyTypeOptions = [...this.sharedDropdownService.moneyTypeOptions];   // 結帳方式
-  //         this.checkTypeOptions = [...this.sharedDropdownService.checkTypeOptions];   // 對帳方式
-  //         this.storeWayOptions = [...this.sharedDropdownService.storeWayOptions];     // 抽成別
-  //         this.paytypeOptions = [...this.sharedDropdownService.paytypeOptions];       // 抽成別
-  //         this.invoiceTypeOptions = [...this.sharedDropdownService.invoiceTypeOptions]; // 抽成別
-  //         this.tltKindOptions = [...this.sharedDropdownService.tltKindOptions];       // 抽成別
-  //         this.tltopenflagOption = [...this.sharedDropdownService.openflagOptions];   // 抽成別
-  //         this.commCompTypeDropdown = [...this.sharedDropdownService.commCompTypeOptions];
-  //         this.approveStatusOptions = [...this.sharedDropdownService.approveStatusOptions];
-  //         this.yesNoOptions = [...this.sharedDropdownService.yesNoOptions];
-  //         this.tltTermTypeOptions = [...this.sharedDropdownService.tltTermTypeOptions];
-  //         this.tltctypemtotalOptions = [...this.sharedDropdownService.tltctypemtotalOptions]; // 包底類別
-  //         this.totalAmtOptions = [...this.sharedDropdownService.totalAmtOptions];             // 目標營業額單位(廠商)
-  //         this.totalAmtVendorOptions = [...this.sharedDropdownService.totalAmtVendorOptions]; // 目標營業額單位(業主)
-  //         this.depositPaymentOptions = [...this.sharedDropdownService.depositPaymentOptions]; // 保證金
-  //         this.overallStatusOptions = [...this.sharedDropdownService.overallStatusOptions];
-  //         this.applyTypeOptions = [...this.sharedDropdownService.applyTypeOptions];
-  //         this.contractTypeOptions = [...this.sharedDropdownService.contractTypeOptions];
-  //         this.applyStatusOptions = [...this.sharedDropdownService.applyStatusOptions];
-  //         // 強制變更檢測
-  //         this.cdr.detectChanges();
-
-  //         console.log('合約資料載入完成');
-  //       }
-  //     }
-  //   });
-  // }
-
   private loadContractDetail(rowData: TLS12040DetailModel): void {
     console.log('🔍 開始載入合約詳細資料:', rowData);
     this.loading = true;
@@ -856,7 +789,13 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       'feedback_date', 'due_date', 'contact_Date'
     ];
 
-    const processedData = { ...data };
+    const processedData = {
+      ...data,
+      check_typeList: data.check_type
+        ? data.check_type.split(',').map((s: string) => s.trim())
+        : []
+    };
+
 
     dateFields.forEach(field => {
       if (processedData[field]) {
@@ -2293,6 +2232,13 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 1️⃣ 暫時啟用所有表單控制項
     this.dataForm.enable();
+
+    const processedData = {
+      ...data,
+      check_typeList: data.check_type
+        ? data.check_type.split(',').map((s: string) => s.trim())
+        : []
+    };
 
     // 2️⃣ 填充資料 (包含日期欄位)
     this.populateForm(data);
