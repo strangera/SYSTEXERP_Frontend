@@ -90,6 +90,7 @@ export interface AddButton {
   displayText?: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
+  loading?: (rowData: any) => boolean;
 }
 
 export interface RowEditSaveEvent<T = any> {

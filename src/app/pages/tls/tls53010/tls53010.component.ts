@@ -42,7 +42,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     PST_No: ['', Validators.maxLength(15)],                     // 盤點單編號
     HOS_No: [[]],                                               // 倉別代碼 (改為陣列)
     LOGO_No: [[]],                                              // 品牌代碼 (改為陣列)
-    PST_DateStart: ['', Validators.required],    // 盤點基準日期(起)
+    PST_DateStart: [null],    // 盤點基準日期(起)
     PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
     PST_Status: [[]],                                           // 盤點單狀態 (多選)
     ...createPaginationConfig([{ field: 'PST_No', order: -1 }]) // 分頁和排序參數
@@ -87,19 +87,35 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     { field: 'PST_Remark', header: '盤點備註', visible: false },
   ];
 
-  // TODO: 待新增loading屬性
+  loadingStates: Map<number, { print: boolean; export: boolean }> = new Map();
   addButton: AddButton[] = [
     {
       label: '列印',
       icon: 'pi pi-print text-red-500',
       action: (rowData: TLS53010Data) => { this.onPrint(rowData); },
+      loading: (rowData: TLS53010Data) => this.getLoadingState(rowData.id, 'print'),
     },
     {
       label: '匯出',
       icon: 'pi pi-file-export text-green-500',
       action: (rowData: TLS53010Data) => { this.onExport(rowData); },
+      loading: (rowData: TLS53010Data) => this.getLoadingState(rowData.id, 'export'),
     },
   ];
+
+  // 取得 loading 狀態
+  getLoadingState(id: number, action: 'print' | 'export'): boolean {
+    return this.loadingStates.get(id)?.[action] || false;
+  }
+
+  // 設定 loading 狀態
+  setLoadingState(id: number, action: 'print' | 'export', loading: boolean): void {
+    if (!this.loadingStates.has(id)) {
+      this.loadingStates.set(id, { print: false, export: false });
+    }
+    const state = this.loadingStates.get(id)!;
+    state[action] = loading;
+  }
 
   // 展開行設置
   expansionColumns: Column[] = [
@@ -155,8 +171,13 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   }
 
   onSubmit(frm: FormGroup) {
+    const queryRequest = {
+      ...frm.getRawValue(),
+      PST_DateStart: this.datePipe.transform(frm.get('PST_DateStart')?.value, 'yyyy-MM-dd') || null,
+      PST_DateEnd: this.datePipe.transform(frm.get('PST_DateEnd')?.value, 'yyyy-MM-dd') || null
+    }
     this.handleSubmit(frm, () => {
-      this.tls53010Service.queryTLS53010(frm.getRawValue())
+      this.tls53010Service.queryTLS53010(queryRequest)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
@@ -219,8 +240,15 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
 
   // 列印
   onPrint(rowData: TLS53010Data) {
+    this.setLoadingState(rowData.id, 'print', true);
+
     this.tls53010Service.printTLS53010(this.createDetailQueryRequest(rowData))
-      .pipe(untilDestroyed(this))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.setLoadingState(rowData.id, 'print', false);
+        })
+      )
       .subscribe({
         next: (response: HttpResponse<Blob>) => {
           this.downloadFile(response, '盤點單報表.pdf', 'application/pdf');
@@ -233,8 +261,15 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
 
   // 匯出
   onExport(rowData: TLS53010Data) {
+    this.setLoadingState(rowData.id, 'export', true);
+
     this.tls53010Service.exportTLS53010Detail(this.createDetailQueryRequest(rowData))
-      .pipe(untilDestroyed(this))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.setLoadingState(rowData.id, 'export', false);
+        })
+      )
       .subscribe({
         next: (response: HttpResponse<Blob>) => {
           this.downloadFile(response, '盤點單明細報表.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
