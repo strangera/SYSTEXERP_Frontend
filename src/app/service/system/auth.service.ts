@@ -24,9 +24,10 @@ export interface OuterTokenResponse {
   tokenType: string;
 }
 
-export interface ApiResponse<T> {
+export interface ApiResponse<T, F = undefined> {
   Status: string;
   Data: T;
+  footerData?: F;
   Error: {
     Code: string;
     Detail: string;

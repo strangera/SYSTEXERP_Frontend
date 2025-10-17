@@ -25,8 +25,28 @@ export interface Tls2e050QueryBody {
   invoice_type: string;
 }
 
-// 定義單筆 Data 紀錄的介面 (API Response 中 Data 陣列的元素)
-export interface Tls2e050Data {
+export interface TotalData {
+  group_name: string; // 統計名稱 (通常是 "總計")
+  sam_sales_namt: number; // 銷貨淨額
+  sam_sales_notaxamt: number; // 銷貨未稅淨額
+  sam_sales_tax: number; // 銷項稅額
+  sam_profit: number; // 佣金淨額
+  sam_notax_profit: number; // 佣金未稅淨額
+  sam_profit_tax: number; // 佣金稅額
+  sam_ap_namt: number; // 應付總淨額
+  sam_ap_notaxamt: number; // 應付未稅淨額
+  sam_ap_tax: number; // 應付稅額
+  sam_ap_amt: number; // 應付總金額
+  sam_fare_namt: number; // 費用淨額
+  sam_fare_tax: number; // 費用稅額
+  sam_fare_notaxamt: number; // 費用未稅淨額
+  sam_rent_namt: number; // 租金淨額
+  sam_rent_tax: number; // 租金稅額
+  acc_receivable: number; // 應收金額
+  sam_under_limit_amt: number; // 未達保底金額
+  acc_payable: number; // 應付金額
+}
+export interface MainData {
   ven_no: string;
   VEN_Name: string;
   tlt_no: string;
@@ -71,7 +91,7 @@ export class Tls2e050Service {
    * @param queryBody 查詢條件
    * @returns 包含查詢結果的 Observable
    */
-  queryTls2e050(queryBody: Tls2e050QueryBody): Observable<ApiResponse<Tls2e050Data[]>> {
-    return this.http.post<ApiResponse<Tls2e050Data[]>>(API_URL, queryBody);
+  queryTls2e050(queryBody: Tls2e050QueryBody): Observable<any> {
+    return this.http.post<any>(API_URL, queryBody);
   }
 }
