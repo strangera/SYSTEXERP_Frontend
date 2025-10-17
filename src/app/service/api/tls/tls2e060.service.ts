@@ -1,0 +1,70 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiResponse } from '@service/system/auth.service';
+import { environment } from 'src/environments/environment';
+import { SortMeta } from 'primeng/api';
+
+// 定義查詢 Request Body 的介面
+// 根據 Swagger/OpenAPI 的 Request Body Schema 進行定義
+export interface Tls2e060QueryBody {
+  PageSize: number;
+  PageIndex: number;
+  SortBy: SortMeta[];
+  adj_no: string;
+  adj_date: string; // 格式 '2025-10-17'
+  sam_yyymm: string;
+}
+
+// 定義單筆 Data 紀錄的介面 (API Response 中 Data 陣列的元素)
+// 根據 Swagger/OpenAPI 的 Response Schema 進行定義
+export interface Tls2e060Data {
+  adj_no: string; // 調整單號
+  adj_date: string; // 調整日期 ($date 格式，如 '2025-10-17')
+  sam_yyymm: string; // 調整年月
+  tlt_no: string; // 專櫃編號
+  contract_no: string; // 契約編號
+  contrace_subno: string; // 版次 (注意：Swagger 範例中是 'contrace_subnostring' 可能是 typo，假設為 'contrace_subno')
+  adj_taxtype: string; // 調整稅別 0=免稅, 1=應稅
+  adj_amount: number; // 調整金額 ($double)
+}
+
+// 定義建立 Request Body 的介面
+// 根據 Swagger/OpenAPI 的 Request Body Schema 進行定義
+export interface Tls2e060CreateBody {
+  sam_yyymm: string;
+  sam_termno: number;
+  tlt_no: string;
+  talent_id: number;
+  contract_no: string;
+  adj_taxtype: string; // 0 或 1
+  adj_amount: number;
+}
+const QUERY_API_URL = environment.ApiUrl + '/TLS0000/TLS2000/queryTLS2E060';
+const CREATE_API_URL = environment.ApiUrl + '/TLS0000/TLS2000/createTLS2E060';
+@Injectable({
+  providedIn: 'root'
+})
+export class Tls2e060Service {
+
+  constructor(private http: HttpClient) { }
+
+  /**
+   * 查詢專櫃結帳前調整作業資料 (TLS2E060)
+   * @param queryBody 查詢條件
+   * @returns 包含查詢結果的 Observable
+   */
+  queryTls2e060(queryBody: Tls2e060QueryBody): Observable<ApiResponse<Tls2e060Data[]>> {
+    return this.http.post<ApiResponse<Tls2e060Data[]>>(QUERY_API_URL, queryBody);
+  }
+
+  /**
+   * 建立/新增專櫃結帳前調整作業資料 (TLS2E060)
+   * @param createBody 建立資料的內容
+   * @returns 包含操作結果的 Observable (假設成功回傳的 ApiResponse<any> 即可，因為 Swagger 沒提供 Data Schema)
+   */
+  createTls2e060(createBody: Tls2e060CreateBody): Observable<ApiResponse<number>> {
+    // 雖然 Swagger 描述為 '200 OK'，我們仍使用 ApiResponse<any> 類型
+    return this.http.post<ApiResponse<number>>(CREATE_API_URL, createBody);
+  }
+}

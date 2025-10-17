@@ -1,1 +1,26 @@
-<p>tls2e060-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="調整單號" controlName="adj_no"
+          [control]="dataForm.controls.adj_no" [submitted]="submitted"></app-input-text>
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="調整日期" controlName="sam_yyymm"
+          [control]="dataForm.controls.sam_yyymm" [submitted]="submitted"></app-calendar>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="sam_termno"
+          [control]="dataForm.controls.sam_termno" [options]="sam_termnoOptions" optionLabel="label" optionValue="value"
+          [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="tlt_no"
+          [control]="dataForm.controls.tlt_no" [options]="tlt_noOptions | async" optionLabel="label" optionValue="value"
+          [submitted]="submitted"></app-dropdown>
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
+</div>

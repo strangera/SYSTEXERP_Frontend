@@ -128,6 +128,12 @@ export interface Pos20032Query {
   CAT_LNo: string[];
   CAT_MNo: string[];
 }
+/**
+ * 查詢專櫃主檔(TLTTALENT) (取最新契約，含對應資料)
+ */
+export interface TLTTALENTQuery {
+  tlt_noList?: string[];
+}
 
 /**
  * 查詢 TLTTALENT_Status_DropDownList 時的請求 body
@@ -210,6 +216,13 @@ export interface Pos2004Item {
  * 查詢 TLTTALENT_CHARGE_DropDownList 時的請求 body
  */
 export interface TalentChargeQuery {
+  talent_id: number;
+}
+
+/**
+ * 查詢 queryTLTTALENTDropDownList 時的請求 body
+ */
+export interface TLTTALENTItem {
   talent_id: number;
 }
 
