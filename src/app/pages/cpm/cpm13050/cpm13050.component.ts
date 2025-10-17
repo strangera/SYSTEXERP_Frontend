@@ -1,120 +1,93 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column } from '@shared/componentkit/table/table.model';
 
 //5.1.3.5  專櫃停車費折抵設定作業
 @Component({
-    selector: 'app-cpm13050',
-    templateUrl: './cpm13050.component.html',
-    styleUrl: './cpm13050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TableComponent, TranslateModule]
+  selector: 'app-cpm13050',
+  templateUrl: './cpm13050.component.html',
+  styleUrl: './cpm13050.component.scss',
+  standalone: true,
+  imports: [DropdownComponent, CalendarRangeQuickComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TableComponent, TranslateModule]
 })
-export class CPM13050Component extends BasicQpageComponent implements OnInit {
-  //
+
+export class CPM13050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    creditHours: [, [Validators.maxLength(10)]], // 折抵時數
-    creditAmount: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 折抵金額
+    TXN_DateStart: [""],  // 交易日期
+    TXN_DateEnd: [""],  // 交易日期
+    PKG_disc_shop_name: [""],  // 店家名稱
+    PKG_disc_rule_name: [""],  // 折扣名稱
+    displayMode: [""],  // 報表格式
+    ...createPaginationConfig([{ field: 'PKNG_SeqNo', order: 1 }]), // 預設依序號排序
+
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  totalRecords = 0;
+  PKG_disc_shop_name_Options = []; // 店家名稱下拉選單選項
+  PKG_disc_rule_name_Options = []
+  reportOptions = []; // 報表格式下拉選單選項
+  data: any[] = [];
+  columns: Column[] = [];
+  displayModeOptions = [
+    { value: 'M', label: '彙總' },
+    { value: 'D', label: '明細' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { 'isdelete': true, 'creditHours': 0.5, 'creditAmount': 500 },
-    { 'isdelete': true, 'creditHours': 1, 'creditAmount': 1000 },
-    { 'isdelete': true, 'creditHours': 1.5, 'creditAmount': 1500 }
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'creditHours', header: '折抵時數', visible: true },
-    { field: 'creditAmount', header: '折抵金額', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+
+
+  /**  根據顯示模式切換欄位 */
+  updateTableColumns(showType: string) {
+
+    if (showType === 'D') {
+      this.columns = [
+        { field: 'TXN_Date', header: '日期', visible: true, showSort: true },
+        { field: 'PKG_disc_shop_name', header: '店家名稱', visible: true, showSort: true },
+        { field: 'PKG_entrance_uuid', header: '入場紀錄ID', visible: true, showSort: true },
+        { field: 'PKG_pricing_start_at', header: '入場時間', visible: true },
+        { field: 'PKG_pricing_end_at', header: '出場時間', visible: true },
+        { field: 'PKG_license_plate_no', header: '車牌', visible: true },
+        { field: 'PKG_disc_rule_name', header: '折扣名稱', visible: true },
+        { field: 'PKG_discount_time', header: '實際抵扣時數', visible: true },
+        { field: 'PKG_discount_fee', header: '實際抵扣金額', visible: true },
+
+      ];
+    } else {
+      this.columns = [
+        { field: 'TXN_Date', header: '日期', visible: true, showSort: true },
+        { field: 'PKG_disc_shop_name', header: '店家名稱', visible: true, showSort: true },
+        { field: 'PKG_disc_rule_name', header: '折扣名稱', visible: true },
+        { field: 'count', header: '筆數', visible: true },
+        { field: 'PKG_discount_time', header: '實際抵扣時數', visible: true },
+        { field: 'PKG_discount_fee', header: '實際抵扣金額', visible: true },
+      ]
+    }
+  }
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510019';
-    this.cruPage = '/CPM1000/CPM13050CRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('CPM13050', '/CPM/CPM13050cru', this.queryForm, (frm) => this.onSubmit(frm));
   }
 
-  // ----------------------------------------------------------------
+
+
+  // 表單提交邏輯 (查詢)
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      this.loading = true;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
 }

@@ -6,11 +6,16 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="ShowType"
             [options]="displayModeOptions" optionLabel="label" optionValue="value" [filter]="false"
             [control]="queryForm.controls.ShowType" [submitted]="submitted"></app-dropdown>
 
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="存貨年月" controlName="STK_YM"
+            [control]="queryForm.controls.STK_YM" [submitted]="submitted"></app-calendar>
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="存貨年月" controlName="STK_YM"
             [control]="queryForm.controls.STK_YM" [submitted]="submitted"></app-calendar>
 
@@ -33,14 +38,28 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-customFooter-table *ngIf="columns?.length && columns.length > 0" tableKey="tls57110" dataKey="LOGO_No"
-    [data]="data" [columns]="columns" [totalRecords]="totalRecords" [footerData]="footerData"
-    [rows]="queryForm.value.pgSize ?? 20" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"
-    [showDelete]="false" [subTotalData]="subTotalData" [showTotal]="true"
-    [groupRowsBy]="showType === 'D' ? 'LOGO_CH_NAME' : ''" [multiSortMeta]="[
+  <app-customFooter-table
+    *ngIf="columns?.length && columns.length > 0"
+    tableKey="tls57110"
+    dataKey="LOGO_No"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [footerData]="footerData"
+    [rows]="queryForm.value.pgSize ?? 20"
+    [lazy]="true"
+    [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    [showReportMode]="false"
+    [showManage]="false"
+    [showDelete]="false"
+    [subTotalData]="subTotalData"
+    [showTotal]="true"
+    [groupRowsBy]="showType === 'D' ? 'LOGO_CH_NAME' : ''"
+    [multiSortMeta]="[
       { field: showType === 'M' ? 'LOGO_CH_NAME' : 'LOGO_No', order: 1 },
-    ]">
+    ]"
+  >
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="匯出存貨庫存月結表.PDF" icon="pi pi-file" (click)="onExportPDF()"
