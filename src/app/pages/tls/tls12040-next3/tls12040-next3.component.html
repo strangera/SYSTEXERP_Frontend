@@ -84,7 +84,9 @@
               [readonly]="
                 getTableSetting(tableConfig, 'readonly') || isViewMode
               "
-              [forceEditMode]="getTableSetting(tableConfig, 'forceEditMode')"
+              [forceEditMode]="
+                !isReadOnlyMode && getTableSetting(tableConfig, 'forceEditMode')
+              "
               [detailKey]="''"
               [emptyMessage]="tableConfig.emptyMessage"
               (addMainItem)="callTableMethod(tableConfig.addMethod)"
