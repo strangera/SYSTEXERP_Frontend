@@ -50,6 +50,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     IsZeroShow: [null],
     TXN_DateStart: [null as Date | null],
     TXN_DateEnd: [null as Date | null],
+
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
@@ -87,6 +88,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   }
   ngOnInit(): void {
     this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm);
+    this.queryForm.patchValue({ pageSize: 100 });
     this.dropDownListService.queryPOS1002_DropDownList().subscribe((data) => {
       this.ECRNoOptions = data.Data;
     });

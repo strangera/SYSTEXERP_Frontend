@@ -210,8 +210,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       this.dataForm.get('ECR_No')?.reset('');
       this.dataForm.get('ECR_Status')?.setValue('A');
       this.dataForm.get('ECR_Status')?.disable();
-      this.dataForm.get('ECR_Type')?.setValue('2');
-      this.dataForm.get('ECR_Type')?.disable();
+      this.dataForm.get('ECR_Type')?.setValue('2'); // 預設為專櫃機台(自收)，但保持可選
     } else if (this.isFormEditable) {
       this.dataForm.get('ECR_No')?.disable();
     }
