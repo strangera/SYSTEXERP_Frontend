@@ -152,7 +152,7 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
 
         // 期初庫存
         { field: 'STK_PRIORQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_PRIOR' },
-        { field: 'STK_PRIORCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, groupField: 'STK_PRIOR' },
 
         // 異動 - 進貨/退貨/銷貨
         { field: 'STK_STOCKQTY', header: '數量', format: formatAmount, isSubTotal: true, groupField: 'STK_STOCK' },
