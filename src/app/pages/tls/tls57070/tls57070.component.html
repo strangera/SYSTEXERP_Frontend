@@ -45,7 +45,9 @@
     [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"
     [showDelete]="false" [subTotalData]="DetailSumData" [showTotal]="true" [columnGroup]="columnGroup"
     [groupRowsBy]="queryForm.value.ShowType === 'D' ? 'LOGO_CH_NAME' : ''" [multiSortMeta]="[
-      { field: queryForm.value.ShowType === 'M' ? 'LOGO_CH_NAME' : 'LOGO_No', order: 1 },
+      queryForm.value.ShowType === 'M' ?
+      { field: 'LOGO_CH_NAME', order: 1 } :
+      { field: 'LOGO_No', order: 1 },{ field: 'PLU_MagNo', order: 1 },
     ]">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">

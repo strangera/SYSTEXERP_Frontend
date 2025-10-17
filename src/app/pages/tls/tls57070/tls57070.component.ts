@@ -230,6 +230,12 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
       const body = {
         ...frm.value,
         STK_YM: convertDateToYYYYMM(frm.value.STK_YM),
+        SortBy: frm.value.ShowType === 'M' ?
+          [
+            { field: 'LOGO_CH_NAME', order: 1 }] :
+          [
+            { field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 },
+          ]
       }
       this.tls57070Service.queryTLS57070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.DetailSumData = res.DetailSumData.map((item: any) => ({
@@ -248,6 +254,7 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
           }
         ]
         this.data = res.Data;
+        console.log(res.TotalCount);
         this.totalRecords = res.TotalCount;
       })
     })
