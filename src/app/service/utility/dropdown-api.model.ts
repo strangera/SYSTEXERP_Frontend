@@ -223,7 +223,17 @@ export interface TalentChargeQuery {
  * 查詢 queryTLTTALENTDropDownList 時的請求 body
  */
 export interface TLTTALENTItem {
-  talent_id: number;
+  talent_id: string,
+  apply_no: string,
+  tlt_bdate: string,
+  tlt_edate: string,
+  tlt_no: string,
+  tlt_name: string,
+  org_id: string,
+  contract_no: string,
+  contract_subno: string,
+  tlt_contract_bdate: string,
+  tlt_contract_edate: string
 }
 
 /**
