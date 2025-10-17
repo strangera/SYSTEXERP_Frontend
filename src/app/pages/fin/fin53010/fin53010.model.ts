@@ -64,12 +64,16 @@ export interface FIN53010Detail {
   DetailNo: string;
   SubDetailNo: string;
   NoteDesc: string;
+  clearingCode?: string;
 }
 
 /**
  * FIN53010 明細檔 (Table 顯示用)
  * AccName: 科目名稱
  * DetailName: 廠商/員工名稱
+ * AccAmtD: 借方金額
+ * AccAmtC: 貸方金額
+ * displayIndex: 顯示用索引值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
   AccName?: string;

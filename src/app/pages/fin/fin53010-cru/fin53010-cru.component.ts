@@ -162,6 +162,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       optionLabel: 'user_Name',
       optionValue: 'user_No',
     },
+    {
+      field: 'clearingCode',
+      header: '立沖代號',
+      type: 'dropdown',
+      options: () => [],
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
     // { field: 'recKey', header: '對帳KEY值', type: 'input' },
   ]);
 
@@ -221,7 +229,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             AccName: this.service.accNoMap.get(String(d.AccNo))?.AccCName,
             DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
               ?? this.service.usrMap.get(String(d.DetailNo))?.label,
-            displayIndex: d.SerNo / 10 - 1,
+            displayIndex: d.SerNo,
           })));
         })
       ).subscribe();
@@ -238,7 +246,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, idx) => {
           return {
             ...rest,
-            id: this.rowdata!.id,
+            id: typeof rest.id === 'number' ? rest.id! : null,
             index: idx + 1,
             AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
             AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
@@ -348,12 +356,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   };
 
   public onRowReorder(event: TableRowReorderEvent): void {
-    const currentData = this.tableData();
-    currentData.forEach((item, index) => {
-      item.displayIndex = index;
+    this.tableData.update(current => {
+      const movedItem = current.splice(event.dragIndex!, 1)[0];
+      current.splice(event.dropIndex!, 0, movedItem);
+      return current;
     });
 
-    this.logger.debug(`onRowReorder:`, [event, currentData]);
+    this.logger.debug(`onRowReorder:`, [event, this.tableData()]);
   }
 
   // Template 相關方法
