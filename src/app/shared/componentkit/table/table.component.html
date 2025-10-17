@@ -9,8 +9,7 @@
   [scrollHeight]="scrollHeight" [showCurrentPageReport]="IsPrint && showPaginator" [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions" [(rows)]="rows" [(first)]="first" (onLazyLoad)="loadDataLazy($event)"
   [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
-  [styleClass]="
+  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full" [styleClass]="
     'p-datatable-sm' +
     (IsPrint ? ' p-datatable-gridlines' : ' ') +
     (!disabled ? ' p-datatable-striped' : ' ')
@@ -41,8 +40,7 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"
-          rowspan="2"></th>
+        <th *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)" class="w-1rem" rowspan="2"></th>
         <th *ngIf="showSerialNo" class="w-1rem" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2"
           *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
@@ -281,7 +279,8 @@
               }"></div>
             <p-button *ngFor="let btn of addButton" [label]="btn.displayText" pTooltip="{{ btn.label }}"
               tooltipPosition="top" [icon]="btn.icon" (click)="btn.action(rowData, $event)"
-              [disabled]="btn.disabled ? btn.disabled(rowData) : false" [loading]="buttonsLoading" />
+              [disabled]="btn.disabled ? btn.disabled(rowData) : false"
+              [loading]="btn.loading ? btn.loading(rowData) : buttonsLoading" />
           </ng-container>
         </td>
       </ng-container>

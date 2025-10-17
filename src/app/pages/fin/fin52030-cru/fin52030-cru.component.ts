@@ -183,7 +183,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const payload = {
+      const raw = {
         ...d,
         TempNo: String(d.TempNo),
         VouType: String(d.VouType),
@@ -196,14 +196,20 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         })),
       };
 
-      this.logger.debug(`onSubmit:`, [d, payload, this.rowdata, this.tableData()]);
+      const payload = Object.keys(raw).reduce((acc, key) => {
+        const v = raw[key as keyof typeof raw];
+        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
+        return acc;
+      }, {} as any);
+
+      this.logger.debug(`onSubmit:`, [d, raw, payload, this.rowdata, this.tableData()]);
 
       const request = this.isFormCreateable
         ? this.service.insertFIN52030Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN52030Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        finalize(() => this.loading = !1)
+        finalize(() => this.loading = !1),
       ).subscribe(res => res.Status === '0000' && this.onCancel());
     });
   }

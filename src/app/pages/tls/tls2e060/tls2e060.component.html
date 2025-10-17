@@ -1,100 +1,37 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button btnType="create" label="下一步" class="col"></app-button>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="調整報表"
-            class="col"
-          ></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="查詢年月"
-                  [control]="queryForm.controls.onedatemm"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="結帳方式"
-                  controlName="checkout"
-                  [options]="checkoutOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.checkout"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="應免稅"
-                  controlName="tax"
-                  [options]="taxOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.tax"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="櫃位名稱"
-                  controlName="counterName"
-                  [options]="counterNameOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.counterName"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <!-- <div class="card">
-            <div class="col-13">
-                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-table>
-            </div>
-        </div> -->
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="調整單號" controlName="adj_no" [control]="queryForm.controls.adj_no"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar label="調整日期" controlName="adj_date" [control]="queryForm.controls.adj_date"
+              [submitted]="submitted"></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateMonthOne" label="結帳年月" controlName="sam_yyymm"
+              [control]="queryForm.controls.sam_yyymm" [submitted]="submitted"></app-calendar>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table dataKey="INV_ItemNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
+    [showDelete]="false" [loading]="loading"></app-table>
 </div>

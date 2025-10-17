@@ -22,6 +22,7 @@ import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-tls53020',
@@ -49,8 +50,8 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
     PST_No: ['', [Validators.maxLength(14)]], // 盤點單編號
     HOS_No: [[]], // 倉別代碼
     LOGO_No: [[]], // 品牌代碼
-    PST_DateStart: ['', Validators.required], // 盤點基準日期(起)
-    PST_DateEnd: ['', Validators.required], // 盤點基準日期(迄)
+    PST_DateStart: [null],    // 盤點基準日期(起)
+    PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
     PST_Status: [[]], // 盤點狀態
     PST_Type: [null], // 盤點類型
     ...createPaginationConfig([{ field: 'PST_Date', order: -1 }]),
@@ -118,7 +119,8 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
 
   constructor(
     private tls53020Service: TLS53020Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private datePipe: DatePipe
   ) {
     super();
   }
@@ -129,8 +131,13 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   }
 
   onSubmit(frm: FormGroup): void {
+    const queryRequest = {
+      ...frm.getRawValue(),
+      PST_DateStart: this.datePipe.transform(frm.get('PST_DateStart')?.value, 'yyyy-MM-dd') || null,
+      PST_DateEnd: this.datePipe.transform(frm.get('PST_DateEnd')?.value, 'yyyy-MM-dd') || null
+    };
     this.handleSubmit(this.queryForm, () => {
-      this.tls53020Service.queryTLS53020(frm.getRawValue())
+      this.tls53020Service.queryTLS53020(queryRequest)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(res => {
           this.data = res.Data;

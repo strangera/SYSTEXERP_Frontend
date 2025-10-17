@@ -90,6 +90,7 @@ export interface AddButton {
   displayText?: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
+  loading?: (rowData: any) => boolean;
 }
 
 export interface RowEditSaveEvent<T = any> {
@@ -192,6 +193,15 @@ export const formatAmount = (val: number | string): string => {
   const num = Number(val);
   if (isNaN(num)) return '';
   return num.toLocaleString(); // eg. 1,000,000
+};
+// 000,000,000，中文就顯示中文，數字就千分位
+export const formatAmountCN = (val: number | string): string => {
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+  const num = Number(val);
+  if (isNaN(num)) return val.toString();
+  return num.toLocaleString('zh-CN'); // eg. 1,000,000
 };
 // 000,000,000 如果是0就不顯示
 export const formatAmountNo0 = (val: number | string | null | undefined): string => {

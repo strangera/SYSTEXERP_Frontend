@@ -45,7 +45,9 @@ import {
   Pos2013Query,
   Pos2013Item,
   BusSClassItem,
-  TALPORDERMQuery
+  TALPORDERMQuery,
+  TLTTALENTQuery,
+  TLTTALENTItem
 } from './dropdown-api.model';
 import { ApiResponse } from '@service/system/auth.service';
 import { environment } from 'src/environments/environment';
@@ -431,6 +433,13 @@ export class DropdownApiService {
   /** 查詢專櫃主檔(TLTTALENT) (取得最新合約資料) */
   queryTltTalent(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT_DropDownList', 'No', 'Name').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢專櫃主檔(TLTTALENT) (取最新契約，含對應資料) */
+  queryTLTTALENTDropDownList(body: TLTTALENTQuery = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<TLTTALENTItem, TLTTALENTQuery>('/TLS0000/TLS2000/queryTLTTALENTDropDownList', 'tlt_no', 'tlt_name', body).pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
