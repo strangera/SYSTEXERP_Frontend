@@ -342,81 +342,91 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   }
 
   /* ----------------- Submit（固定 pageSize=30） ----------------- */
-  onSubmit(frm: FormGroup) {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.queryForm.markAllAsTouched();
-      this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
-      return;
-    }
+ /* ----------------- Submit（固定 pageSize=30） ----------------- */
+/* ----------------- Submit（固定 pageSize=30） ----------------- */
+onSubmit(frm: FormGroup) {
+  this.submitted = true;
 
-    const raw = this.queryForm.getRawValue();
-    const payload = this.buildPayload(raw);
-
-    // ✅ 首次查詢固定 30 筆（交給子元件持續 lazy 載入）
-    payload.pageIndex = 1;
-    payload.pageSize  = 30;
-    this.lastQueryBody = { ...payload };
-
-    // 重置畫面狀態
-    this.loading = true;
-    this.data = [];
-    this.selectedItems = [];
-    this.footerData = undefined;
-
-    this.tls2b030Service
-      .queryTLS2B030(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (response) => {
-          const dataAny = response?.Data as any;
-          const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-          const sumRaw  = dataAny?.SumPayDiffs ?? null;
-
-          const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
-            const flat: any = { ...r };
-
-            // 攤平 PayDiffs
-            if (r?.PayDiffs) {
-              Object.entries(r.PayDiffs).forEach(([k, v]) => (flat[k] = (v as number) ?? 0));
-            }
-
-            // 穩定 key（避免名稱重複）
-            flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
-            return flat as TLS2B030Row;
-          });
-
-          this.data = rows;
-
-          // 後端總筆數（直接給子元件）
-          this.totalRecords = Number(response?.TotalCount ?? rows.length) || rows.length;
-
-          // 首頁就把總計映射好
-          if (sumRaw) {
-            const footer: any = {};
-            Object.keys(sumRaw).forEach((k) => {
-              const v = (sumRaw as any)[k] ?? 0;
-              if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = v;
-              if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = v;
-            });
-            this.footerData = footer;
-          } else {
-            this.footerData = undefined;
-          }
-
-          // 保存查詢條件（返回頁面時保留）
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('API error:', err);
-          this.data = [];
-          this.totalRecords = 0;
-          this.footerData = undefined;
-          this.loading = false;
-        },
-      });
+  // ===== 驗證條件 =====
+  if (this.queryForm.invalid) {
+    this.queryForm.markAllAsTouched();
+    this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
+    return;
   }
+
+  // ===== 建立查詢條件 =====
+  const raw = this.queryForm.getRawValue();
+  const payload = this.buildPayload(raw);
+
+  payload.pageIndex = 1;
+  payload.pageSize = 30;
+
+  // ===== 重置狀態 =====
+  this.loading = true;
+  this.data = [];
+  this.selectedItems = [];
+  this.footerData = undefined;
+  this.totalRecords = 0; // 暫時清零，防止虛擬容器亂撐
+
+  // ===== 執行查詢 =====
+  this.tls2b030Service
+    .queryTLS2B030(payload)
+    .pipe(untilDestroyed(this))
+    .subscribe({
+      next: (response) => {
+        const dataAny = response?.Data as any;
+        const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+        const sumRaw = dataAny?.SumPayDiffs ?? null;
+
+        const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
+          const flat: any = { ...r };
+          if (r?.PayDiffs) {
+            Object.entries(r.PayDiffs).forEach(([k, v]) => (flat[k] = (v as number) ?? 0));
+          }
+          flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+          return flat as TLS2B030Row;
+        });
+
+        this.data = rows;
+
+        // 🧩 延遲設定 totalRecords，確保 table-report 建立後才撐高度
+        const total = Number(response?.TotalCount ?? rows.length) || rows.length;
+        setTimeout(() => {
+          this.totalRecords = total;
+        });
+
+        // ===== 總計列 =====
+        if (sumRaw) {
+          const footer: any = {};
+          Object.keys(sumRaw).forEach((k) => {
+            const v = (sumRaw as any)[k] ?? 0;
+            if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = v;
+            if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = v;
+          });
+          this.footerData = footer;
+        } else {
+          this.footerData = undefined;
+        }
+
+        // ===== 延遲設定 lastQueryBody（避免 table-report 提前打空查詢） =====
+        setTimeout(() => {
+          this.lastQueryBody = { ...payload };
+        });
+
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('API error:', err);
+        this.data = [];
+        this.totalRecords = 0;
+        this.footerData = undefined;
+        this.loading = false;
+      },
+    });
+}
+
+
 
   onClear(frm: FormGroup) {
     frm.reset({
