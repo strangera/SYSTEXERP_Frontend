@@ -126,13 +126,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   TSB_NameOptions: IDropdownItem[] = [];
   ECR_KBTypeOptions: IDropdownItem[] = [];
   KB_StyleOptions: IDropdownItem[] = [];
-
-  KB_FuncOptions = [
-    { label: '— 請選擇 —', value: '' },
-    { label: '結帳 PAY', value: 'PAY' },
-    { label: '折扣 DISC', value: 'DISC' },
-    { label: '作廢 VOID', value: 'VOID' },
-  ];
+  KB_FuncOptions: { label: string; value: string }[] = [];
   KB_SwitchOptions = [
     { label: '啟用', value: 'Y' },
     { label: '不啟用', value: 'N' },
@@ -155,7 +149,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   ];
 
   // 獲取合併按鈕的標籤
-  getMergeButtonLabel(option: {label: string, value: string}): string {
+  getMergeButtonLabel(option: { label: string, value: string }): string {
     if (!this.selected) return option.label;
 
     if (option.value === 'mergeRight') {
@@ -290,6 +284,16 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         No: item.No ?? item.SYS_Code,
         Name: item.Name ?? item.SYS_Name
       })) ?? [];
+    });
+    this.dropDownListService.queryTLS42010FuncDropDownList().subscribe({
+      next: (res) => {
+        if (res?.Status === '0000' && res.Data?.length) {
+          this.KB_FuncOptions = res.Data.map((item: any) => ({
+            label: `${item.KB_Func} - ${item.KB_Desc}`, // 顯示代碼+名稱
+            value: item.KB_Func
+          }));
+        }
+      },
     });
   }
 
@@ -612,7 +616,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         // 檢查是否被同時往右往下合併覆蓋
         if (k.mergeRight && k.mergeRight > 0 && k.mergeDown && k.mergeDown > 0) {
           if (keyX > kX && keyX <= kX + k.mergeRight &&
-              keyY > kY && keyY <= kY + k.mergeDown) {
+            keyY > kY && keyY <= kY + k.mergeDown) {
             return true;
           }
         }
