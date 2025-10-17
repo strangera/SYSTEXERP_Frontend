@@ -97,7 +97,7 @@ export const TLS12040_FORM_DEFAULTS = {
 
   // ========== 活動參與 ==========
   cap_saletype1: 'N',              // 滿仟送佰：否
-  cap_saletype2: 'N',              // 全館消費滿額集點活動：否
+  cap_saletype2: 'N',              // 會員卡集點：否
   cap_saletype3: 'N',              // 有價券：否
   cap_saletype4: 'N',              // 會員卡：否
   cap_saletype5: 'N',              // 參加提貨單：否
