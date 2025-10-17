@@ -1,5 +1,5 @@
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MainData, Tls2e050Data, Tls2e050Service } from '../../../service/api/tls/tls2e050.service';
+import { MainData,TotalData, Tls2e050Service } from '../../../service/api/tls/tls2e050.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -20,13 +20,14 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 // 2.2.14.5 專櫃帳款試算彙總表
 @Component({
   selector: 'app-tls2e050',
   templateUrl: './tls2e050.component.html',
   standalone: true,
-  imports: [InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TableComponent, TranslateModule]
+  imports: [InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, CustomFooterTableComponent, TranslateModule]
 })
 export class TLS2E050Component extends BasicQueryPageComponent<MainData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -51,6 +52,7 @@ export class TLS2E050Component extends BasicQueryPageComponent<MainData> impleme
   });
   totalRecords = 0;
   data: MainData[] = [];
+  footerData: TotalData[] = [];
   columns: Column[] = [
     // 廠商及專櫃基本資訊
     { field: 'ven_no', header: '廠商編號' },
@@ -67,32 +69,32 @@ export class TLS2E050Component extends BasicQueryPageComponent<MainData> impleme
     { field: 'check_day', header: '結帳後幾日付款' }, // 結帳後幾日付款
 
     // 銷貨淨額
-    { field: 'sam_sales_namt', header: '銷貨淨額(應稅)', format: formatAmount },
-    { field: 'sam_sales_notaxamt', header: '銷貨淨額(免稅)', format: formatAmount },
-    { field: 'sam_sales_tax', header: '銷貨淨額(稅額)', format: formatAmount },
+    { field: 'sam_sales_namt', header: '銷貨淨額(應稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_sales_notaxamt', header: '銷貨淨額(免稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_sales_tax', header: '銷貨淨額(稅額)', isTotal: true,format: formatAmount },
 
     // 抽成額
-    { field: 'sam_profit', header: '抽成額(應稅)', format: formatAmount },
-    { field: 'sam_notax_profit', header: '抽成額(免稅)', format: formatAmount },
-    { field: 'sam_profit_tax', header: '抽成額(稅額)', format: formatAmount },
+    { field: 'sam_profit', header: '抽成額(應稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_notax_profit', header: '抽成額(免稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_profit_tax', header: '抽成額(稅額)', isTotal: true,format: formatAmount },
 
     // 進貨 (應付相關)
-    { field: 'sam_ap_namt', header: '進貨(應稅)', format: formatAmount },
-    { field: 'sam_ap_notaxamt', header: '進貨(免稅)', format: formatAmount },
-    { field: 'sam_ap_tax', header: '進項稅額', format: formatAmount },
-    { field: 'sam_ap_amt', header: '進貨總額(含稅)', format: formatAmount },
+    { field: 'sam_ap_namt', header: '進貨(應稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_ap_notaxamt', header: '進貨(免稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_ap_tax', header: '進項稅額', isTotal: true,format: formatAmount },
+    { field: 'sam_ap_amt', header: '進貨總額(含稅)', isTotal: true,format: formatAmount },
 
     // 代扣/租金 (應收項目)
-    { field: 'sam_fare_namt', header: '代扣未稅(開立)', format: formatAmount },
-    { field: 'sam_fare_tax', header: '代扣稅額', format: formatAmount },
-    { field: 'sam_fare_notaxamt', header: '代扣金額(不開立)', format: formatAmount },
-    { field: 'sam_rent_namt', header: '租金未稅', format: formatAmount },
-    { field: 'sam_rent_tax', header: '租金稅額', format: formatAmount },
+    { field: 'sam_fare_namt', header: '代扣未稅(開立)', isTotal: true,format: formatAmount },
+    { field: 'sam_fare_tax', header: '代扣稅額', isTotal: true,format: formatAmount },
+    { field: 'sam_fare_notaxamt', header: '代扣金額(不開立)', isTotal: true,format: formatAmount },
+    { field: 'sam_rent_namt', header: '租金未稅', isTotal: true,format: formatAmount },
+    { field: 'sam_rent_tax', header: '租金稅額', isTotal: true,format: formatAmount },
 
     // 最終合計
-    { field: 'acc_receivable', header: '應收合計', format: formatAmount },
-    { field: 'sam_under_limit_amt', header: '包底抽成不足(含稅)', format: formatAmount },
-    { field: 'acc_payable', header: '應付帳款(含稅)', format: formatAmount },
+    { field: 'acc_receivable', header: '應收合計', isTotal: true,format: formatAmount },
+    { field: 'sam_under_limit_amt', header: '包底抽成不足(含稅)', isTotal: true,format: formatAmount },
+    { field: 'acc_payable', header: '應付帳款(含稅)', isTotal: true,format: formatAmount },
   ];
   money_typeOptions = getSYS1000Options('money_type');
   tlt_term_typeOptions = getSYS1000Options('tlt_term_type');
@@ -160,7 +162,8 @@ export class TLS2E050Component extends BasicQueryPageComponent<MainData> impleme
     }
     this.handleSubmit(frm, () => {
       this.tls2e050Service.queryTls2e050(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data.mainData;
+        this.data = response.Data;
+        this.footerData = response.footerData;
         this.totalRecords = response.TotalCount;
         this.messageService.successBubble(response.Message);
       })

@@ -25,11 +25,6 @@ export interface Tls2e050QueryBody {
   invoice_type: string;
 }
 
-// 定義單筆 Data 紀錄的介面 (API Response 中 Data 陣列的元素)
-export interface Tls2e050Data {
-  mainData: MainData[];
-  totalData: TotalData[];
-}
 export interface TotalData {
   group_name: string; // 統計名稱 (通常是 "總計")
   sam_sales_namt: number; // 銷貨淨額
@@ -96,7 +91,7 @@ export class Tls2e050Service {
    * @param queryBody 查詢條件
    * @returns 包含查詢結果的 Observable
    */
-  queryTls2e050(queryBody: Tls2e050QueryBody): Observable<ApiResponse<Tls2e050Data>> {
-    return this.http.post<ApiResponse<Tls2e050Data>>(API_URL, queryBody);
+  queryTls2e050(queryBody: Tls2e050QueryBody): Observable<any> {
+    return this.http.post<any>(API_URL, queryBody);
   }
 }
