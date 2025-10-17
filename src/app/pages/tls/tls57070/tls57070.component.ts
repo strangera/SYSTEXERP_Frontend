@@ -132,10 +132,10 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
 
         // 期末結算與利潤
         { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true },
-        // { field: 'STK_CURRENTQTY', header: '期末數量', isSubTotal: true, groupField: 'STK_CURRENT' },
-        // { field: 'STK_CURRENTCOST', header: '期末成本', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
-        { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
-        { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
+        { field: 'STK_CURRENTQTY', header: '數量', isSubTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'STK_CURRENTCOST', header: '成本', format: formatAmount, isSubTotal: true, groupField: 'STK_CURRENT' },
+        // { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
+        // { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, groupField: 'PLU_SALEPRC' },
         { field: 'STK_UNITCOST', header: '平均成本', format: formatAmount, isSubTotal: true },
         { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true }, // (銷售金額 / 1.05)
         { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true },
