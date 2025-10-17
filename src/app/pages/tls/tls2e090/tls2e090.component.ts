@@ -179,7 +179,7 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
       this.tls2e090Service.queryTls2e090(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.loading = false;
         this.data = response.Data;
-        this.footerData = response.footerData;
+        this.footerData = response.footerData || [];
         this.totalRecords = response.TotalCount;
       });
     });

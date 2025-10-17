@@ -93,7 +93,7 @@ export class Tls2e090Service {
    * @param queryBody 查詢條件
    * @returns 包含查詢結果的 Observable
    */
-  queryTls2e090(queryBody: Tls2e090QueryBody): Observable<any> {
-    return this.http.post<any>(API_URL, queryBody);
+  queryTls2e090(queryBody: Tls2e090QueryBody): Observable<ApiResponse<Tls2e090Data[], TotalData[]>> {
+    return this.http.post<ApiResponse<Tls2e090Data[], TotalData[]>>(API_URL, queryBody);
   }
 }
