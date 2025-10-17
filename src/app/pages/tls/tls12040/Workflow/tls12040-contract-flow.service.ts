@@ -346,7 +346,7 @@ export class TLS12040FlowService {
         isValid
       };
 
-      // ✅ 建立新的 stepData Map，保留所有現有步驟
+      //  建立新的 stepData Map，保留所有現有步驟
       const newStepData = new Map(this._state.stepData);
       newStepData.set(stepName, stepData);
 
@@ -438,7 +438,17 @@ export class TLS12040FlowService {
 
   // Next3 資料
   setNext3Data = (data: any) => this.setStepData('next3', data);
-  getNext3Data = <T>() => this.getStepData<T>('next3');
+  getNext3Data<T = any>(): T | undefined {
+    const stepData = this.getStepData('next3');
+    console.log('📥 getNext3Data 結果:', {
+      found: !!stepData,
+      hasData: !!stepData?.data,
+      dataType: Array.isArray(stepData?.data) ? 'array' : typeof stepData?.data,
+      dataLength: Array.isArray(stepData?.data) ? (stepData?.data as any).length : 0,
+      rawData: stepData?.data
+    });
+    return stepData?.data as T | undefined;
+  }
 
   // ========== 檢視模式 ==========
 
@@ -503,6 +513,11 @@ export class TLS12040FlowService {
     const next1Data = this.getNext1Data();
     const next2Data = this.getNext2Data();
     const next3Data = this.getNext3Data();
+
+    console.log('\n📦 Step 4 (Next3) 資料檢查:');
+    console.log('Next3 資料存在:', !!next3Data);
+    console.log('Next3 資料類型:', Array.isArray(next3Data) ? 'Array' : typeof next3Data);
+    console.log('Next3 資料數量:', Array.isArray(next3Data) ? next3Data.length : 0);
 
     console.log('原始資料檢查:', {
       hasCruData: !!cruData,
@@ -738,13 +753,13 @@ export class TLS12040FlowService {
   }
 
   /**
-   * 處理 Next3 條件資料
-   */
+ * 處理 Next3 條件資料
+ */
   private processNext3ConditionData(next3Data: any): any {
-    console.log('處理 Next3 條件資料...');
+    console.log('🔍 處理 Next3 條件資料...');
 
     if (!next3Data || !Array.isArray(next3Data)) {
-      console.log('沒有 Next3 條件資料');
+      console.log('❌ 沒有 Next3 條件資料');
       return {
         fixedRents: { toInsert: [], toUpdate: [], toDelete: [] },
         baseRentHigher: { toInsert: [], toUpdate: [], toDelete: [] },
@@ -754,6 +769,16 @@ export class TLS12040FlowService {
       };
     }
 
+    //  從合約資訊中取得抽成類型
+    const cruData = this.getCruData();
+    const commissionType = cruData?.tlt_term_type || '3';
+
+    console.log('📊 Next3 資料處理:', {
+      抽成類型: commissionType,
+      抽成類型名稱: this.getCommissionTypeName(commissionType),
+      資料數量: next3Data.length
+    });
+
     const result = {
       fixedRents: { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] },
       baseRentHigher: { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] },
@@ -762,23 +787,78 @@ export class TLS12040FlowService {
       baseTier: { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] }
     };
 
-    next3Data.forEach((condition: any) => {
+    next3Data.forEach((condition: any, index: number) => {
+      console.log(`\n🔄 處理條件 ${index + 1}:`, {
+        id: condition.id,
+        _status: condition._status,
+        抽成類型: commissionType
+      });
+
+      // 處理刪除項目
       if (condition._status === 'deleted') {
-        this.handleDeletedCondition(condition, result);
+        console.log('🗑️ 處理刪除項目');
+        this.handleDeletedConditionByType(condition, commissionType, result);
         return;
       }
 
-      // 根據條件類型分類處理
-      if ('base_rent' in condition && 'cag_charge_rate' in condition) {
-        this.processBaseRentHigherCondition(condition, result.baseRentHigher);
-      } else if ('base_rent' in condition) {
-        this.processFixedRentCondition(condition, result.fixedRents);
-      } else if ('limit_amt' in condition && 'seq_no' in condition) {
-        this.processBaseTierCondition(condition, result.baseTier);
-      } else if ('limit_amt' in condition) {
-        this.processBaseCommissionCondition(condition, result.baseCommissions);
-      } else if ('seq_no' in condition) {
-        this.processGraduatedCondition(condition, result.graduated);
+      //  根據抽成類型直接分類處理
+      switch (commissionType) {
+        case '1': // 固定租金
+          console.log(' 處理: 固定租金');
+          this.processFixedRentCondition(condition, result.fixedRents);
+          break;
+
+        case '2': // 底租抽成取高者
+          console.log(' 處理: 底租抽成取高者');
+          this.processBaseRentHigherCondition(condition, result.baseRentHigher);
+          break;
+
+        case '4': // 包底抽成
+          console.log(' 處理: 包底抽成');
+          this.processBaseCommissionCondition(condition, result.baseCommissions);
+          break;
+
+        case '5': // 層級抽成
+          console.log(' 處理: 層級抽成');
+          this.processGraduatedCondition(condition, result.graduated);
+          break;
+
+        case '6': // 包底加層級
+          console.log(' 處理: 包底加層級');
+          this.processBaseTierCondition(condition, result.baseTier);
+          break;
+
+        default:
+          console.warn('⚠️ 不支援的抽成類型:', commissionType);
+      }
+    });
+
+    console.log('\n📊 處理結果統計:', {
+      抽成類型: commissionType,
+      fixedRents: {
+        insert: result.fixedRents.toInsert.length,
+        update: result.fixedRents.toUpdate.length,
+        delete: result.fixedRents.toDelete.length
+      },
+      baseRentHigher: {
+        insert: result.baseRentHigher.toInsert.length,
+        update: result.baseRentHigher.toUpdate.length,
+        delete: result.baseRentHigher.toDelete.length
+      },
+      baseCommissions: {
+        insert: result.baseCommissions.toInsert.length,
+        update: result.baseCommissions.toUpdate.length,
+        delete: result.baseCommissions.toDelete.length
+      },
+      graduated: {
+        insert: result.graduated.toInsert.length,
+        update: result.graduated.toUpdate.length,
+        delete: result.graduated.toDelete.length
+      },
+      baseTier: {
+        insert: result.baseTier.toInsert.length,
+        update: result.baseTier.toUpdate.length,
+        delete: result.baseTier.toDelete.length
       }
     });
 
@@ -1126,5 +1206,47 @@ export class TLS12040FlowService {
     const fallbackCrudStatus = this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;
     console.log('從 fallback 獲取 crudstatus:', fallbackCrudStatus);
     return { crudstatus: fallbackCrudStatus };
+  }
+
+  /**
+ * 根據抽成類型處理被刪除的條件
+ */
+  private handleDeletedConditionByType(condition: any, commissionType: string, result: any): void {
+    if (!this.hasValidId(condition.id)) return;
+
+    const deleteItem = { id: Number(condition.id) } as any;
+
+    switch (commissionType) {
+      case '1':
+        result.fixedRents.toDelete.push(deleteItem);
+        break;
+      case '2':
+        result.baseRentHigher.toDelete.push(deleteItem);
+        break;
+      case '4':
+        result.baseCommissions.toDelete.push(deleteItem);
+        break;
+      case '5':
+        result.graduated.toDelete.push(deleteItem);
+        break;
+      case '6':
+        result.baseTier.toDelete.push(deleteItem);
+        break;
+    }
+  }
+
+  /**
+   * 獲取抽成類型名稱 (輔助方法)
+   */
+  private getCommissionTypeName(commissionType: string): string {
+    const typeNames: { [key: string]: string } = {
+      '1': '固定租金',
+      '2': '底租抽成取高者',
+      '3': '一般抽成',
+      '4': '包底抽成',
+      '5': '層級抽成',
+      '6': '包底加層級'
+    };
+    return typeNames[commissionType] || `未知類型(${commissionType})`;
   }
 }
