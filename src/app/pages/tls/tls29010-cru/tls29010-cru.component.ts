@@ -309,7 +309,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          // console.log('update', body);
           console.log('update:', JSON.stringify(body, null, 2));
           this.tls29010Service.updateTLS29010(body).subscribe(() => {
             // this.messageService.successBubble('更新成功');

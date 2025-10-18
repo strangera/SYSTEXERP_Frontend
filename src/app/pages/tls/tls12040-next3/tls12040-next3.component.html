@@ -3,7 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button
-      *ngIf="!isViewMode"
+      [hidden]="isReadOnlyMode"
       btnType="submit"
       label="確認"
       (click)="onSubmitNext()"

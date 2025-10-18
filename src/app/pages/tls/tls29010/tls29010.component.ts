@@ -16,6 +16,8 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -88,9 +90,9 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     ...createPaginationConfig([{ field: 'pod_no', order: 1 }]), // 分頁和排序參數
   });
 
-  // 20251016 審核按鈕  (狀態不是未審核都不能點)
+  // 20251016 核准按鈕  (狀態不是未審核都不能點)
   addButton: AddButton[] = [
-    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData, '已審核'); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' }, // 審核
+    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData, '已核准'); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' }, // 審核
   ]
   // 表格
   // ----------------------------------------------------------------
@@ -257,7 +259,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     };
 
     console.log('刪除資料', deleteBody);
-    this.tls29010Service.deleteTLS29010(deleteBody).subscribe({
+    this.tls29010Service.deleteTLS29010M(deleteBody).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
@@ -283,30 +285,32 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     // return false; //不予許刪除
   }
 
-  // 20251016 審核按鈕狀態切換
+  // 20251016 核准按鈕狀態切換
   statusChange(rowData: TALPORDERM, status: string) {
     this.btnLoading = true;
     this.messageService.infoBubble('審核測試，等待api連接');
-    // const body = {
-    //   _DetailList: [
-    //     {
-    //       PO_No: rowData.PO_No,
-    //       PO_Status: status,
-    //       PO_Status_Ori: rowData.PO_Status
-    //     }
-    //   ]
-    // }
-    // this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
-    //   this.messageService.successBubble(response.Message);
-    //   this.onSubmit(this.queryForm);
-    // });
+
+    const apprPod_no = rowData.pod_no;
+    if (apprPod_no) {
+      const body = {
+        pod_no: rowData.pod_no,
+      }
+      console.log('核准資料', body)
+      this.tls29010Service.apprTLS29010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+        this.messageService.successBubble(response.Message);
+        this.onSubmit(this.queryForm);
+      });
+    } else {
+      this.messageService.errorBox('核准失敗，請重新操作')
+    }
+
     this.btnLoading = false;
   }
 
   loadOption() {
     // 專櫃編號
     this.tls29010Service
-      .queryTLTTALENT_Status_DropDownList({})
+      .queryTLTTALENT_Status_DropDownList({}).pipe(untilDestroyed(this))
       .subscribe((response) => {
         this.tlt_No_Option = response.Data.map((item: apiOption) => ({
           No: item.No,

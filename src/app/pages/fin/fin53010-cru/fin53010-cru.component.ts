@@ -13,12 +13,13 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
-import { TableModule } from 'primeng/table';
-import { finalize, tap } from 'rxjs';
-import { AccNoList, FIN53010Data, FIN53010DetailTable, VendorList } from '../fin53010/fin53010.model';
+import { TableModule, TableRowReorderEvent } from 'primeng/table';
+import { finalize, forkJoin, Observable, tap } from 'rxjs';
+import { AccNoList, FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail, VendorList } from '../fin53010/fin53010.model';
 
 @Component({
   selector: 'app-fin53010-cru',
@@ -26,6 +27,7 @@ import { AccNoList, FIN53010Data, FIN53010DetailTable, VendorList } from '../fin
   styleUrl: './fin53010-cru.component.scss',
   standalone: true,
   imports: [
+    ButtonModule,
     CheckboxModule,
     DropdownModule,
     FormsModule,
@@ -42,24 +44,28 @@ import { AccNoList, FIN53010Data, FIN53010DetailTable, VendorList } from '../fin
     TableComponent,
   ],
 })
-export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> implements OnInit {
+export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
 
   private readonly venUsrTemplate = viewChild.required<TemplateRef<any>>('venUsrTemplate');
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
     VouNo: new FormControl<string>('自動給號'),
-    /** 傳票種類 */
-    PostFlag: new FormControl<string | void>(void 0, [Validators.required]),
-    /** 傳票型態 */
-    VouType: new FormControl<string | void>(void 0, [Validators.required]),
-    VouDate: new FormControl<Date | void>(void 0, [Validators.required]),
+    /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
+    VouType: new FormControl<'0' | '1' | '2' | void>(void 0),
+    /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
+    PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
+    /** 傳票種類(SYS1000.VoucherType) */
+    VoucherType: new FormControl<string>('GL', [Validators.required]),
+    VouDate: new FormControl<Date>(new Date, [Validators.required]),
     Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
     INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
-    VouAccType: new FormControl<'0' | '1' | '2' | '3'>('0', [Validators.required]),
+    /** ROC/IFRS 0:共用 1:ROC 2:IFRS */
+    VouAccType: new FormControl<'0' | '1' | '2'>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
     CrtDate: new FormControl<Date | void>(void 0),
     UpdDate: new FormControl<Date | void>(void 0),
+    CompNo: new FormControl<string | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
 
@@ -121,7 +127,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       field: 'NoteDesc',
       header: '摘要',
       type: 'dropdown',
-      options: () => [],
+      options: () => this.service.remarkOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -142,11 +148,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     {
       field: 'ORG_ID',
       header: '組織代號',
-      required: !0,
       type: 'dropdown',
       options: () => this.service.orgNoList(),
       optionLabel: 'label',
       optionValue: 'value',
+      optionShowClear: !1,
     },
     {
       field: 'SubDetailNo',
@@ -155,6 +161,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       options: () => this.filteredTblUserOrgidList(),
       optionLabel: 'user_Name',
       optionValue: 'user_No',
+    },
+    {
+      field: 'clearingCode',
+      header: '立沖代號',
+      type: 'dropdown',
+      options: () => [],
+      optionLabel: 'label',
+      optionValue: 'value',
     },
     // { field: 'recKey', header: '對帳KEY值', type: 'input' },
   ]);
@@ -176,13 +190,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     this.service.getAccNoList();
     this.service.getOrgNoList();
     this.service.getTblUserOrgid();
+    this.service.getVoucherTypes();
     this.service.getINVOptions();
 
     if (this.isFormCreateable) {
-      this.service.getUsrList();
-      this.service.getVendorList();
-      this.df().CRT_USR_No.setValue(this.user.user_No);
-      this.df().CrtDate.setValue(new Date());
+      forkJoin([this.service.getUsrList(), this.service.getVendorList()]).pipe(
+        tap(([usrList, vendorList]) => {
+          this.logger.debug(`lists:`, [usrList, vendorList]);
+          this.df().CRT_USR_No.setValue(this.user.user_No);
+          this.df().CrtDate.setValue(new Date());
+        }),
+        finalize(() => { this.loading = !1; this.service.tableLoading = !1; })
+      ).subscribe();
     } else {
       if (this.isFormEditable) {
         this.df().UPD_USR_No.setValue(this.user.user_No);
@@ -191,19 +210,26 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
       this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
         finalize(() => this.loading = !1),
         tap(res => {
-          this.df().PostFlag.setValue(res.Data.PostFlag ?? '');
-          this.df().VouAccType.setValue(res.Data.VouAccType ?? '0');
-          this.df().CRT_USR_No.setValue(res.Data.CRT_USR_No ?? '');
-          this.df().UPD_USR_No.setValue(res.Data.UPD_USR_No ?? '');
+          this.df().VouNo.setValue(res.Data.VouNo);
+          this.df().VouType.setValue(res.Data.VouType ?? '0');
+          this.df().PostFlag.setValue(res.Data.PostFlag ?? '0');
+          this.df().VoucherType.setValue(res.Data.VoucherType?.trim() ?? 'GL');
+          this.df().VouDate.setValue(res.Data.VouDate ? new Date(res.Data.VouDate) : new Date());
+          this.df().Remark.setValue(res.Data.Remark);
+          this.df().INV_YN.setValue(res.Data.INV_YN ?? 'N');
+          this.df().VouAccType.setValue(<'0' | '1' | '2'>res.Data.VouAccType ?? '0');
+          this.df().CRT_USR_No.setValue(res.Data.CRT_USR_No);
+          this.df().UPD_USR_No.setValue(res.Data.UPD_USR_No);
+          this.df().CompNo.setValue(res.Data.CompNo);
 
           this.tableData.set(res.Data?.Details.map(d => ({
             ...d,
             AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
             AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-            AccName: this.service.accNoMap.get(String(d.AccNo))?.AccCName ?? '',
+            AccName: this.service.accNoMap.get(String(d.AccNo))?.AccCName,
             DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
-              ?? this.service.usrMap.get(String(d.DetailNo))?.label ?? '',
-            displayIndex: d.SerNo / 10 - 1,
+              ?? this.service.usrMap.get(String(d.DetailNo))?.label,
+            displayIndex: d.SerNo,
           })));
         })
       ).subscribe();
@@ -214,38 +240,36 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const d = this.dataForm.getRawValue();
+      const { VouNo, ...d } = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        VouDate: d.VouDate?.toISOString(),
-        CrtDate: d.CrtDate?.toISOString(),
-        UpdDate: d.UpdDate?.toISOString(),
         Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, idx) => {
           return {
             ...rest,
+            id: typeof rest.id === 'number' ? rest.id! : null,
             index: idx + 1,
             AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
             AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
+            ORG_ID: rest.ORG_ID || '100000',
           };
         }),
+        ...(this.isFormCreateable ? {} : { VouNo }),
       };
 
-      const payload = <any>Object.keys(raw).reduce((acc, key) => {
+      const payload: FIN53010InsertPayload = Object.keys(raw).reduce((acc, key) => {
         const v = raw[key as keyof typeof raw];
-        if (v !== void 0 && v !== null && !(typeof v === 'string' && v.trim() === '') && !(Array.isArray(v) && v.length === 0)) {
-          acc[key as keyof typeof raw] = v;
-        }
+        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
         return acc;
       }, {} as any);
 
       this.logger.debug(`onSubmit:`, [d, payload, this.rowdata, this.tableData()]);
 
-      const request = this.isFormCreateable
-        ? this.service.insertFIN53010Data({ ...payload, creator: this.user.user_No })
-        : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, creator: this.user.user_No });
+      const request: Observable<FIN53010InsertResult | FIN53010UpdateResult> = this.isFormCreateable
+        ? this.service.insertFIN53010Data({ ...payload, CRT_USR_No: this.user.user_No })
+        : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        finalize(() => this.loading = !1)
+        finalize(() => this.loading = !1),
       ).subscribe(res => res.Status === '0000' && this.onCancel());
     });
   }
@@ -254,18 +278,27 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     this.logger.debug(`onFieldChange:`, [event]);
     const row = event.rowData;
 
-    // 自動帶入科目名稱
-    if (event.field === 'AccNo')
-      row.AccName = this.service.accNoMap.get(String(event.value))?.AccCName ?? '';
+    switch (event.field) {
+      case 'AccNo':
+        // 自動帶入科目名稱
+        row.AccName = this.service.accNoMap.get(String(event.value))?.AccCName ?? '';
+        break;
 
-    // 自動互斥借貸方金額
-    else if (event.field === 'AccAmtD' && event.value) row.AccAmtC = void 0;
-    else if (event.field === 'AccAmtC' && event.value) row.AccAmtD = void 0;
+      case 'AccAmtD':
+        // 自動互斥借貸方金額
+        if (event.value) row.AccAmtC = void 0;
+        break;
 
-    // 設定目前選擇的組織代號
-    else if (event.field === 'ORG_ID') {
-      this.selectedOrgId.set(String(event.value));
-      row.SubDetailNo = '';
+      case 'AccAmtC':
+        // 自動互斥借貸方金額
+        if (event.value) row.AccAmtD = void 0;
+        break;
+
+      case 'ORG_ID':
+        // 設定目前選擇的組織代號
+        this.selectedOrgId.set(String(event.value));
+        row.SubDetailNo = '';
+        break;
     }
 
     // 檢查是否可儲存
@@ -290,7 +323,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
 
   public onRowEditInit(event: FIN53010DetailTable): void {
     this.onEditing = !0;
-    if (this.isFormCreateable) event.ORG_ID = '100000';
+    !event.ORG_ID && (event.ORG_ID = '100000');
     this.selectedOrgId.set(event.ORG_ID);
     const arr = this.tableData();
     event.displayIndex = Array.isArray(arr) && arr.length > 0 && (arr[arr.length - 1]?.displayIndex ?? 0) + 1 || 0;
@@ -303,11 +336,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     const newItems = Array.isArray(event.data) ? event.data : [event.data];
     const current = this.tableData();
 
-    const indexMap = new Map(current.map((item, idx) => [item.SerNo / 10, idx]));
+    const indexMap = new Map(current.map((item, idx) => [item.displayIndex, idx]));
     const result = [...current];
 
     for (const item of newItems) {
-      const index = indexMap.get(item.SerNo / 10);
+      const index = indexMap.get(item.displayIndex);
       if (index !== void 0) result[index] = { ...result[index], ...item };
       else result.push(item);
     }
@@ -321,6 +354,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<FIN53010Data> im
     this.onEditing = !1;
     this.logger.debug(`onRowEditCancel:`, [event, this.tableData()]);
   };
+
+  public onRowReorder(event: TableRowReorderEvent): void {
+    this.tableData.update(current => {
+      const movedItem = current.splice(event.dragIndex!, 1)[0];
+      current.splice(event.dropIndex!, 0, movedItem);
+      return current;
+    });
+
+    this.logger.debug(`onRowReorder:`, [event, this.tableData()]);
+  }
 
   // Template 相關方法
   public onTemplateTypeChange(event: DropdownChangeEvent): void {

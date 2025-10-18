@@ -70,7 +70,6 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.loading = !0;
       const raw = <FIN52030Payload>{
         ...this.queryForm.getRawValue(),
         TempNo: String(this.qf().TempNo.value ?? ''),
@@ -79,9 +78,10 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
         CRT_USR_No: String(this.qf().CRT_USR_No.value ?? ''),
         UPD_USR_No: String(this.qf().UPD_USR_No.value ?? ''),
       };
-      const payload = <FIN52030Payload>Object.keys(raw).reduce((acc, key) => {
+
+      const payload = Object.keys(raw).reduce((acc, key) => {
         const v = raw[key as keyof typeof raw];
-        if (v !== void 0 && v !== null && !(typeof v === 'string' && v.trim() === '')) acc[key as keyof typeof raw] = v;
+        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
         return acc;
       }, {} as any);
 
