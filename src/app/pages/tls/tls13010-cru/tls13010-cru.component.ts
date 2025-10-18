@@ -12,7 +12,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 
 // 下拉選單服務和選項 - 保持不變
-import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
+import { Pos2013DropdownOption, TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
 
 // API 服務 - 保持不變
 import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
@@ -93,7 +93,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   displayLocationData: LocationItem[] = [];
 
   //廠商統一編號
-  pos2013Options: DropdownOption[] = [];
+  pos2013Options: Pos2013DropdownOption[] = [];
 
   // 洽談者選項
   negotiatorOptions: DropdownOption[] = [];
@@ -190,6 +190,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // ==========  主要表單定義 ==========
   dataForm = this.formBuilder.group({
+    vendor_ven_no: [''],    // VEN_No (完整編號) - 下拉選單用
+    vendor_no: [''],        // No (統編) - 後端用
     talent_id: [''], // 必填但系統自動給號
     apply_no: [''], // 必填但系統自動給號
     approve_status: ['1', [Validators.required]], // 必填，預設未審核
@@ -481,68 +483,45 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private setupVendorUniformListener(): void {
-    const venUniformSubscription = this.dataForm.get('ven_uniform')?.valueChanges.subscribe(venUniform => {
-      if (venUniform && venUniform.trim()) {
-        this.loadVendorInfo(venUniform);
+    // ✅ 改為監聽 vendor_ven_no (下拉選單綁定的欄位)
+    const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges.subscribe(vendorVenNo => {
+      console.log('📝 vendor_ven_no 變更:', vendorVenNo);
+
+      if (vendorVenNo && vendorVenNo.trim()) {
+        // ✅ 從選項中找到對應的廠商
+        const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
+
+        if (selectedOption) {
+          // ✅ 自動帶入其他欄位
+          this.dataForm.patchValue({
+            vendor_no: selectedOption.No,              // 統編
+            ven_no: selectedOption.VEN_No,             // 廠商編號 (如果你還需要)
+            ven_uniform: selectedOption.No,            // 統一編號 (如果你還需要)
+            VEN_Name: selectedOption.Name,
+            VEN_Address: selectedOption.VEN_Address
+          }, { emitEvent: false });
+
+          this.saveToWorkflow();
+
+          console.log('✅ 已自動帶入廠商資料:', {
+            VEN_No: vendorVenNo,
+            統編: selectedOption.No,
+            名稱: selectedOption.Name
+          });
+        }
       } else {
-        // 清空相關欄位
+        // ✅ 清空相關欄位
         this.dataForm.patchValue({
+          vendor_no: '',
+          ven_no: '',
+          ven_uniform: '',
           VEN_Name: '',
-          ven_no: ''
-        });
+          VEN_Address: ''
+        }, { emitEvent: false });
       }
     });
 
     if (venUniformSubscription) this.subscriptions.push(venUniformSubscription);
-  }
-
-  private loadVendorInfo(venUniform: string): void {
-
-    // 使用 VendorCategoryOptionsService 載入廠商資料
-    this.tls13010DropdownService.pos2013Options.find(vendor => vendor.value === venUniform);
-
-    // 如果pos2013Options還沒載入，直接呼叫API
-    this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
-      next: (vendors: any[]) => {
-
-        // 尋找匹配的廠商
-        const matchedVendor = vendors.find((vendor: { value: string; }) => vendor.value === venUniform);
-
-        if (matchedVendor) {
-
-          // 更新廠商名稱和公司地址
-          this.dataForm.patchValue({
-            VEN_Name: matchedVendor.Name || '',
-            VEN_Address: matchedVendor.VEN_Address || '',
-            ven_no: matchedVendor.ven_no || matchedVendor.ven_no || ''
-          });
-
-          // 立即儲存到工作流程
-          this.saveToWorkflow();
-
-        } else {
-          console.warn('⚠️ 找不到匹配的廠商');
-          this.messageService.warnBubble('找不到該廠商統一編號的資料');
-
-          // 清空相關欄位
-          this.dataForm.patchValue({
-            VEN_Name: '',
-            VEN_Address: '',
-            ven_no: ''
-          });
-        }
-      },
-      error: (err: any) => {
-        console.error('❌ 載入廠商資訊失敗:', err);
-        this.messageService.errorBubble('載入廠商資訊失敗，請檢查統一編號是否正確');
-
-        // 發生錯誤時清空相關欄位
-        this.dataForm.patchValue({
-          VEN_Name: '',
-          VEN_Address: ''
-        });
-      }
-    });
   }
 
   private getCustomTitle(): string {
@@ -818,15 +797,32 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
 
   private loadDataFromQueryResult(queryData: Record<string, unknown>): void {
+    const venUniform = queryData['ven_uniform'] as string;  // "00000000"
+    const venNo = queryData['ven_no'] as string;            // "00000000-2"
+
+    let matchedVendorVenNo = '';
+
+    if (venNo && venNo.includes('-')) {
+      // 優先用 ven_no
+      matchedVendorVenNo = venNo;
+    } else if (venUniform) {
+      // 用統編找
+      const matchedOption = this.pos2013Options.find(opt => opt.No === venUniform);
+      if (matchedOption) {
+        matchedVendorVenNo = matchedOption.VEN_No;
+      }
+    }
     this.dataForm.patchValue({
+      vendor_ven_no: matchedVendorVenNo,
+      vendor_no: venUniform,
       // 基本資訊
       talent_id: queryData['talent_id'] as string,
       apply_no: queryData['apply_no'] as string,
       tlt_name: queryData['tlt_name'] as string,
       tlt_no: queryData['tlt_no'] as string,
-      ven_no: queryData['ven_no'] as string,
+      ven_no: venNo || venUniform,
       VEN_Name: queryData['VEN_Name'] as string,
-      ven_uniform: queryData['ven_uniform'] as string,
+      ven_uniform: venUniform,
       paper_type: queryData['paper_type'] as string,
       bus_type: queryData['bus_type'] as string,
       bus_class: queryData['bus_class'] as string,
@@ -1100,7 +1096,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       contract_subno: formData.contract_subno || '',
       tlt_no: formData.tlt_no || '',
       approve_status: formData.approve_status || '',
-      ven_no: formData.ven_no || '',
+      ven_no: formData.vendor_ven_no || '',  // "00000000-2" (完整編號)
       contract_no: formData.contract_no || '',
       // 日期欄位
       tlt_bdate: formData.tlt_bdate || '',
@@ -1112,7 +1108,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       contact_Date: formData.contact_Date || '',
 
       // 業務欄位
-      ven_uniform: formData.ven_uniform || '',
+      ven_uniform: formData.vendor_no || '', // "00000000" (統編)
       paper_type: formData.paper_type || '',
       bus_type: formData.bus_type || '',
       bus_class: formData.bus_class || '',
@@ -2609,5 +2605,17 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   formatEmailField(fieldName: string, value: string): void {
     this.emailValidationService.formatEmailField(this.dataForm, fieldName, value, this.messageService);
     this.saveToWorkflow();
+  }
+
+  /**
+ * ✅ 廠商選項被選中
+ */
+  onVendorOptionSelected(selectedOption: any): void {
+    this.dataForm.patchValue({
+      vendor_ven_no: selectedOption.VEN_No,   // "00000000-2"
+      vendor_no: selectedOption.No,           // "00000000"
+      VEN_Name: selectedOption.Name,
+      VEN_Address: selectedOption.VEN_Address
+    }, { emitEvent: false });
   }
 }
