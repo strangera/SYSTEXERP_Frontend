@@ -50,7 +50,6 @@ export interface POS2013 {
 @Component({
   selector: 'app-tls12060',
   templateUrl: './tls12060.component.html',
-  styleUrl: './tls12060.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, ReportTableGroupComponent, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
@@ -75,7 +74,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     version_end: [null, [Validators.min(0)]], // 版本終止
     counter: [[], [Validators.min(0)]], // 專櫃編號
 
-    tlt_building:[[], ], // 館別 (SYS3800)
+    tlt_building: [[],], // 館別 (SYS3800)
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
@@ -289,14 +288,14 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     });
 
     //查 館別
-      this.tls12060Service.querySYS3800_DropDownList({}).subscribe((response) => {
-        this.tlt_building_Option = response.Data.map((item: apiOption) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
+    this.tls12060Service.querySYS3800_DropDownList({}).subscribe((response) => {
+      this.tlt_building_Option = response.Data.map((item: apiOption) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
+      }));
 
-        console.log('館別:', this.tlt_building_Option);
-      });
+      console.log('館別:', this.tlt_building_Option);
+    });
   }
 }

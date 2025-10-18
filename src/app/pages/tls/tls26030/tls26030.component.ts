@@ -22,7 +22,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 @Component({
   selector: 'app-tls26030',
   templateUrl: './tls26030.component.html',
-  styleUrl: './tls26030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

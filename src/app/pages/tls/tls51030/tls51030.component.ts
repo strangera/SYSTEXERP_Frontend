@@ -37,7 +37,6 @@ interface CategoryItem {
 @Component({
   selector: 'app-tls51030',
   templateUrl: './tls51030.component.html',
-  styleUrls: ['./tls51030.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })

@@ -32,7 +32,7 @@ export interface TALPORDERM {
   pod_no: string; // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
   pod_type: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8';
   // 活動類型: 作業固定操作的活動類型為 8=期間開放折扣
-  // 1=預售 (只有預售才下到 pos) 
+  // 1=預售 (只有預售才下到 pos)
   // 2=滿千送百發行
   // 3=滿千送百兌回
   // 4=會員卡集點-銷售 (不用)
@@ -91,7 +91,6 @@ export interface TALPORDERD_OPENDisc {
 @Component({
   selector: 'app-tls29010-cru',
   templateUrl: './tls29010-cru.component.html',
-  styleUrl: './tls29010-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, ExpandableEditTableComponent, CalendarComponent, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, EditorTextComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })
@@ -111,8 +110,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_type: ['', [Validators.required]], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
 
     //20251015 新增 (act_no、pod_desc 欄位)
-    act_no: ['',[Validators.maxLength(10),this.validationService.noChineseValidator]], // 活動編號(使用者輸入)
-    pod_desc: ['',[Validators.maxLength(100)]], // 活動名稱(使用者輸入)
+    act_no: ['', [Validators.maxLength(10), this.validationService.noChineseValidator]], // 活動編號(使用者輸入)
+    pod_desc: ['', [Validators.maxLength(100)]], // 活動名稱(使用者輸入)
 
     pod_sdate: [null, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [null, [Validators.required]], // 活動終止日 (Date)
@@ -229,23 +228,23 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
     //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
     const userInfo = this.authService?.getUserInfo?.();
-    if(userInfo){
+    if (userInfo) {
       if (this.crudstatus === CRUDStatus.Create) {
-      this.dataForm.get('pod_desc')?.enable();
-      this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
+        this.dataForm.get('pod_desc')?.enable();
+        this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
 
-      this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
-      this.dataForm.get('pod_status')?.disable();
-      this.dataForm.get('approved_userno')?.disable();
-      this.dataForm.get('approved_usr_name')?.disable();
-      this.dataForm.get('approved_date')?.disable();
+        this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
+        this.dataForm.get('pod_status')?.disable();
+        this.dataForm.get('approved_userno')?.disable();
+        this.dataForm.get('approved_usr_name')?.disable();
+        this.dataForm.get('approved_date')?.disable();
 
-      // 新增 活動類型只能選8號
-      this.dataForm.get('pod_type')?.setValue('8') //新增模式 只能選 8 期間開放折扣
-      this.dataForm.get('pod_type')?.disable();
-    } else {
-      this.dataForm.get('pod_desc')?.disable();
-    }
+        // 新增 活動類型只能選8號
+        this.dataForm.get('pod_type')?.setValue('8') //新增模式 只能選 8 期間開放折扣
+        this.dataForm.get('pod_type')?.disable();
+      } else {
+        this.dataForm.get('pod_desc')?.disable();
+      }
     }
   }
 

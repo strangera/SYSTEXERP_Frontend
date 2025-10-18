@@ -31,11 +31,10 @@ interface CategoryItem {
 }
 // 2.5.1.2  中分類維護作業
 @Component({
-    selector: 'app-tls51020',
-    templateUrl: './tls51020.component.html',
-    styleUrl: './tls51020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls51020',
+  templateUrl: './tls51020.component.html',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   // ProgNo: string = '250002';

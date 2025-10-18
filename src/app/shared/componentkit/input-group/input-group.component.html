@@ -1,5 +1,5 @@
 <label [for]="controlName">{{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
 </label>
 <div class="custom-input-group p-inputgroup">
   <p-autoComplete class="w-full" [id]="controlName" [inputId]="controlName" [formControl]="control"

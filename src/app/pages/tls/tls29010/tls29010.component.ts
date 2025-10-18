@@ -60,7 +60,6 @@ export interface TALPORDERM {
 @Component({
   selector: 'app-tls29010',
   templateUrl: './tls29010.component.html',
-  styleUrls: ['./tls29010.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
@@ -257,7 +256,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
       idList: idList, // 符合 API 的 idList 格式
     };
 
-    console.log('刪除資料',deleteBody);
+    console.log('刪除資料', deleteBody);
     this.tls29010Service.deleteTLS29010(deleteBody).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
@@ -286,23 +285,23 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 20251016 審核按鈕狀態切換
   statusChange(rowData: TALPORDERM, status: string) {
-      this.btnLoading = true;
-      this.messageService.infoBubble('審核測試，等待api連接');
-      // const body = {
-      //   _DetailList: [
-      //     {
-      //       PO_No: rowData.PO_No,
-      //       PO_Status: status,
-      //       PO_Status_Ori: rowData.PO_Status
-      //     }
-      //   ]
-      // }
-      // this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
-      //   this.messageService.successBubble(response.Message);
-      //   this.onSubmit(this.queryForm);
-      // });
-      this.btnLoading = false;
-    }
+    this.btnLoading = true;
+    this.messageService.infoBubble('審核測試，等待api連接');
+    // const body = {
+    //   _DetailList: [
+    //     {
+    //       PO_No: rowData.PO_No,
+    //       PO_Status: status,
+    //       PO_Status_Ori: rowData.PO_Status
+    //     }
+    //   ]
+    // }
+    // this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+    //   this.messageService.successBubble(response.Message);
+    //   this.onSubmit(this.queryForm);
+    // });
+    this.btnLoading = false;
+  }
 
   loadOption() {
     // 專櫃編號

@@ -28,7 +28,6 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 @Component({
   selector: 'app-tls26050',
   templateUrl: './tls26050.component.html',
-  styleUrl: './tls26050.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent,
     DropdownComponent

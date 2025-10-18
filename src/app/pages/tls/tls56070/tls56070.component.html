@@ -63,7 +63,7 @@
     <header>
       <div class="flex justify-content-end gap-2">
         <p-button styleClass="p-2 p-button-success" label="審核" [loading]="btnLoading()"
-          icon="fa-solid fa-clipboard-check" (click)="batchUpdateStatus('2')"
+          icon="fa-regular fa-square-check" (click)="batchUpdateStatus('2')"
           [disabled]="selectedItems.length === 0 || checkStatus('1')" [loading]="btnLoading()"></p-button>
         <p-button styleClass="p-2 p-button-danger" label="報廢" [loading]="btnLoading()" icon="pi pi-trash"
           (click)="batchUpdateStatus('3')" [disabled]="selectedItems.length === 0 || checkStatus('2')"

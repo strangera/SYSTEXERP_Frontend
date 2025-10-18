@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe, NgIf } from '@angular/common';
 import { finalize } from 'rxjs';
-import { TLS32050Service, TLS32050Data, TLS32050QueryRequest } from '../../../service/api/tls/tls32050.service';
+import { TLS32050Service, TLS32050Data } from '../../../service/api/tls/tls32050.service';
 import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -33,7 +33,6 @@ import { Tls11010Service } from '@service/api/tls/tls11010.service';
 @Component({
   selector: 'app-tls32050',
   templateUrl: './tls32050.component.html',
-  styleUrl: './tls32050.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })

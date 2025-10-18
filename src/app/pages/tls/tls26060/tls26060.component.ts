@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe, NgIf } from '@angular/common';
 import { debounceTime, finalize } from 'rxjs';
-import { TLS26060Service, TLS26060Data, TLS26060QueryRequest } from '../../../service/api/tls/tls26060.service';
+import { TLS26060Service, TLS26060Data } from '../../../service/api/tls/tls26060.service';
 import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -38,7 +38,6 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 @Component({
   selector: 'app-tls26060',
   templateUrl: './tls26060.component.html',
-  styleUrl: './tls26060.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent,
     DropdownComponent

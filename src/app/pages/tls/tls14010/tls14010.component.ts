@@ -36,7 +36,6 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-tls14010',
   templateUrl: './tls14010.component.html',
-  styleUrls: ['./tls14010.component.scss'],
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, ButtonComponent, TableComponent, TranslateModule]
 })
@@ -54,7 +53,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     tlt_floorList: [[]], // 樓層(SYS3900)
     area_noList: [[]], // 區域 (SYS3a00)
     bus_typeList: [[]], // 大分類 (tltbustype)
-    org_idList:[[]], // 組織代碼 (SYS3100) 0916新增
+    org_idList: [[]], // 組織代碼 (SYS3100) 0916新增
 
     tlt_openflagList: [[]], // 營運狀況 閉店/撤櫃, 營業中, 合約結束,核准時合約尚未開始, 洽談中, 簽約中, 已作廢 fix
     contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start

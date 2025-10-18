@@ -5,7 +5,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TLS12050Service } from '../../../service/api/tls/tls12050.service';
 import { NgIf } from '@angular/common';
 import { CommonModule } from '@angular/common';
@@ -25,7 +24,6 @@ import { ImageModule } from 'primeng/image';
     ReactiveFormsModule,
     AccordionModule,
     TranslateModule,
-    MultiSelectComponent,
     NgIf,
     ImageModule
   ],

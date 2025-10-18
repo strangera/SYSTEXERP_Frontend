@@ -1,12 +1,12 @@
 <div class="flex" style="height: 18px;">
   <label class="col p-0 m-0 pr-2" [hidden]="!showLabel" [for]="startControlName">{{ label === '' ? startLabel : label }}
-    <span *ngIf="isRequired" class="required">*</span>
+    <span *ngIf="isRequired" class="text-red-500">*</span>
   </label>
   <div class="col-fixed py-0">
     <span class="text-center"></span>
   </div>
   <label class="col p-0 m-0" [hidden]="!showLabel || label!==''" [for]="endControlName">{{ endLabel }}
-    <span *ngIf="isRequired" class="required">*</span>
+    <span *ngIf="isRequired" class="text-red-500">*</span>
   </label>
 </div>
 
