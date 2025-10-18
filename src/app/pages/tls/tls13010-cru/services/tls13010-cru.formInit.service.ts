@@ -116,7 +116,7 @@ export class TLS13010FormInitService {
     const defaultValues = this.getDefaultFormValues();
     formGroup.patchValue(defaultValues);
 
-    console.log('✅ 表單已初始化為預設值');
+    console.log(' 表單已初始化為預設值');
   }
 
   /**
@@ -176,7 +176,7 @@ export class TLS13010FormInitService {
       overall_status: '1'
     });
 
-    console.log('✅ 表單已重設為預設值');
+    console.log(' 表單已重設為預設值');
   }
 
   /**
@@ -263,6 +263,6 @@ export class TLS13010FormInitService {
     const newModeState = this.getNewModeInitialState();
     formGroup.patchValue(newModeState);
 
-    console.log('✅ 新增模式特定值已設定');
+    console.log(' 新增模式特定值已設定');
   }
 }

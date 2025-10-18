@@ -43,14 +43,14 @@ export class LocationDataManagementService {
       return true;
     });
 
-    // ✅ 確保所有項目都有正確的狀態並清理空 key
+    //確保所有項目都有正確的狀態並清理空 key
     return validLocationData.map(item => {
       const cleanedItem = this.cleanObjectKeys({
         ...item,
         _status: item._status || 'original'
       });
 
-      // ✅ 確保必要欄位存在且有效
+      //確保必要欄位存在且有效
       return {
         id: cleanedItem.id,
         talent_id: cleanedItem.talent_id,
@@ -86,7 +86,7 @@ export class LocationDataManagementService {
       const cleaned: any = {};
 
       Object.keys(obj).forEach(key => {
-        // ✅ 過濾空 key 和無效 key
+        //  過濾空 key 和無效 key
         if (key && key.trim() !== '' && key !== 'undefined' && key !== 'null') {
           const value = obj[key];
 
@@ -116,7 +116,7 @@ export class LocationDataManagementService {
    */
   calculateTotalSpace(locationData: LocationItem[]): number {
     return locationData
-      .filter(item => item._status !== 'deleted')  // ✅ 排除已刪除的項目
+      .filter(item => item._status !== 'deleted')  //  排除已刪除的項目
       .reduce((total: number, item: LocationItem) => {
         const area = parseFloat(item.tlt_space.toString()) || 0;
         return total + area;
@@ -168,7 +168,7 @@ export class LocationDataManagementService {
       return true; // 重複
     }
 
-    console.log('✅ 位置編號可用:', locationNo);
+    console.log(' 位置編號可用:', locationNo);
     return false; // 不重複
   }
 
@@ -332,8 +332,8 @@ export class LocationDataManagementService {
                   (locationOption as any)?.floor_desc || ''),
                 area_desc: String(item.area_desc ||
                   (locationOption as any)?.area_desc || ''),
-                _status: 'original',  // ✅ 明確設定為原始狀態
-                _isNew: false         // ✅ 標記為既有資料
+                _status: 'original',  //  明確設定為原始狀態
+                _isNew: false         //  標記為既有資料
               };
             });
 
@@ -412,7 +412,7 @@ export class LocationDataManagementService {
       }
     });
 
-    // ✅ 處理資料
+    //  處理資料
     const updatedData = currentLocationData
       .filter(item => {
         // 移除新增項目
@@ -431,7 +431,7 @@ export class LocationDataManagementService {
         return item;
       });
 
-    console.log('✅ 批次刪除完成');
+    console.log(' 批次刪除完成');
 
     return {
       updatedData,
