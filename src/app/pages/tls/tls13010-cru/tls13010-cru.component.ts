@@ -1071,18 +1071,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     return this.contractFlowService.isNewContractMode();
   }
 
-  /**
-   * 新增：取得頁面標題
-   */
-  getPageTitle(): string {
-    return this.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
-  }
-
-
-  private generateTempId(): string {
-    return this.locationManagementService.generateTempId();
-  }
-
   // 位置表格儲存事件
   onLocationTableSave(event: { oldData: LocationItem; newData: LocationItem }): void {
     const { oldData, newData } = event;
