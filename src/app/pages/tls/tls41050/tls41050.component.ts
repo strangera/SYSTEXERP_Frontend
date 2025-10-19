@@ -55,7 +55,6 @@ export interface POS1002 {
 @Component({
   selector: 'app-tls41050',
   templateUrl: './tls41050.component.html',
-  styleUrl: './tls41050.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -1,7 +1,7 @@
 <label [hidden]="label === ''" [for]="controlName">
   {{ label }}
   @if (isRequired) {
-  <span class="required">*</span>
+  <span class="text-red-500">*</span>
   }
   <ng-content select="header"></ng-content>
 </label>

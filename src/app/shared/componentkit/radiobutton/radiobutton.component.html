@@ -1,5 +1,5 @@
 <label *ngIf="label !== ''">{{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
 </label>
 <div class="flex flex-wrap gap-3 py-2">
   <div *ngFor="let option of options" class="flex">

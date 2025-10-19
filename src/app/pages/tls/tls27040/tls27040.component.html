@@ -8,7 +8,7 @@
       [headerStyleClass]="'query-accordionTab'">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <label for="Bank">收單行<span class="required">*</span></label>
+          <label for="Bank">收單行<span class="text-red-500">*</span></label>
           <p-dropdown inputId="Bank" [(ngModel)]="selectedBank" [options]="POS611XOptions" optionLabel="label"
             optionValue="value" [filter]="false" placeholder="請選擇收單行" />
         </div>

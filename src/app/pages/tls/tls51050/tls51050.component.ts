@@ -16,7 +16,6 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-tls51050',
   templateUrl: './tls51050.component.html',
-  styleUrl: './tls51050.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
 })

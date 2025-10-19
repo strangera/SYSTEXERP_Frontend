@@ -43,12 +43,7 @@ export abstract class BasicQueryPageComponent<T> {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
-    console.log('Navigation State:', state); // 調試輸出
-
     const previousRoute = state?.['fromRoute'] || '/account/dashboard';
-    console.log('Previous Route:', previousRoute); // 調試輸出
-    console.log('Current Route:', this.router.url); // 調試輸出
-
     // 通用規則：檢查 previousRoute 是否包含 ProgNo（例如 tls13010），涵蓋 CRU 和所有 next 頁面
     const isFromRelatedRoute = previousRoute.includes(this.ProgNo.toLowerCase());
     if (this.canPerformAction('10') && isFromRelatedRoute && queryForm) {
