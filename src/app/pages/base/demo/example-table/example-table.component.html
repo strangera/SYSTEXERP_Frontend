@@ -29,7 +29,8 @@
         <app-table dataKey="id" [data]="data5" [columns]="columns5" groupRowsBy="bank"></app-table>
       </p-tabPanel>
       <p-tabPanel header="可編輯">
-        <app-table title="一次編輯一筆(功能包含 刪除 新增) 可預設新增資料預設值" dataKey="id" [data]="data6" [columns]="columns6"
+        參考 app-edit-table 元件
+        <!-- <app-table title="一次編輯一筆(功能包含 刪除 新增) 可預設新增資料預設值" dataKey="id" [data]="data6" [columns]="columns6"
           [showRowEdit]="true" [showInsert]="true" [rowEditDisabled]="rowEditDisabled" [showEdit]="false"
           [showDetail]="false" [insertRowData]="true" [showCheckBox]="true" [selectedItems]="selectedItems6"
           (selectionChange)="selectedItems6 = $event" [deleteData]="true" (dataChange)="data6 = $event"
@@ -40,7 +41,7 @@
           [insertRowData]="true" [showCheckBox]="true" [selectedItems]="selectedItems6"
           (selectionChange)="selectedItems6 = $event" [deleteData]="true" (dataChange)="data6 = $event"
           [defaultInsertData]="defaultInsertData">
-        </app-table>
+        </app-table> -->
       </p-tabPanel>
       <p-tabPanel header="展開式Table">
         <app-table dataKey="id" [data]="data7" [columns]="columns7" expansionDataKey="details"
