@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, Injectable, Query, signal } from '@angular/core';
-import { AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010Detail, FIN53010InsertPayload, FIN53010Payload, FIN53010UpdatePayload, VendorList } from '@pages/fin/fin53010/fin53010.model';
+import { AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010Detail, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
 import { IDropdownItem, Option, TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -21,7 +21,7 @@ export class FIN53010Service {
   /** 傳票種類 */
   public readonly VouTypes = signal<Option[]>([]);
   /** 傳票型態 */
-  public readonly VoucherTypes = signal<Option[]>([]);
+  public readonly VoucherTypes = signal<VoucherType[]>([]);
   /** 傳票狀態 */
   public readonly postFlags = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
@@ -30,6 +30,7 @@ export class FIN53010Service {
   public readonly vouAccTypes = signal<Option[]>([]);
   public readonly INVOptions = signal<Option[]>([]);
   public readonly sys1000List = signal<IDropdownItem[]>([]);
+  public readonly remarkOptions = signal<Option[]>([]);
 
   public accNoMap = new Map<string, AccNoList>([]);
   public vendorMap = new Map<string, VendorList>([]);
@@ -112,18 +113,8 @@ export class FIN53010Service {
   public loadFIN53010Detail(id: number): Observable<FIN53010DataDetail> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    const usr$ = !this.usrList().length
-      ? this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
-        take(1),
-        tap(res => this.usrList.set(res ?? [])))
-      : of(void 0);
-
-    const vendor$ = !this.vendorList().length
-      ? this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
-        take(1),
-        tap(res => this.vendorList.set(res.Data))
-      )
-      : of(void 0);
+    const usr$ = this.getUsrList();
+    const vendor$ = this.getVendorList();
 
     return forkJoin([usr$, vendor$]).pipe(
       concatMap(() =>
@@ -140,46 +131,54 @@ export class FIN53010Service {
     );
   }
 
-  public updateFIN53010Data(payload: FIN53010UpdatePayload): Observable<BaseQueryResponse<FIN53010Data>> {
+  public insertFIN53010Data(payload: FIN53010InsertPayload): Observable<FIN53010InsertResult> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<FIN53010Data>>(`${apiUrl}/updateFIN53010`, payload).pipe(
+    return this.http.post<FIN53010InsertResult>(`${apiUrl}/insertFIN53010`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(res => { }),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('更新FIN53010結果:', []);
-      })
+      tap(res => this.logger.debug('插入FIN53010結果:', [res])),
+      finalize(() => this.tableLoading = !1)
     );
   }
 
-  public insertFIN53010Data(payload: FIN53010InsertPayload): Observable<BaseQueryResponse<FIN53010Data>> {
+  public updateFIN53010Data(payload: FIN53010UpdatePayload): Observable<FIN53010UpdateResult> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<FIN53010Data>>(`${apiUrl}/insertFIN53010`, payload).pipe(
+    return this.http.post<FIN53010UpdateResult>(`${apiUrl}/updateFIN53010`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(res => { }),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('插入FIN53010結果:', []);
-      })
+      tap(res => this.logger.debug('更新FIN53010結果:', [res])),
+      finalize(() => this.tableLoading = !1)
     );
   }
 
-  public deleteFIN53010Data(payload: number[]): Observable<BaseQueryResponse<Record<string, any>>> {
+  public deleteFIN53010Data(payload: number[]): Observable<FIN53010DeleteResult> {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/deleteFIN53010`, { ids: payload }).pipe(
+    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/deleteFIN53010`, { ids: payload }).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(res => { }),
-      finalize(() => {
-        this.tableLoading = !1;
-        this.logger.debug('刪除FIN53010結果:', []);
-      })
+      tap(res => this.logger.debug('刪除FIN53010結果:', [res])),
+      finalize(() => this.tableLoading = !1)
     );
+  }
+
+  public getVoucherTypes(): void {
+    this.VoucherTypes.set([
+      { id: 1, No: 'AA', Name: 'AAAA' },
+      { id: 2, No: 'BB', Name: 'BBBB' },
+      { id: 3, No: 'CC', Name: 'CCCC' },
+      { id: 4, No: 'DD', Name: 'DDDD' },
+      { id: 5, No: 'EE', Name: 'EEEE' },
+      { id: 6, No: 'GL', Name: 'GL測試用' },
+    ]);
+
+    this.http.post<BaseQueryResponse<VoucherType>>(`${apiUrl}/queryVoucherTypeDropdown`, {}).pipe(
+      take(1),
+      tap(res => this.VoucherTypes.set(res.Data)),
+      finalize(() => this.logger.debug('查詢VoucherTypes結果:', [this.VoucherTypes()])),
+    ).subscribe();
   }
 
   public getAccNoList(): void {
@@ -190,25 +189,40 @@ export class FIN53010Service {
     ).subscribe();
   }
 
-  public getVendorList(): void {
+  public getVendorList(): Observable<VendorList[]> {
     this.venLoading.set(!0);
-    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
-      take(1),
-      tap(res => this.vendorList.set(res.Data)),
-      finalize(() => this.logger.debug('查詢VendorList結果:', [this.vendorList()])),
-      finalize(() => this.venLoading.set(!1)),
-    ).subscribe();
+    return !this.vendorList().length
+      ? this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
+        take(1),
+        tap(res => this.vendorList.set(res.Data)),
+        map(res => res.Data),
+        finalize(() => {
+          this.venLoading.set(!1);
+          this.logger.debug('查詢VendorList結果:', [this.vendorList()]);
+        }),
+      )
+      : of(<BaseQueryResponse<VendorList>>{ Data: this.vendorList() }).pipe(
+        take(1),
+        map(res => res.Data),
+        finalize(() => this.venLoading.set(!1)));
   }
 
-  public getUsrList(): void {
+  public getUsrList(): Observable<Option[]> {
     this.usrLoading.set(!0);
-    this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
-      take(1),
-      map(res => res!.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option))),
-      tap(res => this.usrList.set(res ?? [])),
-      finalize(() => this.logger.debug('查詢UsrList結果:', [this.usrList()])),
-      finalize(() => this.usrLoading.set(!1)),
-    ).subscribe();
+    return !this.usrList().length
+      ? this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
+        take(1),
+        // map(res => res?.filter(item => !RegExp(/^[0-9]/).test(item['value']))),
+        map(res => res!.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option))),
+        tap(res => this.usrList.set(res ?? [])),
+        finalize(() => {
+          this.usrLoading.set(!1);
+          this.logger.debug('查詢UsrList結果:', [this.usrList()]);
+        }),
+      )
+      : of(this.usrList()).pipe(
+        take(1),
+        finalize(() => this.usrLoading.set(!1)));
   }
 
   public getOrgNoList(): void {

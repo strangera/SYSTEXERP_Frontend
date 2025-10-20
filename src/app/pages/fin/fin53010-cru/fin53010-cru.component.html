@@ -28,25 +28,28 @@
                       [control]="df().VouType"
                       [submitted]="submitted"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
-                        label="傳票型態"
-                        controlName="PostFlag"
-                        [showClear]="!1"
-                        [control]="df().PostFlag"
-                        [options]="service.postFlags()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [submitted]="submitted"></app-dropdown>
+                      label="傳票型態"
+                      controlName="VoucherType"
+                      [showClear]="!1"
+                      [control]="df().VoucherType"
+                      [options]="service.VoucherTypes()"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [submitted]="submitted"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       calendarType="dateOne"
                       label="傳票日期"
                       controlName="VouDate"
                       [control]="df().VouDate"
                       [submitted]="submitted"></app-calendar>
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="傳票摘要"
-                        controlName="Remark"
-                        [control]="df().Remark"
-                        [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="傳票摘要"
+                      controlName="Remark"
+                      [control]="df().Remark"
+                      [options]="service.remarkOptions()"
+                      optionLabel="label"
+                      optionValue="value"
+                      [submitted]="submitted"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="補發票"
                       controlName="INVOptions"
@@ -128,13 +131,14 @@
                    (rowEditInit)="onRowEditInit($event)"
                    (rowEditSave)="onRowEditSave($event)"
                    (rowEditCancel)="onRowEditCancel($event)"
+                   (rowReorder)="onRowReorder($event)"
                    [showTotal]="!0"
                    [showSerialNo]="!1"
                    [rowEditCanSave]="rowEditCanSave"
                    [data]="tableData()"
                    [totalRecords]="totalRecords()"
                    [loading]="service.tableLoading"
-                   [dataKey]="'index'"
+                   [dataKey]="'id'"
                    [tableKey]="'FIN52030_detail'"
                    [columns]="columns()"></app-table>
       </p-panel>
@@ -190,8 +194,8 @@
                      let-item>
           <tr class="cursor-pointer hover:surface-hover"
               (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
-            <td>{{ item.VEN_No ?? item.AccNo }}</td>
-            <td>{{ item.VEN_Name ?? item.AccCName }}</td>
+            <td>{{ item.VEN_No ?? item.value }}</td>
+            <td>{{ item.VEN_Name ?? item.label }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">

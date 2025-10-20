@@ -2,7 +2,7 @@
 import { DatePipe } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { importProvidersFrom } from '@angular/core';
-import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
+import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, UrlSerializer } from '@angular/router';
 import { JwtModule } from '@auth0/angular-jwt';
@@ -35,7 +35,8 @@ export function tokenGetter() {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(BrowserModule,
+    provideClientHydration(),
+    importProvidersFrom(
       TranslateModule.forRoot({
         loader: {
           provide: TranslateLoader,
@@ -65,12 +66,12 @@ bootstrapApplication(AppComponent, {
     PrimeNGConfig,
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: CustomheaderinterceptorService, // 添加自定義頭部
+      useClass: AuthinterceptorService, // 再處理認證
       multi: true
     },
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: AuthinterceptorService, // 再處理認證
+      useClass: CustomheaderinterceptorService, // 添加自定義頭部
       multi: true
     },
     {

@@ -33,7 +33,6 @@ import { Tls11010Service } from '@service/api/tls/tls11010.service';
 @Component({
   selector: 'app-tls32040',
   templateUrl: './tls32040.component.html',
-  styleUrl: './tls32040.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
 })

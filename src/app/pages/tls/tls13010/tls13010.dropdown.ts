@@ -41,6 +41,15 @@ export interface DropdownOption {
   label: string;
 }
 
+export interface Pos2013DropdownOption {
+  value: string | number;
+  label: string;
+  VEN_No: string;
+  No: string;
+  Name: string;
+  VEN_Address: string;
+}
+
 // ========== 轉換函數 ==========
 const convertToDropdownOptions = (options: Record<string, string>): DropdownOption[] => {
   return Object.entries(options).map(([value, label]) => ({ value, label }));
@@ -103,7 +112,7 @@ export class TLS13010DropdownService {
   public locationOptions: DropdownOption[] = [];
   public paperTypeOptions: DropdownOption[] = [];
   public discountTypeOptions: DropdownOption[] = [];
-  public pos2013Options: DropdownOption[] = [];
+  public pos2013Options: Pos2013DropdownOption[] = [];
   public negotiatorOptions: DropdownOption[] = [];
   public payNoOptions: DropdownOption[] = [];
 

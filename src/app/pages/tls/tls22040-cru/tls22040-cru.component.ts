@@ -15,7 +15,6 @@ import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
-import { NgStyle } from '@angular/common';
 
 @Component({
   selector: 'app-tls22040-cru',
@@ -30,8 +29,6 @@ import { NgStyle } from '@angular/common';
     ReactiveFormsModule,
     TranslateModule,
     ButtonModule,
-    NgStyle
-
   ],
 })
 export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements OnInit {

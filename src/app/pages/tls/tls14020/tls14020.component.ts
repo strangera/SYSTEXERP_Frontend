@@ -18,8 +18,6 @@ import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -41,7 +39,7 @@ import { CheckboxModule } from 'primeng/checkbox';
   templateUrl: './tls14020.component.html',
   styleUrl: './tls14020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent, CheckboxModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent, CheckboxModule]
 })
 export class TLS14020Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
 

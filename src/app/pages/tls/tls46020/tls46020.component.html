@@ -44,7 +44,7 @@
       [control]="dialogQueryForm.controls.Target_ECR_No" [options]="mergedDialogOptions" optionLabel="label"
       optionValue="No" [submitted]="submitted" />
   </form>
-  <span class="required" *ngIf="submitted && isValid">
+  <span class="text-red-500" *ngIf="submitted && isValid">
     無法複製到相同的環境變數
   </span>
 </app-dialog>

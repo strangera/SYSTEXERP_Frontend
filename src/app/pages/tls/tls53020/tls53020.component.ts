@@ -50,7 +50,7 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
     PST_No: ['', [Validators.maxLength(14)]], // 盤點單編號
     HOS_No: [[]], // 倉別代碼
     LOGO_No: [[]], // 品牌代碼
-    PST_DateStart: [null],    // 盤點基準日期(起)
+    PST_DateStart: [new Date(), Validators.required],    // 盤點基準日期(起)
     PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
     PST_Status: [[]], // 盤點狀態
     PST_Type: [null], // 盤點類型

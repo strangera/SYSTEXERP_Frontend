@@ -10,7 +10,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
@@ -20,7 +19,6 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-tls14040',
   templateUrl: './tls14040.component.html',
-  styleUrl: './tls14040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -31,7 +29,6 @@ yesterday.setDate(yesterday.getDate() - 1);
     InputTextComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    ReportTableGroupComponent,
     TableComponent,
     TranslateModule]
 })
@@ -50,7 +47,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     bus_typeList: [[]], // 大分類
 
     tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
-    
+
     contract_subno_start: [''], // 合約附號_起
     contract_subno_end: [''], // 合約附號_迄
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)

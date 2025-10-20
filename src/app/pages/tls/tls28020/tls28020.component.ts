@@ -23,7 +23,6 @@ const now = new Date();
 @Component({
   selector: 'app-tls28020',
   templateUrl: './tls28020.component.html',
-  styleUrls: ['./tls28020.component.scss'],
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })

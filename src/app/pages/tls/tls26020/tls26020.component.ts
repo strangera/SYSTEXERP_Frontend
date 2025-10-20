@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize, Observable } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -22,7 +22,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 @Component({
   selector: 'app-tls26020',
   templateUrl: './tls26020.component.html',
-  styleUrl: './tls26020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

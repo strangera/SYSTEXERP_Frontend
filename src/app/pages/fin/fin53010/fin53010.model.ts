@@ -5,8 +5,8 @@ interface FIN53010Basic {
   VouNo: string;
   /** 補發票 (Y/N) */
   INV_YN: 'Y' | 'N';
-  /** 傳票狀態 0:作廢 1:建立 2:確認 3:過帳 */
-  PostFlag: '0' | '1' | '2' | '3';
+  /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
+  PostFlag: '0' | '1' | '3';
   /** ROC/IFRS 0:共用 1:ROC 2:IFRS 3:全部 */
   VouAccType: '0' | '1' | '2' | '3';
   /** 傳票類別 1:現金收入2:現金支出3:轉帳傳票 */
@@ -32,7 +32,7 @@ export interface FIN53010Data extends Pick<FIN53010Basic, 'VouType' | 'VouNo'> {
   DetailCount: number;
 }
 
-interface QueryFIN53010Detail extends FIN53010Basic, CRT, UPD {
+export interface QueryFIN53010Detail extends FIN53010Basic, CRT, UPD {
   CompNo: string;
   Details: FIN53010Detail[];
   Remark: string;
@@ -55,25 +55,29 @@ export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'D
  * NoteDesc: 摘要
  */
 export interface FIN53010Detail {
-  id: number;
-  SerNo: number;
-  AccDC: string;
-  AccNo: string;
   AccAmt: number;
-  ORG_ID: string;
+  AccDC: string;
+  AccName: string;
+  AccNo: string;
+  DetailName: string;
   DetailNo: string;
-  SubDetailNo: string;
   NoteDesc: string;
+  ORG_ID: string;
+  SerNo: number;
+  SubDetailNo: string;
+  clearingCode?: string;
+  id: number;
 }
 
 /**
  * FIN53010 明細檔 (Table 顯示用)
  * AccName: 科目名稱
  * DetailName: 廠商/員工名稱
+ * AccAmtD: 借方金額
+ * AccAmtC: 貸方金額
+ * displayIndex: 顯示用索引值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
-  AccName?: string;
-  DetailName?: string;
   AccAmtD?: number;
   AccAmtC?: number;
   displayIndex?: number;
@@ -110,9 +114,24 @@ export interface FIN53010UpdatePayload extends Omit<FIN53010Payload, 'UPD_USR_No
   Details: FIN53010Detail[];
 }
 
-export interface FIN53010DeleteResult {
-}
+export type FIN53010InsertResult = Omit<BaseQueryResponse<any>, 'Data'> & {
+  Data: {
+    DetailCount: number;
+    gls3002_id: number;
+  };
+};
 
+export type FIN53010UpdateResult = Omit<BaseQueryResponse<any>, 'Data'> & {
+  Data: {
+    [key: string]: any;
+  };
+};
+
+export type FIN53010DeleteResult = Omit<BaseQueryResponse<any>, 'Data'> & {
+  Data: {
+    [key: string]: any;
+  };
+};
 export interface VendorList {
   VEN_No: string;
   VEN_Name: string;
@@ -123,4 +142,10 @@ export interface VendorList {
 export interface AccNoList {
   AccNo: string;
   AccCName: string;
+}
+
+export interface VoucherType {
+  id: number;
+  No: string;
+  Name: string;
 }

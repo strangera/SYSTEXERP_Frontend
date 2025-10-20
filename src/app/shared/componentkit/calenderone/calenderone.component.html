@@ -1,31 +1,15 @@
 <label [hidden]="!showLabel || label === ''" [for]="controlName">
   {{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
   <ng-content select="header"></ng-content>
 </label>
 <!-- 元件 -->
 <ng-container *ngIf="!readonly; else readonlyMode">
-  <p-calendar
-    [formControl]="control"
-    [id]="controlName"
-    [placeholder]="control.disabled ? '' : placeholder"
-    [timeOnly]="timeOnly"
-    [showTime]="showTime"
-    [hourFormat]="hourFormat"
-    [showSeconds]="showSeconds"
-    [view]="view"
-    [dateFormat]="dateFormat"
-    [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"
-    [iconDisplay]="'input'"
-    [showIcon]="!control.disabled"
-    [minDate]="minDate"
-    [maxDate]="maxDate"
-     [readonlyInput]="readonly"
-     [inputStyleClass]="calendarClasses"    
-    [appendTo]="'body'"
-    (onClose)="onClose()"
-    (onInput)="onInput($event)"
-  >
+  <p-calendar [formControl]="control" [id]="controlName" [placeholder]="control.disabled ? '' : placeholder"
+    [timeOnly]="timeOnly" [showTime]="showTime" [hourFormat]="hourFormat" [showSeconds]="showSeconds" [view]="view"
+    [dateFormat]="dateFormat" [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }" [iconDisplay]="'input'"
+    [showIcon]="!control.disabled" [minDate]="minDate" [maxDate]="maxDate" [readonlyInput]="readonly"
+    [inputStyleClass]="calendarClasses" [appendTo]="'body'" (onClose)="onClose()" (onInput)="onInput($event)">
     <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
       <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
       <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
@@ -36,21 +20,12 @@
 <!-- 唯讀模式 -->
 <ng-template #readonlyMode>
   <div class="readonly-calendar">
-    <input
-      type="text"
-      [id]="controlName"
-      [value]="getDisplayValue()"
-      [placeholder]="placeholder"
-      [class]="calendarClasses"
-      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
-      pInputText
-      readonly
-    />
+    <input type="text" [id]="controlName" [value]="getDisplayValue()" [placeholder]="placeholder"
+      [class]="calendarClasses" [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" pInputText
+      readonly />
   </div>
 </ng-template>
 
 <!-- 錯誤訊息 -->
-<app-control-messages
-  [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"
-></app-control-messages>
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>

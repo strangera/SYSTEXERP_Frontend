@@ -33,8 +33,8 @@ export class TLS2D040Service {
   constructor(private http: HttpClient) { }
 
   // 查詢依會計科目彙總資料
-  queryTLS2D040_Detail(req: QueryTLS2D040Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Detail`, req);
+  queryTLS2D040_Acct(req: QueryTLS2D040Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Acct`, req);
   }
 
   // 查詢依專櫃彙總資料
