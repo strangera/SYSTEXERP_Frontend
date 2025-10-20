@@ -207,8 +207,12 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   insertTLS53010(form: FormGroup) {
     this.handleSubmit(form, () => {
       if (this.canAdd()) {
-        this.tls53010Service.insertTLS53010(form.getRawValue())
-          .pipe(untilDestroyed(this))
+        const payload = {
+          ...form.getRawValue(),
+          PST_Date: this.datePipe.transform(form.get('PST_Date')?.value, 'yyyy-MM-dd') || null
+        }
+        this.tls53010Service.insertTLS53010(payload)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
           .subscribe(() => {
             this.messageService.successBubble('新增全品項完成');
             this.resetForm();
@@ -247,7 +251,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位', format: (v, i, r) => r.UNIT_NAME },
+    { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_PageNum', header: '棚割編號' },
     { field: 'PLU_LocNo', header: '棚割序號' },
@@ -291,7 +295,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     return {
       HOS_No: this.dataForm.get('HOS_No')?.value || '',
       LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
-      PST_Date: this.dataForm.get('PST_Date')?.value || '',
+      PST_Date: this.datePipe.transform(this.dataForm.get('PST_Date')?.value, 'yyyy-MM-dd')!,
       PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
       POS2004List: this.data.map(item => ({
         PLU_MagNo: item.PLU_MagNo,
@@ -327,7 +331,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     return {
       POS2033M_ID: this.rowdata!.id,
       PST_No: this.dataForm.get('PST_No')?.value || '',
-      PST_Date: this.dataForm.get('PST_Date')?.value || '',
+      PST_Date: this.datePipe.transform(this.dataForm.get('PST_Date')?.value, 'yyyy-MM-dd')!,
       PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
       POS2004List: this.data.map(item => ({
         POS2033_ID: item.id || 0,

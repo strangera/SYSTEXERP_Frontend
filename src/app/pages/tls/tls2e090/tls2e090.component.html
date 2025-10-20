@@ -128,8 +128,8 @@
 
 <!-- 查詢結果表格 -->
 <div class="card mt-3">
-  <app-table dataKey="ven_no" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-customFooter-table dataKey="ven_no" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
-    [showDelete]="false" [loading]="loading"></app-table>
+    [showDelete]="false" [loading]="loading" [showTotal]="true" [footerData]="footerData"></app-customFooter-table>
 </div>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, finalize } from 'rxjs';
-import { Tls2e090Service, Tls2e090Data } from '@service/api/tls/tls2e090.service';
+import { Tls2e090Service, Tls2e090Data,TotalData } from '@service/api/tls/tls2e090.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -12,7 +12,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -20,13 +19,14 @@ import { AsyncPipe } from '@angular/common';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 // 2.2.14.9 專櫃帳款結帳彙總表
 @Component({
   selector: 'app-tls2e090',
   templateUrl: './tls2e090.component.html',
   standalone: true,
   imports: [
-    TableComponent, MenubarComponent, ButtonComponent, AccordionModule,
+    CustomFooterTableComponent, MenubarComponent, ButtonComponent, AccordionModule,
     FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent,
     MultiSelectComponent, CheckboxModule, RadiobuttonYNComponent, InputNumberComponent, // 新增的 Component
     TranslateModule, AsyncPipe
@@ -61,6 +61,7 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
 
   totalRecords = 0;
   data: Tls2e090Data[] = [];
+  footerData: TotalData[] = [];
   // 表格欄位 (Columns) - 根據 Tls2e090Data 介面調整
   columns: Column[] = [
     // 基本資訊
@@ -76,34 +77,34 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
     { field: 'check_day', header: '付款日數' },
 
     // 銷貨相關 (金額欄位加上 type: 'currency')
-    { field: 'sam_sales_namt', header: '銷貨淨額(應稅)', format: formatAmount },
-    { field: 'sam_sales_notaxamt', header: '銷貨淨額(免稅)', format: formatAmount },
-    { field: 'sam_sales_tax', header: '銷貨淨額(稅額)', format: formatAmount },
+    { field: 'sam_sales_namt', header: '銷貨淨額(應稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_sales_notaxamt', header: '銷貨淨額(免稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_sales_tax', header: '銷貨淨額(稅額)', isTotal: true,format: formatAmount },
 
     // 抽成相關 (金額欄位加上 type: 'currency')
-    { field: 'sam_profit', header: '抽成額(應稅)', format: formatAmount },
-    { field: 'sam_notax_profit', header: '抽成額(免稅)', format: formatAmount },
-    { field: 'sam_profit_tax', header: '抽成額(稅額)', format: formatAmount },
+    { field: 'sam_profit', header: '抽成額(應稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_notax_profit', header: '抽成額(免稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_profit_tax', header: '抽成額(稅額)', isTotal: true,format: formatAmount },
 
     // 進貨/應付相關 (金額欄位加上 type: 'currency')
-    { field: 'sam_ap_namt', header: '進貨(應稅)', format: formatAmount },
-    { field: 'sam_ap_notaxamt', header: '進貨(免稅)', format: formatAmount },
-    { field: 'sam_ap_tax', header: '進項稅額', format: formatAmount },
-    { field: 'sam_ap_amt', header: '進貨總額(含稅)', format: formatAmount }, // 應付帳款總額 (舊欄位名)
+    { field: 'sam_ap_namt', header: '進貨(應稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_ap_notaxamt', header: '進貨(免稅)', isTotal: true,format: formatAmount },
+    { field: 'sam_ap_tax', header: '進項稅額', isTotal: true,format: formatAmount },
+    { field: 'sam_ap_amt', header: '進貨總額(含稅)', isTotal: true,format: formatAmount }, // 應付帳款總額 (舊欄位名)
 
     // 代扣相關 (金額欄位加上 type: 'currency')
-    { field: 'sam_fare_namt', header: '代扣未稅(開立)', format: formatAmount },
-    { field: 'sam_fare_tax', header: '代扣稅額', format: formatAmount },
-    { field: 'sam_fare_notaxamt', header: '代扣金額(不開立)', format: formatAmount },
+    { field: 'sam_fare_namt', header: '代扣未稅(開立)', isTotal: true,format: formatAmount },
+    { field: 'sam_fare_tax', header: '代扣稅額', isTotal: true,format: formatAmount },
+    { field: 'sam_fare_notaxamt', header: '代扣金額(不開立)', isTotal: true,format: formatAmount },
 
     // 租金相關 (金額欄位加上 type: 'currency')
-    { field: 'sam_rent_namt', header: '租金未稅', format: formatAmount },
-    { field: 'sam_rent_tax', header: '租金稅額', format: formatAmount },
+    { field: 'sam_rent_namt', header: '租金未稅', isTotal: true,format: formatAmount },
+    { field: 'sam_rent_tax', header: '租金稅額', isTotal: true,format: formatAmount },
 
     // 結算結果 (金額欄位加上 type: 'currency')
-    { field: 'acc_receivable', header: '應收合計', format: formatAmount },
-    { field: 'sam_under_limit_amt', header: '包底抽成不足(含稅)', format: formatAmount },
-    { field: 'acc_payable', header: '廠商應付帳款(含稅)', format: formatAmount },
+    { field: 'acc_receivable', header: '應收合計', isTotal: true,format: formatAmount },
+    { field: 'sam_under_limit_amt', header: '包底抽成不足(含稅)', isTotal: true,format: formatAmount },
+    { field: 'acc_payable', header: '廠商應付帳款(含稅)', isTotal: true,format: formatAmount },
   ];
 
   // 2. 選項資料 (Options) - 使用 Observable 配合 | async pipe
@@ -178,6 +179,7 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
       this.tls2e090Service.queryTls2e090(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.loading = false;
         this.data = response.Data;
+        this.footerData = response.footerData || [];
         this.totalRecords = response.TotalCount;
       });
     });

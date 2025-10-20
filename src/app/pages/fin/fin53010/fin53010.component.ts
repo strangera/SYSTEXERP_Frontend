@@ -16,7 +16,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN53010Data, FIN53010Payload } from './fin53010.model';
+import { FIN53010Data } from './fin53010.model';
 
 @Component({
   selector: 'app-fin53010',
@@ -43,12 +43,12 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public readonly queryForm = this.formBuilder.group({
     VouNoStart: new FormControl<number | void>(void 0),
     VouNoEnd: new FormControl<number | void>(void 0),
-    /** 傳票類別 1:現金收入2:現金支出3:轉帳傳票 */
+    /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
     VouType: new FormControl<'0' | '1' | '2' | void>(void 0),
     VouDateStart: new FormControl<Date | void>(void 0),
     VouDateEnd: new FormControl<Date | void>(void 0),
-    /** 傳票狀態 0:作廢 1:建立 2:確認 3:過帳 */
-    PostFlag: new FormControl<'0' | '1' | '2' | '3' | void>(void 0),
+    /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
+    PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
     Remark: new FormControl<string | void>(void 0),
     /** 傳票種類(SYS1000.VoucherType) */
     VoucherType: new FormControl<string | void>(void 0),
@@ -92,16 +92,14 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     this.service.getPostFlags();
     this.service.getVouAccTypes();
     this.service.getAccNoList();
-    this.service.getVendorList();
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.loading = !0;
       const raw = this.queryForm.getRawValue();
-      const payload = <FIN53010Payload>Object.keys(raw).reduce((acc, key) => {
+      const payload = Object.keys(raw).reduce((acc, key) => {
         const v = raw[key as keyof typeof raw];
-        if (!!v) acc[key as keyof typeof raw] = v;
+        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
         return acc;
       }, {} as any);
 

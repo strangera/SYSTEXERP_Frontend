@@ -36,31 +36,6 @@ export abstract class BasicQueryPageComponent<T> {
 
   // 初始化方法
   public abstract ngOnInit(): void;
-  // public abstract canQuery(): boolean;
-  // public abstract canAdd(): boolean;
-  // public abstract canEdit(): boolean;
-
-  // 初始化頁面
-  // initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
-  //   this.ProgNo = progNo; // 程式編號
-  //   this.cruPage = cruPage ?? ''; // CRU路徑
-  //   this.funInfo = this.authService.getUserPermissions(this.ProgNo); // 取得權限
-  //   // 在初始化頁面後，通知選單更新選中狀態
-  //   this.currentPageService.setCurrentProgNo(this.ProgNo);
-  //   // 取得歷史紀錄(如果有的話)
-  //   const state = this.router.lastSuccessfulNavigation?.extras.state;
-  //   const previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
-  //   // 處理 cruPage，移除開頭的斜線
-  //   const sanitizedCruPage = this.cruPage.toLocaleLowerCase().startsWith('/') ? this.cruPage.toLocaleLowerCase().substring(1) : this.cruPage.toLocaleLowerCase();
-  //   if (this.canPerformAction('10') && previousRoute === `/account/${sanitizedCruPage}`) { // '查詢' 的 function_code 是 "10"
-  //     const query = this.queryStateService.getQueryStateValue(this.ProgNo);
-  //     if (query && queryForm) {
-  //       queryForm?.patchValue(query);
-  //       queryForm?.patchValue({ pageIndex: 1 });
-  //       if (onSubmit) { onSubmit(queryForm); }
-  //     }
-  //   }
-  // }
 
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
     this.ProgNo = progNo.toUpperCase();

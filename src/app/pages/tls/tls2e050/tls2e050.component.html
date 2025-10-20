@@ -102,8 +102,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="INV_ItemNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-customFooter-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
-    [showDelete]="false" [loading]="loading"></app-table>
+    [showDelete]="false" [loading]="loading" [showTotal]="true" [footerData]="footerData" ></app-customFooter-table>
 </div>

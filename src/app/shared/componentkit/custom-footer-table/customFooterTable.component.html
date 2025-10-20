@@ -38,7 +38,7 @@
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
         <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem" rowspan="2"></th>
-        <th class="w-1rem" rowspan="2">序號</th>
+        <th class="w-1rem text-center" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2" *ngIf="
             IsPrint &&
             showCheckBox &&
@@ -101,7 +101,7 @@
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
         <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem"></th>
-        <th class="w-1rem">序號</th>
+        <th class="w-1rem text-center">序號</th>
         <th class="w-1rem" *ngIf="
             IsPrint &&
             showCheckBox &&
