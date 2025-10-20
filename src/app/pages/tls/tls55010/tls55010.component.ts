@@ -65,12 +65,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         htmlFormat: true,
         format: () => '<i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>'
       } : c);
-      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-        this.isConfirmDate = false;
+      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this), finalize(() => {
+        this.loading = false
         this.columns = this.columns.map(c => c.field === 'isPassed' ? {
           ...c, htmlFormat: false, format: undefined
         } : c);
+      })).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+        this.isConfirmDate = false;
         this.data.forEach((item: any) => {
           item.isPassed = 'OK';
           item.details = [];
