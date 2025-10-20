@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
+import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31040Request {
   TXN_DateS: string | Date;
@@ -47,7 +48,7 @@ export interface TLS31040PrintDetailRequest extends TLS31040DetailRequest {
   IsExcel: boolean;
 }
 
-export interface TLS31040Response {
+export interface TLS31040Item {
   tlt_kind: string;
   tlt_kind_name: string;
   
@@ -69,7 +70,7 @@ export interface TLS31040Response {
   CompletionRate: number;
 }
 
-export interface TLS31040DetailResponse {
+export interface TLS31040DetailItem {
   building_desc: string;
   org_name: string;
   tlt_kind: string;
@@ -92,6 +93,16 @@ export interface TLS31040DetailResponse {
   CompletionRate: number;
 }
 
+export interface TLS31040Response {
+  Data: TLS31040Item[];
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31040DetailResponse {
+  Data: TLS31040DetailItem[];
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -100,13 +111,31 @@ export class Tls31040Service {
     constructor(private http: HttpClient) { }
     
     // 查詢各櫃別之營業報表
-    queryTLS31040(body: TLS31040Request): Observable<ApiResponse<TLS31040Response[]>> {
-      return this.http.post<ApiResponse<TLS31040Response[]>>(`${this.apiUrl}/queryTLS31040`, body);
+    queryTLS31040(body: TLS31040Request): Observable<any> {
+      return this.http.post<any>(`${this.apiUrl}/queryTLS31040`, body).pipe(
+            map(res => {
+              return {
+                Data: res.Data?.Data,
+                TotalCount: res.TotalCount,
+                Message: res.Message,
+                TotalData: res.Data?.TotalData 
+              };
+            })
+          );
     }
 
     // 查詢單櫃別展開之營業報表
-    queryTLS31040Detail(body: TLS31040DetailRequest): Observable<ApiResponse<TLS31040DetailResponse[]>> {
-      return this.http.post<ApiResponse<TLS31040DetailResponse[]>>(`${this.apiUrl}/queryTLS31040Detail`, body);
+    queryTLS31040Detail(body: TLS31040DetailRequest):  Observable<any> {
+      return this.http.post<ApiResponse<TLS31040DetailResponse>>(`${this.apiUrl}/queryTLS31040Detail`, body).pipe(
+            map(res => {
+              return {
+                Data: res.Data?.Data,
+                TotalCount: res.TotalCount,
+                Message: res.Message,
+                TotalData: res.Data?.TotalData,
+              };
+            })
+          );
     }
   
     // 產出各櫃別之營業報表

@@ -1,5 +1,5 @@
 <label [for]="controlName">{{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
 </label>
 <p-editor *ngIf="!control.disabled" [id]="controlName" [formControl]="control" [style]="{ height: '300px' }"
   [styleClass]="submitted && control.errors|| control.touched && control.errors ? 'ng-invalid ng-dirty' : ''"

@@ -287,15 +287,13 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
         console.log('所有 API 呼叫結果：', result);
       })
     ).subscribe(result => {
-      //  result: { selectedMValues: IDropdownItem[], data: IDropdownItem[] }
 
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-        const groupKey = `${mValue.bus_type}_${mValue.No}`;
-        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+      const groupKey = `${mValue.bus_type}_${mValue.No}`;
+      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
         //  過濾小分類資料對應到當前中分類
         const items = result.data
-          // .filter(item => item.bus_type === mValue.bus_type && item.CAT_MNo === mValue.No)
           .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
           .map(item => ({
             ...item,
@@ -314,7 +312,6 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
           }
         });
 
-        // console.log('項目',items);
 
         accumulator[groupKey] = {
           label: groupLabel,

@@ -1,13 +1,13 @@
 <div class="flex" style="height: 18px;">
   <label class="col p-0 m-0 pr-2" [for]="startControlName">{{ label === '' ? startLabel : label +
     '(起迄)' }}
-    <span *ngIf="isRequired" class="required">*</span>
+    <span *ngIf="isRequired" class="text-red-500">*</span>
   </label>
   <div class="col-fixed py-0">
     <span class="text-center"></span>
   </div>
   <label class="col p-0 m-0" [hidden]="label!==''" [for]="endControlName">{{ endLabel }}
-    <span *ngIf="isRequired" class="required">*</span>
+    <span *ngIf="isRequired" class="text-red-500">*</span>
   </label>
 </div>
 <div class="grid p-fluid">

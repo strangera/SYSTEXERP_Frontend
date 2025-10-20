@@ -1,26 +1,15 @@
 <!-- autocomplete.component.html -->
 <label [for]="controlName">
   {{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
   <!-- <span *ngIf="selectedOption" class="selected-indicator">✓ 已選擇</span> -->
 </label>
 
-<p-autoComplete
-  styleClass="bank-autocomplete"
-  [id]="controlName"
-  [(ngModel)]="selectedOption"
-  (ngModelChange)="onModelChange($event)"
-  [suggestions]="filteredOptions"
-  (completeMethod)="onSearch($event)"
-  optionLabel="label"
-  [placeholder]="control.disabled ? '' : placeholder"
-  [dropdown]="false"
-  [forceSelection]="forceSelection"
-  [showClear]="true"
-  [ngClass]="{ 'ng-dirty ng-invalid': hasError }"
-  [disabled]="control.disabled"
-  [minLength]="1"
->
+<p-autoComplete styleClass="bank-autocomplete" [id]="controlName" [(ngModel)]="selectedOption"
+  (ngModelChange)="onModelChange($event)" [suggestions]="filteredOptions" (completeMethod)="onSearch($event)"
+  optionLabel="label" [placeholder]="control.disabled ? '' : placeholder" [dropdown]="false"
+  [forceSelection]="forceSelection" [showClear]="true" [ngClass]="{ 'ng-dirty ng-invalid': hasError }"
+  [disabled]="control.disabled" [minLength]="1">
   <ng-template let-option pTemplate="item">
     <div class="autocomplete-item">
       <div class="bank-info">

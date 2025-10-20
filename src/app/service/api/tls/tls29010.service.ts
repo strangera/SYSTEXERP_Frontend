@@ -36,9 +36,20 @@ export class Tls29010Service {
     return this.http.post<any>(`${this.apiUrl}/updateTLS29010`, body);
   }
 
-  // 刪除 TALPORDERD_OPENDisc 資料表
+  // 刪除 TALPORDERD_OPENDisc 資料表 (明細都用update處理，先掛著)
   deleteTLS29010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS29010`, body);
+  }
+
+  // 刪除 主檔 TALPORDERM 資料表
+  deleteTLS29010M(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS29010M`, body);
+  }
+
+  // ---20251017 SA新增需求---
+  // 核准 主檔
+  apprTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/apprTLS29010`, body);
   }
 
   // ---dropDown下拉---

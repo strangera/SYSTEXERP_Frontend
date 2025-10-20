@@ -7,12 +7,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ButtonModule } from 'primeng/button';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
@@ -29,15 +24,10 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    RadiobuttonComponent,
-    CalendarRangeQuickComponent,
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
-    MultiSelectComponent,
     ButtonModule
   ],
   templateUrl: './tls31020cru.component.html'
@@ -76,7 +66,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
   footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31020DetailRequest | null = null; //歷史查詢條件
-  
+
   columns: Column[] = [
     { field: 'building_desc', header: '館別', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
@@ -205,28 +195,28 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
       this.data = res.Data ?? [];               // 查詢資料
       this.footerTotal = res.TotalData ?? null;;    // 總計資料
       this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
-          budget: this.footerTotal.TotalBudget,
-          AVN_TotSaleAmt: this.footerTotal.TotalSales,
-          TxnCount: this.footerTotal.TotalTxnCount,
-          AvgTicket: this.footerTotal.AvgTicket,
-          tlt_space: this.footerTotal.TotalSpace,
-          MonthlyPSM: this.footerTotal.AvgPSM,
-          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
-          // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+        budget: this.footerTotal.TotalBudget,
+        AVN_TotSaleAmt: this.footerTotal.TotalSales,
+        TxnCount: this.footerTotal.TotalTxnCount,
+        AvgTicket: this.footerTotal.AvgTicket,
+        tlt_space: this.footerTotal.TotalSpace,
+        MonthlyPSM: this.footerTotal.AvgPSM,
+        MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+        // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
 
-          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
-          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+        MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+        MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
 
-          AchievementRate: this.footerTotal.AvgAchievementRate,
-          CompletionRate: this.footerTotal.AvgCompletionRate,
-        } : null;
-        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
-          
-        // } : null;
+        AchievementRate: this.footerTotal.AvgAchievementRate,
+        CompletionRate: this.footerTotal.AvgCompletionRate,
+      } : null;
+      // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+
+      // } : null;
 
       this.historyRequestBody = request;                 // 查詢條件
-      console.log('明細資料',this.data)
-      console.log('明細總計',this.footerTotal);
+      console.log('明細資料', this.data)
+      console.log('明細總計', this.footerTotal);
       console.log('明細總計(轉換後)', this.footershowTotal);
       // console.log('明細條件',this.historyRequestBody);
       this.totalRecords = res.TotalCount;

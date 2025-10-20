@@ -1,21 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate, ColumnGroup } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { apiOption } from '@shared/models/tls/tls000.model';
-import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { CommonModule } from '@angular/common';
 import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -69,9 +64,8 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-tls12070',
   templateUrl: './tls12070.component.html',
-  styleUrl: './tls12070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, CommonModule, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, ReportTableGroupComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, ReportTableGroupComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, CommonModule, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS12070Component extends BasicQueryPageComponent<Customer_interview> implements OnInit {
   activeReport: 'query' | 'willing' = 'query';

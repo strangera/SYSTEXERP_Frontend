@@ -1,6 +1,6 @@
 <label [for]="controlName" class="flex gap-1">
   {{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
   <ng-content select="header"></ng-content>
 </label>
 

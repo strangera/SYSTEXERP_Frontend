@@ -27,11 +27,10 @@ interface CategoryItem {
 
 // 2.5.1.2 中分類維護作業 CRU
 @Component({
-    selector: 'app-tls51020-cru',
-    templateUrl: './tls51020-cru.component.html',
-    styleUrl: './tls51020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-tls51020-cru',
+  templateUrl: './tls51020-cru.component.html',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
 })
 export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   // ----------------------------------------------------------------
