@@ -194,8 +194,8 @@
                      let-item>
           <tr class="cursor-pointer hover:surface-hover"
               (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
-            <td>{{ item.VEN_No ?? item.AccNo }}</td>
-            <td>{{ item.VEN_Name ?? item.AccCName }}</td>
+            <td>{{ item.VEN_No ?? item.value }}</td>
+            <td>{{ item.VEN_Name ?? item.label }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">

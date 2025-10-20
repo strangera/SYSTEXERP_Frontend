@@ -119,6 +119,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
     if (changes['data'] && this.data !== undefined) {
+      console.log(this.data);
+
       if (this.data.length > 0) {
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
