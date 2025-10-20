@@ -43,7 +43,7 @@ export interface TLS26050QueryRequest extends BaseQueryRequest {
   floor?: string[]; // 樓層
   region?: string[]; // 區域
   bus_type?: string[]; // 大分類
-  bus_class?: string[]; // 中分類
+  bus_class?: string[][]; // 中分類 - Changed from string[] to string[][]
   tlt_kind?: string[]; // 櫃別
   tlt_term_type?: string[]; // 抽成別
   org_id?: string[]; // 組織代號
@@ -66,6 +66,7 @@ export interface TLS26050WeekResponse {
 // 查詢結果 Model
 export interface TLS26050Data {
   id: number; // ID
+  group_name: string; // 群組名稱
   tlt_building: string; // 館別
   talent_id: string; // 專櫃編號
   team_name: string; // TEAM名稱
