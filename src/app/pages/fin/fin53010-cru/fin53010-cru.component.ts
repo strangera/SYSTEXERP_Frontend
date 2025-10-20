@@ -16,6 +16,7 @@ import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
+import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, forkJoin, Observable, tap } from 'rxjs';
@@ -31,6 +32,7 @@ import { AccNoList, FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FI
     CheckboxModule,
     DropdownModule,
     FormsModule,
+    InputTextModule,
     PanelModule,
     ReactiveFormsModule,
     TableModule,
@@ -209,28 +211,32 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
       this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
         finalize(() => this.loading = !1),
-        tap(res => {
-          this.df().VouNo.setValue(res.Data.VouNo);
-          this.df().VouType.setValue(res.Data.VouType ?? '0');
-          this.df().PostFlag.setValue(res.Data.PostFlag ?? '0');
-          this.df().VoucherType.setValue(res.Data.VoucherType?.trim() ?? 'GL');
-          this.df().VouDate.setValue(res.Data.VouDate ? new Date(res.Data.VouDate) : new Date());
-          this.df().Remark.setValue(res.Data.Remark);
-          this.df().INV_YN.setValue(res.Data.INV_YN ?? 'N');
-          this.df().VouAccType.setValue(<'0' | '1' | '2'>res.Data.VouAccType ?? '0');
-          this.df().CRT_USR_No.setValue(res.Data.CRT_USR_No);
-          this.df().UPD_USR_No.setValue(res.Data.UPD_USR_No);
-          this.df().CompNo.setValue(res.Data.CompNo);
+        tap(({ Data: v }) => {
+          this.dataForm.patchValue({
+            VouNo: v.VouNo,
+            VouType: ['0', '1', '2'].includes(String(v.VouType)) ? String(v.VouType) as '0' | '1' | '2' : '0',
+            PostFlag: ['0', '1', '3'].includes(String(v.PostFlag)) ? String(v.PostFlag) as '0' | '1' | '3' : '0',
+            VoucherType: v.VoucherType?.trim() ?? 'GL',
+            VouDate: v.VouDate ? new Date(v.VouDate) : new Date(),
+            Remark: v.Remark,
+            INV_YN: (v.INV_YN ?? 'N') as 'N' | 'Y',
+            VouAccType: ['0', '1', '2'].includes(String(v.VouAccType)) ? String(v.VouAccType) as '0' | '1' | '2' : '0',
+            CRT_USR_No: v.CRT_USR_No,
+            UPD_USR_No: v.UPD_USR_No,
+            CompNo: v.CompNo,
+          });
 
-          this.tableData.set(res.Data?.Details.map(d => ({
+          this.tableData.set(v?.Details.map(d => ({
             ...d,
             AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
             AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-            AccName: this.service.accNoMap.get(String(d.AccNo))?.AccCName,
-            DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
+            AccName: d.AccName ?? this.service.accNoMap.get(String(d.AccNo))?.AccCName,
+            DetailName: d.DetailName ?? this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
               ?? this.service.usrMap.get(String(d.DetailNo))?.label,
-            displayIndex: d.SerNo,
+            displayIndex: d.SerNo / 10 - 1,
           })));
+
+          this.logger.debug(`loading detail:`, [v, this.dataForm.getRawValue(), this.tableData()]);
         })
       ).subscribe();
     }
