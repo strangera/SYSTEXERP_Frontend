@@ -161,7 +161,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   opendisc_Detail: TALPORDERD_OPENDisc[] = [];
   //欄位資訊
   TALPORDERD_OPENDisc_Detail_Columns: ColumnDef[] = [
-    { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true }, // 不用顯示 內容與主檔案一致 *
+    // { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true }, // 不用顯示 內容與主檔案一致 *
     { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 抽成類別(0-9) *
     //---要使用的---
     // [專櫃編號] 帶出 下面這坨
@@ -253,11 +253,15 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       return;
     }
 
+    //檢核明細檔talent_id不能有0
+    if(this.opendisc_Detail.some(item => item.talent_id === 0)){
+      this.messageService.errorBubble('專櫃合約不可空白');
+      this.messageService.unblockUi();
+      return;
+    }
+
     // 明細送出的pod全部都用主檔的pod_no (新增是後端自動新增流水號)
     const mainPodNo = this.dataForm.get('pod_no')?.value;
-
-    // console.log('原始明細資料',this.opendisc_Detail);
-
     const processedDetail = this.opendisc_Detail.map(item => {
       const cleaned = Object.fromEntries(
         Object.entries(item).filter(([key, _]) => key !== '')
@@ -284,31 +288,31 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         if (this.canAdd()) {
           // console.log('insert', body);
           console.log('insert', JSON.stringify(body, null, 2));
-          this.tls29010Service.insertTLS29010(body).subscribe(() => {
-            this.messageService.successBubble('新增成功');
+          // this.tls29010Service.insertTLS29010(body).subscribe(() => {
+          //   this.messageService.successBubble('新增成功');
 
-            // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
-            const keepValues = {
-              str_no: this.dataForm.get('str_no')?.value,
-              pod_type: this.dataForm.get('pod_type')?.value,
-              pod_status: this.dataForm.get('pod_status')?.value,
-            };
+          //   // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
+          //   const keepValues = {
+          //     str_no: this.dataForm.get('str_no')?.value,
+          //     pod_type: this.dataForm.get('pod_type')?.value,
+          //     pod_status: this.dataForm.get('pod_status')?.value,
+          //   };
 
-            // reset 其他欄位
-            this.dataForm.reset();
+          //   // reset 其他欄位
+          //   this.dataForm.reset();
 
-            // 把保留欄位的值重新設回去
-            this.dataForm.patchValue(keepValues);
-          });
+          //   // 把保留欄位的值重新設回去
+          //   this.dataForm.patchValue(keepValues);
+          // });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update:', JSON.stringify(body, null, 2));
-          this.tls29010Service.updateTLS29010(body).subscribe(() => {
-            // this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
-          });
+          // this.tls29010Service.updateTLS29010(body).subscribe(() => {
+          //   // this.messageService.successBubble('更新成功');
+          //   this.onCancel(); // 儲存後，會返回列表
+          // });
         }
         break;
     }
@@ -419,46 +423,61 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     if (newData?.tlt_no) {
       console.log('寫入專櫃編號', newData.tlt_no);
 
-      try {
-        const res = await this.tls29010Service
-          .queryTLTTALENT_Data({ tlt_no: newData.tlt_no }).pipe(untilDestroyed(this))
-          .toPromise();
+      // try {
+      //   const res = await this.tls29010Service
+      //     .queryTLTTALENT_Data({ tlt_no: newData.tlt_no }).pipe(untilDestroyed(this))
+      //     .toPromise();
 
-        if (res.Status === '0000' && res.Data?.length) {
-          const apiData = res.Data[0];
+      //   if (res.Status === '0000' && res.Data?.length) {
+      //     const apiData = res.Data[0];
 
-          // 更新 newData
-          // newData.tlt_id = apiData.tlt_id;
-          newData.tlt_no = apiData.tlt_no;
-          newData.tlt_name = apiData.tlt_name;
-          newData.apply_no = apiData.apply_no;
-          newData.tlt_term_type = apiData.tlt_term_type;
-          newData.tlt_bdate = apiData.tlt_bdate;
-          newData.tlt_edate = apiData.tlt_edate;
-          newData.cag_charge_rate = apiData.cag_charge_rate;
+      //     // 更新 newData (這邊之後都要改)
+      //     newData.tlt_id = 0;
+      //     newData.tlt_no = apiData.tlt_no;
+      //     newData.tlt_name = apiData.tlt_name;
+      //     newData.apply_no = apiData.apply_no;
+      //     newData.tlt_term_type = apiData.tlt_term_type;
+      //     newData.tlt_bdate = apiData.tlt_bdate;
+      //     newData.tlt_edate = apiData.tlt_edate;
+      //     newData.cag_charge_rate = apiData.cag_charge_rate;
 
-          console.log('合約明細', apiData);
+      //     console.log('合約明細', apiData);
 
-          // 做狀態判斷與更新
-          this.tls29010DetailService.handleRowSave({ oldData, newData });
-        } else {
-          this.messageService.errorBubble('找不到對應的合約資料，移除該筆明細');
-          const index = this.opendisc_Detail.indexOf(newData);
-          if (index > -1) {
-            this.opendisc_Detail.splice(index, 1);
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      }
+      //     // api還沒好，先用預設新資料
+
+
+      //     // 做狀態判斷與更新
+      //     this.tls29010DetailService.handleRowSave({ oldData, newData });
+      //   } else {
+      //     this.messageService.errorBubble('找不到對應的合約資料，移除該筆明細');
+      //     const index = this.opendisc_Detail.indexOf(newData);
+      //     if (index > -1) {
+      //       this.opendisc_Detail.splice(index, 1);
+      //     }
+      //   }
+      //     // 做狀態判斷與更新
+      //     this.tls29010DetailService.handleRowSave({ oldData, newData });
+      // } catch (err) {
+      //   console.error(err);
+      // }
+
+      // 更新 newData (這邊之後都要改)
+      newData.talent_id = 0;
+      newData.tlt_id = 12345;
+      newData.tlt_no = '000123';
+      newData.tlt_name = '新專櫃名稱';
+      newData.apply_no = 'APPLY_NO';
+      newData.tlt_term_type = 'TERM_TYPE';
+      newData.tlt_bdate = '2025-01-01';
+      newData.tlt_edate = '2025-12-31';
+      newData.cag_charge_rate = 0.1;
+
+
+      // api還沒好，先用預設新資料
+      console.log('api還沒好，先用預設新資料', newData);
     } else {
       // 沒有 talent_id 直接進行狀態判斷
       this.tls29010DetailService.handleRowSave(event);
-    }
-
-    //不允許talent_id 有'0'的存在
-    if(this.opendisc_Detail.some(item => item.talent_id === 0)){
-      this.messageService.errorBubble('請確實輸入合約編號');
     }
   }
 
