@@ -370,6 +370,14 @@ export class DropDownListService {
   queryPLULOGO_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPLULOGO_DropDownList`, {});
   }
+  // 查詢 CPM13050 店家名稱(PK6001D) 下拉選單
+  queryCPM13050_ShopNameDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCPM13050_shop_nameDropDownList`, {});
+  }
+  // 查詢 CPM13050 折扣名稱(PK68001D) 下拉選單
+  queryCPM13050_RuleNameDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>( `${this.apiUrl}/queryCPM13050_rule_nameDropDownList`,{});
+  }
 
   // 查詢品牌代碼(PLULOGO)資料表下拉選單 (包含 PLU_OrderPrcRate)
   queryPLULOGO_OrderPrcRate_DropDownList(): Observable<ApiResponse<IPLULOGOOrderPrcRateItem[]>> {
@@ -494,9 +502,10 @@ export class DropDownListService {
   queryTLS42010DropDownList(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
-  queryTLS42010FuncDropDownList(): Observable<any> {const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
-  const body = { KB_Func: [] }; return this.http.post<any>(url, body);
-}
+  queryTLS42010FuncDropDownList(): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
+    const body = { KB_Func: [] }; return this.http.post<any>(url, body);
+  }
 
 
   // 載入活動清單 (TALPORDERM)

@@ -1,63 +1,206 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ButtonModule } from 'primeng/button';
+import { Cpm13060Service } from '@service/api/cpm/cpm13060.service';
+import { NgStyle, DatePipe } from '@angular/common';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
-//5.1.3.5  專櫃停車費折抵設定作業
 @Component({
   selector: 'app-cpm13060',
   templateUrl: './cpm13060.component.html',
-  styleUrl: './cpm13060.component.scss',
+  styleUrls: ['./cpm13060.component.scss'],
   standalone: true,
-  imports: [DropdownComponent, CalendarRangeQuickComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TableComponent, TranslateModule]
+  imports: [
+    ButtonModule,
+    TableReportComponent,
+    CalendarRangeQuickComponent,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+  ],
+  providers: [DatePipe]
 })
-
 export class CPM13060Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [""],  // 交易日期
-    TXN_DateEnd: [""],  // 交易日期
-    ...createPaginationConfig([{ field: 'PKNG_SeqNo', order: 1 }]), // 預設依序號排序
-
+    TXN_BDATE: [new Date(), [Validators.required]],
+    TXN_EDATE: [new Date(), [Validators.required]],
+    ...createPaginationConfig([{ field: 'building_desc', order: 1 }]),
   });
+
   totalRecords = 0;
-
   data: any[] = [];
-  columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'floor_desc', header: '樓層', visible: true },
-    { field: 'ECR_SubGroup', header: '繳費機編號', visible: true },
-    { field: 'PKG_disc_rule_name', header: '折扣規則', visible: true },
-    { field: 'Total_Fee', header: '金額', visible: true },
-    { field: 'Total_Time', header: '時數', visible: true },
-    { field: 'count', header: '筆數', visible: true },
+  footerData: any = {}; // 對應 SumData
+  subTotalData: any[] = [];
+  groupRowsBy = 'ECR_No';
+  historyRequestBody: any = null;
+  btnLoading = false;
+  btnLoading2 = false;
 
+  columns: ReportColumn[] = [
+    { field: 'building_desc', header: '館別', visible: true, showSort: true },
+    { field: 'floor_desc', header: '樓層', visible: true, showSort: true },
+    { field: 'ECR_No', header: '繳費機編號', visible: true, showSort: true },
+    { field: 'ECR_SubGroup', header: '區域', visible: true, showSort: true },
+    { field: 'PKG_disc_rule_name', header: '折扣規則', visible: true, showSort: true },
+    { field: 'Total_Fee', header: '金額', visible: true, showSort: true, align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'Total_Time', header: '時數', visible: true, showSort: true, align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'CNT', header: '筆數', visible: true, showSort: true, align: 'right', format: formatAmount, isSubTotal: true },
   ];
-  constructor(
 
+  constructor(
+    public readonly cpm13060Service: Cpm13060Service,
+    private datePipe: DatePipe,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
     this.initializePage('CPM13060', '/CPM/CPM13060cru', this.queryForm, (frm) => this.onSubmit(frm));
   }
-
-
-
-  // 表單提交邏輯 (查詢)
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
+      const formValue = frm.value;
+      const requestBody = {
+        PageSize: 30,
+        PageIndex: 1,
+        OrderBy: '',
+        Offset: 0,
+        SortBy: [{ field: 'building_desc', order: 1 }],
+        TXN_BDATE: formValue.TXN_BDATE
+          ? this.datePipe.transform(formValue.TXN_BDATE, 'yyyy-MM-dd')!
+          : undefined,
+        TXN_EDATE: formValue.TXN_EDATE
+          ? this.datePipe.transform(formValue.TXN_EDATE, 'yyyy-MM-dd')!
+          : undefined,
+      };
 
+      this.loading = true;
+      this.historyRequestBody = requestBody;
+
+      this.cpm13060Service
+        .queryCPM13060(requestBody)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res?.Data?.Datas?.length > 0) {
+              this.data = res.Data.Datas;
+              this.footerData = res.Data.SumData ?? {};
+              this.subTotalData = res.Data.DetailSumData ?? [];
+              this.totalRecords = res.TotalCount ?? this.data.length;
+              this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            } else {
+              this.data = [];
+              this.footerData = {};
+              this.subTotalData = [];
+              this.totalRecords = 0;
+              this.messageService.warnBubble(res?.Message || '查無資料。');
+            }
+          },
+          error: (err) => {
+            console.error('查詢錯誤:', err);
+            this.loading = false;
+          },
+        });
     });
   }
+  /** 匯出 PDF */
+  onExportPDF(): void {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢再匯出。');
+      return;
+    }
 
+    this.btnLoading = true;
+    this.cpm13060Service
+      .exportCPM13060PDF(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (res) => {
+          const blob = res.body; // HttpResponse<Blob>，取出 body
+          if (!blob || blob.size === 0) {
+            this.messageService.warnBubble('無可匯出的資料。');
+            return;
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `APS停車抵扣報表_${new Date().toISOString().slice(0, 10)}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        },
+        error: (err) => {
+          console.error('PDF 匯出失敗:', err);
+          this.messageService.warnBubble('PDF 匯出失敗。');
+        },
+      });
+  }
+
+  /** 匯出 Excel */
+  onExportExcel(): void {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢再匯出。');
+      return;
+    }
+
+    this.btnLoading = true;
+    this.cpm13060Service
+      .exportCPM13060(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (!blob || blob.size === 0) {
+            this.messageService.warnBubble('無可匯出的資料。');
+            return;
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `APS停車抵扣報表_${new Date().toISOString().slice(0, 10)}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        },
+        error: (err) => {
+          console.error('Excel 匯出失敗:', err);
+          this.messageService.warnBubble('Excel 匯出失敗。');
+        },
+      });
+  }
+
+
+
+  /** 通用下載方法 */
+  private downloadFile(blob: Blob, filename: string): void {
+    if (!blob || blob.size === 0) {
+      this.messageService.warnBubble('無可匯出的資料。');
+      return;
+    }
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
 }
