@@ -1,4 +1,4 @@
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BusSClass, DropDownListService, IDropdownItem, ITLTBUSSCLASSRequest } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -163,7 +163,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
             const groupKey = currentItem.bus_type || '';
             if (!accumulator[groupKey]) {
               accumulator[groupKey] = {
-                label: currentItem.bus_type_name,
+                label: `${currentItem.bus_type} - ${currentItem.bus_type_name}`, // <-- 修正這裡！
                 items: []
               };
             }
@@ -191,88 +191,130 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     // 監聽中分類變化，獲取小分類並分組
     this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
       map(selectedMValues => selectedMValues || []),
-      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      // 使用 switchMap 取消前一次的請求，並處理 API 呼叫
       switchMap((selectedMValues: IDropdownItem[]) => {
         if (selectedMValues.length === 0) {
           this.bus_sclass_Option = [];
           this.queryForm.controls.bus_sclass.setValue([]);
-          return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
+          return of(null); // 如果沒有選取任何中分類，回傳 null
         }
-        const requests = [];
-        // 根據選取的中分類，為每一個中分類組建一個 API 請求
-        for (const mValue of selectedMValues) {
-          if (mValue && mValue.bus_type) {
-            requests.push(
-              this.dropDownListService.queryTLTBUSSCLASS_DropDownList({ bus_type: [mValue.bus_type], bus_class: [mValue.No] }).pipe(
-                map(res => ({
-                  LNo: mValue.bus_type,
-                  LName: mValue.bus_type_name,
-                  MNo: mValue.No,
-                  MName: mValue.Name,
-                  Data: res.Data
-                }))
-              )
-            );
-          }
-        }
-        return forkJoin(requests);
-      })).subscribe(results => {
-        // 處理合併和分組的邏輯
-        const groupedData = results.reduce((accumulator, group) => {
-          const groupKey = `${group.LNo}_${group.MNo}`;
 
-          if (!accumulator[groupKey]) {
-            accumulator[groupKey] = {
-              label: `${group.LName} - ${group.MName}`,
-              items: []
-            };
-          }
-
-          const newItems = group.Data.map(item => ({
-            ...item,
-            label: `${item.No} - ${item.Name}`,
-            bus_type: group.LNo,
-            bus_type_name: group.LName,
-            CAT_MNo: group.MNo,
-            CAT_MName: group.MName
+        // 1. 組建成 ITLTBUSSCLASSRequest 結構
+        const queryTLTBUSSCLASSInfos = selectedMValues
+          .filter(mValue => mValue.bus_type && mValue.No) // 確保有必要的代碼
+          .map(mValue => ({
+            // 這裡 bus_type 和 bus_class 必須是單一字串
+            bus_type: mValue.bus_type!, // 大分類代碼 (單一字串)
+            bus_class: mValue.No,     // 中分類代碼 (單一字串)
           }));
-          const existingItems = accumulator[groupKey].items;
-          const allItems = [...existingItems, ...newItems];
 
-          const uniqueItemsMap = new Map();
-          allItems.forEach(item => {
-            // 使用 No 作為鍵來去重
-            if (!uniqueItemsMap.has(item.No)) {
-              uniqueItemsMap.set(item.No, item);
-            }
-          });
+        if (queryTLTBUSSCLASSInfos.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.bus_sclass.setValue([]);
+          return of(null);
+        }
 
-          accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+        // 2. 準備 API 請求的 Payload
+        const payload: ITLTBUSSCLASSRequest = { queryTLTBUSSCLASSInfos };
 
-          return accumulator;
-        }, {} as Record<string, any>);
+        // 3. 呼叫 API，並將中分類的完整資訊 (用於分組標籤) 附加到 stream
+        // 我們只需要 selectedMValues 的子集，用於後續的分組標籤
+        const busClassGroupInfo = selectedMValues
+          .filter(mValue => mValue.bus_type && mValue.No);
 
-        this.bus_sclass_Option = Object.values(groupedData);
-      });
+        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList(payload).pipe(
+          map(res => ({
+            data: res.Data,
+            busClassGroupInfo: busClassGroupInfo
+          }))
+        );
+      })
+    ).subscribe(results => {
+      // 檢查結果是否為 null 或沒有資料
+      if (!results || !results.data || results.data.length === 0) {
+        this.bus_sclass_Option = [];
+        return;
+      }
+
+      // 處理合併和分組的邏輯
+      const groupedData = results.data.reduce((accumulator, item: BusSClass) => {
+        // 使用 大分類代碼 + 中分類代碼 作為群組鍵，確保唯一性
+        const groupKey = `${item.bus_type}_${item.bus_class}`;
+
+        if (!accumulator[groupKey]) {
+          // 找到對應的中分類 IDropdownItem 來獲取其名稱
+          const selectedClass = results.busClassGroupInfo.find(
+            info => info.bus_type === item.bus_type && info.No === item.bus_class
+          );
+
+          // 取得名稱：大分類名稱 (bus_type_name) - 中分類名稱 (bus_class_name)
+          const busTypeName = selectedClass?.bus_type_name || item.bus_type;
+          const busClassName = selectedClass?.Name || item.bus_class_name;
+
+          const groupLabel = `${busTypeName} - ${busClassName}`;
+
+          accumulator[groupKey] = {
+            label: groupLabel, // <-- 群組標籤：大分類名稱 - 中分類名稱
+            items: []
+          };
+        }
+
+        // 小分類項目標籤：No - Name
+        accumulator[groupKey].items.push({
+          ...item,
+          label: `${item.No} - ${item.Name}`, // <-- 小分類項目標籤：代碼 - 名稱
+        });
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+    });
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
   }
   footerData: any;
   onSubmit(frm: FormGroup) {
-    this.loading = true; // 在這裡設置 loading
     this.handleSubmit(frm, () => {
-      // 1. 處理請求參數
+
+      // 1. 映射 bus_class：[ [大代碼, 中代碼], [大代碼, 中代碼], ... ]
+      const busClassList = frm.getRawValue().bus_class.map((item: IDropdownItem) => [item.bus_type!, item.No]);
+
+      // 2. 映射 bus_sclass：[ [大代碼, 中代碼, 小代碼], ... ]
+      const busSClassList = frm.getRawValue().bus_sclass.map((item: IDropdownItem & BusSClass) => [item.bus_type!, item.bus_class!, item.No]);
+
+
+      // 3. 檢查並決定最終傳遞的 bus_class 值
+      // 如果有值，則為 [ [代碼組合], [代碼組合], ... ] (二層陣列)
+      // 範例：[ ["10","00"], ["10","03"] ]
+      const finalBusClass = (busClassList.length > 0) ? busClassList : []; // 移除額外的 [[]] 包裝
+
+      // 4. 檢查並決定最終傳遞的 bus_sclass 值
+      // 範例：[ ["10","00","01"], ["10","03","01"], ... ]
+      const finalBusSClass = (busSClassList.length > 0) ? busSClassList : []; // 移除額外的 [[]] 包裝
+
       const formValue = {
         ...frm.getRawValue(),
-        // 修正：bus_class / bus_sclass 應該是 List<string>，如果 item.No 是字串或字串陣列，則需要確認
-        // 假設 IDropdownItem 的 .No 是單一值
-        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-        bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+
+        // 應用新的空值處理邏輯和層次修正
+        bus_class: finalBusClass,
+        bus_sclass: finalBusSClass,
+
+        // 其他欄位保持不變
+        tlt_building: (frm.getRawValue().tlt_building || []).map((item: IDropdownItem) => item.No),
+        tlt_floor: (frm.getRawValue().tlt_floor || []).map((item: IDropdownItem) => item.No),
+        area_no: (frm.getRawValue().area_no || []).map((item: IDropdownItem) => item.No),
+
+        tlt_kind: (frm.getRawValue().tlt_kind || []).map((item: IDropdownItem) => item.value),
+        tlt_term_type: (frm.getRawValue().tlt_term_type || []).map((item: IDropdownItem) => item.value),
+        org_id: (frm.getRawValue().org_id || []).map((item: IDropdownItem) => item.No),
+
+        // 其他單值欄位
         TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
       } as TLS31010Request;
 
-      // 2. 呼叫 API 並處理回傳數據
+      // ... (呼叫 API 及其餘邏輯保持不變)
       this.tls31010Service.queryTLS31010(formValue)
         .pipe(
           finalize(() => this.loading = false),
@@ -281,13 +323,8 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
         .subscribe(res => {
           this.data = res.Data.QueryData;
           this.totalRecords = res.TotalCount;
-
-          // 3. 處理 footerData 的映射和轉換
           const mappedFooter = mapTotalDataToQueryData(res.Data.TotalData);
-
-          // 4. 將單一物件放入陣列中，以符合 Table Component 的列表輸入
           this.footerData = [mappedFooter];
-
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });

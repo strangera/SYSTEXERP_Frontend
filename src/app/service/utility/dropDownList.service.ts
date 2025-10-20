@@ -81,8 +81,10 @@ export interface ITLTBUSCLASSRequest {
 }
 
 export interface ITLTBUSSCLASSRequest {
-  bus_type: string[];
-  bus_class: string[];
+  queryTLTBUSSCLASSInfos: {
+    bus_type: string,
+    bus_class: string
+  }[]
 }
 
 // 小分類組成['大'+'中'] -- 新版api
@@ -253,8 +255,8 @@ export class DropDownListService {
   }
 
   // 查詢TLTBUSSCLASS資料表 (小分類)
-  queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
+  queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<BusSClass[]>> {
+    return this.http.post<ApiResponse<BusSClass[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
   }
 
   // 查詢TLTBUSSCLASS資料表 (小分類) -- 新版api測試
