@@ -55,16 +55,18 @@ export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'D
  * NoteDesc: 摘要
  */
 export interface FIN53010Detail {
-  id: number;
-  SerNo: number;
-  AccDC: string;
-  AccNo: string;
   AccAmt: number;
-  ORG_ID: string;
+  AccDC: string;
+  AccName: string;
+  AccNo: string;
+  DetailName: string;
   DetailNo: string;
-  SubDetailNo: string;
   NoteDesc: string;
+  ORG_ID: string;
+  SerNo: number;
+  SubDetailNo: string;
   clearingCode?: string;
+  id: number;
 }
 
 /**
@@ -76,8 +78,6 @@ export interface FIN53010Detail {
  * displayIndex: 顯示用索引值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
-  AccName?: string;
-  DetailName?: string;
   AccAmtD?: number;
   AccAmtC?: number;
   displayIndex?: number;

@@ -212,6 +212,7 @@ export class FIN53010Service {
     return !this.usrList().length
       ? this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
         take(1),
+        // map(res => res?.filter(item => !RegExp(/^[0-9]/).test(item['value']))),
         map(res => res!.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option))),
         tap(res => this.usrList.set(res ?? [])),
         finalize(() => {
