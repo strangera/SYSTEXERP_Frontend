@@ -126,7 +126,7 @@ export class Tls24010Pos5007Component implements OnChanges {
       TXN_Disc: 0,
       TXN_SaleAmt: 0,
       tlt_id: this.tlt_idOptions[0]?.tlt_id,
-      PLU_TaxType: this.tlt_idOptions[0]?.cag_taxtype,
+      PLU_TaxType: this.tlt_idOptions[0]?.cag_taxtype ?? '0',
       TXN_DiscCode: this.tlt_idOptions[0]?.cag_barcode,
       TXN_DiscCode_Name: this.tlt_idOptions[0]?.cag_barcode_name
     });

@@ -2,7 +2,7 @@
 
 import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-
+import { AuthService } from '@service/system/auth.service';
 /**
  * TLS13010 表單初始化服務
  * 負責處理表單的預設值設定和初始化邏輯
@@ -11,7 +11,7 @@ import { FormGroup } from '@angular/forms';
   providedIn: 'root'
 })
 export class TLS13010FormInitService {
-
+  constructor(private authService: AuthService) { }
   /**
    * 取得表單預設值
    * @returns 包含所有預設值的物件
@@ -72,8 +72,8 @@ export class TLS13010FormInitService {
       contact_Date: '',
       tlt_contract_bdate: '',
       tlt_contract_edate: '',
-      feedback_date: '',
-      due_date: '',
+      feedback_date: getTodayDate(),
+      due_date: getTodayDate(15),
       contact_USR_No: '',
       contact_USR_Name: '',
       email: '',
@@ -265,4 +265,51 @@ export class TLS13010FormInitService {
 
     console.log(' 新增模式特定值已設定');
   }
+
+  /**
+   * 自動設定當前登入使用者為洽談者到表單
+   * @param formGroup 要設定值的表單群組
+   */
+  setCurrentUserAsNegotiator(formGroup: FormGroup): void {
+    const currentUser = this.authService.currentUserValue;
+
+    if (!currentUser) {
+      console.warn('⚠️ [FormInitService] 無法取得當前使用者資訊，無法自動設定洽談者');
+      return;
+    }
+
+    // 取得當前表單上的欄位，避免覆蓋已載入的舊資料 (雖然Component會控制只在新增時呼叫，但Service內也做檢查更安全)
+    const contactUsrNoControl = formGroup.get('contact_USR_No');
+
+    // 只有當 contact_USR_No 是空值時，才進行設定 (確保不會覆蓋編輯模式的資料)
+    if (contactUsrNoControl && !contactUsrNoControl.value) {
+
+      console.log('👤 [FormInitService] 自動設定當前使用者為洽談者:', {
+        編號: currentUser.user_No,
+        姓名: currentUser.user_Name
+      });
+
+      // 設定洽談者欄位
+      formGroup.patchValue({
+        contact_USR_No: currentUser.user_No,
+        contact_USR_Name: currentUser.user_Name,
+        // contact_Date: new Date() // 如果需要設定洽談日期為今天
+      }, { emitEvent: false });
+
+      // 標記為已觸碰(顯示驗證樣式)
+      contactUsrNoControl.markAsTouched();
+      formGroup.get('contact_USR_Name')?.markAsTouched();
+
+    } else if (contactUsrNoControl && contactUsrNoControl.value) {
+      // console.log('✅ [FormInitService] 洽談者欄位已有值，跳過自動設定。');
+    } else {
+      console.warn('⚠️ [FormInitService] 表單中找不到 contact_USR_No 欄位。');
+    }
+  }
+}
+
+export function getTodayDate(daysToAdd = 0): string {
+  const today = new Date();
+  today.setDate(today.getDate() + daysToAdd); // 加上指定的天數
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 }

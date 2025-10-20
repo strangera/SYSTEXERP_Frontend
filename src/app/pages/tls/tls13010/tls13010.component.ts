@@ -103,6 +103,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_no: [, [Validators.maxLength(50)]],
     bus_typeList: [[]],
     ven_no: [, [Validators.maxLength(50)]],
+    vendor_ven_no: [, [Validators.maxLength(16)]],
     ven_uniformList: [[]],
     paper_typeList: [[]],
 
