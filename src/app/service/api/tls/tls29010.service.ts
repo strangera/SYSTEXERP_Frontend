@@ -47,6 +47,11 @@ export class Tls29010Service {
   }
 
   // ---20251017 SA新增需求---
+  // 查詢 TLTTALENT 資料表，作為明細下拉選單
+  queryTLTTALENT_Data(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_Data`, body);
+  }
+
   // 核准 主檔
   apprTLS29010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/apprTLS29010`, body);
