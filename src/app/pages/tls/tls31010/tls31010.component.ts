@@ -9,17 +9,17 @@ import { TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, ColumnGroup, createPaginationConfig, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { TLS31010QueryData, TLS31010Request, Tls31010Service } from '@service/api/tls/tls31010.service';
+import { debounceTime, finalize, forkJoin, map, of, switchMap } from 'rxjs';
+import { TLS31010QueryData, TLS31010Request, Tls31010Service, TLS31010TotalData } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
 import { formatDate } from '@angular/common';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 @Component({
   selector: 'app-tls31010',
@@ -35,10 +35,10 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
     TableModule,
     RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
     ButtonModule,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    CustomFooterTableComponent
   ]
 })
 
@@ -60,25 +60,52 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
   });
   totalRecords = 0;
   data: TLS31010QueryData[] = [];
+  // 假設 formatAmount 和 formatPercentage 已經被定義和引入
+
   columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
+    { header: '總計', field: 'group_name', hidden: true },
+    // --- 不需要總計或為文字描述的欄位 ---
+    { field: 'building_desc', header: '館別', visible: true }, // '總計' 或 'Total'
     { field: 'org_name', header: '組織名稱', visible: true },
     { field: 'tlt_kind', header: '櫃別', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'location_no', header: '位置編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
+
+    // --- 需要總計的欄位 (對應 TLS31010TotalData) ---
+    // 總預算 (TotalBudget) -> budget
+    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, isTotal: true },
+
+    // 總銷售額 (TotalSales) -> AVN_TotSaleAmt
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, isTotal: true },
+
+    // 平均達成率 (AvgAchievementRate) -> AchievementRate
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), isTotal: true },
+
+    // 佔比通常不需要顯示總計，或總計為 100%，但在這裡沒有 TotalData 的總佔比，故保持
     { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
     { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+
+    // 總交易筆數 (TotalTxnCount) -> TxnCount
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, isTotal: true },
+
+    // 平均客單價 (AvgTicket) -> AvgTicket
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, isTotal: true },
+
+    // 總坪數 (TotalSpace) -> tlt_space
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', isTotal: true },
+
+    // 平均坪效 (AvgPSM) -> MonthlyPSM
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space', isTotal: true },
+
+    // 月總預算 (TotalMonthlyBudget) -> MonthlyBudgetTotal
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount, isTotal: true },
+
+    // 月總銷售 (TotalMonthlySales) -> MonthlySalesTotal
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount, isTotal: true },
+
+    // 平均完成率 (AvgCompletionRate) -> CompletionRate
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2), isTotal: true },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -231,20 +258,39 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
   }
+  footerData: any;
   onSubmit(frm: FormGroup) {
+    this.loading = true; // 在這裡設置 loading
     this.handleSubmit(frm, () => {
+      // 1. 處理請求參數
       const formValue = {
         ...frm.getRawValue(),
+        // 修正：bus_class / bus_sclass 應該是 List<string>，如果 item.No 是字串或字串陣列，則需要確認
+        // 假設 IDropdownItem 的 .No 是單一值
         bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
         bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
         TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
       } as TLS31010Request;
-      this.tls31010Service.queryTLS31010(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data.QueryData;
-        this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      })
-    })
+
+      // 2. 呼叫 API 並處理回傳數據
+      this.tls31010Service.queryTLS31010(formValue)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(res => {
+          this.data = res.Data.QueryData;
+          this.totalRecords = res.TotalCount;
+
+          // 3. 處理 footerData 的映射和轉換
+          const mappedFooter = mapTotalDataToQueryData(res.Data.TotalData);
+
+          // 4. 將單一物件放入陣列中，以符合 Table Component 的列表輸入
+          this.footerData = [mappedFooter];
+
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
   btnLoading = false;
   onReport(frm: FormGroup) {
@@ -272,3 +318,29 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
       });
   }
 }
+const mapTotalDataToQueryData = (totalData: TLS31010TotalData): TLS31010QueryData => {
+  return {
+    // 固定的總計欄位
+    group_name: '總計',
+    building_desc: '總計', // 假設您想在第一欄顯示總計
+    org_name: '',
+    tlt_kind: '',
+    tlt_no: '',
+    location_no: '',
+    tlt_name: 'Total', // 或其他總計標識
+
+    // 映射數值欄位
+    budget: totalData.TotalBudget,
+    AVN_TotSaleAmt: totalData.TotalSales,
+    AchievementRate: totalData.AvgAchievementRate,
+    BudgetRate: 0, // 假設沒有對應值，設為 0 或 null
+    PerformanceRate: 0, // 假設沒有對應值
+    TxnCount: totalData.TotalTxnCount,
+    AvgTicket: totalData.AvgTicket,
+    tlt_space: totalData.TotalSpace,
+    MonthlyPSM: totalData.AvgPSM,
+    MonthlyBudgetTotal: totalData.TotalMonthlyBudget,
+    MonthlySalesTotal: totalData.TotalMonthlySales,
+    CompletionRate: totalData.AvgCompletionRate,
+  };
+};
