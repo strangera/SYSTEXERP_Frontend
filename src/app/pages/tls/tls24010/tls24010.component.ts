@@ -137,7 +137,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
                 const data = this.TLT_NoOptions.find(option => option.No === rowdata.TLT_No);
                 if (data?.store_way && data?.Name && data?.talent_id) {
                   rowdata.store_way = data.store_way;
-                  rowdata.TLT_Name = data?.Name;
                   rowdata.talent_id = data?.talent_id;
                 }
                 if (frm.get('TXN_GUIPaper')?.value === 'R') {
@@ -150,7 +149,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             }
           ]
         }
-        this.updateItems(frm);
+        this.updateItems();
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
@@ -200,16 +199,17 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         ...rowData,
         type,
         TXN_GUIPaper: this.queryStateService.getQueryStateValue(this.ProgNo)?.TXN_GUIPaper,
-      });
+      }, this.historyRequestBody);
     }
   }
   items: MenuItem[] = [];
-  updateItems(frm: FormGroup): void {
-    const store_way = frm.get('store_way')?.value;
+  updateItems(): void {
+    console.log(this.selectedRowData);
+
     this.items = [
       { label: '專櫃編號修正', icon: 'pi pi-id-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
-      { label: '折數修正', icon: 'pi pi-percentage', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },
-      { label: '抽成類別修正', icon: 'pi pi-tags', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
+      { label: '折數修正', icon: 'pi pi-percentage', disabled: this.selectedRowData?.store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },
+      { label: '抽成類別修正', icon: 'pi pi-tags', disabled: this.selectedRowData?.store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
       { label: '付款別修正', icon: 'pi pi-credit-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正) },
       { label: '是否為預售交易修正', icon: 'pi pi-shopping-cart', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
       { label: '交易資料作廢', icon: 'pi pi-trash', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
@@ -218,6 +218,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
 
   openModal(rowdata: TLS24010Data, event?: Event): void {
     this.selectedRowData = rowdata;
+    this.updateItems();
     if (this.menu && event) {
       this.menu.toggle(event);
     }
