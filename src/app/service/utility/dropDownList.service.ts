@@ -132,7 +132,7 @@ export interface IPOS2013Request {
 
 export interface POS2004Item {
   id?: number;
-  PLU_MagNo: string;
+  PLU_MagNo: string | POS2004Item;
   PLU_No: string;
   PLU_Name: string;
   PLU_SalePrc?: number,
@@ -494,9 +494,10 @@ export class DropDownListService {
   queryTLS42010DropDownList(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
-  queryTLS42010FuncDropDownList(): Observable<any> {const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
-  const body = { KB_Func: [] }; return this.http.post<any>(url, body);
-}
+  queryTLS42010FuncDropDownList(): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
+    const body = { KB_Func: [] }; return this.http.post<any>(url, body);
+  }
 
 
   // 載入活動清單 (TALPORDERM)
