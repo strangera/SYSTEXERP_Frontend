@@ -90,7 +90,7 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="TLS41010" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+  <app-table-report tableKey="TLS41010" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)" [pageSizeSetting]="'A0'"
     (edit)="onEdit($event)" [showCheckBox]="true" (selectionChange)="selectedItems = $event"
     [selectedItems]="selectedItems" [totalRecords]="totalRecords" [addButton]="addButton" [loading]="loading"
     [lastQueryBody]="lastQueryForm" [footerData]="footerTotal"
