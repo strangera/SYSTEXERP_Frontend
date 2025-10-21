@@ -9,174 +9,90 @@
       <!-- 日期時間與狀態 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="通告產生時間"
-            controlName="NOT_DateTime"
-            calendarType="dateTimeOne"
-            [control]="dataForm.controls.NOT_DateTime"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="通告產生時間" controlName="NOT_DateTime" calendarType="dateTimeOne"
+            [control]="dataForm.controls.NOT_DateTime" [submitted]="submitted"></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="有效開始日期"
-            controlName="NOT_BegDateTime"
-            calendarType="dateTimeOne"
-            [control]="dataForm.controls.NOT_BegDateTime"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="有效開始日期" controlName="NOT_BegDateTime" calendarType="dateTimeOne"
+            [control]="dataForm.controls.NOT_BegDateTime" [submitted]="submitted"></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="有效結束時間"
-            controlName="NOT_EndDateTime"
-            calendarType="dateTimeOne"
-            [control]="dataForm.controls.NOT_EndDateTime"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="有效結束時間" controlName="NOT_EndDateTime" calendarType="dateTimeOne"
+            [control]="dataForm.controls.NOT_EndDateTime" [submitted]="submitted"></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="通告狀態"
-            controlName="NOT_Status"
-            [options]="NOT_Status_Option"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.NOT_Status"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="通告狀態" controlName="NOT_Status" [options]="NOT_Status_Option" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.NOT_Status" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="通告備註"
-            controlName="NOT_Remark"
-            [control]="dataForm.controls.NOT_Remark"
-            [style]="{ height: '100px' }"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="通告備註" controlName="NOT_Remark" [control]="dataForm.controls.NOT_Remark"
+            [style]="{ height: '100px' }" [submitted]="submitted"></app-input-text>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="是否即時顯示"
-            groupname="NOT_DispRt"
-            [control]="dataForm.controls.NOT_DispRt"
-            [submitted]="submitted"
-            [options]="[
+          <app-radiobutton label="是否即時顯示" groupname="NOT_DispRt" [control]="dataForm.controls.NOT_DispRt"
+            [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]"
-            (valueChange)="dataForm.controls.NOT_DispRt.setValue($event)"
-          ></app-radiobutton>
+            ]" (valueChange)="dataForm.controls.NOT_DispRt.setValue($event)"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="暫停時是否顯示"
-            groupname="NOT_DispSpd"
-            [control]="dataForm.controls.NOT_DispSpd"
-            [submitted]="submitted"
-            [options]="[
+          <app-radiobutton label="暫停時是否顯示" groupname="NOT_DispSpd" [control]="dataForm.controls.NOT_DispSpd"
+            [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]"
-            (valueChange)="dataForm.controls.NOT_DispSpd.setValue($event)"
-          ></app-radiobutton>
+            ]" (valueChange)="dataForm.controls.NOT_DispSpd.setValue($event)"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="按下功能鍵是否顯示"
-            groupname="NOT_DispBtn"
-            [control]="dataForm.controls.NOT_DispBtn"
-            [submitted]="submitted"
-            [options]="[
+          <app-radiobutton label="按下功能鍵是否顯示" groupname="NOT_DispBtn" [control]="dataForm.controls.NOT_DispBtn"
+            [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]"
-            (valueChange)="dataForm.controls.NOT_DispBtn.setValue($event)"
-          ></app-radiobutton>
+            ]" (valueChange)="dataForm.controls.NOT_DispBtn.setValue($event)"></app-radiobutton>
         </div>
       </div>
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="客顯器是否顯示"
-            groupname="NOT_DispCd"
-            [control]="dataForm.controls.NOT_DispCd"
-            [submitted]="submitted"
-            [options]="[
+          <app-radiobutton label="客顯器是否顯示" groupname="NOT_DispCd" [control]="dataForm.controls.NOT_DispCd"
+            [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]"
-            (valueChange)="dataForm.controls.NOT_DispCd.setValue($event)"
-          ></app-radiobutton>
+            ]" (valueChange)="dataForm.controls.NOT_DispCd.setValue($event)"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="是否銷貨明細表列印"
-            groupname="NOT_Prn"
-            [control]="dataForm.controls.NOT_Prn"
-            [submitted]="submitted"
-            [options]="[
+          <app-radiobutton label="是否銷貨明細表列印" groupname="NOT_Prn" [control]="dataForm.controls.NOT_Prn"
+            [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]"
-            (valueChange)="dataForm.controls.NOT_Prn.setValue($event)"
-          ></app-radiobutton>
+            ]" (valueChange)="dataForm.controls.NOT_Prn.setValue($event)"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="是否限制播放條件"
-            groupname="NOT_DtlLimit"
-            [control]="dataForm.controls.NOT_DtlLimit"
-            [submitted]="submitted"
-            [options]="[
+          <app-radiobutton label="是否限制播放條件" groupname="NOT_DtlLimit" [control]="dataForm.controls.NOT_DtlLimit"
+            [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]"
-            (valueChange)="dataForm.controls.NOT_DtlLimit.setValue($event)"
-          ></app-radiobutton>
+            ]" (valueChange)="dataForm.controls.NOT_DtlLimit.setValue($event)"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-12">
-          <app-input-textarea
-            label="通告內容"
-            controlName="NOT_Desc"
-            [control]="dataForm.controls.NOT_Desc"
-            [style]="{ height: '100px' }"
-            [submitted]="submitted"
-          ></app-input-textarea>
+          <app-input-textarea label="通告內容" controlName="NOT_Desc" [control]="dataForm.controls.NOT_Desc"
+            [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
-        <app-table
-          #table
-          class="col-12"
-          dataKey="ID"
-          [columns]="columns"
-          [data]="data"
-          [showEdit]="false"
-          [showDetail]="false"
-          [showCheckBox]="true"
-          [showInsert]="true"
-          [showRowEdit]="true"
-          (selectionChange)="selectedRows = $event"
-          [selectedItems]="selectedRows"
-          [showCaption]="!isFormReadable"
-          [showManage]="!isFormReadable"
-          [showCheckBox]="!isFormReadable"
-          [insertRowData]="true"
-          (dataChange)="data = $event"
-          [showReportMode]="false"
-          dataStatusField="status"
-        ></app-table>
+        <app-table #table class="col-12" tableKey="tls41040Detail" dataKey="NOT_SeqNo" [columns]="columns" [data]="data" [showEdit]="false"
+          [showDetail]="false" [showCheckBox]="!isFormReadable" [showInsert]="true" [showRowEdit]="true"
+          (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showCaption]="!isFormReadable"
+          [showManage]="!isFormReadable" [insertRowData]="true" (dataChange)="data = $event"
+          [showReportMode]="false" dataStatusField="status" (delete)="onDelete($event)"></app-table>
         <!-- <app-table-edit
           tableKey="tls41040Detail"
           class="col-12"
@@ -189,9 +105,7 @@
           dataStatusField="status"
         ></app-table-edit> -->
       </div>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>

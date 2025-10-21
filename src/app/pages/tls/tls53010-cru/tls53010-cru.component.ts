@@ -186,8 +186,15 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     });
     // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
-      if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+      if (value && this.dialogQueryForm.controls.CAT_LNo.value) {
+        this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.dialogQueryForm.controls.CAT_LNo.value,
+              CAT_MNo: value
+            }
+          ]
+        }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
         });
         this.dialogQueryForm.controls.CAT_SNo.enable();

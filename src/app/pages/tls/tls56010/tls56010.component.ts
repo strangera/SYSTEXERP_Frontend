@@ -3,7 +3,7 @@ import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angula
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, IPOS20032Request } from '@service/utility/dropDownList.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -25,10 +25,6 @@ import { TableModule } from 'primeng/table';
 
 export interface IPOS20031Request {
   CAT_LNo: string[];
-}
-export interface IPOS20032Request {
-  CAT_LNo: string[];
-  CAT_MNo: string[];
 }
 interface IPLULOGOItem {
   No: string;
@@ -177,9 +173,13 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       const bigCode = this.queryForm.get('CAT_LNo')?.value;
       if (bigCode && midCode) {
         const params: IPOS20032Request = {
-          CAT_LNo: [bigCode],
-          CAT_MNo: [midCode]
-        };
+          CATList: [
+            {
+              CAT_LNo: bigCode,
+              CAT_MNo: midCode
+            }
+          ]
+        }
         this.dropDownListService.queryPOS20032_DropDownList(params).subscribe({
           next: (res) => {
             this.smallCategoryOptions = (res.Data ?? []).map(item => ({

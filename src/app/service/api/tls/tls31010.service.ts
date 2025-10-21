@@ -21,6 +21,7 @@ export interface TLS31010Request {
 }
 
 export interface TLS31010QueryData {
+  group_name?: string
   building_desc: string
   org_name: string
   tlt_kind: string

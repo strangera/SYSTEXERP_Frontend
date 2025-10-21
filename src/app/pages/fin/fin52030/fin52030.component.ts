@@ -11,7 +11,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { combineLatest, finalize } from 'rxjs';
 import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 
 @Component({
@@ -34,7 +34,7 @@ import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> implements OnInit {
   public readonly queryForm = this.formBuilder.group({
     TempNo: new FormControl<string | void>(void 0),
-    VouType: new FormControl<string | void>(void 0),
+    VouType: new FormControl<'1' | '2' | '3' | void>(void 0),
     TempName: new FormControl<string | void>(void 0),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
@@ -47,7 +47,7 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
     { field: 'TempName', header: '傳票代號' },
-    { field: 'VouType', header: '傳票類型', format: v => this.service.subpoenaTypeMap.get(v) ?? v },
+    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
     { field: 'DetailCount', header: '明細筆數' },
   ];
 
@@ -63,22 +63,16 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
 
-    this.service.getUsrList();
-
-    this.logger.debug(`init:`, [this.service.usrList()]);
+    this.loading = !0;
+    combineLatest([
+      this.service.getAccNoList(),
+      this.service.getUsrList(),
+    ]).pipe(finalize(() => this.loading = !1)).subscribe(res => this.logger.debug(`init:`, res));
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = <FIN52030Payload>{
-        ...this.queryForm.getRawValue(),
-        TempNo: String(this.qf().TempNo.value ?? ''),
-        VouType: String(this.qf().VouType.value ?? ''),
-        TempName: String(this.qf().TempName.value ?? ''),
-        CRT_USR_No: String(this.qf().CRT_USR_No.value ?? ''),
-        UPD_USR_No: String(this.qf().UPD_USR_No.value ?? ''),
-      };
-
+      const raw = this.queryForm.getRawValue() as FIN52030Payload;
       const payload = Object.keys(raw).reduce((acc, key) => {
         const v = raw[key as keyof typeof raw];
         if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
@@ -96,9 +90,5 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
       ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
-  }
-
-  public onClearForm(): void {
-    this.queryForm.reset();
   }
 }

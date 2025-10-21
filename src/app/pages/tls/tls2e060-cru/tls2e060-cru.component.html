@@ -8,14 +8,28 @@
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="調整單號" controlName="adj_no"
           [control]="dataForm.controls.adj_no" [submitted]="submitted"></app-input-text>
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="調整日期" controlName="sam_yyymm"
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="調整日期" controlName="adj_date"
+          [control]="dataForm.controls.adj_date" [submitted]="submitted"></app-calendar>
+      </div>
+      <div class="grid p-fluid">
+        <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="結帳年月" controlName="sam_yyymm"
           [control]="dataForm.controls.sam_yyymm" [submitted]="submitted"></app-calendar>
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="帳次" controlName="sam_termno"
-          [control]="dataForm.controls.sam_termno" [options]="sam_termnoOptions" optionLabel="label" optionValue="value"
-          [submitted]="submitted"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
-          [control]="dataForm.controls.tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
-          optionValue="talent_id" [submitted]="submitted"></app-dropdown>
+          [control]="dataForm.controls.tlt_no" [options]="tlt_noOptions" optionLabel="label" [submitted]="submitted"
+          (valueChange)="onTltNoChange($event)"></app-dropdown>
+      </div>
+      <div class=" grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="契約編號" controlName="contract_no"
+          [control]="dataForm.controls.contract_no" [submitted]="submitted"></app-input-text>
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="版次" controlName="contract_subno"
+          [control]="dataForm.controls.contract_subno" [submitted]="submitted"></app-input-number>
+      </div>
+      <div class="grid p-fluid">
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="調整稅別" controlName="adj_taxtype"
+          [control]="dataForm.controls.adj_taxtype" [options]="adj_taxtypeOptions" optionLabel="label"
+          optionValue="value" [submitted]="submitted"></app-dropdown>
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="調整金額" controlName="adj_amount"
+          [control]="dataForm.controls.adj_amount" [submitted]="submitted"></app-input-number>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

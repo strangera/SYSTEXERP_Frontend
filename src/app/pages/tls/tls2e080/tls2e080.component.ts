@@ -18,6 +18,7 @@ import { finalize, map } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
+import { Tls2e080TableReportComponent } from './tls2e080-table-report/tls2e080-table-report.component';
 
 // 2.2.14.8 專櫃對帳單
 @Component({
@@ -36,7 +37,8 @@ import { ButtonModule } from 'primeng/button';
     AsyncPipe,
     InputTextComponent,
     TableReportComponent,
-    ButtonModule
+    ButtonModule,
+    Tls2e080TableReportComponent
   ]
 })
 export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> implements OnInit {
@@ -44,7 +46,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     tlt_noList: [null], // 專櫃編號
     tlt_term_typeList: [null], // 抽成方式
     tlt_floorList: [null], // 樓層
-    sam_yyymm: [null, [Validators.required]], // 查詢年月
+    sam_yyymm: [new Date('2025-01'), [Validators.required]], // 查詢年月
     money_typeList: [null], //結帳方式
     sam_termnoList: [null], // 帳次
     tlt_buildingList: [null], // 館別
@@ -88,12 +90,9 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   }
   onSubmit(frm: FormGroup) {
     const formValue = frm.value;
-
-    // 確保 sam_yyymm 有值且為 Date 物件或有效字串
     let sam_yyymm_string = '';
     if (formValue.sam_yyymm) {
       const date = new Date(formValue.sam_yyymm);
-      // 格式化為 yyyy-MM
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       sam_yyymm_string = `${year}${month}`;
@@ -107,9 +106,9 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     }
     this.handleSubmit(frm, () => {
       this.tls2e080Service.queryTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.totalRecords = res.TotalCount || 0;
         this.data = res.Data
         this.historyRequestBody = body;
-        this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     })

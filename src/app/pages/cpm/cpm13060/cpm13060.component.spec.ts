@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TLS2G040Component } from './tls2g040.component';
+import { CPM13050Component } from './cpm13050.component';
 
-describe('TLS2G040Component', () => {
-  let component: TLS2G040Component;
-  let fixture: ComponentFixture<TLS2G040Component>;
+describe('CPM13050Component', () => {
+  let component: CPM13050Component;
+  let fixture: ComponentFixture<CPM13050Component>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TLS2G040Component]
+      imports: [CPM13050Component]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TLS2G040Component);
+    fixture = TestBed.createComponent(CPM13050Component);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

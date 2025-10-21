@@ -124,8 +124,15 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
     });
     // 監聽中分類變化
     this.queryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
-      if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.queryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+      if (value && this.queryForm.controls.CAT_LNo.value) {
+        this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.queryForm.controls.CAT_LNo.value,
+              CAT_MNo: value
+            }
+          ]
+        }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
         });
       }

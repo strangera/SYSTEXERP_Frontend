@@ -409,7 +409,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
 
   getGroupSubtotalValue(groupKey: string, field: string): number | string {
     if (!this.subTotalData?.length) return '';
-    const match = this.subTotalData.find(item => item.LOGO_CH_NAME === groupKey);
+    const match = this.subTotalData.find(item => item[this.groupRowsBy] === groupKey);
     return match ? (match[field as keyof typeof match] ?? 0) : 0;
   }
 

@@ -25,7 +25,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="傳票種類"
                       controlName="VouType"
-                      [options]="service.subpoenaTypes()"
+                      [options]="service.vouTypeOptions()"
                       optionLabel="label"
                       optionValue="value"
                       [showClear]="false"
@@ -63,8 +63,8 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [disabled]="!dataForm.valid || onEditing"
-                    [loading]="service.tableLoading"></app-button>
+                    [disabled]="!dataForm.valid || onEditing || !isBalanced()"
+                    [loading]="service.tableLoading()"></app-button>
       </div>
       }
     </form>
@@ -93,7 +93,7 @@
                    [rowEditCanSave]="rowEditCanSave"
                    [data]="tableData()"
                    [totalRecords]="totalRecords()"
-                   [loading]="service.tableLoading"
+                   [loading]="loading"
                    [dataKey]="'index'"
                    [tableKey]="'FIN52030_detail'"
                    [columns]="columns()"></app-table>
@@ -139,7 +139,7 @@
                [rows]="10"
                [showCurrentPageReport]="!0"
                currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆"
-               [loading]="service.venUsrLoading">
+               [loading]="service.venLoading() || service.usrLoading()">
         <ng-template pTemplate="header">
           <tr>
             <th>代號</th>
@@ -156,7 +156,8 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="2" class="text-center p-3">無符合條件的資料</td>
+            <td colspan="2"
+                class="text-center p-3">無符合條件的資料</td>
           </tr>
         </ng-template>
       </p-table>

@@ -17,6 +17,7 @@ import { FileSelectEvent } from 'primeng/fileupload';
 import { ActivatedRoute } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-table-report',
@@ -35,10 +36,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input({ required: true }) columns: ReportColumn[] = [];                              // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];                  // 用來儲存查詢結果
   @Input({ required: true }) queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
-  @Input() loading = false;
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
-  //
+  @Input() loading = false;
   @Input() apiUrl: string | undefined = undefined;
   @Input() showCheckBox = false;
   @Input() selectedItems: any = [];
@@ -91,22 +91,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() subTotalData: any;               // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Input() disabled = false;
-  // 展開
   // expansion 收合展開
-  /** 收合展開 欄位配置(expansion必需配置) @default [] */
   @Input() expansionColumns: ReportColumn[] = [];
-  /** 收合展開 資料key(expansion必需配置) @default 'details' */
   @Input() expansionDataKey = 'details';
-  /** 收合展開 排序欄位(單一排序) @default [{ field: this.expansionDataKey, order: 1 }] */
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
-  /** 屬性來接收父層傳來的載入函數 */
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
-  /** 收合展開 已展開資料 @default {} */
   expandedRows: Record<string, boolean> = {};
-  //
   private = true;            // 用來判斷是否為第一次載入
   virtualData: any = [];
-  isLoading = false;
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -115,47 +107,77 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     super();
     this.onScroll = this.onScroll.bind(this);
   }
-
   ngOnChanges(changes: SimpleChanges) {
-    // 第一次獲取data
-    if (changes['data'] && this.data !== undefined) {
-      console.log(this.data);
-
-      if (this.data.length > 0) {
-        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
-        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
-
-        if (this.data.length >= 30) {
-          this.virtualData = Array(this.data.length).fill(null);
-          setTimeout(() => {
-            this.virtualData.splice(0, this.data.length, ...this.data);
-          });
-        } else {
-          this.virtualData = [...this.data];
-        }
-      } else if (this.data.length === 0) {
-        this.virtualData = Array(0).fill(null);
-        this.totalRecords = 0;
-        this.groupTotals = {}; // 沒資料時也要清空小計
+    if (changes['data'] && this.data.length !== 0) {
+      this.virtualData = [];
+      this.dt.virtualScroll = false;
+      this.dt.scrollHeight = 'flex';
+      this.groupTotals = {}; // 清空小計，因為這是新的一組資料
+      this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+      this.cdr.detectChanges();
+      if (this.data.length < 30) {
+        this.virtualData = this.data;
+        this.dt.virtualScroll = false;
+        this.dt.scrollHeight = 'flex';
+      } else {
+        this.dt.virtualScroll = true;
+        this.dt.scrollHeight = '450px';
+        this.virtualData = Array.from({ length: this.data.length });
+        this.cdr.detectChanges();
+        this.virtualData = this.data;
       }
       this.selectedItems = [];
     }
   }
-
-  trackByFn(index: number, item: any) {
-    return this.dataKey && item?.[this.dataKey] || index;
+  loadMoreData() {
+    if (!this.queryFunction || !this.lastQueryBody) { return; }
+    const body = {
+      ...this.lastQueryBody,
+      pageIndex: Math.floor(this.data.length / 30) + 1,
+      pageSize: 30,
+    };
+    this.loading = true;
+    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      if (res && res.Data && res.Data.length > 0) {
+        this.virtualData = Array.from({ length: this.data.length + res.Data.length });
+        this.updateGroupTotals(res.Data);
+        this.cdr.detectChanges();
+        this.data = [...this.data, ...res.Data];
+        this.virtualData = this.data;
+        this.totalRecords = res.TotalCount || 0;
+      }
+    });
   }
-  // 分組欄位對齊
-  getGroupAlignClass(groupField: string): string {
-    const align = this.columnGroup?.find(g => g.field === groupField)?.align;
-    return align ? 'text-' + align : 'text-center';
-  }
-  // 分組標題
-  getGroupHeader(groupField: string): string {
-    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
+  onSort(event: any) {
+    if (event.multiSortMeta && event.multiSortMeta.length > 0) {
+      const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
+      this.dt.multiSortMeta = [lastSort];
+    }
+    if (!this.queryFunction || !this.lastQueryBody || this.data.length < 30) {
+      return;
+    }
+    const body = {
+      ...this.lastQueryBody,
+      pageIndex: 1, // 重新排序時，總是從第一頁開始
+      pageSize: 30,
+      SortBy: this.dt.multiSortMeta // 這裡現在只包含最新的單一排序
+    };
+    this.queryFunction(body).pipe(untilDestroyed(this)).subscribe(res => {
+      if (res && res.Data && res.Data.length > 0) {
+        this.virtualData = Array.from({ length: this.data.length + res.Data.length });
+        this.updateGroupTotals(res.Data);
+        this.cdr.detectChanges();
+        this.data = [...this.data, ...res.Data];
+        this.virtualData = this.data;
+        this.lastQueryBody = body;
+        this.totalRecords = res.TotalCount || 0;
+        this.groupTotals = {};
+        this.selectedItems = [];
+      }
+    });
   }
   onScroll(event: any) {
-    if (this.isLoading || this.data.length >= this.totalRecords || this.data.length < 30) {
+    if (this.data.length >= this.totalRecords || this.data.length < 30) {
       this.virtualData = [...this.data]
       return;
     }
@@ -170,86 +192,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     }
   }
-  isTotal = 0;
-  loadMoreData() {
-    if (!this.queryFunction || !this.lastQueryBody) {
-      return;
-    }
-    this.isLoading = true;
-    const body = {
-      ...this.lastQueryBody,
-      pageIndex: Math.floor(this.data.length / 30) + 1,
-      pageSize: 30,
-      SortBy: this.dt.multiSortMeta
-    };
-    this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
-      if (res && res.Data && res.Data.length > 0) {
-        this.updateGroupTotals(res.Data);
-        this.data = [...this.data, ...res.Data];
-        this.isTotal += this.data.reduce((a: number, b: any) => a + (b.STK_CURRENTQTY ?? 0), 0);
-        this.totalRecords = res.TotalCount; // 確保總筆數同步更新
-        this.virtualData = Array(this.data.length).fill(null);
-        setTimeout(() => {
-          this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-          this.dt.scrollHeight = '700px';
-          this.selectedItems = [...this.selectedItems]
-        })
-      }
-    });
+  trackByFn(index: number, item: any) {
+    return this.dataKey && item?.[this.dataKey] || index;
   }
-  onSort(event: any) {
-    // 1. 核心修正：確保單點擊只保留單一排序
-    // PrimeNG 在 sortMode="multiple" 時，event.multisortmeta 包含所有排序。
-    // 如果我們只想要單一排序，就只取最後一個元素作為新的排序狀態。
-    if (event.multiSortMeta && event.multiSortMeta.length > 0) {
-      // 取得最新點擊的排序狀態
-      const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
-
-      // 強制將 multiSortMeta 設定為只有最新的這一個排序
-      this.dt.multiSortMeta = [lastSort];
-    }
-
-    // 檢查是否有 queryFunction (省略部分邏輯，確保程式碼連貫)
-    if (!this.queryFunction || !this.lastQueryBody || this.data.length < 30) {
-      return;
-    }
-
-    // 3. 準備查詢參數
-    const body = {
-      ...this.lastQueryBody,
-      pageIndex: 1, // 重新排序時，總是從第一頁開始
-      pageSize: 30,
-      SortBy: this.dt.multiSortMeta // 這裡現在只包含最新的單一排序
-    };
-
-    // 4. 呼叫 API 重新取得資料 (後續邏輯不變)
-    this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
-      if (res && res.Data) {
-        // 5. API 成功後，更新資料和狀態
-        this.groupTotals = {};
-        this.data = res.Data;
-        this.selectedItems = [];
-        this.totalRecords = res.TotalCount;
-        this.lastQueryBody = body; // 更新最後一次的查詢條件
-        this.updateGroupTotals(this.data);
-        // 重新處理虛擬滾動資料
-        if (this.data.length > 0) {
-          if (this.data.length >= 30) {
-            this.virtualData = Array(this.data.length).fill(null);
-            setTimeout(() => {
-              this.virtualData.splice(0, this.data.length, ...this.data);
-            });
-          } else {
-            this.virtualData = [...this.data];
-          }
-        }
-      }
-    });
+  // 分組標題
+  getGroupHeader(groupField: string): string {
+    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
   }
-  // loadCarsLazy(event: TableLazyLoadEvent) {
-  //   this.dt.reset();
-  //   this.cdr.detectChanges();
-  // }
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as ReportColumn[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
@@ -313,17 +262,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.columns.forEach(col => {
         if (col.isSubTotal) {
           const field = col.field;
-          // !!! 關鍵修正：處理資料轉換 !!!
           const value = Number(row[field]) || 0;
-
           // 增量加總
           this.groupTotals[groupKey][field] = (this.groupTotals[groupKey][field] || 0) + value;
         }
       });
     });
-
-    // 由於資料變動，我們可能需要觸發變更偵測，確保小計行更新
-    // (PrimeNG 通常會處理，但如果發現小計行沒有更新，可能需要手動觸發)
-    // this.cdr.detectChanges();
   }
 }

@@ -1,3 +1,7 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { SortMeta } from 'primeng/api';
 
 /**
@@ -65,12 +69,6 @@ export interface Tls57070ResponseData {
   SumData: Tls57070DataItem; // 總計資料
   DetailSumData: Tls57070DataItem[]; // 可能的分組彙總資料 (例如依 LOGO_No)
 }
-// tls57070.service.ts
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
-import { environment } from 'src/environments/environment';
-
 @Injectable({
   providedIn: 'root'
 })

@@ -210,9 +210,16 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     });
 
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), untilDestroyed(this), switchMap(mNo => {
-      if (mNo) {
+      if (mNo && this.dialogQueryForm.controls.CAT_LNo.value) {
         this.dialogQueryForm.controls.CAT_SNo.enable();
-        return this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [mNo] });
+        return this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.dialogQueryForm.controls.CAT_LNo.value,
+              CAT_MNo: mNo
+            }
+          ]
+        });
       } else {
         this.dialogQueryForm.controls.CAT_SNo.disable();
         return of(null);
@@ -275,8 +282,15 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
-      if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+      if (value && this.dialogQueryForm.controls.CAT_LNo.value) {
+        this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.dialogQueryForm.controls.CAT_LNo.value,
+              CAT_MNo: value
+            }
+          ]
+        }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
         });
         this.dialogQueryForm.controls.CAT_SNo.enable();

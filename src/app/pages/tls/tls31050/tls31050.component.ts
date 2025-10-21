@@ -51,7 +51,7 @@ import { TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Servic
   ]
 })
 
-export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response> implements OnInit{
+export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday, Validators.required],
     TXN_DateE: [yesterday, Validators.required],
@@ -247,76 +247,76 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
       }
     });
     // 監聽中分類變化，獲取小分類並分組
-    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
-      map(selectedMValues => selectedMValues || []),
-      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
-      switchMap((selectedMValues: IDropdownItem[]) => {
-        if (selectedMValues.length === 0) {
-          this.bus_sclass_Option = [];
-          this.queryForm.controls.bus_sclass.setValue([]);
-          return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
-        }
-        const requests = [];
-        // 根據選取的中分類，為每一個中分類組建一個 API 請求
-        for (const mValue of selectedMValues) {
-          if (mValue && mValue.bus_type) {
-            requests.push(
-              this.dropDownListService.queryTLTBUSSCLASS_DropDownList({ bus_type: [mValue.bus_type], bus_class: [mValue.No] }).pipe(
-                map(res => ({
-                  LNo: mValue.bus_type,
-                  LName: mValue.bus_type_name,
-                  MNo: mValue.No,
-                  MName: mValue.Name,
-                  Data: res.Data
-                }))
-              )
-            );
-          }
-        }
-        return forkJoin(requests);
-      }),
-      tap(results => {
-        console.log('所有 API 呼叫結果：', results);
-      })
-    ).subscribe(results => {
-      // 處理合併和分組的邏輯
-      const groupedData = results.reduce((accumulator, group) => {
-        const groupKey = `${group.LNo}_${group.MNo}`;
+    // this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
+    //   map(selectedMValues => selectedMValues || []),
+    //   // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+    //   switchMap((selectedMValues: IDropdownItem[]) => {
+    //     if (selectedMValues.length === 0) {
+    //       this.bus_sclass_Option = [];
+    //       this.queryForm.controls.bus_sclass.setValue([]);
+    //       return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
+    //     }
+    //     const requests = [];
+    //     // 根據選取的中分類，為每一個中分類組建一個 API 請求
+    //     for (const mValue of selectedMValues) {
+    //       if (mValue && mValue.bus_type) {
+    //         requests.push(
+    //           this.dropDownListService.queryTLTBUSSCLASS_DropDownList({ bus_type: [mValue.bus_type], bus_class: [mValue.No] }).pipe(
+    //             map(res => ({
+    //               LNo: mValue.bus_type,
+    //               LName: mValue.bus_type_name,
+    //               MNo: mValue.No,
+    //               MName: mValue.Name,
+    //               Data: res.Data
+    //             }))
+    //           )
+    //         );
+    //       }
+    //     }
+    //     return forkJoin(requests);
+    //   }),
+    //   tap(results => {
+    //     console.log('所有 API 呼叫結果：', results);
+    //   })
+    // ).subscribe(results => {
+    //   // 處理合併和分組的邏輯
+    //   const groupedData = results.reduce((accumulator, group) => {
+    //     const groupKey = `${group.LNo}_${group.MNo}`;
 
-        if (!accumulator[groupKey]) {
-          accumulator[groupKey] = {
-            label: `${group.LName} - ${group.MName}`,
-            items: []
-          };
-        }
+    //     if (!accumulator[groupKey]) {
+    //       accumulator[groupKey] = {
+    //         label: `${group.LName} - ${group.MName}`,
+    //         items: []
+    //       };
+    //     }
 
-        const newItems = group.Data.map(item => ({
-          ...item,
-          label: `${item.No} - ${item.Name}`,
-          bus_type: group.LNo,
-          bus_type_name: group.LName,
-          CAT_MNo: group.MNo,
-          CAT_MName: group.MName
-        }));
-        const existingItems = accumulator[groupKey].items;
-        const allItems = [...existingItems, ...newItems];
+    //     const newItems = group.Data.map(item => ({
+    //       ...item,
+    //       label: `${item.No} - ${item.Name}`,
+    //       bus_type: group.LNo,
+    //       bus_type_name: group.LName,
+    //       CAT_MNo: group.MNo,
+    //       CAT_MName: group.MName
+    //     }));
+    //     const existingItems = accumulator[groupKey].items;
+    //     const allItems = [...existingItems, ...newItems];
 
-        const uniqueItemsMap = new Map();
-        allItems.forEach(item => {
-          // 使用 No 作為鍵來去重
-          if (!uniqueItemsMap.has(item.No)) {
-            uniqueItemsMap.set(item.No, item);
-          }
-        });
+    //     const uniqueItemsMap = new Map();
+    //     allItems.forEach(item => {
+    //       // 使用 No 作為鍵來去重
+    //       if (!uniqueItemsMap.has(item.No)) {
+    //         uniqueItemsMap.set(item.No, item);
+    //       }
+    //     });
 
-        accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+    //     accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
 
-        return accumulator;
-      }, {} as Record<string, any>);
+    //     return accumulator;
+    //   }, {} as Record<string, any>);
 
-      this.bus_sclass_Option = Object.values(groupedData);
-      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
-    });
+    //   this.bus_sclass_Option = Object.values(groupedData);
+    //   console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+    // });
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
@@ -374,7 +374,7 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
   queryWeek(event: string) {
     const control = this.dateForm.controls['onedateyy'];
     if (!control.value) return;
-    
+
     const payload = {
       onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
       weeks: event,
@@ -466,7 +466,7 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
         end = this.dateForm.get('enddate')?.value ?? null;
         break;
 
-      case '3': { // 月報 
+      case '3': { // 月報
         const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
         if (onedatemm) {
           start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);

@@ -81,8 +81,10 @@ export interface ITLTBUSCLASSRequest {
 }
 
 export interface ITLTBUSSCLASSRequest {
-  bus_type: string[];
-  bus_class: string[];
+  queryTLTBUSSCLASSInfos: {
+    bus_type: string,
+    bus_class: string
+  }[]
 }
 
 // 小分類組成['大'+'中'] -- 新版api
@@ -110,8 +112,12 @@ export interface IPOS20031Request {
 }
 
 export interface IPOS20032Request {
-  CAT_LNo: string[];
-  CAT_MNo: string[];
+  CATList: [
+    {
+      CAT_LNo: string,
+      CAT_MNo: string
+    }
+  ]
 }
 
 export interface ISYS1000Request {
@@ -132,7 +138,7 @@ export interface IPOS2013Request {
 
 export interface POS2004Item {
   id?: number;
-  PLU_MagNo: string;
+  PLU_MagNo: string | POS2004Item;
   PLU_No: string;
   PLU_Name: string;
   PLU_SalePrc?: number,
@@ -253,8 +259,8 @@ export class DropDownListService {
   }
 
   // 查詢TLTBUSSCLASS資料表 (小分類)
-  queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
+  queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<BusSClass[]>> {
+    return this.http.post<ApiResponse<BusSClass[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
   }
 
   // 查詢TLTBUSSCLASS資料表 (小分類) -- 新版api測試
@@ -369,6 +375,14 @@ export class DropDownListService {
   // 查詢品牌代碼(PLULOGO)資料表下拉選單
   queryPLULOGO_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPLULOGO_DropDownList`, {});
+  }
+  // 查詢 CPM13050 店家名稱(PK6001D) 下拉選單
+  queryCPM13050_ShopNameDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCPM13050_shop_nameDropDownList`, {});
+  }
+  // 查詢 CPM13050 折扣名稱(PK68001D) 下拉選單
+  queryCPM13050_RuleNameDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCPM13050_rule_nameDropDownList`, {});
   }
 
   // 查詢品牌代碼(PLULOGO)資料表下拉選單 (包含 PLU_OrderPrcRate)
@@ -494,9 +508,10 @@ export class DropDownListService {
   queryTLS42010DropDownList(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
-  queryTLS42010FuncDropDownList(): Observable<any> {const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
-  const body = { KB_Func: [] }; return this.http.post<any>(url, body);
-}
+  queryTLS42010FuncDropDownList(): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
+    const body = { KB_Func: [] }; return this.http.post<any>(url, body);
+  }
 
 
   // 載入活動清單 (TALPORDERM)

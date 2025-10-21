@@ -68,7 +68,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼' },
-    { field: 'VouType', header: '傳票類別', format: d => this.service.VouTypes().find(vt => vt.value === d)?.label ?? d },
+    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions().find(vt => vt.value === d)?.label ?? d },
     { field: 'VouDate', header: '傳票日期', format: d => this.datePipe.transform(d, 'yyyy/MM/dd') ?? d },
     { field: 'Remark', header: '傳票摘要' },
     { field: 'AccAmt', header: '傳票金額' },
@@ -87,11 +87,9 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
+    this.loading = !0;
 
-    this.service.getVouTypes();
-    this.service.getPostFlags();
-    this.service.getVouAccTypes();
-    this.service.getAccNoList();
+    this.service.getAccNoList().pipe(finalize(() => this.loading = !1)).subscribe(res => this.logger.debug(`init:`, [res]));
   }
 
   public onSubmit(): void {
