@@ -233,13 +233,13 @@ export class FIN53010Service {
     );
   }
 
-  public getSYS1000(SYS_Type: string): Observable<Option[]> {
+  public getSYS1000(): Observable<Option[]> {
     this.sys1000Cancel$.next();
     this.sys1000Loading.set(!0);
-    return this.dropdownApi.querySys1000({ SYS_Type }).pipe(
+    return this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
       take(1),
       takeUntil(this.sys1000Cancel$),
-      map(res => res?.map(item => ({ value: item['No'], label: item['Name'] } as Option)) ?? []),
+      map(res => res?.map(items => items as unknown as Option) ?? []),
       tap(res => this.sys1000List.set(res)),
       finalize(() => this.logger.debug('查詢SYS1000List結果:', [this.sys1000List()])),
     );

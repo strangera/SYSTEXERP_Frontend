@@ -230,7 +230,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.getOrgNoList();
     this.service.getTblUserOrgidList();
-    this.service.getVoucherTypeOptions();
+    // this.service.getVoucherTypeOptions();
+    this.service.getSYS1000();
 
     forkJoin([
       this.service.getAccNoList(),
