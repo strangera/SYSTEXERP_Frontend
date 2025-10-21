@@ -1,16 +1,15 @@
-<p-table #dt [columns]="selectedColumns" [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true"
-  [dataKey]="dataKey" scrollHeight="700px" [rows]="30" [(selection)]="selectedItems" sortMode="multiple"
-  (onSort)="onSort($event)" [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn"
-  [resizableColumns]="true" [reorderableColumns]="true" [loading]="isLoading" (onColReorder)="onColReorder($event)"
-  [totalRecords]="totalRecords" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  (selectionChange)="selectionChange.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [lazy]="totalRecords < 30 ? false : true"
-  [virtualScrollItemSize]="showManage ? 40.6 : 24" [virtualScrollOptions]="{
-    delay: 50,
+<p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
+  scrollHeight="flex" [(selection)]="selectedItems" sortMode="multiple" (onSort)="onSort($event)"
+  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
+  [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="selectionChange.emit($event)"
+  [rowSelectable]="rowSelectableWrapper" [lazy]="true" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
+    autoSize: true,
     onScroll: onScroll,
-  }" rowGroupMode="subheader" [groupRowsBy]="groupRowsBy" [expandedRowKeys]="expandedRows">
+  }" rowGroupMode="subheader" [expandedRowKeys]="expandedRows">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
@@ -41,8 +40,7 @@
           <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
             <th [attr.colspan]="
                 tableUtility.getColumnSpan(columns, col.groupField!)
-              " [ngClass]="getGroupAlignClass(col.groupField!)" class="group-header" pReorderableColumn
-              pResizableColumn>
+              " class="group-header" pReorderableColumn pResizableColumn>
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
@@ -100,7 +98,7 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
     let-expanded="expanded">
     <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
-      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: showManage ? '40.6px' : '24px' }"
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: '46px' }"
       [pSelectableRowDisabled]="!rowSelectableWrapper || disabled" [pReorderableRow]="index" [pSelectableRow]="rowData"
       [pSelectableRowIndex]="rowIndex">
       <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
@@ -110,16 +108,10 @@
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
-          [raised]="!expandedRows[rowData?.[dataKey ?? 'id']]" [icon]="
-        rowData?.expansionLoading
-            ? 'pi pi-spin pi-spinner'
-            : expandedRows[rowData?.[dataKey ?? 'id']]
-                ? 'pi pi-chevron-down'
-                : 'pi pi-chevron-right'
-    " pButton (click)="toggleRowExpansion(rowData)" [disabled]="
-            rowData?.expansionLoading ||
-        (!expansionLoadFn && !rowData?.[expansionDataKey]?.length)
-          " />
+          [raised]="!expandedRows[rowData?.[dataKey ?? 'id']]" [loading]="rowData?.expansionLoading"
+          [icon]=" expandedRows[rowData?.[dataKey ?? 'id']] ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton
+          (click)="toggleRowExpansion(rowData)" [disabled]="rowData?.expansionLoading ||
+        (!expansionLoadFn && !rowData?.[expansionDataKey]?.length)" />
       </td>
       <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
         style="text-overflow: ellipsis; min-width: 55px" (dblclick)="detail.emit(rowData)" [ngClass]="[
@@ -145,8 +137,8 @@
         </span>
       </td>
       <td [hidden]="!showManage" [ngClass]="{ 'flex justify-content-center gap-2': showManage }"
-        [style]="{ height: showManage ? '40.6px' : '24px' }" class="no-wrap icon-button" alignFrozen="right"
-        pFrozenColumn [frozen]="true" [style.text-align]="'center'">
+        [style]="{ height: '46px'}" class="no-wrap icon-button" alignFrozen="right" pFrozenColumn [frozen]="true"
+        [style.text-align]="'center'">
         <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
           (click)="edit.emit(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData)" [loading]="buttonsLoading" />
         <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detail.emit(rowData)" *ngIf="showDetail"
@@ -177,6 +169,22 @@
           </td>
         </ng-container>
         <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
+      </tr>
+    </ng-container>
+    <ng-container *ngIf="loading && data.length < totalRecords && rowIndex === data.length - 1">
+      <tr *ngFor="let i of [0, 1, 2, 3]" style="height:46px">
+        <td [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
+          <p-skeleton />
+        </td>
+        <td *ngIf="expansionColumns.length">
+          <p-skeleton />
+        </td>
+        <td *ngFor="let col of columns">
+          <p-skeleton />
+        </td>
+        <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
+          <p-skeleton />
+        </td>
       </tr>
     </ng-container>
   </ng-template>

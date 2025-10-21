@@ -90,12 +90,9 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   }
   onSubmit(frm: FormGroup) {
     const formValue = frm.value;
-
-    // 確保 sam_yyymm 有值且為 Date 物件或有效字串
     let sam_yyymm_string = '';
     if (formValue.sam_yyymm) {
       const date = new Date(formValue.sam_yyymm);
-      // 格式化為 yyyy-MM
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       sam_yyymm_string = `${year}${month}`;
@@ -109,9 +106,9 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     }
     this.handleSubmit(frm, () => {
       this.tls2e080Service.queryTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.totalRecords = res.TotalCount || 0;
         this.data = res.Data
         this.historyRequestBody = body;
-        this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     })

@@ -448,8 +448,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls44010', loadComponent: () => import('./tls44010/tls44010.component').then(m => m.TLS44010Component) },
   // EDC即時連線監看
   { path: 'tls44020', loadComponent: () => import('./tls44020/tls44020.component').then(m => m.TLS44020Component) },
-  // 收銀機主檔異動查詢
-  { path: 'tls45020', loadComponent: () => import('./tls45020/tls45020.component').then(m => m.TLS45020Component) },
   // 收銀機開關機時間表
   { path: 'tls45030', loadComponent: () => import('./tls45030/tls45030.component').then(m => m.TLS45030Component) },
   // 網路位置設定
@@ -485,8 +483,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls43040cru', loadComponent: () => import('./tls43040-cru/tls43040-cru.component').then(m => m.TLS43040CRUComponent) },
   // 訊息狀態查詢作業 CRU
   { path: 'tls43050cru', loadComponent: () => import('./tls43050-cru/tls43050-cru.component').then(m => m.TLS43050CRUComponent) },
-  // 收銀機主檔異動查詢 CRU
-  { path: 'tls45020cru', loadComponent: () => import('./tls45020-cru/tls45020-cru.component').then(m => m.TLS45020CRUComponent) },
   // 網路位置設定 CRU
   { path: 'tls46010cru', loadComponent: () => import('./tls46010-cru/tls46010-cru.component').then(m => m.TLS46010CRUComponent) },
   // POS環境變數維護作業 CRU

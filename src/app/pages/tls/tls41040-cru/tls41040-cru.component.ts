@@ -49,7 +49,6 @@ export interface TLS41040Detail {
     CommonModule,
     TableComponent,
     InputTextareaComponent,
-    TableEditComponent
   ]
 })
 export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -72,8 +71,8 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 狀態選單
   NOT_Status_Option: any[] = [
-    { value: 'A', label: '已生效（預設）' },
-    { value: 'D', label: '已刪除' },
+    { value: 'A', label: '啟用' },
+    { value: 'D', label: '停用' },
   ];
 
   // Table 欄位
@@ -222,12 +221,13 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       NOT_DispCd: raw.NOT_DispCd,
       NOT_Prn: raw.NOT_Prn,
       NOT_DtlLimit: raw.NOT_DtlLimit,
-      Detail: this.data.map((d, i) => {
+      Detail: this.data.map((d) => {
         const clone = { ...d };
 
         return {
           ID: isNaN(Number(clone.ID)) ? 0 : Number(clone.ID),
-          NOT_SeqNo: clone.NOT_SeqNo ? Number(clone.NOT_SeqNo) : 0,
+          NOT_SeqNo: clone.NOT_SeqNo && !isNaN(Number(clone.NOT_SeqNo)) ? Number(clone.NOT_SeqNo) : 0,
+
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? '',
@@ -239,9 +239,49 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       })
     };
   }
+  /** 明細資料驗證：互斥 + 唯一 + 至少一欄有值 */
+  private validateDetailData(): boolean {
+    const uniqueSet = new Set<string>();
+
+    for (const d of this.data) {
+      const ecrGrpNo = d.ECR_GrpNo?.trim() ?? '';
+      const tltNo = d.TLT_No?.trim() ?? '';
+      const ecrType = d.ECR_Type?.trim() ?? '';
+      const building = d.BUILDING_No?.trim() ?? '';
+      const floor = d.FLOOR_No?.trim() ?? '';
+      const area = d.Area_No?.trim() ?? '';
+
+      // --- 群組互斥檢查 ---
+      if (ecrGrpNo && (tltNo || ecrType || building || floor || area)) {
+        this.messageService.errorBubble('若設定了「機台群組編號」，其他欄位必須留空');
+        return false;
+      }
+
+      // --- 至少一欄必填 ---
+      if (!ecrGrpNo && !tltNo && !ecrType && !building && !floor && !area) {
+        this.messageService.errorBubble('每筆明細至少要有一個欄位有設定值');
+        return false;
+      }
+
+      // --- 唯一條件檢查 ---
+      const key = ecrGrpNo
+        ? `grp:${ecrGrpNo}`
+        : `tlt:${tltNo}|type:${ecrType}|b:${building}|f:${floor}|a:${area}`;
+
+      if (uniqueSet.has(key)) {
+        this.messageService.errorBubble('明細設定條件重複，請檢查');
+        return false;
+      }
+      uniqueSet.add(key);
+    }
+
+    return true;
+  }
 
   // ===== 儲存 =====
   onSubmit(frm: FormGroup): void {
+    if (!this.validateDetailData()) return;
+
     this.handleSubmit(frm, () => {
       this.loading = true;
 
@@ -278,4 +318,29 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     }
     return { isValid: true, errorMessage: '' };
   }
+
+  // ===== 刪除（本地刪除，不呼叫 API） =====
+  onDelete(event: TLS41040Detail): void {
+    if (!event) {
+      this.messageService.errorBubble('無效的刪除項目');
+      return;
+    }
+    const idx = this.data.findIndex(d => d.NOT_SeqNo === event.NOT_SeqNo);
+
+    if (idx === -1) {
+      this.messageService.errorBubble('找不到要刪除的明細');
+      return;
+    }
+    const target = this.data[idx];
+    if (target.ID && target.ID > 0) {
+      target.status = 'D'; // 給後端識別刪除狀態
+    } else {
+      this.data.splice(idx, 1); // 新增中的資料直接刪掉
+    }
+
+    this.data = [...this.data];
+    this.messageService.successBubble('明細已移除，儲存後才會生效');
+  }
+
 }
+

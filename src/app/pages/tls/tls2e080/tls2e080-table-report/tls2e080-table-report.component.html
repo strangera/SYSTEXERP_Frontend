@@ -1,19 +1,17 @@
-<p-table #dt [columns]="selectedColumns" [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true"
-  [dataKey]="dataKey" scrollHeight="700px" [rows]="30" [(selection)]="selectedItems" sortMode="multiple"
-  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [loading]="isLoading"
-  [totalRecords]="totalRecords" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  (selectionChange)="selectionChange.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [lazy]="totalRecords < 30 ? false : true"
-  [virtualScrollItemSize]="showManage ? 40.6 : 24" [virtualScrollOptions]="{
+<p-table [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="400px" [virtualScroll]="true"
+  [(selection)]="selectedItems" sortMode="multiple" [selectionMode]="showCheckBox ? 'multiple' : null"
+  [rowTrackBy]="trackByFn" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+  [virtualScrollItemSize]="46" (selectionChange)="selectionChange.emit($event)" [rowSelectable]="rowSelectableWrapper"
+  [expandedRowKeys]="expandedRows" [virtualScrollOptions]="{
     inline: true,
     onScroll: onScroll,
-  }" [expandedRowKeys]="expandedRows">
+  }">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
       [selectedItems]="selectedItems" [tableKey]="tableKey" [showCaption]="showCaption" [showFilter]="showFilter"
-      [showReportMode]="showReportMode" [showDelete]="false" [showPage]="false" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
+      [showReportMode]="showReportMode" [showDelete]="false" [showPage]="false" [apiUrl]="apiUrl"
+      [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
@@ -30,8 +28,7 @@
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 如果是第一次出現這個群組 -->
           <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
-            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)"
-              [ngClass]="getGroupAlignClass(col.groupField!)" class="group-header">
+            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header">
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
@@ -75,7 +72,7 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded">
     <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
-      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: showManage ? '40.6px' : '24px' }"
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: '46px' }"
       [pSelectableRowDisabled]="!rowSelectableWrapper" [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">
       <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <td *ngIf="showCheckBox">

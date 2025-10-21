@@ -188,31 +188,25 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   copyKeyAttributes() {
     if (!this.selected) return;
-
     const {
       KB_Func, KB_Display1, KB_Display2, KB_Color,
       KB_FontColor, KB_Style, KB_Font, KB_Size,
       KB_Fonttyped, KB_Switch, KB_Arg1, KB_Arg2, KB_Arg3
     } = this.selected;
-
     this.copiedAttributes = {
       KB_Func, KB_Display1, KB_Display2, KB_Color,
       KB_FontColor, KB_Style, KB_Font, KB_Size,
       KB_Fonttyped, KB_Switch, KB_Arg1, KB_Arg2, KB_Arg3
     };
-
     console.log('已複製屬性:', this.copiedAttributes);
   }
   pasteKeyAttributes(event: MouseEvent) {
     if (!this.copiedAttributes) return;
-
     const isMulti = event.shiftKey;
     const targets = isMulti && this.selectedKeys.length ? this.selectedKeys : [this.selected];
-
     targets.forEach(key => {
       if (!key) return;
       const originalId = key.ID;
-
       Object.assign(key, {
         ...this.copiedAttributes,
         ID: originalId,              // 保留原 ID
@@ -225,15 +219,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       this.selectedKeyForm.patchValue(this.selected, { emitEvent: true });
     }
 
-    console.log('✅ 屬性貼上到:', targets);
+    console.log(' 屬性貼上到:', targets);
   }
-
-
 
   clearKeyAttributes(event: MouseEvent) {
     const isMulti = event.shiftKey;
     const targets = isMulti && this.selectedKeys.length ? this.selectedKeys : [this.selected];
-
     targets.forEach(key => {
       if (!key) return;
       Object.assign(key, {
@@ -263,9 +254,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
-
-
-
   constructor(
     formBuilder: FormBuilder,
     private dropDownListService: DropDownListService,
@@ -273,7 +261,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   ) {
     super();
   }
-
   // ---------------- Computed ----------------
   get pageCapacity() { return this.xCount * this.yCount; }
   get totalPages() { return this.pages.length; }
@@ -438,7 +425,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     while (this.pages.length < maxPage) {
       this.pages.push(this.buildGrid(this.pages.length));
     }
-
     detailList.forEach((d: any) => {
       const pageIndex = (Number(d.KB_KeyPage) > 0 ? Number(d.KB_KeyPage) : 1) - 1;
       const scanCode = d.KB_ScanCode;
@@ -446,18 +432,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       while (this.pages.length <= pageIndex) {
         this.pages.push(this.buildGrid(this.pages.length));
       }
-
       const page = this.pages[pageIndex];
       if (!page) {
         return;
       }
-
       const key = page.find(k => k.code === scanCode);
       if (!key) {
         return;
       }
 
-      // 解析合併設定
       let mergeRight = 0;
       let mergeDown = 0;
       if (typeof d.KB_Merge === 'string' && d.KB_Merge.includes(',')) {
@@ -557,8 +540,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.updateMergeDisplay();
   }
 
-
-
   onPageChange(newPageIndex: number) {
     if (this.selected) {
       Object.assign(this.selected, this.selectedKeyForm.getRawValue());
@@ -575,7 +556,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   private buildDetailList(frm: any) {
     return this.pages.flatMap((page, pageIndex) =>
       page.map(k => {
-        const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
+        const hasConfig =
+          !!(k.KB_Func ||
+            k.KB_Display1 ||
+            k.KB_Display2 ||
+            k.KB_Color !== 'RGB:255,255,255' ||
+            k.KB_FontColor !== 'RGB:0,0,0' ||
+            k.KB_Style !== '1' ||
+            k.KB_Font !== 'Microsoft JhengHei' ||
+            k.KB_Size !== 12);
         const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
         const mergeRight = k.mergeRight || 0;
         const mergeDown = k.mergeDown || 0;
@@ -583,104 +572,77 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         const keyId =
           this.crudstatus === CRUDStatus.Create
             ? 0
-            : (typeof k.ID === 'number' && k.ID > 0 ? k.ID : undefined);
-        if (!k.ID && this.crudstatus === CRUDStatus.Edit) {
-
-          console.warn(`鍵 ${k.code} 沒有 ID，將視為新資料插入`);
-        }
+            : (typeof k.ID === 'number' && k.ID > 0 ? k.ID : 0);
         return {
           ID: keyId,
+          MID: this.rowdata?.ID ?? 0,
           ECR_KBType: frm.ECR_KBType,
-          USR_Level: this.crudstatus === CRUDStatus.Create ? frm.USR_Level : this.rowdata?.USR_Level || frm.USR_Level,
+          USR_Level:
+            this.crudstatus === CRUDStatus.Create
+              ? frm.USR_Level
+              : this.rowdata?.USR_Level || frm.USR_Level,
           KB_ScanCode: k.code,
-          KB_Func: hasConfig ? k.KB_Func : '',
-          KB_Arg1: hasConfig ? k.KB_Arg1 : '',
-          KB_Arg2: hasConfig ? k.KB_Arg2 : '',
-          KB_Arg3: hasConfig ? k.KB_Arg3 : '',
-          KB_Display1: hasConfig ? k.KB_Display1 : '',
-          KB_Display2: hasConfig ? k.KB_Display2 : '',
-          KB_Font: hasConfig ? k.KB_Font : 'Microsoft JhengHei',
-          KB_Size: hasConfig ? k.KB_Size : 12,
+          KB_Func: hasConfig ? k.KB_Func || '' : '',
+          KB_Arg1: hasConfig ? k.KB_Arg1 || '' : '',
+          KB_Arg2: hasConfig ? k.KB_Arg2 || '' : '',
+          KB_Arg3: hasConfig ? k.KB_Arg3 || '' : '',
+          KB_Display1: hasConfig ? k.KB_Display1 || '' : '',
+          KB_Display2: hasConfig ? k.KB_Display2 || '' : '',
+          KB_Font: hasConfig ? k.KB_Font || 'Microsoft JhengHei' : 'Microsoft JhengHei',
+          KB_Size: hasConfig ? k.KB_Size ?? 12 : 12,
           KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
           KB_Style: hasConfig ? k.KB_Style || '1' : '1',
           KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
           KB_Width: pos1008.width,
           KB_Height: pos1008.height,
           KB_Merge: mergeValue,
-          KB_Color: hasConfig ? k.KB_Color : 'RGB:255,255,255',
-          KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
-          KB_KeyPage: pageIndex + 1
+          KB_Color: hasConfig ? k.KB_Color || 'RGB:255,255,255' : 'RGB:255,255,255',
+          KB_FontColor: hasConfig ? k.KB_FontColor || 'RGB:0,0,0' : 'RGB:0,0,0',
+          KB_KeyPage: pageIndex + 1,
         };
       })
     );
   }
 
-
-
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-
-      // 先同步右側表單到當前選取的按鍵
       if (this.selected) {
         Object.assign(this.selected, this.selectedKeyForm.getRawValue());
       }
-
-      // 建立明細資料
       const detailList = this.buildDetailList(frm.value);
 
-      // ---------------- 🧩 補上缺少 ID 的舊鍵 ----------------
-      const existingKeys = this.pages.flat().filter(k => !!k.ID);
       detailList.forEach(d => {
-        if (typeof d.ID === 'string') {
-          const numericId = Number(d.ID);
-          if (!isNaN(numericId) && numericId > 0) {
-            d.ID = numericId;
-          } else {
-            d.ID = undefined;
-          }
-        }
+        if (d.ID == null || isNaN(Number(d.ID))) d.ID = 0;
       });
-
-      const invalidIds = detailList.filter(d => typeof d.ID !== 'number' || d.ID <= 0);
-      if (invalidIds.length) {
-        console.warn('偵測到以下按鍵的 ID 不是數字或無效:', invalidIds.map(i => i.KB_ScanCode));
-      }
-      const invalid = detailList.filter(d => !d.ID && (d.KB_Func || d.KB_Display1 || d.KB_Display2));
-      if (invalid.length) {
-        console.error('以下按鍵缺少 ID（但有功能設定）:', invalid.map(i => i.KB_ScanCode));
-        alert(`偵測到 ${invalid.length} 顆舊按鍵缺少 ID（例如 ${invalid[0].KB_ScanCode}），請重新載入後再儲存！`);
-        this.loading = false;
-        return;
-      }
 
       const duplicates = detailList
         .map(d => `${d.ECR_KBType}-${d.USR_Level}-${d.KB_ScanCode}`)
         .filter((v, i, arr) => arr.indexOf(v) !== i);
       if (duplicates.length) {
-        console.warn(' 偵測到重複按鍵:', duplicates);
+        console.warn('偵測到重複按鍵:', duplicates);
         alert(`偵測到重複按鍵：${duplicates.join(', ')}`);
         this.loading = false;
         return;
       }
-
-      console.table(detailList.map(d => ({
-        Scan: d.KB_ScanCode,
-        ID: d.ID,
-        Func: d.KB_Func
-      })));
-
+      console.table(
+        detailList.map(d => ({
+          Scan: d.KB_ScanCode,
+          ID: d.ID,
+          Func: d.KB_Func,
+        }))
+      );
       if (this.crudstatus === CRUDStatus.Create) {
         const payload = {
           ECR_KBType: frm.value.ECR_KBType,
           USR_Level: frm.value.USR_Level,
           ECR_KBDesc: frm.value.ECR_KBDesc,
           TSB_Name: frm.value.TSB_Name,
-          POS1004Disc: detailList
+          POS1004Disc: detailList, // 後端對應 insert
         };
         this.tls42010Service.insertTLS42010M(payload).subscribe({
-          next: () => this.loading = false,
-          error: () => this.loading = false
+          next: () => (this.loading = false),
+          error: () => (this.loading = false),
         });
       } else {
         const payload = {
@@ -689,16 +651,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           USR_Level: frm.value.USR_Level,
           ECR_KBDesc: frm.value.ECR_KBDesc,
           TSB_Name: frm.value.TSB_Name,
-          POS1004: detailList
+          POS1004: detailList,
         };
         this.tls42010Service.updateTLS42010M(payload).subscribe({
-          next: () => this.loading = false,
-          error: () => this.loading = false
+          next: () => (this.loading = false),
+          error: () => (this.loading = false),
         });
       }
     });
   }
-
 
   // ---------------- 其他 ----------------
   getControl(name: string): FormControl {
@@ -715,10 +676,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   toggleMergeOption(value: string) {
     if (!this.selected) return;
-
     const keyX = parseInt(this.selected.code.substring(0, 2));
     const keyY = parseInt(this.selected.code.substring(2, 4));
-
     if (value === 'mergeRight') {
       if (keyX >= this.xCount) return;
       const currentMerge = this.selected.mergeRight || 0;
@@ -731,17 +690,14 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       const maxMerge = this.yCount - currentPageY;
       this.selected.mergeDown = currentMerge >= maxMerge ? 0 : currentMerge + 1;
     } else if (value === 'resetMerge') {
-
       this.selected.mergeRight = 0;
       this.selected.mergeDown = 0;
     }
-
     this.updateMergeDisplay();
   }
 
   updateMergeDisplay() {
     if (!this.selected) return;
-
     const currentValue = [];
     if (this.selected.mergeRight && this.selected.mergeRight > 0) {
       currentValue.push('mergeRight');
@@ -749,10 +705,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     if (this.selected.mergeDown && this.selected.mergeDown > 0) {
       currentValue.push('mergeDown');
     }
-
     this.getControl('KB_MergeType').setValue(currentValue);
-
-    // 將合併資訊編碼到 KB_Merge 欄位
     const mergeRight = this.selected.mergeRight || 0;
     const mergeDown = this.selected.mergeDown || 0;
     const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
@@ -762,25 +715,21 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   isKeyHidden(key: KeyItem, page: KeyItem[]): boolean {
     const keyX = parseInt(key.code.substring(0, 2));
     const keyY = parseInt(key.code.substring(2, 4));
-
     for (const k of page) {
       if (k !== key) {
         const kX = parseInt(k.code.substring(0, 2));
         const kY = parseInt(k.code.substring(2, 4));
 
-        // 檢查是否被往右合併覆蓋
         if (k.mergeRight && k.mergeRight > 0) {
           if (keyY === kY && keyX > kX && keyX <= kX + k.mergeRight) {
             return true;
           }
         }
-        // 檢查是否被往下合併覆蓋
         if (k.mergeDown && k.mergeDown > 0) {
           if (keyX === kX && keyY > kY && keyY <= kY + k.mergeDown) {
             return true;
           }
         }
-        // 檢查是否被同時往右往下合併覆蓋
         if (k.mergeRight && k.mergeRight > 0 && k.mergeDown && k.mergeDown > 0) {
           if (keyX > kX && keyX <= kX + k.mergeRight &&
             keyY > kY && keyY <= kY + k.mergeDown) {

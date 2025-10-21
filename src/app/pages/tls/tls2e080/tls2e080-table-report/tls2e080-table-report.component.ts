@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableModule } from 'primeng/table';
-import { finalize, Observable } from 'rxjs';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { TableModule } from 'primeng/table';
+import { Observable } from 'rxjs';
 import { ReportColumn, ColumnGroup } from './tls2e080-table-report.model';
 import { ImageModule } from 'primeng/image';
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Tls2e080TableReportUtilityService } from './tls2e080-table-report-utility.service';
 import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '@shared/componentkit/table/table-expansion/table-expansion.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls2e080-table-report',
@@ -25,17 +26,17 @@ import { TableExpansionComponent } from '@shared/componentkit/table/table-expans
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Tls2e080TableReportComponent extends BasicPrintDataComponent implements OnChanges {
-  @ViewChild('dt') private dt!: Table;
   @Input({ required: true }) lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
   @Input({ required: true }) totalRecords = 0;                               // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];                               // 用來儲存查詢結果
+  virtualData: any[] = [];                               // 用來儲存查詢結果
   @Input() dataKey: string | undefined;                                 // 用來儲存查詢結果
   @Input({ required: true }) columns: ReportColumn[] = [];                              // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];                  // 用來儲存查詢結果
   @Input({ required: true }) queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
-  @Input() loading = false;
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;// tableKey預設給路由名稱
   @Input() apiUrl: string | undefined = undefined;
+  // checkbox
   @Input() showCheckBox = false;
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
@@ -45,14 +46,14 @@ export class Tls2e080TableReportComponent extends BasicPrintDataComponent implem
     return false;
   };
   // Header 相關
-  @Input() showCaption = true;                                                  // 是否顯示 Caption
+  @Input() showCaption = true;                // 是否顯示 Caption
   // Header(左) 相關
   @Input() showFilter = true;                 // 是否顯示 Filter
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
   @Input() customReport = false;               // 是否自訂報表
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
+  @Input() columnGroup?: ColumnGroup[];       // table 群組欄位
   // 管理 欄位
   @Input() showManage = true;                // 是否顯示 管理欄位
   @Input() showDetail = true;                // 是否顯示 管理欄位(明細按鈕)
@@ -66,20 +67,11 @@ export class Tls2e080TableReportComponent extends BasicPrintDataComponent implem
   groupTotals: Record<string, Record<string, number>> = {}; // <<< 新增：用於儲存每個群組的總計
   @Input() subTotalData: any;               // (小計)頁尾資料
   // expansion 收合展開
-  /** 收合展開 欄位配置(expansion必需配置) @default [] */
   @Input() expansionColumns: ReportColumn[] = [];
-  /** 收合展開 資料key(expansion必需配置) @default 'details' */
   @Input() expansionDataKey = 'details';
-  /** 收合展開 排序欄位(單一排序) @default [{ field: this.expansionDataKey, order: 1 }] */
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
-  /** 屬性來接收父層傳來的載入函數 */
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
-  /** 收合展開 已展開資料 @default {} */
   expandedRows: Record<string, boolean> = {};
-  //
-  private = true;            // 用來判斷是否為第一次載入
-  virtualData: any = [];
-  isLoading = false;
   constructor(
     public readonly tableUtility: Tls2e080TableReportUtilityService,
     private readonly route: ActivatedRoute,
@@ -89,42 +81,42 @@ export class Tls2e080TableReportComponent extends BasicPrintDataComponent implem
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    // 第一次獲取data
     if (changes['data'] && this.data !== undefined) {
-      console.log(this.data);
-
       if (this.data.length > 0) {
+        if (this.data.length > 30) {
+          this.virtualData = this.data;
+          this.cdr.detectChanges();
+        } else {
+          this.virtualData = Array.from({ length: this.data.length });
+          this.cdr.detectChanges();
+          this.virtualData = this.data;
+        }
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
-
-        if (this.data.length >= 30) {
-          this.virtualData = Array(this.data.length).fill(null);
-          setTimeout(() => {
-            this.virtualData.splice(0, this.data.length, ...this.data);
-          });
-        } else {
-          this.virtualData = [...this.data];
-        }
-      } else if (this.data.length === 0) {
-        this.virtualData = Array(0).fill(null);
-        this.totalRecords = 0;
-        this.groupTotals = {}; // 沒資料時也要清空小計
       }
       this.selectedItems = [];
     }
   }
-  // 分組欄位對齊
-  getGroupAlignClass(groupField: string): string {
-    const align = this.columnGroup?.find(g => g.field === groupField)?.align;
-    return align ? 'text-' + align : 'text-center';
-  }
-  // 分組標題
-  getGroupHeader(groupField: string): string {
-    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
+  loadMoreData() {
+    if (!this.queryFunction || !this.lastQueryBody) { return; }
+    const body = {
+      ...this.lastQueryBody,
+      pageIndex: Math.floor(this.data.length / 30) + 1,
+      pageSize: 30,
+    };
+    this.queryFunction(body).pipe(untilDestroyed(this)).subscribe(res => {
+      if (res && res.Data && res.Data.length > 0) {
+        this.virtualData = Array.from({ length: this.data.length + res.Data.length });
+        this.cdr.detectChanges();
+        this.data = [...this.data, ...res.Data];
+        this.virtualData = this.data;
+        this.totalRecords = res.TotalCount || 0;
+        this.updateGroupTotals(res.Data);
+      }
+    });
   }
   onScroll(event: any) {
-    if (this.isLoading || this.data.length >= this.totalRecords || this.data.length < 30) {
-      this.virtualData = [...this.data]
+    if (this.data.length >= this.totalRecords) {
       return;
     }
     if (event && event.originalEvent && event.originalEvent.target) {
@@ -138,31 +130,9 @@ export class Tls2e080TableReportComponent extends BasicPrintDataComponent implem
       }
     }
   }
-  isTotal = 0;
-  loadMoreData() {
-    if (!this.queryFunction || !this.lastQueryBody) {
-      return;
-    }
-    this.isLoading = true;
-    const body = {
-      ...this.lastQueryBody,
-      pageIndex: Math.floor(this.data.length / 30) + 1,
-      pageSize: 30,
-      SortBy: this.dt.multiSortMeta
-    };
-    this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
-      if (res && res.Data && res.Data.length > 0) {
-        this.updateGroupTotals(res.Data);
-        this.data = [...this.data, ...res.Data];
-        this.isTotal += this.data.reduce((a: number, b: any) => a + (b.STK_CURRENTQTY ?? 0), 0);
-        this.totalRecords = res.TotalCount; // 確保總筆數同步更新
-        this.virtualData = Array(this.data.length).fill(null);
-        setTimeout(() => {
-          this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-          this.dt.scrollHeight = '700px';
-        })
-      }
-    });
+  // 分組標題
+  getGroupHeader(groupField: string): string {
+    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
   }
   /**
  * 檢查是否有任何欄位被配置為需要小計。
