@@ -51,4 +51,9 @@ export class TLS2D040Service {
   queryTLS2D040_Department(req: QueryTLS2D040Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Department`, req);
   }
+
+  // 查詢明細資料
+  queryTLS2D040_Detail(req: QueryTLS2D040Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Detail`, req);
+  }
 }
