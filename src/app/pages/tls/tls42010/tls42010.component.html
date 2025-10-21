@@ -1,20 +1,13 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" label="複製設定" (click)="dialogVisible = true; dialogQueryForm.reset(); submitted = false"></app-button>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -25,10 +18,11 @@
               [options]="kbFuncOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="請選擇鍵盤編號"
-            ></app-dropdown>
+              placeholder="請選擇鍵盤編號">
+            </app-dropdown>
           </div>
         </div>
+
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-12">
             <app-input-textarea
@@ -36,15 +30,12 @@
               controlName="ECR_KBDesc"
               [control]="queryForm.controls.ECR_KBDesc"
               [style]="{ height: '100px' }"
-              [submitted]="submitted"
-            >
-              >
+              [submitted]="submitted">
             </app-input-textarea>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" />
           <app-button btnType="query" [loading]="loading" />
         </div>
@@ -52,9 +43,10 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <app-table-report
-    tableKey="TLS2A020"
+    tableKey="TLS42010"
     [data]="data"
     [columns]="columns"
     (edit)="onEdit($event)"
@@ -68,6 +60,41 @@
     [showDetail]="true"
     [lastQueryBody]="lastQueryForm"
     [footerData]="footerTotal"
+    [showReportMode]="false"
     [queryFunction]="tls42010Service.queryTLS42010M.bind(tls42010Service)"
-  ></app-table-report>
+    (lazyLoadData)="onReportLazyLoad($event)">
+  </app-table-report>
 </div>
+
+<app-dialog
+  [visible]="dialogVisible"
+  header="複製鍵盤設定"
+  (visibleChange)="dialogVisible = $event"
+  (save)="saveDialog(dialogQueryForm)"
+  [height]="'auto'">
+
+  <form [formGroup]="dialogQueryForm" class="flex gap-2">
+    <app-dropdown
+      (changeEvent)="onDialogChange($event)"
+      class="flex-1"
+      label="來源鍵盤編號"
+      controlName="Source_USR_Level"
+      [control]="dialogQueryForm.controls.Source_USR_Level"
+      [options]="dialogOptions"
+      optionLabel="label"
+      optionValue="No"
+      [submitted]="submitted">
+    </app-dropdown>
+
+    <app-input-text
+      class="flex-1"
+      label="目標鍵盤編號"
+      controlName="Target_USR_Level"
+      [control]="dialogQueryForm.controls.Target_USR_Level"
+      placeholder="請輸入新鍵盤編號"
+      [submitted]="submitted">
+    </app-input-text>
+  </form>
+
+  <span class="text-red-500" *ngIf="submitted && isValid">無法複製到相同的鍵盤編號</span>
+</app-dialog>

@@ -48,7 +48,7 @@ export class Tls24010DiscodeComponent implements OnInit, OnChanges {
     const body = {
       Store_way: STORE_WAY.專櫃,
       TXN_Date: txnDate ? new Date(txnDate.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '',
-      TLT_No: this.TLT_No
+      Keyword: this.TLT_No
     }
     this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
       this.POS2004Options = response.Data;

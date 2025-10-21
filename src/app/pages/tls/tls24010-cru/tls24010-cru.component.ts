@@ -116,7 +116,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
-    console.log(this.queryData);
     this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
     this.TLT_Name = rowDataTyped.TLT_Name;
     this.store_way = rowDataTyped.store_way;
@@ -390,8 +389,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               updatePOS5007List: this.tltnoComp?.tltIdData.map(item => {
                 return {
                   POS5007_ID: item.ID,
-                  TLT_No: this.dataForm.getRawValue().TLT_No,
-                  PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : item.PLU_MagNo as string || '',
+                  TLT_No: item.TLT_No || '',
+                  PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : (item.PLU_MagNo as POS2004Item).PLU_MagNo as string || '',
                   PLU_No: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : item.PLU_No as string || '',
                   Talent_ID: item.Talent_ID || this.talent_id || 0,
                   tlt_id: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).tlt_id as string : item.tlt_id as string || '',
@@ -405,6 +404,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
+            this.onCancel();
           });
         } else if (this.type === FIX_TYPE.抽成類別修正) {
           const data = {
@@ -420,6 +420,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
+            this.onCancel();
           });
         } else if (this.type === FIX_TYPE.折扣別修正) {
           const data = {
@@ -435,6 +436,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
+            this.onCancel();
           });
         } else if (this.type === FIX_TYPE.預售交易修正) {
           const data = {
@@ -447,8 +449,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
+            this.onCancel();
           });
         } else if (this.type === FIX_TYPE.付款別修正) {
+          console.log(this.paynoComp?.payNoData);
+
           const data = {
             ...body,
             EditType: TLS24010_EDIT_TYPE.付款別修正,
@@ -458,9 +463,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
                 PAY_No: item.PAY_No || '',
                 TXN_PayAmt: item.TXN_PayAmt || 0,
                 CRD_Type: item.PAY_Type === '0' ? item.CRD_Type || '' : '',
-                CRD_No: item.PAY_Type === '0' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
-                TXN_CouponNo: item.PAY_Type !== '0' && item.PAY_Type !== 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
-                TXN_PayDesc: item.PAY_Type === 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
+                CRD_No: item.CRD_No || '',
+                TXN_CouponNo: item.TXN_CouponNo || '',
+                TXN_PayDesc: item.TXN_PayDesc || '',
                 TERM_No: item.PAY_Type === '0' ? Number(item.TERM_No) : 0,
                 PAY_OverPay: item.PAY_OverPay ?? null,
               }
@@ -468,6 +473,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
+            this.onCancel();
           });
         } else if (this.type === FIX_TYPE.交易資料作廢) {
           const data = {
@@ -476,6 +482,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
+            this.onCancel();
           });
         }
       }

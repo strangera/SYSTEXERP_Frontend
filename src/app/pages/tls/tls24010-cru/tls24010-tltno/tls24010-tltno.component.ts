@@ -55,6 +55,15 @@ export class Tls24010TltnoComponent implements OnChanges {
         { field: 'PLU_TaxType', header: '稅別', format: (value: string) => value === '0' ? '免稅' : (value === '1' ? '應稅' : value) },
         { field: 'TXN_DiscName', header: '折扣別', },
       ]
+      const updatedColumn = {
+        ...this.columns[0], // 複製所有舊屬性
+        optionLabel: 'TLT_No'  // 替換 options 屬性
+      };
+      // 替換整個 columns 陣列中的第一個元素
+      this.columns = [
+        updatedColumn,
+        ...this.columns.slice(1) // 保持其他欄位不變
+      ];
     }
   }
   private isSameData(newData: POS5007Data[], oldData: POS5007Data[]): boolean {
@@ -64,47 +73,75 @@ export class Tls24010TltnoComponent implements OnChanges {
   // 過濾PLU_MagNo
   filterPLU_MagNo(event: { rowData: POS5007Data, value: string }): void {
     const query = event.value.toLowerCase();
-    if (!query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 9) {
+
+    if (!query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 6) {
       return;
     }
     const txnDate = this.TXN_Date as unknown as Date
+    const formatToLocalISO = (date: Date) => {
+      // 檢查 date 是否為有效的 Date 物件
+      if (!date || isNaN(date.getTime())) {
+        return '';
+      }
+
+      // 取得本地時間的年、月、日
+      const year = date.getFullYear();
+      // getMonth() 回傳 0-11，所以要 +1
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+
+      // 格式化為 YYYY-MM-DD (確保月和日有兩位數，不足補零)
+      const formattedMonth = String(month).padStart(2, '0');
+      const formattedDay = String(day).padStart(2, '0');
+
+      return `${year}-${formattedMonth}-${formattedDay}`;
+    };
     const body = {
       Store_way: this.store_way,
-      TXN_Date: txnDate ? txnDate.toISOString().split('T')[0] : '',
+      TXN_Date: txnDate ? formatToLocalISO(txnDate) : '',
       Keyword: query
     }
     this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
       const newPOS2004Options = response.Data.map((item, index) => ({
         ...item,
         id: index,
-        label: `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}`
+        label: this.store_way === STORE_WAY.自營 ? `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}` :
+          `${item.TLT_No} - ${item.TLT_Name}`
       }));
+      this.POS2004Options = newPOS2004Options;
       const updatedColumn = {
-        ...this.columns[0], // 複製原有屬性
-        options: newPOS2004Options // 賦予新的 options
+        ...this.columns[0], // 複製所有舊屬性
+        options: newPOS2004Options // 替換 options 屬性
       };
+      // 替換整個 columns 陣列中的第一個元素
       this.columns = [
-        updatedColumn, // 放入更新後的 column
-        ...this.columns.slice(1) // 放入其他未變動的 columns
+        updatedColumn,
+        ...this.columns.slice(1) // 保持其他欄位不變
       ];
     });
   }
   onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {
-    const selectedItem = this.POS2004Options.find(item => item.PLU_MagNo === event.value?.value.PLU_MagNo);
-    if (selectedItem) {
+    console.log(event.rowData);
+    if (this.store_way === STORE_WAY.自營) {
+      const selectedItem = this.POS2004Options.find(item => item.PLU_MagNo === event.value?.value.PLU_MagNo);
+      console.log(selectedItem);
+      if (!selectedItem) { return; }
       event.rowData.PLU_Name = selectedItem.PLU_Name;
       event.rowData.TLT_No = selectedItem.TLT_No;
-      event.rowData.PLU_No = selectedItem.PLU_No;
       event.rowData.Talent_ID = selectedItem.talent_id;
       event.rowData.Contract_No = selectedItem.Contract_No;
       event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
-    }
-    if (this.store_way === STORE_WAY.專櫃) {
-      const selectedItem = this.POS2004Options.find(item => item.id === (event.value as unknown as POS2004Item).id);
-      if (selectedItem) {
-        event.rowData.tlt_id_desc = selectedItem.tlt_id_desc;
-        event.rowData.TXN_DiscName = selectedItem.cag_barcode_name;
-      }
+    } else if (this.store_way === STORE_WAY.專櫃) {
+      const selectedItem = this.POS2004Options.find(item => item.talent_id === event.value?.value.talent_id);
+      console.log(selectedItem);
+      if (!selectedItem) { return; }
+      event.rowData.PLU_Name = selectedItem.TLT_Name;
+      event.rowData.PLU_No = selectedItem.TLT_No;
+      event.rowData.TLT_No = selectedItem.TLT_No;
+      event.rowData.Talent_ID = selectedItem.talent_id;
+      event.rowData.Contract_No = selectedItem.Contract_No;
+      event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
+      event.rowData.tlt_id = selectedItem.tlt_id;
     }
   }
 }

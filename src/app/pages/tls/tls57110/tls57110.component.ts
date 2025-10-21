@@ -204,6 +204,12 @@ export class TLS57110Component extends BasicQueryPageComponent<TLS57110Response>
         STK_YM: rawValue.STK_YM ? this.formatToYearMonth(rawValue.STK_YM) : '',
         pageIndex,
         pageSize,
+         SortBy: frm.value.ShowType === 'M' ?
+          [
+            { field: 'LOGO_CH_NAME', order: 1 }] :
+          [
+            { field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 },
+          ]
       };
 
 
