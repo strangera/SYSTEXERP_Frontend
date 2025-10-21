@@ -52,7 +52,7 @@ export interface CPM13060SumData {
   providedIn: 'root'
 })
 export class Cpm13060Service {
-  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS5000`;
+  private apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
 
   constructor(private http: HttpClient) {}
 

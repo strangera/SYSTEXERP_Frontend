@@ -56,8 +56,8 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_Name: ['', [Validators.maxLength(20)]],
     ECR_TLT_No: ['', [Validators.maxLength(20)]],
     ECR_TLT_Name: ['', [Validators.maxLength(60)]],
-    ECR_ActiveDateStart: [null],
-    ECR_ActiveDateEnd: [null],
+    ECR_ActiveDateStart: [null as Date | null],
+    ECR_ActiveDateEnd: [null as Date | null],
     ECR_CloseDateStart: [null],
     ECR_CloseDateEnd: [null],
     ECR_Status: [''],
@@ -156,11 +156,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
         console.log('查詢 TLS11010 成功', res.Data);
-
       },
-      error: (err) => {
-        console.error('查詢 TLS11010 失敗', err);
-      }
     });
   }
 
@@ -175,15 +171,50 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
           value: x.value            // 存值
         })) || [];
     });
-    this.queryForm.get('ECR_TLT_No')?.valueChanges.subscribe((selectedNo) => {
-      const selected = this.CounterOptions.find((c) => c.value === selectedNo);
-      this.queryForm.patchValue(
-        {
-          ECR_TLT_Name: selected ? selected.Name : ''
-        },
-        { emitEvent: false }
-      );
-    });
+    this.queryForm.get('ECR_TLT_No')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((selectedNo) => {
+        if (!selectedNo) return;
+
+        const selected = this.CounterOptions.find((c) => c.value === selectedNo);
+        this.queryForm.patchValue(
+          {
+            ECR_TLT_Name: selected ? selected.Name : ''
+          },
+          { emitEvent: false }
+        );
+
+        this.tls41010Service.queryTLT_NoInfo(selectedNo).subscribe({
+          next: (res) => {
+            if (res?.Status === '0000' && res.Data) {
+              const info = res.Data;
+
+              //對應樓層
+              const matchedFloor = this.floorOptions.find(
+                f =>
+                  f.value === info.ECR_SubGroup ||
+                  f.label === info.ECR_SubGroup ||
+                  f.label.includes(info.ECR_SubGroup)
+              );
+
+              this.queryForm.patchValue({
+                ECR_LocNo: info.ECR_LocNo ?? '',
+                ECR_Status: info.ECR_Status ?? '',
+                ECR_Group: info.ECR_Group ?? '',
+                ECR_SubGroup: matchedFloor ? matchedFloor.value : '',
+                ECR_AreaNo: info.ECR_AreaNo ?? '',
+                ECR_ActiveDateStart: info.tlt_bdate ? new Date(info.tlt_bdate) : null,
+                ECR_ActiveDateEnd: info.tlt_edate ? new Date(info.tlt_edate) : null
+              }, { emitEvent: false });
+            } else {
+              console.warn('查詢櫃位資料失敗:', res?.Message);
+            }
+          },
+          error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err)
+        });
+      });
+
+
 
     //後台主機ip
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {

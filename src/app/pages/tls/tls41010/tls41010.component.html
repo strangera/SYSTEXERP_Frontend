@@ -36,9 +36,9 @@
             [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status"
             [submitted]="submitted"></app-dropdown>
 
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="ECR_SubGroup"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="樓層" controlName="ECR_SubGroup"
             [options]="floorOptions" [control]="queryForm.controls.ECR_SubGroup"
-            [submitted]="submitted"></app-multi-select>
+            [submitted]="submitted"></app-dropdown>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="位置編號" controlName="ECR_LocNo" [control]="queryForm.controls.ECR_LocNo"
               [options]="LocOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-dropdown>

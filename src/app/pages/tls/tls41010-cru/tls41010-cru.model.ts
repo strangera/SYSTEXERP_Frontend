@@ -6,10 +6,15 @@ export const typeOptions = [
 ];
 
 export const statusOptions = [
-  { label: '啟用(預設值)', value: 'A' },
+  { label: '啟用', value: 'A' },
   { label: '停用', value: 'C' },
   { label: '強制停用', value: 'S' },
   { label: '訓練', value: 'T' },
+];
+
+export const statusOptionsForCRU = [
+  { label: '啟用', value: 'A' },
+  { label: '停用', value: 'C' },
 ];
 
 export const salTypeOptions = [
