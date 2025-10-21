@@ -10,7 +10,7 @@ interface FIN53010Basic {
   /** ROC/IFRS 0:共用 1:ROC 2:IFRS 3:全部 */
   VouAccType: '0' | '1' | '2' | '3';
   /** 傳票類別 1:現金收入2:現金支出3:轉帳傳票 */
-  VouType: '0' | '1' | '2';
+  VouType: '1' | '2' | '3';
   /** 傳票種類(SYS1000.VoucherType) */
   VoucherType: string;
 }
