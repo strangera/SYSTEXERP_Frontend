@@ -53,24 +53,10 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const adjDateValue: Date | null = frm.get('adj_date')?.value;
-      let formattedAdjDate: string | null = null;
-
-      if (adjDateValue) {
-        // 關鍵步驟：
-        // 1. 確保 value 是一個 Date 物件 (通常來自 datepicker)
-        // 2. 將本地時間調整為 00:00:00 (通常不是必須，但更安全)
-        adjDateValue.setHours(0, 0, 0, 0);
-
-        // 3. 使用 formatDate 函式，指定格式 'yyyy-MM-dd' 和時區 'UTC'
-        //    這強制將該日期物件視為 UTC 日期進行格式化，忽略本地時區。
-        formattedAdjDate = formatDate(adjDateValue, 'yyyy-MM-dd', 'en-US', 'UTC');
-      }
-
       const body = {
         ...frm.getRawValue(),
         sam_yyymm: convertDateToYYYYMM(frm.get('sam_yyymm')?.value),
-        adj_date: formattedAdjDate, // 使用已校正的日期字串
+        adj_date: new Date(frm.get('adj_date')?.value.getTime() + 86400000).toISOString().split('T')[0],
       }
 
       this.tls2e060Service.queryTls2e060(body).pipe(
