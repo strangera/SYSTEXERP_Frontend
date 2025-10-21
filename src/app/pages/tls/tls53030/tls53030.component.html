@@ -8,30 +8,42 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="盤點單編號" controlName="inventorySerialNo"
-              [control]="queryForm.controls.inventorySerialNo" [submitted]="submitted"></app-input-text>
+            <!-- 盤點單編號 -->
+            <app-input-text label="盤點單編號" controlName="PST_No" [control]="queryForm.controls.PST_No"
+              [submitted]="submitted"></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
+            <!-- 倉庫代碼/名稱 -->
+            <app-multi-select label="倉庫代碼/名稱" controlName="HOS_No" [options]="hosOptions"
+              [control]="queryForm.controls.HOS_No" [submitted]="submitted" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌編號" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
+            <!-- 品牌代碼/名稱 -->
+            <app-multi-select label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"
+              [control]="queryForm.controls.LOGO_No" [submitted]="submitted" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="盤點基準日期"
-              [startControl]="queryForm.controls.inventoryDateFrom" [endControl]="queryForm.controls.inventoryDateTo"
+            <!-- 盤點基準日期（起訖） -->
+            <app-calendar-range label="盤點基準日期" calendarType="dateRange"
+              [startControl]="queryForm.controls.PST_DateStart" [endControl]="queryForm.controls.PST_DateEnd"
               [submitted]="submitted"></app-calendar-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="盤點單狀態" controlName="storageInventoryStatus" [options]="storageInventoryStatusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.storageInventoryStatus"
-              [submitted]="submitted"></app-dropdown>
+            <!-- 盤點狀態 -->
+            <app-multi-select label="盤點狀態" controlName="PST_Status" [options]="pstStatusOptions"
+              [control]="queryForm.controls.PST_Status" [submitted]="submitted" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="顯示差異" controlName="showDifference" [control]="queryForm.controls.showDifference"
-              [options]="showDifferenceOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton label="顯示差異" controlName="showDifference" [control]="queryForm.controls.showDiff"
+              [options]="showDiffOptions" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -42,10 +54,12 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <app-table tableKey="TLS53030" [data]="data" [columns]="columns" dataKey="ID"
-    [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    [showManage]="true" [showDetail]="false" [showEdit]="false" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [addButton]="addButton"></app-table>
+  <app-table tableKey="TLS53030" dataKey="PST_No" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+    [showDelete]="false" [showEdit]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [multiSortMeta]="[{ field: 'PST_No', order: -1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [addButton]="addButton" [expansionColumns]="expansionColumns" [expansionLoadFn]="loadDetails"
+    [expansionDataKey]="'PLU_MagNo'">
+  </app-table>
 </div>
