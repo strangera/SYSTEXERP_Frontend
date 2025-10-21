@@ -8,11 +8,11 @@ import { Observable, of } from 'rxjs';
 export interface TLS42020QueryRequest extends BaseQueryRequest {
   menuType: string[];              // 菜單類別
   tltNo: string[];                 // 專櫃編號
-  tltName?: string[];               // 專櫃名稱 - 新增此欄位
-  SBM_BegDate_s: string;          // 開始日期(起)
-  SBM_BegDate_e: string;          // 開始日期(迄)
-  SBM_EndDate_s: string;          // 結束日期(起)
-  SBM_EndDate_e: string;          // 結束日期(迄)
+  tltName?: string[];              // 專櫃名稱 - 新增此欄位
+  SBM_BegDate_s: string;           // 開始日期(起)
+  SBM_BegDate_e: string;           // 開始日期(迄)
+  SBM_EndDate_s: string;           // 結束日期(起)
+  SBM_EndDate_e: string;           // 結束日期(迄)
 }
 
 // Data result interface for TLS42020 (POS1027M資料表)
@@ -128,7 +128,7 @@ export interface TLS42020DeleteRequest {
 
 // Dropdown request interface for TLS42020
 export interface TLS42020DropdownRequest {
-  TLT_NO: number[];               // 專櫃編號清單
+  TLT_NO: string[];               // 專櫃編號清單
 }
 
 @Injectable({
@@ -151,7 +151,7 @@ export class TLS42020Service {
 
   // 新增POS1027M資料表
   insertTLS42020M(data: TLS42020InsertRequest): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/insertTLS42020M`, data);
+    return this.http.post<any>(`${this.apiUrl}/insertTLS42020`, data);
   }
 
   // 更新POS1027M資料表

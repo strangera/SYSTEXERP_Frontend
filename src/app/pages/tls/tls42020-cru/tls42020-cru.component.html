@@ -20,7 +20,7 @@
       </div>
 
       <!-- 明細 -->
-      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="id" [columns]="columns" [data]="data"
+      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="ID" [columns]="columns" [data]="data"
         [showEdit]="false" [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
         (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
         [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
