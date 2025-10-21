@@ -1,5 +1,6 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52010Service } from '@service/api/fin/fin52010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -10,7 +11,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { FIN52010Data } from './fin52010.model';
@@ -37,9 +38,25 @@ import { FIN52010Data } from './fin52010.model';
 export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-
+    AccYear: new FormControl<string | void>(void 0),
+    OpenDate: new FormControl<Date | void>(void 0),
+    CloseDate: new FormControl<Date | void>(void 0),
+    DefaultVouDate: new FormControl<Date | void>(void 0),
+    ORG_ID: new FormControl<string | void>(void 0),
+    AccNoTotPL: new FormControl<string | void>(void 0),
+    AccNoCurPL: new FormControl<string | void>(void 0),
+    CashAccNo: new FormControl<string | void>(void 0),
+    AccNoAR: new FormControl<string | void>(void 0),
+    AccNoAP: new FormControl<string | void>(void 0),
+    AccNoInTax: new FormControl<string | void>(void 0),
+    AccNoOutTax: new FormControl<string | void>(void 0),
+    AccNoPost: new FormControl<string | void>(void 0),
+    AccNoRemitFee: new FormControl<string | void>(void 0),
+    advanceExpenseAccNo: new FormControl<string | void>(void 0),
+    billTransferCon: new FormControl<'N' | 'Y'>('N'),
+    ...createPaginationConfig([{ field: 'id', order: 1 }]),
   });
-  private readonly qf = computed(() => this.queryForm.controls);
+  public readonly qf = computed(() => this.queryForm.controls);
 
   public readonly filteredData = computed(() => {
     return this.service.FIN52010Data();
@@ -47,8 +64,26 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
-  public readonly columns: Column[] = [
-
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52010Data; })[] = [
+    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccCName', header: '科目名稱' },
+    { field: 'AccEName', header: '科目英文名稱' },
+    { field: 'AccDC', header: '借/貸', format: d => this.service.accDCOptions().find(option => option.value === d)?.label ?? d },
+    { field: 'Ledger_MD', header: '統制/明細', format: d => this.service.ledgerOptions().find(option => option.value === d)?.label ?? d },
+    { field: 'ClassNo', header: '三碼代號' },
+    { field: 'ParentAccNo', header: '上層科目代號' },
+    { field: 'Input_YN', header: '是否可輸', format: d => d === 'Y' ? '是' : d === 'N' ? '否' : d },
+    { field: 'ABAT_YN', header: '是否為沖帳代號', format: d => d === 'Y' ? '是' : d === 'N' ? '否' : d },
+    { field: 'Voucher_Type', header: '傳票格式' },
+    { field: 'Budget_YN', header: '是否為預算科目', format: d => d === 'Y' ? '是' : d === 'N' ? '否' : d },
+    { field: 'Org_YN', header: '是否設定部門代號', format: d => d === 'Y' ? '是' : d === 'N' ? '否' : d },
+    { field: 'ROC_AccNo', header: 'ROC科目代號' },
+    { field: 'IFRS_AccNo', header: 'IFRS科目代號' },
+    { field: 'NoteDesc', header: '備註' },
+    { field: 'CRT_USR_Name', header: '建立者' },
+    { field: 'CRT_Date', header: '建立日期', format: d => this.date.transform(d, 'yyyy/MM/dd') },
+    { field: 'UPD_USR_Name', header: '修改者' },
+    { field: 'UPD_Date', header: '修改日期', format: d => this.date.transform(d, 'yyyy/MM/dd') },
   ];
 
 
@@ -161,6 +196,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   constructor(
     public service: FIN52010Service,
     private readonly logger: NGXLogger,
+    private readonly date: DatePipe,
   ) {
     super();
   }
@@ -169,6 +205,9 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     this.initializePage('FIN52010', '/FIN/FIN52010CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
+
+    this.service.getTblUserOrgidList();
+    this.service.getSYS1000().subscribe();
 
     this.logger.debug(`init:`, []);
 

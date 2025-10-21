@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { FIN52010Data, FIN52010Detail } from '@pages/fin/fin52010/fin52010.model';
+import { FIN52010Data, FIN52010Detail, FIN52010Payload } from '@pages/fin/fin52010/fin52010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -41,6 +41,24 @@ export class FIN52010Service {
   public readonly remarkList = signal<Option[]>([]);
   public readonly sys1000List = signal<Option[]>([]);
 
+  public readonly billTransferConOptions = signal<Option[]>([
+    { value: 'N', label: '否' },
+    { value: 'Y', label: '是' },
+  ]);
+  public readonly vouTypeOptions = signal<Option[]>([
+    { value: '1', label: '現金收入傳票' },
+    { value: '2', label: '現金支出傳票' },
+    { value: '3', label: '轉帳傳票' }
+  ]);
+  public readonly accDCOptions = signal<Option[]>([
+    { value: 'D', label: '借' },
+    { value: 'C', label: '貸' }
+  ]);
+  public readonly ledgerOptions = signal<Option[]>([
+    { value: '0', label: '統制' },
+    { value: '1', label: '明細' }
+  ]);
+
   public readonly accNoMap = computed(() =>
     new Map(this.accNoList().map(item => [item.value, item]))
   );
@@ -60,19 +78,19 @@ export class FIN52010Service {
     private readonly dropdownApi: DropdownApiService,
   ) { }
 
-  // public loadFIN52010(payload: FIN52010Payload): Observable<BaseQueryResponse<FIN52010Data>> {
-  //   this.tableCancel$.next();
-  //   this.tableLoading.set(!0);
-  //   return this.http.post<BaseQueryResponse<FIN52010Data>>(`${apiUrl}/queryFIN52010`, payload).pipe(
-  //     take(1),
-  //     takeUntil(this.tableCancel$),
-  //     tap(res => this.FIN52010Data.set(res.Data)),
-  //     finalize(() => {
-  //       this.tableLoading.set(!1);
-  //       this.logger.debug('查詢FIN52010結果:', [this.FIN52010Data()]);
-  //     })
-  //   );
-  // }
+  public loadFIN52010(payload: FIN52010Payload): Observable<BaseQueryResponse<FIN52010Data>> {
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
+    return this.http.post<BaseQueryResponse<FIN52010Data>>(`${apiUrl}/queryFIN52010`, payload).pipe(
+      take(1),
+      takeUntil(this.tableCancel$),
+      tap(res => this.FIN52010Data.set(res.Data)),
+      finalize(() => {
+        this.tableLoading.set(!1);
+        this.logger.debug('查詢FIN52010結果:', [this.FIN52010Data()]);
+      })
+    );
+  }
 
   // public loadFIN52010Detail(id: number): Observable<FIN52010DataDetail> {
   //   this.tableCancel$.next();
@@ -140,26 +158,26 @@ export class FIN52010Service {
   //   ).subscribe();
   // }
 
-  // public getOrgNoList(): void {
-  //   this.orgNoCancel$.next();
-  //   this.dropdownApi.querySys3100().pipe(
-  //     take(1),
-  //     takeUntil(this.orgNoCancel$),
-  //     tap(res => this.orgNoList.set(res ?? [])),
-  //     finalize(() => this.logger.debug('查詢OrgNoList結果:', [this.orgNoList()])),
-  //   ).subscribe();
-  // }
+  public getOrgNoList(): void {
+    this.orgNoCancel$.next();
+    this.dropdownApi.querySys3100().pipe(
+      take(1),
+      takeUntil(this.orgNoCancel$),
+      tap(res => this.orgNoList.set(res ?? [])),
+      finalize(() => this.logger.debug('查詢OrgNoList結果:', [this.orgNoList()])),
+    ).subscribe();
+  }
 
-  // public getTblUserOrgidList(): void {
-  //   this.orgIdCancel$.next();
-  //   this.dropdownApi.queryTblUserOrgid().pipe(
-  //     take(1),
-  //     takeUntil(this.orgIdCancel$),
-  //     map(res => res?.map(item => ({ value: item['Org_ID'], label: item['Org_Name'] } as Option)) ?? []),
-  //     tap(res => this.tblUserOrgidList.set(res)),
-  //     finalize(() => this.logger.debug('查詢TblUserOrgidListList結果:', [this.tblUserOrgidList()])),
-  //   ).subscribe();
-  // }
+  public getTblUserOrgidList(): void {
+    this.orgIdCancel$.next();
+    this.dropdownApi.queryTblUserOrgid().pipe(
+      take(1),
+      takeUntil(this.orgIdCancel$),
+      map(res => res?.map(item => ({ value: item['Org_ID'], label: item['Org_Name'] } as Option)) ?? []),
+      tap(res => this.tblUserOrgidList.set(res)),
+      finalize(() => this.logger.debug('查詢TblUserOrgidListList結果:', [this.tblUserOrgidList()])),
+    ).subscribe();
+  }
 
   // public getAccNoList(): Observable<Option[]> {
   //   this.accNoCancel$.next();
@@ -207,15 +225,15 @@ export class FIN52010Service {
   //   );
   // }
 
-  // public getSYS1000(SYS_Type: string): Observable<Option[]> {
-  //   this.sys1000Cancel$.next();
-  //   this.sys1000Loading.set(!0);
-  //   return this.dropdownApi.querySys1000({ SYS_Type }).pipe(
-  //     take(1),
-  //     takeUntil(this.sys1000Cancel$),
-  //     map(res => res?.map(item => ({ value: item['No'], label: item['Name'] } as Option)) ?? []),
-  //     tap(res => this.sys1000List.set(res)),
-  //     finalize(() => this.logger.debug('查詢SYS1000List結果:', [this.sys1000List()])),
-  //   );
-  // }
+  public getSYS1000(): Observable<Option[]> {
+    this.sys1000Cancel$.next();
+    this.sys1000Loading.set(!0);
+    return this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
+      take(1),
+      takeUntil(this.sys1000Cancel$),
+      map(res => res?.map(item => ({ value: item['No'], label: item['Name'] } as Option)) ?? []),
+      tap(res => this.sys1000List.set(res)),
+      finalize(() => this.logger.debug('查詢SYS1000List結果:', [this.sys1000List()])),
+    );
+  }
 }
