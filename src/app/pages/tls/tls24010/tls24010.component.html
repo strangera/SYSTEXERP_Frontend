@@ -41,7 +41,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="TXN_No" tableKey="TLS24010Table" [lastQueryBody]="historyRequestBody" [data]="data"
+  <app-table-report dataKey="TXN_No" tableKey="TLS24010Table" [lastQueryBody]="historyRequestBody" [data]="data" [pageSizeSetting]="'A0'"
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showReportMode]="false" [showEdit]="false"
     [queryFunction]="tls24010Service.queryTLS24010.bind(tls24010Service)" groupRowsBy="ODM_No" [loading]="loading"
     [addButton]="addButton" (detail)="onDetailData($event)">
