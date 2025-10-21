@@ -14,6 +14,7 @@ import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { BankOptionsService } from '@service/api/dropdownservice/bank-option.service';
 import { DropdownOption, Pos2013DropdownOption, TLS13010DropdownService } from '@pages/tls/tls13010/tls13010.dropdown';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
 
 
 /**
@@ -28,6 +29,7 @@ export class TLS13010DataLoaderService {
   constructor(
     private contractFlowService: ContractFlowService,
     private tls13010Service: TLS13010Service,
+    private tls12010Service: Tls12010Service,
     private locationOptionsService: LocationOptionsService,
     private vendorCategoryService: VendorCategoryOptionsService,
     private negotiatorService: NegotiatorOptionsService,
@@ -641,5 +643,75 @@ export class TLS13010DataLoaderService {
     } else {
       console.log('🔭 沒有位置暫存資料');
     }
+  }
+
+  /**
+ * 根據廠商統編載入潛在客戶資料
+ * @param vendorNo 廠商統編
+ * @param formGroup 要更新的表單
+ */
+  loadPotentialCustomerData(
+    vendorNo: string,
+    formGroup: FormGroup
+  ): Observable<boolean> {
+    const request = {
+      PageSize: 1,
+      PageIndex: 1,
+      OrderBy: "",
+      Offset: 0,
+      SortBy: [],
+      CreatedDateStart: null,
+      CreatedDateEnd: null,
+      contact_USR_Name: "",
+      cus_uniform_id: [vendorNo],
+      VEN_Name: "",
+      VEN_EngName: "",
+      tlt_name: "",
+      tlt_EngName: "",
+      bus_type: []
+    };
+
+    return this.tls12010Service.queryTLS12010(request).pipe(
+      map(result => {
+        if (result.Data && result.Data.length > 0) {
+          const potentialData = result.Data[0];
+
+          // 回填欄位
+          formGroup.patchValue({
+            tlt_name: potentialData.tlt_name || '',
+            bus_type: potentialData.bus_type || '',
+            contact_tel: potentialData.VEN_BossTel || '',
+            contact_fax: potentialData.VEN_BossFax || ''
+          }, { emitEvent: true });
+
+          console.log('✅ 已載入潛在客戶資料');
+          return true;
+        } else {
+          // 清空欄位
+          formGroup.patchValue({
+            tlt_name: '',
+            bus_type: '',
+            contact_tel: '',
+            contact_fax: ''
+          }, { emitEvent: true });
+
+          console.log('⚠️ 查無潛在客戶資料');
+          return false;
+        }
+      }),
+      catchError(err => {
+        console.error('❌ 載入潛在客戶資料失敗:', err);
+
+        // 清空欄位
+        formGroup.patchValue({
+          tlt_name: '',
+          bus_type: '',
+          contact_tel: '',
+          contact_fax: ''
+        }, { emitEvent: true });
+
+        return of(false);
+      })
+    );
   }
 }

@@ -60,15 +60,15 @@
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="廠商統一編號"
-              controlName="ven_uniform"
+              controlName="ven_uniformList"
               [options]="vendorUIDOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ven_uniform"
+              [control]="queryForm.controls.ven_uniformList"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown

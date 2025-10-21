@@ -128,6 +128,9 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_no: [, []], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(50)]], // 櫃位名稱
     ven_uniform: [], // 廠商統一編號
+    ven_uniformList: [[]],
+    ven_no: [, [Validators.maxLength(50)]],
+    vendor_ven_no: [, [Validators.maxLength(16)]],
     location_no: [], // 位置編號
     contract_subno_from: [, [Validators.max(12)]], // 版本編號
     contract_subno_to: [, [Validators.max(12)]], // 版本編號

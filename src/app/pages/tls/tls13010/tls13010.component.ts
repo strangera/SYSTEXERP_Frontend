@@ -299,15 +299,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
         clearInterval(checkInterval);
       }
     }, 200); // 每 200ms 檢查一次
-
-    // 設置 5 秒超時，避免無限等待
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      if (this.pos2013Options.length === 0) {
-        console.warn('⚠️ POS2013 選項載入超時');
-        this.messageService.warnBubble('載入廠商選項失敗，請重新整理頁面');
-      }
-    }, 5000);
   }
 
   /**

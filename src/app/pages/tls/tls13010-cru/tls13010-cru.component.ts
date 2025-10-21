@@ -503,175 +503,63 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // private setupVendorUniformListener(): void {
-  //   // 改為監聽 vendor_ven_no (下拉選單綁定的欄位)
-  //   const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges.subscribe(vendorVenNo => {
-  //     console.log('📝 vendor_ven_no 變更:', vendorVenNo);
-
-  //     if (vendorVenNo && vendorVenNo.trim()) {
-  //       // 從選項中找到對應的廠商
-  //       const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
-
-  //       if (selectedOption) {
-  //         // 自動帶入其他欄位
-  //         this.dataForm.patchValue({
-  //           vendor_no: selectedOption.No,              // 統編
-  //           ven_no: selectedOption.VEN_No,             // 廠商編號 (如果你還需要)
-  //           ven_uniform: selectedOption.No,            // 統一編號 (如果你還需要)
-  //           VEN_Name: selectedOption.Name,
-  //           VEN_Address: selectedOption.VEN_Address
-  //         }, { emitEvent: false });
-
-  //         this.saveToWorkflow();
-
-  //         console.log('已自動帶入廠商資料:', {
-  //           VEN_No: vendorVenNo,
-  //           統編: selectedOption.No,
-  //           名稱: selectedOption.Name
-  //         });
-  //       }
-  //     } else {
-  //       // 清空相關欄位
-  //       this.dataForm.patchValue({
-  //         vendor_no: '',
-  //         ven_no: '',
-  //         ven_uniform: '',
-  //         VEN_Name: '',
-  //         VEN_Address: ''
-  //       }, { emitEvent: false });
-  //     }
-  //   });
-
-  //   if (venUniformSubscription) this.subscriptions.push(venUniformSubscription);
-  // }
-
   private setupVendorUniformListener(): void {
-    const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges.subscribe(vendorVenNo => {
-      console.log('📝 vendor_ven_no 變更:', vendorVenNo);
+    const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges
+      .subscribe(vendorVenNo => {
+        console.log('📝 vendor_ven_no 變更:', vendorVenNo);
 
-      if (vendorVenNo && vendorVenNo.trim()) {
-        const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
+        if (vendorVenNo && vendorVenNo.trim()) {
+          const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
 
-        if (selectedOption) {
-          // A. 先帶入 Pos2013 的基本資料
-          this.dataForm.patchValue({
-            vendor_no: selectedOption.No,
-            ven_no: selectedOption.VEN_No,
-            ven_uniform: selectedOption.No,
-            VEN_Name: selectedOption.Name,
-            VEN_Address: selectedOption.VEN_Address,
-            vendor_acct_name: selectedOption.Name
-          }, { emitEvent: false });
+          if (selectedOption) {
+            // A. 帶入廠商基本資料
+            this.dataForm.patchValue({
+              vendor_no: selectedOption.No,
+              ven_no: selectedOption.VEN_No,
+              ven_uniform: selectedOption.No,
+              VEN_Name: selectedOption.Name,
+              VEN_Address: selectedOption.VEN_Address,
+              vendor_acct_name: selectedOption.Name
+            }, { emitEvent: false });
 
-          // B. 查詢潛在客戶資料
-          const cus_uniform_id = selectedOption.No.trim();
-
-          const request = {
-            PageSize: 1,
-            PageIndex: 1,
-            OrderBy: "",
-            Offset: 0,
-            SortBy: [],
-            CreatedDateStart: null,
-            CreatedDateEnd: null,
-            contact_USR_Name: "",
-            cus_uniform_id: [cus_uniform_id],
-            VEN_Name: "",
-            VEN_EngName: "",
-            tlt_name: "",
-            tlt_EngName: "",
-            bus_type: []
-          };
-
-          console.log('🔍 查詢潛在客戶資料, 統編:', cus_uniform_id);
-
-          this.tls12010Service.queryTLS12010(request).subscribe({
-            next: (result) => {
-              console.log('📦 API 完整回應:', result);
-
-              if (result.Data && result.Data.length > 0) {
-                // ✅ 找到資料 - 回填欄位
-                const potentialData = result.Data[0];
-                console.log('✅ 找到潛在客戶資料:', potentialData);
-
-                this.dataForm.patchValue({
-                  tlt_name: potentialData.tlt_name || '',
-                  bus_type: potentialData.bus_type || '',
-                  contact_tel: potentialData.VEN_BossTel || '',
-                  contact_fax: potentialData.VEN_BossFax || ''
-                }, { emitEvent: true });
-
-                this.messageService.successBubble('已自動帶入潛在客戶資料');
-
-                console.log('✅ 已回填欄位:', {
-                  櫃位名稱: potentialData.tlt_name,
-                  大分類: potentialData.bus_type,
-                  電話: potentialData.VEN_BossTel,
-                  傳真: potentialData.VEN_BossFax
-                });
-              } else {
-                // ⚠️ 查無資料 - 清空潛在客戶相關欄位
-                console.warn('⚠️ 查無潛在客戶資料 (統編:', cus_uniform_id, ')');
-
-                this.dataForm.patchValue({
-                  tlt_name: '',
-                  bus_type: '',
-                  contact_tel: '',
-                  contact_fax: ''
-                }, { emitEvent: true }); // 觸發 bus_type 的清空邏輯
-
-                this.messageService.infoBubble('查無潛在客戶資料，已帶入廠商基本資料');
-
-                console.log('🧹 已清空潛在客戶相關欄位');
+            // B. 使用 DataLoaderService 載入潛在客戶資料
+            this.dataLoaderService.loadPotentialCustomerData(
+              selectedOption.No,
+              this.dataForm
+            ).subscribe({
+              next: (hasData) => {
+                if (hasData) {
+                  this.messageService.successBubble('已自動帶入潛在客戶資料');
+                } else {
+                  this.messageService.infoBubble('查無潛在客戶資料，已帶入廠商基本資料');
+                }
+              },
+              error: () => {
+                this.messageService.warnBubble('查詢潛在客戶資料失敗，僅帶入廠商基本資料');
+              },
+              complete: () => {
+                this.saveToWorkflow();
               }
-            },
-            error: (err) => {
-              // ❌ API 錯誤 - 也清空潛在客戶相關欄位
-              console.error('❌ 查詢潛在客戶資料失敗:', err);
+            });
 
-              this.dataForm.patchValue({
-                tlt_name: '',
-                bus_type: '',
-                contact_tel: '',
-                contact_fax: ''
-              }, { emitEvent: true });
-
-              this.messageService.warnBubble('查詢潛在客戶資料失敗，僅帶入廠商基本資料');
-
-              console.log('🧹 API 錯誤，已清空潛在客戶相關欄位');
-            },
-            complete: () => {
-              // 確保儲存到工作流程
-              this.saveToWorkflow();
-            }
-          });
-
-          console.log('✅ 已帶入廠商基本資料:', {
-            VEN_No: vendorVenNo,
-            統編: selectedOption.No,
-            名稱: selectedOption.Name
-          });
+            console.log('✅ 已帶入廠商基本資料');
+          }
+        } else {
+          // 清空所有欄位
+          this.dataForm.patchValue({
+            vendor_no: '',
+            ven_no: '',
+            ven_uniform: '',
+            VEN_Name: '',
+            VEN_Address: '',
+            vendor_acct_name: '',
+            tlt_name: '',
+            bus_type: '',
+            contact_tel: '',
+            contact_fax: ''
+          }, { emitEvent: false });
         }
-      } else {
-        // 清空所有相關欄位（包含廠商基本資料和潛在客戶資料）
-        this.dataForm.patchValue({
-          // 廠商基本資料
-          vendor_no: '',
-          ven_no: '',
-          ven_uniform: '',
-          VEN_Name: '',
-          VEN_Address: '',
-          vendor_acct_name: '',
-          // 潛在客戶資料
-          tlt_name: '',
-          bus_type: '',
-          contact_tel: '',
-          contact_fax: ''
-        }, { emitEvent: false });
-
-        console.log('🧹 已清空所有廠商和潛在客戶欄位');
-      }
-    });
+      });
 
     if (venUniformSubscription) {
       this.subscriptions.push(venUniformSubscription);
