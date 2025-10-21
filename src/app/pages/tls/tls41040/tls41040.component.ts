@@ -14,6 +14,28 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
+
+// 定義資料項目介面
+interface TLS41040Item {
+  NOT_SeqNo: string;
+  NOT_DateTime: string;
+  NOT_BegDateTime: string;
+  NOT_EndDateTime: string;
+  NOT_Desc: string;
+  NOT_Status: string;
+  NOT_Remark: string;
+  TLT_No: string;
+  ECR_Type: string;
+  ECR_GrpNo: string;
+  BUILDING_No: string;
+  FLOOR_No: string;
+  Area_No: string;
+  ID?: number;
+  id?: number;
+}
 
 @Component({
   selector: 'app-tls41040',
@@ -33,7 +55,7 @@ import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 
     InputTextareaComponent
   ],
 })
-export class TLS41040Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> implements OnInit {
 
   // ---- 表單 ----
   queryForm = this.formBuilder.nonNullable.group({
@@ -45,7 +67,7 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'NOT_SeqNo', order: 1 }]),
   });
 
-  ECRNoOptions: any[] = [];
+  ECRNoOptions: {label: string; value: string}[] = [];
 
   NOT_Status_Options = [
     { label: '已生效', value: 'A' },
@@ -85,8 +107,9 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
     { field: 'Area_No', header: '區域', visible: true },
   ];
 
-  data: any[] = [];
+  data: TLS41040Item[] = [];
   totalRecords = 0;
+  selectedItems: TLS41040Item[] = [];
 
   constructor(
     private ECRNoService: ECRNoService,
@@ -120,7 +143,6 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
         NOT_Remark: frmValue.NOT_Remark || ''
       };
 
-
       this.loading = true;
       this.tls41040Service.queryTLS41040(payload).subscribe({
         next: (res) => {
@@ -137,6 +159,18 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  // ---- 刪除 ----
+  onDelete(selectedRows: TLS41040Item[]): void {
+    const idList = selectedRows.map(row => row.ID || row.id).filter((id): id is number => typeof id === 'number');
+    const deletePayload = { idList };
+    this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this)).subscribe({
+      next: () => {
+        this.onSubmit(this.queryForm);
+        this.selectedItems = [];
+      },
+      error: () => { this.loading = false; },
+    });
+  }
 
 
 }

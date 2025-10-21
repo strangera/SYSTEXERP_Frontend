@@ -132,7 +132,7 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
         { field: 'PKG_pricing_end_at', header: '出場時間', visible: true, format: formatDateTime },
         { field: 'PKG_license_plate_no', header: '車牌號碼', visible: true },
         { field: 'PKG_disc_rule_name', header: '折扣名稱', visible: true },
-        { field: 'PKG_discount_time', header: '折抵時數', visible: true, },
+        { field: 'PKG_discount_time', header: '折抵時數', visible: true, format: formatAmount, isSubTotal: true },
         { field: 'PKG_discount_fee', header: '折抵金額', visible: true, format: formatAmount, isSubTotal: true },
       ];
     } else {
@@ -140,8 +140,8 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
         { field: 'TXN_Date', header: '日期', visible: true, showSort: true },
         { field: 'PKG_disc_shop_name', header: '店家名稱', visible: true },
         { field: 'PKG_disc_rule_name', header: '折扣名稱', visible: true },
-        { field: 'CNT', header: '筆數', visible: true },
-        { field: 'PKG_discount_time', header: '總折抵時數', visible: true },
+        { field: 'CNT', header: '筆數', visible: true, isSubTotal: true },
+        { field: 'PKG_discount_time', header: '總折抵時數', visible: true,format: formatAmount, isSubTotal: true  },
         { field: 'PKG_discount_fee', header: '總折抵金額', visible: true, format: formatAmount, isSubTotal: true },
       ];
     }
