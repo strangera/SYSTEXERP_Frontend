@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { SHARED_DROPDOWN_OPTIONS, DropdownOption } from '../constants/business.constants';
+import { SHARED_DROPDOWN_OPTIONS, DropdownOption, Pos2013DropdownOption } from '../constants/business.constants';
 import { environment } from '../../../environments/environment';
 // API 服務注入
 import { Sysb800DropdownService } from '../../service/api/sys/sysb800-dropdown.service';
@@ -83,6 +83,32 @@ export class SharedDropdownService {
         const normalizedData = this.normalizeApiResponse(response);
         console.log(`✅ ${apiName} 載入完成: ${normalizedData.length} 筆資料`);
         return normalizedData;
+      }),
+      catchError((error) => {
+        console.error(`❌ ${apiName} 載入失敗:`, error);
+        return of([]); // 回傳空陣列，避免中斷使用者操作
+      })
+    );
+  }
+
+  /**
+ * 通用的 API 呼叫方法 - 包含錯誤處理
+ */
+  private callPOS2013Api<T>(apiName: string, apiCall: () => Observable<T>): Observable<Pos2013DropdownOption[]> {
+    console.log(`🚀 呼叫 ${apiName} API`);
+
+    return apiCall().pipe(
+      map((response: any) => {
+        // 🔥 直接回傳 API 的結果,因為 getVendorCategoryNoNameOptions 已經處理好格式了
+        const data = Array.isArray(response) ? response : [];
+        console.log(`✅ ${apiName} 載入完成: ${data.length} 筆資料`);
+
+        // 🔍 顯示第一筆資料的結構
+        if (data.length > 0) {
+          console.log(`📋 ${apiName} 第一筆資料:`, data[0]);
+        }
+
+        return data as Pos2013DropdownOption[];
       }),
       catchError((error) => {
         console.error(`❌ ${apiName} 載入失敗:`, error);
@@ -184,8 +210,8 @@ export class SharedDropdownService {
   /**
    * 載入廠商選項
    */
-  getVendorOptions(venFlag: string = "1"): Observable<DropdownOption[]> {
-    return this.callApi(`廠商(${venFlag})`, () =>
+  getVendorOptions(venFlag: string = "1"): Observable<Pos2013DropdownOption[]> {
+    return this.callPOS2013Api(`廠商(${venFlag})`, () =>
       this.vendorCategoryService.getVendorCategoryNoNameOptions(venFlag)
     );
   }

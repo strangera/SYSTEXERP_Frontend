@@ -503,48 +503,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // private setupVendorUniformListener(): void {
-  //   // 改為監聽 vendor_ven_no (下拉選單綁定的欄位)
-  //   const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges.subscribe(vendorVenNo => {
-  //     console.log('📝 vendor_ven_no 變更:', vendorVenNo);
-
-  //     if (vendorVenNo && vendorVenNo.trim()) {
-  //       // 從選項中找到對應的廠商
-  //       const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
-
-  //       if (selectedOption) {
-  //         // 自動帶入其他欄位
-  //         this.dataForm.patchValue({
-  //           vendor_no: selectedOption.No,              // 統編
-  //           ven_no: selectedOption.VEN_No,             // 廠商編號 (如果你還需要)
-  //           ven_uniform: selectedOption.No,            // 統一編號 (如果你還需要)
-  //           VEN_Name: selectedOption.Name,
-  //           VEN_Address: selectedOption.VEN_Address
-  //         }, { emitEvent: false });
-
-  //         this.saveToWorkflow();
-
-  //         console.log('已自動帶入廠商資料:', {
-  //           VEN_No: vendorVenNo,
-  //           統編: selectedOption.No,
-  //           名稱: selectedOption.Name
-  //         });
-  //       }
-  //     } else {
-  //       // 清空相關欄位
-  //       this.dataForm.patchValue({
-  //         vendor_no: '',
-  //         ven_no: '',
-  //         ven_uniform: '',
-  //         VEN_Name: '',
-  //         VEN_Address: ''
-  //       }, { emitEvent: false });
-  //     }
-  //   });
-
-  //   if (venUniformSubscription) this.subscriptions.push(venUniformSubscription);
-  // }
-
   private setupVendorUniformListener(): void {
     const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges
       .subscribe(vendorVenNo => {

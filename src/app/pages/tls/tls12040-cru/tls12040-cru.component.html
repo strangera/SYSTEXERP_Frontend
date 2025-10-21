@@ -56,11 +56,11 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
                 label="廠商統一編號"
-                controlName="ven_uniform"
+                controlName="vendor_ven_no"
                 [options]="vendorOptions"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.ven_uniform"
+                [control]="dataForm.controls.vendor_ven_no"
                 [submitted]="submitted"
                 [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>

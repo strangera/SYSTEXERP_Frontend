@@ -25,7 +25,7 @@ import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/ex
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { debounceTime, forkJoin, Observable, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, forkJoin, Observable, Subscription } from 'rxjs';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
 import { TLS12040Response } from '../tls12040/tls12040.component';
@@ -40,6 +40,7 @@ import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendo
 import { CrudModeService } from '../tls12040/Workflow/crud-mode.service';
 import { DropdownOption } from '@shared/constants/business.constants';
 import { TLS12040FormInitService } from './services/tls12040-form-init.service';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
 
 interface CategoryItem {
   id: number;
@@ -199,13 +200,15 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     approve_status: ['1', [Validators.required]], // 必填，預設未審核
     tlt_name: ['', [Validators.required, Validators.maxLength(100)]], // 必填
     tlt_no: [''], // 必填但系統自動給號
+    vendor_ven_no: [''],    // VEN_No (完整編號) - 下拉選單用
+    vendor_no: [''],        // No (統編) - 後端用
     ven_no: ['', [Validators.required, Validators.maxLength(16)]],
     ven_uniform: ['', [Validators.required, Validators.maxLength(10)]], // 必填
     VEN_Name: [''], // 必填但自動帶入
     paper_type: ['', [Validators.maxLength(2)]],
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 必填
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 必填
-    bus_sclass: ['', [Validators.maxLength(2)]],
+    bus_sclass: ['', [Validators.required, Validators.maxLength(2)]],
     contract_no: ['', [Validators.maxLength(12)]], // 必填
     contract_subno: ['1', [Validators.required]], // 必填
 
@@ -310,7 +313,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private dateValidationService: DateValidationService,
     private emailValidationService: EmailValidationService,
     private vendorCategoryService: VendorCategoryOptionsService,
-    public crudModeService: CrudModeService
+    public crudModeService: CrudModeService,
+    private tls12010Service: Tls12010Service,
 
   ) { super(); }
 
@@ -791,6 +795,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     const processedData = {
       ...data,
+      vendor_ven_no: data.ven_no || data.vendor_ven_no || '',
       check_typeList: data.check_type
         ? data.check_type.split(',').map((s: string) => s.trim())
         : []
@@ -1894,111 +1899,148 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   private setupVendorUniformListener(): void {
-    const venUniformSubscription = this.dataForm.get('ven_uniform')?.valueChanges.subscribe(venUniform => {
-      if (venUniform && venUniform.trim()) {
-        this.loadVendorInfo(venUniform);
-      } else {
-        // 清空相關欄位
-        this.dataForm.patchValue({
-          VEN_Name: '',
-          ven_no: ''
-        });
-      }
-    });
+    const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(vendorVenNo => {
+        console.log('🔍 vendor_ven_no 變更:', vendorVenNo);
 
-    if (venUniformSubscription) this.subscriptions.push(venUniformSubscription);
-  }
-
-  private loadVendorInfo(venUniform: string): void {
-    this.loading = true;
-
-    this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
-      next: (vendors: any[]) => {
-        const matchedVendor = vendors.find((vendor: { value: string; }) => vendor.value === venUniform);
-
-        if (matchedVendor) {
-          // 更新廠商編號、廠商名稱和公司地址
-          this.dataForm.patchValue({
-            ven_no: matchedVendor.ven_no || '',
-            VEN_Name: matchedVendor.Name || matchedVendor.label || '',
-            VEN_Address: matchedVendor.VEN_Address || ''
-          });
-
-          // 立即標記為已觸碰，不需要延遲
-          this.dataForm.get('ven_no')?.markAsTouched();
-          this.dataForm.get('VEN_Name')?.markAsTouched();
-          this.dataForm.get('VEN_Address')?.markAsTouched();
-
-          this.messageService.successBubble('已自動填入廠商編號、廠商名稱和公司登記地址');
-          console.log(' 自動填入廠商資料:', matchedVendor);
-
-          // 立即儲存
-          this.autoSaveToWorkflow();
-        } else {
-          this.messageService.warnBubble('查無此廠商統一編號對應的資料');
-          this.dataForm.patchValue({
-            ven_no: '',
-            VEN_Name: '',
-            VEN_Address: ''
-          });
-        }
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('❌ 查詢廠商資訊失敗:', error);
-        this.messageService.errorBubble('查詢廠商資訊失敗，請檢查統一編號是否正確');
-        this.dataForm.patchValue({
-          ven_no: '',
-          VEN_Name: '',
-          VEN_Address: ''
-        });
-        this.loading = false;
-      }
-    });
-  }
-
-  //利用 Service 快取同步載入分類
-  private loadClassificationChainSync(cruData: any): void {
-    console.log('🏷️ 同步載入分類鏈（使用快取）');
-
-    // 1. 設定大分類
-    this.dataForm.patchValue({ bus_type: cruData.bus_type });
-
-    // 2. 同時請求中分類和小分類（平行處理）
-    const requests = [
-      this.businessClassificationService.getBusClassOptions(cruData.bus_type)
-    ];
-
-    if (cruData.bus_class) {
-      requests.push(
-        this.businessClassificationService.getBusSClassOptions(
-          cruData.bus_type,
-          cruData.bus_class
-        )
-      );
-    }
-
-    //  使用 forkJoin 平行處理
-    forkJoin(requests).subscribe({
-      next: ([busClassOptions, busSClassOptions]) => {
-        this.busClassOptions = busClassOptions;
-
-        if (cruData.bus_class) {
-          this.dataForm.patchValue({ bus_class: cruData.bus_class });
-        }
-
-        if (busSClassOptions) {
-          this.busSClassOptions = busSClassOptions;
-          if (cruData.bus_sclass) {
-            this.dataForm.patchValue({ bus_sclass: cruData.bus_sclass });
+        if (vendorVenNo && vendorVenNo.trim()) {
+          if (!this.vendorOptions || this.vendorOptions.length === 0) {
+            console.warn('⚠️ vendorOptions 尚未載入');
+            return;
           }
-        }
 
-        this.saveCompleteDataToFlow(cruData);
+          const selectedOption = this.vendorOptions.find(opt => opt.value === vendorVenNo);
+
+          if (selectedOption) {
+            const vendorData = selectedOption as any;
+
+            // A. 帶入廠商基本資料
+            this.dataForm.patchValue({
+              vendor_no: vendorData.No || '',
+              ven_no: vendorVenNo,
+              ven_uniform: vendorData.No || '',
+              VEN_Name: vendorData.Name || vendorData.label || '',
+              VEN_Address: vendorData.VEN_Address || '',
+              vendor_acct_name: vendorData.Name || vendorData.label || ''
+            }, { emitEvent: false });
+
+            // 標記為已觸碰
+            this.dataForm.get('ven_no')?.markAsTouched();
+            this.dataForm.get('ven_uniform')?.markAsTouched();
+            this.dataForm.get('VEN_Name')?.markAsTouched();
+            this.dataForm.get('VEN_Address')?.markAsTouched();
+            this.dataForm.get('vendor_acct_name')?.markAsTouched();
+
+            console.log('✅ 已設定表單值');
+            this.messageService.successBubble('已自動填入廠商編號、廠商名稱、公司登記地址和帳戶名稱');
+
+            // B. ✅ 載入潛在客戶資料
+            const venUniform = vendorData.No || '';
+            if (venUniform) {
+              this.loadPotentialCustomerData(venUniform);
+            }
+          } else {
+            console.warn('⚠️ 找不到對應選項');
+          }
+        } else {
+          // ✅ 清空所有欄位（包含潛在客戶相關欄位）
+          this.dataForm.patchValue({
+            vendor_no: '',
+            ven_no: '',
+            ven_uniform: '',
+            VEN_Name: '',
+            VEN_Address: '',
+            vendor_acct_name: '',
+            tlt_name: '',        // ✅ 清空專櫃名稱
+            bus_type: '',        // ✅ 清空大分類
+            contact_tel: '',     // ✅ 清空電話
+            contact_fax: ''      // ✅ 清空傳真
+          }, { emitEvent: false });
+        }
+      });
+
+    if (venUniformSubscription) {
+      this.subscriptions.push(venUniformSubscription);
+    }
+  }
+
+  private loadPotentialCustomerData(venUniform: string): void {
+    console.log('🔍 開始查詢潛在客戶資料, 統編:', venUniform);
+
+    const request = {
+      PageSize: 1,
+      PageIndex: 1,
+      OrderBy: "",
+      Offset: 0,
+      SortBy: [],
+      CreatedDateStart: null,
+      CreatedDateEnd: null,
+      contact_USR_Name: "",
+      cus_uniform_id: [venUniform],
+      VEN_Name: "",
+      VEN_EngName: "",
+      tlt_name: "",
+      tlt_EngName: "",
+      bus_type: []
+    };
+
+    this.tls12010Service.queryTLS12010(request).subscribe({
+      next: (result) => {
+        console.log('📦 API 回應:', result);
+
+        if (result.Data && result.Data.length > 0) {
+          const potentialData = result.Data[0];
+
+          console.log('✅ 找到潛在客戶資料:', potentialData);
+
+          // 回填欄位
+          this.dataForm.patchValue({
+            tlt_name: potentialData.tlt_name || '',
+            bus_type: potentialData.bus_type || '',
+            contact_tel: potentialData.VEN_BossTel || '',
+            contact_fax: potentialData.VEN_BossFax || ''
+          }, { emitEvent: true }); // 👈 設為 true 以觸發 bus_type 的連動
+
+          // 標記為已觸碰
+          this.dataForm.get('tlt_name')?.markAsTouched();
+          this.dataForm.get('bus_type')?.markAsTouched();
+
+          this.messageService.successBubble('已自動帶入潛在客戶資料');
+          console.log('✅ 已載入潛在客戶資料');
+
+        } else {
+          // ✅ 查無資料時清空相關欄位
+          console.log('ℹ️ 查無潛在客戶資料');
+
+          this.dataForm.patchValue({
+            tlt_name: '',
+            bus_type: '',
+            contact_tel: '',
+            contact_fax: ''
+          }, { emitEvent: false });
+
+          this.messageService.infoBubble('查無潛在客戶資料,僅帶入廠商基本資料');
+        }
       },
-      error: (error) => {
-        console.error('❌ 載入分類失敗:', error);
-        this.saveCompleteDataToFlow(cruData);
+      error: (err) => {
+        console.error('❌ 載入潛在客戶資料失敗:', err);
+
+        // ✅ 錯誤時也要清空欄位
+        this.dataForm.patchValue({
+          tlt_name: '',
+          bus_type: '',
+          contact_tel: '',
+          contact_fax: ''
+        }, { emitEvent: false });
+
+        this.messageService.warnBubble('查詢潛在客戶資料失敗,僅帶入廠商基本資料');
+      },
+      complete: () => {
+        this.autoSaveToWorkflow();
       }
     });
   }
@@ -2025,16 +2067,6 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
       this.triggerAllDynamicValidators();
     }
-  }
-
-  // 4. 監聽抽成別變更，自動更新相關預設值
-  private setupTermTypeListener(): void {
-    this.dataForm.get('tlt_term_type')?.valueChanges.subscribe(termType => {
-      if (termType && this.crudstatus === CRUDStatus.Create) {
-        // 只在新增模式下自動更新
-        this.formInitService.updateDefaultsByTermType(this.dataForm, termType);
-      }
-    });
   }
 
   // 5. 清除表單時使用（如果需要）

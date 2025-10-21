@@ -234,6 +234,16 @@ export interface DropdownOption {
   label: string;
 }
 
+export interface Pos2013DropdownOption {
+  value: string | number;
+  label: string;
+  VEN_No: string;
+  No: string;
+  Name: string;
+  VEN_Address: string;
+}
+
+
 const convertToDropdownOptions = (options: Record<string, string>): DropdownOption[] => {
   return Object.entries(options).map(([value, label]) => ({ value, label }));
 };

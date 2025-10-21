@@ -33,9 +33,9 @@ export const TLS12040_FORM_DEFAULTS = {
   tlt_edate: '',
   tlt_contract_bdate: '',
   tlt_contract_edate: '',
-  feedback_date: '',
-  due_date: '',
-  contact_Date: '',
+  feedback_date: getTodayDate(),
+  due_date: getTodayDate(15),
+  contact_Date: getTodayDate(),
 
   // ========== 聯絡人 ==========
   contact_USR_No: '',
@@ -169,7 +169,8 @@ export const TLS12040_CONDITIONAL_DEFAULTS = {
   }
 } as const;
 
-export function getTodayDate(): string {
+export function getTodayDate(daysToAdd = 0): string {
   const today = new Date();
+  today.setDate(today.getDate() + daysToAdd);
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 }
