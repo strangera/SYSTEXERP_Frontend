@@ -112,8 +112,12 @@ export interface IPOS20031Request {
 }
 
 export interface IPOS20032Request {
-  CAT_LNo: string[];
-  CAT_MNo: string[];
+  CATList: [
+    {
+      CAT_LNo: string,
+      CAT_MNo: string
+    }
+  ]
 }
 
 export interface ISYS1000Request {
@@ -378,7 +382,7 @@ export class DropDownListService {
   }
   // 查詢 CPM13050 折扣名稱(PK68001D) 下拉選單
   queryCPM13050_RuleNameDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>( `${this.apiUrl}/queryCPM13050_rule_nameDropDownList`,{});
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCPM13050_rule_nameDropDownList`, {});
   }
 
   // 查詢品牌代碼(PLULOGO)資料表下拉選單 (包含 PLU_OrderPrcRate)

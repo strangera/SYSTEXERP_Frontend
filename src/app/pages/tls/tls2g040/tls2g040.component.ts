@@ -12,21 +12,21 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { bus_classColumns, bus_classFieldColumns, bus_sclassColumns, bus_sclassFieldColumns, bus_typeColumns, bus_typeFieldColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';
+import { bus_classColumns, bus_sclassColumns, bus_typeColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';
 import { debounceTime, finalize } from 'rxjs';
-import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { InputGroupComponent } from '@shared/componentkit/input-group/input-group.component';
 import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
 // 2.2.16.4 預算日報表
 @Component({
   selector: 'app-tls2g040',
   templateUrl: './tls2g040.component.html',
   standalone: true,
-  imports: [ButtonModule, InputGroupComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  imports: [ButtonModule, DropdownComponent, RadiobuttonComponent, AsyncPipe, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
 export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -38,15 +38,9 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
     tlt_nos: [null], // 專櫃
     report_type: ['bus_type', [Validators.required]],
   });
-  bus_type_name = '';
-  bus_class_name = '';
-  bus_sclass_name = '';
-  bus_typeOptions = this.dropdown.queryTltBusType();
-  bus_typeColumns = bus_typeFieldColumns
-  bus_classOptions?: BusClassItem[] = [];
-  bus_classColumns = bus_classFieldColumns;
-  bus_sclassOptions?: BusSClassItem[] = [];
-  bus_sclassColumns = bus_sclassFieldColumns
+  CAT_LNoOptions: IDropdownItem[] = [];
+  CAT_MNoOptions: IDropdownItem[] = [];
+  CAT_SNoOptions: IDropdownItem[] = [];
   org_idOptions = this.dropdown.querySys3100();
   tlt_noOptions = this.dropdown.queryTltTalent();
   report_typeOptions = report_typeOptions;
@@ -58,6 +52,7 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
   btnLoading = false;
   constructor(
     private readonly dropdown: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
     public readonly tls2g040Service: TLS2G040Service
   ) {
     super();
@@ -65,40 +60,43 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS2G040', '/tls/tls2g040cru');
-    this.dropdown.queryTltBusClass().pipe(untilDestroyed(this)).subscribe(data => {
-      this.bus_classOptions = data?.map(item => ({
-        ...item,
-        label: item.bus_type + ' - ' + item.bus_type_name + ' - ' + item.No + ' - ' + item.Name,
-      }));
-    });
-    this.dropdown.queryTltBusSClass().pipe(untilDestroyed(this)).subscribe(data => {
-      this.bus_sclassOptions = data?.map(item => ({
-        ...item,
-        label: item.bus_type + ' - ' + item.bus_type_name + ' - ' + item.bus_class + ' - ' + item.bus_class_name + ' - ' + item.No + ' - ' + item.Name,
-      }));
-    });
     this.queryForm.valueChanges.pipe(debounceTime(200)).subscribe(() => {
       this.updateColumns();
+    });// 獲取大分類下拉選項
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.CAT_LNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
-    // 監聽大分類的變化
-    this.queryForm.get('bus_type')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      this.queryForm.get('bus_class')?.setValue(null, { emitEvent: false });
-      this.bus_class_name = '';
-      this.queryForm.get('bus_sclass')?.setValue(null, { emitEvent: false });
-      this.bus_sclass_name = '';
+    // 監聽大分類變化
+    this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
+      if (value) {
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+          this.CAT_MNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+          this.queryForm.controls.bus_class.enable();
+        });
+      } else {
+        this.queryForm.controls.bus_class.disable();
+      }
+      this.queryForm.controls.bus_class.setValue(null); // 清空中分類選擇
+      this.queryForm.controls.bus_sclass.setValue(null); // 清空中分類選擇
     });
-    // 監聽中分類的變化
-    this.queryForm.get('bus_class')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      this.queryForm.get('bus_sclass')?.setValue(null, { emitEvent: false });
-      this.queryForm.get('bus_type')?.setValue(value?.bus_type, { emitEvent: false });
-      this.bus_type_name = value?.bus_type_name ?? '';
-      this.bus_sclass_name = '';
-    });
-    this.queryForm.get('bus_sclass')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      this.queryForm.get('bus_type')?.setValue(value?.bus_type, { emitEvent: false });
-      this.queryForm.get('bus_class')?.setValue(value?.bus_class, { emitEvent: false });
-      this.bus_type_name = value?.bus_type_name ?? '';
-      this.bus_class_name = value?.bus_class_name ?? '';
+    // 監聽中分類變化
+    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
+      if (value && this.queryForm.controls.bus_type.value) {
+        this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.queryForm.controls.bus_type.value,
+              CAT_MNo: value
+            }
+          ]
+        }).pipe(untilDestroyed(this)).subscribe(response => {
+          this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+        });
+        this.queryForm.controls.bus_sclass.enable();
+      } else {
+        this.queryForm.controls.bus_sclass.disable();
+      }
+      this.queryForm.controls.bus_sclass.setValue(null); // 清空中分類選擇
     });
     this.updateColumns();
   }
@@ -111,7 +109,7 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
         ...frm.value,
         budget_yymm: budgetDate,
         bus_class: frm.value.bus_class ? typeof frm.value.bus_class === 'string' ? frm.value.bus_class : frm.value.bus_class.No : null,
-        bus_sclass: frm.value.bus_sclass ? frm.value.bus_sclass.No : null,
+        bus_sclass: frm.value.bus_sclass ? frm.value.bus_sclass : null,
         pageIndex: 1,
         pageSize: 30,
         SortBy: [{ field: 'bus_type', order: 1 }],
