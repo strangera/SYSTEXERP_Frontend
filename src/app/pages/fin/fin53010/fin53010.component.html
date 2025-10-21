@@ -24,7 +24,7 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="傳票種類"
                         controlName="VouType"
-                        [options]="service.VouTypes()"
+                        [options]="service.vouTypeOptions()"
                         optionLabel="label"
                         optionValue="value"
                         [control]="qf().VouType"
@@ -38,7 +38,7 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="傳票狀態"
                         controlName="PostFlag"
-                        [options]="service.postFlags()"
+                        [options]="service.postFlagOptions()"
                         optionLabel="label"
                         optionValue="value"
                         [control]="qf().PostFlag"
@@ -51,7 +51,7 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="傳票型態"
                         controlName="VoucherType"
-                        [options]="service.VoucherTypes()"
+                        [options]="service.voucherTypeOptions()"
                         optionLabel="label"
                         optionValue="value"
                         [control]="qf().VoucherType"
@@ -90,14 +90,14 @@
                            label="ROC/IFRS"
                            groupname="VouAccType"
                            [control]="qf().VouAccType"
-                           [options]="service.vouAccTypes()"
+                           [options]="service.vouAccTypeOptions()"
                            [submitted]="submitted"></app-radiobutton>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      [loading]="service.tableLoading"></app-button>
+                      [loading]="service.tableLoading()"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -113,7 +113,7 @@
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading"
+               [loading]="service.tableLoading()"
                [dataKey]="'id'"
                [tableKey]="'FIN53010'"></app-table>
   </div>

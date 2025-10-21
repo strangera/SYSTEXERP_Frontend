@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52030Service } from '@service/api/fin/fin52030.service';
@@ -19,7 +19,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
-import { finalize, tap } from 'rxjs';
+import { finalize, forkJoin, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
@@ -53,7 +53,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public readonly dataForm = this.formBuilder.nonNullable.group({
     TempNo: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(8)]),
     TempName: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(40)]),
-    VouType: new FormControl<string | void>(void 0, [Validators.required]),
+    VouType: new FormControl<'1' | '2' | '3' | void>(void 0, [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     createDate: new FormControl<Date | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
@@ -70,6 +70,46 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public readonly totalRecords = computed(() => this.tableData().length);
 
+  // 計算借貸方總額
+  public readonly debitTotal = computed(() =>
+    this.tableData().reduce((sum, row) => sum + (row.AccAmtD || 0), 0)
+  );
+
+  public readonly creditTotal = computed(() =>
+    this.tableData().reduce((sum, row) => sum + (row.AccAmtC || 0), 0)
+  );
+
+  // 檢查借貸是否平衡
+  public readonly isBalanced = computed(() => {
+    const data = this.tableData();
+    if (!data.length) return !0;
+    const diff = Math.abs(this.debitTotal() - this.creditTotal());
+    return diff < 0.01;
+  });
+
+  public readonly dataEffect = effect(() => {
+    if (this.isFormCreateable) return void (() => {
+      this.loading = !1;
+      this.service.tableLoading.set(!1);
+      this.dataEffect.destroy();
+    });
+    const d = this.service.FIN52030Detail();
+    if (!d.length) return;
+    this.tableData.set(d.map(d => ({
+      ...d,
+      AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
+      AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
+      AccName: this.service.accNoMap().get(String(d.AccNo))?.label ?? '',
+      DetailName: this.service.vendorMap().get(String(d.DetailNo))?.label
+        ?? this.service.usrMap().get(String(d.DetailNo))?.label ?? '',
+      displayIndex: d.index,
+      UPD_USR_No: this.user.user_Name,
+      modifyDate: new Date(),
+    })));
+
+    this.dataEffect.destroy();
+  }, { allowSignalWrites: !0 });
+
   // Template 相關屬性
   public selectedTemplateType = 'vendor';
   public templateSearchTerm = '';
@@ -79,7 +119,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   ];
 
   private readonly filteredTblUserOrgidList = computed(() => {
-    return this.service.tblUserOrgidList().filter(item => item.Org_ID === this.selectedOrgId());
+    return this.service.tblUserOrgidList().filter(item => item.value === this.selectedOrgId());
   });
 
   public readonly columns = computed<(Omit<Column, 'field'> & { field: keyof FIN52030DetailTable; })[]>(() => [
@@ -87,18 +127,20 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     {
       field: 'AccNo',
       header: '科目代號',
+      required: !0,
       type: 'dropdown',
+      disabled: () => this.service.accLoading(),
       options: () => this.service.accNoList(),
-      optionLabel: 'AccNo',
-      optionValue: 'AccNo',
-      templateLabel: 'AccName',
+      optionLabel: 'value',
+      optionValue: 'value',
+      templateLabel: 'label',
     },
     { field: 'AccName', header: '科目名稱' },
     {
       field: 'DetailNo',
       header: '廠商/員工代號',
-      disabled: () => this.service.venUsrLoading,
       type: 'template',
+      disabled: () => this.service.venLoading() || this.service.usrLoading(),
       templateRef: this.venUsrTemplate(),
     },
     { field: 'DetailName', header: '廠商/員工名稱' },
@@ -130,8 +172,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       header: '對象別編號',
       type: 'dropdown',
       options: () => this.filteredTblUserOrgidList(),
-      optionLabel: 'user_Name',
-      optionValue: 'user_No',
+      optionLabel: 'label',
+      optionValue: 'value',
     },
     { field: 'recKey', header: '對帳KEY值', type: 'input' },
   ]);
@@ -144,40 +186,31 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.authService.getUserInfo() && (this.user = this.authService.getUserInfo()!);
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.initializePage('FIN52030', this.dataForm);
+    this.loading = !0;
 
-    this.service.getSubpoenaTypes();
-    this.service.getAccNoList();
+    if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata?.id ?? 0).subscribe();
+
     this.service.getOrgNoList();
-    this.service.getTblUserOrgid();
+    this.service.getTblUserOrgidList();
 
-    if (this.isFormCreateable) {
-      this.service.getUsrList();
-      this.service.getVendorList();
-      this.df().CRT_USR_No.setValue(this.user.user_Name);
-      this.df().createDate.setValue(new Date());
-    } else {
-      this.service.loadFIN52030Detail(this.rowdata!.id).pipe(
-        finalize(() => this.loading = !1),
-        tap(res => {
-          this.logger.debug(`loadFIN52030Detail:`, [res]);
-          this.tableData.set(res.Data.map(d => ({
-            ...d,
-            AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
-            AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-            AccName: this.service.accNoMap.get(String(d.AccNo))?.AccName ?? '',
-            DetailName: this.service.vendorMap.get(String(d.DetailNo))?.VEN_Name
-              ?? this.service.usrMap.get(String(d.DetailNo))?.label ?? '',
-            displayIndex: d.index,
-            UPD_USR_No: this.user.user_Name,
-            modifyDate: new Date(),
-          })));
-        })
-      ).subscribe();
-    }
-
-    this.logger.debug(`init:`, [this.rowdata, this.service.FIN52030Detail()]);
+    forkJoin([
+      this.service.getAccNoList(),
+      this.service.getVendorList(),
+      this.service.getUsrList(),
+    ]).pipe(
+      tap(([_accnos, _vendors, _usrs]) => {
+        if (!this.isFormCreateable) return;
+        this.df().CRT_USR_No.setValue(this.user.user_Name);
+        this.df().createDate.setValue(new Date());
+      }),
+      finalize(() => {
+        this.loading = !1;
+        this.service.tableLoading.set(!1);
+        this.logger.debug(`init:`, [this.rowdata, this.service.FIN52030Detail()]);
+      }),
+    ).subscribe();
   }
 
   public onSubmit(): void {
@@ -185,9 +218,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        TempNo: String(d.TempNo),
-        VouType: String(d.VouType),
-        TempName: String(d.TempName),
         Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, idx) => ({
           ...rest,
           index: idx + 1,
@@ -220,7 +250,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     // 自動帶入科目名稱
     if (event.field === 'AccNo') {
-      row.AccName = this.service.accNoMap.get(String(event.value))?.AccName ?? '';
+      row.AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
     }
 
     // 自動互斥借貸方金額

@@ -22,7 +22,7 @@
                       label="傳票種類"
                       controlName="VouType"
                       [showClear]="!1"
-                      [options]="service.VouTypes()"
+                      [options]="service.vouTypeOptions()"
                       optionLabel="label"
                       optionValue="value"
                       [control]="df().VouType"
@@ -32,7 +32,7 @@
                       controlName="VoucherType"
                       [showClear]="!1"
                       [control]="df().VoucherType"
-                      [options]="service.VoucherTypes()"
+                      [options]="service.voucherTypeOptions()"
                       optionLabel="Name"
                       optionValue="No"
                       [submitted]="submitted"></app-dropdown>
@@ -46,7 +46,7 @@
                       label="傳票摘要"
                       controlName="Remark"
                       [control]="df().Remark"
-                      [options]="service.remarkOptions()"
+                      [options]="service.remarkList()"
                       optionLabel="label"
                       optionValue="value"
                       [submitted]="submitted"></app-dropdown>
@@ -96,7 +96,7 @@
                          label="ROC/IFRS"
                          groupname="VouAccType"
                          [control]="df().VouAccType"
-                         [options]="service.vouAccTypes()"
+                         [options]="service.vouAccTypeOptions()"
                          [submitted]="submitted"></app-radiobutton>
       </div>
 
@@ -107,7 +107,7 @@
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
                     [disabled]="!dataForm.valid || onEditing || !isBalanced()"
-                    [loading]="service.tableLoading"></app-button>
+                    [loading]="service.tableLoading()"></app-button>
       </div>
       }
     </form>
@@ -137,7 +137,7 @@
                    [rowEditCanSave]="rowEditCanSave"
                    [data]="tableData()"
                    [totalRecords]="totalRecords()"
-                   [loading]="service.tableLoading"
+                   [loading]="service.tableLoading()"
                    [dataKey]="'id'"
                    [tableKey]="'FIN52030_detail'"
                    [columns]="columns()"></app-table>
@@ -183,7 +183,7 @@
                [rows]="10"
                [showCurrentPageReport]="!0"
                currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆"
-               [loading]="service.venUsrLoading">
+               [loading]="service.venLoading() || service.usrLoading()">
         <ng-template pTemplate="header">
           <tr>
             <th>代號</th>
@@ -194,8 +194,8 @@
                      let-item>
           <tr class="cursor-pointer hover:surface-hover"
               (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
-            <td>{{ item.VEN_No ?? item.value }}</td>
-            <td>{{ item.VEN_Name ?? item.label }}</td>
+            <td>{{ item.value }}</td>
+            <td>{{ item.label }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
