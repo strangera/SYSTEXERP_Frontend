@@ -169,8 +169,13 @@ export const TLS12040_CONDITIONAL_DEFAULTS = {
   }
 } as const;
 
-export function getTodayDate(daysToAdd = 0): string {
+export function getTodayDate(addDays: number = 0): Date {
   const today = new Date();
-  today.setDate(today.getDate() + daysToAdd);
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  if (addDays !== 0) {
+    today.setDate(today.getDate() + addDays);
+  }
+
+  return today;
 }
+
