@@ -176,9 +176,9 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         ECR_GrpName: raw.ECR_GrpName,
         ECR_DtlLimit: raw.ECR_DtlLimit,
         ECR_GrpDesc: raw.ECR_GrpDesc,
-        Detail: this.data.map(item => ({
-          ID: isNaN(Number(item.ID)) ? 0 : Number(item.ID),   // "saved-xxxx" → 0
-          ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? 0,
+        Detail: this.data.map((item, index) => ({
+          ID: 0,
+          ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? index,
           ECR_No: item.ECR_No ?? '',
           ECR_Type: item.ECR_Type ?? '',
           TLT_No: item.TLT_No ?? '',

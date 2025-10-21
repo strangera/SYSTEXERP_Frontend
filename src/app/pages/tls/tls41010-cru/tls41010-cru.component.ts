@@ -15,6 +15,7 @@ import {
   sernoTypeOptions,
   settleDDOptions,
   statusOptions,
+  statusOptionsForCRU,
   typeOptions,
   yesNoOptions,
   ECR_GUI_Type_Option,
@@ -72,11 +73,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_USR_No: ['', [Validators.maxLength(8)]],
     ECR_USR_Name: ['', [Validators.maxLength(20)]],
     ECR_Status: ['A'],
-    ECR_ActiveDate: [null],
+    ECR_ActiveDate: [null as Date | null],
     ECR_Group: [''],
     ECR_AreaNo: [''],
     ECR_SubGroup: [''],
-    ECR_CloseDate: [null],
+    ECR_CloseDate: [null as Date | null],
     ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_ComName: ['', [Validators.maxLength(64)]],
     ECR_IP: ['', [Validators.maxLength(20)]],
@@ -180,6 +181,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   LocOptions: IDropdownItem[] = [];
   tmplDetailList: any[] = [];
 
+  // 根據表單狀態動態返回狀態選項
+  get currentStatusOptions() {
+    return (this.isFormCreateable || this.isFormEditable) ? statusOptionsForCRU : statusOptions;
+  }
+
   constructor(
     public override formBuilder: FormBuilder,
     private tls46110Service: Tls46010Service,
@@ -223,7 +229,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           No: item.ECR_TmplNo ?? '',
           Name: item.ECR_TmplDesc,
         }));
-         this.tmplDetailList = res.Data;
+        this.tmplDetailList = res.Data;
       }
     });
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
@@ -280,21 +286,54 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-    if (tmplNo) {
-      const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
-      if (detail) {
-        const patchObj: any = {};
-        Object.keys(this.dataForm.controls).forEach(key => {
-          if (detail[key] !== undefined) patchObj[key] = detail[key];
-        });
-        this.dataForm.patchValue(patchObj);
+      if (tmplNo) {
+        const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
+        if (detail) {
+          const patchObj: any = {};
+          Object.keys(this.dataForm.controls).forEach(key => {
+            if (detail[key] !== undefined) patchObj[key] = detail[key];
+          });
+          this.dataForm.patchValue(patchObj);
+        }
       }
-    }
-  });
+    });
     this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
       this.checkTltNoRequired(value);
     });
     this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+
+    this.dataForm.get('ECR_TLT_No')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((selectedNo) => {
+        if (!selectedNo) return;
+
+        // 呼叫查詢 API
+        this.tls41010Service.queryTLT_NoInfo(selectedNo).subscribe({
+          next: (res) => {
+            if (res?.Status === '0000' && res.Data) {
+              const info = res.Data;
+              console.log('自動帶入櫃位資訊:', info);
+
+              this.dataForm.patchValue({
+                ECR_LocNo: info.ECR_LocNo || '',
+                ECR_Status: info.ECR_Status || '',
+                ECR_Group: info.ECR_Group || '',
+                ECR_SubGroup: info.ECR_SubGroup || '',
+                ECR_AreaNo: info.ECR_AreaNo || '',
+                ECR_ActiveDate: info.tlt_bdate ? new Date(info.tlt_bdate) : null,
+                ECR_CloseDate: info.tlt_edate ? new Date(info.tlt_edate) : null,
+              }, { emitEvent: false });
+
+              if (this.isFormCreateable) {
+                this.dataForm.get('ECR_Status')?.enable({ emitEvent: false });
+              }
+            } else {
+              console.warn('查詢櫃位資訊失敗:', res?.Message);
+            }
+          },
+          error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err),
+        });
+      });
   }
 
   /** 套用範本資料 */
