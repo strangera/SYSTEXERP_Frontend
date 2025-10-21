@@ -4,6 +4,8 @@ import { Subject, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { DropdownModule } from 'primeng/dropdown';
 import { NgIf } from '@angular/common';
 import { Button } from 'primeng/button';
 
@@ -17,7 +19,10 @@ export interface TableExport {
   print_reportFooter_per_page?: string;
   page_lines?: number;
   print_line_number?: string,
-  footer_DataType?: string
+  footer_DataType?: string,
+  page_orientation?:string,
+  page_size_setting?:string,
+
 }
 
 @Component({
@@ -25,7 +30,7 @@ export interface TableExport {
   templateUrl: './table-export.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
+  imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule,RadioButtonModule,DropdownModule, NgIf, Button]
 })
 export class TableExportComponent implements OnInit, OnDestroy {
   @Input() visible = true;
@@ -34,6 +39,9 @@ export class TableExportComponent implements OnInit, OnDestroy {
   @Input() exportStatus: 'PDF' | 'Excel' = 'PDF';
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter<TableExport>();
+
+  @Input()  pageOrientation: string | null = 'Landscape';  // PDF橫式
+  @Input()  pageSizeSetting: string | null = 'A4';  // PDF A4
 
   private destroy$ = new Subject<void>();
 
@@ -47,7 +55,9 @@ export class TableExportComponent implements OnInit, OnDestroy {
     print_reportFooter_per_page: ['N'], // 報表頁尾每頁
     page_lines: [10, [Validators.min(10)]], // 每頁行數
     print_line_number: ['Y'],
-    footer_DataType: ['']
+    footer_DataType: [''],
+    page_orientation:['Landscape'],
+    page_size_setting:['A4']
   });
   constructor(private formBuilder: FormBuilder) { };
   ngOnInit() {
@@ -135,7 +145,10 @@ export class TableExportComponent implements OnInit, OnDestroy {
       print_reportFooter: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter || 'Y') : undefined,
       print_reportFooter_per_page: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter_per_page || 'N') : undefined,
       print_line_number: this.exportStatus === 'PDF' ? (this.form.value.print_line_number || 'Y') : undefined,
-      footer_DataType: this.form.value.footer_DataType || ''
+      footer_DataType: this.form.value.footer_DataType || '',
+
+      page_orientation: this.pageOrientation || this.form.value.page_orientation || 'Landscape',
+      page_size_setting: this.pageSizeSetting || this.form.value.page_size_setting || 'A4',
     };
     this.save.emit(tableExportData);
     this.visible = false;

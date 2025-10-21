@@ -56,6 +56,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showFilter = true;                 // 是否顯示 Filter
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
   @Input() customReport = false;               // 是否自訂報表
+  @Input() pageOrientation: string | null = 'Landscape';  // PDF橫式
+  @Input() pageSizeSetting: string | null = 'A4';  // PDF A4
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>(); // 新增事件
