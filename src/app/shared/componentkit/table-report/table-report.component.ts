@@ -18,7 +18,7 @@ import { ActivatedRoute } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-
+import { trigger, style, transition, animate } from '@angular/animations'; // 1. 引入動畫相關函式
 @Component({
   selector: 'app-table-report',
   standalone: true,
@@ -26,12 +26,29 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('fadeInOut', [
+      // 定義進入狀態 (當 *ngIf 為 true 時)
+      transition(':enter', [
+        // 初始狀態：透明度 0，向上平移 10px
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        // 最終狀態：在 300ms 內平滑變回正常狀態
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      // 定義離開狀態 (當 *ngIf 為 false 時)
+      transition(':leave', [
+        // 離開動畫：在 200ms 內變透明並略微向上移動
+        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-5px)' }))
+      ])
+    ])
+  ]
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') private dt!: Table;
   @Input({ required: true }) lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
   @Input({ required: true }) totalRecords = 0;                               // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];                               // 用來儲存查詢結果
+  virtualData: any = [];
   @Input() dataKey: string | undefined;                                 // 用來儲存查詢結果
   @Input({ required: true }) columns: ReportColumn[] = [];                              // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];                  // 用來儲存查詢結果
@@ -40,6 +57,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
   @Input() loading = false;
   @Input() apiUrl: string | undefined = undefined;
+  // Checkbox 相關
   @Input() showCheckBox = false;
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
@@ -48,23 +66,18 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (data) { return this.isRowSelectable(data); }
     return false; //
   };
+  isAllSelected = false;                                                        // 是否全選
+  @Output() dataChange = new EventEmitter<any[]>();                              // 用來儲存查詢結果
   // Header 相關
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   @Input() showSort = true;                                                     // 是否顯示 排序
   // Header(左) 相關
-  @Input() showHeader = true;                 // 是否顯示 Header
   @Input() showFilter = true;                 // 是否顯示 Filter
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
   @Input() customReport = false;               // 是否自訂報表
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
-  @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
-  @Output() insert = new EventEmitter<any>(); // 新增事件
-  @Input() insertDisabled = false;            // 新增按鈕是否禁用
-  @Input() deleteData = false;                // 預先刪除資料 (關聯：需要加入dataKey, dataChange)
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
-  @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
-  @Input() deletepTooltip = '刪除';              // 刪除按鈕提示
   // Header(右) 相關
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
@@ -87,18 +100,16 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() footerData: any;                  // (總計)頁尾資料
   @Input() footerPercentData: any;                  // (百分比)頁尾資料
   @Input() groupRowsBy?: string;              // (小計)群組欄位
-  groupTotals: Record<string, Record<string, number>> = {}; // <<< 新增：用於儲存每個群組的總計
+  groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;               // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
-  @Input() disabled = false;
   // expansion 收合展開
   @Input() expansionColumns: ReportColumn[] = [];
   @Input() expansionDataKey = 'details';
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
   expandedRows: Record<string, boolean> = {};
-  private = true;            // 用來判斷是否為第一次載入
-  virtualData: any = [];
+
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -130,7 +141,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
   loadMoreData() {
-    if (!this.queryFunction || !this.lastQueryBody) { return; }
+    if (this.loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords) {
+      return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
+    }
     const body = {
       ...this.lastQueryBody,
       pageIndex: Math.floor(this.data.length / 30) + 1,
@@ -149,6 +162,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onSort(event: any) {
+    if (this.loading) {
+      return;
+    }
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
@@ -176,6 +192,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     });
   }
+  onLazyLoad() {
+    if (this.isAllSelected) {
+      this.selectedItems = [...this.data];
+      this.selectionChange.emit(this.selectedItems);
+    } else {
+      this.selectedItems = [...this.selectedItems];
+      this.selectionChange.emit(this.selectedItems);
+    }
+  }
   onScroll(event: any) {
     if (this.data.length >= this.totalRecords || this.data.length < 30) {
       this.virtualData = [...this.data]
@@ -191,6 +216,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.loadMoreData();
       }
     }
+    this.cdr.detectChanges();
   }
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;
@@ -208,7 +234,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
  * @returns 如果至少一個欄位有 subtotalField 屬性則回傳 true。
  */
   hasSubtotalColumns(): boolean {
-    return this.columns.some(col => !col.hidden && col.isSubTotal && this.groupRowsBy);
+    return this.columns.some(col => col.isSubTotal && this.groupRowsBy);
   }
   isGroupLastRow(rowData: any, rowIndex: number): boolean {
     if (!this.groupRowsBy || !this.data || rowIndex === this.data.length - 1) {
@@ -249,16 +275,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (!this.groupRowsBy || !this.columns.some(col => col.isSubTotal)) {
       return;
     }
-
     newData.forEach(row => {
       const groupKey = (row[this.groupRowsBy!] as string)?.trim() ?? 'UNKNOWN_GROUP'; // 進行 trim 處理
-
       if (groupKey === undefined) return;
-
       if (!this.groupTotals[groupKey]) {
         this.groupTotals[groupKey] = {};
       }
-
       this.columns.forEach(col => {
         if (col.isSubTotal) {
           const field = col.field;

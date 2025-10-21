@@ -12,13 +12,12 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { Tls57130DataItem, Tls57130Request, Tls57130Service } from '@service/api/tls/tls57130.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 import { AsyncPipe } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls57130',
