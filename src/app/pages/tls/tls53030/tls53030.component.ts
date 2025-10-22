@@ -135,7 +135,7 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 展開行設置
   expansionColumns: Column[] = [
-    { field: 'PLU_PageNum', header: '貨架編號', visible: true },
+    { field: 'PLU_PageNum', header: '貨架編號', hidden: true },
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
