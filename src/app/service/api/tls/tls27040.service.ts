@@ -41,7 +41,8 @@ export interface TLS27040Data {
   TLT_No: string;
   PayCrdType: string;
   TxnAmt: number;
-  TxnDate: Date | null | undefined;
+  TxnDate: Date;
+  TXN_Date: Date;
   TxnTime: string;
   ReqDate: string;
   CrdNo: string;

@@ -1,12 +1,13 @@
-import { SystemOptionsService } from "@service/system/sys1000.service";
+import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
+import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
 import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
-import { Column, formatAmount, formatDate, formatDateTime, formatDateTimeToHHMMSS } from "@shared/componentkit/table/table.model"
+import { formatAmount, formatDate, formatDateTime, formatDateTimeToHHMMSS } from "@shared/componentkit/table/table.model"
 // --- POS6118 聯信特店MIS LOG檔案 ---
 export const columns: ReportColumn[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 ECR_No
   { field: 'TXN_No', header: '交易流水號' }, // 對應 TXN_No
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 TLT_No
-  { field: 'PayCrdType', header: '卡別', format: (value) => PayCrdTypeOptions.find(item => item.value === value)?.label || value }, // 對應 PayCrdType
+  { field: 'PayCrdType', header: '卡別', format: (value) => getSYS1000('NCML_PayCrdType', value) }, // 對應 PayCrdType
   { field: 'TxnAmt', header: '金額', format: formatAmount }, // 對應 TxnAmt (number)
   { field: 'TxnDate', header: '銷售日期', format: formatDate }, // 對應 TxnDate (DATE)
   { field: 'TxnTime', header: '銷售時間', format: formatDateTimeToHHMMSS }, // 對應 TxnTime (string/time), 使用新函式只顯示時間
@@ -16,8 +17,9 @@ export const columns: ReportColumn[] = [
   { field: 'ApprovalCode', header: '授權碼' }, // 對應 ApprovalCode
   { field: 'TxnType', header: '銷售狀況', format: (value) => TxnTypeOptions.find(item => item.value === value)?.label || value }, // 對應 TxnType
   { field: 'CrdTxnFg', header: '交易類別', format: (value) => CrdTxnFgOptions.find(item => item.value === value)?.label || value }, // 對應 CrdTxnFg
-  { field: 'CheckStatus', header: '輸入狀態', format: (value) => CheckOptions.find(item => item.value === value)?.label || value }, // 對應 CheckStatus
-  { field: 'TermNo', header: '分期期數', format: (value) => SystemOptionsService.getOptions('T109').find(item => item.SYS_Code === String(value))?.SYS_Name || value }, // 對應 TermNo
+  { field: 'CheckStatus', header: '比對備註', format: (value) => getSYS1000('CTBC_Check', value) }, // 對應 CheckStatus
+  { field: 'EntryFg', header: '輸入狀態', format: (value) => getSYS1000('EntryFg', value) }, // 對應 CheckStatus
+  { field: 'TermNo', header: '分期期數', format: (value) => getSYS1000('T109', value), exportFormat: transformOptionsForExport(getSYS1000Options('T109')) }, // 對應 TermNo
   { field: 'acquiring_Bank', header: '收單行' }, // 變更標題為 '收單行'
   { field: 'FileName', header: '請款來源' }, // 新增
   { field: 'BatCloseDate', header: '入帳日', format: formatDate }, // 對應 BatCloseDate (DATE), 移至後方
@@ -27,36 +29,73 @@ export const columns: ReportColumn[] = [
   { field: 'UPD_Date', header: '修改日期', format: formatDateTime }, // 對應 UPD_Date (DATETIME)
 ];
 // --- 選項定義（保持不變，或根據實際需求調整） ---
+export const queryTxnTypeOptions = [
+  {
+    label: '一般銷售',
+    value: ['00', '01', '40'] // 一般銷售對應的三個代碼
+  },
+  {
+    label: '退貨銷售',
+    value: ['04', '02', '41'] // 退貨銷售對應的三個代碼
+  }
+];
 export const TxnTypeOptions = [
+  { label: '一般銷售', value: '00' },
+  { label: '退貨銷售', value: '04' },
+  { label: '一般銷售', value: '01' },
+  { label: '退貨銷售', value: '02' },
+  { label: '一般銷售', value: '40' },
+  { label: '退貨銷售', value: '41' }
+]
+// 聯信 POS6118 (交易類型)
+export const POS6118_TxnTypeOptions = [
   { label: '一般銷售', value: '00' },
   { label: '退貨銷售', value: '04' }
 ];
-export const CTBC_TxnCodeOptions = [
+// 中信 POS6119 (交易類型)
+export const POS6119_TxnCodeOptions = [
   { label: '正向交易', value: '01' },
   { label: '負向交易', value: '02' }
 ];
-export const CTBC_TxnTypeOptions = [
-  { label: '請款', value: '40' }, // 交易類型，40=請款
-  { label: '退款', value: '41' }  // 交易類型，41=退款
+// 中信-停車場 POS6119P (交易類型)
+export const POS6119P_TxnTypeOptions = [
+  { label: '請款', value: '40' },
+  { label: '退款', value: '41' }
 ];
-// C=一般交易、I=分期交易、R=紅利交易
+export const queryCrdTxnFgOptions = [
+  {
+    label: '一般',
+    value: ['C', '0'] // 一般銷售對應的三個代碼
+  },
+  {
+    label: '分期',
+    value: ['I', '1'] // 一般銷售對應的三個代碼
+  },
+  {
+    label: '紅利',
+    value: ['R', '2'] // 一般銷售對應的三個代碼
+  }
+];
 export const CrdTxnFgOptions = [
-  { label: '一般交易', value: 'C' },
-  { label: '分期交易', value: 'I' },
-  { label: '紅利交易', value: 'R' }
+  { label: '一般', value: '0' },
+  { label: '分期', value: '1' },
+  { label: '紅利', value: '2' },
+  { label: '一般', value: 'C' },
+  { label: '分期', value: 'I' },
+  { label: '紅利', value: 'R' }
 ];
-
-// 0=手刷補登
-// 2=調整補登
-// 3=CardPool欠落
-export const CheckOptions = [
-  { label: '手刷補登', value: '0' },
-  { label: '調整補登', value: '2' },
-  { label: 'CardPool欠落', value: '3' },
-  { label: '比對正確', value: 'Y' },
-  { label: '比對錯誤', value: 'N' },
-  { label: '已修正', value: 'M' },
-  { label: '手動新增', value: 'A' }
+export const pos6118TxnFgOptions = [
+  { label: '一般', value: '0' },
+  { label: '分期', value: '1' },
+  { label: '紅利', value: '2' },
+];
+export const pos6119TxnFgOptions = [
+  { label: '一般', value: 'C' },
+  { label: '分期', value: 'I' },
+  { label: '紅利', value: 'R' }
+];
+export const pos6119pTxnFgOptions = [
+  { label: '一般', value: 'C' },
 ];
 
 export const POS611XOptions = [
@@ -65,28 +104,10 @@ export const POS611XOptions = [
   { label: '中信-停車場', value: 'POS6119P' },
 ];
 
-export const PayCrdTypeOptions = [
-  { label: 'VISA', value: 'V' },
-  { label: 'MASTER', value: 'M' },
-  { label: 'JCB', value: 'J' },
-  { label: 'AE', value: 'A' },
-  { label: 'DINVER', value: 'D' },
-  { label: '銀聯卡', value: 'S' },
-  { label: '其他', value: 'O' },
-];
-
 export const queryFilterOptions = [
   { label: '收銀機號為空', value: 'ECR_NoBtn' },
   { label: '專櫃編號為空', value: 'StoIDBtn' },
   { label: '專櫃編號不存在', value: 'TLT_NoIsExistBtn' },
-  { label: '交易流水號為空', value: 'TXN_NoBtn' },
-  { label: '銷售日期為空', value: 'TxnDateBtn' },
-  { label: '銷售日期與請款日不同', value: 'DateDifferBtn' },
-];
-
-export const queryFilterForPos6119POptions = [
-  { label: '收銀機號為空', value: 'ECR_NoBtn' },
-  { label: '專櫃編號為空', value: 'StoIDBtn' },
   { label: '交易流水號為空', value: 'TXN_NoBtn' },
   { label: '銷售日期為空', value: 'TxnDateBtn' },
   { label: '銷售日期與請款日不同', value: 'DateDifferBtn' },

@@ -1,3 +1,4 @@
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -6,7 +7,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CheckOptions, columns, CrdTxnFgOptions, PayCrdTypeOptions, POS611XOptions, queryFilterOptions, TxnTypeOptions } from './tls27040.model';
+import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, queryTxnTypeOptions } from './tls27040.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TLS27040Data, TLS27040Service } from '@service/api/tls/tls27040.service';
 import { finalize } from 'rxjs';
@@ -18,7 +19,9 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { SystemOptionsService } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { AsyncPipe } from '@angular/common';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -36,7 +39,9 @@ import { SystemOptionsService } from '@service/system/sys1000.service';
     MultiSelectComponent,
     InputNumberRangeComponent,
     CalendarRangeComponent,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    DropdownComponent,
+    AsyncPipe
   ]
 })
 export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> implements OnInit {
@@ -58,7 +63,7 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     BatCloseDate_Start: [null], // 請款日期起
     BatCloseDate_End: [null], // 請款日期迄
     CrdTxnFgList: [null],      // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
-    CheckList: [null],       // 輸入狀態
+    EntryFgList: [null],       // 輸入狀態
     ApprovalCode: [null, [Validators.maxLength(6)]],  // 核准碼
     TermNoList: [null],      // 分期期數
     radioBtn: [null], // 查詢篩選
@@ -71,15 +76,19 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
   columns: ReportColumn[] = columns;
   totalRecords = 0;
   lastQueryBody: any;
-  POS611XOptions = POS611XOptions;             // 收單銀行
-  TxnTypeOptions = TxnTypeOptions;
-  PayCrdTypeOptions = PayCrdTypeOptions;
-  CrdTxnFgOptions = CrdTxnFgOptions;
-  CheckOptions = CheckOptions;
+  POS611XOptions = POS611XOptions;                // 收單銀行
+  ECR_NoOptions = this.dropdown.queryPos1002();   // ECR編號
+  TLT_NoOptions = this.dropdown.queryTltTalent(); // 專櫃編號
+  TxnTypeOptions = queryTxnTypeOptions;                // 銷售狀況
+  PayCrdTypeOptions = getSYS1000Options('NCML_PayCrdType');// 卡別
+  CrdTxnFgOptions = queryCrdTxnFgOptions;
+  CheckOptions = getSYS1000Options('CTBC_Check');
+  EntryFgOptions = getSYS1000Options('EntryFg');
   TermNoOptions = SystemOptionsService.getOptions('T109');
   queryFilterOptions = queryFilterOptions;
   constructor(
     public readonly tls27040Service: TLS27040Service,
+    private readonly dropdown: DropdownApiService
   ) { super(); }
 
   ngOnInit(): void {
@@ -88,7 +97,9 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
-        ...frm.value
+        ...frm.value,
+        TxnTypeList: processSelectedCodes(frm.value.TxnTypeList),
+        CrdTxnFgList: processSelectedCodes(frm.value.CrdTxnFgList),
       }
       this.tls27040Service.queryTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.length > 0 ? res.Data.map(item => ({
@@ -114,4 +125,10 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
       this.onSubmit(this.queryForm);
     });
   }
+}
+function processSelectedCodes(selectedValues: string[][]) {
+  if (selectedValues) {
+    return selectedValues.flat();
+  }
+  return null;
 }

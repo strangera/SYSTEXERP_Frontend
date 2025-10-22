@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder, AbstractControl } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -7,103 +7,107 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS27040Data, TLS27040Service } from '@service/api/tls/tls27040.service';
 // 假設這些模型/選項已在其他地方定義
-import { CheckOptions, CrdTxnFgOptions, CTBC_TxnCodeOptions, CTBC_TxnTypeOptions, PayCrdTypeOptions, POS611XOptions, TxnTypeOptions } from '../tls27040/tls27040.model';
-import { SystemOptionsService } from '@service/system/sys1000.service';
+import { POS6118_TxnTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, POS6119P_TxnTypeOptions, pos6119pTxnFgOptions, pos6119TxnFgOptions, POS611XOptions, TxnTypeOptions } from '../tls27040/tls27040.model';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { finalize, Observable } from 'rxjs';
 import { ApiResponse } from '@service/system/auth.service'; // 確保 AuthService 被導入
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 @Component({
   selector: 'app-tls27040-cru',
   templateUrl: './tls27040-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [AsyncPipe, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-  POS611XOptions = POS611XOptions;
-
+export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> implements OnInit {
+  POS611XOptions = POS611XOptions;  // 收單行
+  TLT_NoOptions = this.dropdown.queryTltTalent();   // 專櫃編號
+  ECR_NoOptions = this.dropdown.queryPos1002();   // ECR編號
   // =========================================================================
-  // 新增: 初始查詢相關屬性
-  // =========================================================================
-  isQueryValidated = false; // 控制下方詳細表單是否顯示
-  initialQueryLoading = false;
-  initialQuerySubmitted = false;
+  isQueryValidated = false;       // 控制下方詳細表單是否顯示
+  initialQueryLoading = false;    // 控制下方詳細表單是否顯示
+  initialQuerySubmitted = false;  // 控制下方詳細表單是否顯示
 
   initialQueryForm = this.formBuilder.group({
-    ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
-    TXN_No: ['', [Validators.required, Validators.maxLength(8)]],
+    ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]],
+    TXN_No: [null as string | null, [Validators.required, Validators.maxLength(8)]],
     TXN_Date: [null as Date | null, [Validators.required]],
     tableName: [null as string | null, [Validators.required]],
   });
   // =========================================================================
 
   POS6118dataForm = this.formBuilder.nonNullable.group({
-    tableName: ['', [Validators.required, Validators.maxLength(64)]],
-    ECR_No: ['', [Validators.required, Validators.maxLength(10)]], // 收銀機號
-    TXN_No: [0, [Validators.required, Validators.max(99999999)]], // 交易流水號
+    tableName: [null as string | null, [Validators.required, Validators.maxLength(64)]],
+    ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]], // 收銀機號
+    TXN_No: [null as number | null, [Validators.required, Validators.max(99999999)]], // 交易流水號
     NCML_TxnDate: [null as Date | null, [Validators.required]], // 銷售日期
     NCML_Date: [new Date(), [Validators.required]], // 請款日期
-    TLT_No: ['', [Validators.required, Validators.maxLength(12)]], // 專櫃編號
+    TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
     NCML_PayCrdType: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 付款卡類別
     NCML_TxnType: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 交易類別
-    NCML_TxnAmt: [0, [Validators.required, Validators.max(999999999999)]], // 交易金額
-    NCML_CrdNo: ['', [Validators.maxLength(32)]],  // 卡號
-    NCML_TmID: ['', [Validators.maxLength(8)]], // 收銀機代號
+    NCML_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]], // 交易金額
+    NCML_CrdNo: [null as string | null, [Validators.maxLength(32)]],  // 卡號
+    NCML_TmID: [null as string | null, [Validators.maxLength(8)]], // 收銀機代號
     NCML_BatCloseDate: [null as Date | null, [Validators.required]], // 批次結帳日期
-    NCML_ApprovalCode: ['', [Validators.maxLength(6)]], // 授權碼
-    NCML_Check: ['', [Validators.required, Validators.maxLength(2)]], // 輸入狀況
-    NCML_CrdTxnFg: ['', [Validators.maxLength(1)]], // 卡交易類別
+    NCML_ApprovalCode: [null as string | null, [Validators.maxLength(6)]], // 授權碼
+    NCML_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 輸入狀況
+    NCML_CrdTxnFg: [null as string | null, [Validators.maxLength(1)]], // 卡交易類別
     NCML_TermNo: [null as string | null, [Validators.required, Validators.max(99)]], // 期數
     NCML_TxnTime: [null as Date | null, [Validators.required]], // 銷售時間
   });
   POS6119dataForm = this.formBuilder.nonNullable.group({
-    tableName: ['', [Validators.required, Validators.maxLength(64)]],
-    ECR_No: ['', [Validators.required, Validators.maxLength(10)]], // 收銀機號
-    TXN_No: [0, [Validators.required, Validators.max(99999999)]], // 交易流水號
+    tableName: [null as string | null, [Validators.required, Validators.maxLength(64)]],
+    ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]], // 收銀機號
+    TXN_No: [null as number | null, [Validators.required, Validators.max(99999999)]], // 交易流水號
     CTBC_TxnTime: [null as Date | null, [Validators.required]], // 銷售日期 (DateTime)
-    TLT_No: ['', [Validators.required, Validators.maxLength(12)]], // 專櫃編號
+    TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
     CTBC_Date: [new Date(), [Validators.required]],// 請款日期
     CTBC_DataType: [null as string | null, [Validators.maxLength(1)]], // 資料型態
-    CTBC_CrdNo: ['', [Validators.maxLength(19)]], // 卡號
-    CTBC_TmID: ['', [Validators.required, Validators.maxLength(8)]], // 收銀機代號
-    CTBC_TxnCode: ['', [Validators.required, Validators.maxLength(2)]],// 交易代碼
+    CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
+    CTBC_TmID: [null as string | null, [Validators.required, Validators.maxLength(8)]], // 收銀機代號
+    CTBC_TxnCode: [null as string | null, [Validators.required, Validators.maxLength(2)]],// 交易代碼
     CTBC_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]],// 交易金額
     CTBC_PayDate: [null as Date | null, [Validators.required]],// 入帳日
-    CTBC_ApprovalCode: ['', [Validators.maxLength(6)]],// 授權碼
-    CTBC_Check: ['', [Validators.required, Validators.maxLength(2)]],// 輸入狀況
+    CTBC_ApprovalCode: [null as string | null, [Validators.maxLength(6)]],// 授權碼
+    CTBC_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]],// 輸入狀況
     CTBC_TermNo: [null as string | null, [Validators.maxLength(2)]],// 期數
   });
   POS6119PdataForm = this.formBuilder.nonNullable.group({
-    tableName: ['', [Validators.required, Validators.maxLength(64)]],
-    ECR_No: ['', [Validators.required, Validators.maxLength(10)]],// 收銀機號
-    TXN_No: [0, [Validators.required, Validators.max(99999999)]],// 交易流水號
+    tableName: [null as string | null, [Validators.required, Validators.maxLength(64)]],
+    ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]],// 收銀機號
+    TXN_No: [null as number | null, [Validators.required, Validators.max(99999999)]],// 交易流水號
     CTBC_TxnDate: [null as Date | null, [Validators.required]],// 銷售日期
-    TLT_No: ['', [Validators.required, Validators.maxLength(12)]], // 專櫃編號
+    TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
     CTBC_Date: [new Date(), [Validators.required]], // 請款日期
-    CTBC_CrdNo: ['', [Validators.maxLength(19)]], // 卡號
-    CTBC_TxnAmt: [0, [Validators.required, Validators.max(999999999999)]], // 交易金額
-    CTBC_TxnType: ['', [Validators.maxLength(2)]],  // 交易類別
+    CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
+    CTBC_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]], // 交易金額
+    CTBC_TxnType: [null as string | null, [Validators.maxLength(2)]],  // 交易類別
     CTBC_PayDate: [null as Date | null, [Validators.required]], // 入帳日
-    CTBC_TmID: ['', [Validators.maxLength(8)]], // 收銀機代號
-    CTBC_ApprovalCode: ['', [Validators.maxLength(6)]], // 授權碼
-    CTBC_Check: ['', [Validators.required, Validators.maxLength(2)]], // 輸入狀況
+    CTBC_TmID: [null as string | null, [Validators.maxLength(8)]], // 收銀機代號
+    CTBC_ApprovalCode: [null as string | null, [Validators.maxLength(6)]], // 授權碼
+    CTBC_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 輸入狀況
   });
 
-  PayCrdTypeOptions = PayCrdTypeOptions;
-  TxnTypeOptions = TxnTypeOptions;
-  CrdTxnFgOptions = CrdTxnFgOptions;
-  CheckOptions = CheckOptions;
-  CTBC_TxnCodeOptions = CTBC_TxnCodeOptions;
-  CTBC_TxnTypeOptions = CTBC_TxnTypeOptions;
-  TermNoOptions = SystemOptionsService.getOptions('T109')
+  PayCrdTypeOptions = getSYS1000Options('NCML_PayCrdType');
+  CheckOptions = getSYS1000Options('CTBC_Check');
+  EntryFgOptions = getSYS1000Options('EntryFg');
+  POS6118_TxnTypeOptions = POS6118_TxnTypeOptions;
+  POS6119_TxnCodeOptions = POS6119_TxnCodeOptions;
+  POS6119P_TxnTypeOptions = POS6119P_TxnTypeOptions;
+  pos6118TxnFgOptions = pos6118TxnFgOptions;
+  pos6119TxnFgOptions = pos6119TxnFgOptions;
+  pos6119pTxnFgOptions = pos6119pTxnFgOptions;
+  TermNoOptions = getSYS1000Options('T109');
 
   constructor(
     private readonly tls27040Service: TLS27040Service,
     private readonly datePipe: DatePipe,
+    private readonly dropdown: DropdownApiService
   ) { super(); }
 
   /**
@@ -209,8 +213,8 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements 
               ECR_No: rawData.ECR_No,
               TXN_No: Number(rawData.TXN_No),
               tableName: rawData.tableName,
-              // TXN_Date in rowdata is the Date object from initialQueryForm
-              NCML_TxnDate: rawData.TxnDate,
+              // TXN_Date in rawData (this.rowdata) 應該是 TxnDate 屬性
+              NCML_TxnDate: rawData.TXN_Date,
             });
             form.get('NCML_TxnDate')?.disable();
           }
@@ -252,13 +256,13 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements 
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
-
+          form.get('TLT_No')?.enable();
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
               TXN_No: Number(rawData.TXN_No),
               tableName: rawData.tableName,
-              CTBC_TxnTime: rawData.TxnDate, // TXN_Date in rowdata is the Date object
+              CTBC_TxnTime: rawData.TXN_Date, // TXN_Date in rowdata is the Date object
             });
             form.get('CTBC_TxnTime')?.disable();
           }
@@ -297,13 +301,13 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements 
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
-
+          form.get('TLT_No')?.enable();
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
               TXN_No: Number(rawData.TXN_No),
               tableName: rawData.tableName,
-              CTBC_TxnDate: rawData.TxnDate, // TXN_Date in rowdata is the Date object
+              CTBC_TxnDate: rawData.TXN_Date, // TXN_Date in rowdata is the Date object
             });
             form.get('CTBC_TxnDate')?.disable();
           }
@@ -320,22 +324,17 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements 
   onInitialQuerySubmit(frm: FormGroup) {
     this.initialQuerySubmitted = true;
     this.initialQueryLoading = true;
-
     if (!frm.valid) {
       this.initialQueryLoading = false;
       return;
     }
-
-    // 格式化日期為字串 yyyy-MM-dd
     const formValue = frm.getRawValue();
     const formattedDate = this.datePipe.transform(formValue.TXN_Date, 'yyyy-MM-dd');
-
     const body = {
       ...formValue,
       TXN_Date: formattedDate, // 使用格式化後的日期
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
     };
-
     // 呼叫 API 檢查是否可以新增
     this.tls27040Service.queryInsCheck(body).pipe(finalize(() => this.initialQueryLoading = false)).subscribe(res => {
       if (res.Data === true) {
@@ -401,6 +400,8 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements 
 
               // 確保數值欄位是正確的 Number 類型
               NCML_TermNo: Number(formValue.NCML_TermNo),
+
+              NCML_Check: 'Y',
             };
 
             if (this.isFormCreateable) {
@@ -417,8 +418,9 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements 
               // 確保將 Date 物件轉換為 yyyy-MM-dd 字串
               CTBC_Date: this.datePipe.transform(formValue.CTBC_Date, 'yyyy-MM-dd'),
               CTBC_PayDate: this.datePipe.transform(formValue.CTBC_PayDate, 'yyyy-MM-dd'),
-              CTBC_TxnTime: this.datePipe.transform(formValue.CTBC_TxnTime, 'yyyy-MM-dd HH:mm:ss'), // 日期時間轉換
+              CTBC_TxnTime: formValue.CTBC_TxnTime, // 日期時間轉換
               CTBC_TermNo: Number(formValue.CTBC_TermNo),
+              CTBC_Check: 'Y'
             };
             if (this.isFormCreateable) {
               apiCall = this.tls27040Service.insertPOS6119(body);
@@ -434,7 +436,8 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements 
               // 確保將 Date 物件轉換為 yyyy-MM-dd 字串
               CTBC_Date: this.datePipe.transform(formValue.CTBC_Date, 'yyyy-MM-dd'),
               CTBC_TxnDate: this.datePipe.transform(formValue.CTBC_TxnDate, 'yyyy-MM-dd'),
-              CTBC_PayDate: this.datePipe.transform(formValue.CTBC_PayDate, 'yyyy-MM-dd')
+              CTBC_PayDate: this.datePipe.transform(formValue.CTBC_PayDate, 'yyyy-MM-dd'),
+              CTBC_Check: 'Y'
             };
             if (this.isFormCreateable) {
               apiCall = this.tls27040Service.insertPOS6119P(body);
