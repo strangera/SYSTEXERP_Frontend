@@ -17,7 +17,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
@@ -97,13 +97,14 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { field: 'TXN_Net', header: '發票金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_Tax', header: '發票稅額', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'PLU_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'AssetType', header: '資產註記', visible: true, format: v => getSYS1000('AssetType', v) },
   ];
 
-  //#region 
+  //#region
   // TDS1007
   invoiceFormatOptions: Option[] = [];   // 發票格式
   guiTrackOptions: Option[] = [];        // 字軌
