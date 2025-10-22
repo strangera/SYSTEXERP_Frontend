@@ -350,6 +350,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       tlt_name: formValue.tlt_name || '',
       ven_uniform: formValue.ven_uniform || '',
       ven_no: formValue.ven_no || '',
+      vendor_ven_no: formValue.vendor_ven_no || '',
+      vendor_no: formValue.vendor_no || '',
       VEN_Name: formValue.VEN_Name || '',
       contract_subno: formValue.contract_subno || undefined,
       contract_no: formValue.contract_no || undefined,

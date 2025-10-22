@@ -176,7 +176,9 @@ class Next1DataCleaner implements TLS12040DataCleaner {
   }
 
   validate(data: any): boolean {
-    return !!(data.selectedItems && data.selectedItems.length > 0);
+    // 🆕 修正：只要有 fareData 就算有效，不要求一定要有 selectedItems
+    const hasFareData = data.fareData && Object.keys(data.fareData).length > 0;
+    return !!hasFareData;
   }
 }
 
@@ -332,8 +334,8 @@ export class TLS12040FlowService {
     try {
       // 🔍 儲存前記錄 cru 資料
       const originalCruData = this._state.stepData.get('cru');
-      console.log(`儲存 ${stepName} 前，cru locationInfo:`,
-        JSON.stringify(originalCruData?.data?.locationInfo || [], null, 2));
+      // console.log(`儲存 ${stepName} 前，cru locationInfo:`,
+      //   JSON.stringify(originalCruData?.data?.locationInfo || [], null, 2));
 
       // 清理資料
       const cleanedData = cleaner.clean(rawData);
@@ -376,8 +378,8 @@ export class TLS12040FlowService {
 
       // 🔍 儲存後檢查 cru 資料
       const updatedCruData = this._state.stepData.get('cru');
-      console.log(`儲存 ${stepName} 後，cru locationInfo:`,
-        JSON.stringify(updatedCruData?.data?.locationInfo || [], null, 2));
+      // console.log(`儲存 ${stepName} 後，cru locationInfo:`,
+      //   JSON.stringify(updatedCruData?.data?.locationInfo || [], null, 2));
 
       if (originalCruData && !updatedCruData?.data?.locationInfo?.length) {
         console.error('🚨 cru locationInfo 在儲存後變空！');
