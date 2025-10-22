@@ -6,7 +6,7 @@
 <p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems"
   [selectionMode]="showCheckBox ? 'multiple' : undefined" sortMode="multiple" [dataKey]="dataKey"
   [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  (onRowReorder)="onRowReorder($event)" [multiSortMeta]="multiSortMeta"
+  (onRowReorder)="onRowReorder($event); rowReorderData.emit($event)" [multiSortMeta]="multiSortMeta"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
   [rowSelectable]="rowSelectableWrapper" [loading]="loading">
   <ng-template pTemplate="caption">
@@ -179,6 +179,20 @@
               styleClass="pi pi-exclamation-circle text-red-500" [pTooltip]="rowData._validationErrors?.[col.field]"
               tooltipPosition="bottom" />
           </p-iconField>
+          <ng-container *ngIf="col.type === 'template'">
+            <div class="input-wrapper" [attr.data-suffix]="col.suffix">
+              <input pInputText readonly class="w-full min-w-max" [placeholder]="'請選擇' + (col.header || '')"
+                [value]="templateDisplayValue(rowData, col)" [disabled]="disabled" (click)="overlayPanel.show($event)" />
+              <p-overlayPanel #overlayPanel [dismissable]="true" [showCloseIcon]="false"
+                [ngStyle]="{'max-width': '50vw', 'min-width': '300px'}" [appendTo]="'body'">
+                <div class="grid p-fluid">
+                  <ng-container *ngIf="col.templateRef">
+                    <ng-container *ngTemplateOutlet="col.templateRef!; context: { $implicit: rowData, col, overlayPanel }"></ng-container>
+                  </ng-container>
+                </div>
+              </p-overlayPanel>
+            </div>
+          </ng-container>
         </ng-container>
         <span *ngIf="!col.type">
           {{ col.format ? col.format(rowData[col.field], index, rowData) : rowData[col.field]}}

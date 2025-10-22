@@ -7,8 +7,8 @@ interface FIN53010Basic {
   INV_YN: 'Y' | 'N';
   /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
   PostFlag: '0' | '1' | '3';
-  /** ROC/IFRS 0:共用 1:ROC 2:IFRS 3:全部 */
-  VouAccType: '0' | '1' | '2' | '3';
+  /** ROC/IFRS 0:ROC 1:IFRS 2:全部 */
+  VouAccType: '0' | '1' | '2';
   /** 傳票類別 1:現金收入2:現金支出3:轉帳傳票 */
   VouType: '1' | '2' | '3';
   /** 傳票種類(SYS1000.VoucherType) */
@@ -43,16 +43,22 @@ export interface QueryFIN53010Detail extends FIN53010Basic, CRT, UPD {
 export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'Data'> & { Data: QueryFIN53010Detail; };
 
 /**
- * FIN53010 明細檔
- * id: 明細檔流水號
- * SerNo: 顯示用序號 10為單位序編
- * AccDC: 借貸方D/C
- * AccNo: 科目代號 (GLS1005)
- * AccAmt: 借貸方D/C 金額
- * ORG_ID: 組織編號
- * DetailNo: 廠商/員工編號
- * SubDetailNo: 對象編號
- * NoteDesc: 摘要
+ * 代表 FIN53010 記錄的明細。
+ *
+ * @interface FIN53010Detail
+ * @property {number} AccAmt - 借貸方 D/C 金額
+ * @property {string} AccDC - 借貸方D/C
+ * @property {string} AccName - 科目名稱
+ * @property {string} AccNo - 科目代號 (GLS1005)
+ * @property {string} DetailName - 廠商/員工名稱
+ * @property {string} DetailNo - 廠商/員工編號
+ * @property {string} NoteDesc - 摘要
+ * @property {string} ORG_ID - 組織編號
+ * @property {number} SerNo - 顯示用序號，10 為單位遞增
+ * @property {string} SubDetailNo - 對象編號
+ * @property {string} [clearingCode] - 清什麼code?
+ * @property {number} id - 明細檔流水號
+ * @property {number} index - 索引
  */
 export interface FIN53010Detail {
   AccAmt: number;
@@ -65,8 +71,8 @@ export interface FIN53010Detail {
   ORG_ID: string;
   SerNo: number;
   SubDetailNo: string;
-  clearingCode?: string;
   id: number;
+  index: number;
 }
 
 /**
@@ -76,11 +82,16 @@ export interface FIN53010Detail {
  * AccAmtD: 借方金額
  * AccAmtC: 貸方金額
  * displayIndex: 顯示用索引值
+ * recKey: 對帳KEY值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
   AccAmtD?: number;
   AccAmtC?: number;
   displayIndex?: number;
+
+  recKey?: number;
+  clearingCode?: string;
+  ReflNo?: string;
 }
 
 export interface FIN53010Payload extends BaseQueryRequest, Partial<Pick<FIN53010Basic, 'VouType' | 'PostFlag' | 'VouAccType'>> {
@@ -145,7 +156,8 @@ export interface AccNoList {
 }
 
 export interface VoucherType {
-  id: number;
-  No: string;
-  Name: string;
+  Id: number;
+  VoucherKind: string;
+  VoucherName: string;
+  Status: string;
 }

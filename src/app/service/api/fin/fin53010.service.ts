@@ -21,6 +21,7 @@ export class FIN53010Service {
   private readonly voucherTypeCancel$ = new Subject<void>();
   private readonly orgNoCancel$ = new Subject<void>();
   private readonly orgIdCancel$ = new Subject<void>();
+  private readonly refNameCancel$ = new Subject<void>();
 
   public readonly FIN53010Data = signal<FIN53010Data[]>([]);
   public readonly FIN53010Detail = signal<QueryFIN53010Detail>(Object.create(null));
@@ -30,6 +31,7 @@ export class FIN53010Service {
   public readonly venLoading = signal(!1);
   public readonly usrLoading = signal(!1);
   public readonly sys1000Loading = signal(!1);
+  public readonly refNameLoading = signal(!1);
 
   public readonly cru = signal<boolean>(!1);
 
@@ -40,6 +42,9 @@ export class FIN53010Service {
   public readonly tblUserOrgidList = signal<Option[]>([]);
   public readonly remarkList = signal<Option[]>([]);
   public readonly sys1000List = signal<Option[]>([]);
+  public readonly refNameList = signal<Option[]>([]);
+
+  public readonly totalRecords = signal<number>(0);
 
   /** 傳票種類 */
   public readonly vouTypeOptions = signal<Option[]>([
@@ -61,10 +66,9 @@ export class FIN53010Service {
     { value: 'Y', label: '是' },
   ]);
   public readonly vouAccTypeOptions = signal<Option[]>([
-    { value: '0', label: '共用' },
-    { value: '1', label: 'ROC' },
-    { value: '2', label: 'IFRS' },
-    ...(this.cru() ? [] : [{ value: '3', label: '全部' }]),
+    { value: '0', label: 'ROC' },
+    { value: '1', label: 'IFRS' },
+    ...(this.cru() ? [] : [{ value: '2', label: '全部' }]),
   ]);
 
   public readonly accNoMap = computed(() =>
@@ -92,6 +96,7 @@ export class FIN53010Service {
     return this.http.post<BaseQueryResponse<FIN53010Data>>(`${apiUrl}/queryFIN53010`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
+      tap(res => this.totalRecords.set(res.TotalCount || 0)),
       tap(res => this.FIN53010Data.set(res.Data)),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -106,6 +111,7 @@ export class FIN53010Service {
     return this.http.post<FIN53010DataDetail>(`${apiUrl}/queryFIN53010Detail`, { id }).pipe(
       take(1),
       takeUntil(this.tableCancel$),
+      tap(res => this.totalRecords.set(res.TotalCount || 0)),
       tap(res => this.FIN53010Detail.set(res.Data)),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -147,22 +153,14 @@ export class FIN53010Service {
     );
   }
 
-  public getVoucherTypeOptions(): void {
-    this.voucherTypeOptions.set([
-      { id: 1, No: 'AA', Name: 'AAAA' },
-      { id: 2, No: 'BB', Name: 'BBBB' },
-      { id: 3, No: 'CC', Name: 'CCCC' },
-      { id: 4, No: 'DD', Name: 'DDDD' },
-      { id: 5, No: 'EE', Name: 'EEEE' },
-      { id: 6, No: 'GL', Name: 'GL測試用' },
-    ]);
-
-    this.voucherTypeCancel$.next();
-    this.http.post<BaseQueryResponse<VoucherType>>(`${apiUrl}/queryVoucherTypeDropdown`, {}).pipe(
+  public getRefNameList(): void {
+    this.orgIdCancel$.next();
+    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
-      takeUntil(this.voucherTypeCancel$),
-      tap(res => this.voucherTypeOptions.set(res.Data)),
-      finalize(() => this.logger.debug('查詢VoucherTypeOptions結果:', [this.voucherTypeOptions()])),
+      takeUntil(this.orgIdCancel$),
+      map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
+      tap(res => this.refNameList.set(res)),
+      finalize(() => this.logger.debug('查詢RefNameList結果:', [this.refNameList()])),
     ).subscribe();
   }
 
@@ -173,17 +171,6 @@ export class FIN53010Service {
       takeUntil(this.orgNoCancel$),
       tap(res => this.orgNoList.set(res ?? [])),
       finalize(() => this.logger.debug('查詢OrgNoList結果:', [this.orgNoList()])),
-    ).subscribe();
-  }
-
-  public getTblUserOrgidList(): void {
-    this.orgIdCancel$.next();
-    this.dropdownApi.queryTblUserOrgid().pipe(
-      take(1),
-      takeUntil(this.orgIdCancel$),
-      map(res => res?.map(item => ({ value: item['Org_ID'], label: item['Org_Name'] } as Option)) ?? []),
-      tap(res => this.tblUserOrgidList.set(res)),
-      finalize(() => this.logger.debug('查詢TblUserOrgidListList結果:', [this.tblUserOrgidList()])),
     ).subscribe();
   }
 
@@ -217,14 +204,28 @@ export class FIN53010Service {
     );
   }
 
+  public getVoucherTypeList(): Observable<Option[]> {
+    this.vendorCancel$.next();
+    this.venLoading.set(!0);
+    return this.http.post<BaseQueryResponse<VoucherType>>(`${environment.ApiUrl}/FIN50000/FIN52020/queryFIN52020`, {}).pipe(
+      take(1),
+      takeUntil(this.vendorCancel$),
+      map(res => res.Data.map(item => ({ value: item.Id, label: item.VoucherName } as Option))),
+      tap(res => this.vendorList.set(res)),
+      finalize(() => {
+        this.venLoading.set(!1);
+        this.logger.debug('查詢VendorList結果:', [this.vendorList()]);
+      }),
+    );
+  }
+
   public getUsrList(): Observable<Option[]> {
     this.usrCancel$.next();
     this.usrLoading.set(!0);
-    return this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
+    return this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
       takeUntil(this.usrCancel$),
-      // map(res => res?.filter(item => !RegExp(/^[0-9]/).test(item['value']))),
-      map(res => res?.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option)) ?? []),
+      map(res => res?.map(item => ({ value: item.user_No, label: item.user_Name } as Option)) ?? []),
       tap(res => this.usrList.set(res)),
       finalize(() => {
         this.usrLoading.set(!1);

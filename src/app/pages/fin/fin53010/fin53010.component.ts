@@ -15,7 +15,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { FIN53010Data } from './fin53010.model';
 
 @Component({
@@ -58,13 +58,11 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     CrtDateEnd: new FormControl<Date | void>(void 0),
     UpdDateStart: new FormControl<Date | void>(void 0),
     UpdDateEnd: new FormControl<Date | void>(void 0),
-    /** ROC/IFRS 0:共用 1:ROC 2:IFRS 3:全部 */
-    VouAccType: new FormControl<'0' | '1' | '2' | '3'>('0'),
+    /** ROC/IFRS 0:ROC 1:IFRS 2:全部 */
+    VouAccType: new FormControl<'0' | '1' | '2'>('0'),
     ...createPaginationConfig([{ field: 'id', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
-
-  public readonly totalRecords = computed(() => this.service.FIN53010Data().length);
 
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼' },
@@ -89,7 +87,10 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     if (store?.value) this.queryForm.setValue(store.value);
     this.loading = !0;
 
-    this.service.getAccNoList().pipe(finalize(() => this.loading = !1)).subscribe(res => this.logger.debug(`init:`, [res]));
+    forkJoin([
+      this.service.getUsrList(),
+      this.service.getAccNoList(),
+    ]).pipe(finalize(() => this.loading = !1)).subscribe(res => this.logger.debug(`init:`, [res]));
   }
 
   public onSubmit(): void {
