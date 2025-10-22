@@ -78,6 +78,7 @@ class CruDataCleaner implements TLS12040DataCleaner {
       tlt_name: data.tlt_name || '',
       ven_uniform: data.ven_uniform || '',
       ven_no: data.ven_no || '',
+      vendor_ven_no: data.vendor_ven_no || '',
       VEN_Name: data.VEN_Name || '',
       contract_subno: data.contract_subno || '',
       check_type: data.check_type || '',
