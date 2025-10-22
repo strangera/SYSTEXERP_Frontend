@@ -1,29 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { v4 as uuidv4 } from 'uuid';
-import { ChangeDetectionStrategy, AfterContentInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent } from 'primeng/table';
-import { TableUtilityService } from './table-edit-utility.service';
-import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 import { CommonModule } from '@angular/common';
+import { AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { SortMeta } from 'primeng/api';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { TableModule } from 'primeng/table';
-import { TooltipModule } from 'primeng/tooltip';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { BreadcrumbModule } from "primeng/breadcrumb";
-import { validateRequired } from './validate-field.model';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
-import { SortMeta } from 'primeng/api';
-import { CalendarModule } from 'primeng/calendar';
+import { Table, TableColumnReorderEvent, TableModule, TableRowReorderEvent } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { v4 as uuidv4 } from 'uuid';
+import { TableUtilityService } from './table-edit-utility.service';
+import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
+import { validateRequired } from './validate-field.model';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -47,7 +47,8 @@ import { CalendarModule } from 'primeng/calendar';
     BreadcrumbModule,
     SkeletonModule,
     FileUploadModule,
-    CalendarModule
+    CalendarModule,
+    OverlayPanelModule,
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
@@ -106,8 +107,9 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   //   }
   //   return { isValid: true, errorMessage: '' };
   // }
-  @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string }) | undefined = undefined;
+  @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string; }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
+  @Output() rowReorderData = new EventEmitter<TableRowReorderEvent>();      // row reorder 事件
   @Input() errorMessage = '至少輸入一筆資料'; // 錯誤訊息
   // 總計
   @Input() footerData: any;                  // (總計)頁尾資料
@@ -172,7 +174,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
     event = event.filter((item: any) => !item._isAutoInsertCandidate);
-    this.selectionChange.emit(event)
+    this.selectionChange.emit(event);
   }
   // Insert 按鈕
   insertRow() {
@@ -436,4 +438,16 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
+
+  /** 回傳完整data並去除最後一行新增的 */
+  get reorderData(): any[] {
+    return this.data.slice(0, -1);
+  }
+  /** 處理 Template input 顯示的值 */
+  public templateDisplayValue(rowData: any, col: EditColumn): string {
+    const displayField = col.templateDisplayField;
+    // console.log(`templateDisplayValue:`, [rowData, displayField]);
+
+    return displayField ? rowData[displayField] : rowData[col.field] || '';
+  };
 }
