@@ -142,18 +142,3 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-
-
-<div class="card">
-  <div class="col-12">
-    <app-table [showCheckBox]="!0"
-               [data]="service.FIN52010Data()"
-               [columns]="columns"
-               [totalRecords]="totalRecords()"
-               (edit)="onEdit($event)"
-               (detail)="onDetail($event)"
-               [loading]="service.tableLoading()"
-               [dataKey]="'id'"
-               [tableKey]="'FIN52010'"></app-table>
-  </div>
-</div>
