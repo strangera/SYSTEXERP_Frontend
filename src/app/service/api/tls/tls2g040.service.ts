@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service';
 import { map, Observable } from 'rxjs';
@@ -84,7 +84,6 @@ export class TLS2G040Service {
             delete processedItem['DailyBudgets'];
             return processedItem;
           };
-
           // 處理一般資料
           const processedData: TLS2G040Data[] = response.Data?.map(processDailyBudgets) || [];
           // 處理總計資料
