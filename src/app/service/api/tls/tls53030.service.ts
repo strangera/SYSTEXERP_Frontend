@@ -32,6 +32,14 @@ export interface TLS53030ExportPDFRequest {
   PST_Date: string;             // 盤點基準日期 - ISO 8601 格式 - 必填
 }
 
+// Operation request interface for TLS53030 (盤點結案/反結案/作廢)
+export interface TLS53030OperationRequest {
+  MID: number;                  // 商戶編號 - 必填
+  PST_No: string;               // 盤點編號:C+倉別+YYYYMM+SSSS - 必填
+  SYS_StoreNo: string;          // 公司編號/店號 - 必填
+  HOS_No: string;               // 倉別代碼 - 必填
+}
+
 // Data result interface for TLS53030 (盤點資料)
 export interface TLS53030Data {
   id: number;                   // id
@@ -63,6 +71,27 @@ export interface TLS53030DetailData {
   DIFF_Qty: number;             // 差異量
 }
 
+// Update detail request interface for TLS53030
+export interface TLS53030UpdateDetailRequest {
+  MID: number;                  // 商戶編號 - 必填
+  PST_No: string;               // 盤點編號:C+倉別+YYYYMM+SSSS - 必填
+  SYS_StoreNo: string;          // 公司編號/店號 - 必填
+  HOS_No: string;               // 倉別代碼 - 必填
+  PLU_MagNo: string;            // 商品管理編號 - 必填
+  PST_Qty1: number;             // 初盤數量
+  PST_Qty2: number;             // 複盤數量
+  PST_Qty3: number;             // 抽盤數量
+}
+
+// Update PST Status request interface for TLS53030
+export interface TLS53030UpdatePSTStatusRequest {
+  MID: number;                  // 商戶編號 - 必填
+  PST_No: string;               // 盤點編號:C+倉別+YYYYMM+SSSS - 必填
+  SYS_StoreNo: string;          // 公司編號/店號 - 必填
+  HOS_No: string;               // 倉別代碼 - 必填
+  PST_Status: string;           // 盤點狀態 - 必填
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -91,5 +120,30 @@ export class TLS53030Service {
         responseType: 'blob'
       }
     );
+  }
+
+  // 盤點結案
+  concludeTLS53030(data: TLS53030OperationRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/concludeTLS53030`, data);
+  }
+
+  // 盤點反結案
+  revertedTLS53030(data: TLS53030OperationRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/revertedTLS53030`, data);
+  }
+
+  // 盤點作廢
+  voidTLS53030(data: TLS53030OperationRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/voidTLS53030`, data);
+  }
+
+  // 更新盤點明細資料
+  updateTLS53030Detail(data: TLS53030UpdateDetailRequest[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/updateTLS53030_Detail`, data);
+  }
+
+  // 更新盤點狀態
+  updateTLS53030PSTStatus(data: TLS53030UpdatePSTStatusRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/updateTLS53030_PST_Status`, data);
   }
 }
