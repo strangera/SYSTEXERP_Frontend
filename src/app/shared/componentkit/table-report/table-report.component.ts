@@ -180,14 +180,25 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     };
     this.queryFunction(body).pipe(untilDestroyed(this)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
-        this.virtualData = Array.from({ length: this.data.length + res.Data.length });
-        this.updateGroupTotals(res.Data);
+        this.virtualData = [];
+        this.dt.virtualScroll = false;
+        this.dt.scrollHeight = 'flex';
+        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
+        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
         this.cdr.detectChanges();
-        this.data = [...this.data, ...res.Data];
-        this.virtualData = this.data;
-        this.lastQueryBody = body;
-        this.totalRecords = res.TotalCount || 0;
-        this.groupTotals = {};
+        if (res.Data.length < 30) {
+          this.data = res.Data;
+          this.virtualData = this.data;
+          this.dt.virtualScroll = false;
+          this.dt.scrollHeight = 'flex';
+        } else {
+          this.dt.virtualScroll = true;
+          this.dt.scrollHeight = '450px';
+          this.virtualData = Array.from({ length: res.Data.length });
+          this.data = res.Data;
+          this.cdr.detectChanges();
+          this.virtualData = this.data;
+        }
         this.selectedItems = [];
       }
     });

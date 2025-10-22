@@ -3,7 +3,35 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+
+  <!-- 步驟 1: 初始查詢區塊 (僅在新增模式且未驗證時顯示) -->
+  <p-panel *ngIf="isFormCreateable && !isQueryValidated" header="新增實收檔前置檢查" class="line-height-3 m-0">
+    <form [formGroup]="initialQueryForm" (ngSubmit)="onInitialQuerySubmit(initialQueryForm)">
+      <div class="grid p-fluid">
+        <!-- 收單行 -->
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="收單行" controlName="tableName" [options]="POS611XOptions"
+          optionLabel="label" optionValue="value" [control]="initialQueryForm.controls.tableName"
+          [submitted]="initialQuerySubmitted" [filter]="false" />
+        <!-- 收銀機號 -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="收銀機號" controlName="ECR_No"
+          [control]="initialQueryForm.controls.ECR_No" [submitted]="initialQuerySubmitted" />
+        <!-- 交易流水號 -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="交易流水號" controlName="TXN_No"
+          [control]="initialQueryForm.controls.TXN_No" [submitted]="initialQuerySubmitted" />
+        <!-- 銷售日期 -->
+        <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售日期" controlName="TXN_Date"
+          [control]="initialQueryForm.controls.TXN_Date" [submitted]="initialQuerySubmitted" />
+      </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button label="驗證並新增" btnType="query" [loading]="initialQueryLoading"></app-button>
+      </div>
+    </form>
+  </p-panel>
+
+  <!-- 步驟 2: 詳細表單區塊 (在 Read/Update 模式或新增模式且已驗證時顯示) -->
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0" *ngIf="!isFormCreateable || isQueryValidated">
+
+    <!-- POS6118 Form -->
     <form *ngIf="rowdata?.tableName === 'POS6118'" [formGroup]="POS6118dataForm" id="dataForm"
       (ngSubmit)="onSubmit(POS6118dataForm)">
       <div class="grid p-fluid">
@@ -57,10 +85,12 @@
           [control]="POS6118dataForm.controls.NCML_TxnTime" [submitted]="submitted" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="POS6118dataForm"></app-button>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
+
+    <!-- POS6119 Form -->
     <form *ngIf="rowdata?.tableName === 'POS6119'" [formGroup]="POS6119dataForm" id="dataForm"
       (ngSubmit)="onSubmit(POS6119dataForm)">
       <div class="grid p-fluid">
@@ -109,10 +139,12 @@
           [control]="POS6119dataForm.controls.CTBC_TermNo" [submitted]="submitted" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="POS6119dataForm"></app-button>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
+
+    <!-- POS6119P Form -->
     <form *ngIf="rowdata?.tableName === 'POS6119P'" [formGroup]="POS6119PdataForm" id="dataForm"
       (ngSubmit)="onSubmit(POS6119PdataForm)">
       <div class="grid p-fluid">
@@ -155,7 +187,7 @@
           optionLabel="label" optionValue="value" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="POS6119PdataForm"></app-button>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
