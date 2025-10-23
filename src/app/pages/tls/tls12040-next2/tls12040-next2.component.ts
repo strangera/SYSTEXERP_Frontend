@@ -142,7 +142,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 2. 如果 CRU 資料沒有，才檢查 contractInfoData
     if (this.contractInfoData && this.contractInfoData.length > 0) {
       const termType = this.contractInfoData[0].tlt_term_type;
-      console.log('從 contractInfoData 取得 tlt_term_type:', termType);
+      // console.log('從 contractInfoData 取得 tlt_term_type:', termType);
       return termType || '3';
     }
 

@@ -591,10 +591,23 @@ export class TLS12040FlowService {
    * 處理 Next2 抽成資料
    */
   private processNext2CommissionData(next2Data: any): any {
-    console.log('處理 Next2 抽成資料...');
+    console.log('🔍 處理 Next2 抽成資料...');
+    console.log('Next2Data 結構:', {
+      hasNext2Data: !!next2Data,
+      hasData: !!next2Data?.data,
+      hasCommissionData: !!next2Data?.data?.commissionData,
+      hasPreparedData: !!next2Data?.data?.preparedSubmitData
+    });
 
-    if (!next2Data?.commissionData) {
-      console.log('沒有 Next2 抽成資料');
+    // 🔥 優先使用已準備好的資料
+    if (next2Data?.data?.preparedSubmitData) {
+      console.log('✅ 使用 Next2 準備好的 preparedSubmitData');
+      return next2Data.data.preparedSubmitData;
+    }
+
+    // 🔥 修正：正確的讀取路徑
+    if (!next2Data?.data?.commissionData) {
+      console.log('❌ 沒有 Next2 抽成資料');
       return {
         masters: { toInsert: [], toUpdate: [], toDelete: [] },
         discountSettings: { toInsert: [], toUpdate: [], toDelete: [] },
@@ -603,7 +616,12 @@ export class TLS12040FlowService {
       };
     }
 
-    const commissionData = next2Data.commissionData;
+    // 🔥 使用正確的路徑
+    const commissionData = next2Data.data.commissionData;
+    console.log('📦 找到 commissionData:', {
+      length: commissionData.length,
+      sample: commissionData[0]
+    });
     const masters = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
     const discountSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
     const annualSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
@@ -1083,15 +1101,19 @@ export class TLS12040FlowService {
       if (typeof date === 'string') {
         const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (dateOnlyRegex.test(date)) {
-          return date; // ✅ 直接返回
+          console.log(`日期已是正確格式，直接返回: ${date}`);
+          return date; // ✅ 直接返回，不經過 Date 物件
         }
 
+        // 處理帶時間的字串
         if (date.includes('T')) {
-          return date.split('T')[0];
+          const dateOnly = date.split('T')[0];
+          console.log(`從時間戳提取日期: ${date} → ${dateOnly}`);
+          return dateOnly;
         }
       }
 
-      // 對於 Date 物件，使用 UTC 方法避免時區問題
+      // 對於 Date 物件或其他格式，使用本地時間
       let dateObj: Date;
       if (date instanceof Date) {
         dateObj = date;
@@ -1099,15 +1121,22 @@ export class TLS12040FlowService {
         dateObj = new Date(date);
       }
 
-      if (isNaN(dateObj.getTime())) return '';
+      if (isNaN(dateObj.getTime())) {
+        console.warn('無效的日期:', date);
+        return '';
+      }
 
-      // ✅ 使用 UTC 方法
-      const year = dateObj.getUTCFullYear();
-      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getUTCDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      // ✅ 使用本地時間方法，避免時區問題
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const result = `${year}-${month}-${day}`;
 
-    } catch {
+      console.log(`格式化日期: ${date} → ${result}`);
+      return result;
+
+    } catch (error) {
+      console.error('日期格式化錯誤:', error, date);
       return '';
     }
   }
