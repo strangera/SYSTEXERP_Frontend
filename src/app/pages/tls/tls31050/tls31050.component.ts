@@ -1,4 +1,4 @@
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -23,7 +23,9 @@ import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { TLS31050Item, TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls31050',
@@ -46,6 +48,7 @@ import { TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Servic
     RadiobuttonYNComponent,
     TranslateModule,
     TableComponent,
+    TableReportComponent,
     MultiSelectComponent,
     ButtonModule
   ]
@@ -127,7 +130,11 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
   ];
 
   totalRecords = 0;
-  data: TLS31050Response[] = [];
+  data: TLS31050Item[] = [];
+  footerTotal: TLS31020Total | null = null; // 總計取得原始資料
+  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
+  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
+  historyRequestBody: TLS31050Request | null = null; //歷史查詢條件
   columns: Column[] = [
     { field: 'tlt_term_type', header: '抽成別代碼', visible: false },
     { field: 'tlt_term_desc', header: '抽成別名稱', visible: true },
@@ -186,7 +193,7 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls31050Service: Tls31050Service,
+    public readonly tls31050Service: Tls31050Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
   ) { super(); }
@@ -247,76 +254,75 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
       }
     });
     // 監聽中分類變化，獲取小分類並分組
-    // this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
-    //   map(selectedMValues => selectedMValues || []),
-    //   // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
-    //   switchMap((selectedMValues: IDropdownItem[]) => {
-    //     if (selectedMValues.length === 0) {
-    //       this.bus_sclass_Option = [];
-    //       this.queryForm.controls.bus_sclass.setValue([]);
-    //       return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
-    //     }
-    //     const requests = [];
-    //     // 根據選取的中分類，為每一個中分類組建一個 API 請求
-    //     for (const mValue of selectedMValues) {
-    //       if (mValue && mValue.bus_type) {
-    //         requests.push(
-    //           this.dropDownListService.queryTLTBUSSCLASS_DropDownList({ bus_type: [mValue.bus_type], bus_class: [mValue.No] }).pipe(
-    //             map(res => ({
-    //               LNo: mValue.bus_type,
-    //               LName: mValue.bus_type_name,
-    //               MNo: mValue.No,
-    //               MName: mValue.Name,
-    //               Data: res.Data
-    //             }))
-    //           )
-    //         );
-    //       }
-    //     }
-    //     return forkJoin(requests);
-    //   }),
-    //   tap(results => {
-    //     console.log('所有 API 呼叫結果：', results);
-    //   })
-    // ).subscribe(results => {
-    //   // 處理合併和分組的邏輯
-    //   const groupedData = results.reduce((accumulator, group) => {
-    //     const groupKey = `${group.LNo}_${group.MNo}`;
+    this.queryForm.controls.bus_class.valueChanges.pipe(
+      debounceTime(300),
+      untilDestroyed(this),
+      map(selectedMValues => selectedMValues || []),
 
-    //     if (!accumulator[groupKey]) {
-    //       accumulator[groupKey] = {
-    //         label: `${group.LName} - ${group.MName}`,
-    //         items: []
-    //       };
-    //     }
+      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      switchMap((selectedMValues: IDropdownItem[]) => {
+        if (selectedMValues.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.bus_sclass.setValue([]);
+          //  統一回傳型別，避免 TypeScript 推斷成 never[]
+          return of({ selectedMValues: [], data: [] });
+        }
 
-    //     const newItems = group.Data.map(item => ({
-    //       ...item,
-    //       label: `${item.No} - ${item.Name}`,
-    //       bus_type: group.LNo,
-    //       bus_type_name: group.LName,
-    //       CAT_MNo: group.MNo,
-    //       CAT_MName: group.MName
-    //     }));
-    //     const existingItems = accumulator[groupKey].items;
-    //     const allItems = [...existingItems, ...newItems];
+        //  組成符合新 API 的請求格式
+        const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
+          .filter(v => v && v.bus_type) // 過濾 undefined
+          .map(v => ({
+            bus_type: v.bus_type!,   // 非空斷言
+            bus_class: v.No
+          }));
 
-    //     const uniqueItemsMap = new Map();
-    //     allItems.forEach(item => {
-    //       // 使用 No 作為鍵來去重
-    //       if (!uniqueItemsMap.has(item.No)) {
-    //         uniqueItemsMap.set(item.No, item);
-    //       }
-    //     });
+        //  呼叫新 API（一次呼整包）
+        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
+          map(res => ({ selectedMValues, data: res.Data }))
+        );
+      }),
 
-    //     accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+      tap(result => {
+        console.log('所有 API 呼叫結果：', result);
+      })
+    ).subscribe(result => {
 
-    //     return accumulator;
-    //   }, {} as Record<string, any>);
+      const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
+      const groupKey = `${mValue.bus_type}_${mValue.No}`;
+      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
-    //   this.bus_sclass_Option = Object.values(groupedData);
-    //   console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
-    // });
+        //  過濾小分類資料對應到當前中分類
+        const items = result.data
+          .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
+          .map(item => ({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            bus_type: mValue.bus_type,
+            bus_type_name: mValue.bus_type_name,
+            CAT_MNo: mValue.No,
+            CAT_MName: mValue.Name
+          }));
+
+        //  去重
+        const uniqueItemsMap = new Map<string, typeof items[0]>();
+        items.forEach(item => {
+          if (!uniqueItemsMap.has(item.No)) {
+            uniqueItemsMap.set(item.No, item);
+          }
+        });
+
+
+        accumulator[groupKey] = {
+          label: groupLabel,
+          items: Array.from(uniqueItemsMap.values())
+        };
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+    });
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
@@ -326,18 +332,41 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
       const formValue = {
         ...frm.getRawValue(),
 
-        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-        bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+        bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+        bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
         TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31050Request;
 
       console.log('送出request請求', formValue);
       this.tls31050Service.queryTLS31050(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        console.log('各櫃別之營業報表response', res.Data);
-        this.data = res.Data;
+        this.data = res.Data ?? [];               // 查詢資料
+        this.footerTotal = res.TotalData ?? null;;    // 總計資料
+
+        this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
+          budget: this.footerTotal.TotalBudget,
+          AVN_TotSaleAmt: this.footerTotal.TotalSales,
+          TxnCount: this.footerTotal.TotalTxnCount,
+          AvgTicket: this.footerTotal.AvgTicket,
+          tlt_space: this.footerTotal.TotalSpace,
+          MonthlyPSM: this.footerTotal.AvgPSM,
+          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+          TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+
+          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+
+          AchievementRate: this.footerTotal.AvgAchievementRate,
+          CompletionRate: this.footerTotal.AvgCompletionRate,
+        } : null;
+
+        this.historyRequestBody = formValue;                 // 查詢條件
+        console.log('查詢結果', this.data);
+        console.log('查詢總計', this.footerTotal);
+        console.log('查詢總計(轉換後)', this.footershowTotal);
+
         this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, formValue);
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     })
   }

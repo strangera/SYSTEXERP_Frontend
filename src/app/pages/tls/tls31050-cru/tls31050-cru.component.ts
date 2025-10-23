@@ -17,8 +17,10 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS31050DetailRequest, TLS31050DetailResponse, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { TLS31050DetailItem, TLS31050DetailRequest, TLS31050DetailResponse, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
 import { formatDate } from '@angular/common';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls31050-cru',
@@ -35,6 +37,7 @@ import { formatDate } from '@angular/common';
     RadiobuttonYNComponent,
     TranslateModule,
     TableComponent,
+    TableReportComponent,
     MultiSelectComponent,
     ButtonModule
   ],
@@ -65,7 +68,11 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
   });
   totalRecords = 0;
-  data: TLS31050DetailResponse[] = [];
+  data: TLS31050DetailItem[] = [];
+  footerTotal: TLS31020Total | null = null; // 總計
+  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
+  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
+  historyRequestBody: TLS31050DetailRequest | null = null; //歷史查詢條件
   columns: Column[] = [
     { field: 'building_desc', header: '館別', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
@@ -135,7 +142,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly tls31050Service: Tls31050Service  ) {
+    public readonly tls31050Service: Tls31050Service  ) {
     super(); // 呼叫父類建構子
   }
 
