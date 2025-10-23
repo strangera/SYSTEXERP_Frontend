@@ -1,9 +1,12 @@
 import { Component, OnInit, } from '@angular/core';
 import { PrimeNGConfig } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
-import { RouterOutlet } from '@angular/router';
+import { NavigationError, Router, RouterOutlet } from '@angular/router';
 import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
 import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { filter } from 'rxjs';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { isDevMode } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -15,9 +18,13 @@ export class AppComponent implements OnInit {
   constructor(
     private readonly primengConfig: PrimeNGConfig,
     private readonly translate: TranslateService,
+    private readonly router: Router,
+    private readonly swUpdate: SwUpdate,
   ) {
     this.translate.setDefaultLang('zh-tw');
     this.translate.use('zh-tw');
+    this.handleRouteLoadErrors();
+    this.checkForAppUpdate();
   }
   ngOnInit(): void {
     this.primengConfig.ripple = true;
@@ -85,5 +92,58 @@ export class AppComponent implements OnInit {
       cancel: '取消',
       pending: '待處理',
     });
+  }
+  /**
+   * 監聽路由事件，捕捉動態載入模組 (Lazy Loading) 失敗的錯誤。
+   */
+  private handleRouteLoadErrors(): void {
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationError => e instanceof NavigationError)// 只過濾出 NavigationError 事件
+      )
+      .subscribe((error) => {
+        const errorMsg = error.error.message;
+
+        // 判斷是否為程式碼分割 (Code Splitting) 載入失敗的常見錯誤
+        // 錯誤通常包含 "Loading chunk" 或 "Failed to fetch dynamically imported module" 等關鍵詞
+        if (errorMsg.includes('chunk') || errorMsg.includes('module')) {
+          console.error('偵測到動態模組載入失敗 (可能因版本更新):', error);
+
+          // 提示使用者並執行強制重新載入
+          const userConfirmed = confirm('應用程式已更新。為確保功能正常，需要重新載入頁面。點擊「確定」重新整理。');
+
+          if (userConfirmed) {
+            // 傳入 true 以強制從伺服器載入，不使用瀏覽器快取
+            window.location.reload();
+          }
+        } else {
+          // 其他路由錯誤，可以選擇性地報告或記錄
+          console.error('發生其他路由錯誤:', error);
+        }
+      });
+  }
+  /**
+   * 檢查是否有新的應用程式版本可用，並提示使用者。
+   */
+  private checkForAppUpdate(): void {
+    // 只有在 Service Worker 啟用時才執行 (即非開發模式)
+    if (!isDevMode() && this.swUpdate.isEnabled) {
+
+      // 1. 偵聽是否有可用的新版本 (已下載到快取中)
+      this.swUpdate.versionUpdates.pipe(
+        filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
+      ).subscribe(() => {
+        // 提示使用者有新版本，並請求更新
+        if (confirm('偵測到系統有更新！是否立即重新整理頁面以使用最新版本？')) {
+          // 啟動新版本並重新載入
+          this.swUpdate.activateUpdate().then(() => document.location.reload());
+        }
+      });
+
+      // 2. 也可以設定檢查間隔 (可選，通常在後台檢查就夠了)
+      // setInterval(() => {
+      //   this.swUpdate.checkForUpdate();
+      // }, 6 * 60 * 60 * 1000); // 例如每 6 小時檢查一次
+    }
   }
 }
