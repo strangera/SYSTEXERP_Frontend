@@ -94,7 +94,7 @@ export interface TLS31060DetailItem {
 }
 
 export interface TLS31060Response {
-  QueryData: TLS31060Item[];
+  Data: TLS31060Item[];
   TotalData: TLS31020Total;
 }
 
@@ -116,7 +116,7 @@ export class Tls31060Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS31060`, body).pipe(
       map(res => {
         return {
-          Data: res.Data?.QueryData,
+          Data: res.Data?.Data,
           TotalCount: res.TotalCount,
           Message: res.Message,
           TotalData: res.Data?.TotalData 
@@ -130,7 +130,7 @@ export class Tls31060Service {
     return this.http.post<ApiResponse<TLS31060DetailResponse>>(`${this.apiUrl}/queryTLS31060Detail`, body).pipe(
       map(res => {
         return {
-          Data: res.Data?.QueryData,
+          Data: res.Data?.QueryData, //這邊要注意
           TotalCount: res.TotalCount,
           Message: res.Message,
           TotalData: res.Data?.TotalData,

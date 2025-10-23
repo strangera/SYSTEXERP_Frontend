@@ -91,12 +91,12 @@ export interface TLS31070DetailItem {
 }
 
 export interface TLS31070Response {
-  QueryData: TLS31070Item[];
+  Data: TLS31070Item[];
   TotalData: TLS31020Total;
 }
 
 export interface TLS31070DetailResponse {
-  QueryData: TLS31070DetailItem[];
+  Data: TLS31070DetailItem[];
   TotalData: TLS31020Total;
 }
 
@@ -112,7 +112,7 @@ export class Tls31070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS31070`, body).pipe(
       map(res => {
         return {
-          Data: res.Data?.QueryData,
+          Data: res.Data?.Data,
           TotalCount: res.TotalCount,
           Message: res.Message,
           TotalData: res.Data?.TotalData 
@@ -126,13 +126,13 @@ export class Tls31070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS31070Detail`, body).pipe(
       map(res => {
         return {
-          Data: res.Data?.QueryData,
+          Data: res.Data?.Data,
           TotalCount: res.TotalCount,
-              Message: res.Message,
-              TotalData: res.Data?.TotalData,
-            };
-          })
-        );
+          Message: res.Message,
+          TotalData: res.Data?.TotalData,
+        };
+      })
+    );
   }
       
   // 產出各組織之營業報表

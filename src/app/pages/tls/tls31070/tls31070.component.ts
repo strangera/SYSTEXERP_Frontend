@@ -358,7 +358,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
         } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
-        console.log('查詢結果', this.data);
+        console.log('查詢結果', res);
         console.log('查詢總計', this.footerTotal);
         console.log('查詢總計(轉換後)', this.footershowTotal);
 
