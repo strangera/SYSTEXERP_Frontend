@@ -6,7 +6,7 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="tls31030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+  <app-table-report tableKey="tls31030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
     [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
     [queryFunction]="tls31030Service.queryTLS31030Detail.bind(tls31030Service)"
     [footerData]="footershowTotal" [footerPercentData]="footershowPercent">
