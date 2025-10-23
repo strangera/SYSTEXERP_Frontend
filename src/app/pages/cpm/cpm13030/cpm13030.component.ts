@@ -14,9 +14,10 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CPM13030Service } from '@service/api/cpm/cpm13030.service';
+import { finalize } from 'rxjs';
+import { DatePipe } from '@angular/common';
 
-
-//5.1.3.3  非業主POS停車費折抵補登作業
 @Component({
   selector: 'app-cpm13030',
   templateUrl: './cpm13030.component.html',
@@ -34,29 +35,29 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
     InputNumberRangeComponent,
     TranslateModule,
     InputNumberComponent,
-    CustomFooterTableComponent
-
+    CustomFooterTableComponent,
+    DatePipe
   ]
 })
 export class CPM13030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     TXN_EDATE: [new Date(), [Validators.required]],
     TXN_BDATE: [new Date(), [Validators.required]],
-    ECR_Group: [''],
-    org_id: [''],
-    TLT_No: [''],
-    TLT_NAME: [''],
+    building_noList: [[]],
+    org_nameList: [[]],
+    tlt_noList: [[]],
     TXN_GUIBegNo: [''],
-    TXN_TotSaleAmt: [''],
+    TXN_TotSaleAmtStart: [''],
+    TXN_TotSaleAmtEnd: [''],
     displayMode: ['M'],
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+    ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
   });
+  selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
   footerData: any = {};
   subTotalData: any[] = [];
-  groupRowsBy = 'TXN_Date';
-  historyRequestBody: any = null;
+  groupRowsBy = 'ECR_Group';
   btnLoading = false;
   btnLoading2 = false;
   columns: Column[] = [];
@@ -68,21 +69,25 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
   org_id_Options: any[] = [];
   ECR_Group_Options: any[] = [];
   TLT_No_Options: { No: string, Name: string, label: string }[] = [];
-  TLT_NAME_Options: { No: string, Name: string, label: string }[] = [];
 
   constructor(
-    private readonly dropDownListService: DropDownListService,
+    private dropDownListService: DropDownListService,
+    private cpm13030Service: CPM13030Service,
+    private datePipe: DatePipe
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
     this.initializePage('CPM13030', '/CPM/CPM13030CRU', this.queryForm, (frm) => this.onSubmit(frm));
+
+    // 下拉清單載入
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.TLT_No_Options = res.Data.map(item => ({
         ...item, label: `${item.No} - ${item.Name}`
       }));
     });
+
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -92,7 +97,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           value: item.No
         }));
       });
-    // 館別
+
     this.dropDownListService.querySYS3800_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -104,6 +109,131 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         }));
       });
   }
+
+  /** 查詢報表 */
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const v = frm.value;
+      const payload = {
+        TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
+        TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
+        building_noList: v.building_noList || [],
+        org_nameList: v.org_nameList || [],
+        tlt_noList: v.tlt_noList || [],
+        TXN_GUIBegNo: v.TXN_GUIBegNo || '',
+        TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart || 0,
+        TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd || 0,
+        ShowType: v.displayMode,
+        PageIndex: v.PageIndex,
+        PageSize: v.PageSize,
+      };
+
+
+      this.loading = true;
+      this.cpm13030Service.queryCPM13030(payload)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe({
+          next: (res) => {
+            if (res?.Data?.Datas) {
+              this.data = res.Data.Datas;
+              this.footerData = res.Data.TotalDatas || {};
+              this.totalRecords = res.Data.TotalCount || this.data.length;
+              this.updateTableColumns(v.displayMode);
+            } else {
+              this.data = [];
+              this.footerData = {};
+              this.totalRecords = 0;
+            }
+          },
+          error: (err) => {
+            console.error('查詢失敗:', err);
+            this.data = [];
+            this.footerData = {};
+          }
+        });
+    });
+  }
+
+  /** 匯出 Excel */
+  onExportExcel(): void {
+    this.btnLoading = true;
+    const v = this.queryForm.value;
+    const payload = {
+      TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy/MM/dd'),
+      TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy/MM/dd'),
+      building_noList: v.building_noList,
+      org_nameList: v.org_nameList,
+      tlt_noList: v.tlt_noList,
+      TXN_GUIBegNo: v.TXN_GUIBegNo,
+      TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart,
+      TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd,
+      ShowType: v.displayMode,
+    };
+
+    this.cpm13030Service.exportCPM13030(payload)
+      .pipe(finalize(() => this.btnLoading = false))
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (blob) {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'CPM13030_非業主POS停車費折抵補登報表.xlsx';
+            link.click();
+          }
+        },
+        error: (err) => console.error('匯出 Excel 失敗:', err)
+      });
+  }
+
+  /** 匯出 PDF */
+  onExportPDF(): void {
+    this.btnLoading2 = true;
+    const v = this.queryForm.value;
+    const payload = {
+      TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy/MM/dd'),
+      TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy/MM/dd'),
+      building_noList: v.building_noList,
+      org_nameList: v.org_nameList,
+      tlt_noList: v.tlt_noList,
+      TXN_GUIBegNo: v.TXN_GUIBegNo,
+      TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart,
+      TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd,
+      ShowType: v.displayMode,
+    };
+
+    this.cpm13030Service.exportCPM13030PDF(payload)
+      .pipe(finalize(() => this.btnLoading2 = false))
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (blob) {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'CPM13030_非業主POS停車費折抵補登報表.pdf';
+            link.click();
+          }
+        },
+      });
+  }
+  private downloadFile(blob: Blob, filename: string): void {
+    if (!blob || blob.size === 0) {
+      this.messageService.warnBubble('無可匯出的資料。');
+      return;
+    }
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
+  /** 動態設定欄位與群組 */
   updateTableColumns(showType: string): void {
     if (showType === 'D') {
       // ========== 明細 ==========
@@ -131,7 +261,6 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         { field: '強制折抵', header: '強制折抵' },
         { field: '小計', header: '小計' },
       ];
-
     } else {
       // ========== 彙總 ==========
       this.columns = [
@@ -159,16 +288,6 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         { field: '小計', header: '小計' },
       ];
     }
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.loading = false;
-
   }
 
 }
