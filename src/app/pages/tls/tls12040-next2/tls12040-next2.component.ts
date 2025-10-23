@@ -142,7 +142,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 2. 如果 CRU 資料沒有，才檢查 contractInfoData
     if (this.contractInfoData && this.contractInfoData.length > 0) {
       const termType = this.contractInfoData[0].tlt_term_type;
-      console.log('從 contractInfoData 取得 tlt_term_type:', termType);
+      // console.log('從 contractInfoData 取得 tlt_term_type:', termType);
       return termType || '3';
     }
 
@@ -221,7 +221,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 4. 同步全域標籤狀態
     this.selectedSettingTab = 'discount';
 
-    console.log('✅ 資料一致性確保完成');
+    console.log(' 資料一致性確保完成');
   }
 
   /**
@@ -272,21 +272,32 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   /**
    *  改進:統一的抽成資料載入方法
    */
-  private async loadCommissionData(): Promise<void> {
-    console.log('🔍 開始載入抽成資料...');
+  async loadCommissionData(): Promise<void> {
+    // 先檢查是否有暫存資料
+    const savedData = this.flowService.getStepData('next2');
 
-    // 1. 優先檢查是否有暫存的 Next2 資料
-    const savedNext2Data = this.flowService.getNext2Data();
-
-    if (savedNext2Data && this.isValidSavedData(savedNext2Data)) {
-      console.log('📦 發現有效的暫存 Next2 資料');
-      await this.loadFromSavedData(savedNext2Data);
+    if (savedData?.data?.commissionData && savedData.data.commissionData.length > 0) {
+      //  有暫存，直接用暫存資料
+      console.log('📦 從暫存載入抽成資料');
+      this.commissionData = savedData.data.commissionData;
+      this.dataLoaded = true;
+      this.commissionDataLoaded = true;
       return;
     }
 
-    // 2. 沒有暫存資料,從工作流程載入
-    console.log('🔄 沒有暫存資料,從工作流程載入');
-    await this.loadWorkflowData();
+    // ❌ 沒有暫存，才打 API
+    console.log('🌐 從 API 載入抽成資料');
+    await this.dataFlowService.loadData(
+      this.currentApplyNo,
+      this.discountOptions,
+      this.getContractDate('start'),
+      this.getContractDate('end')
+    );
+
+    // 從 dataFlowService 取得資料
+    this.commissionData = this.dataFlowService.getVisibleData();
+    this.dataLoaded = true;
+    this.commissionDataLoaded = true;
   }
 
 
@@ -296,7 +307,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('載入合約資訊...');
 
     const cruData = this.flowService.getCruData();
-
+    console.log('🔍 完整 CRU 資料:', cruData);
+    console.log('🔍 apply_no:', cruData?.apply_no);
+    console.log('🔍 flowService 狀態:', this.flowService.getCurrentState());
+    this.currentApplyNo = cruData?.apply_no || null;
     if (cruData) {
       this.prepareContractInfoDisplay(cruData);
       console.log(' 合約資訊載入完成:', this.contractInfoData);
@@ -329,83 +343,6 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('是否為唯讀模式:', this.isReadOnlyMode);
   }
 
-  // 4. 新增檢查暫存資料有效性的方法
-  private isValidSavedData(savedData: any): boolean {
-    if (!savedData) {
-      console.log('❌ savedData 為空');
-      return false;
-    }
-
-    const hasCommissionData = savedData.commissionData &&
-      Array.isArray(savedData.commissionData);
-
-    const hasApplyNo = savedData.currentApplyNo !== undefined; // 允許 null
-
-    console.log('🔍 檢查暫存資料有效性:', {
-      hasCommissionData,
-      hasApplyNo,
-      commissionDataLength: savedData.commissionData?.length || 0,
-      applyNo: savedData.currentApplyNo
-    });
-
-    //  修正:即使 commissionData 為空陣列也是有效的(新增模式)
-    return hasCommissionData && hasApplyNo !== undefined;
-  }
-
-
-  /**
-   * 改進:從暫存資料載入
-   */
-  private async loadFromSavedData(savedData: any): Promise<void> {
-    try {
-      console.log('📄 開始從暫存資料載入...');
-
-      // 恢復基本狀態
-      this.currentApplyNo = savedData.currentApplyNo || '';
-      this.selectedSettingTab = savedData.selectedSettingTab || 'discount';
-      this.contractInfoData = savedData.contractInfoData || [];
-
-      //  關鍵修正:直接更新 dataFlowService 的狀態
-      if (savedData.commissionData && Array.isArray(savedData.commissionData)) {
-        console.log('📊 恢復抽成資料:', savedData.commissionData.length, '筆');
-
-        // 確保每個項目都有完整的子資料結構
-        const validatedData = savedData.commissionData.map((item: any) => ({
-          ...item,
-          ChargeDetails: item.ChargeDetails || [],
-          YearChargeDetails: item.YearChargeDetails || [],
-          LevelChargeDetails: item.LevelChargeDetails || []
-        }));
-
-        // 直接設定到 dataFlowService
-        this.dataFlowService['stateManager'].currentEditData = validatedData;
-        this.dataFlowService['stateManager'].uiState.dataLoaded = true;
-        this.dataFlowService['stateManager'].uiState.hasUnsavedChanges = false;
-
-        // 通知狀態變更
-        this.dataFlowService['notifyStateChange']();
-
-        // 同步到組件
-        this.commissionData = validatedData;
-        this.dataLoaded = true;
-        this.commissionDataLoaded = true;
-      }
-
-      // 恢復額外設定
-      if (savedData.additionalSettings) {
-        this.hasUnsavedChanges = savedData.additionalSettings.hasUnsavedChanges || false;
-      }
-
-      console.log(' 暫存資料載入完成');
-      this.cdr.detectChanges();
-
-    } catch (error) {
-      console.error('❌ 從暫存資料載入失敗:', error);
-      // 如果載入失敗,回退到正常流程
-      await this.loadWorkflowData();
-    }
-  }
-
 
   private initializeColumns(): void {
     this.contractInfoColumns = TLS12040Next2ColumnsConfig.getContractInfoColumns();
@@ -420,7 +357,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('📋 CRU 資料:', cruData);
 
     // 設定 apply_no
-    this.currentApplyNo = this.isCreateMode ? null : (cruData?.apply_no || null);
+    this.currentApplyNo = cruData?.apply_no || null;
     console.log('🔖 當前申請編號:', this.currentApplyNo);
 
     // 準備合約資訊顯示
@@ -881,7 +818,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 準備要儲存的資料 - 使用與 Next2DataCleaner 相匹配的格式
     const dataToSave = {
       // 主要資料
-      commissionData: this.commissionData || [],
+      commissionData: JSON.parse(JSON.stringify(this.commissionData || [])),  // 🔥 深拷貝
 
       // UI 狀態
       selectedSettingTab: this.selectedSettingTab,
@@ -1062,7 +999,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     this.commissionData = [...this.commissionData, newItem];
     this.saveToWorkflow();
-    this.notificationService.infoBubble('新增完成');
+    // this.notificationService.infoBubble('新增完成');
   }
 
   private generateNewTltId(): string {
@@ -1374,35 +1311,45 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
-
+    console.log('🚨🚨🚨 onFieldChange 被觸發！', { fieldName, newValue, itemId: rowData?.id });
     // 判斷是主檔還是明細
     const isDetail = this.isDetailItem(rowData);
 
     if (isDetail) {
       this.handleDetailFieldChange(event);
     } else {
-      //  處理 cap_saletype 的 checkbox
+      // 🔥 修復：直接在 commissionData 陣列中找到並更新原始項目
+      const index = this.commissionData.findIndex(item => item.id === rowData.id);
+      if (index === -1) {
+        console.error(`找不到 commission item: ${rowData.id}`);
+        return;
+      }
+
+      //  處理 master 項目的欄位變更
       if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype5') {
         const ynValue = newValue ? 'Y' : 'N';
-        rowData[fieldName] = ynValue;
-
-        // 只有新增的項目才同步
-        if (rowData._status === 'new') {
-          this.commissionData.forEach(master => {
-            if (master._status === 'new' && master.id !== rowData.id) {
-              master[fieldName] = ynValue;
-            }
-          });
-        }
-
-        this.dataFlowService.updateField(rowData.id, 'master', fieldName, ynValue);
+        (this.commissionData[index] as any)[fieldName] = ynValue;
       } else {
-        this.dataFlowService.updateField(rowData.id, 'master', fieldName, newValue);
+        (this.commissionData[index] as any)[fieldName] = newValue;
       }
+
+      // 標記狀態為已修改（除非是新項目）
+      if (this.commissionData[index]._status !== 'new') {
+        this.commissionData[index]._status = 'modified';
+      }
+      // 強制觸發變更檢測
+      this.cdr.detectChanges();
     }
+
+    console.log('💾 準備儲存:', {
+      fieldName,
+      newValue,
+      updatedValue: (this.commissionData.find(x => x.id === rowData.id) as any)?.[fieldName]
+    });
 
     setTimeout(() => this.saveToWorkflow(), 200);
   }
+
 
   /**
  * 處理明細資料的欄位變更
@@ -1830,12 +1777,19 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private formatDateString(dateInput: any): string {
     if (!dateInput) return this.formatLocalDateString(new Date());
 
-    if (typeof dateInput === 'string' && dateInput.includes('T')) {
-      return dateInput.split('T')[0];
+    // 🔥 關鍵修復：如果已經是 YYYY-MM-DD 格式，直接返回
+    if (typeof dateInput === 'string') {
+      const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateOnlyRegex.test(dateInput)) {
+        return dateInput; // ✅ 直接返回，不經過 Date 物件
+      }
+
+      if (dateInput.includes('T')) {
+        return dateInput.split('T')[0];
+      }
     }
 
     try {
-      // 修正：使用本地時間而非 UTC 時間
       if (dateInput instanceof Date) {
         return this.formatLocalDateString(dateInput);
       }

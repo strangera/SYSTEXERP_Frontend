@@ -78,6 +78,7 @@ class CruDataCleaner implements TLS12040DataCleaner {
       tlt_name: data.tlt_name || '',
       ven_uniform: data.ven_uniform || '',
       ven_no: data.ven_no || '',
+      vendor_ven_no: data.vendor_ven_no || '',
       VEN_Name: data.VEN_Name || '',
       contract_subno: data.contract_subno || '',
       check_type: data.check_type || '',
@@ -176,7 +177,9 @@ class Next1DataCleaner implements TLS12040DataCleaner {
   }
 
   validate(data: any): boolean {
-    return !!(data.selectedItems && data.selectedItems.length > 0);
+    // 🆕 修正：只要有 fareData 就算有效，不要求一定要有 selectedItems
+    const hasFareData = data.fareData && Object.keys(data.fareData).length > 0;
+    return !!hasFareData;
   }
 }
 
@@ -332,8 +335,8 @@ export class TLS12040FlowService {
     try {
       // 🔍 儲存前記錄 cru 資料
       const originalCruData = this._state.stepData.get('cru');
-      console.log(`儲存 ${stepName} 前，cru locationInfo:`,
-        JSON.stringify(originalCruData?.data?.locationInfo || [], null, 2));
+      // console.log(`儲存 ${stepName} 前，cru locationInfo:`,
+      //   JSON.stringify(originalCruData?.data?.locationInfo || [], null, 2));
 
       // 清理資料
       const cleanedData = cleaner.clean(rawData);
@@ -376,8 +379,8 @@ export class TLS12040FlowService {
 
       // 🔍 儲存後檢查 cru 資料
       const updatedCruData = this._state.stepData.get('cru');
-      console.log(`儲存 ${stepName} 後，cru locationInfo:`,
-        JSON.stringify(updatedCruData?.data?.locationInfo || [], null, 2));
+      // console.log(`儲存 ${stepName} 後，cru locationInfo:`,
+      //   JSON.stringify(updatedCruData?.data?.locationInfo || [], null, 2));
 
       if (originalCruData && !updatedCruData?.data?.locationInfo?.length) {
         console.error('🚨 cru locationInfo 在儲存後變空！');
@@ -588,10 +591,23 @@ export class TLS12040FlowService {
    * 處理 Next2 抽成資料
    */
   private processNext2CommissionData(next2Data: any): any {
-    console.log('處理 Next2 抽成資料...');
+    console.log('🔍 處理 Next2 抽成資料...');
+    console.log('Next2Data 結構:', {
+      hasNext2Data: !!next2Data,
+      hasData: !!next2Data?.data,
+      hasCommissionData: !!next2Data?.data?.commissionData,
+      hasPreparedData: !!next2Data?.data?.preparedSubmitData
+    });
 
-    if (!next2Data?.commissionData) {
-      console.log('沒有 Next2 抽成資料');
+    // 🔥 優先使用已準備好的資料
+    if (next2Data?.data?.preparedSubmitData) {
+      console.log('✅ 使用 Next2 準備好的 preparedSubmitData');
+      return next2Data.data.preparedSubmitData;
+    }
+
+    // 🔥 修正：正確的讀取路徑
+    if (!next2Data?.data?.commissionData) {
+      console.log('❌ 沒有 Next2 抽成資料');
       return {
         masters: { toInsert: [], toUpdate: [], toDelete: [] },
         discountSettings: { toInsert: [], toUpdate: [], toDelete: [] },
@@ -600,7 +616,12 @@ export class TLS12040FlowService {
       };
     }
 
-    const commissionData = next2Data.commissionData;
+    // 🔥 使用正確的路徑
+    const commissionData = next2Data.data.commissionData;
+    console.log('📦 找到 commissionData:', {
+      length: commissionData.length,
+      sample: commissionData[0]
+    });
     const masters = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
     const discountSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
     const annualSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
@@ -1074,22 +1095,48 @@ export class TLS12040FlowService {
 
   private formatDate(date: any): string {
     if (!date) return '';
+
     try {
+      // 🔥 關鍵修復：如果已經是 YYYY-MM-DD 格式，直接返回
+      if (typeof date === 'string') {
+        const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (dateOnlyRegex.test(date)) {
+          console.log(`日期已是正確格式，直接返回: ${date}`);
+          return date; // ✅ 直接返回，不經過 Date 物件
+        }
+
+        // 處理帶時間的字串
+        if (date.includes('T')) {
+          const dateOnly = date.split('T')[0];
+          console.log(`從時間戳提取日期: ${date} → ${dateOnly}`);
+          return dateOnly;
+        }
+      }
+
+      // 對於 Date 物件或其他格式，使用本地時間
       let dateObj: Date;
       if (date instanceof Date) {
         dateObj = date;
-      } else if (typeof date === 'string') {
-        dateObj = new Date(date);
       } else {
         dateObj = new Date(date);
       }
-      if (isNaN(dateObj.getTime())) return '';
 
+      if (isNaN(dateObj.getTime())) {
+        console.warn('無效的日期:', date);
+        return '';
+      }
+
+      // ✅ 使用本地時間方法，避免時區問題
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch {
+      const result = `${year}-${month}-${day}`;
+
+      console.log(`格式化日期: ${date} → ${result}`);
+      return result;
+
+    } catch (error) {
+      console.error('日期格式化錯誤:', error, date);
       return '';
     }
   }

@@ -35,6 +35,9 @@ export interface TLS12040DetailModel {
   tlt_name: string;     // 櫃位名稱
   ven_uniform: string;  // 廠商編號
   ven_no: string;
+  vendor_ven_no?: string;
+  vendor_no?: string;
+
   VEN_Name: string;
   contract_subno?: string;
   contract_no?: string;

@@ -350,6 +350,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       tlt_name: formValue.tlt_name || '',
       ven_uniform: formValue.ven_uniform || '',
       ven_no: formValue.ven_no || '',
+      vendor_ven_no: formValue.ven_no || '',
+      vendor_no: formValue.vendor_no || '',
       VEN_Name: formValue.VEN_Name || '',
       contract_subno: formValue.contract_subno || undefined,
       contract_no: formValue.contract_no || undefined,
@@ -2264,16 +2266,18 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 1️⃣ 暫時啟用所有表單控制項
     this.dataForm.enable();
+    const dataWithParsedDates = this.parseDateStringsToDates(data);
 
     const processedData = {
-      ...data,
+      ...dataWithParsedDates,
       check_typeList: data.check_type
         ? data.check_type.split(',').map((s: string) => s.trim())
         : []
     };
 
     // 2️⃣ 填充資料 (包含日期欄位)
-    this.populateForm(data);
+    this.populateForm(dataWithParsedDates);
+
 
     // 3️⃣ 重新禁用表單 (readonly 模式)
     if (this.crudstatus === CRUDStatus.Read) {
@@ -2309,5 +2313,41 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 恢復 viewMode
     this.flowService.setViewMode(originalViewMode);
+  }
+
+  private parseDateStringsToDates(data: any): any {
+    if (!data) return data;
+
+    const dateFields = [
+      'tlt_start_date',
+      'tlt_end_date',
+      'contract_date',
+      'tlt_contract_bdate',
+      'tlt_contract_edate',
+      'tlt_bdate',
+      'tlt_edate',
+      'apply_date',
+      'feedback_date',
+      'due_date',
+      'contact_Date'
+
+      // ⚠️ 請根據您的 TLS12040DetailModel 補上所有日期欄位
+    ];
+
+    const parsedData = { ...data };
+
+    dateFields.forEach(field => {
+      const dateString = parsedData[field];
+      if (dateString && typeof dateString === 'string') {
+        // 嘗試解析日期字串，如果解析失敗則保留原值
+        const dateObject = new Date(dateString);
+        // 檢查是否為有效的日期，並進行賦值
+        if (!isNaN(dateObject.getTime())) {
+          parsedData[field] = dateObject;
+        }
+      }
+    });
+
+    return parsedData;
   }
 }

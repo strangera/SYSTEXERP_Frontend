@@ -94,7 +94,7 @@ export class TLS12040Next2ColumnsConfig {
   static getCommissionColumns(): ColumnDef[] {
     return [
       { field: 'tlt_id', header: '抽成類別', editable: false },
-      { field: 'tlt_id_desc', header: '抽成類別名稱', editable: true },
+      { field: 'tlt_id_desc', header: '抽成類別名稱', editable: true, type: 'text' },
       { field: 'cag_taxtype', header: '稅別', editable: true, type: 'dropdown', options: SHARED_DROPDOWN_OPTIONS.cagTaxTypeOption },
       { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
       { field: 'sst_rate', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true, decimalPlaces: 3 },
