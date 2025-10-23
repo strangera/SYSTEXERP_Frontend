@@ -30,7 +30,7 @@
   <app-table-report dataKey="ECR_TmplNo" [lastQueryBody]="lastQueryFormValue"
     [queryFunction]="tls46020Service.queryTLS46020.bind(tls46020Service)" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [showCheckBox]="true" (delete)="onDelete($event)" [data]="data" [columns]="columns"
+    [showCheckBox]="true" (delete)="onDelete($event)" [data]="data" [columns]="columns" [pageSizeSetting]="'A0'"
     [totalRecords]="totalRecords"></app-table-report>
 </div>
 

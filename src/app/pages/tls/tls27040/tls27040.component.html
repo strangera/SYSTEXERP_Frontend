@@ -1,50 +1,81 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onOpenDialog()"></app-button>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <label for="Bank">收單行<span class="text-red-500">*</span></label>
-          <p-dropdown inputId="Bank" [(ngModel)]="selectedBank" [options]="POS611XOptions" optionLabel="label"
-            optionValue="value" [filter]="false" placeholder="請選擇收單行" />
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <!-- 共通性 -->
+        <div class="grid p-fluid">
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
+            [control]="queryForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
+            optionValue="value" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
+            [control]="queryForm.controls.TXN_No" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No"
+            [control]="queryForm.controls.TLT_No" [submitted]="submitted" [options]="TLT_NoOptions | async"
+            optionLabel="label" optionValue="value" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="銷售狀況" controlName="TxnTypeList"
+            [options]="TxnTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.TxnTypeList" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="卡別" controlName="PayCrdTypeList"
+            [options]="CrdTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.PayCrdTypeList" [submitted]="submitted" />
+          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="金額"
+            startControlName="TxnAmt_Start" endControlName="TxnAmt_End" [startControl]="queryForm.controls.TxnAmt_Start"
+            [endControl]="queryForm.controls.TxnAmt_End" [submitted]="submitted" />
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="銷售日期"
+            startControlName="TxnDate_Start" endControlName="TxnDate_End"
+            [startControl]="queryForm.controls.TxnDate_Start" [endControl]="queryForm.controls.TxnDate_End"
+            [submitted]="submitted" />
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="timeRange" label="銷售時間"
+            startControlName="TxnTime_Start" endControlName="TxnTime_End"
+            [startControl]="queryForm.controls.TxnTime_Start" [endControl]="queryForm.controls.TxnTime_End"
+            [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="卡號" controlName="CrdNo"
+            [control]="queryForm.controls.CrdNo" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="EDC號碼" controlName="TmID"
+            [control]="queryForm.controls.TmID" [submitted]="submitted" />
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="請款日期"
+            startControlName="NCML_BatCloseDate_Start" endControlName="NCML_BatCloseDate_End"
+            [startControl]="queryForm.controls.BatCloseDate_Start" [endControl]="queryForm.controls.BatCloseDate_End"
+            [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="交易類別" controlName="CrdTxnFgList"
+            [options]="CrdTxnFgOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.CrdTxnFgList" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="輸入狀態" controlName="EntryFgList"
+            [options]="EntryFgOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.EntryFgList" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="ApprovalCode"
+            [control]="queryForm.controls.ApprovalCode" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="TermNoList"
+            [options]="TermNoOptions" optionLabel="SYS_Name" optionValue="SYS_Code"
+            [control]="queryForm.controls.TermNoList" [submitted]="submitted" />
         </div>
-      </div>
-      <hr *ngIf="selectedBank" />
-      <ng-container [ngTemplateOutlet]="currentFormTemplate"></ng-container>
+        <hr />
+        <div class="grid p-fluid">
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收單行" controlName="tableNameList"
+            [control]="queryForm.controls.tableNameList" [options]="POS611XOptions" optionLabel="label"
+            optionValue="value" [submitted]="submitted" />
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <app-radiobutton class="col-12" label="查詢篩選" controlName="radioBtn" [options]="queryFilterOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.radioBtn" [submitted]="submitted" />
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<div *ngIf="selectedBank" class="card">
-  <ng-container *ngTemplateOutlet="currentTableTemplate"></ng-container>
+<div class="card">
+  <app-table-report tableKey="tls27040" dataKey="dataKey" [data]="data" [columns]="columns" [showCheckBox]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" (detail)="onDetail($event)" (edit)="onEdit($event)"
+    [queryFunction]="tls27040Service.queryTLS27040.bind(tls27040Service)" [footerData]="footerData" />
 </div>
-<div class="hidden">
-  <app-tls27040-pos6118 #pos6118 [selectedBank]="selectedBank"></app-tls27040-pos6118>
-  <app-tls27040-pos6119 #pos6119 [selectedBank]="selectedBank"></app-tls27040-pos6119>
-  <app-tls27040-pos6119p #pos6119p [selectedBank]="selectedBank"></app-tls27040-pos6119p>
-</div>
-<app-dialog [visible]="dialogVisible" header="新增實收檔" [showFooter]="false" (visibleChange)="dialogVisible = $event"
-  height="h-10rem">
-  <form [formGroup]="dialogQueryForm" (ngSubmit)="onDialogSubmit(dialogQueryForm)">
-    <div class="grid p-fluid">
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="收單行" controlName="tableName" [options]="POS611XOptions"
-        optionLabel="label" optionValue="table" [control]="dialogQueryForm.controls.tableName" [submitted]="submitted"
-        [filter]="false" />
-    </div>
-    <hr />
-    <div class="grid p-fluid">
-      <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
-        [control]="dialogQueryForm.controls.ECR_No" [submitted]="dialogSubmitted" />
-      <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
-        [control]="dialogQueryForm.controls.TXN_No" [submitted]="dialogSubmitted" />
-      <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期" [control]="dialogQueryForm.controls.TXN_Date"
-        [submitted]="dialogSubmitted" />
-    </div>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button btnType="query" [loading]="dialogLoading"></app-button>
-    </div>
-  </form>
-</app-dialog>

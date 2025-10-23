@@ -1,7 +1,7 @@
 /// <reference types="@angular/localize" />
 import { DatePipe } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { importProvidersFrom } from '@angular/core';
+import { importProvidersFrom, isDevMode } from '@angular/core';
 import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, UrlSerializer } from '@angular/router';
@@ -20,6 +20,7 @@ import { HTTPRequestInterceptorService } from './app/core/interceptors/httpReque
 import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
 import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
+import { provideServiceWorker } from '@angular/service-worker';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -97,6 +98,13 @@ bootstrapApplication(AppComponent, {
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
     provideAnimations(),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    }), provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          }),
   ]
 })
   .catch((err) => console.error(err));

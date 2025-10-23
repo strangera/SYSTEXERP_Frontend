@@ -24,7 +24,7 @@ export interface Tls2e060Data {
   sam_yyymm: string; // 調整年月
   tlt_no: string; // 專櫃編號
   contract_no: string; // 契約編號
-  contrace_subno: string; // 版次 (注意：Swagger 範例中是 'contrace_subnostring' 可能是 typo，假設為 'contrace_subno')
+  contract_subno: string; // 版次 (注意：Swagger 範例中是 'contrace_subnostring' 可能是 typo，假設為 'contrace_subno')
   adj_taxtype: string; // 調整稅別 0=免稅, 1=應稅
   adj_amount: number; // 調整金額 ($double)
 }

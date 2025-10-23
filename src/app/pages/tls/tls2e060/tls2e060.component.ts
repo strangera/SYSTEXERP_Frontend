@@ -37,7 +37,7 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
     { field: 'sam_yyymm', header: '調整年月', visible: true, format: formatYYYYMM },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'contract_no', header: '契約編號', visible: true },
-    { field: 'contrace_subno', header: '版次', visible: true },
+    { field: 'contract_subno', header: '版次', visible: true },
     { field: 'adj_taxtype', header: '調整稅別', visible: true, format: (v) => getSYS1000('PLU_TaxType', v) }, // 0=免稅, 1=應稅
     { field: 'adj_amount', header: '調整金額', visible: true },
   ];

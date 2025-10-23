@@ -11,7 +11,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { combineLatest, finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 
 @Component({
@@ -64,10 +64,11 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     if (store?.value) this.queryForm.setValue(store.value);
 
     this.loading = !0;
-    combineLatest([
+    forkJoin([
       this.service.getAccNoList(),
       this.service.getUsrList(),
-    ]).pipe(finalize(() => this.loading = !1)).subscribe(res => this.logger.debug(`init:`, res));
+    ]).pipe(finalize(() => this.loading = !1))
+      .subscribe(res => this.logger.debug(`init:`, res));
   }
 
   public onSubmit(): void {

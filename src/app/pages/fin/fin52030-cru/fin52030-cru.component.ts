@@ -118,10 +118,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     { label: '員工', value: 'user' }
   ];
 
-  private readonly filteredTblUserOrgidList = computed(() => {
-    return this.service.tblUserOrgidList().filter(item => item.value === this.selectedOrgId());
-  });
-
   public readonly columns = computed<(Omit<Column, 'field'> & { field: keyof FIN52030DetailTable; })[]>(() => [
     { field: 'displayIndex', header: '序號', showSort: !1, format: d => (d + 1) * 10 },
     {
@@ -171,7 +167,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       field: 'SubDetailNo',
       header: '對象別編號',
       type: 'dropdown',
-      options: () => this.filteredTblUserOrgidList(),
+      options: () => this.service.refNameList(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -193,7 +189,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata?.id ?? 0).subscribe();
 
     this.service.getOrgNoList();
-    this.service.getTblUserOrgidList();
+    this.service.getRefNameList();
 
     forkJoin([
       this.service.getAccNoList(),
