@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
+import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31050Request {
   TXN_DateS: string | Date;
@@ -11,8 +12,8 @@ export interface TLS31050Request {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string[]
   tlt_term_type: string[]
   org_id: string[]
@@ -33,8 +34,8 @@ export interface TLS31050DetailRequest {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string[]
   tlt_term_type: string // 這裡只有一個抽成別
   org_id: string[]
@@ -47,7 +48,7 @@ export interface TLS31050PrintDetailRequest extends TLS31050DetailRequest {
   IsExcel: boolean;
 }
 
-export interface TLS31050Response {
+export interface TLS31050Item {
   tlt_term_type: string;
   tlt_term_desc: string;
   
@@ -69,7 +70,7 @@ export interface TLS31050Response {
   CompletionRate: number;
 }
 
-export interface TLS31050DetailResponse {
+export interface TLS31050DetailItem {
   building_desc: string;
   org_name: string;
   tlt_kind: string;
@@ -100,6 +101,16 @@ export interface TLS31050DetailResponse {
   CompletionRate: number;
 }
 
+export interface TLS31050Response {
+  QueryData: TLS31050Item[];
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31050DetailResponse {
+  QueryData: TLS31050DetailItem[];
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -109,13 +120,31 @@ export class Tls31050Service {
   constructor(private http: HttpClient) { }
       
   // 查詢各抽成別之營業報表
-  queryTLS31050(body: TLS31050Request): Observable<ApiResponse<TLS31050Response[]>> {
-    return this.http.post<ApiResponse<TLS31050Response[]>>(`${this.apiUrl}/queryTLS31050`, body);
+  queryTLS31050(body: TLS31050Request): Observable<any>  {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31050`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.QueryData,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData 
+        };
+      })
+    );
   }
   
   // 查詢單抽成別展開之營業報表
-  queryTLS31050Detail(body: TLS31050DetailRequest): Observable<ApiResponse<TLS31050DetailResponse[]>> {
-    return this.http.post<ApiResponse<TLS31050DetailResponse[]>>(`${this.apiUrl}/queryTLS31050Detail`, body);
+  queryTLS31050Detail(body: TLS31050DetailRequest): Observable<any> {
+    return this.http.post<ApiResponse<TLS31050DetailResponse>>(`${this.apiUrl}/queryTLS31050Detail`, body).pipe(
+          map(res => {
+            return {
+              Data: res.Data?.QueryData,
+              TotalCount: res.TotalCount,
+              Message: res.Message,
+              TotalData: res.Data?.TotalData,
+            };
+          })
+        );
   }
     
   // 產出各抽成別之營業報表

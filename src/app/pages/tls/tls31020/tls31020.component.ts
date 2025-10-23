@@ -331,12 +331,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('中分類', frm.getRawValue().bus_class);
-      console.log('小分類', frm.getRawValue().bus_sclass);
       const formValue = {
         ...frm.getRawValue(),
-        // bus_class: (frm.getRawValue().bus_class || []).map((item: any) => item.No),
-        // bus_sclass: (frm.getRawValue().bus_sclass || []).map((item: any) => item.No),
         bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
         bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
 
@@ -391,7 +387,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       SortBy: undefined,
       pageIndex: undefined,
       pageSize: undefined,
-      bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+      bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31020PrintRequest;

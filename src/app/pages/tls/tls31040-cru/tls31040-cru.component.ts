@@ -18,7 +18,7 @@ import { QueryStateService } from '@shared/service/query-state.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS31040DetailRequest, TLS31040DetailResponse, TLS31040PrintDetailRequest, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
+import { TLS31040DetailItem, TLS31040DetailRequest, TLS31040DetailResponse, TLS31040PrintDetailRequest, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
 import { formatDate } from '@angular/common';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -69,7 +69,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
 
   });
   totalRecords = 0;
-  data: TLS31040DetailResponse[] = [];
+  data: TLS31040DetailItem[] = [];
   footerTotal: TLS31020Total | null = null; // 總計
   footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
