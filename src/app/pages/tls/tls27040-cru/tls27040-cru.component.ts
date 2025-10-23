@@ -11,8 +11,7 @@ import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS27040Data, TLS27040Service } from '@service/api/tls/tls27040.service';
-// 假設這些模型/選項已在其他地方定義
-import { POS6118_TxnTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, POS6119P_TxnTypeOptions, pos6119pTxnFgOptions, pos6119TxnFgOptions, POS611XOptions, TxnTypeOptions } from '../tls27040/tls27040.model';
+import { CrdTypeMap, POS6118_TxnTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, POS6119P_TxnTypeOptions, pos6119pTxnFgOptions, pos6119TxnFgOptions, POS611XOptions } from '../tls27040/tls27040.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { finalize, Observable } from 'rxjs';
 import { ApiResponse } from '@service/system/auth.service'; // 確保 AuthService 被導入
@@ -48,7 +47,8 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     NCML_TxnDate: [null as Date | null, [Validators.required]], // 銷售日期
     NCML_Date: [new Date(), [Validators.required]], // 請款日期
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
-    NCML_PayCrdType: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 付款卡類別
+    CRD_Type: [null as string | null, [Validators.required]], // 付款卡類別
+    NCML_PayCrdType: [null as string | null], // 付款卡類別
     NCML_TxnType: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 交易類別
     NCML_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]], // 交易金額
     NCML_CrdNo: [null as string | null, [Validators.maxLength(32)]],  // 卡號
@@ -66,11 +66,12 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     TXN_No: [null as number | null, [Validators.required, Validators.max(99999999)]], // 交易流水號
     CTBC_TxnTime: [null as Date | null, [Validators.required]], // 銷售日期 (DateTime)
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
+    CTBC_TxnCode: [null as string | null, [Validators.required, Validators.maxLength(2)]],// 交易代碼
     CTBC_Date: [new Date(), [Validators.required]],// 請款日期
+    CRD_Type: [null as string | null, [Validators.required]], // 卡類別
     CTBC_DataType: [null as string | null, [Validators.maxLength(1)]], // 資料型態
     CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
     CTBC_TmID: [null as string | null, [Validators.required, Validators.maxLength(8)]], // 收銀機代號
-    CTBC_TxnCode: [null as string | null, [Validators.required, Validators.maxLength(2)]],// 交易代碼
     CTBC_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]],// 交易金額
     CTBC_PayDate: [null as Date | null, [Validators.required]],// 入帳日
     CTBC_ApprovalCode: [null as string | null, [Validators.maxLength(6)]],// 授權碼
@@ -84,6 +85,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_TxnDate: [null as Date | null, [Validators.required]],// 銷售日期
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
     CTBC_Date: [new Date(), [Validators.required]], // 請款日期
+    CRD_Type: [null as string | null, [Validators.required]], // 卡類別
     CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
     CTBC_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]], // 交易金額
     CTBC_TxnType: [null as string | null, [Validators.maxLength(2)]],  // 交易類別
@@ -93,7 +95,6 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 輸入狀況
   });
 
-  PayCrdTypeOptions = getSYS1000Options('NCML_PayCrdType');
   CheckOptions = getSYS1000Options('CTBC_Check');
   EntryFgOptions = getSYS1000Options('EntryFg');
   POS6118_TxnTypeOptions = POS6118_TxnTypeOptions;
@@ -103,6 +104,8 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
   pos6119TxnFgOptions = pos6119TxnFgOptions;
   pos6119pTxnFgOptions = pos6119pTxnFgOptions;
   TermNoOptions = getSYS1000Options('T109');
+  CrdTypeOptions = getSYS1000Options('CRD_Type').filter(item => item.value !== 'O');
+  PayCrdTypeOptions = getSYS1000Options('NCML_PayCrdType');
 
   constructor(
     private readonly tls27040Service: TLS27040Service,
@@ -183,7 +186,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               TXN_No: Number(rawData.TXN_No),
               TLT_No: rawData.TLT_No,
               // NCML Fields Mapping
-              NCML_PayCrdType: rawData.PayCrdType,
+              CRD_Type: rawData.CRD_Type,
               NCML_TxnAmt: rawData.TxnAmt,
               NCML_CrdNo: rawData.CrdNo,
               NCML_TmID: rawData.TmID,
@@ -206,6 +209,24 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
+
+          form.controls.CRD_Type.valueChanges.subscribe(value => {
+            // 確保值存在且為非空字串
+            if (value) {
+              // 將值轉換為大寫 (如果輸入可能為小寫)
+              const singleCharKey = value.toUpperCase();
+
+              // 查找對應的雙字元值，如果找不到則設定為 null 或空字串
+              const twoCharValue = CrdTypeMap[singleCharKey] || null;
+
+              // 使用 setValue 更新另一個控制項的值
+              // { emitEvent: false } 是為了避免觸發 NCML_CrdType 自己的 valueChanges 循環
+              form.controls.NCML_PayCrdType.setValue(twoCharValue, { emitEvent: false });
+            } else {
+              // 如果 CRD_Type 被清空，則清空 NCML_CrdType 的值
+              form.controls.NCML_PayCrdType.setValue(null, { emitEvent: false });
+            }
+          });
 
           // 在 Create 模式下 (通過 initialQuerySubmit 觸發)
           if (this.isFormCreateable) {
