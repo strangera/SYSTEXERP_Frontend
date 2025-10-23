@@ -149,7 +149,7 @@ export class FIN52030Service {
   public getAccDescList(payload: NoteDescPayload): void {
     this.noteDescCancel$.next();
     this.noteDescLoading.set(!0);
-    this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, payload).pipe(
+    this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, { AccNo: Array.from(new Set(payload.AccNo)), NoteDesc: payload.NoteDesc }).pipe(
       take(1),
       takeUntil(this.noteDescCancel$),
       map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option))),

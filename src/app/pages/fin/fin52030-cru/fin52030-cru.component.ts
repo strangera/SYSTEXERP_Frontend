@@ -108,15 +108,15 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     this.tableData.set(data.map(v => ({
       ...v,
-      AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
-      AccName: this.service.accNoMap().get(String(v.AccNo))?.label ?? '',
+      AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
+      AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
-        ?? this.service.usrMap().get(String(v.DetailNo))?.label ?? '',
-      displayIndex: v.index,
-      UPD_USR_No: this.user.user_Name,
-      modifyDate: new Date(),
+        ?? this.service.usrMap().get(String(v.DetailNo))?.label,
       NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label ?? v.NoteDesc,
+      UPD_USR_No: this.user.user_Name,
+      displayIndex: v.index,
+      modifyDate: new Date(),
     })));
 
     this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
@@ -133,7 +133,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   ];
 
   public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN52030DetailTable; })[]>(() => [
-    { field: 'displayIndex', header: '序號', showSort: !1, format: d => (d + 1) * 10 },
+    { field: 'displayIndex', header: '序號', formatFooterDisable: !1, format: d => (d + 1) * 10 },
     {
       field: 'AccNo',
       header: '科目代號',

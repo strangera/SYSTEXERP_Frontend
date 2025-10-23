@@ -10,26 +10,26 @@ export interface FIN52030Data {
 
 /**
  * FIN52030 明細檔
- * index: 序號 (以10為單位序編) 起始0
- * SerNo: 序號 (以10為單位序編)
+ * AccAmt: 借貸方D/C 金額
+ * AccDC: 借貸方D/C
  * AccNo: 科目代號 (GLS1005)
  * DetailNo: 廠商/員工編號(廠商讀取 pos2013.ven_no, 員工讀取 tblUser.user_no
  * NoteDesc: 摘要
- * AccDC: 借貸方D/C
- * AccAmt: 借貸方D/C 金額
  * ORG_ID: 組織代號
+ * SerNo: 序號 (以10為單位序編)
  * SubDetailNo: 對象編號
+ * index: 序號 (以10為單位序編) 起始0
  */
 export interface FIN52030Detail {
-  index: number;
-  SerNo: number;
-  AccNo: string;
-  AccDC: string;
-  DetailNo: string;
-  NoteDesc: string;
   AccAmt: number;
-  ORG_ID: string;
-  SubDetailNo: string;
+  AccDC: string;
+  AccNo: string;
+  DetailNo?: string;
+  NoteDesc?: string;
+  ORG_ID?: string;
+  SerNo: number;
+  SubDetailNo?: string;
+  index: number;
 }
 
 /**
@@ -37,6 +37,9 @@ export interface FIN52030Detail {
  * AccName: 科目名稱
  * DetailName: 廠商/員工名稱
  * recKey: 對帳KEY值
+ * AccAmtD: 借方金額
+ * AccAmtC: 貸方金額
+ * displayIndex: 顯示用索引值
  */
 export interface FIN52030DetailTable extends FIN52030Detail {
   AccName?: string;
