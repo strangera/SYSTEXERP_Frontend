@@ -12,14 +12,14 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
-import { TableColumnReorderEvent, TableModule, TableRowReorderEvent } from 'primeng/table';
+import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, forkJoin, Observable, tap } from 'rxjs';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
@@ -54,7 +54,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly dataForm = this.formBuilder.nonNullable.group({
     VouNo: new FormControl<string>('自動給號'),
     /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
-    VouType: new FormControl<'1' | '2' | '3' | void>(void 0),
+    VouType: new FormControl<'1' | '2' | '3' | void>(void 0, [Validators.required]),
     /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
     PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
     /** 傳票種類(SYS1000.VoucherType) */
@@ -62,8 +62,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     VouDate: new FormControl<Date>(new Date, [Validators.required]),
     Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
     INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
-    /** ROC/IFRS 0:共用 1:ROC 2:IFRS */
-    VouAccType: new FormControl<'0' | '1' | '2'>('0', [Validators.required]),
+    /** ROC/IFRS 0:ROC 1:IFRS null:全部 */
+    VouAccType: new FormControl<'0' | '1' | void>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
     CrtDate: new FormControl<Date | void>(void 0),
@@ -84,7 +84,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }));
 
   public defaultInsertData = computed((): Partial<FIN53010DetailTable> => ({
-    displayIndex: this.tableData().length,
     ORG_ID: this.selectedOrgId(),
   }));
 
@@ -117,8 +116,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const data = this.service.FIN53010Detail();
     if (!data?.Details) return;
 
-    this.service.getAccDescList({ AccNo: data.Details.map(v => v.AccNo) });
-
     this.dataForm.patchValue({
       VouNo: data.VouNo,
       VouType: ['1', '2', '3'].includes(String(data.VouType)) ? String(data.VouType) as '1' | '2' | '3' : '1',
@@ -127,7 +124,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       VouDate: data.VouDate ? new Date(data.VouDate) : new Date(),
       Remark: data.Remark,
       INV_YN: (data.INV_YN ?? 'N') as 'N' | 'Y',
-      VouAccType: ['0', '1', '2'].includes(String(data.VouAccType)) ? String(data.VouAccType) as '0' | '1' | '2' : '0',
+      VouAccType: ['0', '1'].includes(String(data.VouAccType)) ? String(data.VouAccType) as '0' | '1' : void 0,
       CRT_USR_No: data.CRT_USR_No,
       UPD_USR_No: data.UPD_USR_No,
       CompNo: data.CompNo,
@@ -135,17 +132,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.tableData.set(data?.Details.map(v => ({
       ...v,
-      AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
-      AccName: this.service.accNoMap().get(String(v.AccNo))?.label ?? '',
+      AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
+      AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
-        ?? this.service.usrMap().get(String(v.DetailNo))?.label ?? '',
-      NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
-      displayIndex: v.SerNo / 10 - 1,
+        ?? this.service.usrMap().get(String(v.DetailNo))?.label,
+      // NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label,
     })));
 
     this.logger.debug(`loading detail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
     if (!this.service.accNoMap().size || !this.service.vendorMap().size || !this.service.usrMap().size) return;
+
+    this.service
+      .getAccDescList({ AccNo: data.Details.map(v => v.AccNo) }).pipe(
+        finalize(() => {
+          // 更新 NoteDesc 欄位
+          this.tableData.update(rows => rows.map(row => ({
+            ...row,
+            NoteDesc: this.service.noteDescMap().get(String(row.AccNo))?.value,
+          })));
+        }),
+      ).subscribe();
+
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
@@ -158,7 +166,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN53010DetailTable; })[]>(() => [
-    { field: 'displayIndex', header: '序號', format: d => typeof d === 'number' ? (d + 1) * 10 : null },
+    { field: 'SerNo', header: '序號' },
     {
       field: 'AccNo',
       header: '科目代號',
@@ -237,13 +245,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public ngOnInit(): void {
     this.initializePage('FIN53010', this.dataForm);
+    this.service.FIN53010Detail.set(Object.create(null));
     this.loading = !0;
 
     if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe();
 
     this.service.getOrgNoList();
     this.service.getRefNameList();
-    this.service.tblUserOrgidList();
+    this.service.getVoucherTypeList();
 
     forkJoin([
       this.service.getAccNoList(),
@@ -257,7 +266,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }),
       finalize(() => {
         this.loading = !1;
-        this.service.tableLoading.set(!1);
         this.logger.debug(`init:`, [this.rowdata, this.service.FIN53010Detail()]);
       }),
     ).subscribe();
@@ -268,7 +276,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       const { VouNo, ...d } = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, index) => {
+        Details: this.tableData().map(({ AccAmtD, AccAmtC, ...rest }, index) => {
           return {
             ...rest,
             index,
@@ -306,45 +314,49 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onFieldChange(event: FieldChangeEvent<FIN53010DetailTable>): void {
     this.logger.debug(`onFieldChange:`, [event]);
-    const row = event.rowData;
 
-    switch (event.field) {
-      case 'AccNo':
-        // 自動帶入科目名稱
-        row.AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
-        break;
-
-      case 'AccAmtD':
-        // 自動互斥借貸方金額
-        if (event.value) row.AccAmtC = void 0;
-        break;
-
-      case 'AccAmtC':
-        // 自動互斥借貸方金額
-        if (event.value) row.AccAmtD = void 0;
-        break;
-
-      case 'ORG_ID':
-        // 設定目前選擇的組織代號
-        this.selectedOrgId.set(String(event.value));
-        row.SubDetailNo = '';
-        break;
-    }
-
-    // 檢查是否可儲存
-    this.rowEditCanSave = !!row.AccNo && !!row.ORG_ID || !!this.isBalanced();
-
-    // 更新 tableData 觸發重算合計
+    // 更新 tableData 並觸發重算合計
     this.tableData.update(current => {
-      const indexMap = new Map(current.map((item, idx) => [item.displayIndex, idx]));
       const result = [...current];
+      const index = event.index;
 
-      const index = indexMap.get(row.displayIndex);
-      if (index !== void 0) {
-        result[index] = { ...result[index], ...row };
-      } else {
-        result.push(row);
+      if (typeof index !== 'number' || index < 0 || index >= result.length) {
+        result.push({ ...event.rowData, SerNo: (result.length + 1) * 10 });
+        return result;
       }
+
+      switch (event.field) {
+        case 'AccNo':
+          // 自動帶入科目名稱
+          result[index].AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
+          // 自動帶入摘要
+          this.service.getAccDescList({ AccNo: [String(event.value)] }).pipe(
+            tap(res => result[index].NoteDesc = res[0].value ?? void 0),
+          ).subscribe();
+          break;
+
+        case 'AccAmtD':
+          // 自動互斥借貸方金額
+          if (event.value) result[index].AccAmtC = void 0;
+          break;
+
+        case 'AccAmtC':
+          // 自動互斥借貸方金額
+          if (event.value) result[index].AccAmtD = void 0;
+          break;
+
+        case 'ORG_ID':
+          // 設定目前選擇的組織代號
+          this.selectedOrgId.set(String(event.value));
+          result[index].SubDetailNo = '';
+          break;
+      }
+
+      // 更新 SerNo
+      result[index].SerNo = (index + 1) * 10;
+
+      // 檢查是否可儲存
+      this.rowEditCanSave = !!result[index].AccNo && !!result[index].ORG_ID || !!this.isBalanced();
 
       return result;
     });
@@ -382,6 +394,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.logger.debug(`onRowReorder:`, [event, this.tableData()]);
   }
+
+  public onApplyTemplate(): void {
+    this.logger.debug(`套用常用傳票:`, []);
+  };
 
   // Template 相關方法
   public onTemplateTypeChange(event: DropdownChangeEvent): void {

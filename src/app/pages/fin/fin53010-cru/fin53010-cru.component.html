@@ -2,6 +2,11 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo"
                  class="flex-1"></app-menubar>
+    @if (!isFormReadable) {
+    <app-button btnType="query"
+                label="套用常用傳票"
+                (click)="onApplyTemplate()"></app-button>
+    }
     <app-button btnType="back"
                 (click)="onCancel()"></app-button>
   </div>
@@ -22,6 +27,7 @@
                       label="傳票種類"
                       controlName="VouType"
                       [showClear]="!1"
+                      [disabled]="!isFormCreateable"
                       [options]="service.vouTypeOptions()"
                       optionLabel="label"
                       optionValue="value"
@@ -33,21 +39,22 @@
                       [showClear]="!1"
                       [disabled]="!0"
                       [control]="df().VoucherType"
-                      [options]="service.voucherTypeOptions()"
-                      optionLabel="Name"
-                      optionValue="No"
+                      [options]="service.voucherTypeList()"
+                      optionLabel="label"
+                      optionValue="value"
                       [submitted]="submitted"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       calendarType="dateOne"
                       label="傳票日期"
                       controlName="VouDate"
+                      [disabled]="!isFormCreateable"
                       [control]="df().VouDate"
                       [submitted]="submitted"></app-calendar>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="傳票摘要"
                       controlName="Remark"
                       [control]="df().Remark"
-                      [options]="service.remarkList()"
+                      [options]="service.noteDescList()"
                       optionLabel="label"
                       optionValue="value"
                       [submitted]="submitted"></app-dropdown>
@@ -56,6 +63,7 @@
                       controlName="INVOptions"
                       [showClear]="!1"
                       [filter]="!1"
+                      [disabled]="!isFormCreateable"
                       [options]="service.INVOptions()"
                       optionLabel="label"
                       optionValue="value"
@@ -96,6 +104,7 @@
         <app-radiobutton class="col-12 md:col-6 lg:col-4"
                          label="ROC/IFRS"
                          groupname="VouAccType"
+                         [disabled]="!isFormCreateable"
                          [control]="df().VouAccType"
                          [options]="service.vouAccTypeOptions()"
                          [submitted]="submitted"></app-radiobutton>
@@ -122,15 +131,15 @@
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
         <app-table-edit [showCheckBox]="!isFormReadable"
-                        [showInsert]="!isFormReadable"
                         [showReorder]="!isFormReadable"
+                        [disabled]="isFormReadable"
                         (fieldChange)="onFieldChange($event)"
                         (delete)="onDelete($event)"
                         (rowReorderData)="onRowReorder($event)"
                         [data]="tableData()"
                         [defaultInsertData]="defaultInsertData()"
                         [footerData]="footerData()"
-                        [loading]="service.tableLoading() || service.accLoading() || service.venLoading() || service.usrLoading()"
+                        [loading]="service.tableLoading()"
                         [tableKey]="'FIN52030_detail'"
                         [columns]="columns()"></app-table-edit>
       </p-panel>

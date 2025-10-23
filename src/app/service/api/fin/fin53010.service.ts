@@ -35,19 +35,27 @@ export class FIN53010Service {
   public readonly venLoading = signal(!1);
   public readonly usrLoading = signal(!1);
   public readonly sys1000Loading = signal(!1);
+  public readonly voucherTypeLoading = signal(!1);
   public readonly refNameLoading = signal(!1);
   public readonly noteDescLoading = signal(!1);
 
   public readonly cru = signal<boolean>(!1);
 
+  /** 科目 */
   public readonly accNoList = signal<Option[]>([]);
+  /** 廠商 */
   public readonly vendorList = signal<Option[]>([]);
+  /** 員工 */
   public readonly usrList = signal<Option[]>([]);
+  /** 組織代號 */
   public readonly orgNoList = signal<Option[]>([]);
-  public readonly tblUserOrgidList = signal<Option[]>([]);
-  public readonly remarkList = signal<Option[]>([]);
+  /** sys1000 */
   public readonly sys1000List = signal<Option[]>([]);
+  /** 傳票型態 */
+  public readonly voucherTypeList = signal<Option[]>([]);
+  /** 對象別 */
   public readonly refNameList = signal<Option[]>([]);
+  /** 摘要 */
   public readonly noteDescList = signal<Option[]>([]);
 
   /** 傳票種類 */
@@ -56,8 +64,6 @@ export class FIN53010Service {
     { value: '2', label: '現金支出傳票' },
     { value: '3', label: '轉帳傳票' }
   ]);
-  /** 傳票型態 */
-  public readonly voucherTypeOptions = signal<VoucherType[]>([]);
   /** 傳票狀態 */
   public readonly postFlagOptions = signal<Option[]>([
     { value: '0', label: '作廢' },
@@ -72,7 +78,7 @@ export class FIN53010Service {
   public readonly vouAccTypeOptions = signal<Option[]>([
     { value: '0', label: 'ROC' },
     { value: '1', label: 'IFRS' },
-    ...(this.cru() ? [] : [{ value: '2', label: '全部' }]),
+    ...(this.cru() ? [] : [{ value: void 0, label: '全部' }]),
   ]);
 
   public readonly accNoMap = computed(() =>
@@ -84,11 +90,11 @@ export class FIN53010Service {
   public readonly usrMap = computed(() =>
     new Map(this.usrList().map(item => [item.value, item]))
   );
-  public readonly sys1000Map = computed(() =>
-    new Map(this.sys1000List().map(item => [item.value, item]))
-  );
   public readonly noteDescMap = computed(() =>
     new Map(this.noteDescList().map(item => [item.value, item]))
+  );
+  public readonly voucherTypeMap = computed(() =>
+    new Map(this.voucherTypeList().map(item => [item.value, item]))
   );
 
   constructor(
@@ -160,6 +166,31 @@ export class FIN53010Service {
     );
   }
 
+  public getVoucherTypeList(): void {
+    this.voucherTypeCancel$.next();
+    this.voucherTypeLoading.set(!0);
+    // this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
+    this.http.post<BaseQueryResponse<VoucherType>>(`${environment.ApiUrl}/FIN50000/FIN52020/queryFIN52020`, { PageSize: 9999, PageIndex: 1 }).pipe(
+      take(1),
+      takeUntil(this.voucherTypeCancel$),
+      map(res => res.Data?.map(item => ({ value: item.VoucherKind.trim(), label: item.VoucherName } as Option)) ?? []),
+      tap(res => this.voucherTypeList.set(res)),
+      finalize(() => this.logger.debug('查詢VoucherTypeList結果:', [this.voucherTypeList()])),
+    ).subscribe();
+  }
+
+  public getSYS1000List(): void {
+    this.sys1000Cancel$.next();
+    this.sys1000Loading.set(!0);
+    this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
+      take(1),
+      takeUntil(this.sys1000Cancel$),
+      map(res => res?.map(item => ({ value: item.No, label: item.Name } as Option)) ?? []),
+      tap(res => this.sys1000List.set(res)),
+      finalize(() => this.logger.debug('查詢SYS1000List結果:', [this.sys1000List()])),
+    ).subscribe();
+  }
+
   public getRefNameList(): void {
     this.orgIdCancel$.next();
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
@@ -171,19 +202,19 @@ export class FIN53010Service {
     ).subscribe();
   }
 
-  public getAccDescList(payload: NoteDescPayload): void {
+  public getAccDescList(payload: NoteDescPayload): Observable<Option[]> {
     this.noteDescCancel$.next();
     this.noteDescLoading.set(!0);
-    this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, payload).pipe(
+    return this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, { PageSize: 9999, PageIndex: 0, AccNo: Array.from(new Set(payload.AccNo)), NoteDesc: payload.NoteDesc }).pipe(
       take(1),
       takeUntil(this.noteDescCancel$),
-      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option))),
+      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option)) ?? []),
       tap(res => this.noteDescList.set(res)),
       finalize(() => {
         this.noteDescLoading.set(!1);
         this.logger.debug('查詢NoteDescList結果:', [this.noteDescList()]);
       }),
-    ).subscribe();
+    );
   }
 
   public getOrgNoList(): void {
@@ -226,21 +257,6 @@ export class FIN53010Service {
     );
   }
 
-  public getVoucherTypeList(): Observable<Option[]> {
-    this.vendorCancel$.next();
-    this.venLoading.set(!0);
-    return this.http.post<BaseQueryResponse<VoucherType>>(`${environment.ApiUrl}/FIN50000/FIN52020/queryFIN52020`, {}).pipe(
-      take(1),
-      takeUntil(this.vendorCancel$),
-      map(res => res.Data.map(item => ({ value: item.Id, label: item.VoucherName } as Option))),
-      tap(res => this.vendorList.set(res)),
-      finalize(() => {
-        this.venLoading.set(!1);
-        this.logger.debug('查詢VendorList結果:', [this.vendorList()]);
-      }),
-    );
-  }
-
   public getUsrList(): Observable<Option[]> {
     this.usrCancel$.next();
     this.usrLoading.set(!0);
@@ -253,18 +269,6 @@ export class FIN53010Service {
         this.usrLoading.set(!1);
         this.logger.debug('查詢UsrList結果:', [this.usrList()]);
       }),
-    );
-  }
-
-  public getSYS1000(): Observable<Option[]> {
-    this.sys1000Cancel$.next();
-    this.sys1000Loading.set(!0);
-    return this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
-      take(1),
-      takeUntil(this.sys1000Cancel$),
-      map(res => res?.map(items => items as unknown as Option) ?? []),
-      tap(res => this.sys1000List.set(res)),
-      finalize(() => this.logger.debug('查詢SYS1000List結果:', [this.sys1000List()])),
     );
   }
 }

@@ -46,52 +46,50 @@ export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'D
  * 代表 FIN53010 記錄的明細。
  *
  * @interface FIN53010Detail
- * @property {number} AccAmt - 借貸方 D/C 金額
- * @property {string} AccDC - 借貸方D/C
- * @property {string} AccName - 科目名稱
- * @property {string} AccNo - 科目代號 (GLS1005)
- * @property {string} DetailName - 廠商/員工名稱
- * @property {string} DetailNo - 廠商/員工編號
- * @property {string} NoteDesc - 摘要
- * @property {string} ORG_ID - 組織編號
- * @property {number} SerNo - 顯示用序號，10 為單位遞增
- * @property {string} SubDetailNo - 對象編號
- * @property {string} [clearingCode] - 清什麼code?
- * @property {number} id - 明細檔流水號
- * @property {number} index - 索引
+ * AccAmt: 借貸方 D/C 金額
+ * AccDC: 借貸方D/C
+ * AccName: 科目名稱
+ * AccNo: 科目代號 (GLS1005)
+ * DetailName: 廠商/員工名稱
+ * DetailNo: 廠商/員工編號
+ * NoteDesc: 摘要
+ * ORG_ID: 組織編號
+ * SerNo: 顯示用序號，10 為單位遞增
+ * SubDetailNo: 對象編號
+ * clearingCode: 立沖代號
+ * id: 明細檔流水號
+ * index: 索引
  */
 export interface FIN53010Detail {
   AccAmt: number;
   AccDC: string;
-  AccName: string;
   AccNo: string;
-  DetailName: string;
-  DetailNo: string;
-  NoteDesc: string;
-  ORG_ID: string;
+  DetailNo?: string;
+  NoteDesc?: string;
+  ORG_ID?: string;
   SerNo: number;
-  SubDetailNo: string;
+  SubDetailNo?: string;
   id: number;
-  index: number;
 }
 
 /**
  * FIN53010 明細檔 (Table 顯示用)
+ * AccAmtC: 貸方金額
+ * AccAmtD: 借方金額
  * AccName: 科目名稱
  * DetailName: 廠商/員工名稱
- * AccAmtD: 借方金額
- * AccAmtC: 貸方金額
- * displayIndex: 顯示用索引值
+ * ReflNo: 參考編號
+ * clearingCode: 立沖代號
  * recKey: 對帳KEY值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
-  AccAmtD?: number;
   AccAmtC?: number;
-  displayIndex?: number;
-
-  recKey?: number;
-  clearingCode?: string;
+  AccAmtD?: number;
+  AccName?: string;
+  DetailName?: string;
   ReflNo?: string;
+  clearingCode?: string;
+  recKey?: number;
 }
 
 export interface FIN53010Payload extends BaseQueryRequest, Partial<Pick<FIN53010Basic, 'VouType' | 'PostFlag' | 'VouAccType'>> {
