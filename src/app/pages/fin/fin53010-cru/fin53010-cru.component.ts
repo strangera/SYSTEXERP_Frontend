@@ -117,6 +117,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const data = this.service.FIN53010Detail();
     if (!data?.Details) return;
 
+    this.service.getAccDescList({ AccNo: data.Details.map(v => v.AccNo) });
+
     this.dataForm.patchValue({
       VouNo: data.VouNo,
       VouType: ['1', '2', '3'].includes(String(data.VouType)) ? String(data.VouType) as '1' | '2' | '3' : '1',
@@ -131,45 +133,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       CompNo: data.CompNo,
     });
 
-    queueMicrotask(() => {
-      this.tableData.set(data?.Details.map(v => ({
-        ...v,
-        AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
-        AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
-        displayIndex: v.SerNo / 10 - 1,
-      })));
-    });
+    this.tableData.set(data?.Details.map(v => ({
+      ...v,
+      AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
+      AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
+      AccName: this.service.accNoMap().get(String(v.AccNo))?.label ?? '',
+      DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
+        ?? this.service.usrMap().get(String(v.DetailNo))?.label ?? '',
+      NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
+      displayIndex: v.SerNo / 10 - 1,
+    })));
 
-    this.dataEffect.destroy();
     this.logger.debug(`loading detail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
-  }, { allowSignalWrites: !0 });
-
-  // 處理 AccName 的 effect
-  public readonly accNameEffect = effect(() => {
-    const data = this.tableData();
-    const am = this.service.accNoMap();
-    if (!data.length || !am.size) return;
-
-    this.tableData.set(data.map(v => ({
-      ...v,
-      AccName: v.AccNo ? (am.get(String(v.AccNo))?.label ?? '') : '',
-    })));
-    this.accNameEffect.destroy();
-  }, { allowSignalWrites: !0 });
-
-  // 處理 DetailName 的 effect
-  public readonly detailNameEffect = effect(() => {
-    const data = this.tableData();
-    const vm = this.service.vendorMap();
-    const um = this.service.usrMap();
-
-    if (!data.length || !vm.size || !um.size) return;
-
-    this.tableData.set(data.map(v => ({
-      ...v,
-      DetailName: v.DetailNo ? (vm.get(v.DetailNo)?.label ?? um.get(v.DetailNo)?.label ?? '') : '',
-    })));
-    this.detailNameEffect.destroy();
+    if (!this.service.accNoMap().size || !this.service.vendorMap().size || !this.service.usrMap().size) return;
+    this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
@@ -186,6 +163,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       field: 'AccNo',
       header: '科目代號',
       type: 'dropdown',
+      required: !0,
       showClear: !1,
       disabled: () => this.service.accLoading(),
       options: () => this.service.accNoList(),
@@ -206,7 +184,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       field: 'NoteDesc',
       header: '摘要',
       type: 'dropdown',
-      options: () => this.service.remarkList(),
+      options: () => this.service.noteDescList(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -387,7 +365,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       finalize(() => this.service.loadFIN53010Detail(this.rowdata!.id))
     ).subscribe();
   }
-
 
   public onRowReorder(event: TableRowReorderEvent): void {
     this.tableData.update(current => {

@@ -161,3 +161,14 @@ export interface VoucherType {
   VoucherName: string;
   Status: string;
 }
+
+export interface NoteDescList {
+  id: string;
+  AccNo: string;
+  NoteDesc: string;
+}
+
+export interface NoteDescPayload extends BaseQueryRequest {
+  AccNo?: string[];
+  NoteDesc?: string;
+}

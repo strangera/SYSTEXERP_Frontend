@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
+import { NoteDescList, NoteDescPayload } from '@pages/fin/fin52030/fin52030.model';
 import { AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -22,9 +23,12 @@ export class FIN53010Service {
   private readonly orgNoCancel$ = new Subject<void>();
   private readonly orgIdCancel$ = new Subject<void>();
   private readonly refNameCancel$ = new Subject<void>();
+  private readonly noteDescCancel$ = new Subject<void>();
 
   public readonly FIN53010Data = signal<FIN53010Data[]>([]);
   public readonly FIN53010Detail = signal<QueryFIN53010Detail>(Object.create(null));
+
+  public readonly totalRecords = signal<number>(0);
 
   public readonly tableLoading = signal(!1);
   public readonly accLoading = signal(!1);
@@ -32,6 +36,7 @@ export class FIN53010Service {
   public readonly usrLoading = signal(!1);
   public readonly sys1000Loading = signal(!1);
   public readonly refNameLoading = signal(!1);
+  public readonly noteDescLoading = signal(!1);
 
   public readonly cru = signal<boolean>(!1);
 
@@ -43,8 +48,7 @@ export class FIN53010Service {
   public readonly remarkList = signal<Option[]>([]);
   public readonly sys1000List = signal<Option[]>([]);
   public readonly refNameList = signal<Option[]>([]);
-
-  public readonly totalRecords = signal<number>(0);
+  public readonly noteDescList = signal<Option[]>([]);
 
   /** 傳票種類 */
   public readonly vouTypeOptions = signal<Option[]>([
@@ -82,6 +86,9 @@ export class FIN53010Service {
   );
   public readonly sys1000Map = computed(() =>
     new Map(this.sys1000List().map(item => [item.value, item]))
+  );
+  public readonly noteDescMap = computed(() =>
+    new Map(this.noteDescList().map(item => [item.value, item]))
   );
 
   constructor(
@@ -161,6 +168,21 @@ export class FIN53010Service {
       map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
       tap(res => this.refNameList.set(res)),
       finalize(() => this.logger.debug('查詢RefNameList結果:', [this.refNameList()])),
+    ).subscribe();
+  }
+
+  public getAccDescList(payload: NoteDescPayload): void {
+    this.noteDescCancel$.next();
+    this.noteDescLoading.set(!0);
+    this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, payload).pipe(
+      take(1),
+      takeUntil(this.noteDescCancel$),
+      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option))),
+      tap(res => this.noteDescList.set(res)),
+      finalize(() => {
+        this.noteDescLoading.set(!1);
+        this.logger.debug('查詢NoteDescList結果:', [this.noteDescList()]);
+      }),
     ).subscribe();
   }
 
