@@ -1077,21 +1077,36 @@ export class TLS12040FlowService {
 
   private formatDate(date: any): string {
     if (!date) return '';
+
     try {
+      // 🔥 關鍵修復：如果已經是 YYYY-MM-DD 格式，直接返回
+      if (typeof date === 'string') {
+        const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (dateOnlyRegex.test(date)) {
+          return date; // ✅ 直接返回
+        }
+
+        if (date.includes('T')) {
+          return date.split('T')[0];
+        }
+      }
+
+      // 對於 Date 物件，使用 UTC 方法避免時區問題
       let dateObj: Date;
       if (date instanceof Date) {
         dateObj = date;
-      } else if (typeof date === 'string') {
-        dateObj = new Date(date);
       } else {
         dateObj = new Date(date);
       }
+
       if (isNaN(dateObj.getTime())) return '';
 
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
+      // ✅ 使用 UTC 方法
+      const year = dateObj.getUTCFullYear();
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getUTCDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
+
     } catch {
       return '';
     }

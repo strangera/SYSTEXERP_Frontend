@@ -307,7 +307,12 @@
                 *ngSwitchDefault
                 pInputText
                 type="text"
-                [(ngModel)]="rowData[col.field]"
+                [ngModel]="getFieldDefaultValue(col, rowData)"
+                (ngModelChange)="onTextInputChange(rowData, col, $event)"
+                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
+                [maxlength]="col.maxLength ?? null"
+                [placeholder]="col.placeholder || ''"
+                class="text-input"
               />
 
               <ng-container *ngSwitchCase="'button'">
