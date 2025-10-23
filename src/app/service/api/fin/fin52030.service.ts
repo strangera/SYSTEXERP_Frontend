@@ -1,13 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { AccNoList, FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { AccNoList, FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescList, NoteDescPayload, VendorList } from '@pages/fin/fin52030/fin52030.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Fin52040Response } from './fin52040.service';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 
@@ -20,21 +19,26 @@ export class FIN52030Service {
   private readonly usrCancel$ = new Subject<void>();
   private readonly orgNoCancel$ = new Subject<void>();
   private readonly RefNameCancel$ = new Subject<void>();
+  private readonly noteDescCancel$ = new Subject<void>();
 
   public readonly FIN52030Data = signal<FIN52030Data[]>([]);
   public readonly FIN52030Detail = signal<FIN52030Detail[]>([]);
+
+  public readonly totalRecords = signal<number>(0);
 
   public readonly tableLoading = signal(!1);
   public readonly accLoading = signal(!1);
   public readonly venLoading = signal(!1);
   public readonly usrLoading = signal(!1);
   public readonly RefNameLoading = signal(!1);
+  public readonly noteDescLoading = signal(!1);
 
   public readonly accNoList = signal<Option[]>([]);
   public readonly vendorList = signal<Option[]>([]);
   public readonly usrList = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
   public readonly refNameList = signal<Option[]>([]);
+  public readonly noteDescList = signal<Option[]>([]);
 
   /** 傳票種類 */
   public readonly vouTypeOptions = signal<Option[]>([
@@ -52,6 +56,9 @@ export class FIN52030Service {
   public readonly usrMap = computed(() =>
     new Map(this.usrList().map(item => [item.value, item]))
   );
+  public readonly noteDescMap = computed(() =>
+    new Map(this.noteDescList().map(item => [item.value, item]))
+  );
 
   constructor(
     private readonly http: HttpClient,
@@ -65,6 +72,7 @@ export class FIN52030Service {
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
+      tap(res => this.totalRecords.set(res.TotalCount || 0)),
       tap(res => this.FIN52030Data.set(res.Data)),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -129,12 +137,27 @@ export class FIN52030Service {
 
   public getRefNameList(): void {
     this.RefNameCancel$.next();
-    this.http.post<BaseQueryResponse<Fin52040Response>>(`${apiUrl}/queryFIN52040`, {}).pipe(
+    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
       takeUntil(this.RefNameCancel$),
-      map(res => res.Data?.map(item => ({ value: item.RefCode, label: item.RefName } as Option)) ?? []),
+      map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
       tap(res => this.refNameList.set(res)),
       finalize(() => this.logger.debug('查詢RefNameList結果:', [this.refNameList()])),
+    ).subscribe();
+  }
+
+  public getAccDescList(payload: NoteDescPayload): void {
+    this.noteDescCancel$.next();
+    this.noteDescLoading.set(!0);
+    this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, payload).pipe(
+      take(1),
+      takeUntil(this.noteDescCancel$),
+      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option))),
+      tap(res => this.noteDescList.set(res)),
+      finalize(() => {
+        this.noteDescLoading.set(!1);
+        this.logger.debug('查詢NoteDescList結果:', [this.noteDescList()]);
+      }),
     ).subscribe();
   }
 
@@ -151,10 +174,10 @@ export class FIN52030Service {
   public getAccNoList(): Observable<Option[]> {
     this.accNoCancel$.next();
     this.accLoading.set(!0);
-    return this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoList`, {}).pipe(
+    return this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       takeUntil(this.accNoCancel$),
-      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccName } as Option))),
+      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName } as Option))),
       tap(res => this.accNoList.set(res)),
       finalize(() => {
         this.accLoading.set(!1);
@@ -162,21 +185,6 @@ export class FIN52030Service {
       }),
     );
   }
-
-  // public getVendorList(): Observable<Option[]> {
-  //   this.vendorCancel$.next();
-  //   this.venLoading.set(!0);
-  //   return this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
-  //     take(1),
-  //     takeUntil(this.vendorCancel$),
-  //     map(res => res.Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-  //     tap(res => this.vendorList.set(res)),
-  //     finalize(() => {
-  //       this.venLoading.set(!1);
-  //       this.logger.debug('查詢VendorList結果:', [this.vendorList()]);
-  //     }),
-  //   );
-  // }
 
   public getVendorList(): Observable<Option[]> {
     this.vendorCancel$.next();

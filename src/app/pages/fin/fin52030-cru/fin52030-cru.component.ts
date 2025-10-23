@@ -10,15 +10,16 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
-import { TableModule } from 'primeng/table';
+import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, forkJoin, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
@@ -43,7 +44,7 @@ import { FIN52030Data, FIN52030DetailTable, VendorList } from '../fin52030/fin52
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
-    TableComponent,
+    TableEditComponent,
   ],
 })
 export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> implements OnInit {
@@ -65,10 +66,15 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   private readonly selectedOrgId = signal<string>('100000');
 
   public selectedItems: FIN52030Data[] = [];
-  public onEditing = !1;
-  public rowEditCanSave = !1;
 
-  public readonly totalRecords = computed(() => this.tableData().length);
+  public readonly rowEditCanSave = signal<boolean>(!1);
+  public readonly defaultNewRow = (): Partial<FIN52030DetailTable> => ({
+    ORG_ID: this.selectedOrgId(),
+  });
+  public readonly footerData = (): Partial<FIN52030DetailTable> => ({
+    AccAmtD: this.debitTotal(),
+    AccAmtC: this.creditTotal(),
+  });
 
   // 計算借貸方總額
   public readonly debitTotal = computed(() =>
@@ -84,7 +90,9 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     const data = this.tableData();
     if (!data.length) return !0;
     const diff = Math.abs(this.debitTotal() - this.creditTotal());
-    return diff < 0.01;
+    // 因為是自然數 所以不需要排除誤差 保留未來變更
+    // return diff < 0.01;
+    return !diff;
   });
 
   public readonly dataEffect = effect(() => {
@@ -93,20 +101,26 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       this.service.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
-    const d = this.service.FIN52030Detail();
-    if (!d.length) return;
-    this.tableData.set(d.map(d => ({
-      ...d,
-      AccAmtD: d.AccDC === 'D' ? d.AccAmt : void 0,
-      AccAmtC: d.AccDC === 'C' ? d.AccAmt : void 0,
-      AccName: this.service.accNoMap().get(String(d.AccNo))?.label ?? '',
-      DetailName: this.service.vendorMap().get(String(d.DetailNo))?.label
-        ?? this.service.usrMap().get(String(d.DetailNo))?.label ?? '',
-      displayIndex: d.index,
+    const data = this.service.FIN52030Detail();
+    if (!data.length) return;
+
+    this.service.getAccDescList({ AccNo: data.map(v => v.AccNo) });
+
+    this.tableData.set(data.map(v => ({
+      ...v,
+      AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
+      AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
+      AccName: this.service.accNoMap().get(String(v.AccNo))?.label ?? '',
+      DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
+        ?? this.service.usrMap().get(String(v.DetailNo))?.label ?? '',
+      displayIndex: v.index,
       UPD_USR_No: this.user.user_Name,
       modifyDate: new Date(),
+      NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label ?? v.NoteDesc,
     })));
 
+    this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
+    if (!this.service.accNoMap().size || !this.service.vendorMap().size || !this.service.usrMap().size) return;
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
@@ -118,13 +132,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     { label: '員工', value: 'user' }
   ];
 
-  public readonly columns = computed<(Omit<Column, 'field'> & { field: keyof FIN52030DetailTable; })[]>(() => [
+  public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN52030DetailTable; })[]>(() => [
     { field: 'displayIndex', header: '序號', showSort: !1, format: d => (d + 1) * 10 },
     {
       field: 'AccNo',
       header: '科目代號',
-      required: !0,
       type: 'dropdown',
+      required: !0,
+      showClear: !1,
       disabled: () => this.service.accLoading(),
       options: () => this.service.accNoList(),
       optionLabel: 'value',
@@ -140,7 +155,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       templateRef: this.venUsrTemplate(),
     },
     { field: 'DetailName', header: '廠商/員工名稱' },
-    { field: 'NoteDesc', header: '摘要', type: 'input' },
+    {
+      field: 'NoteDesc',
+      header: '摘要',
+      type: 'dropdown',
+      options: () => this.service.noteDescList(),
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
     {
       field: 'AccAmtD',
       header: '借方金額',
@@ -159,6 +181,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       field: 'ORG_ID',
       header: '組織代號',
       type: 'dropdown',
+      showClear: !1,
       options: () => this.service.orgNoList(),
       optionLabel: 'label',
       optionValue: 'value',
@@ -186,7 +209,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.initializePage('FIN52030', this.dataForm);
     this.loading = !0;
 
-    if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata?.id ?? 0).subscribe();
+    if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata!.id).subscribe();
 
     this.service.getOrgNoList();
     this.service.getRefNameList();
@@ -214,9 +237,9 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, idx) => ({
+        Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, index) => ({
           ...rest,
-          index: idx + 1,
+          index,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
           AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
         })),
@@ -264,7 +287,22 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     }
 
     // 檢查是否可儲存
-    this.rowEditCanSave = !!(row.AccNo && row.DetailNo && row.ORG_ID);
+    this.rowEditCanSave.set(!!row.AccNo && !!row.ORG_ID || !!this.isBalanced());
+
+    // 更新 tableData 觸發重算合計
+    this.tableData.update(current => {
+      const indexMap = new Map(current.map((item, idx) => [item.displayIndex, idx]));
+      const result = [...current];
+
+      const index = indexMap.get(row.displayIndex);
+      if (index !== void 0) {
+        result[index] = { ...result[index], ...row };
+      } else {
+        result.push(row);
+      }
+
+      return result;
+    });
   }
 
   public onDelete(event: FIN52030DetailTable[]): void {
@@ -283,41 +321,21 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     ).subscribe();
   }
 
-  public onRowEditInit(event: FIN52030DetailTable): void {
-    this.onEditing = !0;
-    if (this.isFormCreateable) event.ORG_ID = '100000';
-    this.selectedOrgId.set(event.ORG_ID);
-    const arr = this.tableData();
-    event.displayIndex = Array.isArray(arr) && arr.length > 0 && (arr[arr.length - 1]?.index ?? 0) + 1 || 0;
-    this.logger.debug(`onRowEditInit:`, [event, arr]);
-  }
+  public onRowReorder(event: TableRowReorderEvent): void {
+    this.tableData.update(current => {
+      const newArray = [...current];
+      const movedItem = newArray.splice(event.dragIndex!, 1)[0];
+      newArray.splice(event.dropIndex!, 0, movedItem);
 
-  public onRowEditSave(event: RowEditSaveEvent<FIN52030DetailTable>): void {
-    if (!this.rowEditCanSave) return;
+      return newArray.map((item, index) => ({
+        ...item,
+        index,
+        displayIndex: index,
+        SerNo: (index + 1) * 10,
+      }));
+    });
 
-    const newItems = Array.isArray(event.data) ? event.data : [event.data];
-    const current = this.tableData();
-
-    const indexMap = new Map(current.map((item, idx) => [item.index, idx]));
-    const result = [...current];
-
-    for (const item of newItems) {
-      const existingIndex = indexMap.get(item.index);
-      if (existingIndex !== undefined) {
-        result[existingIndex] = { ...result[existingIndex], ...item };
-      } else {
-        result.push(item);
-      }
-    }
-
-    this.tableData.set(result);
-    this.onEditing = !1;
-    this.logger.debug(`onRowEditSave:`, [event, newItems, result]);
-  }
-
-  public onRowEditCancel(event: { data: FIN52030DetailTable, rowData: FIN52030DetailTable[], ri: number; }): void {
-    this.onEditing = !1;
-    this.logger.debug(`onRowEditCancel:`, [event, this.tableData()]);
+    this.logger.debug(`onRowReorder:`, [event, this.tableData()]);
   }
 
   // Template 相關方法
