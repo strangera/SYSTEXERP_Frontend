@@ -25,6 +25,8 @@ import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/ex
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 
+import { DropDownListService } from '@service/utility/dropDownList.service';
+
 // TALPORDERM (主檔)
 export interface TALPORDERM {
   id: string; // identity(1,1) not null
@@ -152,7 +154,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
   // 有8 不能重複
   actNoOptions: apiOption[] = []; // 活動群組編號下拉選單 -- 僅顯示(依照id, mid自動切換)
-  tlt_No_Option: option[] = [];  // 專櫃編號下拉
+  tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
   orgOptions: apiOption[] = []; // 組織部門下拉選單
 
   //主檔下拉 --之後由後端api提供
@@ -177,7 +179,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     tlt_id: '', // 折扣別
     // --SA指定的顯示項目--
     tlt_no: '', // 抽成類別
-    cag_barcode: 0, // 折數條碼
+    cag_barcode: '000', // 折數條碼
     cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
     use_flag: 'Y', // 是否使用
 
@@ -205,6 +207,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   constructor(
     private tls29010Service: Tls29010Service,
     private tls29010DetailService: Tls29010DetailService,
+    private dropDownListService: DropDownListService,
     private validationService: ValidationService,
   ) {
     super(); // 呼叫父類建構子
@@ -331,16 +334,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
   loadOption() {
     // 專櫃編號
-  this.tls29010Service
-    .queryTLTTALENT_Status_DropDownList({})
-    .pipe(untilDestroyed(this))
-    .subscribe((response) => {
-      this.tlt_No_Option = response.Data.map((item: apiOption) => ({
-        value: item.No,
-        label: item.Name,
-      }));
+    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+        this.tlt_No_Option = res.Data.map(item => ({
+          value: item.No,
+          label: `${item.No} - ${item.Name}`
+        }));
 
-      console.log('專櫃編號 下拉:', this.tlt_No_Option);
+        console.log('專櫃編號 下拉:', this.tlt_No_Option);
 
       // ✅ 在這裡再更新欄位的 options
       this.TALPORDERD_OPENDisc_Detail_Columns =
@@ -348,7 +348,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           this.TALPORDERD_OPENDisc_Detail_Columns,
           this.tlt_No_Option
         );
-    });
+      });
 
     // 部門編號(SYS3100)
     this.tls29010Service
@@ -423,58 +423,40 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     if (newData?.tlt_no) {
       console.log('寫入專櫃編號', newData.tlt_no);
 
-      // try {
-      //   const res = await this.tls29010Service
-      //     .queryTLTTALENT_Data({ tlt_no: newData.tlt_no }).pipe(untilDestroyed(this))
-      //     .toPromise();
+      try {
+        const res = await this.tls29010Service
+          .queryTLTTALENT_Data({ tlt_no: newData.tlt_no }).pipe(untilDestroyed(this))
+          .toPromise();
 
-      //   if (res.Status === '0000' && res.Data?.length) {
-      //     const apiData = res.Data[0];
+        if (res.Status === '0000' && res.Data?.length) {
+          const apiData = res.Data[0];
 
-      //     // 更新 newData (這邊之後都要改)
-      //     newData.tlt_id = 0;
-      //     newData.tlt_no = apiData.tlt_no;
-      //     newData.tlt_name = apiData.tlt_name;
-      //     newData.apply_no = apiData.apply_no;
-      //     newData.tlt_term_type = apiData.tlt_term_type;
-      //     newData.tlt_bdate = apiData.tlt_bdate;
-      //     newData.tlt_edate = apiData.tlt_edate;
-      //     newData.cag_charge_rate = apiData.cag_charge_rate;
+          // 更新 newData
+          newData.talent_id = apiData.talent_id;
+          newData.tlt_id = apiData.tlt_id;
+          newData.tlt_no = apiData.tlt_no;
+          newData.tlt_name = apiData.tlt_name;
+          newData.cag_barcode = apiData.cag_barcode;
+          newData.tlt_bdate = apiData.tlt_bdate;
+          newData.tlt_edate = apiData.tlt_edate;
+          newData.cag_charge_rate = apiData.cag_charge_rate;
 
-      //     console.log('合約明細', apiData);
+          console.log('合約明細', apiData);
 
-      //     // api還沒好，先用預設新資料
-
-
-      //     // 做狀態判斷與更新
-      //     this.tls29010DetailService.handleRowSave({ oldData, newData });
-      //   } else {
-      //     this.messageService.errorBubble('找不到對應的合約資料，移除該筆明細');
-      //     const index = this.opendisc_Detail.indexOf(newData);
-      //     if (index > -1) {
-      //       this.opendisc_Detail.splice(index, 1);
-      //     }
-      //   }
-      //     // 做狀態判斷與更新
-      //     this.tls29010DetailService.handleRowSave({ oldData, newData });
-      // } catch (err) {
-      //   console.error(err);
-      // }
-
-      // 更新 newData (這邊之後都要改)
-      newData.talent_id = 0;
-      newData.tlt_id = 12345;
-      newData.tlt_no = '000123';
-      newData.tlt_name = '新專櫃名稱';
-      newData.apply_no = 'APPLY_NO';
-      newData.tlt_term_type = 'TERM_TYPE';
-      newData.tlt_bdate = '2025-01-01';
-      newData.tlt_edate = '2025-12-31';
-      newData.cag_charge_rate = 0.1;
-
-
-      // api還沒好，先用預設新資料
-      console.log('api還沒好，先用預設新資料', newData);
+          // 做狀態判斷與更新
+          this.tls29010DetailService.handleRowSave({ oldData, newData });
+        } else {
+          this.messageService.errorBubble('找不到對應的合約資料，移除該筆明細');
+          const index = this.opendisc_Detail.indexOf(newData);
+          if (index > -1) {
+            this.opendisc_Detail.splice(index, 1);
+          }
+        }
+          // 做狀態判斷與更新
+          this.tls29010DetailService.handleRowSave({ oldData, newData });
+      } catch (err) {
+        console.error(err);
+      }
     } else {
       // 沒有 talent_id 直接進行狀態判斷
       this.tls29010DetailService.handleRowSave(event);
