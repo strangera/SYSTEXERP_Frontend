@@ -8,35 +8,35 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="倉別" controlName="HOS_No" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌名稱(中文)" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="品牌名稱(中文)" controlName="LOGO_No" [options]="brandCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="管理編號" controlName="managementID" [options]="managementIDOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.managementID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="管理編號" controlName="PLU_MagNo" [options]="managementIDOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="國際條碼" controlName="supplierCode" [control]="queryForm.controls.supplierCode"
+            <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商貨號" controlName="warehouseNumber" [control]="queryForm.controls.warehouseNumber"
+            <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="queryForm.controls.PLU_OrgPLUNo"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="庫存日期" controlName="inventoryDate"
-              [control]="queryForm.controls.inventoryDate" [submitted]="submitted"></app-calendar>
+            <app-calendar calendarType="dateOne" label="庫存日期" controlName="STK_Date"
+              [control]="queryForm.controls.STK_Date" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="顯示庫存範圍" groupname="systemtyperadio" [control]="queryForm.controls.radiolist"
               [options]="stockRangeOptions" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="顯示行數" controlName="displayInactive" [control]="queryForm.controls.displayInactive"
+            <app-input-number label="顯示行數" controlName="DisplayRowNumber" [control]="queryForm.controls.DisplayRowNumber"
               [submitted]="submitted"></app-input-number>
           </div>
         </div>
@@ -49,8 +49,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- <app-table-report tableKey="tls57040" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
-    [queryFunction]="tls57040Service.queryTLS57040.bind(tls57040Service)">
-  </app-table-report> -->
+  <app-table-report tableKey="tls57030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
+    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="true"
+    [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
+  </app-table-report>
 </div>
