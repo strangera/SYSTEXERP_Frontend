@@ -34,13 +34,15 @@ export class ASS21020Service implements OnDestroy {
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
 
-  public engMeterNoLoading = !1;
-  public tableLoading = !1;
-  public queryTltByFlagLoading = !1;
+  public readonly engMeterNoLoading = signal<boolean>(!1);
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly queryTltByFlagLoading = signal<boolean>(!1);
 
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
   private readonly queryTltByFlagCancel$ = new Subject<void>();
+
+  public readonly totalRecords = signal<number>(0);
 
   constructor(
     private http: HttpClient,
@@ -57,7 +59,7 @@ export class ASS21020Service implements OnDestroy {
 
   public loadEngMeterNo(): void {
     this.engMeterNoCancel$.next();
-    this.engMeterNoLoading = !0;
+    this.engMeterNoLoading.set(!0);
     this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, {}).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
@@ -66,7 +68,7 @@ export class ASS21020Service implements OnDestroy {
         for (const item of Data) this.engMeterNoMap.set(item.ENG_MeterNo, item);
       }),
       finalize(() => {
-        this.engMeterNoLoading = !1;
+        this.engMeterNoLoading.set(!1);
         this.logger.debug('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
       })
     ).subscribe();
@@ -75,13 +77,14 @@ export class ASS21020Service implements OnDestroy {
   /** 取資料 */
   public loadASS21020(query: ASS21020Query): void {
     this.tableCancel$.next();
-    this.tableLoading = !0;
+    this.tableLoading.set(!0);
     this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
       take(1),
       takeUntil(this.tableCancel$),
+      tap(({ TotalCount, Data }) => this.totalRecords.set(TotalCount || 0)),
       tap(({ Data }) => this.ASS21020Data.set(Data.map((item, index) => ({ ...item, Id: index + 1 })))),
       finalize(() => {
-        this.tableLoading = !1;
+        this.tableLoading.set(!1);
         this.logger.debug('查詢ASS21020結果:', [this.ASS21020Data()]);
       })
     ).subscribe();
@@ -89,7 +92,7 @@ export class ASS21020Service implements OnDestroy {
 
   public queryTltByFlag(ENG_MeterNo: string): void {
     this.queryTltByFlagCancel$.next();
-    this.queryTltByFlagLoading = !0;
+    this.queryTltByFlagLoading.set(!0);
     this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
       takeUntil(this.queryTltByFlagCancel$),
@@ -98,7 +101,7 @@ export class ASS21020Service implements OnDestroy {
         for (const item of Data) this.tltByFlagMap.set(item.TLT_No, item);
       }),
       finalize(() => {
-        this.queryTltByFlagLoading = !1;
+        this.queryTltByFlagLoading.set(!1);
         this.logger.debug('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltNoSignal()]);
       })
     ).subscribe();
