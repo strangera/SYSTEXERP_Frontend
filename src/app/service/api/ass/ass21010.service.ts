@@ -21,15 +21,17 @@ export class ASS21010Service implements OnDestroy {
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<DropdownOption[]>([]);
 
-  public engMeterNoLoading = !1;
-  public locationLoading = !1;
-  public tableLoading = !1;
-  public exportLoading = !1;
+  public engMeterNoLoading = signal<boolean>(!1);
+  public locationLoading = signal<boolean>(!1);
+  public tableLoading = signal<boolean>(!1);
+  public exportLoading = signal<boolean>(!1);
 
   private readonly engTypeCancel$ = new Subject<void>();
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
+
+  public readonly totalRecords = signal<number>(0);
 
   constructor(
     private readonly http: HttpClient,
@@ -48,13 +50,13 @@ export class ASS21010Service implements OnDestroy {
 
   public loadEngMeterNo(type?: EngType): void {
     this.engMeterNoCancel$.next();
-    this.engMeterNoLoading = !0;
+    this.engMeterNoLoading.set(!0);
     this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
       finalize(() => {
-        this.engMeterNoLoading = !1;
+        this.engMeterNoLoading.set(!1);
         this.logger.debug('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
       })
     ).subscribe();
@@ -62,13 +64,13 @@ export class ASS21010Service implements OnDestroy {
 
   public loadLocationNo(): void {
     this.locationCancel$.next();
-    this.locationLoading = !0;
+    this.locationLoading.set(!0);
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
       takeUntil(this.locationCancel$),
       tap(response => this.locationSignal.set(response.Data)),
       finalize(() => {
-        this.locationLoading = !1;
+        this.locationLoading.set(!1);
         this.logger.debug('查詢Location結果:', [this.locationSignal()]);
       })
     ).subscribe();
@@ -76,11 +78,13 @@ export class ASS21010Service implements OnDestroy {
 
   public loadASS21010(payload: ASS21010Payload): void {
     this.tableCancel$.next();
-    this.tableLoading = !0;
+    this.tableLoading.set(!0);
     this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
+      tap(response => this.totalRecords.set(response.Data.TotalCount || 0)),
       tap(response => this.ASS21010Data.set(response.Data.Data)),
-      finalize(() => this.tableLoading = !1),
+      finalize(() => this.tableLoading.set(!1)),
     ).subscribe();
   }
 
@@ -99,7 +103,7 @@ export class ASS21010Service implements OnDestroy {
   }
 
   public export(type: 'PDF' | 'Excel', payload: any): void {
-    this.exportLoading = !0;
+    this.exportLoading.set(!0);
 
     const contentType = 'PDF' === type ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     const fileExtension = 'PDF' === type ? 'pdf' : 'xlsx';
@@ -137,7 +141,7 @@ export class ASS21010Service implements OnDestroy {
           // this.messageService.errorBubble(`Response body is empty!`, `${type} Export Fail`);
         }
       }),
-      finalize(() => this.exportLoading = !1)
+      finalize(() => this.exportLoading.set(!1))
     ).subscribe();
   }
 
