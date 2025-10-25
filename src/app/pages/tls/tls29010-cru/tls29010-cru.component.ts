@@ -291,31 +291,31 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         if (this.canAdd()) {
           // console.log('insert', body);
           console.log('insert', JSON.stringify(body, null, 2));
-          // this.tls29010Service.insertTLS29010(body).subscribe(() => {
-          //   this.messageService.successBubble('新增成功');
+          this.tls29010Service.insertTLS29010(body).subscribe(() => {
+            this.messageService.successBubble('新增成功');
 
-          //   // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
-          //   const keepValues = {
-          //     str_no: this.dataForm.get('str_no')?.value,
-          //     pod_type: this.dataForm.get('pod_type')?.value,
-          //     pod_status: this.dataForm.get('pod_status')?.value,
-          //   };
+            // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
+            const keepValues = {
+              str_no: this.dataForm.get('str_no')?.value,
+              pod_type: this.dataForm.get('pod_type')?.value,
+              pod_status: this.dataForm.get('pod_status')?.value,
+            };
 
-          //   // reset 其他欄位
-          //   this.dataForm.reset();
+            // reset 其他欄位
+            this.dataForm.reset();
 
-          //   // 把保留欄位的值重新設回去
-          //   this.dataForm.patchValue(keepValues);
-          // });
+            // 把保留欄位的值重新設回去
+            this.dataForm.patchValue(keepValues);
+          });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update:', JSON.stringify(body, null, 2));
-          // this.tls29010Service.updateTLS29010(body).subscribe(() => {
-          //   // this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.tls29010Service.updateTLS29010(body).subscribe(() => {
+            // this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }

@@ -256,75 +256,75 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       }
     });
     // 監聽中分類變化，獲取小分類並分組
-        this.queryForm.controls.bus_class.valueChanges.pipe(
-          debounceTime(300),
-          untilDestroyed(this),
-          map(selectedMValues => selectedMValues || []),
-    
-          // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
-          switchMap((selectedMValues: IDropdownItem[]) => {
-            if (selectedMValues.length === 0) {
-              this.bus_sclass_Option = [];
-              this.queryForm.controls.bus_sclass.setValue([]);
-              //  統一回傳型別，避免 TypeScript 推斷成 never[]
-              return of({ selectedMValues: [], data: [] });
-            }
-    
-            //  組成符合新 API 的請求格式
-            const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
-              .filter(v => v && v.bus_type) // 過濾 undefined
-              .map(v => ({
-                bus_type: v.bus_type!,   // 非空斷言
-                bus_class: v.No
-              }));
-    
-            //  呼叫新 API（一次呼整包）
-            return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
-              map(res => ({ selectedMValues, data: res.Data }))
-            );
-          }),
-    
-          tap(result => {
-            console.log('所有 API 呼叫結果：', result);
-          })
-        ).subscribe(result => {
-    
-          const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-          const groupKey = `${mValue.bus_type}_${mValue.No}`;
-          const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
-    
-            //  過濾小分類資料對應到當前中分類
-            const items = result.data
-              .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
-              .map(item => ({
-                ...item,
-                label: `${item.No} - ${item.Name}`,
-                bus_type: mValue.bus_type,
-                bus_type_name: mValue.bus_type_name,
-                CAT_MNo: mValue.No,
-                CAT_MName: mValue.Name
-              }));
-    
-            //  去重
-            const uniqueItemsMap = new Map<string, typeof items[0]>();
-            items.forEach(item => {
-              if (!uniqueItemsMap.has(item.No)) {
-                uniqueItemsMap.set(item.No, item);
-              }
-            });
-    
-    
-            accumulator[groupKey] = {
-              label: groupLabel,
-              items: Array.from(uniqueItemsMap.values())
-            };
-    
-            return accumulator;
-          }, {} as Record<string, any>);
-    
-          this.bus_sclass_Option = Object.values(groupedData);
-          console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+this.queryForm.controls.bus_class.valueChanges.pipe(
+      debounceTime(300),
+      untilDestroyed(this),
+      map(selectedMValues => selectedMValues || []),
+
+      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      switchMap((selectedMValues: IDropdownItem[]) => {
+        if (selectedMValues.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.bus_sclass.setValue([]);
+          //  統一回傳型別，避免 TypeScript 推斷成 never[]
+          return of({ selectedMValues: [], data: [] });
+        }
+
+        //  組成符合新 API 的請求格式
+        const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
+          .filter(v => v && v.bus_type) // 過濾 undefined
+          .map(v => ({
+            bus_type: v.bus_type!,   // 非空斷言
+            bus_class: v.No
+          }));
+
+        //  呼叫新 API（一次呼整包）
+        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
+          map(res => ({ selectedMValues, data: res.Data }))
+        );
+      }),
+
+      tap(result => {
+        console.log('所有 API 呼叫結果：', result);
+      })
+    ).subscribe(result => {
+
+      const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
+      const groupKey = `${mValue.bus_type}_${mValue.No}`;
+      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+
+        //  過濾小分類資料對應到當前中分類
+        const items = result.data
+          .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
+          .map(item => ({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            bus_type: mValue.bus_type,
+            bus_type_name: mValue.bus_type_name,
+            CAT_MNo: mValue.No,
+            CAT_MName: mValue.Name
+          }));
+
+        //  去重
+        const uniqueItemsMap = new Map<string, typeof items[0]>();
+        items.forEach(item => {
+          if (!uniqueItemsMap.has(item.No)) {
+            uniqueItemsMap.set(item.No, item);
+          }
         });
+
+
+        accumulator[groupKey] = {
+          label: groupLabel,
+          items: Array.from(uniqueItemsMap.values())
+        };
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+    });
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
@@ -334,16 +334,14 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       const formValue = {
         ...frm.getRawValue(),
 
-        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-        bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+        bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+        bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
         TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31040Request;
 
       console.log('送出request請求', formValue);
       this.tls31040Service.queryTLS31040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        console.log('各櫃別之營業報表response', res.Data);
-        // this.data = res.Data?.QueryData ?? [];               // 查詢資料
         this.data = res.Data ?? [];               // 查詢資料
         this.footerTotal = res.TotalData ?? null;;    // 總計資料
 
@@ -363,9 +361,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
         } : null;
-        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
-
-        // } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
         console.log('查詢結果', this.data);

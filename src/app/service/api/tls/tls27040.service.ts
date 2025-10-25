@@ -14,7 +14,7 @@ export interface QueryTLS27040Request {
   TXN_No: string;
   TLT_No: string;
   TxnTypeList: string[]; // 合併了 NCML_TxnTypeList 和 CTBC_TxnTypeList
-  CRD_TypeList: string[]; // 合併了 NCML_PayCrdTypeList (原 CTBC_TxnCodeList 應更名為 TxnTypeList)
+  PayCrdTypeList: string[]; // 合併了 NCML_PayCrdTypeList (原 CTBC_TxnCodeList 應更名為 TxnTypeList)
   TxnAmt_Start: number; // 從 string 改為 number (根據 Swagger 範例)
   TxnAmt_End: number; // 從 string 改為 number (根據 Swagger 範例)
   TxnDate_Start: string; // 合併了多個日期開始欄位
@@ -39,7 +39,7 @@ export interface TLS27040Data {
   ECR_No: string;
   TXN_No: string; // 原本有 number, 現在 Swagger 範例是 string
   TLT_No: string;
-  CRD_Type: string;
+  PayCrdType: string;
   TxnAmt: number;
   TxnDate: Date;
   TXN_Date: Date;

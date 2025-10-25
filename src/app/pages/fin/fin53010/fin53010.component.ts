@@ -87,6 +87,8 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     if (store?.value) this.queryForm.setValue(store.value);
     this.loading = !0;
 
+    this.service.getVoucherTypeList();
+
     forkJoin([
       this.service.getUsrList(),
       this.service.getAccNoList(),

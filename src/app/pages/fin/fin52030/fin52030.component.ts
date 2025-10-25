@@ -42,8 +42,6 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  public readonly totalRecords = computed(() => this.service.FIN52030Data().length);
-
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
     { field: 'TempName', header: '傳票代號' },

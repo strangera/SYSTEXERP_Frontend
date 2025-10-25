@@ -63,7 +63,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [disabled]="!dataForm.valid || onEditing || !isBalanced()"
+                    [disabled]="!dataForm.valid || !isBalanced()"
                     [loading]="service.tableLoading()"></app-button>
       </div>
       }
@@ -77,26 +77,18 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <app-table [showManage]="!isFormReadable"
-                   [showCheckBox]="!isFormReadable"
-                   [showRowEdit]="!isFormReadable"
-                   [showInsert]="!isFormReadable"
-                   [showReorder]="!isFormReadable"
-                   [insertRowData]="!isFormReadable"
-                   (fieldChange)="onFieldChange($event)"
-                   (delete)="onDelete($event)"
-                   (rowEditInit)="onRowEditInit($event)"
-                   (rowEditSave)="onRowEditSave($event)"
-                   (rowEditCancel)="onRowEditCancel($event)"
-                   [showTotal]="!0"
-                   [showSerialNo]="!1"
-                   [rowEditCanSave]="rowEditCanSave"
-                   [data]="tableData()"
-                   [totalRecords]="totalRecords()"
-                   [loading]="loading"
-                   [dataKey]="'index'"
-                   [tableKey]="'FIN52030_detail'"
-                   [columns]="columns()"></app-table>
+        <app-table-edit [showCheckBox]="!isFormReadable"
+                        [showInsert]="!isFormReadable"
+                        [showReorder]="!isFormReadable"
+                        (fieldChange)="onFieldChange($event)"
+                        (delete)="onDelete($event)"
+                        (rowReorderData)="onRowReorder($event)"
+                        [data]="tableData()"
+                        [defaultInsertData]="defaultNewRow()"
+                        [footerData]="footerData()"
+                        [loading]="service.tableLoading()"
+                        [tableKey]="'FIN52030_detail'"
+                        [columns]="columns()"></app-table-edit>
       </p-panel>
     </div>
   </div>

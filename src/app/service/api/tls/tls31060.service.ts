@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
+import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31060Request {
   TXN_DateS: string | Date;
@@ -11,8 +12,8 @@ export interface TLS31060Request {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string[]
   tlt_term_type: string[]
   org_id: string[]
@@ -33,8 +34,8 @@ export interface TLS31060DetailRequest {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string
   tlt_term_type: string[]
   org_id: string; // 單組織
@@ -47,7 +48,7 @@ export interface TLS31060PrintDetailRequest extends TLS31060DetailRequest {
   IsExcel: boolean;
 }
 
-export interface TLS31060Response {
+export interface TLS31060Item {
   org_id: string;
   org_name: string;
   
@@ -69,7 +70,7 @@ export interface TLS31060Response {
   CompletionRate: number;
 }
 
-export interface TLS31060DetailResponse {
+export interface TLS31060DetailItem {
   building_desc: string;
   org_name: string;
   tlt_kind: string;
@@ -92,6 +93,16 @@ export interface TLS31060DetailResponse {
   CompletionRate: number;
 }
 
+export interface TLS31060Response {
+  Data: TLS31060Item[];
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31060DetailResponse {
+  QueryData: TLS31060DetailItem[];
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -101,13 +112,31 @@ export class Tls31060Service {
   constructor(private http: HttpClient) { }
       
   // 查詢各組織之營業報表
-  queryTLS31060(body: TLS31060Request): Observable<ApiResponse<TLS31060Response[]>> {
-    return this.http.post<ApiResponse<TLS31060Response[]>>(`${this.apiUrl}/queryTLS31060`, body);
+  queryTLS31060(body: TLS31060Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31060`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.Data,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData 
+        };
+      })
+    );
   }
   
   // 查詢單組織展開之營業報表
-  queryTLS31060Detail(body: TLS31060DetailRequest): Observable<ApiResponse<TLS31060DetailResponse[]>> {
-    return this.http.post<ApiResponse<TLS31060DetailResponse[]>>(`${this.apiUrl}/queryTLS31060Detail`, body);
+  queryTLS31060Detail(body: TLS31060DetailRequest): Observable<any> {
+    return this.http.post<ApiResponse<TLS31060DetailResponse>>(`${this.apiUrl}/queryTLS31060Detail`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.QueryData, //這邊要注意
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData,
+        };
+      })
+    );
   }
     
   // 產出各組織之營業報表

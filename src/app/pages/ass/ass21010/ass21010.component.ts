@@ -50,7 +50,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
 
-  public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
   public readonly usrData = computed(() => ({
     SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
     Mid: Number(this.authService.currentUserValue!.mid),
