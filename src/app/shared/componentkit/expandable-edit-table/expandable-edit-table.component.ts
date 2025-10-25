@@ -20,6 +20,7 @@ import { Observable } from 'rxjs';
 import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
 import { TableValidationService } from './table-validation.service';
 import { TableWidthCalculatorService } from './services/table-width-calculator.service';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 
 export interface DisplayFieldConfig {
   fieldName: string;
@@ -1286,21 +1287,31 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.currentDateField && this.temporaryDate) {
       const column = this.getCurrentEditingColumn();
       const oldValue = this.currentDateField.data[this.currentDateField.field];
-      let finalDate: Date;
+
+      //  關鍵修正：使用日期工具，返回字串格式
+      let finalDateString: string;
 
       // 根據格式處理日期
       if (column?.dateFormat?.includes('year-month')) {
         const year = this.temporaryDate.getFullYear();
-        const month = this.temporaryDate.getMonth();
-        finalDate = new Date(year, month, 1);
+        const month = String(this.temporaryDate.getMonth() + 1).padStart(2, '0');
+        finalDateString = `${year}-${month}-01`;
       } else {
-        finalDate = new Date(this.temporaryDate);
+        //  使用 DateUtils 處理，避免時區問題
+        finalDateString = DateUtils.toDateString(this.temporaryDate);
       }
 
-      // 更新資料
-      this.currentDateField.data[this.currentDateField.field] = finalDate;
+      console.log('📅 日期選擇確認:', {
+        欄位: this.currentDateField.field,
+        選擇的日期: this.temporaryDate,
+        最終字串: finalDateString,
+        舊值: oldValue
+      });
 
-      // 關鍵：清理用戶輸入狀態
+      //  儲存為字串格式
+      this.currentDateField.data[this.currentDateField.field] = finalDateString;
+
+      // 清理用戶輸入狀態
       const fieldKey = this.getFieldKey(
         this.currentDateField.data,
         this.currentDateField.field,
@@ -1309,10 +1320,10 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       );
       this.userInputValues.delete(fieldKey);
 
-      // 觸發 fieldChange 事件讓業務層處理
+      // 觸發 fieldChange 事件
       this.triggerFieldChangeEvent(
         this.currentDateField.field,
-        finalDate,
+        finalDateString,  //  傳遞字串
         this.currentDateField.data,
         oldValue
       );
@@ -1322,7 +1333,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         this.triggerSaveIfNeeded(
           this.currentDateField.data,
           column,
-          finalDate,
+          finalDateString,  //  傳遞字串
           this.currentDateField.isDetail,
           this.currentDateField.detailIndex
         );
@@ -1331,7 +1342,6 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.cdr.detectChanges();
     }
 
-    // 關閉對話框
     this.datePickerVisible = false;
     this.currentDateField = null;
     this.temporaryDate = null;

@@ -48,16 +48,16 @@ export class TLS12040Next2ColumnsConfig {
 
       },
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
-      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true },
-      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true },
+      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true, dateFormat: 'full-date' },
+      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true, dateFormat: 'full-date' },
       { field: 'cag_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
     ];
   }
 
   static getAnnualColumns(): ColumnDef[] {
     return [
-      { field: 'tlt_bdate', header: '帳務起', type: 'date', editable: true },
-      { field: 'tlt_edate', header: '帳務迄', type: 'date', editable: true },
+      { field: 'tlt_bdate', header: '帳務起', type: 'date', editable: true, dateFormat: 'full-date' },
+      { field: 'tlt_edate', header: '帳務迄', type: 'date', editable: true, dateFormat: 'full-date' },
       { field: 'year_amount', header: '業績超過金額含', type: 'number', editable: true },
       { field: 'extra_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
     ];
