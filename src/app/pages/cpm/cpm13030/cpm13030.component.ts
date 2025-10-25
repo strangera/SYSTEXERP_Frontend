@@ -55,9 +55,10 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
-  footerData: any = {};
+  footerData: any[] = [];
   subTotalData: any[] = [];
-  groupRowsBy = 'ECR_Group';
+  groupRowsBy = 'building_desc';
+  showSubTotal = true;
   btnLoading = false;
   btnLoading2 = false;
   columns: Column[] = [];
@@ -131,28 +132,23 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
 
       this.loading = true;
       this.cpm13030Service.queryCPM13030(payload)
-        .pipe(
-          untilDestroyed(this),
-          finalize(() => this.loading = false)
-        )
+        .pipe(finalize(() => this.loading = false))
         .subscribe({
           next: (res) => {
             if (res?.Data?.Datas) {
               this.data = res.Data.Datas;
-              this.footerData = res.Data.TotalDatas || {};
-              this.totalRecords = res.Data.TotalCount || this.data.length;
+              this.subTotalData = res.Data.SumDatas || [];
+              this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
+              this.totalRecords = res.TotalCount || this.data.length;
               this.updateTableColumns(v.displayMode);
             } else {
               this.data = [];
-              this.footerData = {};
+              this.subTotalData = [];
+              this.footerData = [];
               this.totalRecords = 0;
             }
           },
-          error: (err) => {
-            console.error('查詢失敗:', err);
-            this.data = [];
-            this.footerData = {};
-          }
+          error: (err) => console.error('查詢失敗:', err)
         });
     });
   }
@@ -162,16 +158,22 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     this.btnLoading = true;
     const v = this.queryForm.value;
     const payload = {
-      TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy/MM/dd'),
-      TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy/MM/dd'),
-      building_noList: v.building_noList,
-      org_nameList: v.org_nameList,
-      tlt_noList: v.tlt_noList,
-      TXN_GUIBegNo: v.TXN_GUIBegNo,
-      TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart,
-      TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd,
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [],
+      TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
+      TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
+      building_noList: v.building_noList || [],
+      org_nameList: v.org_nameList || [],
+      tlt_noList: v.tlt_noList || [],
+      TXN_GUIBegNo: v.TXN_GUIBegNo || '',
+      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || 0,
+      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || 0,
       ShowType: v.displayMode,
     };
+
 
     this.cpm13030Service.exportCPM13030(payload)
       .pipe(finalize(() => this.btnLoading = false))
@@ -194,14 +196,19 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     this.btnLoading2 = true;
     const v = this.queryForm.value;
     const payload = {
-      TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy/MM/dd'),
-      TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy/MM/dd'),
-      building_noList: v.building_noList,
-      org_nameList: v.org_nameList,
-      tlt_noList: v.tlt_noList,
-      TXN_GUIBegNo: v.TXN_GUIBegNo,
-      TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart,
-      TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd,
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [],
+      TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
+      TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
+      building_noList: v.building_noList || [],
+      org_nameList: v.org_nameList || [],
+      tlt_noList: v.tlt_noList || [],
+      TXN_GUIBegNo: v.TXN_GUIBegNo || '',
+      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || 0,
+      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || 0,
       ShowType: v.displayMode,
     };
 
@@ -239,21 +246,21 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       // ========== 明細 ==========
       this.columns = [
         { field: 'TXN_Date', header: '日期', visible: true },
-        { field: 'PKG_disc_shop_name', header: '館別', visible: true },
-        { field: 'PKG_entrance_uuid', header: '組織名稱', visible: true },
-        { field: 'PKG_pricing_start_at', header: 'POS機號', visible: true },
-        { field: 'PKG_pricing_end_at', header: '專櫃編號', visible: true },
-        { field: 'PKG_license_plate_no', header: '發票號碼', visible: true },
-        { field: 'PKG_disc_rule_name', header: '消費金額', visible: true },
-        { field: 'POS_Amount', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount },
-        { field: 'POS_Amount', header: '時數', visible: true, groupField: 'POS連線', format: formatAmount },
-        { field: 'POS_Count', header: '筆數', visible: true, groupField: 'POS連線', format: formatAmount },
-        { field: 'FORCE_Amount', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount },
-        { field: 'FORCE_Amount', header: '時數', visible: true, groupField: '強制折抵', format: formatAmount },
-        { field: 'FORCE_Count', header: '筆數', visible: true, groupField: '強制折抵', format: formatAmount },
-        { field: 'SUM_Amount', header: '金額', visible: true, groupField: '小計', format: formatAmount },
-        { field: 'SUM_Amount', header: '時數', visible: true, groupField: '小計', format: formatAmount },
-        { field: 'SUM_Count', header: '筆數', visible: true, groupField: '小計', format: formatAmount },
+        { field: 'building_desc', header: '館別', visible: true },
+        { field: 'Org_Name', header: '組織名稱', visible: true },
+        { field: 'ECR_No', header: 'POS機號', visible: true },
+        { field: 'TLT_No', header: '專櫃編號', visible: true },
+        { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
+        { field: 'TXN_TotSaleAmt', header: '消費金額', visible: true },
+        { field: 'POSonline_Time', header: '時數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSonline_Qty', header: '筆數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSonline_Amt', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Time', header: '時數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Qty', header: '筆數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Amt', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Time', header: '時數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Qty', header: '筆數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Amt', header: '金額', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
       ];
 
       this.columnGroup = [
@@ -265,21 +272,20 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       // ========== 彙總 ==========
       this.columns = [
         { field: 'TXN_Date', header: '日期', visible: true },
-        { field: 'PKG_disc_shop_name', header: '館別', visible: true },
-        { field: 'PKG_entrance_uuid', header: '組織名稱', visible: true },
-        { field: 'PKG_pricing_start_at', header: 'POS機號', visible: true },
-        { field: 'PKG_pricing_end_at', header: '專櫃編號', visible: true },
-        { field: 'PKG_pricing_end_at', header: '位置編號', visible: true },
-        { field: 'PKG_pricing_end_at', header: '櫃位名稱', visible: true },
-        { field: 'POS_Amount', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount },
-        { field: 'POS_Amount', header: '時數', visible: true, groupField: 'POS連線', format: formatAmount },
-        { field: 'POS_Count', header: '筆數', visible: true, groupField: 'POS連線', format: formatAmount },
-        { field: 'FORCE_Amount', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount },
-        { field: 'FORCE_Amount', header: '時數', visible: true, groupField: '強制折抵', format: formatAmount },
-        { field: 'FORCE_Count', header: '筆數', visible: true, groupField: '強制折抵', format: formatAmount },
-        { field: 'SUM_Amount', header: '金額', visible: true, groupField: '小計', format: formatAmount },
-        { field: 'SUM_Amount', header: '時數', visible: true, groupField: '小計', format: formatAmount },
-        { field: 'SUM_Count', header: '筆數', visible: true, groupField: '小計', format: formatAmount },
+        { field: 'building_desc', header: '館別', visible: true },
+        { field: 'Org_Name', header: '組織名稱', visible: true },
+        { field: 'ECR_No', header: 'POS機號', visible: true },
+        { field: 'ECR_LocNo', header: '位置編號', visible: true },
+        { field: 'TLT_NAME', header: '櫃位名稱', visible: true },
+        { field: 'POSonline_Time', header: '時數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSonline_Qty', header: '筆數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSonline_Amt', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Time', header: '時數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Qty', header: '筆數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Amt', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Time', header: '時數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Qty', header: '筆數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Amt', header: '金額', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
       ];
 
       this.columnGroup = [
