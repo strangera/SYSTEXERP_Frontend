@@ -178,15 +178,18 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         ECR_GrpDesc: raw.ECR_GrpDesc,
         Detail: this.data.map((item, index) => {
           let detailStatus = item.status;
-          if (!item.ID) {
+
+
+          if (typeof item.ID === 'string' || !item.ID) {
             detailStatus = 'new';
           } else if (item.status === 'deleted') {
             detailStatus = 'deleted';
           } else if (!item.status || item.status === 'original') {
             detailStatus = 'modified';
           }
+
           return {
-            ID: item.ID ?? 0,
+            ID: (typeof item.ID === 'string' || item.ID == null) ? 0 : Number(item.ID),
             ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? index,
             ECR_No: item.ECR_No ?? '',
             ECR_Type: item.ECR_Type ?? '',
@@ -197,6 +200,7 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
             status: detailStatus
           };
         })
+
 
       };
 
@@ -248,10 +252,17 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     console.log('修改明細:', rowData);
   }
 
-
-  onDeleteRow(rowData: any) {
-    rowData.status = 'deleted';
+  onDeleteRow(selectedItems: any[]) {
+    for (const item of selectedItems) {
+      item.status = 'deleted';
+    }
+    this.data = this.data.filter(d => !selectedItems.includes(d));
+    this.data = [...this.data];
+    console.log('刪除的項目:', selectedItems);
   }
+
+
+
   onFieldChange(e: any) {
     const row = e.rowData;
     if (row.status !== 'new' && row.status !== 'deleted') {

@@ -32,10 +32,11 @@
     Modified: 'modified',
     Deleted: 'deleted'
   }" [showInsert]="!isTableDisabled" [showRowEdit]="!isTableDisabled" [showCheckBox]="!isTableDisabled"
-          [showEdit]="false" [showDetail]="false" [showCaption]="!isFormReadable" [showManage]="!isFormReadable"
-          [showReportMode]="false" [insertRowData]="true" [disabled]="isTableDisabled"
-          (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" (dataChange)="data = $event"
-          (rowEditSave)="onRowEdit($event.newData)"(fieldChange)="onFieldChange($event)">
+          [showDelete]="true" [deleteData]="false" (delete)="onDeleteRow($event)" [showEdit]="false"
+          [showDetail]="false" [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showReportMode]="false"
+          [insertRowData]="true" [disabled]="isTableDisabled" (selectionChange)="selectedRows = $event"
+          [selectedItems]="selectedRows" (dataChange)="data = $event" (rowEditSave)="onRowEdit($event.newData)"
+          (fieldChange)="onFieldChange($event)">
         </app-table>
 
       </div>

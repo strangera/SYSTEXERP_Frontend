@@ -301,7 +301,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
     return true;
   }
-onDataChange(updatedData: TLS41040Detail[]): void {
+  onDataChange(updatedData: TLS41040Detail[]): void {
     console.log('✅ onDataChange 觸發', updatedData);
 
     this.data = updatedData.map((row) => {
@@ -378,9 +378,6 @@ onDataChange(updatedData: TLS41040Detail[]): void {
     return { isValid: true, errorMessage: '' };
   }
 
-
-
-
   onDelete(selectedItems: TLS41040Detail[]): void {
     if (!selectedItems || selectedItems.length === 0) {
       this.messageService.errorBubble('請先勾選要刪除的明細');
@@ -393,13 +390,15 @@ onDataChange(updatedData: TLS41040Detail[]): void {
         this.data[idx] = { ...this.data[idx], status: 'deleted' };
       }
     }
+
+
     this.data = [...this.data];
     this.onDataChange(this.data);
-    this.data = this.data.filter(d => d.status !== 'deleted');
 
     this.selectedRows = [];
-    this.messageService.successBubble('已刪除，儲存後會一併更新後端');
+    this.messageService.successBubble('已標記刪除，儲存後會一併更新後端');
   }
+
 
 }
 
