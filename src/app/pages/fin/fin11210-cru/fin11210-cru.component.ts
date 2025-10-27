@@ -35,7 +35,7 @@ export class FIN11210CRUComponent extends BasicCruPageComponent<FIN11210Data> im
     ECR_No: [null, [Validators.required]],     // 收銀機號
     ARG_No: [null, [Validators.required]],     // 參數代號
     ARG_Data: [null, [Validators.required]],  // 參數內容
-    ARG_Desc: [null, [Validators.required]]        // 參數說明
+    ARG_Desc: [{ value: null, disabled: true }]        // 參數說明
   });
 
   ECR_No_Options: any[] = [
