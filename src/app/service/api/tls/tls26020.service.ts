@@ -9,7 +9,7 @@ export interface TLS26020QueryRequest extends BaseQueryRequest {
   Sale_DateStart?: string;      // 銷售日期(起) - ISO 8601 格式
   Sale_DateEnd?: string;        // 銷售日期(訖) - ISO 8601 格式
   tlt_building?: string[];      // 館別
-  Org_ID?: string[];            // 組織代號
+  Org_ID?: string[];            // 組織代碼
   Org_Name?: string;            // 組織名稱
   tlt_floor?: string[];         // 樓層
   ECR_No?: string[];            // 收銀機號碼
