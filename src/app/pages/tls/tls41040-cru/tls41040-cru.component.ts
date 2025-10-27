@@ -247,7 +247,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           ID: clone.ID ?? 0,
           STO_No: clone.STO_No ?? this.rowdata?.STO_No ?? '',
           NOT_DateTime: clone.NOT_DateTime ?? raw.NOT_DateTime,
-          NOT_SeqNo: clone.NOT_SeqNo ?? null,
+          NOT_SeqNo: !isNaN(Number(clone.NOT_SeqNo)) ? Number(clone.NOT_SeqNo) : null,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? '',

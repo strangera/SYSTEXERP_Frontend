@@ -1,7 +1,7 @@
-@if (label !== '') {
-<label>{{ label }}
-  @if (isRequired) { <span class="text-red-500">*</span> }
-</label>
+@if (_label() !== '') {
+  <label>{{ _label() }}
+    @if (isRequired) { <span class="text-red-500">*</span> }
+  </label>
 }
 <div class="flex flex-wrap gap-3 py-2">
   @for (option of options(); track option.value) {
