@@ -21,6 +21,7 @@ import { environment } from 'src/environments/environment';
 import { formatDate } from '@angular/common';
 import { TLS31080DetailRequest, TLS31080Item, TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 // 各時段之樓層營業報表
 @Component({
@@ -38,6 +39,7 @@ import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.servic
     RadiobuttonYNComponent,
     TranslateModule,
     TableComponent,
+    TableReportComponent,
     MultiSelectComponent,
     ButtonModule
   ],
