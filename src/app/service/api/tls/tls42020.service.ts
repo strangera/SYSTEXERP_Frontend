@@ -63,41 +63,6 @@ export interface TLS42020DetailData {
   SBM_BtnNo: string;              // 菜單按鍵序號
 }
 
-// Insert POS10271 detail data interface
-export interface TLS42020InsertDetailData {
-  STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 子菜單類別
-  TLT_No: string;                 // 專櫃編號
-  SBM_BegDate: string;            // 開始日期
-  SBM_EndDate: string;            // 結束日期
-  SBM_SeqNo: string;              // 序號
-  PLU_MagNo: string;              // 商品貨號
-  PLU_No: string;                 // 國際條碼
-  PLU_Name: string;               // 商品名稱
-  PLU_PrnName: string;            // 商品列印名稱
-  PLU_FixPrc: string;             // 商品定價
-  PLU_SalePrc: string;            // 商品售價
-  SBM_BtnNo: string;              // 菜單按鍵序號
-}
-
-// Update POS10271 detail data interface
-export interface TLS42020UpdateDetailData {
-  STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 子菜單類別
-  TLT_No: string;                 // 專櫃編號
-  SBM_BegDate: string;            // 開始日期
-  SBM_EndDate: string;            // 結束日期
-  SBM_SeqNo: string;              // 序號
-  PLU_MagNo: string;              // 商品貨號
-  PLU_No: string;                 // 國際條碼
-  PLU_Name: string;               // 商品名稱
-  PLU_PrnName: string;            // 商品列印名稱
-  PLU_FixPrc: string;             // 商品定價
-  PLU_SalePrc: string;            // 商品售價
-  SBM_BtnNo: string;              // 菜單按鍵序號
-  ID: number;                     // ID
-}
-
 // Insert request interface for TLS42020M
 export interface TLS42020InsertRequest {
   STO_No: string;                 // 店舖編號
@@ -109,9 +74,29 @@ export interface TLS42020InsertRequest {
   POS10271: TLS42020InsertDetailData[];  // POS10271子資料
 }
 
+// Insert POS10271 detail data interface
+export interface TLS42020InsertDetailData {
+  MID: number;                    // MID
+  STO_No: string;                 // 店舖編號
+  SBM_Type: number;               // 子菜單類別
+  TLT_No: string;                 // 專櫃編號
+  SBM_BegDate: string;            // 開始日期
+  SBM_EndDate: string;            // 結束日期
+  SBM_SeqNo: string;              // 序號
+  PLU_MagNo: string;              // 商品貨號
+  PLU_No: string;                 // 國際條碼
+  PLU_Name: string;               // 商品名稱
+  PLU_PrnName: string;            // 商品列印名稱
+  PLU_FixPrc: string;             // 商品定價
+  PLU_SalePrc: string;            // 商品售價
+  SBM_BtnNo: string;              // 菜單按鍵序號
+  status: string;                 // 狀態
+}
+
 // Update request interface for TLS42020M
 export interface TLS42020UpdateRequest {
   ID: number;                     // ID
+  MID: number;                    // MID
   STO_No: string;                 // 店舖編號
   SBM_Type: number;               // 菜單類別
   TLT_No: string;                 // 專櫃編號
@@ -119,6 +104,26 @@ export interface TLS42020UpdateRequest {
   SBM_EndDate: string;            // 結束日期
   TLT_Name: string;               // 專櫃名稱
   POS10271: TLS42020UpdateDetailData[];  // POS10271子資料
+}
+
+// Update POS10271 detail data interface
+export interface TLS42020UpdateDetailData {
+  MID: number;                    // MID
+  STO_No: string;                 // 店舖編號
+  SBM_Type: number;               // 子菜單類別
+  TLT_No: string;                 // 專櫃編號
+  SBM_BegDate: string;            // 開始日期
+  SBM_EndDate: string;            // 結束日期
+  SBM_SeqNo: string;              // 序號
+  PLU_MagNo: string;              // 商品貨號
+  PLU_No: string;                 // 國際條碼
+  PLU_Name: string;               // 商品名稱
+  PLU_PrnName: string;            // 商品列印名稱
+  PLU_FixPrc: string;             // 商品定價
+  PLU_SalePrc: string;            // 商品售價
+  SBM_BtnNo: string;              // 菜單按鍵序號
+  status: string;                 // 狀態
+  ID: number;                     // ID
 }
 
 // Delete request interface for TLS42020M
