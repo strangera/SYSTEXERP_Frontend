@@ -89,7 +89,8 @@ export const finRoutes: Routes = [
   { path: 'fin15090', loadComponent: () => import('./fin15090/fin15090.component').then(m => m.FIN15090Component) },
   // 銷貨退回或折讓單列印
   { path: 'fin15100', loadComponent: () => import('./fin15100/fin15100.component').then(m => m.FIN15100Component) },
-
+ // 二電發票表
+  { path: 'fin15110', loadComponent: () => import('./fin15110/fin15110.component').then(m => m.FIN15110Component) },
   // 公司銀行資料維護
   { path: 'fin21010', loadComponent: () => import('./fin21010/fin21010.component').then(m => m.FIN21010Component) },
   { path: 'fin21010cru', loadComponent: () => import('./fin21010-cru/fin21010-cru.component').then(m => m.FIN21010CRUComponent) },

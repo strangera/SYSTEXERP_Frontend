@@ -21,7 +21,7 @@ import { DatePipe } from '@angular/common';
 @Component({
   selector: 'app-cpm13030',
   templateUrl: './cpm13030.component.html',
-  styleUrl: './cpm13030.component.scss',
+  styleUrls: ['./cpm13030.component.scss'],
   standalone: true,
   imports: [
     DropdownComponent,
@@ -41,6 +41,7 @@ import { DatePipe } from '@angular/common';
 })
 export class CPM13030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
+
     TXN_EDATE: [new Date(), [Validators.required]],
     TXN_BDATE: [new Date(), [Validators.required]],
     building_noList: [[]],
@@ -135,10 +136,19 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         .pipe(finalize(() => this.loading = false))
         .subscribe({
           next: (res) => {
-            if (res?.Data?.Datas) {
-              this.data = res.Data.Datas;
-              this.subTotalData = res.Data.SumDatas || [];
-              this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
+            const v = frm.value;
+            if (res?.Data) {
+              if (v.displayMode === 'M') {
+                // 彙總模式：資料在 SumDatas
+                this.data = res.Data.SumDatas || [];
+                this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
+                this.subTotalData = []; // 彙總模式通常不需要小計
+              } else {
+                // 明細模式：資料在 Datas
+                this.data = res.Data.Datas || [];
+                this.subTotalData = res.Data.SumDatas || [];
+                this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
+              }
               this.totalRecords = res.TotalCount || this.data.length;
               this.updateTableColumns(v.displayMode);
             } else {
@@ -148,8 +158,8 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
               this.totalRecords = 0;
             }
           },
-          error: (err) => console.error('查詢失敗:', err)
         });
+
     });
   }
 

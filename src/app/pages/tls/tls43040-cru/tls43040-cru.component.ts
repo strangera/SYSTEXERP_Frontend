@@ -211,7 +211,8 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         this.tls43040Service.insertTLS43040(payload).subscribe({
           next: (res) => {
             console.log('新增成功:', res);
-            this.onCancel(); // !!! 學習
+            this.router.navigate(['/TLS/TLS43040']);
+            // this.onCancel(); // !!! 學習
             this.messageService.successBubble(res.Message); // !!! 學習
           },
         });
@@ -220,6 +221,8 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         this.tls43040Service.updateTLS43040(payload).subscribe({
           next: (res) => {
             console.log('更新成功:', res);
+            this.router.navigate(['/TLS/TLS43040']);
+            this.onCancel();
           },
         });
       }
