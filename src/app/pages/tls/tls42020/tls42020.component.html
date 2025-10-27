@@ -34,14 +34,14 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS42020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="id" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);
-    onSubmit(queryForm)" [multiSortMeta]="[]" [lazy]="true" [loading]="loading" [showDelete]="false"
-    [expansionColumns]="expansionColumns" expansionDataKey="details" [expansionShowPaginator]="false"
-    [expansionRows]="50" [expansionLoadFn]="loadDetails" [expansionMultiSortMeta]="[]" [showDelete]="true"
-    [showCheckBox]="true" (delete)="onDelete(selectedItems)" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showExcel]="true" [showExcelExport]="false" [showExcelImport]="false" [showCustomExcelImport]="true"
-    (importExcel)="onImport($event)">
+  <app-table tableKey="TLS42020" [data]="data" dataKey="id" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [multiSortMeta]="[{ field: 'TLT_No', order: 0 }]" [lazy]="true" [loading]="loading" [showDelete]="true"
+    [expansionColumns]="expansionColumns" expansionDataKey="ID" [expansionShowPaginator]="false"
+    [expansionLoadFn]="loadDetails" [showCheckBox]="true" (delete)="onDelete(selectedItems)" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showExcel]="true" [showExcelExport]="false" [showExcelImport]="false"
+    [showCustomExcelImport]="true" (importExcel)="onImport($event)">
   </app-table>
 </div>
 

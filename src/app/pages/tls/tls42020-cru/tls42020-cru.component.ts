@@ -1,29 +1,19 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-
-// PrimeNG modules
 import { PanelModule } from 'primeng/panel';
-
-// Shared components
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-
-// Translation
 import { TranslateModule } from '@ngx-translate/core';
-
-// Common Angular
 import { NgIf } from '@angular/common';
-
-// Base class
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService, POS2004Item } from '@service/utility/dropDownList.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { TLS42020Data, TLS42020DetailData, TLS42020InsertDetailData, TLS42020InsertRequest, TLS42020Service, TLS42020UpdateRequest } from '@service/api/tls/tls42020.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize, forkJoin, map } from 'rxjs';
+import { finalize } from 'rxjs';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 介面定義
@@ -63,36 +53,23 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     SBM_EndDate: ['', Validators.required]
   });
 
+  private readonly STORE_NO = '10';
   data: TLS42020DetailData[] = [];
   selectedRows: TLS42020DetailData[] = [];
 
-  // 下拉選項
-  readonly menuTypeOptions: DropdownOption[] = [
+  // 菜單類型下拉選項
+  menuTypeOptions: DropdownOption[] = [
     { label: '一般菜單', value: 1 },
     { label: '員工菜單', value: 2 }
   ];
-
+  // 專櫃編號下拉選項
   tltNoOptions: TLTOption[] = [];
 
-  // TODO: 待修改
-  PLU_MagNoOptions: any[] = [
-    {
-      PLU_MagNo: 'A001',
-      PLU_No: '4711234567890',
-      PLU_Name: '經典漢堡',
-      PLU_SalePrc: 120,
-      label: 'A001-經典漢堡'
-    },
-    {
-      PLU_MagNo: 'B001',
-      PLU_No: '4711234567893',
-      PLU_Name: '薯條(大)',
-      PLU_SalePrc: 60,
-      label: 'B001-薯條(大)'
-    }
-  ];
+  //#region 明細資料
+  // 商品貨號下拉選項
+  PLU_MagNoOptions: any[] = [];
 
-  // 表格欄位定義
+  // 明細資料欄位定義
   columns: Column[] = [
     {
       field: 'SBM_BtnNo',
@@ -133,21 +110,18 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     {
       field: 'PLU_FixPrc',
       header: '商品定價',
-      type: 'input',
+      type: 'inputNumber',
       validate: [this.requiredValidator('商品定價為必填欄位')],
-      required: true
+      required: true,
     },
     {
       field: 'PLU_SalePrc',
       header: '商品售價',
-      type: 'input',
+      type: 'inputNumber',
       validate: [this.requiredValidator('商品售價為必填欄位')],
-      required: true
+      required: true,
     }
   ];
-
-  // 常數定義
-  private readonly STORE_NO = '10';
 
   constructor(
     private dropDownListService: DropDownListService,
@@ -197,16 +171,16 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     });
   }
 
+  // 刪除明細資料
   onDelete(rows: TLS42020InsertDetailData[]): void {
     const idsToDelete = new Set(rows.map(item => item.SBM_SeqNo));
     this.data = this.data.filter(item => !idsToDelete.has(item.SBM_SeqNo));
     this.selectedRows = [];
   }
 
-  // 選擇商品貨號後自動帶出其他欄位的資料
+  // 選擇 PLU_MagNo (商品貨號) 後自動帶出其他欄位的資料
   onFieldChange(event: FieldChangeEvent): void {
     if (event.field === 'PLU_MagNo' && event.index !== undefined) {
-      // 當 PLU_MagNo (商品貨號) 改變時，自動帶入相關資料
       const selectedProduct = this.PLU_MagNoOptions.find(item => item.PLU_MagNo === event.value);
       if (selectedProduct) {
         // 更新該行的其他欄位
@@ -218,7 +192,6 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
           rowData.PLU_PrnName = selectedProduct.PLU_PrnName || '';
           rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc || '';
           rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc || '';
-
           // 觸發變更檢測
           this.changeDetectorRef.detectChanges();
         }
@@ -226,9 +199,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     }
   }
 
-  // 私有方法
+  // 載入專櫃編號選項
   private loadOptions(): void {
-    // 載入專櫃編號選項
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -251,6 +223,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         next: () => {
           this.messageService.successBubble('新增成功');
           this.dataForm.reset();
+          this.data = []; // 清空明細資料
         }
       });
   }
@@ -283,24 +256,23 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     };
 
     // 深拷貝明細資料並加上主檔欄位
-    const detailData = this.data
-      .map((item, index) => ({
-        // 複合主鍵
-        STO_No: this.STORE_NO,
-        SBM_Type: mainData.SBM_Type,
-        TLT_No: mainData.TLT_No,
-        SBM_BegDate: mainData.SBM_BegDate,
-        SBM_EndDate: mainData.SBM_EndDate,
-        // 明細資料
-        SBM_SeqNo: '',  // 後端處理
-        PLU_MagNo: item.PLU_MagNo,  // 若為空則由後端產生
-        PLU_No: item.PLU_No,
-        PLU_Name: item.PLU_Name,
-        PLU_PrnName: item.PLU_PrnName,
-        PLU_FixPrc: String(item.PLU_FixPrc),
-        PLU_SalePrc: String(item.PLU_SalePrc),
-        SBM_BtnNo: item.SBM_BtnNo
-      }));
+    const detailData = this.data.map((item) => ({
+      // 複合主鍵
+      STO_No: this.STORE_NO,
+      SBM_Type: mainData.SBM_Type,
+      TLT_No: mainData.TLT_No,
+      SBM_BegDate: mainData.SBM_BegDate,
+      SBM_EndDate: mainData.SBM_EndDate,
+      // 明細資料
+      SBM_SeqNo: item.SBM_SeqNo ?? '',  // 後端處理
+      PLU_MagNo: item.PLU_MagNo ?? '',  // 若為空則由後端產生
+      PLU_No: item.PLU_No,
+      PLU_Name: item.PLU_Name,
+      PLU_PrnName: item.PLU_PrnName,
+      PLU_FixPrc: String(item.PLU_FixPrc),
+      PLU_SalePrc: String(item.PLU_SalePrc),
+      SBM_BtnNo: item.SBM_BtnNo
+    }));
 
     return {
       ...mainData,
@@ -323,25 +295,24 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     };
 
     // 明細資料 - 轉換為 TLS42020UpdateDetailData 格式
-    const detailData = this.data
-      .map((item, index) => ({
-        // 複合主鍵
-        ID: this.rowdata!.id, // 從原始資料取得 ID
-        STO_No: this.STORE_NO,
-        SBM_Type: mainData.SBM_Type,
-        TLT_No: mainData.TLT_No,
-        SBM_BegDate: mainData.SBM_BegDate,
-        SBM_EndDate: mainData.SBM_EndDate,
-        // 明細資料
-        SBM_SeqNo: '',  // 後端處理
-        PLU_MagNo: item.PLU_MagNo,  // 若為空則由後端產生
-        PLU_No: item.PLU_No,
-        PLU_Name: item.PLU_Name,
-        PLU_PrnName: item.PLU_PrnName,
-        PLU_FixPrc: String(item.PLU_FixPrc),
-        PLU_SalePrc: String(item.PLU_SalePrc),
-        SBM_BtnNo: item.SBM_BtnNo
-      }));
+    const detailData = this.data.map((item) => ({
+      // 複合主鍵
+      STO_No: this.STORE_NO,
+      SBM_Type: mainData.SBM_Type,
+      TLT_No: mainData.TLT_No,
+      SBM_BegDate: mainData.SBM_BegDate,
+      SBM_EndDate: mainData.SBM_EndDate,
+      // 明細資料
+      SBM_SeqNo: item.SBM_SeqNo ?? '',  // 後端處理
+      PLU_MagNo: item.PLU_MagNo ?? '',  // 若為空則由後端產生
+      PLU_No: item.PLU_No,
+      PLU_Name: item.PLU_Name,
+      PLU_PrnName: item.PLU_PrnName,
+      PLU_FixPrc: String(item.PLU_FixPrc),
+      PLU_SalePrc: String(item.PLU_SalePrc),
+      SBM_BtnNo: item.SBM_BtnNo,
+      ID: typeof item.ID === 'number' ? item.ID : 0
+    }));
 
     return {
       ...mainData,
@@ -358,15 +329,14 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     });
   }
 
+  // 載入 PLU_MagNo 選項
   loadPLU_MagNoOptions(tltNo: string): void {
-    console.log('loadPLU_MagNoOptions', tltNo);
-    this.tls42020Service.dropdownTLS42020({ TLT_NO: [parseInt(tltNo)] })
+    this.tls42020Service.dropdownTLS42020({ TLT_NO: [tltNo ?? ''] })
       .pipe(
         untilDestroyed(this)
       )
-      .subscribe(options => {
-        this.PLU_MagNoOptions = options;
-        console.log('PLU_MagNoOptions', this.PLU_MagNoOptions);
+      .subscribe(res => {
+        this.PLU_MagNoOptions = res.Data;
       });
   }
 }

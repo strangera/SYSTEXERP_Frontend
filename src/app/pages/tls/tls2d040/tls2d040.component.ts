@@ -55,7 +55,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     store_way: [null],          // 專櫃/自營櫃
     building_no: [[]],        // 館別
     FLOOR_NO: [[]],           // 樓層
-    status: ['0'],        // 狀況
+    status: ['0'],            // 狀況 (明細/彙總)
     report_type: ['0'],      // 彙總報表類型
     ShowNeg1: [false],          // 只顯示負值(只適用於專櫃統計)
     ShowNeg2: [false],          // 只顯示當月應收為負值
@@ -138,7 +138,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS2D040', 'tls/tls2d040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
-    this.setColumns('0');
+    this.setColumns('detail');
   }
 
   loadOptions() {
@@ -204,17 +204,28 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
         ...form.getRawValue(),
         tpy_bdate: form.value.tpy_bdate ? this.datepipe.transform(form.value.tpy_bdate, 'yyyyMM') : '',
         tpy_edate: form.value.tpy_edate ? this.datepipe.transform(form.value.tpy_edate, 'yyyyMM') : '',
-        ShowNeg: form.value.report_type === '0' ? form.value.ShowNeg1 : form.value.ShowNeg2,
+        ShowNeg: (form.value.status === '1' && form.value.report_type === '0') ? form.value.ShowNeg1 : form.value.ShowNeg2,
       }
 
-      // TODO: 根據狀況及報表類型呼叫不同的API
+      // 明細查詢
       if (form.value.status === '0') {
-        // 明細查詢
-        this.loading = false;
-        console.warn('明細查詢功能尚未實作');
+        this.tls2d040Service.queryTLS2D040_Detail(payload)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(response => {
+            this.setColumns('detail');
+            this.data = response.Data.mainData;
+            this.footerData = [{
+              group_name: '合計',
+              tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
+            }];
+            this.totalRecords = response.TotalCount;
+            this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          });
       }
+      // 彙總查詢
       else {
         switch (form.value.report_type) {
+          // 依專櫃
           case '0':
             this.tls2d040Service.queryTLS2D040_TLT(payload)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -229,6 +240,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
               });
             break;
+          // 依扣款項目
           case '1':
             this.tls2d040Service.queryTLS2D040_ChargeItem(payload)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -243,6 +255,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
               });
             break;
+          // 依部門
           case '2':
             this.tls2d040Service.queryTLS2D040_Department(payload)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -258,6 +271,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
               }
               );
             break;
+          // 依會計科目
           case '3':
             this.tls2d040Service.queryTLS2D040_Acct(payload)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -277,8 +291,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  // 根據 report_type 設定不同的欄位
   setColumns(report_type: string) {
-    // 根據 report_type 設定不同的欄位
     switch (report_type) {
       case '0': // 依專櫃
         this.columns = [
@@ -320,6 +334,22 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
           { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+        ];
+        break;
+      case 'detail': // 明細
+        this.columns = [
+          { field: 'tlt_no', header: '專櫃編號' },
+          { field: 'tlt_name', header: '專櫃名稱' },
+          { field: 'source_type', header: '來源系統別', format: (value: any) => this.sourceTypeOptions.find(item => item.No === value)?.Name || value },
+          { field: 'CAP_Item', header: '扣款代碼' },
+          { field: 'CAP_Name', header: '扣款名稱' },
+          { field: 'org_id', header: '組織代碼' },
+          { field: 'pod_no', header: '活動代碼' },
+          { field: 'AccNo', header: '會計科目' },
+          { field: 'sam_yyymm', header: '扣款年月' },
+          { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true },
+          { field: 'remarks', header: '備註' }
         ];
         break;
     }
