@@ -49,7 +49,7 @@ export interface FIN15020Data {
   Voucher_No?: string; // 傳票編號
   SAL_Type?: string; // 系統別
   PUR_DiscNo?: string; // 折抵代號
-  PUR_Uniform?: string; // 統一編號
+  PUR_VenUniform?: string; // 統一編號
 }
 
 export interface FIN15020PrintRequest extends FIN15020QueryRequest {
