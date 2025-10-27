@@ -288,7 +288,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   // 20251016 核准按鈕狀態切換
   statusChange(rowData: TALPORDERM, status: string) {
     this.btnLoading = true;
-    this.messageService.infoBubble('審核測試，等待api連接');
 
     const apprPod_no = rowData.pod_no;
     if (apprPod_no) {

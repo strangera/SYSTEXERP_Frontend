@@ -17,7 +17,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS31050DetailItem, TLS31050DetailRequest, TLS31050DetailResponse, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { TLS31050DetailItem, TLS31050DetailRequest, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
 import { formatDate } from '@angular/common';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -189,6 +189,27 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
   }
 
   queryTLS31050Detail() {
+
+    // ---
+    // 測試資料可以用
+    // {
+    //   "TXN_DateS": "2024-11-11",
+    //   "TXN_DateE": "2024-11-11",
+    //   "tlt_building": [],
+    //   "tlt_floor": [],
+    //   "area_no": [],
+    //   "bus_type": [],
+    //   "bus_class": [],
+    //   "bus_sclass": [],
+    //   "tlt_kind": ["1"], // 正櫃
+    //   "tlt_term_type": "3", // 一般抽成
+    //   "org_id": ["102130"], // 化妝品
+    //   "TaxType": "0",
+    //   "IsRece_Yn": null
+    // }
+    // 來看不同的特價、折數金額
+    // ---
+
     // 把 bus_type 從 string[] 轉成 string
     const request: TLS31050DetailRequest = {
       ...this.queryConditions,
