@@ -9,7 +9,7 @@ import { TranslateModule } from '@ngx-translate/core'; // Add this import as req
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, queryTxnTypeOptions } from './tls27040.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS27040Data, TLS27040Service } from '@service/api/tls/tls27040.service';
+import { TLS27040Data, TLS27040Service, TotalData } from '@service/api/tls/tls27040.service';
 import { finalize } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
 import { todayStart } from '@shared/models/system/query-form.model';
@@ -72,6 +72,7 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     SortBy: [[{ field: 'ID', order: 1 }]],
   });
   data: TLS27040Data[] = [];
+  footerData: TotalData = { group_name: '總計', TxnAmt: 0 };
   selectedItems: TLS27040Data[] = [];
   columns: ReportColumn[] = columns;
   totalRecords = 0;
@@ -106,6 +107,7 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
           ...item,
           dataKey: item.ID + item.tableName
         })) : [];
+        this.footerData = res.footerData && res.footerData.length > 0 ? res.footerData[0] : { group_name: '總計', TxnAmt: 0 };
         this.totalRecords = res.TotalCount;
         this.lastQueryBody = body;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

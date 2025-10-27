@@ -8,7 +8,7 @@ export const columns: ReportColumn[] = [
   { field: 'TXN_No', header: '交易流水號' }, // 對應 TXN_No
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 TLT_No
   { field: 'PayCrdType', header: '卡別', format: (value) => getSYS1000('NCML_PayCrdType', value) }, // 對應 PayCrdType
-  { field: 'TxnAmt', header: '金額', format: formatAmount }, // 對應 TxnAmt (number)
+  { field: 'TxnAmt', header: '金額', format: formatAmount , isTotal: true}, // 對應 TxnAmt (number)
   { field: 'TxnDate', header: '銷售日期', format: formatDate }, // 對應 TxnDate (DATE)
   { field: 'TxnTime', header: '銷售時間', format: formatDateTimeToHHMMSS }, // 對應 TxnTime (string/time), 使用新函式只顯示時間
   { field: 'ReqDate', header: '請款日期', format: formatDate }, // 對應 ReqDate (DATE)

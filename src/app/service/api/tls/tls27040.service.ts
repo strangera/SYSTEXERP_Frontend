@@ -62,6 +62,11 @@ export interface TLS27040Data {
   tableName: string; // 新增，用於標識資料來源表
 }
 
+export interface TotalData {
+  group_name: string; // 統計名稱 (通常是 "總計")
+  TxnAmt: number; // 金額總和
+}
+
 // --- 新增請求介面 for 刪除 API ---
 export interface DeleteItem {
   id: number;
@@ -189,8 +194,8 @@ export class TLS27040Service {
   /**
    * 查詢 實收信用卡調整作業 (統一查詢)
    */
-  queryTLS27040(body: QueryTLS27040Request): Observable<ApiResponse<TLS27040Data[]>> {
-    return this.http.post<ApiResponse<TLS27040Data[]>>(`${this.apiUrl}/queryTLS27040`, body);
+  queryTLS27040(body: QueryTLS27040Request): Observable<ApiResponse<TLS27040Data[], TotalData[]>> {
+    return this.http.post<ApiResponse<TLS27040Data[], TotalData[]>>(`${this.apiUrl}/queryTLS27040`, body);
   }
 
   // --- 新增 API (保持不變) ---
