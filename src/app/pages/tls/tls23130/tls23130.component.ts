@@ -171,70 +171,67 @@ groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
   }
 
   // ===== 查詢（固定 pageSize=30；PageSize=30）=====
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.getRawValue() as any;
+  // ===== 查詢（固定 pageSize=30；PageSize=30）=====
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
 
-      const toIso = (x: any) => {
-        if (!x) return undefined;
-        const d = typeof x === 'string' ? new Date(x) : (x as Date);
-        if (isNaN(d.getTime())) return undefined;
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString().slice(0, 19);
-      };
-      const asArr = (x: any) => Array.isArray(x) ? x : (x == null || x === '' ? undefined : [x]);
+    const asArr = (x: any) => Array.isArray(x) ? x : (x == null || x === '' ? undefined : [x]);
 
-      const payload: any = {
-        TXN_DateStart: toIso(val?.TXN_DateStart),
-        TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-        BNK_No:        (typeof val?.BNK_No === 'string' && val.BNK_No !== '') ? val.BNK_No : undefined,
-        tlt_building:  val?.tlt_building ?? undefined,
-        tlt_floor:     asArr(val?.tlt_floor),
-        org_id:        asArr(val?.org_id),
+    const payload: any = {
+      // ✅ 改成 DateOnly
+      TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
 
-        // ✅ 固定 30（大小寫都帶）
-        pageSize: 30,
-        PageSize: 30,
+      BNK_No:        (typeof val?.BNK_No === 'string' && val.BNK_No !== '') ? val.BNK_No : undefined,
+      tlt_building:  val?.tlt_building ?? undefined,
+      tlt_floor:     asArr(val?.tlt_floor),
+      org_id:        asArr(val?.org_id),
 
-        // 排序使用預設
-       SortBy: this.dedupeSortMeta(this.defaultSort),
-      };
+      // ✅ 固定 30（大小寫都帶）
+      pageSize: 30,
+      PageSize: 30,
 
-      // 清除空值
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === '' || v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-      });
+      // 排序使用預設
+      SortBy: this.dedupeSortMeta(this.defaultSort),
+    };
 
-      // 提供給 app-table-report 的 lastQueryBody
-      this.historyRequestBody = { ...payload };
-
-      this.loading = true;
-      this.messageService?.blockUi();
-
-      this.tls23130Service.queryTLS23130(payload).pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        })
-      ).subscribe({
-        next: (res: any) => {
-          const mapped = this.mapResponseToRowsAndTotals(res);
-          this.data = mapped.rows;
-          this.totalRecords = mapped.totalRecords;
-           this.groupSubtotals = mapped.groupSub;  
-            this.grandTotal = mapped.grand;       
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.groupSubtotals = {};  
-           this.grandTotal = {};     
-        },
-      });
+    // 清除空值
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
-  }
+
+    // 提供給 app-table-report 的 lastQueryBody
+    this.historyRequestBody = { ...payload };
+
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23130Service.queryTLS23130(payload).pipe(
+      finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      })
+    ).subscribe({
+      next: (res: any) => {
+        const mapped = this.mapResponseToRowsAndTotals(res);
+        this.data = mapped.rows;
+        this.totalRecords = mapped.totalRecords;
+        this.groupSubtotals = mapped.groupSub;
+        this.grandTotal = mapped.grand;
+      },
+      error: () => {
+        this.data = [];
+        this.totalRecords = 0;
+        this.groupSubtotals = {};
+        this.grandTotal = {};
+      },
+    });
+  });
+}
+
   private dedupeSortMeta(meta: Array<{ field?: string; order?: 1 | -1 }> = []) {
   // 後者優先：若同欄位多次出現，保留最後一次的設定
   const seen = new Set<string>();
@@ -256,6 +253,9 @@ public queryTLS23130ForReport = (body: any) =>
   this.tls23130Service
     .queryTLS23130({
       ...(body || {}),
+      // ✅ 保險起見：優先用 body 的日期，沒有就吃畫面目前的表單值；統一轉 DateOnly
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
       pageSize: 30,
       PageSize: 30,
       SortBy: this.dedupeSortMeta((body && body.SortBy) || this.defaultSort),
@@ -462,5 +462,16 @@ buildFooterFromGrandTotal(): Record<string, any> | undefined {
   }
   // 如果想在某欄顯示「總計」兩字（例如櫃位名稱），可加：footer['tlt_name'] = '總計';
   return footer;
+}
+// 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 }
