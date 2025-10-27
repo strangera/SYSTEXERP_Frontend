@@ -197,101 +197,122 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     }));
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
+onSubmit(form: FormGroup): void {
+  this.submitted = true;
 
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    return;
+  }
+
+  // 組 payload（含 TXN_Date -> yyyy-MM-dd）
+  const payload: any = { ...form.value };
+  payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
+
+  // 帶入店號
+  const userInfo = localStorage.getItem('UserInfo');
+  if (userInfo) {
+    try {
+      const parsed = JSON.parse(userInfo);
+      if (parsed.SYS_StoreNo) payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
+    } catch { /* ignore */ }
+  }
+
+  // 清除空值
+  Object.keys(payload).forEach((key) => {
+    const value = payload[key];
+    if (typeof value === 'string') {
+      payload[key] = value.trim();
+      if (payload[key] === '') delete payload[key];
     }
+    if (Array.isArray(value) && value.length === 0) delete payload[key];
+    if (value === null || value === undefined) delete payload[key];
+  });
 
-    const payload: any = { ...form.value };
+  // 排除前端控制欄位
+  delete payload['reimbursementType'];
 
-    // 帶入店號
-    const userInfo = localStorage.getItem('UserInfo');
-    if (userInfo) {
-      try {
-        const parsed = JSON.parse(userInfo);
-        if (parsed.SYS_StoreNo) payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
-      } catch { /* ignore */ }
-    }
+  this.loading = true;
+  this.messageService.blockUi();
 
-    // 清除空值
-    Object.keys(payload).forEach((key) => {
-      const value = payload[key];
-      if (typeof value === 'string') {
-        payload[key] = value.trim();
-        if (payload[key] === '') delete payload[key];
-      }
-      if (Array.isArray(value) && value.length === 0) delete payload[key];
-      if (value === null || value === undefined) delete payload[key];
-    });
+  // 查詢前清空總計，避免殘留
+  this.detailTotals = { BOOK_PayAmt: 0, ACT_PayAmt: 0, OVER_PayAmt: 0 };
 
-    // 排除前端控制欄位
-    delete payload['reimbursementType'];
+  const reporttype = form.controls['reporttype'].value; // 1=明細, 2=簡表
+  const apiCall =
+    reporttype === 2
+      ? this.tls2B010Service.simpleTLS2B010(payload)
+      : this.tls2B010Service.queryTLS2B010(payload);
 
-    this.loading = true;
-    this.messageService.blockUi();
-
-    // ★ 查詢前先清空後端總計，避免殘留
-    this.detailTotals = { BOOK_PayAmt: 0, ACT_PayAmt: 0, OVER_PayAmt: 0 };
-
-    const reporttype = form.controls['reporttype'].value;
-    const apiCall =
-      reporttype === 2
-        ? this.tls2B010Service.simpleTLS2B010(payload)
-        : this.tls2B010Service.queryTLS2B010(payload);
-
-    apiCall
-      .pipe(finalize(() => {
+  apiCall
+    .pipe(
+      finalize(() => {
         this.loading = false;
         this.messageService.unblockUi();
         this.refreshCloseDate();
-      }))
-      .subscribe({
-        next: (res) => {
-          if (res?.Status === '0000') {
-            this.queryStateService.setQueryState(this.ProgNo, payload);
+      })
+    )
+    .subscribe({
+      next: (res) => {
+        if (res?.Status !== '0000') {
+          this.messageService.errorBubble(res?.Message || '查詢失敗');
+          return;
+        }
 
-if (reporttype === 2) {
-  // 🔧 正確解析：Data 物件裡的 QueryData 才是資料列
-  const dataObj = res.Data || {};
-  const rawData: any[] = dataObj.QueryData || [];
+        // 成功
+        this.queryStateService.setQueryState(this.ProgNo, payload);
 
-  // 做一個穩定的 ID，避免 dataKey 抓不到
-  this.simpleData = rawData.map((row: any, idx: number) => ({
-    ID: `${row.ECR_No || 'NA'}_${row.TXN_Date || ''}_${idx}`,
-    ...row,
-  }));
+        if (reporttype === 2) {
+          // ===== 溢欠簡表 =====
+          const dataObj = res.Data || {};
+          const rawData: any[] = dataObj.QueryData || [];
 
-  // 總筆數
-  this.totalRecords =
-    (typeof dataObj.TotalCount === 'number' ? dataObj.TotalCount : null) ??
-    (typeof res.TotalCount === 'number' ? res.TotalCount : 0);
+          // 產穩定 ID，避免 dataKey 抓不到
+          this.simpleData = rawData.map((row: any, idx: number) => ({
+            ID: `${row.ECR_No || 'NA'}_${row.TXN_Date || ''}_${idx}`,
+            ...row,
+          }));
 
-} else {
-  // （保留你原本的明細處理）
-  const responseData = res.Data || {};
-  this.data = responseData.QueryData || [];
-  this.totalRecords = responseData.TotalCount ?? res.TotalCount ?? 0;
+          // 綁到通用資料來源 + 切換欄位組
+          this.data = this.simpleData;
+          this.columns = this.simplecolumns;
 
-  const t = responseData.Totals || {};
-  this.detailTotals = {
-    BOOK_PayAmt: Number(t.SumBOOK_PayAmt ?? 0),
-    ACT_PayAmt:  Number(t.SumACT_PayAmt  ?? 0),
-    OVER_PayAmt: Number(t.SumOVER_PayAmt ?? 0),
-  };
+          // 總筆數
+          this.totalRecords =
+            (typeof dataObj.TotalCount === 'number' ? dataObj.TotalCount : null) ??
+            (typeof res.TotalCount === 'number' ? res.TotalCount : 0) ??
+            this.data.length;
+
+          // 簡表不做動態欄位可見性（避免被 reimbursementType 影響）
+        } else {
+          // ===== 支付別溢欠明細表 =====
+          const responseData = res.Data || {};
+          this.data = responseData.QueryData || [];
+          this.columns = this.columns; // 保持明細欄位組
+          this.totalRecords =
+            (typeof responseData.TotalCount === 'number' ? responseData.TotalCount : null) ??
+            (typeof res.TotalCount === 'number' ? res.TotalCount : 0) ??
+            this.data.length;
+
+          // 後端總計（供頁尾顯示）
+          const t = responseData.Totals || {};
+          this.detailTotals = {
+            BOOK_PayAmt: Number(t.SumBOOK_PayAmt ?? 0),
+            ACT_PayAmt:  Number(t.SumACT_PayAmt  ?? 0),
+            OVER_PayAmt: Number(t.SumOVER_PayAmt ?? 0),
+          };
+
+          // 依勾選（系統帳/實收帳）調整欄位顯示
+          this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value || []);
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.messageService.errorBubble('查詢發生錯誤');
+      },
+    });
 }
-          } else {
-            this.messageService.errorBubble(res?.Message || '查詢失敗');
-          }
-        },
-        error: (err) => {
-          this.messageService.errorBubble('查詢發生錯誤');
-          console.error(err);
-        },
-      });
-  }
+
 
   handleLazyLoad(
     e: { pageIndex: number; pageSize: number; SortBy: any[] },
@@ -374,6 +395,9 @@ private buildPayload(): any {
   const form = this.queryForm;
   const payload: any = { ...form.value };
 
+  // ✅ 轉日期成 yyyy-MM-dd
+  payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
+
   // 店號（從 localStorage）
   const userInfo = localStorage.getItem('UserInfo');
   if (userInfo) {
@@ -399,6 +423,7 @@ private buildPayload(): any {
 
   return payload;
 }
+
 
 // 從 Content-Disposition 取檔名
 private getFilenameFromResponse(res: any, fallback: string): string {
@@ -479,5 +504,16 @@ downloadTLS2B010PDF(): void {
     this.btnLoading = false;
     this.messageService.unblockUi();
   });
+}
+// 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 }

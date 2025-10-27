@@ -283,8 +283,8 @@ onSubmit(form: FormGroup): void {
 
     // 固定傳 30（保險同時設定大小寫）
     const payload = this.prune({
-      TXN_DateStart: this.toIso(val?.TXN_DateStart ?? this.yesterday),
-      TXN_DateEnd  : this.toIso(val?.TXN_DateEnd   ?? this.yesterday),
+TXN_DateStart: this.toDateOnly(val?.TXN_DateStart ?? this.yesterday),
+TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd   ?? this.yesterday),
 
       ECR_No     : this.ensureArr(val?.ECR_No),
       TLT_No     : this.ensureArr(val?.tlt_no),
@@ -397,8 +397,12 @@ onSubmit(form: FormGroup): void {
   /** 信用卡明細（✅ 產出 GrandTotal 並同步本地） */
   /** 信用卡明細（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
 public queryTLS23090CreditForReport = (body: any) =>
-  this.tls23090Service
-    .queryTLS23090({ ...(body || {}), PageSize: 30, pageSize: 30 })
+  this.tls23090Service.queryTLS23090({
+    ...(body || {}),
+    pageSize: 30,
+    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+  })
     .pipe(
       map((res: any) => {
         const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
@@ -658,5 +662,15 @@ private computeCounterGrandTotal(res: any): Record<string, number> {
   });
   return grand;
 }
-
+// 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 }

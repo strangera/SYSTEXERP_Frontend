@@ -62,7 +62,7 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
     TranslateModule,
     CalendarComponent,
     DropdownComponent,
-    TableReportComponent, // ✅ 使用 app-table-report
+    // TableReportComponent, // ✅ 使用 app-table-report
   ],
 })
 export class TLS23120Component
@@ -198,26 +198,16 @@ export class TLS23120Component
     this.destroy$.complete();
   }
 
-  // ===== 提交（固定 pageSize=30；PageSize=30） =====
+  // ===== 提交（固定 pageSize=30；PageSize=30）— TXN_Date 改 DateOnly =====
   onSubmit(form: FormGroup): void {
     this.saveQueryForm();
 
     this.handleSubmit(form, () => {
       const val = this.queryForm.getRawValue() as any;
-
-      const toIsoOrNull = (x: any) => {
-        if (!x) return null;
-        const d = typeof x === 'string' ? new Date(x) : (x as Date);
-        if (isNaN(d.getTime())) return null;
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 19);
-      };
-
       const fm = this.queryForm.controls.filterMode.value as FilterMode;
 
       const payload: any = {
-        TXN_Date: toIsoOrNull(val?.TXN_Date),
+        TXN_Date: this.toDateOnly(val?.TXN_Date),
 
         TLT_No:       (fm === 'counter')  ? (val?.TLT_No ?? null) : null,
         tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
@@ -234,7 +224,6 @@ export class TLS23120Component
         pageSize: 30,
         PageSize: 30,
 
-        // 如需排序，可帶 this.sortMeta
         SortBy: this.sortMeta,
       };
 
@@ -269,7 +258,6 @@ export class TLS23120Component
               ? res.TotalCount
               : this.data.length;
 
-          // 若需查完自動開 CRU
           if (this.pendingNavigateAfterQuery) {
             this.pendingNavigateAfterQuery = false;
             if (!this.data?.length) {
@@ -295,9 +283,14 @@ export class TLS23120Component
     });
   }
 
-  // ===== 提供給 app-table-report 的查詢函式（固定 pageSize=30；回傳 GrandTotal） =====
+  // ===== 提供給 app-table-report 的查詢函式（固定 pageSize=30；回傳 GrandTotal）— 也轉 DateOnly =====
   public queryTLS23120ForReport = (body: any) =>
-    this.tls23120Service.queryTLS23120({ ...(body || {}), pageSize: 30, PageSize: 30 }).pipe(
+    this.tls23120Service.queryTLS23120({
+      ...(body || {}),
+      TXN_Date: this.toDateOnly(body?.TXN_Date ?? this.queryForm.value?.TXN_Date),
+      pageSize: 30,
+      PageSize: 30
+    }).pipe(
       map((res: any) => {
         const rows = this.extractDetails(res).map((r: any, i: number) => {
           const row = this.normalizeRow(r);
@@ -313,10 +306,6 @@ export class TLS23120Component
         return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
       })
     );
-
- 
-
-
 
   // ===== 將回傳格式攤平成明細列 =====
   private extractDetails(res: any): any[] {
@@ -385,7 +374,7 @@ export class TLS23120Component
     setGroup(location, mode === 'location');
     setGroup(busType,  mode === 'busType');
     setGroup(org,      mode === 'org');
-    setGroup(counter,  mode === 'counter');
+    setGroup(counter,  mode === 'counter') ;
 
     // 僅在 counter 模式時讓 TLT_No 有 required 驗證
     const tlt = this.queryForm.get('TLT_No');
@@ -437,12 +426,12 @@ export class TLS23120Component
     return out;
   }
 
-  // Query 狀態保存/還原（沿用你原本的做法）
+  // Query 狀態保存/還原
   private reviveDate(x: any) {
     if (!x) return x;
     const d = new Date(x);
     return isNaN(d.getTime()) ? x : d;
-  }
+    }
   private restoreQueryForm(): void {
     try {
       const saved = this.queryStateService.getQueryStateValue(this.QUERY_KEY);
@@ -487,4 +476,15 @@ export class TLS23120Component
     { field: 'sad_settle_qty', header: '結帳筆數', visible: true, isTotal: true, style: 'text-right' },
     { field: 'sad_settle_amt', header: '結帳金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
   ];
+
+  /** 只回 YYYY-MM-dd（本地時區） */
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 }

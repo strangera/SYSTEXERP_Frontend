@@ -23,7 +23,7 @@ import { ButtonModule } from 'primeng/button';
 
 import {
   createPaginationConfig,
-  formatDateToYYYY_MM_DD,
+  
 } from '../../../shared/componentkit/table/table.model';
 
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -198,8 +198,8 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       const val = this.queryForm.getRawValue() as any;
 
       const payload: any = {
-        TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
-        TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
+TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
         tlt_no:        Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
         tlt_building:  val?.tlt_building ?? undefined,
         tlt_floor:     Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
@@ -232,7 +232,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
           );
 
  this.data = (Array.isArray(details) ? details : []).map((r: any, i: number) => {
-  const dShort = formatDateToYYYY_MM_DD(r?.TXN_Date);
+  const dShort = this.toDateOnly(r?.TXN_Date);
   return {     ...r,
      TXN_Date: dShort, // ← 正規化，讓 groupRowsBy 用到的值一致
      _rowKey: `${r?.tlt_no ?? ''}|${dShort ?? ''}|${r?.ECR_No ?? ''}|${i}`,
@@ -254,10 +254,16 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   }
 
   // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30
-  public queryTLS23070ForReport = (body: any) =>
-    this.tls23070Service
-      .queryTLS23070({ ...(body || {}), pageSize: 30 })
-      .pipe(
+public queryTLS23070ForReport = (body: any) =>
+  this.tls23070Service
+    .queryTLS23070({
+      ...(body || {}),
+      pageSize: 30,
+      // ✅ 強制 DateOnly（若 body 無就抓表單值）
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+    })
+    .pipe(
         map((res: any) => {
           const wrapper = this.pickWrapper(res?.Data);
 
@@ -268,7 +274,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
             s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []
           );
  const rows = (Array.isArray(details) ? details : []).map((r: any, i: number) => {
-   const dShort = formatDateToYYYY_MM_DD(r?.TXN_Date);
+   const dShort = this.toDateOnly(r?.TXN_Date);
    return {
      ...r,
      TXN_Date: dShort, // ← 同步正規化
@@ -473,4 +479,15 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     }
     return s;
   }
+  // 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 }
