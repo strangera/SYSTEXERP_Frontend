@@ -29,8 +29,8 @@ export const cpmRoutes: Routes = [
   // { path: 'cpm12070', loadComponent: () => import('./cpm12070/cpm12070.component').then(m => m.CPM12070Component) }, // 顧客意見類別統計表
   { path: 'cpm13010', loadComponent: () => import('./cpm13010/cpm13010.component').then(m => m.CPM13010Component) }, // 停車費折抵補登作業
   { path: 'cpm13010cru', loadComponent: () => import('./cpm13010-cru/cpm13010-cru.component').then(m => m.CPM13010CRUComponent) },
-  // { path: 'cpm13020', loadComponent: () => import('./cpm13020/cpm13020.component').then(m => m.CPM13020Component) }, // 停車費折抵補登作業(可讀停車車號)
-  // { path: 'cpm13020cru', loadComponent: () => import('./cpm13020-cru/cpm13020-cru.component').then(m => m.CPM13020CRUComponent) },
+  { path: 'cpm13020', loadComponent: () => import('./cpm13020/cpm13020.component').then(m => m.CPM13020Component) }, // 停車費折抵補登作業(可讀停車車號)
+  { path: 'cpm13020cru', loadComponent: () => import('./cpm13020-cru/cpm13020-cru.component').then(m => m.CPM13020CRUComponent) },
   { path: 'cpm13030', loadComponent: () => import('./cpm13030/cpm13030.component').then(m => m.CPM13030Component) }, // 非業主POS停車費折抵補登作業
   { path: 'cpm13030cru', loadComponent: () => import('./cpm13030-cru/cpm13030-cru.component').then(m => m.CPM13030CRUComponent) },
   { path: 'cpm13040', loadComponent: () => import('./cpm13040/cpm13040.component').then(m => m.CPM13040Component) }, // 非業主POS停車費折抵補登作業(可讀取車號)
