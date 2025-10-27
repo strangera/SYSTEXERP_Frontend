@@ -56,6 +56,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   private readonly STORE_NO = '10';
   data: TLS42020DetailData[] = [];
   selectedRows: TLS42020DetailData[] = [];
+  // 原始明細資料
+  private originalDetailData: TLS42020DetailData[] = [];
 
   // 菜單類型下拉選項
   menuTypeOptions: DropdownOption[] = [
@@ -122,6 +124,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       required: true,
     }
   ];
+  //#endregion
 
   constructor(
     private dropDownListService: DropDownListService,
@@ -143,6 +146,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
           .pipe(untilDestroyed(this))
           .subscribe(res => {
             this.data = res.Data;
+            this.originalDetailData = res.Data;
           });
       }
     }
@@ -185,7 +189,6 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       if (selectedProduct) {
         // 更新該行的其他欄位
         const rowData = this.data[event.index];
-        // TODO: 欄位對應待確認
         if (rowData) {
           rowData.PLU_No = selectedProduct.PLU_No || '';
           rowData.PLU_Name = selectedProduct.PLU_Name || '';
@@ -244,7 +247,6 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   private createInsertRequestBody(): TLS42020InsertRequest {
     const formValue = this.dataForm.getRawValue();
-
     // 主檔資料
     const mainData = {
       STO_No: this.STORE_NO,
@@ -254,9 +256,11 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       SBM_BegDate: formValue.SBM_BegDate!,
       SBM_EndDate: formValue.SBM_EndDate!
     };
-
-    // 深拷貝明細資料並加上主檔欄位
-    const detailData = this.data.map((item) => ({
+    // 深拷貝明細資料並加上主檔欄位，符合 TLS42020InsertDetailData 格式
+    const detailData: TLS42020InsertDetailData[] = this.data.map((item) => ({
+      // 必要欄位
+      MID: 0,
+      status: '',
       // 複合主鍵
       STO_No: this.STORE_NO,
       SBM_Type: mainData.SBM_Type,
@@ -282,10 +286,10 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   private createUpdateRequestBody(): TLS42020UpdateRequest {
     const formValue = this.dataForm.getRawValue();
-
     // 主檔資料
     const mainData = {
       ID: this.rowdata!.id, // 從原始資料取得 ID
+      MID: 0,
       STO_No: this.STORE_NO,
       SBM_Type: formValue.SBM_Type!,
       TLT_No: formValue.TLT_No!,
@@ -293,11 +297,14 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       SBM_BegDate: formValue.SBM_BegDate!,
       SBM_EndDate: formValue.SBM_EndDate!
     };
-
+    // 取得目前明細資料的 ID 集合
+    const currentDetailIds = new Set(this.data.map(item => item.ID).filter(id => id));
     // 明細資料 - 轉換為 TLS42020UpdateDetailData 格式
     const detailData = this.data.map((item) => ({
-      // 複合主鍵
+      // 必要欄位
+      MID: 0,
       STO_No: this.STORE_NO,
+      // 複合主鍵
       SBM_Type: mainData.SBM_Type,
       TLT_No: mainData.TLT_No,
       SBM_BegDate: mainData.SBM_BegDate,
@@ -311,12 +318,34 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       PLU_FixPrc: String(item.PLU_FixPrc),
       PLU_SalePrc: String(item.PLU_SalePrc),
       SBM_BtnNo: item.SBM_BtnNo,
+      status: '',
       ID: typeof item.ID === 'number' ? item.ID : 0
     }));
+    // 找出被刪除的資料 (原始資料中有，但目前資料中沒有的項目)
+    const deletedDetailData = this.originalDetailData
+      .filter(originalItem => originalItem.ID && !currentDetailIds.has(originalItem.ID))
+      .map(item => ({
+        MID: 0,
+        STO_No: this.STORE_NO,
+        SBM_Type: mainData.SBM_Type,
+        TLT_No: mainData.TLT_No,
+        SBM_BegDate: mainData.SBM_BegDate,
+        SBM_EndDate: mainData.SBM_EndDate,
+        SBM_SeqNo: item.SBM_SeqNo ?? '',
+        PLU_MagNo: item.PLU_MagNo ?? '',
+        PLU_No: item.PLU_No,
+        PLU_Name: item.PLU_Name,
+        PLU_PrnName: item.PLU_PrnName,
+        PLU_FixPrc: String(item.PLU_FixPrc),
+        PLU_SalePrc: String(item.PLU_SalePrc),
+        SBM_BtnNo: item.SBM_BtnNo,
+        status: 'deleted', // 被刪除的資料狀態設為 'deleted'
+        ID: item.ID
+      }));
 
     return {
       ...mainData,
-      POS10271: detailData
+      POS10271: [...detailData, ...deletedDetailData] // 合併現有資料和被刪除的資料
     };
   }
   //#endregion

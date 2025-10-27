@@ -53,12 +53,12 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
     { field: 'ARG_No', header: '參數代號', visible: true },
     { field: 'ARG_Data', header: '參數內容', visible: true },
     { field: 'ARG_Desc', header: '參數說明', visible: true },
-    { field: 'CRT_Date', header: '建立日期', hidden: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員', hidden: true },
-    { field: 'CRT_USR_Name', header: '建立人員名稱', hidden: true },
-    { field: 'UPD_Date', header: '變更日期', hidden: true, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員', hidden: true },
-    { field: 'UPD_USR_Name', header: '變更人員名稱', hidden: true }
+    { field: 'CRT_USR_No', header: '建立人員', visible: true },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'UPD_USR_No', header: '變更人員', visible: true },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
   ];
 
   constructor(

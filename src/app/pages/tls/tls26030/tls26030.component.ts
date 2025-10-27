@@ -10,7 +10,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TLS26030Data, TLS26030Service } from '@service/api/tls/tls26030.service';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { FloorService } from '@service/basic/floor.service';
@@ -33,7 +32,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     MultiSelectComponent,
     TableComponent,
     TranslateModule,
-    InputTextComponent,
   ]
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
@@ -55,7 +53,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     Sale_DateStart: [this.startdate, Validators.required],
     Sale_DateEnd: [this.enddate, Validators.required],
     tlt_building: [[]],                               // 館別
-    Org_ID: [[]],                                     // 組織代號
+    Org_ID: [[]],                                     // 組織代碼
     Org_Name: [''],                                   // 組織名稱
     tlt_floor: [[]],                                  // 樓層
     SYS_StoreNo: ['10'],                               // 新增：店號
@@ -85,7 +83,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     { field: 'Close_Ecr_No', header: '結帳機號', visible: true },
     { field: 'Close_Txn_No', header: '結帳序號', visible: true },
     // 隱藏不需要顯示的欄位
-    { field: 'ORG_ID', header: '組織代號', visible: false },
+    { field: 'ORG_ID', header: '組織代碼', visible: false },
     { field: 'Org_Name', header: '組織名稱', visible: false }
   ];
 
@@ -136,10 +134,13 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     });
 
     // 組織代碼下拉
-    this.tls51080Service
-      .querySYS3100_DropDownList({})
-      .subscribe((response) => {
-        this.orgOptions = response.Data;
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(options => {
+        this.orgOptions = options.Data.map(item => ({
+          Name: `${item.No} - ${item.Name}`,
+          No: item.No
+        }));
       });
 
     // 收銀機號下拉
