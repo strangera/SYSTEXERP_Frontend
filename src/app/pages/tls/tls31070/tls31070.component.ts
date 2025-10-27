@@ -13,9 +13,8 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TLS31070Item, TLS31070PrintDetailRequest, TLS31070PrintRequest, TLS31070Request, TLS31070Response, Tls31070Service } from '@service/api/tls/tls31070.service';
@@ -26,6 +25,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-tls31070',
@@ -378,11 +378,22 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
       // pageIndex: undefined,
       // pageSize: undefined,
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+      bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
       TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
-    } as TLS31070PrintDetailRequest;
+    } as TLS31070PrintRequest;
 
     console.log('各大分類之營業報表print請求', JSON.stringify(formValue));
+
+    this.btnLoading = true;
+    this.tls31070Service.printTLS31070(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data && res.Data.Print_URL) {
+          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          window.open(downloadUrl, '_blank');
+        }
+      });
   }
 
   // #region 日期選單事件

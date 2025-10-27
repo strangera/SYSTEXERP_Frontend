@@ -12,10 +12,10 @@ export interface TLS31070Request {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string[][]
-  tlt_term_type: string[][]
+  tlt_term_type: string[]
   org_id: string[]
   TaxType: string
   IsRece_Yn: string
