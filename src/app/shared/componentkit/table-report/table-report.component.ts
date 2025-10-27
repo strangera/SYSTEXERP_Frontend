@@ -119,25 +119,31 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.onScroll = this.onScroll.bind(this);
   }
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['data'] && this.data.length !== 0) {
-      this.virtualData = [];
-      this.dt.virtualScroll = false;
-      this.dt.scrollHeight = 'flex';
-      this.groupTotals = {}; // 清空小計，因為這是新的一組資料
-      this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
-      this.cdr.detectChanges();
-      if (this.data.length < 30) {
-        this.virtualData = this.data;
+    if (changes['data']) {
+      if (this.data.length !== 0) {
+        this.virtualData = [];
         this.dt.virtualScroll = false;
         this.dt.scrollHeight = 'flex';
-      } else {
-        this.dt.virtualScroll = true;
-        this.dt.scrollHeight = '450px';
-        this.virtualData = Array.from({ length: this.data.length });
+        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
+        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
         this.cdr.detectChanges();
-        this.virtualData = this.data;
+        if (this.data.length < 30) {
+          this.virtualData = this.data;
+          this.dt.virtualScroll = false;
+          this.dt.scrollHeight = 'flex';
+        } else {
+          this.dt.virtualScroll = true;
+          this.dt.scrollHeight = '450px';
+          this.virtualData = Array.from({ length: this.data.length });
+          this.cdr.detectChanges();
+          this.virtualData = this.data;
+        }
+        this.selectedItems = [];
+      } else {
+        this.virtualData = [];
+        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
+        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
       }
-      this.selectedItems = [];
     }
   }
   loadMoreData() {

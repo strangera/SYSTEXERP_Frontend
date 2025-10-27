@@ -1,12 +1,16 @@
 <ul class="layout-menu px-3">
-  <ng-container *ngFor="let level1 of filteredMenu">
-    <li class="layout-root-menuitem" *ngIf="!activeTopMenuProgNo">
-      <div class="layout-menuitem-root-text">{{level1.label}}</div>
-    </li>
-    <ul class="layout-submenu" *ngIf="level1.items">
-      <ng-container *ngFor="let level2 of level1.items">
-        <app-menu-item [item]="level2"></app-menu-item>
-      </ng-container>
-    </ul>
-  </ng-container>
+  @for (level1 of filteredMenu(); track level1['prog_No']) {
+  <li class="layout-root-menuitem">
+    @if (!activeTopMenu()) {
+    <div class="layout-menuitem-root-text">{{level1.label}}</div>
+    }
+  </li>
+  @if (level1.items) {
+  <ul class="layout-submenu">
+    @for (level2 of level1.items; track level2['prog_No']) {
+    <app-menu-item [item]="level2"></app-menu-item>
+    }
+  </ul>
+  }
+  }
 </ul>

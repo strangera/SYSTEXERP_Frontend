@@ -60,7 +60,7 @@ export class TLS2K010CRUComponent {
   ngOnInit(): void {
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
 
     // ----------------------------------------------------------------

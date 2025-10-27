@@ -23,11 +23,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.2.2 詢價登錄作業
 @Component({
-    selector: 'app-ass12020',
-    templateUrl: './ass12020.component.html',
-    styleUrl: './ass12020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, CalendarRangeComponent, InputNumberComponent, TableComponent, TranslateModule]
+  selector: 'app-ass12020',
+  templateUrl: './ass12020.component.html',
+  styleUrl: './ass12020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, CalendarRangeComponent, InputNumberComponent, TableComponent, TranslateModule]
 })
 export class ASS12020Component extends BasicQpageComponent implements OnInit {
   //
@@ -119,8 +119,7 @@ export class ASS12020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310012';
     this.cruPage = '/ASS1000/ASS12020CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.itemCodeService.getSystemTypes().subscribe(data => {
       this.itemCodeOptions = data;

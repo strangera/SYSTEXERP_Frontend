@@ -1,10 +1,10 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
-import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { Subject, takeUntil, timer } from 'rxjs';
 import { FormGroup } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { SystemDataService } from '@service/system/system-data.service';
 interface ButtonConfig {
   label: string;
   icon?: string;
@@ -41,7 +41,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() styleClass = '';
   public showButton = signal(false);
 
-  private authService: AuthService = inject(AuthService);
+  private systemDataService: SystemDataService = inject(SystemDataService);
   private currentPageService: CurrentPageService = inject(CurrentPageService);
   private ngUnsubscribe = new Subject<void>();
   private readonly buttonConfig: Record<string, ButtonConfig> = {
@@ -77,7 +77,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
       if (config.permissionCode && progNo) {
-        const funInfo = this.authService.getUserPermissions(progNo);
+        const funInfo = this.systemDataService.getUserPermissions(progNo);
         const hasPermission = funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === config.permissionCode);
         this.disabled = !hasPermission; // 如果沒有權限，則禁用按鈕
       } else {

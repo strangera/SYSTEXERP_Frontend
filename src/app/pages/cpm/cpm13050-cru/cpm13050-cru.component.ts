@@ -15,11 +15,11 @@ import { NgIf } from '@angular/common';
 
 //5.1.3.5  專櫃停車費折抵設定作業 CRU
 @Component({
-    selector: 'app-cpm13050-cru',
-    templateUrl: './cpm13050-cru.component.html',
-    styleUrl: './cpm13050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-cpm13050-cru',
+  templateUrl: './cpm13050-cru.component.html',
+  styleUrl: './cpm13050-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class CPM13050CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
@@ -50,8 +50,7 @@ export class CPM13050CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '510019';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {

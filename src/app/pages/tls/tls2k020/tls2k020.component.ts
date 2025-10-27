@@ -79,7 +79,7 @@ export class TLS2K020Component {
 
   ngOnInit(): void {
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     this.approvalStatusService.getSystemTypes().subscribe(data => {
       this.statusOptions = data;

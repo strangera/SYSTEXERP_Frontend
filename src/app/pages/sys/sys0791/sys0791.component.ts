@@ -112,7 +112,6 @@ export class SYS0791Component {
   ) { }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.organizationNumber.getOrganizationNumbers().subscribe((data) => {
       this.organizationNumberOptions = data;
     });

@@ -10,6 +10,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { TableExport2 } from '../../componentkit/table2/table-export2/table-export2.component';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { SystemDataService } from '@service/system/system-data.service';
 
 @UntilDestroy()
 @Injectable({
@@ -25,10 +26,11 @@ export class BasicPrintData2Component {
   currentPage = inject(CurrentPageService);
   tableService = inject(TableService);
   authService = inject(AuthService);
+  systemDataService = inject(SystemDataService);
 
   exportPDFDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
-    const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
+    const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
@@ -88,7 +90,7 @@ export class BasicPrintData2Component {
   }
   exportExcelDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
-    const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
+    const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();

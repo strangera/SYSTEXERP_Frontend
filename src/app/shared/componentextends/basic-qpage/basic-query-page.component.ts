@@ -12,6 +12,7 @@ import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
 import { QueryStateService } from '../../service/query-state.service';
+import { SystemDataService } from '@service/system/system-data.service';
 @UntilDestroy()
 export abstract class BasicQueryPageComponent<T> {
   protected readonly now: Date = new Date();
@@ -29,6 +30,7 @@ export abstract class BasicQueryPageComponent<T> {
   currentPageService = inject(CurrentPageService);
   confirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
+  systemDataService = inject(SystemDataService);
 
   language = navigator.language;
   loading = false;
@@ -40,7 +42,7 @@ export abstract class BasicQueryPageComponent<T> {
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
     this.ProgNo = progNo.toUpperCase();
     this.cruPage = cruPage ?? '';
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.funInfo = this.systemDataService.getUserPermissions(this.ProgNo);
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const previousRoute = state?.['fromRoute'] || '/account/dashboard';

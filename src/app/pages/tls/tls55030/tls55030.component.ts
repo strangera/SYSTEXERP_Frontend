@@ -99,7 +99,7 @@ export class TLS55030Component {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.discountStatusService.getDiscountStatusOptions().subscribe(data => this.discountStatusOptions = data);
     this.paperTypeService.getSystemTypes().subscribe(data => this.paperTypeOptions = data);
     this.taxableService.getSystemTypes().subscribe(data => this.taxCategoryOptions = data);

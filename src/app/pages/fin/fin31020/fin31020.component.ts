@@ -19,11 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.3.1.2 應收調整科目設定維護
 @Component({
-    selector: 'app-fin31020',
-    templateUrl: './fin31020.component.html',
-    styleUrl: './fin31020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-fin31020',
+  templateUrl: './fin31020.component.html',
+  styleUrl: './fin31020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class FIN31020Component extends BasicQpageComponent implements OnInit {
   //
@@ -75,7 +75,6 @@ export class FIN31020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '130002';
     this.cruPage = '/FIN3000/FIN31020CRU';
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     //
     // ----------------------------------------------------------------

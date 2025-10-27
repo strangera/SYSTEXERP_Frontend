@@ -22,11 +22,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.5.2 形成電匯明細資料
 @Component({
-    selector: 'app-fin25020',
-    templateUrl: './fin25020.component.html',
-    styleUrl: './fin25020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberComponent, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-fin25020',
+  templateUrl: './fin25020.component.html',
+  styleUrl: './fin25020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberComponent, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class FIN25020Component extends BasicQpageComponent implements OnInit {
   //
@@ -92,7 +92,6 @@ export class FIN25020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '120018';
     this.cruPage = '/FIN2000/FIN25020CRU';
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     //
     this.whetherService.getWhetherOptions().subscribe(data => {

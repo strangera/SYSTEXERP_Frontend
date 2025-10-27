@@ -16,11 +16,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //5.1.3.2  停車費折抵補登作業(可讀停車車號)
 @Component({
-    selector: 'app-cpm13020',
-    templateUrl: './cpm13020.component.html',
-    styleUrl: './cpm13020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, ButtonComponent, TranslateModule]
+  selector: 'app-cpm13020',
+  templateUrl: './cpm13020.component.html',
+  styleUrl: './cpm13020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, ButtonComponent, TranslateModule]
 })
 export class CPM13020Component extends BasicQpageComponent implements OnInit {
   //
@@ -73,8 +73,7 @@ export class CPM13020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '510016';
     this.cruPage = '/CPM1000/CPM13020CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

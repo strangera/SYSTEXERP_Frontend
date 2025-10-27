@@ -14,19 +14,19 @@ import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
-    selector: 'app-sys0780',
-    templateUrl: './sys0780.component.html',
-    styleUrls: ['./sys0780.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        ButtonComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0780',
+  templateUrl: './sys0780.component.html',
+  styleUrls: ['./sys0780.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    ButtonComponent,
+    TranslateModule,
+  ],
 })
 // 作業權限申請表
 export class SYS0780Component extends BasicQpageComponent implements OnInit {
@@ -50,7 +50,6 @@ export class SYS0780Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '420015';
     // 初始化權限資訊
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.systemTypeDetailService.getSystemTypes().subscribe((data) => {
       this.systemTypeDetailOptions = data;
     });

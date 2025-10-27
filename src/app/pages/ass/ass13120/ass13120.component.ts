@@ -16,11 +16,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.12  折舊攤提作業
 @Component({
-    selector: 'app-ass13120',
-    templateUrl: './ass13120.component.html',
-    styleUrl: './ass13120.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  selector: 'app-ass13120',
+  templateUrl: './ass13120.component.html',
+  styleUrl: './ass13120.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
 export class ASS13120Component extends BasicQpageComponent implements OnInit {
   //
@@ -101,8 +101,7 @@ export class ASS13120Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310027';
     this.cruPage = '/ASS1000/ASS13120CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // this.userCodeService.getUserCode().subscribe(data => {
     //   this.userCodeOptions = data;

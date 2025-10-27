@@ -26,11 +26,11 @@ import { NgIf } from '@angular/common';
 
 //3.1.2.4 採購單審核作業 CRU
 @Component({
-    selector: 'app-ass12040-cru',
-    templateUrl: './ass12040-cru.component.html',
-    styleUrl: './ass12040-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, EditorTextComponent, InputNumberComponent, MultiSelectComponent, DropdownComponent, CalendarComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass12040-cru',
+  templateUrl: './ass12040-cru.component.html',
+  styleUrl: './ass12040-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, EditorTextComponent, InputNumberComponent, MultiSelectComponent, DropdownComponent, CalendarComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS12040CRUComponent extends BasicCrupageComponent implements OnInit {
   applicantCodeOptions: any[] = [];
@@ -90,8 +90,7 @@ export class ASS12040CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310014';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.userCodeService.getUserCode().subscribe(data => {
       this.applicantCodeOptions = data;

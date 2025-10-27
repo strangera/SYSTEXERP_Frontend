@@ -16,11 +16,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.4.4  庫存成本月結作業
 @Component({
-    selector: 'app-ass14040',
-    templateUrl: './ass14040.component.html',
-    styleUrl: './ass14040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  selector: 'app-ass14040',
+  templateUrl: './ass14040.component.html',
+  styleUrl: './ass14040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
 export class ASS14040Component extends BasicQpageComponent implements OnInit {
   //
@@ -101,8 +101,7 @@ export class ASS14040Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310031';
     this.cruPage = '/ASS1000/ASS14040CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

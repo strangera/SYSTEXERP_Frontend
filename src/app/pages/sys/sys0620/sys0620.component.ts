@@ -74,7 +74,6 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '420008';
     // 初始化權限資訊
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.organizationNumber.getOrganizationNumbers().subscribe((data) => {
       this.userCodeModOptions = data;
     });

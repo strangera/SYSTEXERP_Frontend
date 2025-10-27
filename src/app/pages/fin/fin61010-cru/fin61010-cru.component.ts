@@ -16,11 +16,11 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-fin61010-cru',
-    templateUrl: './fin61010-cru.component.html',
-    styleUrl: './fin61010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin61010-cru',
+  templateUrl: './fin61010-cru.component.html',
+  styleUrl: './fin61010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN61010CRUComponent
   extends BasicCrupageComponent
@@ -30,7 +30,6 @@ export class FIN61010CRUComponent
     this.ProgNo = '160001';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.userCodeService
       .getUserCode()
       .subscribe((data) => (this.usercode = data));

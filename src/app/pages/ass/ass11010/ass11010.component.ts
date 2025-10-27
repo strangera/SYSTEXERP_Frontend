@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.1.1 大分類維護作業
 @Component({
-    selector: 'app-ass11010',
-    templateUrl: './ass11010.component.html',
-    styleUrl: './ass11010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-ass11010',
+  templateUrl: './ass11010.component.html',
+  styleUrl: './ass11010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class ASS11010Component extends BasicQpageComponent implements OnInit {
   //
@@ -67,8 +67,7 @@ export class ASS11010Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310001';
     this.cruPage = '/ASS1000/ASS11010CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

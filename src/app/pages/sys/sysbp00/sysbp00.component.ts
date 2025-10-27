@@ -16,11 +16,11 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sysbp00',
-    templateUrl: './sysbp00.component.html',
-    styleUrl: './sysbp00.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-sysbp00',
+  templateUrl: './sysbp00.component.html',
+  styleUrl: './sysbp00.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 // 參數資料設定維護
 export class SYSBP00Component extends BasicQpageComponent implements OnInit {
@@ -64,7 +64,6 @@ export class SYSBP00Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '410011';
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     this.systemTypeDetailService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;

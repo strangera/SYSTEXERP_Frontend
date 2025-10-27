@@ -139,7 +139,7 @@ export class tls2b010tableComponent
   @Input() showHeader = true;
   @Input() showReportMode = true;
   @Input() showFilter = true;
-    @Input() showCustomHeader = true;
+  @Input() showCustomHeader = true;
 
   // Insert / Delete
   @Input() showInsert = false;
@@ -203,21 +203,21 @@ export class tls2b010tableComponent
   @Output() serverError = new EventEmitter<unknown>();
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
   /** 是否顯示總計列（footer） @default false */
-@Input() showTotal = false;
-/** 後端回來的總計：{ 欄位名稱: 數值 }，例如 { BOOK_PayAmt: 123, ACT_PayAmt: 456, OVER_PayAmt: 789 } */
-@Input() totals: Record<string, number> = {};
+  @Input() showTotal = false;
+  /** 後端回來的總計：{ 欄位名稱: 數值 }，例如 { BOOK_PayAmt: 123, ACT_PayAmt: 456, OVER_PayAmt: 789 } */
+  @Input() totals: Record<string, number> = {};
 
-/** 取得 footer 總計：優先吃 this.totals[col.field]；沒有就用前端加總（排除 __isTotal 資料列） */
-getFooterTotal(field: string): number {
-  if (this.totals && Object.prototype.hasOwnProperty.call(this.totals, field)) {
-    const v = this.totals[field];
-    return typeof v === 'number' ? v : Number(v || 0);
+  /** 取得 footer 總計：優先吃 this.totals[col.field]；沒有就用前端加總（排除 __isTotal 資料列） */
+  getFooterTotal(field: string): number {
+    if (this.totals && Object.prototype.hasOwnProperty.call(this.totals, field)) {
+      const v = this.totals[field];
+      return typeof v === 'number' ? v : Number(v || 0);
+    }
+    // fallback：前端加總（不含你可能插入的 __isTotal 列）
+    return (this.data || [])
+      .filter(r => !r?.__isTotal)
+      .reduce((sum, r) => sum + Number(r?.[field] || 0), 0);
   }
-  // fallback：前端加總（不含你可能插入的 __isTotal 列）
-  return (this.data || [])
-    .filter(r => !r?.__isTotal)
-    .reduce((sum, r) => sum + Number(r?.[field] || 0), 0);
-}
 
 
   /* ===== 內部旗標 ===== */
@@ -238,7 +238,7 @@ getFooterTotal(field: string): number {
     this.currentPage.currentPageProgNo$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(progNo => {
-        this.funInfo = progNo ? this.authService.getUserPermissions(progNo) : undefined;
+        this.funInfo = progNo ? this.systemDataService.getUserPermissions(progNo) : undefined;
       });
 
     this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
@@ -274,9 +274,9 @@ getFooterTotal(field: string): number {
       this.cdr.detectChanges?.();
     }
 
-     if (changes['rows'] && !changes['rows'].firstChange) {
- this.resyncFirstAfterRowsChange();   // ★ rows 變了也同步
- }
+    if (changes['rows'] && !changes['rows'].firstChange) {
+      this.resyncFirstAfterRowsChange();   // ★ rows 變了也同步
+    }
   }
 
   ngOnDestroy(): void {
@@ -310,17 +310,17 @@ getFooterTotal(field: string): number {
       return;
     }
 
-if (this.lazy) {
-  const maxFirst = Math.max(0, (this.totalPages - 1) * this.rows);
-  if (this.first > maxFirst) {
+    if (this.lazy) {
+      const maxFirst = Math.max(0, (this.totalPages - 1) * this.rows);
+      if (this.first > maxFirst) {
 
-   // 讓它自然觸發下一次 onLazyLoad，不要抑制
-   this.first = maxFirst;
-   return; // 提早結束這次計算，等待下一個事件
-  }
-  this.cdr.detectChanges?.();
-  return;
-}
+        // 讓它自然觸發下一次 onLazyLoad，不要抑制
+        this.first = maxFirst;
+        return; // 提早結束這次計算，等待下一個事件
+      }
+      this.cdr.detectChanges?.();
+      return;
+    }
 
     if (this.totalPages > 0 && this.selectedPage && this.selectedPage > this.totalPages) {
       this.selectedPage = this.totalPages;
@@ -329,12 +329,12 @@ if (this.lazy) {
       this.cdr.detectChanges?.();
     }
   }
-getGlobalGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
- const localNo = this.getGroupDisplayIndex(rowIndexGlobal, rowData); // 本頁第幾個群組（1-based）
-const pageNo = this.selectedPage ?? 1;                              // 目前第幾頁（1-based）
-const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群組」為單位的 offset
- return offset + localNo;
- }
+  getGlobalGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+    const localNo = this.getGroupDisplayIndex(rowIndexGlobal, rowData); // 本頁第幾個群組（1-based）
+    const pageNo = this.selectedPage ?? 1;                              // 目前第幾頁（1-based）
+    const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群組」為單位的 offset
+    return offset + localNo;
+  }
   /** 給右上角頁碼下拉用 */
   goToPage(pageNumber: number) {
     const newFirst = (pageNumber - 1) * this.rows;
@@ -361,7 +361,7 @@ const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群
   loadDataLazy(event: TableLazyLoadEvent, force = false) {
     if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
     if (force) { this._skipFirstLazy = false; }
-   
+
 
     const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
     let pageIndex = (event.first ?? 0) / pageSize + 1;
@@ -377,14 +377,14 @@ const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群
 
     if (!this.lastSortSig) {
       this.lastSortSig = sortSig;
-    }  else if (sortSig !== this.lastSortSig) {
+    } else if (sortSig !== this.lastSortSig) {
       this.lastSortSig = sortSig;
 
-   if (userSorted && pageIndex !== 1) {
-     this.first = 0;
-     this.selectedPage = 1;
-     return;
-  }
+      if (userSorted && pageIndex !== 1) {
+        this.first = 0;
+        this.selectedPage = 1;
+        return;
+      }
     }
 
     this.selectedPage = pageIndex;
@@ -690,78 +690,78 @@ const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群
     this.exportDialog = true;
   }
   /** 把 PrimeNG 提供的 rowIndex（可能是全域）換算成本頁索引（0 開始） */
-private toPageIndex(globalIndex: number): number {
-  // lazy 模式：每頁大小就是 this.rows
-  if (this.lazy) return Math.max(0, globalIndex % (this.rows || 1));
-  // 非 lazy：以 this.first（當前頁起始）換算
-  return Math.max(0, globalIndex - (this.first || 0));
-}
+  private toPageIndex(globalIndex: number): number {
+    // lazy 模式：每頁大小就是 this.rows
+    if (this.lazy) return Math.max(0, globalIndex % (this.rows || 1));
+    // 非 lazy：以 this.first（當前頁起始）換算
+    return Math.max(0, globalIndex - (this.first || 0));
+  }
 
-/** 樣板用：接受「全域」rowIndex，內部換算成本頁索引再產生群組鍵 */
-getGroupKeyValue(rowData: any, rowIndexGlobal: number): string {
-  const local = this.toPageIndex(rowIndexGlobal);
-  const raw = rowData?.[this.groupKey];
-  return (raw !== undefined && raw !== null && String(raw) !== '')
-    ? String(raw)
-    : `__row_${local}`;
-}
+  /** 樣板用：接受「全域」rowIndex，內部換算成本頁索引再產生群組鍵 */
+  getGroupKeyValue(rowData: any, rowIndexGlobal: number): string {
+    const local = this.toPageIndex(rowIndexGlobal);
+    const raw = rowData?.[this.groupKey];
+    return (raw !== undefined && raw !== null && String(raw) !== '')
+      ? String(raw)
+      : `__row_${local}`;
+  }
 
-/** 判斷是否為「本頁」群組首列：頁首一定畫 rowspan 的首格 */
-isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
-  if (!this.hasRowSpan) return false;
-  const local = this.toPageIndex(rowIndexGlobal);
-  if (local === 0) return true; // 跨頁延續：第二頁也要當作首列畫出
-  const m = this.pageGroupMeta[key];
-  return !!m && m.index === local;
-}
-private resyncFirstAfterRowsChange() {
-  if (!this.lazy) return;
-  const curPage = this.selectedPage ?? 1;
-  // 避免因為重設 first 又觸發一次 onLazyLoad
-  this._suppressNextLazy = true;
-  this.first = (curPage - 1) * (this.rows || 0);
-}
+  /** 判斷是否為「本頁」群組首列：頁首一定畫 rowspan 的首格 */
+  isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
+    if (!this.hasRowSpan) return false;
+    const local = this.toPageIndex(rowIndexGlobal);
+    if (local === 0) return true; // 跨頁延續：第二頁也要當作首列畫出
+    const m = this.pageGroupMeta[key];
+    return !!m && m.index === local;
+  }
+  private resyncFirstAfterRowsChange() {
+    if (!this.lazy) return;
+    const curPage = this.selectedPage ?? 1;
+    // 避免因為重設 first 又觸發一次 onLazyLoad
+    this._suppressNextLazy = true;
+    this.first = (curPage - 1) * (this.rows || 0);
+  }
 
 
-/** 取得本頁的 rowspan；meta 查不到也回 1，避免整欄被吃掉 */
-getPageRowSpan(rowIndexGlobal: number, key: string): number {
-  if (!this.hasRowSpan) return 1;
-  const local = this.toPageIndex(rowIndexGlobal);
-  const m = this.pageGroupMeta[key];
-  return (m && m.index === local) ? m.size : 1;
-}
-// 新增：本頁分組的序號 (1-based)
-private pageGroupOrder: Record<string, number> = {};
+  /** 取得本頁的 rowspan；meta 查不到也回 1，避免整欄被吃掉 */
+  getPageRowSpan(rowIndexGlobal: number, key: string): number {
+    if (!this.hasRowSpan) return 1;
+    const local = this.toPageIndex(rowIndexGlobal);
+    const m = this.pageGroupMeta[key];
+    return (m && m.index === local) ? m.size : 1;
+  }
+  // 新增：本頁分組的序號 (1-based)
+  private pageGroupOrder: Record<string, number> = {};
 
-// 調整：重建本頁 group meta 時，順便建立組序
-private rebuildPageGroupMeta(): void {
-  const rows = this.getPageRows();
-  const meta: Record<string, { index: number; size: number }> = {};
-  const order: Record<string, number> = {};
+  // 調整：重建本頁 group meta 時，順便建立組序
+  private rebuildPageGroupMeta(): void {
+    const rows = this.getPageRows();
+    const meta: Record<string, { index: number; size: number }> = {};
+    const order: Record<string, number> = {};
 
-  let lastKey: string | null = null;
-  let groupNo = 0;
+    let lastKey: string | null = null;
+    let groupNo = 0;
 
-  rows.forEach((row, i) => {
-    const key = this.buildGroupKey(row?.[this.groupKey], i);
-    if (lastKey === key) {
-      meta[key].size++;
-    } else {
-      groupNo++;
-      meta[key] = { index: i, size: 1 };
-      order[key] = groupNo;         // 這一組在本頁的組序
-      lastKey = key;
-    }
-  });
+    rows.forEach((row, i) => {
+      const key = this.buildGroupKey(row?.[this.groupKey], i);
+      if (lastKey === key) {
+        meta[key].size++;
+      } else {
+        groupNo++;
+        meta[key] = { index: i, size: 1 };
+        order[key] = groupNo;         // 這一組在本頁的組序
+        lastKey = key;
+      }
+    });
 
-  this.pageGroupMeta = meta;
-  this.pageGroupOrder = order;
-}
+    this.pageGroupMeta = meta;
+    this.pageGroupOrder = order;
+  }
 
-// 取得本頁組序，用於序號顯示（fallback 為 rowIndex+1）
-getGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
-  const key = this.getGroupKeyValue(rowData, rowIndexGlobal);
-  const local = this.toPageIndex(rowIndexGlobal);
-  return this.pageGroupOrder[key] ?? (local + 1);
-}
+  // 取得本頁組序，用於序號顯示（fallback 為 rowIndex+1）
+  getGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+    const key = this.getGroupKeyValue(rowData, rowIndexGlobal);
+    const local = this.toPageIndex(rowIndexGlobal);
+    return this.pageGroupOrder[key] ?? (local + 1);
+  }
 }

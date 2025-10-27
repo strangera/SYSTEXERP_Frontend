@@ -1,98 +1,131 @@
-import { AppMenulistService } from './app.menulist.service';
-import { ElementRef, Input, OnDestroy, OnInit, Component } from '@angular/core';
+import {
+  ElementRef,
+  Input,
+  Component,
+  inject,
+  signal,
+  computed,
+  effect,
+} from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { Subscription } from 'rxjs';
-import { CurrentPageService } from './current-page.service';
-import { NgFor, NgIf } from '@angular/common';
+// 移除 Subscription, OnDestroy, OnInit
 import { AppMenuItemComponent } from './app-menu-item/app-menu-item.component';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { AuthService } from '@service/system/auth.service';
+// 移除 UntilDestroy, untilDestroyed
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
+import { SystemDataService } from '@service/system/system-data.service';
+import { AppMenulistService } from './app.menulist.service';
+import { CurrentPageService } from './current-page.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
-@UntilDestroy()
 @Component({
   selector: 'app-menulist',
   templateUrl: './app.menulist.component.html',
   styleUrls: ['./app.menulist.component.scss'],
   standalone: true,
-  imports: [NgFor, NgIf, AppMenuItemComponent]
+  imports: [AppMenuItemComponent] // 稍後將在 HTML 中使用 @for/@if，但這裡保留 NgFor/NgIf 以便相容
 })
-export class AppMenulistComponent implements OnInit, OnDestroy {
-  @Input() activeTopMenuProgNo: string | null = null; // 新增：接收來自頂部菜單的激活 prog_no
-  model: MenuItem[] = [];                     // 選單模型
-  private menuUpdatedSubscription: Subscription | undefined;
-  private currentPageProgNoSubscription: Subscription | undefined;
+export class AppMenulistComponent { // 移除 implements OnInit, OnDestroy
 
-  constructor(
-    public el: ElementRef,
-    private readonly currentPageService: CurrentPageService, // 注入 Service
-    private readonly authService: AuthService,
-    private readonly appMenulistService: AppMenulistService,
-  ) { }
+  public el: ElementRef = inject(ElementRef);
+  private readonly currentPageService = inject(CurrentPageService);
+  private readonly appMenulistService = inject(AppMenulistService);
+  private readonly systemDataService = inject(SystemDataService);
 
-  ngOnInit(): void {
-    // 訂閱 AccessService 的 menuUpdated，當選單資料更新時重新建立選單
-    this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
+  @Input({ required: true }) set activeTopMenuProgNo(progNo: string | null) {
+    this.activeTopMenu.set(progNo);
+  }
+  public readonly activeTopMenu = signal<string | null>(null);
+
+  private readonly rawFunRights = toSignal(this.systemDataService.menuUpdated, { initialValue: [] as FunsrightInfo[] });
+  private readonly currentPageProgNo = toSignal(this.currentPageService.currentPageProgNo$, { initialValue: null as string | null });
+
+  private rawMenuModel = signal<MenuItem[]>([]);
+
+  constructor() {
+    effect(() => {
+      const newData = this.rawFunRights();
       if (newData?.length > 0) {
-        this.model = this.appMenulistService.buildMenuModel(newData);
-      } else {
-        this.authService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe();
-        this.authService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe();
+        // 重建選單並更新 Signal
+        const newModel = this.appMenulistService.buildMenuModel(newData);
+        this.rawMenuModel.set(newModel);
+      } else if (newData.length === 0) {
+        // 如果數據為空 (首次載入或重設)，重新發起請求 (保持原有副作用邏輯)
+        this.systemDataService.getFunRightsInfo().subscribe();
+        this.systemDataService.queryAllSystemCode().subscribe();
       }
-    });
-    // 訂閱 currentPageProgNo 的變化
-    this.currentPageProgNoSubscription = this.currentPageService.currentPageProgNo$.subscribe(progNo => {
-      if (progNo) {
-        this.setActiveItemByProgNo(progNo)
+    }, { allowSignalWrites: true }); // 允許寫入 rawMenuModel
+
+    effect(() => {
+      const progNo = this.currentPageProgNo();
+      const model = this.rawMenuModel(); // 確保 effect 在 model 變動時也執行
+
+      if (progNo && model.length > 0) {
+        this.setActiveItemByProgNo(progNo, model);
       } else {
-        this.clearSelection();
+        this.clearSelection(model);
       }
     });
   }
 
-  ngOnDestroy(): void {
-    this.currentPageProgNoSubscription?.unsubscribe();
-    this.menuUpdatedSubscription?.unsubscribe();
-  }
+  public readonly filteredMenu = computed<MenuItem[]>(() => {
+    const activeProgNo = this.activeTopMenu();
+    const model = this.rawMenuModel();
+
+    if (!activeProgNo) {
+      return model;
+    }
+    // 根據頂部選單的 ProgNo 進行過濾
+    return model.filter(item => item['prog_No'] === activeProgNo);
+  });
+
+  // -----------------------------------------------------------
+  // 菜單操作邏輯 (已修改為接受 model 參數，並使用 requestAnimationFrame)
+  // -----------------------------------------------------------
 
   // 根據 ProgNo 設置激活的選單項目
-  private setActiveItemByProgNo(progNo: string) {
-    this.clearSelection(); // 清除之前的選中狀態
-    const item = this.findItemRecursive(this.model, progNo);
+  private setActiveItemByProgNo(progNo: string, model: MenuItem[]) {
+    this.clearSelection(model); // 清除之前的選中狀態
+    const item = this.findItemRecursive(model, progNo);
     if (item) {
       item['selected'] = true;
-      this.markParentsActiveRecursive(item);
-      setTimeout(() => {
+      this.markParentsActiveRecursive(item, model);
+
+      // 使用 requestAnimationFrame 替代 setTimeout (更平滑)
+      requestAnimationFrame(() => {
         const selectedElement = this.el.nativeElement.querySelector('.menuitem-selected');
         if (selectedElement) {
-          selectedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 增加 100ms 延遲以確保 DOM 渲染完成
+          setTimeout(() => {
+            selectedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
         }
-      }, 101);
+      });
     }
   }
 
   // 清除所有選單項的選中狀態
-  private clearSelection() {
+  private clearSelection(model: MenuItem[]) {
     const clearSelected = (items: MenuItem[]) => {
       items.forEach(item => {
         item['selected'] = false;
+        item['expanded'] = false; // 確保在切換頁面時折疊
         if (item.items) {
           clearSelected(item.items);
         }
       });
     };
-    if (this.model && this.model.length > 0) {
-      clearSelected(this.model);
+    if (model && model.length > 0) {
+      clearSelected(model);
     }
   }
 
-  private markParentsActiveRecursive(item: MenuItem | null) {
+  private markParentsActiveRecursive(item: MenuItem | null, model: MenuItem[]) {
     if (item && item['parent_id'] !== '') {
-      const parent = this.findItemRecursive(this.model, item['parent_id']);
+      const parent = this.findItemRecursive(model, item['parent_id']);
       if (parent) {
         parent['selected'] = true;
         parent.expanded = true;
-        this.markParentsActiveRecursive(parent);
+        this.markParentsActiveRecursive(parent, model);
       }
     }
   }
@@ -111,11 +144,8 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
     }
     return null;
   }
+
   toggleActive(item: MenuItem) {
     if (item.items) { item.expanded = !item.expanded; }
-  }
-
-  get filteredMenu(): MenuItem[] {
-    return this.activeTopMenuProgNo ? this.model.filter(item => item['prog_No'] === this.activeTopMenuProgNo) : this.model;
   }
 }

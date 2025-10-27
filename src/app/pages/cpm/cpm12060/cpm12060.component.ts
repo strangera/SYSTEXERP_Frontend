@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //5.1.2.6  顧客意見處理狀況表
 @Component({
-    selector: 'app-cpm12060',
-    templateUrl: './cpm12060.component.html',
-    styleUrl: './cpm12060.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-cpm12060',
+  templateUrl: './cpm12060.component.html',
+  styleUrl: './cpm12060.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class CPM12060Component extends BasicQpageComponent implements OnInit {
   //
@@ -92,8 +92,7 @@ export class CPM12060Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '510013';
     this.cruPage = '/CPM1000/CPM12060CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

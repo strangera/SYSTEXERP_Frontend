@@ -257,7 +257,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   ngOnInit(): void {
     this.initializePage('TLS13010', '/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.checkExistingWorkflow();
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadPOS2013Options();
   }
 

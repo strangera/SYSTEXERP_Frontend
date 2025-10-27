@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.3.3 常用訊息維護作業 CRU
 @Component({
-    selector: 'app-tls43030-cru',
-    templateUrl: './tls43030-cru.component.html',
-    styleUrl: './tls43030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls43030-cru',
+  templateUrl: './tls43030-cru.component.html',
+  styleUrl: './tls43030-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 
 export class TLS43030CRUComponent {
@@ -61,8 +61,7 @@ export class TLS43030CRUComponent {
 
   ngOnInit(): void {
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.messageTypeService.getSystemTypes().subscribe(data => {
       this.messageTypeOptions = data;

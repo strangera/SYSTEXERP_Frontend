@@ -162,7 +162,6 @@ export class FIN64010Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '160014';
 
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
   }
 
   onSubmit(frm: FormGroup) {

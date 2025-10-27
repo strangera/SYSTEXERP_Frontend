@@ -70,7 +70,6 @@ export class TLS28020Component {
   ) { }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // 初始化下拉選單選項
     this.paymentTimingService.getPaymentTiming().subscribe(data => {

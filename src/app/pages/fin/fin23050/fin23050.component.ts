@@ -16,11 +16,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.3.5 暫付款核銷傳票拋轉作業
 @Component({
-    selector: 'app-fin23050',
-    templateUrl: './fin23050.component.html',
-    styleUrl: './fin23050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, ButtonComponent, TranslateModule]
+  selector: 'app-fin23050',
+  templateUrl: './fin23050.component.html',
+  styleUrl: './fin23050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, ButtonComponent, TranslateModule]
 })
 export class FIN23050Component extends BasicQpageComponent implements OnInit {
   //
@@ -77,7 +77,6 @@ export class FIN23050Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/FIN2000/FIN23050CRU';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     // ----------------------------------------------------------------
   }

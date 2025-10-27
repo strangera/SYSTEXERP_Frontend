@@ -74,7 +74,7 @@ export class TLS57020Component {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.vendorService.getVendors().subscribe((data) => (this.vendorOptions = data));
   }
 

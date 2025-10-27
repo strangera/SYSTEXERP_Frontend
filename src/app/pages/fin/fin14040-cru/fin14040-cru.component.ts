@@ -83,8 +83,7 @@ export class FIN14040CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '110019';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.taxTypeService.getTaxTypes().subscribe(data => {
       this.taxTypeOptions = data;

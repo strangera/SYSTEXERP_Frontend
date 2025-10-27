@@ -99,7 +99,6 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
       }
     });
     this.initializePage('TLS12020', 'TLS/TLS12020cru', this.queryForm, (form) => this.onSubmit(form));
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadDropdownOptions();
 
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {

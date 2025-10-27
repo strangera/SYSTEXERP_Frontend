@@ -251,7 +251,7 @@ export class Table2Component
     this.currentPageService.currentPageProgNo$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(progNo => {
-        this.funInfo = progNo ? this.authService.getUserPermissions(progNo) : undefined;
+        this.funInfo = progNo ? this.systemDataService.getUserPermissions(progNo) : undefined;
       });
 
     this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;

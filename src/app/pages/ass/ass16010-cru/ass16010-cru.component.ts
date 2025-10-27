@@ -15,11 +15,11 @@ import { NgIf } from '@angular/common';
 // Services
 
 @Component({
-    selector: 'app-ass16010-cru',
-    templateUrl: './ass16010-cru.component.html',
-    styleUrl: './ass16010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, RadiobuttonComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass16010-cru',
+  templateUrl: './ass16010-cru.component.html',
+  styleUrl: './ass16010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, RadiobuttonComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS16010CRUComponent
   extends BasicCrupageComponent
@@ -27,8 +27,7 @@ export class ASS16010CRUComponent
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '310040';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     // 下拉選單--------------------------------------------------------
     // this.userCodeService.getUserCode().subscribe((data) => (this.founder = data));
     // ----------------------------------------------------------------

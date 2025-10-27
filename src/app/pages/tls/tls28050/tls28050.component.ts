@@ -80,7 +80,6 @@ export class TLS28050Component {
   ) { }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // Initialize dropdown options
     this.bagTypeService.getBagTypes().subscribe(data => {

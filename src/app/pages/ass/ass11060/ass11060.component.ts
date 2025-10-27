@@ -22,11 +22,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.1.6 供應商資料維護作業
 @Component({
-    selector: 'app-ass11060',
-    templateUrl: './ass11060.component.html',
-    styleUrl: './ass11060.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, CalendarRangeComponent, EditorTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass11060',
+  templateUrl: './ass11060.component.html',
+  styleUrl: './ass11060.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, CalendarRangeComponent, EditorTextComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS11060Component extends BasicQpageComponent implements OnInit {
   //
@@ -139,8 +139,7 @@ export class ASS11060Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310006';
     this.cruPage = '/ASS1000/ASS11060CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.transportationMethodService.getSystemTypes().subscribe(data => {
       this.deliveryMethodOptions = data;

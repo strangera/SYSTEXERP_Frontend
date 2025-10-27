@@ -20,11 +20,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.4.1  進貨發票建檔作業
 @Component({
-    selector: 'app-ass14010',
-    templateUrl: './ass14010.component.html',
-    styleUrl: './ass14010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-ass14010',
+  templateUrl: './ass14010.component.html',
+  styleUrl: './ass14010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 export class ASS14010Component extends BasicQpageComponent implements OnInit {
   //
@@ -108,8 +108,7 @@ export class ASS14010Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310028';
     this.cruPage = '/ASS1000/ASS14010CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.vendorService.getVendors().subscribe(data => {
       this.supplierCodeOptions = data;

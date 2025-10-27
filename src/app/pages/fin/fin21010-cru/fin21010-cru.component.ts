@@ -23,11 +23,11 @@ import { NgIf } from '@angular/common';
 
 //1.2.1.1 公司銀行資料維護 CRU
 @Component({
-    selector: 'app-fin21010-cru',
-    templateUrl: './fin21010-cru.component.html',
-    styleUrl: './fin21010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin21010-cru',
+  templateUrl: './fin21010-cru.component.html',
+  styleUrl: './fin21010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN21010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
@@ -68,8 +68,7 @@ export class FIN21010CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '120001';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.bankAccountCodeService.getSystemTypes().subscribe(data => {
       this.bankCodeOptions = data;

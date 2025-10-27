@@ -1,4 +1,3 @@
-import { AuthService } from '@service/system/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
@@ -9,6 +8,7 @@ import { CardModule } from 'primeng/card';
 import { BadgeModule } from 'primeng/badge';
 import { DividerModule } from 'primeng/divider';
 import { ButtonModule } from 'primeng/button'; // 如果未來需要按鈕，可以先引入
+import { SystemDataService } from '@service/system/system-data.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -36,13 +36,13 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private currentPageService: CurrentPageService,
-    private readonly authService: AuthService,
+    private readonly systemDataService: SystemDataService,
     private sanitizer: DomSanitizer
   ) { }
 
   ngOnInit(): void {
     this.currentPageService.setCurrentProgNo('dashboard');
-    this.authService.querySystemNotice().subscribe(res => {
+    this.systemDataService.querySystemNotice().subscribe(res => {
       const sortedData = res.Data.sort((a, b) => {
         return new Date(b.Pub_StartDate).getTime() - new Date(a.Pub_StartDate).getTime();
       });

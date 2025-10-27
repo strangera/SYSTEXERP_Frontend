@@ -52,7 +52,6 @@ export class FIN63020CRUComponent
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '160009';
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;

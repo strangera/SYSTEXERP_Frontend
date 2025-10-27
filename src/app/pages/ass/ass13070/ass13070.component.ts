@@ -22,11 +22,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.7  財產保管單位設定作業
 @Component({
-    selector: 'app-ass13070',
-    templateUrl: './ass13070.component.html',
-    styleUrl: './ass13070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, CalendarRangeComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13070',
+  templateUrl: './ass13070.component.html',
+  styleUrl: './ass13070.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, CalendarRangeComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 export class ASS13070Component extends BasicQpageComponent implements OnInit {
   //
@@ -116,8 +116,7 @@ export class ASS13070Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310022';
     this.cruPage = '/ASS1000/ASS13070CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.purchaseTypeService.getPurchaseTypes().subscribe(data => {
       this.purchaseTypeOptions = data;

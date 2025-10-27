@@ -129,7 +129,7 @@ export class TLS31090Component {
   ngOnInit(): void {
 
 
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // Initialize dropdown options
     this.floorService.getFloors().subscribe(data => {

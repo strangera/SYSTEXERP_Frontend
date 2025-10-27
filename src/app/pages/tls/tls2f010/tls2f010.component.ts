@@ -131,7 +131,7 @@ export class TLS2F010Component {
 
   ngOnInit(): void {
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.counterCodeService.getCounterCodes().subscribe(data => {
       this.counterIDOptions = data;

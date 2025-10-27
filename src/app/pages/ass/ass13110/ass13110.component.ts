@@ -22,11 +22,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.11  資產差異表
 @Component({
-    selector: 'app-ass13110',
-    templateUrl: './ass13110.component.html',
-    styleUrl: './ass13110.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13110',
+  templateUrl: './ass13110.component.html',
+  styleUrl: './ass13110.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS13110Component extends BasicQpageComponent implements OnInit {
   //
@@ -117,8 +117,7 @@ export class ASS13110Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310026';
     this.cruPage = '/ASS1000/ASS13110CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.userCodeService.getUserCode().subscribe(data => {
       this.userCodeOptions = data;

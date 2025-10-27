@@ -27,11 +27,11 @@ import { NgIf } from '@angular/common';
 
 //3.1.3.8  資產變賣作業 CRU
 @Component({
-    selector: 'app-ass13080-cru',
-    templateUrl: './ass13080-cru.component.html',
-    styleUrl: './ass13080-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass13080-cru',
+  templateUrl: './ass13080-cru.component.html',
+  styleUrl: './ass13080-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS13080CRUComponent extends BasicCrupageComponent implements OnInit {
   shareCodeOptions: any[] = [];
@@ -126,8 +126,7 @@ export class ASS13080CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310023';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.sharedCodeService.getSharedCode().subscribe(data => {
       this.shareCodeOptions = data;

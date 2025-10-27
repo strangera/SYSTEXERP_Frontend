@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.1.8 處分資產基本設定
 @Component({
-    selector: 'app-ass11080',
-    templateUrl: './ass11080.component.html',
-    styleUrl: './ass11080.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, TranslateModule]
+  selector: 'app-ass11080',
+  templateUrl: './ass11080.component.html',
+  styleUrl: './ass11080.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, TranslateModule]
 })
 export class ASS11080Component extends BasicQpageComponent implements OnInit {
   //
@@ -115,8 +115,7 @@ export class ASS11080Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310008';
     this.cruPage = '/ASS1000/ASS11080CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.whetherService.getWhetherOptions().subscribe(data => {
       this.WhetherOptions = data;

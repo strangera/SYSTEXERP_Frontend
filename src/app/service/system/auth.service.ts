@@ -1,12 +1,20 @@
 import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  throwError,
+  catchError,
+  map,
+  tap,
+  of,
+  switchMap,
+  EMPTY
+} from 'rxjs';
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
-import { catchError, map } from 'rxjs/operators';
 import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
-import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
 import { QueryStateService } from '../../shared/service/query-state.service';
@@ -14,9 +22,11 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 import { registerLocaleData } from '@angular/common';
 import zhHant from '@angular/common/locales/zh-Hant';
 import { InactivityService } from '../../core/services/inactivity.service';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Favorite } from '@shared/component/menubar/menubar.component';
+import { UntilDestroy } from '@ngneat/until-destroy';
+
 registerLocaleData(zhHant, 'zh-Hant-TW');
+
+// ⚠️ 最佳實踐：建議將此介面移至共用的 interface 檔案 (例如 @shared/interface/api-response.ts)
 export interface OuterTokenResponse {
   token: string;
   expiresAt: string;
@@ -24,6 +34,7 @@ export interface OuterTokenResponse {
   tokenType: string;
 }
 
+// ⚠️ 最佳實踐：建議將此介面移至共用的 interface 檔案
 export interface ApiResponse<T, F = undefined> {
   Status: string;
   Data: T;
@@ -41,21 +52,20 @@ export interface ApiResponse<T, F = undefined> {
   TotalCount: number;
   TotalPage: number;
 }
+
 @UntilDestroy()
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private inactivityService?: InactivityService;
   private readonly apiUrl: string = environment.ApiUrl;
+  private readonly jwtHelper: JwtHelperService = new JwtHelperService();
+  // 核心使用者狀態管理
   private readonly userSubject: BehaviorSubject<UserInfo | null>;
-  public user: Observable<UserInfo | null>;
-  private readonly _menuUpdated = new BehaviorSubject<FunsrightInfo[]>([]);
-  menuUpdated = this._menuUpdated.asObservable();
-  private readonly _sys1000 = new BehaviorSubject<unknown[]>([]);
-  sys1000 = this._sys1000.asObservable();
-  private readonly jwtHelper: JwtHelperService;
+  public readonly user: Observable<UserInfo | null>;
+  // 用於登入流程的 IP
   private client_ip = '0.0.0.0';
+  private inactivityService?: InactivityService;
 
   constructor(
     private readonly router: Router,
@@ -63,100 +73,134 @@ export class AuthService {
     private readonly encrypt: EncryptionService,
     private readonly notemessage: NotificationService,
     private readonly queryStateService: QueryStateService,
-    private readonly httpBackend: HttpBackend,
-    private readonly injector: Injector,
+    private readonly httpBackend: HttpBackend, // 用於創建不經過攔截器的 HttpClient
+    private readonly injector: Injector, // 用於延遲載入 InactivityService
   ) {
+    // 1. 初始化使用者狀態
     const userStorage = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
     this.user = this.userSubject.asObservable();
-    const storedFunRightsInfo = sessionStorage.getItem('FunRightsInfo');
-    if (storedFunRightsInfo) {
-      const parsedFunRightsInfo = JSON.parse(storedFunRightsInfo) as FunsrightInfo[];
-      this._menuUpdated.next(parsedFunRightsInfo); // 使用儲存的資料更新選單
-    }
-    this.jwtHelper = new JwtHelperService();
+
+    // 2. 獲取 IP 並更新狀態 (在 constructor 中執行一次)
+    this.initializeClientIp();
+  }
+
+  /**
+   * 封裝獲取外部 IP 的邏輯，只在 Service 建立時執行一次。
+   * 使用 tap 處理副作用，避免在 constructor 中直接訂閱。
+   */
+  private initializeClientIp(): void {
     const ipClient = new HttpClient(this.httpBackend);
 
-    // 修正: 不再需要判斷 userStorage，直接取得 IP 並存入 localStorage
     ipClient.get<{ ip: string }>('https://api.ipify.org/?format=json').pipe(
       map(res => res.ip),
-      catchError(() => { return ['0.0.0.0']; })
-    ).subscribe(ip => {
-      this.client_ip = ip;
-      // 檢查 localStorage 是否已經存在 'UserInfo' key
-      if (localStorage.getItem('UserInfo')) {
-        const userInfo = JSON.parse(localStorage.getItem('UserInfo') as string);
-        userInfo.client_ip = this.client_ip;
-        localStorage.setItem('UserInfo', JSON.stringify(userInfo));
-        this.userSubject.next(userInfo);
-      }
-    });
+      // IP 獲取失敗時返回預設值 '0.0.0.0'，確保流程繼續
+      catchError(() => of('0.0.0.0')),
+      // 使用 tap 執行副作用：更新本地 IP 變數和儲存的使用者資訊
+      tap(ip => {
+        this.client_ip = ip;
+
+        let userInfo = this.getUserInfo();
+        if (userInfo) {
+          // ⚠️ 注意：要建立新的物件來更新，以確保 immutability (雖然這裡只是服務內變數)
+          userInfo = { ...userInfo, client_ip: ip };
+          localStorage.setItem('UserInfo', JSON.stringify(userInfo));
+          this.userSubject.next(userInfo);
+        }
+      })
+      // 由於我們只在 constructor 中呼叫它一次，這裡必須訂閱來觸發 HTTP 請求
+    ).subscribe();
   }
+
+  // 最佳實踐：簡單 Getter
   public get currentUserValue(): UserInfo | null {
-    return this.userSubject.value; // 獲取存儲的 JWT Token
+    return this.userSubject.value;
   }
+
+  /**
+   * 檢查用戶是否登入且 Token 未過期。
+   * 最佳實踐：使用簡潔的布林判斷式。
+   */
   isLoggedIn(): boolean {
-    const user = this.currentUserValue; // 獲取當前用戶資訊
-    if (user?.AccessToken) {
-      const isTokenExpired = this.jwtHelper.isTokenExpired(user.AccessToken);
-      if (isTokenExpired) { return false; }
-      return true; // Token 存在且未過期
-    }
-    return false; // 沒有用戶資訊或沒有 Token
+    const user = this.userSubject.value;
+    return !!user?.AccessToken && !this.jwtHelper.isTokenExpired(user.AccessToken);
   }
-  // 變更：加入 options?: { skipNavigate?: boolean }
+
+  /**
+   * 處理用戶登入
+   */
   login(data: userLogin, options?: { skipNavigate?: boolean }): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
+    // 使用初始化時獲取到的 IP
     data.client_ip = this.client_ip;
 
     return this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, data).pipe(
-      map((response: ApiResponse<UserInfo>) => {
-        if (response.Status === '0000') {
-          localStorage.setItem('UserInfo', JSON.stringify(response.Data));
-          const userInfo = JSON.parse(localStorage.getItem('UserInfo') as string);
-          userInfo.client_ip = this.client_ip;
-          localStorage.setItem('UserInfo', JSON.stringify(userInfo));
-          this.userSubject.next(userInfo);
-
-          this.inactivityService ??= this.injector.get(InactivityService);
-
-          this.inactivityService.setupListener();
-          this.inactivityService.startTimer();
-          this.queryStateService.clearAllQueryStates();
-
-          // ✅ 只有在沒指定 skipNavigate 時才導到 /sso/dashboard
-          if (!options?.skipNavigate) {
-            this.router.navigate(['/sso/dashboard']);
-          }
-          return response;
-        } else {
+      // 處理後端業務邏輯狀態碼 (Status === '0000')
+      map(response => {
+        if (response.Status !== '0000') {
+          // 拋出業務錯誤，讓訂閱者處理
           throw new Error(response.Message || 'Login failed');
         }
+        return response;
       }),
+      // 使用 tap 處理所有副作用 (Side Effects)
+      tap(response => {
+        let userInfo = response.Data;
+
+        // 1. 確保 client_ip 更新到儲存和 Subject
+        userInfo = { ...userInfo, client_ip: this.client_ip };
+        localStorage.setItem('UserInfo', JSON.stringify(userInfo));
+        this.userSubject.next(userInfo);
+
+        // 2. 延遲初始化並啟動非活動服務
+        this.inactivityService ??= this.injector.get(InactivityService);
+        this.inactivityService.setupListener();
+        this.inactivityService.startTimer();
+
+        // 3. 清除查詢狀態
+        this.queryStateService.clearAllQueryStates();
+
+        // 4. 導航邏輯
+        if (!options?.skipNavigate) {
+          this.router.navigate(['/sso/dashboard']);
+        }
+      }),
+      // 確保將所有錯誤導向給訂閱者或攔截器
       catchError(err => throwError(() => err))
     );
   }
 
-  // 移除存儲的 JWT Token
+  /**
+   * 處理用戶登出
+   */
   logout(): void {
-    const userInfoStr = this.getUserInfo();
-    const token = userInfoStr ? userInfoStr.AccessToken : null;
-    // 如果有 Token 且需要後端登出，才發送請求
-    if (token) {
-      this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
-        catchError((error) => {
-          // 後端登出失敗不影響前端登出狀態，但可以記錄錯誤
+    const user = this.getUserInfo();
+    const token = user?.AccessToken;
+
+    // 最佳實踐：使用 switchMap 鏈式處理，避免在 if 塊中訂閱。
+    // 這個 Observable 鏈的目的是在有 Token 時發送登出請求，但不關心結果。
+    of(token).pipe(
+      // 如果有 Token，發送後端登出請求
+      switchMap(t => t ? this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
+        catchError(error => {
+          // 即使後端登出失敗，也要繼續執行前端登出流程
           console.error('後端登出請求失敗:', error);
-          // 不再彈出錯誤訊息，因為前端已經顯示成功登出
-          return throwError(() => error);
+          return EMPTY; // 返回 EMPTY 讓 Observable 鏈結束
         })
-      ).pipe(untilDestroyed(this)).subscribe(); // 不需要 next 和 error 處理，因為主要登出邏輯已在前面執行
-    }
-    // 統一清除邏輯
+      ) : EMPTY),
+      // 最佳實踐：使用 UntilDestroy 管理 Service 自身的訂閱生命週期
+      // 由於我們只是觸發一個 fire-and-forget 的 HTTP 請求，可以省略 untilDestroyed(this).subscribe()
+    ).subscribe();
+
+    // 統一清除邏輯 (前端登出的核心步驟，應立即執行)
     this.clearSessionAndLocalStorage();
   }
-  // 新增一個私有方法來統一清除儲存
+
+  /**
+   * 統一清除本地儲存和導航
+   */
   private clearSessionAndLocalStorage(): void {
+    // ⚠️ 建議未來考慮只清除與 Auth 相關的 key，而不是 global clear()
     sessionStorage.clear();
     localStorage.clear();
     this.userSubject.next(null);
@@ -164,76 +208,20 @@ export class AuthService {
     this.queryStateService.clearAllQueryStates();
     this.notemessage.infoBubble('已成功登出');
   }
-  // 獲取我的最愛
-  getFavorites(user_No?: string): Observable<ApiResponse<Favorite[]>> {
-    return this.http.post<ApiResponse<Favorite[]>>(`${this.apiUrl}/User/GetUserFavorite`, { user_No: user_No }).pipe(
-      map((response: ApiResponse<Favorite[]>) => { // 使用 ApiResponse<unknown>
-        // 雖然 Data 結構是未知的，但 response 結構是已知的
-        sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
-        return response;
-      })
-    );
-  }
-  // 更新我的最愛
-  UpdateUserFavorite(body: Favorite[]): Observable<ApiResponse<unknown>> {
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
-  }
-  // 獲取使用者權限
-  getFunRightsInfo(): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
-      map((response: ApiResponse<any>) => {
-        sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
-        this._menuUpdated.next(response.Data.funright_info);
-        return response;
-      }),
-      catchError((error) => {
-        console.error('Error fetching mock FunRightsInfo', error);
-        return throwError(() => error);
-      })
-    );
-  }
-  // 獲得系統代碼檔
-  queryAllSystemCode(): Observable<ApiResponse<unknown[]>> { // 確保 Data 是一個陣列
-    return this.http.post<ApiResponse<unknown[]>>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
-      map((response: ApiResponse<unknown[]>) => {
-        sessionStorage.setItem('SYS1000', JSON.stringify(response.Data));
-        this._sys1000.next(response.Data);
-        return response;
-      }),
-      catchError((error) => {
-        console.error('Error fetching SystemCode', error);
-        return throwError(() => error);
-      })
-    );
-  }
-  // 當頁面移動，獲取目前頁面使用者權限
-  getUserPermissions(progNo: string): FunsrightInfo | undefined {
-    try {
-      const funs = this._menuUpdated.getValue();
-      return funs.find(fun => fun.prog_No === progNo);
-    } catch (error) {
-      console.error('Error parsing FunRightsInfo from sessionStorage', error);
-      return undefined;
-    }
-  }
-  // 獲取使用者資訊
+
+  /**
+   * 獲取使用者資訊
+   */
   getUserInfo(): UserInfo | null {
     const userInfo = localStorage.getItem('UserInfo');
-    if (userInfo) {
-      return JSON.parse(userInfo);
-    } else {
-      return null;
-    }
-  }
-  // 改 getOuterToken 回傳型別
-  getOuterToken(): Observable<OuterTokenResponse> {
-    return this.http.get<OuterTokenResponse>(
-      `${this.apiUrl}/SSOLogin/getOuterToken`,
-      { headers: { Accept: 'application/json' } }
-    );
+    return userInfo ? JSON.parse(userInfo) as UserInfo : null;
   }
 
-  querySystemNotice(): Observable<ApiResponse<{ Pub_StartDate: string, Pub_EndDate: string, Pub_Type: string, Pub_Event: string, Pub_Description: string }[]>> {
-    return this.http.post<ApiResponse<{ Pub_StartDate: string, Pub_EndDate: string, Pub_Type: string, Pub_Event: string, Pub_Description: string }[]>>(`${this.apiUrl}/User/querySystemNotice`, {})
+  /**
+   * 獲取外部 Token
+   */
+  getOuterToken(): Observable<OuterTokenResponse> {
+    // 最佳實踐：移除不必要的 headers，依賴 HTTP 攔截器處理
+    return this.http.get<OuterTokenResponse>(`${this.apiUrl}/SSOLogin/getOuterToken`);
   }
 }

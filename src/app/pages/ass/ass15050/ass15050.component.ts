@@ -19,11 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.5.5 折舊攤提表
 @Component({
-    selector: 'app-ass15050',
-    templateUrl: './ass15050.component.html',
-    styleUrl: './ass15050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass15050',
+  templateUrl: './ass15050.component.html',
+  styleUrl: './ass15050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS15050Component extends BasicQpageComponent implements OnInit {
   //
@@ -121,8 +121,7 @@ export class ASS15050Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310036';
     this.cruPage = '/ASS1000/ASS15050CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

@@ -22,11 +22,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.1.4 品項資料維護作業
 @Component({
-    selector: 'app-ass11040',
-    templateUrl: './ass11040.component.html',
-    styleUrl: './ass11040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
+  selector: 'app-ass11040',
+  templateUrl: './ass11040.component.html',
+  styleUrl: './ass11040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
 })
 export class ASS11040Component extends BasicQpageComponent implements OnInit {
   //
@@ -129,8 +129,7 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310004';
     this.cruPage = '/ASS1000/ASS11040CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.postageChargeService.getSystemTypes().subscribe(data => {
       this.warrantyMethodOptions = data;

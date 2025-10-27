@@ -23,11 +23,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.1.1 公司銀行資料維護
 @Component({
-    selector: 'app-fin21010',
-    templateUrl: './fin21010.component.html',
-    styleUrl: './fin21010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-fin21010',
+  templateUrl: './fin21010.component.html',
+  styleUrl: './fin21010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class FIN21010Component extends BasicQpageComponent implements OnInit {
   //
@@ -94,7 +94,6 @@ export class FIN21010Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/FIN2000/FIN21010CRU';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.bankAccountCodeService.getSystemTypes().subscribe(data => {
       this.bankCodeOptions = data;

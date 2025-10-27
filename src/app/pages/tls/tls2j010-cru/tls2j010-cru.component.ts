@@ -49,7 +49,7 @@ export class TLS2J010CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '220090';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {

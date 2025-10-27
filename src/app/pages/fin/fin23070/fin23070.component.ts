@@ -22,11 +22,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.3.7 暫付款核銷報表
 @Component({
-    selector: 'app-fin23070',
-    templateUrl: './fin23070.component.html',
-    styleUrl: './fin23070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, InputNumberRangeComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
+  selector: 'app-fin23070',
+  templateUrl: './fin23070.component.html',
+  styleUrl: './fin23070.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, InputNumberRangeComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
 })
 export class FIN23070Component extends BasicQpageComponent implements OnInit {
   //
@@ -102,7 +102,7 @@ export class FIN23070Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/FIN2000/FIN23070CRU';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.vendorService.getVendors().subscribe(data => {
       this.requsetEmployeeOptions = data;

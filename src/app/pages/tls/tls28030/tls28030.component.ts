@@ -89,7 +89,6 @@ export class TLS28030Component {
   ) { }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // Initialize dropdown options
     this.paymentTimingService.getPaymentTiming().subscribe(data => {

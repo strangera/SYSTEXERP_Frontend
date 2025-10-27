@@ -22,11 +22,11 @@ import { NgIf } from '@angular/common';
 
 //1.1.4.2 進貨退出或折讓資料維護 CRU
 @Component({
-    selector: 'app-fin14020-cru',
-    templateUrl: './fin14020-cru.component.html',
-    styleUrl: './fin14020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, CalendarComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin14020-cru',
+  templateUrl: './fin14020-cru.component.html',
+  styleUrl: './fin14020-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, CalendarComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN14020CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
@@ -82,8 +82,7 @@ export class FIN14020CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '110017';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.taxTypeService.getTaxTypes().subscribe(data => {
       this.taxTypeOptions = data;

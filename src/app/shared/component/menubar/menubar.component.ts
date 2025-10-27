@@ -1,3 +1,5 @@
+import { SystemDataService } from './../../../service/system/system-data.service';
+import { FavoriteService } from './../../../service/system/favorite.service';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { AuthService } from '../../../service/system/auth.service';
@@ -41,12 +43,14 @@ export class MenubarComponent implements OnInit {
   constructor(
     private readonly authService: AuthService,
     private readonly messageService: NotificationService,
+    private readonly favoriteService: FavoriteService,
+    private readonly systemDataService: SystemDataService
   ) { }
 
   ngOnInit(): void {
     if (this.customBreadcrumbItems.length > 0) { return; }
     this.breadcrumbItems = [];
-    this.authService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
+    this.systemDataService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
       this.funRightsInfo = [...newData];
       this.menu = [];
       this.breadcrumbItems = [];
@@ -82,7 +86,7 @@ export class MenubarComponent implements OnInit {
   checkIfFavorite(progNo: string): boolean {
     const favorites: Favorite[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
     if (!favorites || favorites.length === 0) {
-      this.authService.getFavorites(this.authService.currentUserValue?.user_No).subscribe((response) => {
+      this.favoriteService.getFavorites(this.authService.currentUserValue?.user_No).subscribe((response) => {
         sessionStorage.setItem('Favorites', JSON.stringify(response.Data))
         return response.Data.some((favorite: Favorite) => favorite.PROG_No === progNo);
       });
@@ -103,7 +107,7 @@ export class MenubarComponent implements OnInit {
         favorites[i].FVT_SeqNo = i + 1;
       }
     }
-    this.authService.UpdateUserFavorite(favorites).subscribe({
+    this.favoriteService.updateUserFavorite(favorites).subscribe({
       next: (response) => {
         this.messageService.successBubble('我的最愛已更新', response.Message);
         sessionStorage.setItem('Favorites', JSON.stringify(favorites));

@@ -24,11 +24,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.5  移轉交接表
 @Component({
-    selector: 'app-ass13050',
-    templateUrl: './ass13050.component.html',
-    styleUrl: './ass13050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, MultiSelectComponent, RadiobuttonComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13050',
+  templateUrl: './ass13050.component.html',
+  styleUrl: './ass13050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, MultiSelectComponent, RadiobuttonComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS13050Component extends BasicQpageComponent implements OnInit {
   //
@@ -130,8 +130,7 @@ export class ASS13050Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310020';
     this.cruPage = '/ASS1000/ASS13050CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.purchaseTypeService.getPurchaseTypes().subscribe(data => {
       this.purchaseTypeOptions = data;

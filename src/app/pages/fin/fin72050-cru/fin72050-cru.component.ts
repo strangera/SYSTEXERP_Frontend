@@ -25,21 +25,21 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-fin72050-cru',
-    templateUrl: './fin72050-cru.component.html',
-    styleUrl: './fin72050-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        CalendarComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-fin72050-cru',
+  templateUrl: './fin72050-cru.component.html',
+  styleUrl: './fin72050-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    CalendarComponent,
+    ButtonComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 export class FIN72050CRUComponent
   extends BasicCrupageComponent
@@ -49,7 +49,6 @@ export class FIN72050CRUComponent
     this.ProgNo = '170007';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.userCodeService
       .getUserCode()
       .subscribe((data) => (this.founder = data));

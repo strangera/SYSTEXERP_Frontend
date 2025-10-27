@@ -21,11 +21,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.1.9 資材中分類會計科目維護作業
 @Component({
-    selector: 'app-ass11090',
-    templateUrl: './ass11090.component.html',
-    styleUrl: './ass11090.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass11090',
+  templateUrl: './ass11090.component.html',
+  styleUrl: './ass11090.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS11090Component extends BasicQpageComponent implements OnInit {
   //
@@ -174,8 +174,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310009';
     this.cruPage = '/ASS1000/ASS11090CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.needPayTicketService.getNeedPayTickets().subscribe(data => {
       this.costOptions = data;

@@ -13,6 +13,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SystemOptionsService } from '@service/system/sys1000.service';
+import { SystemDataService } from '@service/system/system-data.service';
 
 @UntilDestroy()
 @Injectable({
@@ -29,7 +30,7 @@ export abstract class BasicPrintDataComponent {
   tableService = inject(TableService);
   authService = inject(AuthService);
   messageService = inject(NotificationService);
-
+  systemDataService = inject(SystemDataService);
   constructor() {
     this.getProgNo();
   }
@@ -46,7 +47,7 @@ export abstract class BasicPrintDataComponent {
 
   exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
-    const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
+    const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
@@ -115,7 +116,7 @@ export abstract class BasicPrintDataComponent {
   }
   exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
-    const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
+    const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
@@ -188,7 +189,7 @@ export abstract class BasicPrintDataComponent {
   getProgNo() {
     this.currentPage.currentPageProgNo$.pipe(untilDestroyed(this)).subscribe(progNo => {
       if (progNo) {
-        this.funInfo = this.authService.getUserPermissions(progNo);
+        this.funInfo = this.systemDataService.getUserPermissions(progNo);
         this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
         // this.cdr.detectChanges(); // 資料更新後觸發變更偵測
       } else {

@@ -56,7 +56,6 @@ export class FIN72010CRUComponent
     this.ProgNo = '170003';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.userCodeService
       .getUserCode()
       .subscribe((data) => (this.founder = data));

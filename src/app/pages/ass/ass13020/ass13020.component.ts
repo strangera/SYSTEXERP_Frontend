@@ -100,8 +100,7 @@ export class ASS13020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310017';
     this.cruPage = '/ASS1000/ASS13020CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

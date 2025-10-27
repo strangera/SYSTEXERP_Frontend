@@ -32,8 +32,7 @@ export class ASS21050CRUComponent
   ngOnInit(): void {
     // 網站導覽設定
     this.ProgNo = '320005';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     // 下拉選單--------------------------------------------------------
     //  this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));

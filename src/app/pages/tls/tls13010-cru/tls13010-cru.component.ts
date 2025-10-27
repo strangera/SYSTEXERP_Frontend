@@ -41,6 +41,7 @@ import { RentCalculationService } from './services/rent-calculation.service';
 import { CommissionTypeChangeService } from './services/commission-type-change.service';
 import { FormStateService } from './services/form-state.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
+import { SystemDataService } from '@service/system/system-data.service';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -360,7 +361,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     private negotiatorService: NegotiatorOptionsService,
     private validationService: TLS13010ValidationService,
     private dateValidationService: DateValidationService,
-    private emailValidationService: EmailValidationService
+    private emailValidationService: EmailValidationService,
+    private systemDataService: SystemDataService
   ) { }
 
   // ==========  生命週期方法 ==========
@@ -392,7 +394,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.user = this.authService.currentUserValue;
     }
     this.currentPageService.setCurrentProgNo(this.ProgNo);
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.funInfo = this.systemDataService.getUserPermissions(this.ProgNo);
 
     // 固定為 Edit,避免表單被 disable
     this.crudstatus = CRUDStatus.Edit;

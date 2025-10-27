@@ -36,7 +36,7 @@ import { InputNumberComponent } from "@shared/componentkit/input-number/input-nu
     PanelModule,
     InputTextareaComponent,
     InputNumberComponent
-],
+  ],
 })
 
 export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -88,7 +88,6 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   }
   ngOnInit(): void {
     this.initializePage('TLS12020', this.dataForm);
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     if (this.rowdata) {
       const mapped = this.mapRowDataToForm(this.rowdata);
       this.dataForm.patchValue(mapped);
