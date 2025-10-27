@@ -26,9 +26,10 @@
 
 
 <div class="card mt-5">
-  <app-customFooter-table tableKey="TLS22010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+  <app-customFooter-table tableKey="TLS22010" [data]="data" [columns]="columns" [totalRecords]="totalRecords" dataKey="Ecr_No"
     [footerData]="footerData" [lazy]="true" [loading]="loading" [showManage]="false" [showDelete]="false"
-    [showReportMode]="false" [showTotal]="true" [rows]="100">
+    [showReportMode]="false" [showTotal]="true" (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    [multiSortMeta]="[{ field: 'Ecr_No', order: 1 }]" (submit)="onSubmit(queryForm)">
 
     <header>
       <div class="flex justify-content-between align-items-center gap-2">

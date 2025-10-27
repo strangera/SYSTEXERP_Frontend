@@ -1,25 +1,27 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse,} from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
-
 export class FIN15100Service {
- private apiUrl = `${environment.ApiUrl}/FIN0000/INV1000`;
+  private apiUrl = `${environment.ApiUrl}/FIN0000/FIN15000`;
 
   constructor(private http: HttpClient) {}
 
- QueryFIN15110(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryFIN15110`, data);
+  QueryFIN15100(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryFIN15100`, body);
   }
- PrintFIN15110(body: any): Observable<HttpResponse<Blob>> {
-  return this.http.post(`${this.apiUrl}/printFIN15110`, body, {
-    observe: 'response',
-    responseType: 'blob'
-  });
-}
 
+  /** 取得報表產出 URL */
+  PrintFIN15110(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/printFIN15110`, body);
+  }
+
+  /** 直接用後端 URL 下載檔案 */
+  downloadFile(url: string): Observable<Blob> {
+    return this.http.get(url, { responseType: 'blob' });
+  }
 }

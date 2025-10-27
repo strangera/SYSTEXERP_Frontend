@@ -21,7 +21,8 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { createPaginationConfig, Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
-import { FIN15110Service} from '@service/api/fin/fin15110.service';
+import { FIN15110Service } from '@service/api/fin/fin15110.service';
+import { environment } from 'src/environments/environment';
 @Component({
   selector: 'app-fin15110',
   templateUrl: './fin15110.component.html',
@@ -45,11 +46,11 @@ import { FIN15110Service} from '@service/api/fin/fin15110.service';
     DatePipe,
   ],
 })
-export class FIN15110Component extends BasicQueryPageComponent <any> implements OnInit {
+export class FIN15110Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     TXN_DT_S: [new Date(), [Validators.required]],
     TXN_DT_E: [new Date(), [Validators.required]],
-    ...createPaginationConfig([{ field: 'ECR_NO', order: 1 }]),
+    ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
   });
 
   data: any[] = [];
@@ -84,27 +85,31 @@ export class FIN15110Component extends BasicQueryPageComponent <any> implements 
 
   /** 查詢 */
   onSubmit(frm: FormGroup): void {
+    if (this.loading) return;
     this.handleSubmit(frm, () => {
       this.loading = true;
       const v = frm.value;
-
       const payload = {
-        PageSize: v.PageSize || 0,
-        PageIndex: v.PageIndex || 0,
+        PageSize: v.PageSize || 20,
+        PageIndex: v.PageIndex ?? 1,
         OrderBy: '',
         Offset: 0,
-        SortBy: [],
+        SortBy: v.SortBy ?? [],
         MID: '0',
         STO_No: '10',
         TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
         TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
       };
 
+      console.log('查詢 payload:', payload);
+
       this.fin15110Service
         .QueryFIN15110(payload)
+
         .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (res) => {
+            console.log('查詢回應:', res);
             if (res?.Data) {
               this.data = res.Data.FIN15110s || [];
               this.footerData = [
@@ -117,6 +122,8 @@ export class FIN15110Component extends BasicQueryPageComponent <any> implements 
                 },
               ];
               this.totalRecords = res.Data.TotalCount || this.data.length;
+              console.log('資料筆數:', this.data.length);
+              console.log('總筆數:', this.totalRecords);
             } else {
               this.data = [];
               this.footerData = [];
@@ -124,60 +131,41 @@ export class FIN15110Component extends BasicQueryPageComponent <any> implements 
             }
 
           },
-          error: (err) => {
-            console.error('查詢失敗:', err);
-            this.messageService.errorBubble('查詢失敗');
-          },
         });
     });
   }
 
+  override onLazyLoadData(event: any, form: FormGroup): void {
+    if (this.loading) return;
+
+    const pageIndex = event.pageIndex ?? Math.floor((event.first ?? 0) / (event.pageSize ?? 20)) + 1;
+
+    form.get('PageSize')?.setValue(event.pageSize);
+    form.get('PageIndex')?.setValue(pageIndex);
+    form.get('SortBy')?.setValue(event.SortBy);
+
+    this.onSubmit(form);
+  }
+
   /** 匯出 PDF */
   onExportPDF(): void {
-    this.btnLoading = true;
-    const v = this.queryForm.value;
-
-    const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
-      MID: '0',
-      STO_No: '10',
-      TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
-      TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-      IsMerge: true,
-      IsExcel: false,
-    };
-
-    this.fin15110Service
-      .PrintFIN15110(payload)
-      .pipe(finalize(() => (this.btnLoading = false)))
-      .subscribe({
-        next: (res) => {
-          const blob = res.body;
-          if (blob) {
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = '二電發票表.pdf';
-            link.click();
-          } else {
-            this.messageService.warnBubble('沒有可匯出的資料');
-          }
-        },
-        error: (err) => {
-          console.error('匯出 PDF 失敗:', err);
-          this.messageService.errorBubble('匯出 PDF 失敗');
-        },
-      });
+    this.exportReport(false);
   }
 
   /** 匯出 Excel */
   onExportExcel(): void {
-    this.btnLoading2 = true;
-    const v = this.queryForm.value;
+    this.exportReport(true);
+  }
 
+  /** 通用匯出報表函式 */
+  private exportReport(isExcel: boolean): void {
+    if (isExcel) {
+      this.btnLoading2 = true;
+    } else {
+      this.btnLoading = true;
+    }
+
+    const v = this.queryForm.value;
     const payload = {
       PageSize: 0,
       PageIndex: 0,
@@ -189,28 +177,53 @@ export class FIN15110Component extends BasicQueryPageComponent <any> implements 
       TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
       TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
       IsMerge: true,
-      IsExcel: true,
+      IsExcel: isExcel,
     };
 
+    console.log('匯出報表 payload:', payload);
+
     this.fin15110Service
-      .PrintFIN15110(payload)
-      .pipe(finalize(() => (this.btnLoading2 = false)))
+      .printFIN15110(payload)
+      .pipe(
+        finalize(() => {
+          if (isExcel) this.btnLoading2 = false;
+          else this.btnLoading = false;
+        })
+      )
       .subscribe({
         next: (res) => {
-          const blob = res.body;
-          if (blob) {
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = '二電發票表.xlsx';
-            link.click();
+          console.log('printFIN15110 API 回應:', res);
+
+          if (!res) {
+            this.messageService.errorBubble('後端無回應');
+            return;
+          }
+
+          if (res.Status !== '0000') {
+            this.messageService.errorBubble(res.Message || '產生報表失敗');
+            return;
+          }
+          const url = res?.Data?.Print_URL;
+          if (url) {
+            const fileUrl = `${environment.ApiUrl.replace(/\/$/, '')}${url}`;
+            console.log('下載路徑:', fileUrl);
+
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.setAttribute('download', decodeURIComponent(
+              url.split('/').pop() ?? (isExcel ? '二電發票表.xlsx' : '二電發票表.pdf')
+            ));
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
           } else {
-            this.messageService.warnBubble('沒有可匯出的資料');
+            this.messageService.warnBubble('後端未回傳報表連結');
           }
         },
-        error: (err) => {
-          console.error('匯出 Excel 失敗:', err);
-          this.messageService.errorBubble('匯出 Excel 失敗');
-        },
+
       });
   }
 

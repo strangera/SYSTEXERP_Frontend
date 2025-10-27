@@ -73,7 +73,6 @@ export class FIN15100Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private readonly fin15100Service: FIN15100Service,
     private readonly datePipe: DatePipe
   ) {
     super();
@@ -87,132 +86,124 @@ export class FIN15100Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      const v = frm.value;
+      // const v = frm.value;
 
-      const payload = {
-        PageSize: v.PageSize || 0,
-        PageIndex: v.PageIndex || 0,
-        OrderBy: '',
-        Offset: 0,
-        SortBy: [],
-        MID: '0',
-        STO_No: '10',
-        TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
-        TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-      };
+      // const payload = {
+      //   PageSize: v.PageSize || 0,
+      //   PageIndex: v.PageIndex || 0,
+      //   OrderBy: '',
+      //   Offset: 0,
+      //   SortBy: [],
+      //   MID: '0',
+      //   STO_No: '10',
+      //   TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
+      //   TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+      // };
 
-      this.fin15100Service
-        .QueryFIN15110(payload)
-        .pipe(finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (res) => {
-            if (res?.Data) {
-              this.data = res.Data.FIN15110s || [];
-              this.footerData = [
-                {
-                  TXN_SaleAmt: res.Data.TotalTXN_SaleAmt,
-                  TXN_SaleTax: res.Data.TotalTXN_SaleTax,
-                  TXN_SaleNoTax: res.Data.TotalTXN_SaleNoTax,
-                  TXN_Net: res.Data.TotalNet,
-                  TXN_Tax: res.Data.TotalTax,
-                },
-              ];
-              this.totalRecords = res.Data.TotalCount || this.data.length;
-            } else {
-              this.data = [];
-              this.footerData = [];
-              this.totalRecords = 0;
-            }
+      // this.fin15100Service
+      //   .QueryFIN15110(payload)
+      //   .pipe(finalize(() => (this.loading = false)))
+      //   .subscribe({
+      //     next: (res) => {
+      //       if (res?.Data) {
+      //         this.data = res.Data.FIN15110s || [];
+      //         this.footerData = [
+      //           {
+      //             TXN_SaleAmt: res.Data.TotalTXN_SaleAmt,
+      //             TXN_SaleTax: res.Data.TotalTXN_SaleTax,
+      //             TXN_SaleNoTax: res.Data.TotalTXN_SaleNoTax,
+      //             TXN_Net: res.Data.TotalNet,
+      //             TXN_Tax: res.Data.TotalTax,
+      //           },
+      //         ];
+      //         this.totalRecords = res.Data.TotalCount || this.data.length;
+      //       } else {
+      //         this.data = [];
+      //         this.footerData = [];
+      //         this.totalRecords = 0;
+      //       }
 
-          },
-          error: (err) => {
-            console.error('查詢失敗:', err);
-            this.messageService.errorBubble('查詢失敗');
-          },
-        });
+      //     },
+      //   });
     });
   }
 
   /** 匯出 PDF */
   onExportPDF(): void {
     this.btnLoading = true;
-    const v = this.queryForm.value;
+    // const v = this.queryForm.value;
 
-    const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
-      MID: '0',
-      STO_No: '10',
-      TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
-      TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-      IsMerge: true,
-      IsExcel: false,
-    };
+    // const payload = {
+    //   PageSize: 0,
+    //   PageIndex: 0,
+    //   OrderBy: '',
+    //   Offset: 0,
+    //   SortBy: [],
+    //   MID: '0',
+    //   STO_No: '10',
+    //   TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
+    //   TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+    //   IsMerge: true,
+    //   IsExcel: false,
+    // };
 
-    this.fin15100Service
-      .PrintFIN15110(payload)
-      .pipe(finalize(() => (this.btnLoading = false)))
-      .subscribe({
-        next: (res) => {
-          const blob = res.body;
-          if (blob) {
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = '二電發票表.pdf';
-            link.click();
-          } else {
-            this.messageService.warnBubble('沒有可匯出的資料');
-          }
-        },
-        error: (err) => {
-          console.error('匯出 PDF 失敗:', err);
-          this.messageService.errorBubble('匯出 PDF 失敗');
-        },
-      });
+    // this.fin15100Service
+    //   .PrintFIN15110(payload)
+    //   .pipe(finalize(() => (this.btnLoading = false)))
+    //   .subscribe({
+    //     next: (res) => {
+    //       const blob = res.body;
+    //       if (blob) {
+    //         const link = document.createElement('a');
+    //         link.href = window.URL.createObjectURL(blob);
+    //         link.download = '二電發票表.pdf';
+    //         link.click();
+    //       } else {
+    //         this.messageService.warnBubble('沒有可匯出的資料');
+    //       }
+    //     },
+
+    //   });
   }
 
   /** 匯出 Excel */
   onExportExcel(): void {
     this.btnLoading2 = true;
-    const v = this.queryForm.value;
+    // const v = this.queryForm.value;
 
-    const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
-      MID: '0',
-      STO_No: '10',
-      TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
-      TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-      IsMerge: true,
-      IsExcel: true,
-    };
+    // const payload = {
+    //   PageSize: 0,
+    //   PageIndex: 0,
+    //   OrderBy: '',
+    //   Offset: 0,
+    //   SortBy: [],
+    //   MID: '0',
+    //   STO_No: '10',
+    //   TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
+    //   TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+    //   IsMerge: true,
+    //   IsExcel: true,
+    // };
 
-    this.fin15100Service
-      .PrintFIN15110(payload)
-      .pipe(finalize(() => (this.btnLoading2 = false)))
-      .subscribe({
-        next: (res) => {
-          const blob = res.body;
-          if (blob) {
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = '二電發票表.xlsx';
-            link.click();
-          } else {
-            this.messageService.warnBubble('沒有可匯出的資料');
-          }
-        },
-        error: (err) => {
-          console.error('匯出 Excel 失敗:', err);
-          this.messageService.errorBubble('匯出 Excel 失敗');
-        },
-      });
+    // this.fin15100Service
+    //   .PrintFIN15110(payload)
+    //   .pipe(finalize(() => (this.btnLoading2 = false)))
+    //   .subscribe({
+    //     next: (res) => {
+    //       const blob = res.body;
+    //       if (blob) {
+    //         const link = document.createElement('a');
+    //         link.href = window.URL.createObjectURL(blob);
+    //         link.download = '二電發票表.xlsx';
+    //         link.click();
+    //       } else {
+    //         this.messageService.warnBubble('沒有可匯出的資料');
+    //       }
+    //     },
+
+  //     });
+  // }
+
+// }
   }
-
 }
