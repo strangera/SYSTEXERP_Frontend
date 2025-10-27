@@ -346,17 +346,15 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
         this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
           budget: this.footerTotal.TotalBudget,
           AVN_TotSaleAmt: this.footerTotal.TotalSales,
+          AchievementRate: this.footerTotal.AvgAchievementRate,
           TxnCount: this.footerTotal.TotalTxnCount,
           AvgTicket: this.footerTotal.AvgTicket,
           tlt_space: this.footerTotal.TotalSpace,
           MonthlyPSM: this.footerTotal.AvgPSM,
-          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+          // MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
           TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
-
           MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-
-          AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
         } : null;
 
