@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { FIN52010Data, FIN52010Detail, FIN52010Payload } from '@pages/fin/fin52010/fin52010.model';
+import { FIN52010Data, FIN52010DataResponse, FIN52010UpdatePayload, FIN52010UpdateResult } from '@pages/fin/fin52010/fin52010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -13,32 +13,24 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52010Service {
 
-  private readonly tableCancel$ = new Subject<void>();
-  private readonly accNoCancel$ = new Subject<void>();
-  private readonly vendorCancel$ = new Subject<void>();
-  private readonly usrCancel$ = new Subject<void>();
-  private readonly sys1000Cancel$ = new Subject<void>();
-  private readonly voucherTypeCancel$ = new Subject<void>();
+  private readonly dataCancel$ = new Subject<void>();
   private readonly orgNoCancel$ = new Subject<void>();
-  private readonly orgIdCancel$ = new Subject<void>();
+  private readonly tblUsrOrgCancel$ = new Subject<void>();
+  private readonly sys1000Cancel$ = new Subject<void>();
+  private readonly submitCancel$ = new Subject<void>();
 
-  public readonly FIN52010Data = signal<FIN52010Data[]>([]);
-  public readonly FIN52010Detail = signal<FIN52010Detail[]>([]);
+  public readonly FIN52010Data = signal<FIN52010Data>(Object.create(null));
 
-  public readonly tableLoading = signal(!1);
-  public readonly accLoading = signal(!1);
-  public readonly venLoading = signal(!1);
-  public readonly usrLoading = signal(!1);
-  public readonly sys1000Loading = signal(!1);
+  public readonly dataLoading = signal<boolean>(!1);
+  public readonly OrgNoLoading = signal<boolean>(!1);
+  public readonly tblUsrOrgLoading = signal<boolean>(!1);
+  public readonly sys1000Loading = signal<boolean>(!1);
 
-  public readonly cru = signal<boolean>(!1);
+  public readonly submitting = signal<boolean>(!1);
 
-  public readonly accNoList = signal<Option[]>([]);
-  public readonly vendorList = signal<Option[]>([]);
-  public readonly usrList = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
-  public readonly tblUserOrgidList = signal<Option[]>([]);
-  public readonly remarkList = signal<Option[]>([]);
+  public readonly orgList = signal<Option[]>([]);
+  public readonly usrList = signal<Option[]>([]);
   public readonly sys1000List = signal<Option[]>([]);
 
   public readonly billTransferConOptions = signal<Option[]>([
@@ -59,18 +51,18 @@ export class FIN52010Service {
     { value: '1', label: '明細' }
   ]);
 
-  public readonly accNoMap = computed(() =>
-    new Map(this.accNoList().map(item => [item.value, item]))
-  );
-  public readonly vendorMap = computed(() =>
-    new Map(this.vendorList().map(item => [item.value, item]))
-  );
-  public readonly usrMap = computed(() =>
-    new Map(this.usrList().map(item => [item.value, item]))
-  );
-  public readonly sys1000Map = computed(() =>
-    new Map(this.sys1000List().map(item => [item.value, item]))
-  );
+  // public readonly accNoMap = computed(() =>
+  //   new Map(this.accNoList().map(item => [item.value, item]))
+  // );
+  // public readonly vendorMap = computed(() =>
+  //   new Map(this.vendorList().map(item => [item.value, item]))
+  // );
+  // public readonly usrMap = computed(() =>
+  //   new Map(this.usrList().map(item => [item.value, item]))
+  // );
+  // public readonly sys1000Map = computed(() =>
+  //   new Map(this.sys1000List().map(item => [item.value, item]))
+  // );
 
   constructor(
     private readonly http: HttpClient,
@@ -78,85 +70,31 @@ export class FIN52010Service {
     private readonly dropdownApi: DropdownApiService,
   ) { }
 
-  public loadFIN52010(payload: FIN52010Payload): Observable<BaseQueryResponse<FIN52010Data>> {
-    this.tableCancel$.next();
-    this.tableLoading.set(!0);
-    return this.http.post<BaseQueryResponse<FIN52010Data>>(`${apiUrl}/queryFIN52010`, payload).pipe(
+  public loadFIN52010(CompNo: string = ''): Observable<FIN52010Data> {
+    this.dataCancel$.next();
+    this.dataLoading.set(!0);
+    return this.http.post<FIN52010DataResponse>(`${apiUrl}/queryFIN52010`, { CompNo }).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
+      takeUntil(this.dataCancel$),
       tap(res => this.FIN52010Data.set(res.Data)),
+      map(res => res.Data),
       finalize(() => {
-        this.tableLoading.set(!1);
+        this.dataLoading.set(!1);
         this.logger.debug('查詢FIN52010結果:', [this.FIN52010Data()]);
       })
     );
   }
 
-  // public loadFIN52010Detail(id: number): Observable<FIN52010DataDetail> {
-  //   this.tableCancel$.next();
-  //   this.tableLoading.set(!0);
-  //   return this.http.post<FIN52010DataDetail>(`${apiUrl}/queryFIN52010Detail`, { id }).pipe(
-  //     take(1),
-  //     takeUntil(this.tableCancel$),
-  //     tap(res => this.FIN52010Detail.set(res.Data)),
-  //     finalize(() => {
-  //       this.tableLoading.set(!1);
-  //       this.logger.debug('查詢FIN52010 Detail結果:', [this.FIN52010Detail()]);
-  //     })
-  //   );
-  // }
-
-  // public insertFIN52010Data(payload: FIN52010InsertPayload): Observable<FIN52010InsertResult> {
-  //   this.tableCancel$.next();
-  //   this.tableLoading.set(!0);
-  //   return this.http.post<FIN52010InsertResult>(`${apiUrl}/insertFIN52010`, payload).pipe(
-  //     take(1),
-  //     takeUntil(this.tableCancel$),
-  //     tap(res => this.logger.debug('插入FIN52010結果:', [res])),
-  //     finalize(() => this.tableLoading.set(!1))
-  //   );
-  // }
-
-  // public updateFIN52010Data(payload: FIN52010UpdatePayload): Observable<FIN52010UpdateResult> {
-  //   this.tableCancel$.next();
-  //   this.tableLoading.set(!0);
-  //   return this.http.post<FIN52010UpdateResult>(`${apiUrl}/updateFIN52010`, payload).pipe(
-  //     take(1),
-  //     takeUntil(this.tableCancel$),
-  //     tap(res => this.logger.debug('更新FIN52010結果:', [res])),
-  //     finalize(() => this.tableLoading.set(!1))
-  //   );
-  // }
-
-  // public deleteFIN52010Data(payload: number[]): Observable<FIN52010DeleteResult> {
-  //   this.tableCancel$.next();
-  //   this.tableLoading.set(!0);
-  //   return this.http.post<FIN52010DeleteResult>(`${apiUrl}/deleteFIN52010`, { ids: payload }).pipe(
-  //     take(1),
-  //     takeUntil(this.tableCancel$),
-  //     tap(res => this.logger.debug('刪除FIN52010結果:', [res])),
-  //     finalize(() => this.tableLoading.set(!1))
-  //   );
-  // }
-
-  // public getVoucherTypeOptions(): void {
-  //   this.voucherTypeOptions.set([
-  //     { id: 1, No: 'AA', Name: 'AAAA' },
-  //     { id: 2, No: 'BB', Name: 'BBBB' },
-  //     { id: 3, No: 'CC', Name: 'CCCC' },
-  //     { id: 4, No: 'DD', Name: 'DDDD' },
-  //     { id: 5, No: 'EE', Name: 'EEEE' },
-  //     { id: 6, No: 'GL', Name: 'GL測試用' },
-  //   ]);
-
-  //   this.voucherTypeCancel$.next();
-  //   this.http.post<BaseQueryResponse<VoucherType>>(`${apiUrl}/queryVoucherTypeDropdown`, {}).pipe(
-  //     take(1),
-  //     takeUntil(this.voucherTypeCancel$),
-  //     tap(res => this.voucherTypeOptions.set(res.Data)),
-  //     finalize(() => this.logger.debug('查詢VoucherTypeOptions結果:', [this.voucherTypeOptions()])),
-  //   ).subscribe();
-  // }
+  public updateFIN52010Data(payload: FIN52010UpdatePayload): Observable<FIN52010UpdateResult> {
+    this.submitCancel$.next();
+    this.submitting.set(!0);
+    return this.http.post<BaseQueryResponse<FIN52010UpdateResult>>(`${apiUrl}/updateFIN52010`, payload).pipe(
+      take(1),
+      takeUntil(this.submitCancel$),
+      tap(res => this.logger.debug('更新FIN52010結果:', [res])),
+      finalize(() => this.submitting.set(!1))
+    );
+  }
 
   public getOrgNoList(): void {
     this.orgNoCancel$.next();
@@ -168,72 +106,26 @@ export class FIN52010Service {
     ).subscribe();
   }
 
-  public getTblUserOrgidList(): void {
-    this.orgIdCancel$.next();
+  public getTblUsrOrgList(): void {
+    this.tblUsrOrgCancel$.next();
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      takeUntil(this.orgIdCancel$),
-      map(res => res?.map(item => ({ value: item['Org_ID'], label: item['Org_Name'] } as Option)) ?? []),
-      tap(res => this.tblUserOrgidList.set(res)),
-      finalize(() => this.logger.debug('查詢TblUserOrgidListList結果:', [this.tblUserOrgidList()])),
+      takeUntil(this.tblUsrOrgCancel$),
+      tap(res => this.orgList.set(res?.map(item => ({ value: item.Org_ID, label: item.Org_Name } as Option)) ?? [])),
+      tap(res => this.usrList.set(res?.map(item => ({ value: item.user_No, label: item.user_Name } as Option)) ?? [])),
+      finalize(() => this.logger.debug('查詢TblUsrOrgList結果:', [this.orgList(), this.usrList()])),
     ).subscribe();
   }
 
-  // public getAccNoList(): Observable<Option[]> {
-  //   this.accNoCancel$.next();
-  //   this.accLoading.set(!0);
-  //   return this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
-  //     take(1),
-  //     takeUntil(this.accNoCancel$),
-  //     map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName } as Option))),
-  //     tap(res => this.accNoList.set(res)),
-  //     finalize(() => {
-  //       this.accLoading.set(!1);
-  //       this.logger.debug('查詢AccNoList結果:', [this.accNoList()]);
-  //     }),
-  //   );
-  // }
-
-  // public getVendorList(): Observable<Option[]> {
-  //   this.vendorCancel$.next();
-  //   this.venLoading.set(!0);
-  //   return this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
-  //     take(1),
-  //     takeUntil(this.vendorCancel$),
-  //     map(res => res.Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-  //     tap(res => this.vendorList.set(res)),
-  //     finalize(() => {
-  //       this.venLoading.set(!1);
-  //       this.logger.debug('查詢VendorList結果:', [this.vendorList()]);
-  //     }),
-  //   );
-  // }
-
-  // public getUsrList(): Observable<Option[]> {
-  //   this.usrCancel$.next();
-  //   this.usrLoading.set(!0);
-  //   return this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
-  //     take(1),
-  //     takeUntil(this.usrCancel$),
-  //     // map(res => res?.filter(item => !RegExp(/^[0-9]/).test(item['value']))),
-  //     map(res => res?.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option)) ?? []),
-  //     tap(res => this.usrList.set(res)),
-  //     finalize(() => {
-  //       this.usrLoading.set(!1);
-  //       this.logger.debug('查詢UsrList結果:', [this.usrList()]);
-  //     }),
-  //   );
-  // }
-
-  public getSYS1000(): Observable<Option[]> {
+  public getSYS1000(): void {
     this.sys1000Cancel$.next();
     this.sys1000Loading.set(!0);
-    return this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
+    this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
       take(1),
       takeUntil(this.sys1000Cancel$),
       map(res => res?.map(item => ({ value: item['No'], label: item['Name'] } as Option)) ?? []),
       tap(res => this.sys1000List.set(res)),
       finalize(() => this.logger.debug('查詢SYS1000List結果:', [this.sys1000List()])),
-    );
+    ).subscribe();
   }
 }
