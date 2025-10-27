@@ -10,8 +10,12 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="公司銀行科目" controlName="BNK_DepositAccNo" [options]="GLS1005_Option"
-              optionLabel="ACCCNAME" optionValue="ACCNO" [control]="queryForm.controls.BNK_DepositAccNo"
+              optionLabel="Label" optionValue="No" [control]="queryForm.controls.BNK_DepositAccNo"
               [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="公司銀行名稱" controlName="AccCName" [control]="queryForm.controls.AccCName"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="全省銀行代碼" controlName="BNK_No" [options]="APS1004_Option"
@@ -29,21 +33,22 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="EDI用戶代號(統一編號)" controlName="BNK_AccName" [control]="queryForm.controls.BNK_AccName"
+            <app-input-text label="EDI用戶代號(統一編號)" controlName="SYS_Name" [control]="queryForm.controls.SYS_Name"
                 [submitted]="submitted"></app-input-text>
             </div>
         </div>  
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="存款代號" controlName="BNK_AccType" [control]="queryForm.controls.BNK_AccType"
+            <app-dropdown label="存款代碼" controlName="BNK_AccType" [options]="BNK_AccType_Option"
+                optionLabel="Name" optionValue="No" [control]="queryForm.controls.BNK_AccType" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="應付票據" controlName="BNK_CheckInAccNo" [control]="queryForm.controls.BNK_CheckInAccNo"
                 [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="應付票據科目" controlName="BNK_CheckInAccNo" [control]="queryForm.controls.BNK_CheckInAccNo"
-                [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="應收票據科目" controlName="BNK_CheckOutAccNo" [control]="queryForm.controls.BNK_CheckOutAccNo"
+              <app-input-text label="應收票據" controlName="BNK_CheckOutAccNo" [control]="queryForm.controls.BNK_CheckOutAccNo"
                 [submitted]="submitted"></app-input-text>
           </div>
         </div>  
