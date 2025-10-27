@@ -281,8 +281,8 @@ onSubmit(form: FormGroup): void {
   const isSummary = !!this.queryForm.get('showSummary')?.value;
 
   // 日期轉 yyyy-MM-dd
-  raw['TXN_DateStart'] = this.toYMD(raw['TXN_DateStart']);
-  raw['TXN_DateEnd']   = this.toYMD(raw['TXN_DateEnd']);
+raw['TXN_DateStart'] = this.toDateOnly(raw['TXN_DateStart']);
+raw['TXN_DateEnd']   = this.toDateOnly(raw['TXN_DateEnd']);
 
   const ensureArr   = (v: any) => Array.isArray(v) ? v : v == null || v === '' ? [] : [v];
   const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
@@ -443,8 +443,15 @@ onSubmit(form: FormGroup): void {
   /** 明細：供 app-table-report infinite scroll / 排序使用 */
 /** 明細：供 app-table-report infinite scroll / 排序使用（不插小計列） */
 public queryTLS23030ForReport = (body: any) => {
-  const safeBody = { ...body, pageSize: 30 };
+  const safeBody = {
+    ...body,
+    pageSize: 30,
+    // ✅ 確保 DateOnly
+    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+  };
   safeBody.SortBy = this.sanitizeSort(Array.isArray(body?.SortBy) ? body.SortBy : []);
+
   return this.tls23030Service.queryTLS23030(safeBody).pipe(
     map((res: any) => {
       // 展平成 rows
@@ -485,8 +492,14 @@ const rows = rawRows.map((item: any, i: number) => {
 
 
   /** 彙總：供 app-table-report 使用 */
-  public queryTLS23030SummaryForReport = (body: any) =>
-    this.tls23030Service.queryTLS23030Summary({ ...body, pageSize: 30 }).pipe(
+public queryTLS23030SummaryForReport = (body: any) =>
+  this.tls23030Service.queryTLS23030Summary({
+    ...body,
+    pageSize: 30,
+    // ✅ 確保 DateOnly
+    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+  }).pipe(
       map((res: any) => {
         const packs = Array.isArray(res?.Data) ? res.Data : [];
         const totals = packs.reduce(
@@ -770,5 +783,16 @@ private sanitizeSort(uiSort: Array<{ field: string; order: 1 | -1 }>): Array<{ f
     for (const f of this.GROUPKEY_SORT_EXPANSION) out.push({ field: f, order: 1 });
   }
   return out;
+}
+// 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 }

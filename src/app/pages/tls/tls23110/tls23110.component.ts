@@ -235,8 +235,8 @@ buildFooterFromGrandTotal(): Record<string, any> | undefined {
       const asArr = (x: any) => Array.isArray(x) ? x : (x == null || x === '' ? undefined : [x]);
 
       const payload: any = {
-        TXN_DateStart: toIso(val?.TXN_DateStart),
-        TXN_DateEnd  : toIso(val?.TXN_DateEnd),
+      TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+      TXN_DateEnd  : this.toDateOnly(val?.TXN_DateEnd),
         tlt_term_type: val?.tlt_term_type ?? undefined,
         rece_yn      : val?.rece_yn ?? undefined,
         IsNoPLU_No   : toTF(val?.IsNoPLU_No),
@@ -463,7 +463,8 @@ columns: any[] = [
   }
   public queryTLS23110ForReport = (body: any) =>
   this.tls23110Service
-    .queryTLS23110({ ...(body || {}), pageSize: 30, PageSize: 30 })
+    .queryTLS23110({ ...(body || {}), TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd  : this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd), pageSize: 30, PageSize: 30 })
     .pipe(
       map((res: any) => {
         const rawRows: any[] =
@@ -548,5 +549,16 @@ private buildGrandFromTotalSummary(totalSummary: any): Record<string, number> {
 }
 
 
+// 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 }

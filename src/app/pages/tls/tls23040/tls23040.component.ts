@@ -234,8 +234,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     ];
 
     const payload: any = {
-      TXN_DateStart: this.toIso(raw?.TXN_DateStart ?? this.yesterday),
-      TXN_DateEnd:   this.toIso(raw?.TXN_DateEnd   ?? this.yesterday),
+  TXN_DateStart: this.toDateOnly(raw?.TXN_DateStart ?? this.yesterday), // ✅ yyyy-MM-dd
+  TXN_DateEnd:   this.toDateOnly(raw?.TXN_DateEnd   ?? this.yesterday), // ✅ yyyy-MM-dd
 
       ...(this.ensureArr(raw?.ECR_No).length         ? { ECR_No: this.ensureArr(raw?.ECR_No) }             : {}),
       ...(this.ensureArr(raw?.TLT_No).length         ? { TLT_No: this.ensureArr(raw?.TLT_No) }             : {}),
@@ -358,12 +358,16 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   }
 
   // 提供給 app-table-report 的查詢函式（支援排序/分頁）
-  public queryTLS23040ForReport = (body: any) =>
-    this.tls23040Service.queryTLS23040({
-      ...body,
-      pageSize: 30,
-      SortBy: this.sanitizeSortBy(body?.SortBy),
-    }).pipe(
+public queryTLS23040ForReport = (body: any) =>
+  this.tls23040Service.queryTLS23040({
+    ...body,
+    pageSize: 30,
+    SortBy: this.sanitizeSortBy(body?.SortBy),
+
+    // ✅ 確保用 DateOnly
+    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+  }).pipe(
       map((res: any) => {
         const packs: any[] = Array.isArray(res?.Data) ? res.Data : [];
 
@@ -561,4 +565,15 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         : undefined;
     }
   }
+  // 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 }
