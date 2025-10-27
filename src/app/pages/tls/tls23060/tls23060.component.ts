@@ -146,8 +146,8 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       const val = this.queryForm.getRawValue() as any;
 
       const payload: any = {
-        TXN_DateStart: this.toIso(val?.TXN_DateStart, false),
-        TXN_DateEnd:   this.toIso(val?.TXN_DateEnd, true),
+TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
         rece_yn:       val?.rece_yn ?? undefined,
         ECR_No:        Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
         tlt_no:        Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
@@ -198,28 +198,34 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   // === 提供給 app-table-report 的查詢函式：強制 pageSize=30 ===
-  public queryTLS23060ForReport = (body: any) =>
-    this.tls23060Service
-      .queryTLS23060({ ...body, pageSize: 30 })
-      .pipe(
-        map((res: any) => {
-          const wrapper = this.pickWrapper(res?.Data);
-          const details = this.pickDetails(wrapper);
+public queryTLS23060ForReport = (body: any) =>
+  this.tls23060Service
+    .queryTLS23060({
+      ...body,
+      pageSize: 30,
+      // ✅ 強制用 DateOnly（若 body 沒帶，就抓當前表單值）
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+    })
+    .pipe(
+      map((res: any) => {
+        const wrapper = this.pickWrapper(res?.Data);
+        const details = this.pickDetails(wrapper);
 
-          const rows = details.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-          }));
+        const rows = details.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+        }));
 
-          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          // 同步總計到 footerData，同時回傳給 table 當 GrandTotal
-          const grand = this.buildFooterFromPack(wrapper);
-          this.footerData = grand;
+        const grand = this.buildFooterFromPack(wrapper);
+        this.footerData = grand;
 
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        })
-      );
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      })
+    );
+
 
   // === 匯出（PDF / Excel）— 會移除 pageSize / pageIndex ===
   private buildExportBody() {
@@ -458,4 +464,15 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
+  // 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 }

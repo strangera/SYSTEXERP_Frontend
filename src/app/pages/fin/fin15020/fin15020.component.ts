@@ -95,7 +95,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'PUR_DiscNo', header: '折抵代號', visible: true, format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'PUR_Uniform', header: '統一編號', visible: true }
+    { field: 'PUR_VenUniform', header: '統一編號', visible: true }
   ];
 
   //#region 下拉選項

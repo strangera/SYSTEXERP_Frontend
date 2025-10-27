@@ -35,7 +35,6 @@ export class LayoutService {
   overlayOpen$ = this.overlayOpen.asObservable();
 
   constructor() {
-    this.loadMenuState();
     effect(() => {
       const config = this.config();
       this.updateThemeClass(config.colorScheme);
@@ -66,26 +65,6 @@ export class LayoutService {
     });
   }
 
-  private loadMenuState() {
-    // 覆蓋模式
-    const overlayActive = localStorage.getItem('menuActive_overlay');
-    if (overlayActive !== null) {
-      this.isOverlayMenuActive.set(overlayActive === 'true');
-    }
-
-    // 桌面靜態模式
-    const desktopInactive = localStorage.getItem('menuInactive_desktop');
-    if (desktopInactive !== null) {
-      this.isStaticMenuDesktopInactive.set(desktopInactive === 'true');
-    }
-
-    // 手機靜態模式
-    const mobileActive = localStorage.getItem('menuActive_mobile');
-    if (mobileActive !== null) {
-      this.isStaticMenuMobileActive.set(mobileActive === 'true');
-    }
-  }
-
   // 現在的邏輯是根據 colorScheme 和 theme 來構建路徑
   private loadThemeCss(themeName: string, colorScheme: string) {
     const themeLink = document.getElementById('app-theme') as HTMLLinkElement;
@@ -95,32 +74,18 @@ export class LayoutService {
   }
   onMenuToggle() {
     if (this.isOverlay()) {
-      this.isOverlayMenuActive.update(val => {
-        const newVal = !val;
-        localStorage.setItem('menuActive_overlay', String(newVal));
-        return newVal;
-      });
+      this.isOverlayMenuActive.update(val => !val);
       if (this.isOverlayMenuActive()) {
         this.overlayOpen.next();
       }
-    } else if (this.isDesktop()) { // Static menu mode (桌面靜態模式)
-      this.isStaticMenuDesktopInactive.update(val => {
-        const newVal = !val;
-        localStorage.setItem('menuInactive_desktop', String(newVal));
-        return newVal;
-      });
-    } else { // Mobile mode (手機模式)
-      this.isStaticMenuMobileActive.update(val => {
-        const newVal = !val;
-        localStorage.setItem('menuActive_mobile', String(newVal));
-        return newVal;
-      });
+    } else if (this.isDesktop()) {// Static menu mode
+      this.isStaticMenuDesktopInactive.update(val => !val);
+    } else { // Mobile mode
+      this.isStaticMenuMobileActive.update(val => !val);
       if (this.isStaticMenuMobileActive()) {
         this.overlayOpen.next();
       }
     }
-
-    // 原始的 overlayOpen 觸發邏輯保持不變
     // 確保只在菜單實際打開時發送 overlayOpen 事件
     if (this.isOverlayMenuActive() || this.isStaticMenuMobileActive()) {
       this.overlayOpen.next();

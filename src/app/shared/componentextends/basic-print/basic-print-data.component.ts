@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
+import { ChangeDetectorRef, inject, Injectable  } from '@angular/core';
 import { QueryStateService } from '../../service/query-state.service';
 import { TableService } from '../../componentkit/table/report.service';
 import { HttpResponse } from '@angular/common/http';
@@ -45,7 +45,8 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {    
+    
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);

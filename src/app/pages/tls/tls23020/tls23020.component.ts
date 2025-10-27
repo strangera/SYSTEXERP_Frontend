@@ -411,17 +411,19 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     return dedup;
   }
 
-  public queryTLS23020ForReport = (body: any) =>
-    this.tls23020Service
-      .queryTLS23020({
-        ...(body || {}),
-        // ⚠️ 後端不可吃 groupKey，先正規化排序欄位
-        SortBy: this.toBackendSort(body?.SortBy),
-        // （可選）保底頁參數
-        pageIndex: body?.pageIndex ?? 1,
-        pageSize: body?.pageSize ?? 30,
-      })
-      .pipe(
+public queryTLS23020ForReport = (body: any) =>
+  this.tls23020Service
+    .queryTLS23020({
+      ...(body || {}),
+      // ✅ 確保 DateOnly
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+      // ✅ 後端可吃的排序
+      SortBy: this.toBackendSort(body?.SortBy),
+      pageIndex: body?.pageIndex ?? 1,
+      pageSize: body?.pageSize ?? 30,
+    })
+    .pipe(
         map((res: any) => {
           // 兼容 Data 可能為物件或陣列
           const wrappers = Array.isArray(res?.Data)
@@ -686,60 +688,54 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   /** 組查詢 payload（含排序＆分頁鍵） */
-  private buildPayload(val: any) {
-    const toIso = (x: any) => this.toIso(x);
-    const asStrArr = (x: any) =>
-      Array.isArray(x)
-        ? x.map(String)
-        : x == null || x === ''
-          ? undefined
-          : [String(x)];
-    const asNum = (x: any) =>
-      x == null || x === '' || isNaN(Number(x)) ? undefined : Number(x);
+/** 組查詢 payload（含排序＆分頁鍵） */
+private buildPayload(val: any) {
+  // ✅ 用 DateOnly（yyyy-MM-dd）
+  const toDateOnly = (x: any) => this.toDateOnly(x);
 
-    const o: any = {
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd: toIso(val?.TXN_DateEnd),
-      ECR_No: asStrArr(val?.ECR_No),
-      TXN_No_Start: asNum(val?.TXN_No_Start),
-      TXN_No_End: asNum(val?.TXN_No_End),
-      TLT_No: asStrArr(val?.TLT_No),
-      TXN_GUINo: (val?.TXN_GUINo ?? '').toString().trim() || undefined,
-      TXN_SaleAmt_Start: asNum(val?.TXN_SaleAmt_Start),
-      TXN_SaleAmt_End: asNum(val?.TXN_SaleAmt_End),
-      PLU_TaxType:
-        val?.PLU_TaxType == null || val?.PLU_TaxType === ''
-          ? undefined
-          : String(val.PLU_TaxType),
-      TXN_DiscCode: asStrArr(val?.TXN_DiscCode),
-      PRM_TXN_DiscCode: asStrArr(val?.PRM_TXN_DiscCode),
-      tlt_id: asStrArr(val?.tlt_id),
-      PLU_MagNo: (val?.PLU_MagNo ?? '').toString().trim() || undefined,
-      IsNoPLU_No: !!val?.IsNoPLU_No,
-      rece_yn:
-        val?.rece_yn == null || val?.rece_yn === ''
-          ? undefined
-          : String(val.rece_yn),
-      cash_yn:
-        val?.cash_yn == null || val?.cash_yn === ''
-          ? undefined
-          : String(val.cash_yn),
-      tlt_building: asStrArr(val?.tlt_building),
-      tlt_floor: asStrArr(val?.tlt_floor),
-      org_id: asStrArr(val?.org_id),
-    };
-    if (this.includePagingAndSorting) {
-      o.pageIndex = val?.pageIndex ?? 1; // ✅ 當頁
-      o.pageSize = val?.pageSize ?? 30;
-      o.SortBy = Array.isArray(val?.SortBy) ? val.SortBy : undefined;
-    }
-    Object.keys(o).forEach((k) => {
-      const v = o[k];
-      if (v === undefined || v === '') delete o[k];
-      if (Array.isArray(v) && v.length === 0) delete o[k];
-    });
-    return o;
+  const asStrArr = (x: any) =>
+    Array.isArray(x) ? x.map(String) : x == null || x === '' ? undefined : [String(x)];
+  const asNum = (x: any) =>
+    x == null || x === '' || isNaN(Number(x)) ? undefined : Number(x);
+
+  const o: any = {
+    // ⬇⬇⬇ 這兩行改成 DateOnly
+    TXN_DateStart: toDateOnly(val?.TXN_DateStart),
+    TXN_DateEnd:   toDateOnly(val?.TXN_DateEnd),
+
+    ECR_No: asStrArr(val?.ECR_No),
+    TXN_No_Start: asNum(val?.TXN_No_Start),
+    TXN_No_End: asNum(val?.TXN_No_End),
+    TLT_No: asStrArr(val?.TLT_No),
+    TXN_GUINo: (val?.TXN_GUINo ?? '').toString().trim() || undefined,
+    TXN_SaleAmt_Start: asNum(val?.TXN_SaleAmt_Start),
+    TXN_SaleAmt_End: asNum(val?.TXN_SaleAmt_End),
+    PLU_TaxType: val?.PLU_TaxType == null || val?.PLU_TaxType === '' ? undefined : String(val.PLU_TaxType),
+    TXN_DiscCode: asStrArr(val?.TXN_DiscCode),
+    PRM_TXN_DiscCode: asStrArr(val?.PRM_TXN_DiscCode),
+    tlt_id: asStrArr(val?.tlt_id),
+    PLU_MagNo: (val?.PLU_MagNo ?? '').toString().trim() || undefined,
+    IsNoPLU_No: !!val?.IsNoPLU_No,
+    rece_yn: val?.rece_yn == null || val?.rece_yn === '' ? undefined : String(val.rece_yn),
+    cash_yn: val?.cash_yn == null || val?.cash_yn === '' ? undefined : String(val.cash_yn),
+    tlt_building: asStrArr(val?.tlt_building),
+    tlt_floor: asStrArr(val?.tlt_floor),
+    org_id: asStrArr(val?.org_id),
+  };
+
+  if (this.includePagingAndSorting) {
+    o.pageIndex = val?.pageIndex ?? 1;
+    o.pageSize  = val?.pageSize ?? 30;
+    o.SortBy    = Array.isArray(val?.SortBy) ? val.SortBy : undefined;
   }
+
+  Object.keys(o).forEach((k) => {
+    const v = o[k];
+    if (v === undefined || v === '') delete o[k];
+    if (Array.isArray(v) && v.length === 0) delete o[k];
+  });
+  return o;
+}
 
   /** 將日期控制項轉成後端要的 yyyy-MM-ddTHH:mm:ss（本地時間、去時區偏移） */
   private toIso(val: any): string | undefined {
@@ -752,8 +748,13 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   // ===== 小工具 =====
-  public queryTLS23020SummaryForReport = (body: any) =>
-    this.tls23020Service.queryTLS23020Summary(body).pipe(
+public queryTLS23020SummaryForReport = (body: any) =>
+  this.tls23020Service.queryTLS23020Summary({
+    ...(body || {}),
+    // ✅ 確保 DateOnly
+    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+  }).pipe(
       map((res: any) => {
         // 後端回來的是 Data.QueryData（依你現有程式）
         const arr = Array.isArray(res?.Data?.QueryData)
@@ -1128,4 +1129,15 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     const rest = dedup.filter((x) => x.field !== groupField);
     return [{ field: groupField, order }, ...rest];
   }
+  // 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 }

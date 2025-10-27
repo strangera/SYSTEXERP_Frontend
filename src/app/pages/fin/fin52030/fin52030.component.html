@@ -68,7 +68,7 @@
   <div class="col-12">
     <app-table [data]="service.FIN52030Data()"
                [columns]="columns"
-               [totalRecords]="totalRecords()"
+               [totalRecords]="service.totalRecords()"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [loading]="service.tableLoading()"

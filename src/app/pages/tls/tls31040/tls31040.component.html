@@ -148,7 +148,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls31040" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+  <app-table-report tableKey="tls31040" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
     [totalRecords]="totalRecords" (detail)="onDetail1($event)" [showDelete]="false" [showEdit]="false"
     [showManage]="true" [showReportMode]="false" [queryFunction]="tls31040Service.queryTLS31040.bind(tls31040Service)"
     [footerData]="footershowTotal" [footerPercentData]="footershowPercent">

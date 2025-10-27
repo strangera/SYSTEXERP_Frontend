@@ -9,6 +9,7 @@ import {
   TLS12040PageState
 } from '../models/tls12040-next2.model';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 
 // 變更追蹤介面
 export interface ChangeRecord {
@@ -390,36 +391,46 @@ export class TLS12040DataFlowService {
     itemType: 'chargeDetail' | 'levelChargeDetail',
     parentItem: ChargeSettingBusinessModel
   ): any[] {
-    console.log(' TLS12040 建立完整折扣項目 (參考 TLS13010):', {
+    console.log('🔧 TLS12040 建立完整折扣項目 (使用日期工具):', {
       itemType,
       existingCount: existingDetails.length,
       optionsCount: discountOptions.length,
       parentTltId: parentItem.tlt_id
     });
 
+    //  確保日期參數是正確格式
+    const normalizedStartDate = DateUtils.toDateString(contractStartDate);
+    const normalizedEndDate = DateUtils.toDateString(contractEndDate);
+
+    console.log('📅 正規化後的日期:', {
+      原始起始日: contractStartDate,
+      正規化起始日: normalizedStartDate,
+      原始結束日: contractEndDate,
+      正規化結束日: normalizedEndDate
+    });
+
     const result: any[] = [];
     const isNewContractWithoutData = existingDetails.length === 0;
 
     discountOptions?.forEach((option, index) => {
-      //  修正：使用 filter 處理同一折扣別的多筆資料 (學習 TLS13010)
       const existingItems = existingDetails.filter(detail =>
         detail.cag_barcode === option.value && detail._status !== 'deleted'
       );
 
       if (existingItems.length > 0) {
-        // 為每個既有項目創建一筆記錄，並確保選中狀態
+        // 處理既有項目
         existingItems.forEach(existingItem => {
-          // 根據項目類型創建不同結構的物件
           const enhancedItem = itemType === 'levelChargeDetail' ? {
             ...existingItem,
             cag_barcode: existingItem.cag_barcode,
             barcode_desc: existingItem.barcode_desc || option.label,
             _status: existingItem._status || 'original',
-            is_selected: true, // 既有項目一律設為已選中
+            is_selected: true,
             is_configured: true,
             is_enabled: true,
-            tlt_bdate: existingItem.tlt_bdate || contractStartDate,
-            tlt_edate: existingItem.tlt_edate || contractEndDate,
+            //  關鍵修正：使用日期工具正規化
+            tlt_bdate: DateUtils.toDateString(existingItem.tlt_bdate) || normalizedStartDate,
+            tlt_edate: DateUtils.toDateString(existingItem.tlt_edate) || normalizedEndDate,
             seq_no: existingItem.seq_no || (index + 1),
             level_bmount: existingItem.level_bmount || 0,
             level_eamount: existingItem.level_eamount || 0,
@@ -429,30 +440,31 @@ export class TLS12040DataFlowService {
             cag_barcode: existingItem.cag_barcode,
             barcode_desc: existingItem.barcode_desc || option.label,
             _status: existingItem._status || 'original',
-            is_selected: true, // 既有項目一律設為已選中
+            is_selected: true,
             is_configured: true,
             is_enabled: true,
-            tlt_bdate: existingItem.tlt_bdate || contractStartDate,
-            tlt_edate: existingItem.tlt_edate || contractEndDate,
+            //  關鍵修正：使用日期工具正規化
+            tlt_bdate: DateUtils.toDateString(existingItem.tlt_bdate) || normalizedStartDate,
+            tlt_edate: DateUtils.toDateString(existingItem.tlt_edate) || normalizedEndDate,
             cag_charge_rate: existingItem.cag_charge_rate || 0
           };
 
           result.push(enhancedItem);
-          console.log(`✅ 保持既有項目: ${existingItem.cag_barcode} (${option.label}) - 預設勾選`);
+          console.log(` 保持既有項目: ${existingItem.cag_barcode} - 日期: ${enhancedItem.tlt_bdate} ~ ${enhancedItem.tlt_edate}`);
         });
       } else {
-        //  修正：新增項目的預選邏輯 - 只要是 000 或包含正品就預選
+        // 處理新增項目
         const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
 
-        // 根據項目類型建立不同結構的物件
         const newItem = itemType === 'levelChargeDetail' ? {
           id: this.generateTempId(),
           apply_no: parentItem.apply_no,
           tlt_id: parentItem.tlt_id,
           cag_barcode: option.value,
           barcode_desc: option.label || '',
-          tlt_bdate: contractStartDate,
-          tlt_edate: contractEndDate,
+          //  關鍵修正：直接使用正規化後的日期字串
+          tlt_bdate: normalizedStartDate,
+          tlt_edate: normalizedEndDate,
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault,
           _status: shouldSelectByDefault ? 'new' : 'new',
@@ -467,8 +479,9 @@ export class TLS12040DataFlowService {
           tlt_id: parentItem.tlt_id,
           cag_barcode: option.value,
           barcode_desc: option.label || '',
-          tlt_bdate: contractStartDate,
-          tlt_edate: contractEndDate,
+          //  關鍵修正：直接使用正規化後的日期字串
+          tlt_bdate: normalizedStartDate,
+          tlt_edate: normalizedEndDate,
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault,
           _status: shouldSelectByDefault ? 'new' : 'new',
@@ -477,20 +490,14 @@ export class TLS12040DataFlowService {
         };
 
         result.push(newItem);
-        console.log(`➕ 新增未設定項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預設勾選' : '預設不勾選'}`);
+        console.log(`➕ 新增項目: ${option.value} - 日期: ${newItem.tlt_bdate} ~ ${newItem.tlt_edate}`);
       }
     });
 
-    console.log('✅ TLS12040 建立完整折扣項目完成:', {
+    console.log(' 建立完整折扣項目完成:', {
       itemType,
       resultCount: result.length,
-      selectedCount: result.filter(item => item.is_selected).length,
-      正品項目檢查: result.filter(r => r.cag_barcode === '000').map(r => ({
-        id: r.id,
-        cag_barcode: r.cag_barcode,
-        selected: r.is_selected,
-        status: r._status
-      }))
+      日期範圍: `${normalizedStartDate} ~ ${normalizedEndDate}`
     });
 
     return result;

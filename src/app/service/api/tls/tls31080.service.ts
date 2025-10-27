@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
+import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31080Request {
   TXN_DateS: string | Date;
@@ -11,8 +12,8 @@ export interface TLS31080Request {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string[]
   tlt_term_type: string[]
   org_id: string[]
@@ -33,8 +34,8 @@ export interface TLS31080DetailRequest {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string[]
   tlt_term_type: string[]
   org_id: string[]
@@ -48,7 +49,7 @@ export interface TLS31080PrintDetailRequest extends TLS31080DetailRequest {
   IsExcel: boolean;
 }
 
-export interface TLS31080Response {
+export interface TLS31080Item {
   paper_type: string;
   paper_type_desc: string;
   
@@ -70,7 +71,7 @@ export interface TLS31080Response {
   CompletionRate: number;
 }
 
-export interface TLS31080DetailResponse {
+export interface TLS31080DetailItem {
   tlt_no: string;
   tlt_name: string;
 
@@ -89,6 +90,16 @@ export interface TLS31080DetailResponse {
   CompletionRate: number;
 }
 
+export interface TLS31080Response {
+  Data: TLS31080Item[];
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31080DetailResponse {
+  Data: TLS31080DetailItem[];
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -96,22 +107,40 @@ export class Tls31080Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
   constructor(private http: HttpClient) { }
           
-  // 查詢各組織之營業報表
-  queryTLS31080(body: TLS31080Request): Observable<ApiResponse<TLS31080Response[]>> {
-    return this.http.post<ApiResponse<TLS31080Response[]>>(`${this.apiUrl}/queryTLS31080`, body);
+  // 查詢各時段之營業報表
+  queryTLS31080(body: TLS31080Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31080`, body).pipe(
+          map(res => {
+            return {
+              Data: res.Data?.Data,
+              TotalCount: res.TotalCount,
+              Message: res.Message,
+              TotalData: res.Data?.TotalData 
+            };
+          })
+        );
   }
       
-  // 查詢單組織展開之營業報表
-  queryTLS31080Detail(body: TLS31080DetailRequest): Observable<ApiResponse<TLS31080DetailResponse[]>> {
-    return this.http.post<ApiResponse<TLS31080DetailResponse[]>>(`${this.apiUrl}/queryTLS31080Detail`, body);
+  // 查詢各時段展開之營業報表
+  queryTLS31080Detail(body: TLS31080DetailRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31080Detail`, body).pipe(
+          map(res => {
+            return {
+              Data: res.Data?.Data,
+              TotalCount: res.TotalCount,
+              Message: res.Message,
+              TotalData: res.Data?.TotalData 
+            };
+          })
+        );
   }
         
-  // 產出各組織之營業報表
+  // 產出單時段之營業報表
   printTLS31080(body: TLS31080PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
     return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31080`, body);
   }
         
-  // 產出單組織展開之營業報表
+  // 產出單時段展開之營業報表
   printTLS31080Detail(body: TLS31080PrintDetailRequest): Observable<ApiResponse<{ Print_URL: string }>> {
     return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31080Detail`, body);
   }

@@ -11,7 +11,7 @@ export interface TLS53010QueryRequest extends BaseQueryRequest {
   LOGO_No?: string[];           // 品牌代碼 (陣列)
   PST_DateStart: string;        // 盤點基準日期(起) - ISO 8601 格式 - 必填
   PST_DateEnd: string;          // 盤點基準日期(迄) - ISO 8601 格式 - 必填
-  PST_Status?: string[];        // 盤點單狀態 (陣列)
+  PST_Status?: string[];        // 盤點狀態 (陣列)
 }
 
 // Detail query request interface for TLS53010
@@ -63,7 +63,7 @@ export interface TLS53010Data {
   LOGO_No: string;              // 品牌代碼
   LOGO_CH_NAME: string;         // 品牌中文名稱
   PST_Date: string;             // 盤點基準日期
-  PST_Status: string;           // 盤點單狀態:0盤點單開立,待盤點，1初盤,盤點中 2複盤,盤點完成 3抽盤,小盤結案 4已結案 9作廢
+  PST_Status: string;           // 盤點狀態:0盤點單開立,待盤點，1初盤,盤點中 2複盤,盤點完成 3抽盤,小盤結案 4已結案 9作廢
   PST_Remark: string;           // 盤點備註
   CRT_Date: string;             // 建立日期
   CRT_USR_No: string;           // 建立人

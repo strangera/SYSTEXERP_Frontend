@@ -17,7 +17,6 @@ import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
 import { ASS21020Data, TLTByFlag } from './ass21020.model';
 
@@ -55,7 +54,6 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
-  public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
 
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges, { equal: (a, b) => a === b });
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges, { equal: (a, b) => a === b });
@@ -181,8 +179,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
         PageIndex: pageIndex || void 0,
       });
 
-      this.loading = this.service.tableLoading;
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.loading = !1;
     });
   }
 
@@ -208,7 +206,6 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
               Mid: Number(this.user?.mid)!,
               SYS_StoreNo: this.user?.SYS_StoreNo!,
             });
-            this.loading = !1;
           }
         });
     }

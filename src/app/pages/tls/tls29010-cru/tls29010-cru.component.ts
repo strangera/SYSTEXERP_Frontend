@@ -164,10 +164,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   //欄位資訊
   TALPORDERD_OPENDisc_Detail_Columns: ColumnDef[] = [
     // { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true }, // 不用顯示 內容與主檔案一致 *
-    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 抽成類別(0-9) *
     //---要使用的---
     // [專櫃編號] 帶出 下面這坨
     { field: 'tlt_no', header: '專櫃編號', type: 'dropdown', editable: true, autoWidth: true, options: [] }, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
+    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 抽成類別(0-9) *
     { field: 'cag_barcode', header: '折數條碼', type: 'text', editable: false, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
     { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: false, autoWidth: true, hidden: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
     { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
@@ -291,31 +291,31 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         if (this.canAdd()) {
           // console.log('insert', body);
           console.log('insert', JSON.stringify(body, null, 2));
-          // this.tls29010Service.insertTLS29010(body).subscribe(() => {
-          //   this.messageService.successBubble('新增成功');
+          this.tls29010Service.insertTLS29010(body).subscribe(() => {
+            this.messageService.successBubble('新增成功');
 
-          //   // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
-          //   const keepValues = {
-          //     str_no: this.dataForm.get('str_no')?.value,
-          //     pod_type: this.dataForm.get('pod_type')?.value,
-          //     pod_status: this.dataForm.get('pod_status')?.value,
-          //   };
+            // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
+            const keepValues = {
+              str_no: this.dataForm.get('str_no')?.value,
+              pod_type: this.dataForm.get('pod_type')?.value,
+              pod_status: this.dataForm.get('pod_status')?.value,
+            };
 
-          //   // reset 其他欄位
-          //   this.dataForm.reset();
+            // reset 其他欄位
+            this.dataForm.reset();
 
-          //   // 把保留欄位的值重新設回去
-          //   this.dataForm.patchValue(keepValues);
-          // });
+            // 把保留欄位的值重新設回去
+            this.dataForm.patchValue(keepValues);
+          });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update:', JSON.stringify(body, null, 2));
-          // this.tls29010Service.updateTLS29010(body).subscribe(() => {
-          //   // this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.tls29010Service.updateTLS29010(body).subscribe(() => {
+            // this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }

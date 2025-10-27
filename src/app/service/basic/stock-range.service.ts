@@ -14,7 +14,7 @@ export class StockRangeService {
     { value: 1, label: '全顯示' },
     { value: 2, label: '僅顯示不為零庫存' },
     { value: 3, label: '僅顯示零庫存' },
-    { value: 4, label: '僅顯示為零庫存' }
+    { value: 4, label: '僅顯示負庫存' }
   ];
 
   constructor(

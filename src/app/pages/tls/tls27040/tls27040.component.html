@@ -21,7 +21,7 @@
             [options]="TxnTypeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.TxnTypeList" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="卡別" controlName="PayCrdTypeList"
-            [options]="CrdTypeOptions" optionLabel="label" optionValue="value"
+            [options]="PayCrdTypeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.PayCrdTypeList" [submitted]="submitted" />
           <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="金額"
             startControlName="TxnAmt_Start" endControlName="TxnAmt_End" [startControl]="queryForm.controls.TxnAmt_Start"
@@ -77,5 +77,5 @@
   <app-table-report tableKey="tls27040" dataKey="dataKey" [data]="data" [columns]="columns" [showCheckBox]="true"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
     [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" (detail)="onDetail($event)" (edit)="onEdit($event)"
-    [queryFunction]="tls27040Service.queryTLS27040.bind(tls27040Service)" [footerData]="footerData" />
+    [queryFunction]="tls27040Service.queryTLS27040.bind(tls27040Service)" [footerData]="footerData"/>
 </div>

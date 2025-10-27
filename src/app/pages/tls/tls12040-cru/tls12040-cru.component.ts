@@ -331,7 +331,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.initializeFormDefaults(); // 2. 初始化預設值，包含 existingData 處理
     this.initializeDropdownOptions(); // 3. 初始化下拉選項
     this.setupVendorUniformListener(); // 4. 設定監聽器
-    this.setupDynamicValidators(); // 5. 設定動態驗證
+    this.setupBusinessClassificationListeners();// 5. 設定大分類監聽器 (新增)
+    this.setupDynamicValidators(); // 6. 設定動態驗證
 
     // 調試當前狀態
     console.log('=== CRU 狀態調試 ===');
@@ -350,6 +351,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       tlt_name: formValue.tlt_name || '',
       ven_uniform: formValue.ven_uniform || '',
       ven_no: formValue.ven_no || '',
+      vendor_ven_no: formValue.ven_no || '',
+      vendor_no: formValue.vendor_no || '',
       VEN_Name: formValue.VEN_Name || '',
       contract_subno: formValue.contract_subno || undefined,
       contract_no: formValue.contract_no || undefined,
@@ -1968,6 +1971,127 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
+  /**
+ * 🔧 設定業種分類的連動監聽
+ * 大分類 → 中分類 → 小分類
+ */
+  private setupBusinessClassificationListeners(): void {
+    // 監聽大分類變更
+    const busTypeSubscription = this.dataForm.get('bus_type')?.valueChanges
+      .pipe(
+        debounceTime(100),
+        distinctUntilChanged()
+      )
+      .subscribe(busType => {
+        console.log('🔍 大分類變更:', busType);
+
+        if (busType) {
+          // 清空中分類和小分類的值
+          this.dataForm.patchValue({
+            bus_class: '',
+            bus_sclass: ''
+          }, { emitEvent: false });
+
+          // 清空選項
+          this.busClassOptions = [];
+          this.busSClassOptions = [];
+
+          // 載入中分類選項
+          this.businessClassificationService.getBusClassOptions(busType).subscribe({
+            next: (options) => {
+              this.busClassOptions = options;
+              console.log('✅ 已載入中分類選項:', options.length, '筆');
+            },
+            error: (err) => {
+              console.error('❌ 載入中分類失敗:', err);
+              this.busClassOptions = [];
+            }
+          });
+        } else {
+          // 清空所有分類
+          this.dataForm.patchValue({
+            bus_class: '',
+            bus_sclass: ''
+          }, { emitEvent: false });
+
+          this.busClassOptions = [];
+          this.busSClassOptions = [];
+        }
+
+        // 自動保存
+        this.autoSaveToWorkflow();
+      });
+
+    // 監聽中分類變更
+    const busClassSubscription = this.dataForm.get('bus_class')?.valueChanges
+      .pipe(
+        debounceTime(100),
+        distinctUntilChanged()
+      )
+      .subscribe(busClass => {
+        console.log('🔍 中分類變更:', busClass);
+
+        const busType = this.dataForm.get('bus_type')?.value;
+
+        if (busType && busClass) {
+          // 清空小分類的值
+          this.dataForm.patchValue({
+            bus_sclass: ''
+          }, { emitEvent: false });
+
+          // 清空選項
+          this.busSClassOptions = [];
+
+          // 載入小分類選項
+          this.businessClassificationService.getBusSClassOptions(busType, busClass).subscribe({
+            next: (options) => {
+              this.busSClassOptions = options;
+              console.log('✅ 已載入小分類選項:', options.length, '筆');
+            },
+            error: (err) => {
+              console.error('❌ 載入小分類失敗:', err);
+              this.busSClassOptions = [];
+            }
+          });
+        } else {
+          // 清空小分類
+          this.dataForm.patchValue({
+            bus_sclass: ''
+          }, { emitEvent: false });
+
+          this.busSClassOptions = [];
+        }
+
+        // 自動保存
+        this.autoSaveToWorkflow();
+      });
+
+    // 監聽小分類變更（如需要）
+    const busSClassSubscription = this.dataForm.get('bus_sclass')?.valueChanges
+      .pipe(
+        debounceTime(100),
+        distinctUntilChanged()
+      )
+      .subscribe(busSClass => {
+        console.log('🔍 小分類變更:', busSClass);
+
+        // 自動保存
+        this.autoSaveToWorkflow();
+      });
+
+    // 將訂閱加入清單，以便在 ngOnDestroy 時取消訂閱
+    if (busTypeSubscription) {
+      this.subscriptions.push(busTypeSubscription);
+    }
+    if (busClassSubscription) {
+      this.subscriptions.push(busClassSubscription);
+    }
+    if (busSClassSubscription) {
+      this.subscriptions.push(busSClassSubscription);
+    }
+  }
+
+
   private loadPotentialCustomerData(venUniform: string): void {
     console.log('🔍 開始查詢潛在客戶資料, 統編:', venUniform);
 
@@ -2264,16 +2388,18 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 1️⃣ 暫時啟用所有表單控制項
     this.dataForm.enable();
+    const dataWithParsedDates = this.parseDateStringsToDates(data);
 
     const processedData = {
-      ...data,
+      ...dataWithParsedDates,
       check_typeList: data.check_type
         ? data.check_type.split(',').map((s: string) => s.trim())
         : []
     };
 
     // 2️⃣ 填充資料 (包含日期欄位)
-    this.populateForm(data);
+    this.populateForm(dataWithParsedDates);
+
 
     // 3️⃣ 重新禁用表單 (readonly 模式)
     if (this.crudstatus === CRUDStatus.Read) {
@@ -2309,5 +2435,41 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 恢復 viewMode
     this.flowService.setViewMode(originalViewMode);
+  }
+
+  private parseDateStringsToDates(data: any): any {
+    if (!data) return data;
+
+    const dateFields = [
+      'tlt_start_date',
+      'tlt_end_date',
+      'contract_date',
+      'tlt_contract_bdate',
+      'tlt_contract_edate',
+      'tlt_bdate',
+      'tlt_edate',
+      'apply_date',
+      'feedback_date',
+      'due_date',
+      'contact_Date'
+
+      // ⚠️ 請根據您的 TLS12040DetailModel 補上所有日期欄位
+    ];
+
+    const parsedData = { ...data };
+
+    dateFields.forEach(field => {
+      const dateString = parsedData[field];
+      if (dateString && typeof dateString === 'string') {
+        // 嘗試解析日期字串，如果解析失敗則保留原值
+        const dateObject = new Date(dateString);
+        // 檢查是否為有效的日期，並進行賦值
+        if (!isNaN(dateObject.getTime())) {
+          parsedData[field] = dateObject;
+        }
+      }
+    });
+
+    return parsedData;
   }
 }

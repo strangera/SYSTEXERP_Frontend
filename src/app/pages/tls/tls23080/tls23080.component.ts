@@ -5,7 +5,7 @@ import { HttpResponse } from '@angular/common/http';
 import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig} from '../../../shared/componentkit/table/table.model';
 
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
@@ -185,8 +185,8 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
       const val = this.queryForm.getRawValue() as any;
 
       const payload: any = {
-        TXN_DateStart: this.toIso(val?.TXN_DateStart),
-        TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
+TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
         tlt_openflag:  val?.tlt_openflag ?? undefined,
         ECR_No:        Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
         tlt_building:  Array.isArray(val?.tlt_building) && val.tlt_building.length ? val.tlt_building : undefined,
@@ -230,25 +230,30 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   }
 
   // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，並帶回 GrandTotal
-  public queryTLS23080ForReport = (body: any) =>
-    this.tls23080Service
-      .queryTLS23080({ ...(body || {}), pageSize: 30 }) // 強制 30
-      .pipe(
-        map((res: any) => {
-          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-          const rows = this.extractRows(wrappers);
-          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+public queryTLS23080ForReport = (body: any) =>
+  this.tls23080Service
+    .queryTLS23080({
+      ...(body || {}),
+      pageSize: 30,
+      // ★ 強制 DateOnly（若 body 沒有就抓表單值）
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+    })
+    .pipe(
+      map((res: any) => {
+        const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+        const rows = this.extractRows(wrappers);
+        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          // GrandTotal（用第一包的 Total* 欄位）
-          const first = wrappers[0] ?? {};
-          const grand = this.mapTotalsFromWrapper(first);
+        // GrandTotal
+        const first = wrappers[0] ?? {};
+        const grand = this.mapTotalsFromWrapper(first);
+        this.grandTotal = { ...grand };
 
-          // 同步到本地，給 footerData 用
-          this.grandTotal = { ...grand };
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      })
+    );
 
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        })
-      );
 
   // ========= 匯出 =========
   private buildExportBody() {
@@ -327,21 +332,17 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
       .flatMap((g: any) => (Array.isArray(g?.tLS23080_Details) ? g.tLS23080_Details : []))
       .map((d: any, i: number) => ({
         ...d,
-        TXN_Date: d?.TXN_Date ? formatDateToYYYY_MM_DD(d.TXN_Date) : d?.TXN_Date,
+        TXN_Date: d?.TXN_Date ? this.toDateOnly(d.TXN_Date) : d?.TXN_Date,
         _rowKey: `${d?.TXN_Date ?? ''}|${i}`,
       }));
   }
 
   // 詳細（若未使用可移除）
-  private toIsoForDetail(dateLike: any): string {
-    const d = new Date(dateLike);
-    if (isNaN(d.getTime())) return '';
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
-  }
+
   onViewTLS23080(row: any) {
-    const iso = this.toIsoForDetail(row?.TXN_Date);
+    const dateOnly = this.toDateOnly(row?.TXN_Date);
     this.router.navigate(['/account/tls/tls23080cru'], {
-      state: { criteria: { TXN_Date: iso } }
+      state: { criteria: { TXN_Date: dateOnly  } }
     });
   }
 
@@ -447,4 +448,15 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     // 總金額
     { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
+  // 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 }

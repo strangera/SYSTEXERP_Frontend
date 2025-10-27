@@ -33,6 +33,8 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 
 // ✅ 自動取消訂閱
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { CounterNameService } from '@service/basic/counter-name.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 @UntilDestroy()
 @Component({
@@ -52,6 +54,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    DropdownComponent,
   ],
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
@@ -118,6 +121,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   organizationOptions: any[] = [];
+  CounterOptions: any[] = [];
 
   // ===== 表格欄位 =====
   columns: any[] = [
@@ -156,6 +160,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
     private tls13030Service: TLS13030Service,
+    private counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -220,6 +225,9 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       .subscribe(opts => {
         this.organizationOptions = opts;
       });
+          this.counterNameService.getCounters().subscribe(v => this.CounterOptions = (v || []).map((x) => ({
+      label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
+    })));
   }
 
   // ===== lazy 事件（分頁/排序）=====

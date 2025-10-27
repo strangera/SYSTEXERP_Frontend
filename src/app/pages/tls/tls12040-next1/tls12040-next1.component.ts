@@ -156,7 +156,22 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.contractInfoColumns = TLS12040FareColumnDefinitions.getContractInfoColumns();
     this.loadOrgOptions();
     this.loadPayNoOptions();
+    this.loadApplyNo();
     this.loadWorkflowDataWithRetry();
+
+  }
+
+  private loadApplyNo(): void {
+    const flowState = this.flowService.getCurrentState();
+    const cruData = this.flowService.getCruData();
+
+    this.currentApplyNo = flowState?.applyNo || cruData?.apply_no || '';
+
+    console.log('📋 當前 apply_no:', this.currentApplyNo);
+
+    if (!this.currentApplyNo) {
+      console.warn('⚠️ 未找到 apply_no');
+    }
   }
 
   //  新增：處理路由狀態的方法
@@ -282,55 +297,28 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this._lastPayNoOptionsLength = -1;
   }
 
-  // tls12040-next1.component.ts
   private loadWorkflowDataWithRetry(retryCount: number = 0): void {
-    const state = this.router.lastSuccessfulNavigation?.extras?.state;
-    const saved = sessionStorage.getItem('TLS12040_FLOW');
-    let realApplyNo = '';
-    let savedCrudStatus: CRUDStatus | undefined;
+    // 1. 先取得 apply_no
+    const cruData = this.flowService.getCruData();
+    this.currentApplyNo = cruData?.apply_no || '';
+    console.log('📋 從 CRU 載入 apply_no:', this.currentApplyNo);
 
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log('從 SessionStorage 解析原始資料:', parsed);
-        if (parsed.stepData && Array.isArray(parsed.stepData)) {
-          const cruEntry = parsed.stepData.find(([key]: [string, any]) => key === 'cru');
-          if (cruEntry && cruEntry[1]?.data?.apply_no) {
-            realApplyNo = cruEntry[1].data.apply_no;
-          }
-        }
-        savedCrudStatus = parsed.crudstatus;
-        console.log('從 SessionStorage 解析 crudstatus:', savedCrudStatus);
-      } catch (error) {
-        console.error('解析 SessionStorage 失敗:', error);
-      }
-    }
-
-    // 設定 applyNo
-    this.currentApplyNo = realApplyNo || state?.['apply_no'] || this.flowService.getCurrentState().applyNo || '';
-    console.log('設定 currentApplyNo:', this.currentApplyNo);
-
-    // 設定 crudstatus（優先級：路由 > SessionStorage > CrudModeService > Read）
-    if (state && state['crudstatus']) {
-      this.crudstatus = state['crudstatus'];
-      console.log('從路由恢復 crudstatus:', this.crudstatus);
-    } else if (savedCrudStatus) {
-      this.crudstatus = savedCrudStatus;
-      console.log('從 SessionStorage 恢復 crudstatus:', this.crudstatus);
-    } else {
-      this.crudstatus = this.crudModeService.getCrudStatus() || CRUDStatus.Read;
-      console.log('從 CrudModeService 或預設恢復 crudstatus:', this.crudstatus);
-    }
-
-    this.crudModeService.setCrudStatus(this.crudstatus);
-    this.flowService.setCurrentState({ crudstatus: this.crudstatus }); // 同步到 flowService
-    console.log('最終設置 crudstatus:', this.crudstatus);
-
-    // 載入合約資訊
+    // 2. 載入合約資訊
     this.loadContractInfo();
 
-    // 載入扣款資料
-    this.loadFareDataWithPriority();
+    // ✅ 3. 優先載入暫存，沒有才打 API
+    const next1Data = this.flowService.getNext1Data<Next1Data>();
+
+    if (next1Data && next1Data.fareData) {
+      console.log('✅ 使用 workflow 暫存的費用資料');
+      this.fareData = next1Data.fareData;
+      this.originalFareData = JSON.parse(JSON.stringify(next1Data.fareData)); // 深拷貝
+    } else if (this.currentApplyNo) {
+      console.log('📡 暫存無資料，從 API 載入');
+      this.loadFareDataFromAPI();
+    } else {
+      console.warn('⚠️ 沒有 apply_no 也沒有暫存資料');
+    }
   }
 
 
@@ -711,7 +699,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private saveFareDataToWorkflow(): void {
     console.log('儲存 next1 資料前檢查 cru:');
     const cruBefore = this.flowService.getStepData('cru');
-    console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
+    // console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
 
     const next1Data = {
       fareData: this.fareData,
@@ -722,9 +710,9 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const saveResult = this.flowService.setStepData('next1', next1Data);
 
     if (saveResult) {
-      console.log('✅ next1 資料儲存成功');
+      // console.log('✅ next1 資料儲存成功');
       const cruAfter = this.flowService.getStepData('cru');
-      console.log('儲存 next1 後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
+      // console.log('儲存 next1 後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
       if (
         cruBefore?.data?.locationInfo?.length > 0 &&
         (!cruAfter?.data?.locationInfo || cruAfter.data.locationInfo.length === 0)
@@ -1652,6 +1640,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   onFareTableEdit(rowData: any, capType: string): void {
     console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
     this.ensureDefaultValues(rowData, capType);
+    this.saveFareDataToWorkflow();
   }
 
   private ensureDefaultValues(item: any, capType: string): void {
@@ -1734,6 +1723,5 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
-
 }
 

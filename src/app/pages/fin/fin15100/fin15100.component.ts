@@ -1,31 +1,27 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   Validators,
   FormsModule,
   ReactiveFormsModule,
+  FormGroup,
 } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FIN15100Service } from '../../../service/api/fin/fin15100.service';
-import { BusinessIdService } from '../../../service/basic/business-id.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
 import { ButtonModule } from 'primeng/button';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { environment } from '../../../../environments/environment';
-
-
-
-
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { createPaginationConfig, Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { FIN15100Service } from '@service/api/fin/fin15100.service';
+import { finalize } from 'rxjs';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-fin15100',
@@ -39,160 +35,175 @@ import { environment } from '../../../../environments/environment';
     ReactiveFormsModule,
     ButtonComponent,
     TranslateModule,
-    InputTextRangeComponent,
-    InputTextComponent,
+    CalendarRangeQuickComponent,
     TableModule,
     InputTextModule,
     InputNumberModule,
     DropdownModule,
     CalendarModule,
     ButtonModule,
-    CalendarComponent
+    CustomFooterTableComponent,
+    DatePipe,
   ],
 })
-export class FIN15100Component extends BasicQueryPageComponent<any> {
+export class FIN15100Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.group({
+    TXN_DT_S: [new Date(), [Validators.required]],
+    TXN_DT_E: [new Date(), [Validators.required]],
+    ...createPaginationConfig([{ field: 'ECR_NO', order: 1 }]),
+  });
 
   data: any[] = [];
   totalRecords = 0;
-  selectedItems: any[] = [];
+  footerData: any[] = [];
+  btnLoading = false;
+  btnLoading2 = false;
 
-
-  queryForm = this.formBuilder.group({
-    INV_DeclareYM: [null, Validators.required], // 申報年月
-    TXN_Ret_NoS: [null, [Validators.required,Validators.maxLength(20)]], // 退出/折讓單號(起)
-    TXN_Ret_NoE: [null, [Validators.required,Validators.maxLength(20)]],   // 退出/折讓單號(迄)
-    InvoiceTrack: ['', [Validators.maxLength(2)]],//字軌
-    InvoiceNumberS: [null, [Validators.maxLength(8)]], //發票起始號碼
-    InvoiceNumberE: [null, [Validators.maxLength(8)]], //發票結束號碼
-  });
-
-
-
-
+  columns: Column[] = [
+    { field: 'Ecr_No', header: '收銀機號', visible: true, showSort: true },
+    { field: 'TXN_Date', header: '發票日期', visible: true, showSort: true },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true, showSort: true },
+    { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
+    { field: 'TXN_SaleAmt', header: '銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_SaleTax', header: '應稅銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_SaleNoTax', header: '免稅銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_Net', header: '未稅銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_Tax', header: '稅額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_VoidDT', header: '發票作廢日', visible: true, showSort: true },
+  ];
 
   constructor(
-    private fin15100Service: FIN15100Service,
-    private businessIdService: BusinessIdService,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage(
-      'FIN15100',
-      '/fin/fin15100cru',
-      this.queryForm,
-      () => this.onSubmit()
-    );
-
-
+    this.initializePage('FIN15100', '/FIN/FIN15100CRU', this.queryForm, (frm) => this.onSubmit(frm));
   }
 
+  /** 查詢 */
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      // const v = frm.value;
 
-  onSubmit(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.queryForm.markAllAsTouched();
-      return;
-    }
+      // const payload = {
+      //   PageSize: v.PageSize || 0,
+      //   PageIndex: v.PageIndex || 0,
+      //   OrderBy: '',
+      //   Offset: 0,
+      //   SortBy: [],
+      //   MID: '0',
+      //   STO_No: '10',
+      //   TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
+      //   TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+      // };
 
-    // 取表單值
-    const f = this.queryForm.getRawValue();
+      // this.fin15100Service
+      //   .QueryFIN15110(payload)
+      //   .pipe(finalize(() => (this.loading = false)))
+      //   .subscribe({
+      //     next: (res) => {
+      //       if (res?.Data) {
+      //         this.data = res.Data.FIN15110s || [];
+      //         this.footerData = [
+      //           {
+      //             TXN_SaleAmt: res.Data.TotalTXN_SaleAmt,
+      //             TXN_SaleTax: res.Data.TotalTXN_SaleTax,
+      //             TXN_SaleNoTax: res.Data.TotalTXN_SaleNoTax,
+      //             TXN_Net: res.Data.TotalNet,
+      //             TXN_Tax: res.Data.TotalTax,
+      //           },
+      //         ];
+      //         this.totalRecords = res.Data.TotalCount || this.data.length;
+      //       } else {
+      //         this.data = [];
+      //         this.footerData = [];
+      //         this.totalRecords = 0;
+      //       }
 
-    // 取 localStorage.UserInfo → mid、SYS_StoreNo
-    const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
-
-    const payload = {
-      INV_DeclareYM: this.toYYYYMM(f.INV_DeclareYM),
-      TXN_Ret_NoS: f.TXN_Ret_NoS ?? '',
-      TXN_Ret_NoE: f.TXN_Ret_NoE ?? '',
-      InvoiceTrack: f.InvoiceTrack ?? '',
-      InvoiceNumberS: f.InvoiceNumberS ?? '',
-      InvoiceNumberE: f.InvoiceNumberE ?? '',
-      Mid: mid,
-      STO_No: SYS_StoreNo,
-    };
-
-    this.loading = true;
-    this.fin15100Service.printFIN15100(payload).subscribe({
-    next: (res) => {
-  this.loading = false;
-
-  const rawUrl: string | undefined =
-    res?.Data?.Print_URL ?? res?.Data?.[0]?.Print_URL;
-
-  if (!rawUrl) {
-    alert('取得列印網址失敗（Print_URL 為空）');
-    console.error('API 回傳無 Print_URL：', res);
-    return;
-  }
-
-  // 不做任何 encode，不用 URL()，只做字串相接
-  const finalUrl = rawUrl.startsWith('http')
-    ? rawUrl
-    : this.joinUrlNoEncode(environment.ApiUrl, rawUrl);
-
-  window.open(finalUrl, '_blank', 'noopener');
-},
-      error: (err) => {
-        this.loading = false;
-        alert('查詢失敗，請稍後再試');
-        console.error('PrintFIN15100 發生錯誤：', err);
-      },
+      //     },
+      //   });
     });
   }
-  private joinUrlNoEncode(base: string, path: string): string {
-  const cleanBase = base.replace(/\/+$/, '');
-  const cleanPath = String(path).replace(/^\/+/, '');
-  return `${cleanBase}/${cleanPath}`;
-}
 
-  /** 將相對或絕對的 Print_URL 轉為完整可開啟的網址 */
-private buildAbsoluteUrl(base: string, path: string): string {
-  try {
-    // new URL 會自動處理前後斜線；中文路徑可用 encodeURI
-    const u = new URL(path, base).toString();
-    return encodeURI(u);
-  } catch {
-    const cleanBase = base.replace(/\/+$/, '');
-    const cleanPath = String(path).replace(/^\/+/, '');
-    return encodeURI(`${cleanBase}/${cleanPath}`);
+  /** 匯出 PDF */
+  onExportPDF(): void {
+    this.btnLoading = true;
+    // const v = this.queryForm.value;
+
+    // const payload = {
+    //   PageSize: 0,
+    //   PageIndex: 0,
+    //   OrderBy: '',
+    //   Offset: 0,
+    //   SortBy: [],
+    //   MID: '0',
+    //   STO_No: '10',
+    //   TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
+    //   TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+    //   IsMerge: true,
+    //   IsExcel: false,
+    // };
+
+    // this.fin15100Service
+    //   .PrintFIN15110(payload)
+    //   .pipe(finalize(() => (this.btnLoading = false)))
+    //   .subscribe({
+    //     next: (res) => {
+    //       const blob = res.body;
+    //       if (blob) {
+    //         const link = document.createElement('a');
+    //         link.href = window.URL.createObjectURL(blob);
+    //         link.download = '二電發票表.pdf';
+    //         link.click();
+    //       } else {
+    //         this.messageService.warnBubble('沒有可匯出的資料');
+    //       }
+    //     },
+
+    //   });
   }
-}
 
+  /** 匯出 Excel */
+  onExportExcel(): void {
+    this.btnLoading2 = true;
+    // const v = this.queryForm.value;
 
-  /** 解析 localStorage.UserInfo，回傳 { mid, SYS_StoreNo } */
-  private getUserInfoFromLocal(): { mid: number; SYS_StoreNo: string } {
-    let mid = 0;
-    let SYS_StoreNo = '';
+    // const payload = {
+    //   PageSize: 0,
+    //   PageIndex: 0,
+    //   OrderBy: '',
+    //   Offset: 0,
+    //   SortBy: [],
+    //   MID: '0',
+    //   STO_No: '10',
+    //   TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
+    //   TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+    //   IsMerge: true,
+    //   IsExcel: true,
+    // };
 
-    try {
-      const raw = localStorage.getItem('UserInfo');
-      if (raw) {
-        const obj = JSON.parse(raw);
-        // 依你的截圖欄位：mid 與 SYS_StoreNo
-        mid = Number(obj?.mid ?? 0);
-        SYS_StoreNo = String(obj?.SYS_StoreNo ?? '');
-      }
-    } catch (e) {
-      console.error('解析 localStorage.UserInfo 失敗：', e);
-    }
+    // this.fin15100Service
+    //   .PrintFIN15110(payload)
+    //   .pipe(finalize(() => (this.btnLoading2 = false)))
+    //   .subscribe({
+    //     next: (res) => {
+    //       const blob = res.body;
+    //       if (blob) {
+    //         const link = document.createElement('a');
+    //         link.href = window.URL.createObjectURL(blob);
+    //         link.download = '二電發票表.xlsx';
+    //         link.click();
+    //       } else {
+    //         this.messageService.warnBubble('沒有可匯出的資料');
+    //       }
+    //     },
 
-    return { mid, SYS_StoreNo };
-  }
+  //     });
+  // }
 
-  /** 將 Month 選擇轉為 YYYYMM（支援 Date / 字串） */
-  private toYYYYMM(val: any): string {
-    if (!val) return '';
-    if (val instanceof Date) {
-      const y = val.getFullYear();
-      const m = String(val.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    }
-    // 支援 "2025-09" / "2025/09" / "202509" 等常見格式
-    const s = String(val);
-    const m = s.match(/^(\d{4})[\/\-]?(\d{2})/);
-    if (m) return `${m[1]}${m[2]}`;
-    return s; // fallback
+// }
   }
 }

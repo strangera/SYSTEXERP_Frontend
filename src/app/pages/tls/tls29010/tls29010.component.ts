@@ -73,7 +73,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   queryForm = this.formBuilder.group({
     // TALPORDERM
     pod_no: [null],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
-    pod_type: [[]], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
+    pod_type: [['8']], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣) // 新增規則這裡部定查8
     pod_sdate: [null], // 活動起始日 (Date)
     pod_edate: [null], // 活動終止日 (Date)
     pod_status: [[]], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
@@ -288,7 +288,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   // 20251016 核准按鈕狀態切換
   statusChange(rowData: TALPORDERM, status: string) {
     this.btnLoading = true;
-    this.messageService.infoBubble('審核測試，等待api連接');
 
     const apprPod_no = rowData.pod_no;
     if (apprPod_no) {

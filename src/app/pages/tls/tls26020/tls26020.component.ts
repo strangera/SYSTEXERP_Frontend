@@ -13,7 +13,6 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { FloorService } from '@service/basic/floor.service';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { DatePipe } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -33,7 +32,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     TranslateModule,
     CalendarRangeComponent,
     MultiSelectComponent,
-    InputTextComponent
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
@@ -133,10 +131,13 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     });
 
     // 組織代碼下拉
-    this.tls51080Service
-      .querySYS3100_DropDownList({})
-      .subscribe((response) => {
-        this.orgOptions = response.Data;
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(options => {
+        this.orgOptions = options.Data.map(item => ({
+          Name: `${item.No} - ${item.Name}`,
+          No: item.No
+        }));
       });
 
     // 收銀機號下拉

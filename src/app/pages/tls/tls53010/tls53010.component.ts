@@ -44,7 +44,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     LOGO_No: [[]],                                              // 品牌代碼 (改為陣列)
     PST_DateStart: [null],    // 盤點基準日期(起)
     PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
-    PST_Status: [[]],                                           // 盤點單狀態 (多選)
+    PST_Status: [[]],                                           // 盤點狀態 (多選)
     ...createPaginationConfig([{ field: 'PST_No', order: -1 }]) // 分頁和排序參數
   });
 
@@ -55,7 +55,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   // 下拉選單
   hosOptions: any[] = [];// 倉別選項
   logoOptions: any[] = [];// 品牌選項
-  // 盤點單狀態選項
+  // 盤點狀態選項
   pstStatusOptions: any[] = [
     { value: '0', label: '盤點單開立-待盤點' },
     { value: '1', label: '初盤-盤點中' },
@@ -80,7 +80,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     },
     {
       field: 'PST_Status',
-      header: '盤點單狀態',
+      header: '盤點狀態',
       visible: true,
       format: (v) => this.pstStatusOptions.find(opt => opt.value === v)?.label || v,
     },
@@ -91,7 +91,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   addButton: AddButton[] = [
     {
       label: '列印',
-      icon: 'pi pi-print text-red-500',
+      icon: 'pi pi-print text-cyan-500',
       action: (rowData: TLS53010Data) => { this.onPrint(rowData); },
       loading: (rowData: TLS53010Data) => this.getLoadingState(rowData.id, 'print'),
     },

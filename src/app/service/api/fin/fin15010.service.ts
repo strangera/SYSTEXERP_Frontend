@@ -27,7 +27,7 @@ export interface FIN15010QueryRequest extends BaseQueryRequest {
   Voucher_No_S?: string;              // 傳票號碼起
   Voucher_No_E?: string;              // 傳票號碼訖
   CRT_USR_Name?: string;              // 傳票建立者
-  SAL_Type?: string[];                // 使用別
+  SAL_Type?: string[];                // 直接扣抵法稅額分攤種類
   CRT_Date_S?: string;                // 建立日期起
   CRT_Date_D?: string;                // 建立日期訖
   SYS_ORIGIN?: string[];              // 系統別
