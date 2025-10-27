@@ -69,7 +69,10 @@ export class tls2b010tableComponent
   constructor(
     private readonly messageService: NotificationService,
   ) { super(); }
+ @Input() preserveRowsWhileLoading = false;
 
+  // === 新增：內部 loading 狀態（配合清空資料時顯示 skeleton）===
+  internalLoading = false;
   /* ======================= Inputs / Outputs ======================= */
   // 基本
   @Input() dataKey = 'ID';
@@ -85,11 +88,14 @@ export class tls2b010tableComponent
 
   private _data: any[] = [];
   @Input() set data(v: any[]) {
+    // 一旦外部把新資料丟進來，就視為載入完成
     this._data = Array.isArray(v) ? v : [];
-    this.rebuildPageGroupMeta();       // data 變更先重建 meta
+    this.internalLoading = false;             // ★ 關閉內部 loading
+    this.rebuildPageGroupMeta();
     this.dataChange.emit(this._data);
   }
   get data(): any[] { return this._data; }
+
 
   @Output() dataChange = new EventEmitter<any[]>();
   @Input() loading = false;
@@ -358,46 +364,65 @@ const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群
     }
   }
 
-  loadDataLazy(event: TableLazyLoadEvent, force = false) {
-    if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
-    if (force) { this._skipFirstLazy = false; }
-   
+loadDataLazy(event: TableLazyLoadEvent, force = false) {
+  // 第一次 primeNG 會自動丟 event；避免重複打
+  if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
+  if (force) { this._skipFirstLazy = false; }
 
-    const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-    let pageIndex = (event.first ?? 0) / pageSize + 1;
+  // 計算頁碼與每頁筆數
+  const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
+  let pageIndex = (event.first ?? 0) / (pageSize || 1) + 1;
 
-    const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
-      (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-    const normalized = this.normalizeSortMeta(sortRaw);
-    const sort = this.ensureGroupFirst(normalized);
-    const sortSig = JSON.stringify(sort);
+  // 取排序（multiSort > 單欄 > 無）
+  const sortRaw =
+    event.multiSortMeta ??
+    (event as any).multisortmeta ??
+    (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
 
-    // 判斷這次 onLazyLoad 是否真的是「使用者點了排序」
-    const userSorted = !!(event.sortField || (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length));
+  const normalized = this.normalizeSortMeta(sortRaw);
+  const sort = this.ensureGroupFirst(normalized);
+  const sortSig = JSON.stringify(sort);
 
-    if (!this.lastSortSig) {
-      this.lastSortSig = sortSig;
-    }  else if (sortSig !== this.lastSortSig) {
-      this.lastSortSig = sortSig;
+  // 有沒有真的由使用者觸發排序
+  const userSorted = !!(
+    event.sortField ||
+    (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length)
+  );
 
-   if (userSorted && pageIndex !== 1) {
-     this.first = 0;
-     this.selectedPage = 1;
-     return;
-  }
+  // 偵測排序變更：若變更且目前不是第 1 頁，回到第 1 頁
+  if (!this.lastSortSig) {
+    this.lastSortSig = sortSig;
+  } else if (sortSig !== this.lastSortSig) {
+    this.lastSortSig = sortSig;
+    if (userSorted && pageIndex !== 1) {
+      // 回到第一頁（讓 primeNG 重新拋一次 lazy 事件）
+      this.first = 0;
+      this.selectedPage = 1;
+      return;
     }
-
-    this.selectedPage = pageIndex;
-    this.queryState.setQueryState(this.tableKey + 'Sort', sort);
-
-    const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
-
-    const key = `${pageIndex}|${pageSize}|${sortSig}`;
-    if (!force && key === this.lastEmitKey) return;
-    this.lastEmitKey = key;
-
-    this.lazyLoadData.emit(payload);
   }
+
+  // 記錄頁碼/排序到狀態（保留原行為）
+  this.selectedPage = pageIndex;
+  this.queryState.setQueryState(this.tableKey + 'Sort', sort);
+
+  // ★ 進入 loading 狀態：清空當前畫面資料，避免殘留上一頁
+  if (!this.preserveRowsWhileLoading) {
+    this.internalLoading = true;
+    this._data = [];              // 直接清空私有欄位，避免觸發 setter 把 loading 關掉
+    this.rebuildPageGroupMeta();  // 清空後重建群組資訊，避免 rowspan 殘影
+  }
+
+  // 組 payload 丟給外層（由父元件打 API 再把新資料 set 回來）
+  const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+
+  // 去抖：同一個參數就不重複 emit
+  const key = `${pageIndex}|${pageSize}|${sortSig}`;
+  if (!force && key === this.lastEmitKey) return;
+  this.lastEmitKey = key;
+
+  this.lazyLoadData.emit(payload);
+}
 
   /* ======================= 群組 / RowSpan ======================= */
 
