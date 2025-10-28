@@ -15,7 +15,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, tap } from 'rxjs';
 import { FIN53010Data } from './fin53010.model';
 
 @Component({
@@ -68,7 +68,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     { field: 'VouNo', header: '傳票號碼' },
     { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions().find(vt => vt.value === d)?.label ?? d },
     { field: 'VouDate', header: '傳票日期', format: d => this.datePipe.transform(d, 'yyyy/MM/dd') ?? d },
-    { field: 'Remark', header: '傳票摘要' },
+    { field: 'Remark', header: '傳票摘要', format: d => this.service.noteDescMap().get(d)?.label ?? d },
     { field: 'AccAmt', header: '傳票金額' },
     { field: 'DetailCount', header: '明細筆數' },
   ];
@@ -108,6 +108,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       this.service.FIN53010Data.set([]);
 
       this.service.loadFIN53010(payload).pipe(
+        tap(res => this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean)).subscribe()),
         finalize(() => {
           this.loading = !1;
           this.logger.debug('FIN53010 查詢結果:', [this.service.FIN53010Data()]);

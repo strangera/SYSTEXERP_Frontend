@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '@service/system/auth.service';
+import { environment } from 'src/environments/environment';
 
 // 定義圖片相關的資料模型
 export interface ImageQueryRequest {
@@ -47,7 +48,7 @@ export interface ImageDeleteRequest {
   providedIn: 'root'
 })
 export class ImageService {
-  private readonly apiUrl = 'http://localhost:5142/Image';
+  private readonly apiUrl = environment.ApiUrl + '/Image';
 
   constructor(private readonly http: HttpClient) { }
 

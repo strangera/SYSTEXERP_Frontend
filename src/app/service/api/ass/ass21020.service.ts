@@ -29,7 +29,10 @@ export class ASS21020Service implements OnDestroy {
   public readonly engTypeMap = new Map<string, EngType>([
     ['水錶', EngType.水],
     ['電錶', EngType.電],
-    ['瓦斯錶', EngType.瓦斯]
+    ['瓦斯錶', EngType.瓦斯],
+    ['G01', EngType.水],
+    ['G02', EngType.電],
+    ['G03', EngType.瓦斯],
   ]);
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
@@ -81,7 +84,7 @@ export class ASS21020Service implements OnDestroy {
     this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(({ TotalCount, Data }) => this.totalRecords.set(TotalCount || 0)),
+      tap(({ TotalCount }) => this.totalRecords.set(TotalCount || 0)),
       tap(({ Data }) => this.ASS21020Data.set(Data.map((item, index) => ({ ...item, Id: index + 1 })))),
       finalize(() => {
         this.tableLoading.set(!1);

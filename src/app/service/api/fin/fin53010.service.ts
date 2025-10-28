@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { NoteDescList, NoteDescPayload } from '@pages/fin/fin52030/fin52030.model';
-import { AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, QueryFIN53010Detail, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -56,7 +55,7 @@ export class FIN53010Service {
   /** 對象別 */
   public readonly refNameList = signal<Option[]>([]);
   /** 摘要 */
-  public readonly noteDescList = signal<Option[]>([]);
+  public readonly noteDescList = signal<AccDescOption[]>([]);
 
   /** 傳票種類 */
   public readonly vouTypeOptions = signal<Option[]>([
@@ -202,13 +201,14 @@ export class FIN53010Service {
     ).subscribe();
   }
 
-  public getAccDescList(payload: NoteDescPayload): Observable<Option[]> {
+  public getAccDescList(AccNo: string[]): Observable<AccDescOption[]> {
     this.noteDescCancel$.next();
     this.noteDescLoading.set(!0);
-    return this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, { PageSize: 9999, PageIndex: 0, AccNo: Array.from(new Set(payload.AccNo)), NoteDesc: payload.NoteDesc }).pipe(
+    return this.http.post<NoteDescResponse>(`${apiUrl}/queryAccNoNoteDescDropdown`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
       take(1),
       takeUntil(this.noteDescCancel$),
-      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option)) ?? []),
+      map(res => Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
+        ({ value: key, label: value[0], data: value.map((v, i) => ({ value: String(i), label: v })) } as AccDescOption)) ?? []),
       tap(res => this.noteDescList.set(res)),
       finalize(() => {
         this.noteDescLoading.set(!1);
@@ -233,7 +233,7 @@ export class FIN53010Service {
     return this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       takeUntil(this.accNoCancel$),
-      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName } as Option))),
+      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName, templateLabel: `${item.AccNo} - ${item.AccCName}` } as Option))),
       tap(res => this.accNoList.set(res)),
       finalize(() => {
         this.accLoading.set(!1);

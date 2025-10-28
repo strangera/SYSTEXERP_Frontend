@@ -7,9 +7,10 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs'; // 引入 forkJoin
+import { forkJoin, Observable } from 'rxjs'; // 引入 forkJoin 和 Observable
 import { finalize, map } from 'rxjs/operators';
 import { NgIf } from '@angular/common';
+import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2c050',
@@ -31,7 +32,6 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
     cls_date: [new Date(), [Validators.required]],
   });
 
-  // 使用新的 Observable 型別
   closeDate: string | undefined;
   summaryDate: string | undefined;
   loadingDates = false;
@@ -47,15 +47,69 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
     this.fetchDates();
   }
 
+  // 覆寫 onSubmit，將其改為單純的表單驗證
   onSubmit(form: FormGroup): void {
-    // 轉檔按鈕的邏輯
-    this.handleSubmit(form, () => {
-      if (form.value.cls_date) {
-        this.tls2c050Service.invoiceTLS2C050(form.value.cls_date).pipe(finalize(() => this.loading = false)).subscribe(res => {
-          this.messageService.successBubble(res.Message);
-          this.fetchDates();
-        });
+    this.submitted = true;
+    if (form.invalid) {
+      return;
+    }
+    // 不執行任何操作，讓單獨的函數處理按鈕邏輯
+  }
+
+  /**
+   * 執行發票彙總作業 (轉檔)
+   */
+  onInvoiceSummary(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const date = this.queryForm.controls.cls_date.value;
+      if (date) {
+        const dateStr = formatDateToYYYY_MM_DD(date); // 假設有轉換工具
+        if (dateStr) {
+          this.executeApi(this.tls2c050Service.invoiceTLS2C050(dateStr));
+        }
       }
+    });
+  }
+
+  /**
+   * 執行發票鎖定
+   */
+  onLock(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const date = this.queryForm.controls.cls_date.value;
+      if (date) {
+        const dateStr = formatDateToYYYY_MM_DD(date);
+        if (dateStr) {
+          this.executeApi(this.tls2c050Service.lockTLS2C050(dateStr));
+        }
+      }
+    });
+  }
+
+  /**
+   * 執行發票反鎖定
+   */
+  onUnLock(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const date = this.queryForm.controls.cls_date.value;
+      if (date) {
+        const dateStr = formatDateToYYYY_MM_DD(date);
+        if (dateStr) {
+          this.executeApi(this.tls2c050Service.unLockTLS2C050(dateStr));
+        }
+      }
+    });
+  }
+
+  /**
+   * 統一處理 API 呼叫和結果
+   * @param api$ 待執行的 Observable
+   */
+  private executeApi(api$: Observable<any>): void {
+    this.loading = true;
+    api$.pipe(finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Message || '操作成功');
+      this.fetchDates(); // 操作成功後重新取得日期
     });
   }
 
@@ -78,7 +132,6 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
         finalize(() => this.loadingDates = false)
       )
       .subscribe(([closeDate, summaryDate]) => {
-        // 直接賦值給 string 變數
         this.closeDate = closeDate;
         this.summaryDate = summaryDate;
       });

@@ -6,9 +6,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { DiscCodeEditItem, PayNoEditItem, PreOrderEditItem, Tls24080Service, TLTIdEditItem, TLTNoEditItem, VoidEditItem } from '@service/api/tls/tls24080.service';
+import { TLS24080ResultData, Tls24080Service } from '@service/api/tls/tls24080.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -16,8 +15,8 @@ import { finalize } from 'rxjs';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24080.model';
-import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls24080',
@@ -31,13 +30,13 @@ import { yesterday } from '@shared/models/system/query-form.model';
     CalendarRangeComponent,
     MultiSelectComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     InputNumberRangeComponent,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    TableReportComponent
   ],
 })
-export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | DiscCodeEditItem | TLTIdEditItem | PayNoEditItem | PreOrderEditItem | VoidEditItem> implements OnInit {
+export class TLS24080Component extends BasicQueryPageComponent<TLS24080ResultData> implements OnInit {
   queryForm = this.formBuilder.group({
     TXN_Date_Start: [yesterday, [Validators.required]], // 銷售日期起 // 預設昨天
     TXN_Date_End: [yesterday, [Validators.required]],   // 銷售日期迄 // 預設昨天
@@ -47,9 +46,12 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
     TXN_No_Start: [null as null | number, [Validators.max(99999999)]],  // 領取交易序號 起
     TXN_No_End: [null as null | number, [Validators.max(99999999)]],  // 領取交易序號 迄
     EditType: ['TLTNoEdit', [Validators.required]],// 報表型態
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'ID', order: 1 }]],
   });
   totalRecords = 0;
+  lastQueryBody: any;
   ECR_NoOptions: IDropdownItem[] = [];
   EditTypeOptions = [
     { label: '專櫃編號修正', value: 'TLTNoEdit' },
@@ -59,14 +61,14 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
     { label: '是否為預售交易修正', value: 'PreOrderEdit' },
     { label: '交易資料作廢', value: 'VoidEdit' },
   ];
-  data: TLTNoEditItem[] | DiscCodeEditItem[] | TLTIdEditItem[] | PayNoEditItem[] | PreOrderEditItem[] | VoidEditItem[] = [];
+  data: TLS24080ResultData[] = [];
   columns: Column[] = TLTNoEditColumn;
   constructor(
     private readonly dropDownList: DropDownListService,
-    private readonly tls24080Service: Tls24080Service,
+    public readonly tls24080Service: Tls24080Service,
   ) { super(); }
   ngOnInit(): void {
-    this.initializePage('TLS24080', 'TLS/TLS24080CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS24080');
     this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
@@ -80,11 +82,19 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
         case 'VoidEdit': this.columns = VoidEditColumn; break;
         default: this.columns = [];
       }
+      setTimeout(() => {
+        // 避免在初始化時，由 patchValue 觸發的第一次 valueChange 執行查詢，
+        // 所以檢查 this.data 是否已有值 (代表已經執行過一次查詢)
+        // 或者直接執行查詢，但確保查詢參數正確。
+        this.onSubmit(this.queryForm);
+      }, 0);
     })
 
     const EditType = this.queryStateService.getQueryState(this.ProgNo)?.value?.EditType;
     if (EditType) {
       this.queryForm.get('EditType')?.patchValue(EditType);
+    } else {
+      this.columns = TLTNoEditColumn;
     }
   }
 
@@ -97,17 +107,9 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
         UPD_Date_End: frm.value.UPD_Date_End ? addDaysToDate(frm.value.UPD_Date_End, 1) : null,
       }
       this.tls24080Service.queryTLS24080(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        switch (frm.value.EditType) {
-          case 'TLTNoEdit': this.data = res.Data[0].TLTNoEdit as TLTNoEditItem[]; break;
-          case 'DiscCodeEdit': this.data = res.Data[0].DiscCodeEdit as DiscCodeEditItem[]; break;
-          case 'TLTIdEdit': this.data = res.Data[0].TLTIdEdit as TLTIdEditItem[]; break;
-          case 'PayNoEdit': this.data = res.Data[0].PayNoEdit as PayNoEditItem[]; break;
-          case 'PreOrderEdit': this.data = res.Data[0].PreOrderEdit as PreOrderEditItem[]; break;
-          case 'VoidEdit': this.data = res.Data[0].VoidEdit as VoidEditItem[]; break;
-          default: this.data = [];
-        }
+        this.data = res.Data
+        this.lastQueryBody = body;
         this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     });
   }

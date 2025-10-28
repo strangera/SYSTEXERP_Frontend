@@ -328,8 +328,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2c030cru', loadComponent: () => import('./tls2c030-cru/tls2c030-cru.component').then(m => m.TLS2C030CRUComponent) },
   // 專櫃暫存傳票查詢作業 CRU
   { path: 'tls2c040cru', loadComponent: () => import('./tls2c040-cru/tls2c040-cru.component').then(m => m.TLS2C040CRUComponent) },
-  // 發票匯總作業 CRU
-  { path: 'tls2c050cru', loadComponent: () => import('./tls2c050-cru/tls2c050-cru.component').then(m => m.TLS2C050CRUComponent) },
   // 代扣款補登作業 CRU
   { path: 'tls2d010cru', loadComponent: () => import('./tls2d010-cru/tls2d010-cru.component').then(m => m.TLS2D010CRUComponent) },
   // 專櫃代扣款明細表 CRU

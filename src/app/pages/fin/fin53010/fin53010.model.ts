@@ -1,3 +1,4 @@
+import { Option } from '@service/utility/dropdown-api.model';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 interface FIN53010Basic {
@@ -161,12 +162,13 @@ export interface VoucherType {
 }
 
 export interface NoteDescList {
-  id: string;
-  AccNo: string;
-  NoteDesc: string;
+  AccNoNoteDesc: { [key: string]: string[]; };
 }
 
-export interface NoteDescPayload extends BaseQueryRequest {
-  AccNo?: string[];
-  NoteDesc?: string;
+export type NoteDescResponse = Omit<BaseQueryResponse<NoteDescList>, 'Data'> & {
+  Data: NoteDescList;
+};
+
+export interface AccDescOption extends Option {
+  data?: Option[];
 }
