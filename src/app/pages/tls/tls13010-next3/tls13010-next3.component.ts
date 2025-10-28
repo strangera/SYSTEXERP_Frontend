@@ -1,4 +1,3 @@
-// tls13010-next3.component.ts - 重構版本：清晰的結構和職責分離
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { catchError, firstValueFrom } from 'rxjs';
 import { FormGroup } from '@angular/forms';

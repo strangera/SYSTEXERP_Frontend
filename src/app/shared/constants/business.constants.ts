@@ -92,7 +92,7 @@ export const APPLY_STATUS_OPTIONS = {
 export const TLT_CTYPE_MTOTAL_OPTIONS = {
   '1': '年包',
   '2': '月包',
-  '3': '期間包',
+  '0': '期間包',
 } as const;
 
 

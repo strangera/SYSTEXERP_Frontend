@@ -202,7 +202,7 @@ export class ContractFlowService {
           data: DataCleaner.cleanContractInfo(step1Data)
         },
 
-        deductions: DataCleaner.cleanDeductionItems(step2Data || []),
+        deductions: DataCleaner.cleanDeductionItems(this.cleanFareAmounts(step2Data || [])),
 
         // 關鍵修正：傳遞合約日期給 DataCleaner
         commissions: DataCleaner.cleanCommissionData(
@@ -1777,5 +1777,19 @@ export class ContractFlowService {
 
     // 預設為編輯模式
     this.isViewModeSubject.next(false);
+  }
+
+  /**
+ * 清理扣款金額,確保都是整數
+ */
+  private cleanFareAmounts(fareItems: FareItem[]): FareItem[] {
+    return fareItems.map(item => ({
+      ...item,
+      tpy_amount: item.tpy_amount ? Math.round(Number(item.tpy_amount)) : null,
+      tpy_totalamt: item.tpy_totalamt ? Math.round(Number(item.tpy_totalamt)) : null,
+      down_payment: item.down_payment ? Math.round(Number(item.down_payment)) : null,
+      period_nos: item.period_nos ? Math.round(Number(item.period_nos)) : null,
+      interval: item.interval ? Math.round(Number(item.interval)) : null,
+    }));
   }
 }

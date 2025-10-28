@@ -438,12 +438,12 @@ export interface FareItem {
   tpy_type?: string;
   tpy_qty?: number;
   tpy_unitamt?: number;
-  tpy_amount?: number;
-  tpy_totalamt?: number;
+  tpy_amount?: number | null;
+  tpy_totalamt?: number | null;
   day_account?: string;
-  interval?: number;
-  down_payment?: number;
-  period_nos?: number;
+  interval?: number | null;
+  down_payment?: number | null;
+  period_nos?: number | null;
   cap_saletype?: string;
   edc_bank?: string;
   instms_type?: string;
