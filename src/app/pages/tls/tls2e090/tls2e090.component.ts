@@ -22,7 +22,6 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, ReportColumn } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 // 假設您在 tls2e090.model.ts 中定義了 columns1, columns2, columns3
@@ -40,7 +39,7 @@ type ReportType = '1' | '2' | '3';
   selector: 'app-tls2e090', // ***Selector 修改為 tls2e090***
   templateUrl: './tls2e090.component.html', // ***TemplateUrl 修改為 tls2e090***
   standalone: true,
-  imports: [RadiobuttonComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, CustomFooterTableComponent, TranslateModule]
+  imports: [RadiobuttonComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2E090Component extends BasicQueryPageComponent<any> implements OnInit { // ***Component Name 修改為 TLS2E090Component***
 

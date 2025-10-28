@@ -23,7 +23,6 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 // 假設您在 tls2e050.model.ts 中定義了 columns1, columns2, columns3
 import { columnGroup, columns1, columns2, columns3 } from './tls2e050.model';
@@ -41,7 +40,7 @@ type ReportType = '1' | '2' | '3';
   selector: 'app-tls2e050',
   templateUrl: './tls2e050.component.html',
   standalone: true,
-  imports: [RadiobuttonComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, RadioButtonModule, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, CustomFooterTableComponent, TranslateModule]
+  imports: [RadiobuttonComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, RadioButtonModule, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2E050Component extends BasicQueryPageComponent<any> implements OnInit {
 
