@@ -1,4 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
+import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface FIN52030Data {
   id: number;
@@ -32,6 +32,20 @@ export interface FIN52030Detail {
   index: number;
 }
 
+export interface FIN52030DetailData {
+  CRT_Date: Date;
+  CRT_USR_No: string;
+  Details: FIN52030Detail[];
+  TempName: string;
+  TempNo: string;
+  UPD_Date: Date;
+  UPD_USR_No: string;
+  VouType: '1' | '2' | '3';
+  id: number;
+};
+
+export type FIN52030DetailDataResponse = Omit<BaseQueryResponse<FIN52030DetailData>, 'Data'> & { Data: FIN52030DetailData; };
+
 /**
  * FIN52030 明細檔 (Table 顯示用)
  * AccName: 科目名稱
@@ -39,7 +53,6 @@ export interface FIN52030Detail {
  * recKey: 對帳KEY值
  * AccAmtD: 借方金額
  * AccAmtC: 貸方金額
- * displayIndex: 顯示用索引值
  */
 export interface FIN52030DetailTable extends FIN52030Detail {
   AccName?: string;
@@ -47,7 +60,6 @@ export interface FIN52030DetailTable extends FIN52030Detail {
   recKey?: number;
   AccAmtD?: number;
   AccAmtC?: number;
-  displayIndex?: number;
 }
 
 export interface FIN52030Payload extends BaseQueryRequest {

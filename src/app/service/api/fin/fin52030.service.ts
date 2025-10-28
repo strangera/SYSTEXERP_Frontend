@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { AccNoList, FIN52030Data, FIN52030Detail, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescList, NoteDescPayload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { AccNoList, FIN52030Data, FIN52030Detail, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescList, NoteDescPayload, VendorList } from '@pages/fin/fin52030/fin52030.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -22,7 +22,7 @@ export class FIN52030Service {
   private readonly noteDescCancel$ = new Subject<void>();
 
   public readonly FIN52030Data = signal<FIN52030Data[]>([]);
-  public readonly FIN52030Detail = signal<FIN52030Detail[]>([]);
+  public readonly FIN52030Detail = signal<FIN52030DetailData>(Object.create(null));
 
   public readonly totalRecords = signal<number>(0);
 
@@ -81,8 +81,8 @@ export class FIN52030Service {
     );
   }
 
-  public loadFIN52030Detail(id: number): Observable<BaseQueryResponse<FIN52030Detail>> {
-    return this.http.post<BaseQueryResponse<FIN52030Detail>>(`${apiUrl}/queryFIN52030Detail`, { id }).pipe(
+  public loadFIN52030Detail(id: number): Observable<FIN52030DetailDataResponse> {
+    return this.http.post<FIN52030DetailDataResponse>(`${apiUrl}/queryFIN52030Detail`, { id }).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52030Detail.set(res.Data)),
@@ -146,10 +146,10 @@ export class FIN52030Service {
     ).subscribe();
   }
 
-  public getAccDescList(payload: NoteDescPayload): void {
+  public getAccDescList(payload: NoteDescPayload): Observable<Option[]> {
     this.noteDescCancel$.next();
     this.noteDescLoading.set(!0);
-    this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, { AccNo: Array.from(new Set(payload.AccNo)), NoteDesc: payload.NoteDesc }).pipe(
+    return this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, { AccNo: Array.from(new Set(payload.AccNo)), NoteDesc: payload.NoteDesc }).pipe(
       take(1),
       takeUntil(this.noteDescCancel$),
       map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option))),
@@ -158,7 +158,7 @@ export class FIN52030Service {
         this.noteDescLoading.set(!1);
         this.logger.debug('查詢NoteDescList結果:', [this.noteDescList()]);
       }),
-    ).subscribe();
+    );
   }
 
   public getOrgNoList(): void {

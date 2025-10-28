@@ -56,9 +56,9 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     TempName: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(40)]),
     VouType: new FormControl<'1' | '2' | '3' | void>(void 0, [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
-    createDate: new FormControl<Date | void>(void 0),
+    CRT_Date: new FormControl<Date | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
-    modifyDate: new FormControl<Date | void>(void 0),
+    UPD_Date: new FormControl<Date | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
 
@@ -102,11 +102,24 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       this.dataEffect.destroy();
     });
     const data = this.service.FIN52030Detail();
-    if (!data.length) return;
+    this.logger.debug(`set init table:`, [data]);
+    if (!data.Details?.length) return;
 
-    this.service.getAccDescList({ AccNo: data.map(v => v.AccNo) });
+    this.service.getAccDescList({ AccNo: data.Details.map(v => v.AccNo) }).pipe(
+      tap(res => this.logger.debug(`get assDesc:`, [res])),
+    ).subscribe();
 
-    this.tableData.set(data.map(v => ({
+    this.dataForm.patchValue({
+      TempNo: data.TempNo,
+      TempName: data.TempName,
+      VouType: data.VouType,
+      CRT_USR_No: data.CRT_USR_No,
+      CRT_Date: data.CRT_Date,
+      UPD_USR_No: data.UPD_USR_No,
+      UPD_Date: data.UPD_Date,
+    });
+
+    this.tableData.set(data.Details.map(v => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
@@ -116,7 +129,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label ?? v.NoteDesc,
       UPD_USR_No: this.user.user_Name,
       displayIndex: v.index,
-      modifyDate: new Date(),
+      UPD_Date: new Date(),
     })));
 
     this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
@@ -133,7 +146,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   ];
 
   public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN52030DetailTable; })[]>(() => [
-    { field: 'displayIndex', header: '序號', formatFooterDisable: !1, format: d => (d + 1) * 10 },
+    { field: 'SerNo', header: '序號' },
     {
       field: 'AccNo',
       header: '科目代號',
@@ -159,6 +172,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       field: 'NoteDesc',
       header: '摘要',
       type: 'dropdown',
+      disabled: () => this.service.noteDescLoading(),
       options: () => this.service.noteDescList(),
       optionLabel: 'label',
       optionValue: 'value',
@@ -222,7 +236,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       tap(([_accnos, _vendors, _usrs]) => {
         if (!this.isFormCreateable) return;
         this.df().CRT_USR_No.setValue(this.user.user_Name);
-        this.df().createDate.setValue(new Date());
+        this.df().CRT_Date.setValue(new Date());
       }),
       finalize(() => {
         this.loading = !1;
@@ -237,7 +251,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().map(({ displayIndex, AccAmtD, AccAmtC, ...rest }, index) => ({
+        Details: this.tableData().map(({ AccAmtD, AccAmtC, ...rest }, index) => ({
           ...rest,
           index,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
@@ -266,40 +280,50 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onFieldChange(event: FieldChangeEvent<FIN52030DetailTable>): void {
     this.logger.debug(`onFieldChange:`, [event]);
     const row = event.rowData;
+    const index = event.index;
 
-    // 自動帶入科目名稱
-    if (event.field === 'AccNo') {
-      row.AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
-    }
-
-    // 自動互斥借貸方金額
-    else if (event.field === 'AccAmtD' && row.AccAmtC) {
-      row.AccAmtC = void 0;
-    }
-    else if (event.field === 'AccAmtC' && row.AccAmtD) {
-      row.AccAmtD = void 0;
-    }
-
-    // 設定目前選擇的組織代號
-    else if (event.field === 'ORG_ID') {
-      this.selectedOrgId.set(String(event.value));
-      row.SubDetailNo = '';
-    }
-
-    // 檢查是否可儲存
-    this.rowEditCanSave.set(!!row.AccNo && !!row.ORG_ID || !!this.isBalanced());
-
-    // 更新 tableData 觸發重算合計
+    // 更新 tableData 並觸發重算合計
     this.tableData.update(current => {
-      const indexMap = new Map(current.map((item, idx) => [item.displayIndex, idx]));
       const result = [...current];
+      const index = event.index;
 
-      const index = indexMap.get(row.displayIndex);
-      if (index !== void 0) {
-        result[index] = { ...result[index], ...row };
-      } else {
-        result.push(row);
+      if (typeof index !== 'number' || index < 0 || index >= result.length) {
+        result.push({ ...event.rowData, SerNo: (result.length + 1) * 10 });
+        return result;
       }
+
+      switch (event.field) {
+        case 'AccNo':
+          // 自動帶入科目名稱
+          result[index].AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
+          // 自動帶入摘要
+          this.service.getAccDescList({ AccNo: [String(event.value)] }).pipe(
+            tap(res => result[index].NoteDesc = res[0].value ?? void 0),
+          ).subscribe();
+          break;
+
+        case 'AccAmtD':
+          // 自動互斥借貸方金額
+          if (event.value) result[index].AccAmtC = void 0;
+          break;
+
+        case 'AccAmtC':
+          // 自動互斥借貸方金額
+          if (event.value) result[index].AccAmtD = void 0;
+          break;
+
+        case 'ORG_ID':
+          // 設定目前選擇的組織代號
+          this.selectedOrgId.set(String(event.value));
+          result[index].SubDetailNo = '';
+          break;
+      }
+
+      // 更新 SerNo
+      result[index].SerNo = (index + 1) * 10;
+
+      // 檢查是否可儲存
+      this.rowEditCanSave.set(!!result[index].AccNo && !!result[index].ORG_ID || !!this.isBalanced());
 
       return result;
     });
@@ -330,7 +354,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       return newArray.map((item, index) => ({
         ...item,
         index,
-        displayIndex: index,
         SerNo: (index + 1) * 10,
       }));
     });
