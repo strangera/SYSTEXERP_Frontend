@@ -1,6 +1,5 @@
-import { filter } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -19,6 +18,8 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Column } from 'src/app/shared/componentkit/table/table.model'; // Ensure this path is correct
+
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin14030',
@@ -61,14 +62,34 @@ export class FIN14030Component extends BasicQueryPageComponent<any> implements O
     PUR_TaxType: [''],
     endPUR_Amt: [''],
     endVoucher_No: [''],
+    startPUR_Amt: [''],
     startVoucher_No: [''],
     AssetType: [[]],
-
+    endPUR_Tax: [''],
+    startPUR_Tax: [''],
     ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]),
   });
-  InvoiceType_Options = getSYS1000Options('InvoiceType')
-    .filter(opt => ['31', '32', '35'].includes(opt.value));
-
+  Buyer_Uniform_Options: any[] = [];
+  data: any[] = [];
+  totalRecords = 0;
+  InvoiceType_Options = getSYS1000Options('InvoiceType');
+    // .filter(opt => ['31', '32', '35'].includes(opt.value));
+  SAL_Type_Options = getSYS1000Options('SAL_Type');
+  taxTypeOptions = getSYS1000Options('PUR_TaxType');
+  AssetNoteOptions = getSYS1000Options('AssetType');
+  columns: Column[] = [
+    { field: 'InvoiceType', header: '發票格式', visible: true },
+    { field: 'InvoiceNumber', header: '發票號碼', visible: true },
+    { field: 'InvoiceDate', header: '發票日期', visible: true },
+    { field: 'INV_DeclareYM', header: '申報年月', visible: true },
+    { field: 'Buyer_Uniform', header: '買受人統一編號', visible: true },
+    { field: 'PUR_TaxType', header: '課稅別', visible: true },
+    { field: 'PUR_Net', header: '未稅金額', visible: true },
+    { field: 'PUR_Tax', header: '稅額', visible: true },
+    { field: 'Voucher_No', header: '傳票編號', visible: true },
+    { field: 'AssetType', header: '資產註記', visible: true },
+    { field: 'SAL_Type', header: '使用別', visible: true },
+  ];
   constructor(
     private fin14030Service: Fin14030Service,
   ) {
@@ -79,15 +100,8 @@ export class FIN14030Component extends BasicQueryPageComponent<any> implements O
 
   }
   onSubmit(form: FormGroup): void {
-this.handleSubmit(form, () => {
-      // this.fin14030Service.getFIN14030Data(form.value).subscribe({
-      //   next: (res) => {
-      //     this.data = res.Data;
-      //     this.totalRecords = res.TotalRecords;
-      //     this.footerData = res.FooterData;
-      //     this.loading = false;
-      //   },
-      // });
+    this.handleSubmit(form, () => {
+
     });
   }
 }
