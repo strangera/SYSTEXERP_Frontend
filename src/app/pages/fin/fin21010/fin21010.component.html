@@ -9,8 +9,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="公司銀行科目" controlName="BNK_DepositAccNo" [options]="GLS1005_Option"
-              optionLabel="Label" optionValue="No" [control]="queryForm.controls.BNK_DepositAccNo"
+            <app-dropdown label="公司銀行科目" controlName="BNK_DepositAccNo" [options]="GLS1005_BNK_DepositAccNo_Option"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.BNK_DepositAccNo"
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -44,12 +44,14 @@
             </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="應付票據" controlName="BNK_CheckInAccNo" [control]="queryForm.controls.BNK_CheckInAccNo"
-                [submitted]="submitted"></app-input-text>
+              <app-dropdown label="應付票據" controlName="BNK_CheckInAccNo" [options]="GLS1005_BNK_CheckInAccNo_Option"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.BNK_CheckInAccNo"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="應收票據" controlName="BNK_CheckOutAccNo" [control]="queryForm.controls.BNK_CheckOutAccNo"
-                [submitted]="submitted"></app-input-text>
+            <app-dropdown label="應收票據" controlName="BNK_CheckOutAccNo" [options]="GLS1005_BNK_CheckOutAccNo_Option"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.BNK_CheckOutAccNo"
+              [submitted]="submitted"></app-dropdown>      
           </div>
         </div>  
         <!-- <div> -->
