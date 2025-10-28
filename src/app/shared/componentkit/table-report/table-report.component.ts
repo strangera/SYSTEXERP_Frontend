@@ -56,6 +56,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
   @Input() loading = false;
+  @Input() firstLoading = false;
   @Input() apiUrl: string | undefined = undefined;
   // Checkbox 相關
   @Input() showCheckBox = false;

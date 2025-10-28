@@ -9,7 +9,7 @@
     trackBy: trackByFn,
     autoSize: true,
     onScroll: onScroll,
-  }" [expandedRowKeys]="expandedRows">
+  }" [expandedRowKeys]="expandedRows" [loading]="firstLoading">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
