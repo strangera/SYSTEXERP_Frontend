@@ -157,7 +157,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       options: () => this.service.accNoList(),
       optionLabel: 'value',
       optionValue: 'value',
-      templateLabel: 'label',
+      templateLabel: 'templateLabel',
     },
     { field: 'AccName', header: '科目名稱' },
     {

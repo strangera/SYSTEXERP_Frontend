@@ -177,7 +177,7 @@ export class FIN52030Service {
     return this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       takeUntil(this.accNoCancel$),
-      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName } as Option))),
+      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName, templateLabel: `${item.AccNo} - ${item.AccCName}` } as Option))),
       tap(res => this.accNoList.set(res)),
       finalize(() => {
         this.accLoading.set(!1);
