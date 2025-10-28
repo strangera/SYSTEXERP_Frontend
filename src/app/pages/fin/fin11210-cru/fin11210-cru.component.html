@@ -11,16 +11,11 @@
           <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECR_No_Options" optionLabel="Name" optionValue="No"
             [control]="dataForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
         </div>
-        <!-- 參數代號 -->
+        <!-- 參數代號/說明 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="參數代號" controlName="ARG_No" [options]="ARG_No_Options" optionLabel="No" optionValue="No"
-            [control]="dataForm.controls.ARG_No" [submitted]="submitted"
-            (valueChange)="onARGNoChange($event)"></app-dropdown>
-        </div>
-        <!-- 參數說明 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="參數說明" controlName="ARG_Desc" [control]="dataForm.controls.ARG_Desc"
-            [submitted]="submitted"></app-input-text>
+          <app-dropdown label="參數代號/說明" controlName="ARG_No" [options]="ARG_No_Options" optionLabel="Name"
+            optionValue="No" [control]="dataForm.controls.ARG_No" [submitted]="submitted"
+            [editable]="false"></app-dropdown>
         </div>
         <!-- 參數內容 -->
         <div class="col-12 md:col-6 lg:col-4">
