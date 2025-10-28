@@ -15,12 +15,11 @@
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
       [selectedItems]="selectedItems" [tableKey]="tableKey" [showCaption]="showCaption" [showFilter]="showFilter"
       [showReportMode]="showReportMode" [showDelete]="showDelete" [showExcel]="showExcel"
-      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport"
-      [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
-      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="false"
-      (delete)="delete.emit($event)" (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)"
-      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [customReport]="customReport"
-      (exportEvent)="exportEvent.emit($event)">
+      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation"
+      [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport"
+      [exportExcelLoading]="exportExcelLoading" [showPage]="false" (delete)="delete.emit($event)"
+      (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
+      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
@@ -37,7 +36,7 @@
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 如果是第一次出現這個群組 -->
           <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
-            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header"
+            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header text-center"
               pReorderableColumn pResizableColumn>
               {{ getGroupHeader(col.groupField!) }}
             </th>
