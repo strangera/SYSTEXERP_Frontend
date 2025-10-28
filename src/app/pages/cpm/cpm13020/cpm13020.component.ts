@@ -51,15 +51,15 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   /** ALL=全館彙總 / POS=機台彙總 */
   reportMode: 'ALL' | 'POS' = 'ALL';
 
-  // 下拉選單（檢視模式）
   reportModeOptions = [
     { label: '全館彙總', value: 'ALL' },
     { label: '機台彙總', value: 'POS' },
   ] as Array<{label: string; value: 'ALL' | 'POS'}>;
 
-  // 資料/總筆數
+  // 資料/總筆數/總計
   rows: any[] = [];
   totalRecords = 0;
+  grandTotal: any = null; // ← 新增：提供給 <app-table-report>
 
   // 匯出（目前後端尚未提供匯出 API，先保留 UI 開關）
   btnLoading = false;
@@ -74,12 +74,11 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     return d;
   })();
 
-  // 與 QueryBase 對齊：交給後端分頁/排序
   queryForm = this.formBuilder.group({
     TXN_BDate: [this.yesterday, [Validators.required]],
     TXN_EDate: [this.yesterday, [Validators.required]],
-    PAY_No: [''],                // 單選，空字串=全部
-    reportMode: ['ALL', [Validators.required]],  // ← 新增到表單
+    PAY_No: [''],
+    reportMode: ['ALL', [Validators.required]],
     ...createPaginationConfig([{ field: 'PAY_No', order: 1 }]),
     pageSize: [30],
   });
@@ -114,7 +113,6 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.initializePage('CPM13020', 'cpm/cpm13020', this.queryForm, (form) => this.onSubmit(form));
 
-    // 支付別下拉
     this.dropDownListService.queryPOS1006_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
@@ -128,13 +126,22 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
         }));
       });
 
-    // 報表模式同步（表單 -> 欄位判斷）
     this.queryForm.controls.reportMode.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(v => {
         this.reportMode = (v === 'POS' ? 'POS' : 'ALL');
       });
   }
+
+  // 解析 API 回傳的總計物件
+private extractGrandTotal(apiResp: any): any {
+  const t0 = apiResp?.Data?.totalData?.[0];
+  if (!t0) return null;
+  return {
+    TXN_PayAmt: Number(t0.TXN_Total_PayAmt ?? 0),
+    TXN_CustCnt: Number(t0.TXN_Total_CustCnt ?? 0),
+  };
+}
 
   // === PrimeNG SortMeta -> API SortMeta（order: 1 | -1）===
   private normalizeSortMeta(meta: unknown): ApiSortMeta[] {
@@ -148,47 +155,51 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   }
 
   // 送出：交由後端分頁/排序
-  onSubmit = (frm: FormGroup) => {
-    this.handleSubmit(frm, () => {
-      const val = this.queryForm.getRawValue();
+onSubmit = (frm: FormGroup) => {
+  this.handleSubmit(frm, () => {
+    const val = this.queryForm.getRawValue();
+    const payNoRaw = val?.PAY_No;
+    const payNo: string | undefined =
+      (payNoRaw && String(payNoRaw).length > 0) ? String(payNoRaw) : undefined;
 
-      const payNoRaw = val?.PAY_No;
-      const payNo: string | undefined = (payNoRaw && String(payNoRaw).length > 0) ? String(payNoRaw) : undefined;
+    const payload: QueryCPM13020Request = {
+      TXN_BDate: this.toDateOnly(val?.TXN_BDate),
+      TXN_EDate: this.toDateOnly(val?.TXN_EDate),
+      PAY_No: payNo,
+      pageIndex: Number(val?.pageIndex ?? 1),
+      pageSize: Number(val?.pageSize ?? 30),
+      SortBy: this.normalizeSortMeta(val?.SortBy),
+    };
 
-      const payload: QueryCPM13020Request = {
-        TXN_BDate: this.toDateOnly(val?.TXN_BDate),
-        TXN_EDate: this.toDateOnly(val?.TXN_EDate),
-        PAY_No: payNo,
-        pageIndex: Number(val?.pageIndex ?? 1),
-        pageSize: Number(val?.pageSize ?? 30),
-        SortBy: this.normalizeSortMeta(val?.SortBy),
-      };
+    this.historyRequestBody = { ...payload };
+    this.loading = true;
 
-      this.historyRequestBody = { ...payload };
-      this.loading = true;
+    const mode = (val?.reportMode === 'POS') ? 'POS' : 'ALL';
+    const call$ = mode === 'ALL'
+      ? this.cpm13020Service.queryAll(payload)
+      : this.cpm13020Service.queryPos(payload);
+call$
+  .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+  .subscribe({
+    next: (resp) => {
+      console.log('API Response', resp);
+      // 只取 mainData
+      this.rows = Array.isArray(resp?.Data?.mainData)
+        ? resp.Data.mainData
+        : [];
+      this.totalRecords = Number(resp?.TotalCount ?? this.rows.length ?? 0);
+      this.grandTotal = this.extractGrandTotal(resp);
+    },
+    error: () => {
+      this.rows = [];
+      this.totalRecords = 0;
+      this.grandTotal = null;
+    },
+  });
+  });
+};
 
-      const mode = (val?.reportMode === 'POS') ? 'POS' : 'ALL';
-      const call$ = mode === 'ALL'
-        ? this.cpm13020Service.queryAll(payload)
-        : this.cpm13020Service.queryPos(payload);
-
-      call$
-        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (resp) => {
-            const list = Array.isArray(resp?.Data) ? resp.Data : [];
-            this.rows = list;
-            this.totalRecords = Number(resp?.TotalCount ?? list.length ?? 0);
-          },
-          error: () => {
-            this.rows = [];
-            this.totalRecords = 0;
-          },
-        });
-    });
-  };
-
-  // <app-table-report> 查詢（直接打後端分頁）
+  // <app-table-report> 查詢（直接打後端分頁，回傳 GrandTotal）
   public queryAllForReport = (body: any) => {
     const rawPay = (body?.PAY_No ?? this.queryForm.value?.PAY_No);
     const payNo: string | undefined =
@@ -202,9 +213,9 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
       pageSize: Number(body?.pageSize ?? this.queryForm.value?.pageSize ?? 30),
       SortBy: this.normalizeSortMeta(body?.SortBy ?? this.queryForm.value?.SortBy),
     }).pipe(map((res: any) => ({
-      Data: Array.isArray(res?.Data) ? res.Data : [],
+      Data: Array.isArray(res?.Data?.mainData) ? res.Data.mainData : (Array.isArray(res?.Data) ? res.Data : []),
       TotalCount: Number(res?.TotalCount ?? 0),
-      GrandTotal: null,
+      GrandTotal: this.extractGrandTotal(res), // ← 回傳 GrandTotal 給 table-report
     })));
   };
 
@@ -221,9 +232,9 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
       pageSize: Number(body?.pageSize ?? this.queryForm.value?.pageSize ?? 30),
       SortBy: this.normalizeSortMeta(body?.SortBy ?? this.queryForm.value?.SortBy),
     }).pipe(map((res: any) => ({
-      Data: Array.isArray(res?.Data) ? res.Data : [],
+      Data: Array.isArray(res?.Data?.mainData) ? res.Data.mainData : (Array.isArray(res?.Data) ? res.Data : []),
       TotalCount: Number(res?.TotalCount ?? 0),
-      GrandTotal: null,
+      GrandTotal: this.extractGrandTotal(res), // ← 回傳 GrandTotal 給 table-report
     })));
   };
 

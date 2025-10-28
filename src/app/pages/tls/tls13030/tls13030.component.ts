@@ -47,7 +47,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
+    // InputTextComponent,
     MultiSelectComponent,
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
