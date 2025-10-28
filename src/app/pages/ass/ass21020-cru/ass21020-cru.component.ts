@@ -39,7 +39,7 @@ import { ASS21020CRUTable, ASS21020Data, ASS21020Detail, ASS21020Query, ASS21020
   ]
 })
 export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> implements OnInit {
-  public tb = viewChild<TableComponent>('tb');
+  public tb = viewChild.required<TableComponent>('tb');
   public readonly CRUDStatus = CRUDStatus;
   private readonly ratePtn = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
 
@@ -175,6 +175,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       this.lastQueriedMeterNo = payload.ENG_MeterNo;
       this.service.queryTltByFlag(payload.ENG_MeterNo);
     }
+    this.logger.debug(`patch form:`, [meterData]);
 
     if (payload.EngTypes && meterData) queueMicrotask(() => {
       if (this.crudstatus !== CRUDStatus.Create) this.service.loadASS21020(payload);
