@@ -231,6 +231,27 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢會計科目設定檔(GLS1005) (只取 公司銀行科目) */
+  queryGls1005_BNK_DepositAcc(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_DepositAcc').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢會計科目設定檔(GLS1005) (只取 應收票據科目) */
+  queryGls1005_BNK_CheckInAcc(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckInAcc').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢會計科目設定檔(GLS1005) (只取 應付票據科目) */
+  queryGls1005_BNK_CheckOutAcc(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckOutAcc').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
   /** 查詢扣款代碼檔(APS1003) */
   queryAps1003(body: Aps1003Query): Observable<IDropdownItem[] | null> {
     return this.queryDropdownWithParams<IDropdownItem, Aps1003Query>('/queryAPS1003_DropDownList', body).pipe(

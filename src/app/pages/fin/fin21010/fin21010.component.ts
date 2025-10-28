@@ -69,7 +69,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   // 查詢
   queryForm = this.formBuilder.group({
     //APS1002  公司銀行資料維護主檔
-    BNK_DepositAccNo: [null], // 公司銀行科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME"
+    BNK_DepositAccNo: [null], // 公司銀行科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (accNo like '1103%')
     AccCName: [null],         // 公司銀行科目名稱(文字輸入)
 
     BNK_No: [null],           // 全省銀行代碼 // "讀取APS1004銀行分行代碼檔
@@ -84,8 +84,8 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     // BNK_BranchNo: [null],     // 銀行分行代號
     // BNK_AccStatus: ['0'],     // 帳戶狀態 (0=正常)
 
-    BNK_CheckInAccNo: [null],                       // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME"
-    BNK_CheckOutAccNo: [null],                      // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME"
+    BNK_CheckInAccNo: [null],                       // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
+    BNK_CheckOutAccNo: [null],                      // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
     //分頁查詢
     ...createPaginationConfig([{ field: 'BNK_No', order: 1 }]), // 分頁和排序參數
   });
@@ -94,12 +94,11 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   APS1004_Option: APS1004[] = []; // APS1004銀行分行代碼檔 -- 下拉BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME， 不可重覆
-  GLS1005_Option: apiOption[] = []; // GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME (API response內容為api的no, name)
 
   // -----------看要不要由GLS1005_Option去mapping---------------------
-  GLS1005_BNK_DepositAccNo_Option: apiOption[] = []; // 公司銀行科目
-  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應付票據科目 (應該是 ClassNo = '211')
-  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應收票據科目 (應該是 ClassNo = '112','113')
+  GLS1005_BNK_DepositAccNo_Option: apiOption[] = []; // 公司銀行科目  (accNo like '1103%')
+  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
+  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
   // ----------------------------------------------------------------
 
   BNK_AccType_Option: apiOption[] = []; // SYS1000.BNK_ACCTYPE 存款代號 -- 下拉選單
@@ -222,23 +221,23 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
 
     console.log('deleteBody', deleteBody);
 
-    // this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
+    this.fin21010Service.deleteFIN21010(deleteBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
 
     console.log('刪除API待提供', deleteBody);
 
@@ -261,15 +260,31 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     });
 
     // 查 GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME
-    this.dropdownApiService.queryGls1005().subscribe((response) => {
+    this.dropdownApiService.queryGls1005_BNK_DepositAcc().subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      this.GLS1005_Option = list.map((item: any) => ({
-        No: item.No, // 會計科目 代號
-        Name: item.Name, // 會計科目 名稱
-        Label: item.label // 會計科目 標籤
+      this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
+        No: item.No, // 公司銀行科目 代號
+        Name: item.Name, // 公司銀行科目 名稱
       }));
-      console.log('GLS1005 會計科目:', response);
-      // console.log('GLS1005 會計科目:', this.GLS1005_Option);
+      console.log('公司銀行科目:', this.GLS1005_BNK_DepositAccNo_Option);
+    });
+
+    this.dropdownApiService.queryGls1005_BNK_CheckInAcc().subscribe((response) => {
+      const list = Array.isArray(response) ? response : [];
+      this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
+        No: item.No, // 應付票據科目 代號
+        Name: item.Name, // 應付票據科目 名稱
+      }));
+      console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
+    });
+
+    this.dropdownApiService.queryGls1005_BNK_CheckOutAcc().subscribe((response) => {
+      const list = Array.isArray(response) ? response : [];
+      this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
+        No: item.No, // 應收票據科目 代號
+        Name: item.Name, // 應收票據科目 名稱
+      }));
+      console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
     });
 
   }
