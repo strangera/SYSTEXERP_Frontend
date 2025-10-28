@@ -23,6 +23,7 @@ import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { environment } from 'src/environments/environment';
+
 @Component({
   selector: 'app-fin15110',
   templateUrl: './fin15110.component.html',
@@ -47,6 +48,7 @@ import { environment } from 'src/environments/environment';
   ],
 })
 export class FIN15110Component extends BasicQueryPageComponent<any> implements OnInit {
+
   queryForm = this.formBuilder.group({
     TXN_DT_S: [new Date(), [Validators.required]],
     TXN_DT_E: [new Date(), [Validators.required]],
@@ -83,15 +85,15 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN15110', '/FIN/FIN15110CRU', this.queryForm, (frm) => this.onSubmit(frm));
   }
 
-  /** 查詢 */
   onSubmit(frm: FormGroup): void {
     if (this.loading) return;
     this.handleSubmit(frm, () => {
       this.loading = true;
+
       const v = frm.value;
       const payload = {
-        PageSize: v.PageSize || 20,
-        PageIndex: v.PageIndex ?? 1,
+        PageSize: v.pageSize || 20,
+        PageIndex: v.pageIndex ?? 1,
         OrderBy: '',
         Offset: 0,
         SortBy: v.SortBy ?? [],
@@ -101,69 +103,57 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
         TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
       };
 
-      console.log('查詢 payload:', payload);
 
-      this.fin15110Service
-        .QueryFIN15110(payload)
-
-        .pipe(finalize(() => (this.loading = false)))
+      this.fin15110Service.QueryFIN15110(payload)
+        .pipe(finalize(() => this.loading = false))
         .subscribe({
           next: (res) => {
-            console.log('查詢回應:', res);
             if (res?.Data) {
-              this.data = res.Data.FIN15110s || [];
+              const d = res.Data;
+              this.data = d.FIN15110s ?? [];
+              this.totalRecords = d.TotalCount ?? this.data.length;
               this.footerData = [
                 {
-                  TXN_SaleAmt: res.Data.TotalTXN_SaleAmt,
-                  TXN_SaleTax: res.Data.TotalTXN_SaleTax,
-                  TXN_SaleNoTax: res.Data.TotalTXN_SaleNoTax,
-                  TXN_Net: res.Data.TotalNet,
-                  TXN_Tax: res.Data.TotalTax,
+                  TXN_SaleAmt: d.TotalTXN_SaleAmt,
+                  TXN_SaleTax: d.TotalTXN_SaleTax,
+                  TXN_SaleNoTax: d.TotalTXN_SaleNoTax,
+                  TXN_Net: d.TotalNet,
+                  TXN_Tax: d.TotalTax,
                 },
               ];
-              this.totalRecords = res.Data.TotalCount || this.data.length;
-              console.log('資料筆數:', this.data.length);
-              console.log('總筆數:', this.totalRecords);
             } else {
               this.data = [];
               this.footerData = [];
               this.totalRecords = 0;
             }
-
           },
         });
     });
   }
 
-  override onLazyLoadData(event: any, form: FormGroup): void {
+  override onLazyLoadData(event: any): void {
     if (this.loading) return;
 
-    const pageIndex = event.pageIndex ?? Math.floor((event.first ?? 0) / (event.pageSize ?? 20)) + 1;
+    this.queryForm.patchValue({
+      pageSize: event.pageSize,
+      pageIndex: event.pageIndex,
+      SortBy: event.SortBy,
+    });
 
-    form.get('PageSize')?.setValue(event.pageSize);
-    form.get('PageIndex')?.setValue(pageIndex);
-    form.get('SortBy')?.setValue(event.SortBy);
-
-    this.onSubmit(form);
+    this.onSubmit(this.queryForm);
   }
 
-  /** 匯出 PDF */
   onExportPDF(): void {
     this.exportReport(false);
   }
 
-  /** 匯出 Excel */
   onExportExcel(): void {
     this.exportReport(true);
   }
-
-  /** 通用匯出報表函式 */
+lastExportUrl: string | null = null;
   private exportReport(isExcel: boolean): void {
-    if (isExcel) {
-      this.btnLoading2 = true;
-    } else {
-      this.btnLoading = true;
-    }
+    if (isExcel) this.btnLoading2 = true;
+    else this.btnLoading = true;
 
     const v = this.queryForm.value;
     const payload = {
@@ -180,51 +170,40 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
       IsExcel: isExcel,
     };
 
-    console.log('匯出報表 payload:', payload);
+    console.log(' 匯出 payload:', payload);
 
-    this.fin15110Service
-      .printFIN15110(payload)
-      .pipe(
-        finalize(() => {
-          if (isExcel) this.btnLoading2 = false;
-          else this.btnLoading = false;
-        })
-      )
+    this.fin15110Service.printFIN15110(payload)
+      .pipe(finalize(() => {
+        if (isExcel) this.btnLoading2 = false;
+        else this.btnLoading = false;
+      }))
       .subscribe({
         next: (res) => {
-          console.log('printFIN15110 API 回應:', res);
-
-          if (!res) {
-            this.messageService.errorBubble('後端無回應');
+          if (!res || res.Status !== '0000') {
+            this.messageService.errorBubble(res?.Message ?? '匯出失敗');
             return;
           }
 
-          if (res.Status !== '0000') {
-            this.messageService.errorBubble(res.Message || '產生報表失敗');
-            return;
-          }
           const url = res?.Data?.Print_URL;
-          if (url) {
-            const fileUrl = `${environment.ApiUrl.replace(/\/$/, '')}${url}`;
-            console.log('下載路徑:', fileUrl);
-
-            const a = document.createElement('a');
-            a.href = fileUrl;
-            a.setAttribute('download', decodeURIComponent(
-              url.split('/').pop() ?? (isExcel ? '二電發票表.xlsx' : '二電發票表.pdf')
-            ));
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
-          } else {
+          if (!url) {
             this.messageService.warnBubble('後端未回傳報表連結');
+            return;
           }
+
+          const fileUrl = `${environment.ApiUrl.replace(/\/$/, '')}${url}`;
+          const a = document.createElement('a');
+          a.href = fileUrl;
+          a.setAttribute('download', decodeURIComponent(
+            url.split('/').pop() ?? (isExcel ? '二電發票表.xlsx' : '二電發票表.pdf')
+          ));
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+
+          this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
         },
 
       });
   }
-
 }

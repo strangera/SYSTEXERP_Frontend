@@ -20,7 +20,7 @@
             [submitted]="submitted">
           </app-calendar-range-quick>
 
-          <!-- 支付別（單選，空值=全部） -->
+          <!-- 支付別 -->
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="支付別"
@@ -35,7 +35,7 @@
           <!-- 檢視模式（下拉選單） -->
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
-            label="報表格式"
+            label="檢視模式"
             controlName="reportMode"
             [options]="reportModeOptions"
             optionLabel="label"
@@ -64,6 +64,7 @@
       [data]="rows"
       [columns]="columnsAll"
       [totalRecords]="totalRecords"
+      [footerData]="grandTotal"       
       [showDelete]="false"
       [showManage]="false"
       [showReportMode]="false"
@@ -78,6 +79,7 @@
       [data]="rows"
       [columns]="columnsPos"
       [totalRecords]="totalRecords"
+      [footerData]="grandTotal"       
       [showDelete]="false"
       [showManage]="false"
       [showReportMode]="false"

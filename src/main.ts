@@ -37,6 +37,7 @@ export function tokenGetter() {
 bootstrapApplication(AppComponent, {
   providers: [
     provideClientHydration(),
+    provideAnimations(),
     importProvidersFrom(
       TranslateModule.forRoot({
         loader: {
@@ -97,7 +98,6 @@ bootstrapApplication(AppComponent, {
     },
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
-    provideAnimations(),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000'

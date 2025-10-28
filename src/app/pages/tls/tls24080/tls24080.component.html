@@ -44,8 +44,14 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table apiUrl="queryTLS24080" tableKey="TLS24010" dataKey="ID" [data]="data" [columns]="columns"
+  <!-- <app-table apiUrl="queryTLS24080" tableKey="TLS24010" dataKey="ID" [data]="data" [columns]="columns"
     [showEdit]="false" [showDetail]="false" [showDelete]="false" [multiSortMeta]="[{ field: 'ID', order: -1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [showManage]="false" [loading]="loading"></app-table>
+    [showManage]="false" [loading]="loading"></app-table> -->
+
+  <app-table-report apiUrl="queryTLS24080" tableKey="tls24080" dataKey="ID" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false"
+    [queryFunction]="tls24080Service.queryTLS24080.bind(this.tls24080Service)" [showManage]="false" [showManage]="false"
+    [firstLoading]="loading">
+  </app-table-report>
 </div>

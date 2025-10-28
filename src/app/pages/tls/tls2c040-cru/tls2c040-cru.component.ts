@@ -13,12 +13,13 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls2c040-cru',
@@ -36,25 +37,26 @@ import { formatAmount } from '@shared/componentkit/table/table.model';
     DropdownComponent,
     CalendarComponent,
     TranslateModule,
-    TableEditComponent
+    TableEditComponent,
+    CustomFooterTableComponent
   ]
 })
 export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    VouNo: [''],                                               // 傳票編號
-    VouType: [''],                                             // 傳票種類
-    SrcSheetType: [''],                                        // 傳票型態
-    VouDate: [''],                                             // 傳票日期
-    Remark: ['', Validators.required],                         // 傳票摘要
-    No: [''],                                                  // 結帳單號
-    PostFlag: [''],                                            // 傳票狀態
-    CRT_USR_No: [''],                                          // 建立人員
-    CRT_Date: [''],                                            // 建立日期
-    UPD_USR_No: [''],                                          // 修改人員
-    UPD_Date: [''],                                           // 修改日期
+    VouNo: [{ value: '', disabled: true }],                     // 傳票編號
+    VouType: [{ value: '', disabled: true }],                   // 傳票種類
+    SrcSheetType: [{ value: '', disabled: true }],              // 傳票型態
+    VouDate: [{ value: '', disabled: true }],                   // 傳票日期
+    Remark: ['', Validators.required],                          // 傳票摘要
+    No: [{ value: '', disabled: true }],                        // 結帳單號
+    PostFlag: [{ value: '', disabled: true }],                  // 傳票狀態
+    CRT_USR_No: [{ value: '', disabled: true }],                // 建立人員
+    CRT_Date: [{ value: '', disabled: true }],                  // 建立日期
+    UPD_USR_No: [{ value: '', disabled: true }],                // 修改人員
+    UPD_Date: [{ value: '', disabled: true }],                  // 修改日期
   });
 
-  // 下拉選單選項
+  //#region 下拉選單選項
   // 傳票型態
   vouTypeOptions: IDropdownItem[] = [
     { No: '1', Name: '現金收入' },
@@ -62,16 +64,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     { No: '3', Name: '轉帳傳票' }
   ];
   // 傳票種類
-  srcSheetTypeOptions: IDropdownItem[] = [
-    { No: 'SD', Name: '每日營收傳票' },
-    { No: 'MR', Name: '租金傳票' },
-    { No: 'MD', Name: '代扣款傳票' },
-    { No: 'PR', Name: '抽成傳票' },
-    { No: 'PN', Name: '進貨帳款-暫估應付傳票' },
-    { No: 'PNC', Name: '進貨帳款-成本結轉' },
-    { No: 'PT', Name: '每日營收傳票' },
-    { No: 'WD', Name: '自營日結暫存傳票' },
-  ];
+  srcSheetTypeOptions: IDropdownItem[] = [];
   // 傳票狀態
   postFlagOptions: IDropdownItem[] = [
     { No: '0', Name: '作廢' },
@@ -79,8 +72,17 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     { No: '2', Name: '確認' },
     { No: '3', Name: '過帳' }
   ];
+  //#endregion
 
-  // 明細table相關
+  //#region 編輯明細table相關
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
+  editData: any[] = [];
+  selectedItems: any[] = [];
+  editFooterData = {
+    debitAmount: 0, // 借方總金額
+    creditAmount: 0, // 貸方總金額
+  }
+
   editColumns: EditColumn[] = [
     { field: 'AccNo', header: '科目代號' },
     { field: 'AccNotes', header: '科目名稱' },
@@ -112,31 +114,83 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'ORG_ID', header: '組織代碼' },
     { field: 'ProjectNo', header: '活動代號' },
     { field: 'PTA', header: '立沖代號' }
-  ]
+  ];
+  //#endregion
 
-  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
-  data: any[] = [];
-  selectedItems: any[] = [];
-  footerData = {
-    debitAmount: 0, // 借方總金額
-    creditAmount: 0, // 貸方總金額
-  }
+  //#region 檢視明細table相關
+  detailData: any[] = [];
+  totalRecords = 0;
+  detailFooterData: any[] = [];
+
+  detailColumns: Column[] = [
+    { field: 'VOUNO', header: '應收帳款代號', visible: true },
+    { field: 'SrcSheetType', header: '專案代號', visible: true },
+    { field: 'org_id', header: '組織代碼', visible: true },
+    { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'CustomerNo', header: '客戶代碼', visible: true },
+    { field: 'DetailNo', header: '廠商代碼', visible: true },
+    { field: 'VouType', header: '傳票類型', visible: true },
+    { field: 'sam_yyymm', header: '年月', visible: true },
+    { field: 'sam_termno', header: '帳次', visible: true },
+    { field: 'ar_amt', header: '應收帳款金額', visible: true, isTotal: true, format: formatAmount },
+    { field: 'pta_amt', header: '沖帳金額', visible: true, format: formatAmount },
+    { field: 'accno', header: '會計科目', visible: true },
+    { field: 'ent_date', header: '立帳日期', visible: true },
+    { field: 'perget_date', header: '預計收款日期', visible: true },
+    { field: 'SrcVouNo', header: '原始憑證', visible: true },
+    { field: 'notedesc', header: '備註', visible: true }
+  ];
+  //#endregion
 
   constructor(
     private tls2c040Service: TLS2C040Service,
-    private dropdownApiService: DropdownApiService
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2C040', this.dataForm);
-    this.setupFormControls();
+
+    // 載入傳票種類
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.srcSheetTypeOptions = response.Data;
+      });
+
     // 編輯時 帶回明細資料
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      this.data = this.rowdata._GLS6002List;
-      this.footerData.debitAmount = this.totalDebitAmount;
-      this.footerData.creditAmount = this.totalCreditAmount;
+    if (this.crudstatus === CRUDStatus.Edit) {
+      this.editData = this.rowdata._GLS6002List;
+      this.editFooterData.debitAmount = this.totalDebitAmount;
+      this.editFooterData.creditAmount = this.totalCreditAmount;
+    }
+
+    // 檢視時 帶回應收/應付資料
+    if (this.crudstatus === CRUDStatus.Read) {
+      // 應收
+      if (this.queryData === '應收') {
+        const req = {
+          id: this.rowdata.id,
+          PageSize: 20,
+          PageIndex: 0,
+          SortBy: []
+        };
+        this.tls2c040Service.queryTLS2C040_GLS6004(req)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(response => {
+            this.detailData = response.Data._GLS6004List;
+            this.totalRecords = response.TotalCount;
+            this.detailFooterData = [{
+              group_name: '總計',
+              ar_amt: response.Data.Total_ar_amt
+            }];
+          });
+      }
+      // 應付
+      else if (this.queryData === '應付') {
+        // TODO: 待實作應付查詢
+      }
     }
   }
 
@@ -155,7 +209,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
           const updateRequest = {
             id: this.rowdata.id,
             Remark: formValue.Remark || '',
-            GLS6002List: this.data.map(d => ({ id: d.id, NoteDesc: d.NoteDesc }))  // 傳票摘要
+            GLS6002List: this.editData.map(d => ({ id: d.id, NoteDesc: d.NoteDesc }))  // 傳票摘要
           };
 
           this.tls2c040Service.updateTLS2C040(updateRequest)
@@ -169,25 +223,11 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  setupFormControls(): void {
-    // 除了傳票摘要以外，其他欄位皆不可編輯
-    this.dataForm.get('VouNo')?.disable();
-    this.dataForm.get('VouType')?.disable();
-    this.dataForm.get('SrcSheetType')?.disable();
-    this.dataForm.get('VouDate')?.disable();
-    this.dataForm.get('No')?.disable();
-    this.dataForm.get('PostFlag')?.disable();
-    this.dataForm.get('CRT_USR_No')?.disable();
-    this.dataForm.get('CRT_Date')?.disable();
-    this.dataForm.get('UPD_USR_No')?.disable();
-    this.dataForm.get('UPD_Date')?.disable();
-  }
-
   get totalDebitAmount() {
-    return this.data.reduce((sum, item) => sum + (item.AccDC === 'D' ? item.AccAmt : 0), 0);
+    return this.editData.reduce((sum, item) => sum + (item.AccDC === 'D' ? item.AccAmt : 0), 0);
   }
 
   get totalCreditAmount() {
-    return this.data.reduce((sum, item) => sum + (item.AccDC === 'C' ? item.AccAmt : 0), 0);
+    return this.editData.reduce((sum, item) => sum + (item.AccDC === 'C' ? item.AccAmt : 0), 0);
   }
 }
