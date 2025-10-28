@@ -20,7 +20,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, forkJoin, Observable, tap } from 'rxjs';
+import { combineLatest, finalize, Observable, tap } from 'rxjs';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
@@ -66,8 +66,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     VouAccType: new FormControl<'0' | '1' | void>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
-    CrtDate: new FormControl<Date | void>(void 0),
-    UpdDate: new FormControl<Date | void>(void 0),
+    CRT_Date: new FormControl<Date | void>(void 0),
+    UPD_Date: new FormControl<Date | void>(void 0),
     CompNo: new FormControl<string | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
@@ -125,8 +125,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       Remark: data.Remark,
       INV_YN: (data.INV_YN ?? 'N') as 'N' | 'Y',
       VouAccType: ['0', '1'].includes(String(data.VouAccType)) ? String(data.VouAccType) as '0' | '1' : void 0,
-      CRT_USR_No: data.CRT_USR_No,
-      UPD_USR_No: data.UPD_USR_No,
       CompNo: data.CompNo,
     });
 
@@ -137,22 +135,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? this.service.usrMap().get(String(v.DetailNo))?.label,
-      // NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label,
+      NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
     })));
 
     this.logger.debug(`loading detail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
-    if (!this.service.accNoMap().size || !this.service.vendorMap().size || !this.service.usrMap().size) return;
-
-    this.service
-      .getAccDescList({ AccNo: data.Details.map(v => v.AccNo) }).pipe(
-        finalize(() => {
-          // 更新 NoteDesc 欄位
-          this.tableData.update(rows => rows.map(row => ({
-            ...row,
-            NoteDesc: this.service.noteDescMap().get(String(row.AccNo))?.value,
-          })));
-        }),
-      ).subscribe();
+    if (!this.service.accNoMap().size
+      || !this.service.vendorMap().size
+      || !this.service.usrMap().size
+      || !this.service.noteDescMap().size) return;
 
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
@@ -177,7 +167,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       options: () => this.service.accNoList(),
       optionLabel: 'value',
       optionValue: 'value',
-      templateLabel: 'label',
+      templateLabel: 'templateLabel',
     },
     { field: 'AccName', header: '科目名稱' },
     {
@@ -192,7 +182,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       field: 'NoteDesc',
       header: '摘要',
       type: 'dropdown',
-      options: () => this.service.noteDescList(),
+      options: (v: FIN53010DetailTable) => computed(() =>
+        this.service.noteDescList().find(item => item.value === v.AccNo)?.data ?? [])(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -254,15 +245,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getRefNameList();
     this.service.getVoucherTypeList();
 
-    forkJoin([
+    combineLatest([
       this.service.getAccNoList(),
       this.service.getVendorList(),
       this.service.getUsrList(),
+      this.service.getAccDescList([]),
     ]).pipe(
-      tap(([_accnos, _vendors, _usrs]) => {
-        if (!this.isFormCreateable) return;
-        this.df().CRT_USR_No.setValue(this.user.user_No);
-        this.df().CrtDate.setValue(new Date());
+      tap(([accNos, vendors, usrs, accDescs]) => {
+        this.logger.debug(`init forks:`, [accNos, vendors, usrs, accDescs]);
+        if (!this.isFormCreateable) {
+          this.df().UPD_USR_No.setValue(this.user.user_Name);
+          this.df().UPD_Date.setValue(new Date());
+        } else {
+          this.df().CRT_USR_No.setValue(this.user.user_Name);
+          this.df().CRT_Date.setValue(new Date());
+        }
       }),
       finalize(() => {
         this.loading = !1;
@@ -276,14 +273,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       const { VouNo, ...d } = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().map(({ AccAmtD, AccAmtC, ...rest }, index) => {
+        Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => {
           return {
             ...rest,
             index,
-            id: typeof rest.id === 'number' ? rest.id! : null,
+            id: typeof rest.id === 'number' ? rest.id! : void 0,
             AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
             AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
             ORG_ID: rest.ORG_ID || '100000',
+            NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
           };
         }),
         ...(this.isFormCreateable ? {} : { VouNo }),
@@ -330,9 +328,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           // 自動帶入科目名稱
           result[index].AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 自動帶入摘要
-          this.service.getAccDescList({ AccNo: [String(event.value)] }).pipe(
-            tap(res => result[index].NoteDesc = res[0].value ?? void 0),
-          ).subscribe();
+          result[index].NoteDesc = String(this.service.noteDescMap()
+            .get(event.value)?.data?.[0].label || event.value || '');
           break;
 
         case 'AccAmtD':
@@ -349,6 +346,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           // 設定目前選擇的組織代號
           this.selectedOrgId.set(String(event.value));
           result[index].SubDetailNo = '';
+          break;
+        case 'NoteDesc':
+          result[index].NoteDesc = String(this.service.noteDescMap()
+            .get(event.rowData.AccNo)?.data
+            ?.find(d => d.value === event.value)?.label
+            || event.value || '');
           break;
       }
 

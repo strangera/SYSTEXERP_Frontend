@@ -13,6 +13,11 @@ export interface QueryTLS2C040Request extends BaseQueryRequest {
   No?: string;                   // 結帳單號
 }
 
+// 查詢專櫃暫存傳票查詢作業-應收 Request
+export interface QueryTLS2C040_GLS6004Request extends BaseQueryRequest {
+  id: number;
+}
+
 // 更新GLS6001資料表 Request
 export interface UpdateTLS2C040Request {
   id: number;
@@ -34,6 +39,11 @@ export class TLS2C040Service {
   // 查詢
   queryTLS2C040(req: QueryTLS2C040Request): Observable<BaseQueryResponse<any>> {
     return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/queryTLS2C040`, req);
+  }
+
+  // 查詢專櫃暫存傳票查詢作業-應收
+  queryTLS2C040_GLS6004(req: QueryTLS2C040_GLS6004Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2C040_GLS6004`, req);
   }
 
   // 更新GLS6001資料表

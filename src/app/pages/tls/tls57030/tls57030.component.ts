@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
@@ -16,7 +16,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table/table.model';
 
@@ -48,24 +47,20 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
     PLU_No: [''],
     PLU_OrgPLUNo: [''],
     STK_Date: [new Date()],
-    ShowStockRange: [''],
-    DisplayRowNumber: [20],
     radiolist: [1],
+    DisplayRowNumber: [20],
   });
 
-  // Dropdown options
   warehouseOptions: any[] = [];
   brandCodeOptions: any[] = [];
   managementIDOptions: any[] = [];
   stockRangeOptions: any[] = [];
 
-  // Table data
   data: any[] = [];
   totalRecords = 0;
   historyRequestBody: any;
-  columnGroup = [
-    { field: '合計', header: '合計' }
-  ];
+  columnGroup = [{ field: '合計', header: '合計' }];
+  scrollLock = false;
 
   columns = [
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
@@ -89,7 +84,7 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
     private brandCodeService: BrandCodeService,
     private managementIDService: ManagementIDService,
     private stockRangeService: StockRangeService,
-    public tls57030Service: TLS57030Service
+    public readonly tls57030Service: TLS57030Service
   ) {
     super();
   }
@@ -101,54 +96,81 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
     this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
     this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
     this.stockRangeService.getStockRangeOptions().subscribe((data) => (this.stockRangeOptions = data));
+
+    this.queryForm.get('DisplayRowNumber')?.valueChanges.subscribe(value => {
+      if (value && this.historyRequestBody) {
+        this.historyRequestBody.PageSize = value;
+        this.historyRequestBody.DisplayRowNumber = value;
+      }
+    });
   }
 
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup, event?: any) {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
-      const pageSize = formValue.DisplayRowNumber || 20;
+      const pageIndex = event?.pageIndex ?? 1;
+      const pageSize = event?.pageSize ?? formValue.DisplayRowNumber ?? 20;
 
       const requestBody = {
         PageSize: pageSize,
-        PageIndex: 1,
+        PageIndex: pageIndex,
         OrderBy: '',
         Offset: 0,
         SortBy: [],
-        HOS_No: formValue.warehouseCode ?? '',
-        LOGO_No: formValue.brandCode ?? '',
-        PLU_MagNo: formValue.managementID ?? '',
-        PLU_No: formValue.supplierCode ?? '',
-        PLU_OrgPLUNo: formValue.warehouseNumber ?? '',
-        STK_Date: formValue.inventoryDate ?? null,
-        ShowStockRange: formValue.displayInventoryType ?? '',
+        HOS_No: formValue.HOS_No ?? '',
+        LOGO_No: formValue.LOGO_No ?? '',
+        PLU_MagNo: formValue.PLU_MagNo ?? '',
+        PLU_No: formValue.PLU_No ?? '',
+        PLU_OrgPLUNo: formValue.PLU_OrgPLUNo ?? '',
+        STK_Date: formValue.STK_Date ?? null,
+        ShowStockRange: (formValue.radiolist ?? 1).toString(),
         DisplayRowNumber: pageSize.toString(),
       };
 
-      this.historyRequestBody = requestBody;
-      this.loading = true;
+      if (pageIndex === 1) {
+        this.data = [];
+      }
 
-      this.tls57030Service
-        .queryTLS57030(requestBody)
-        .pipe(
-          untilDestroyed(this),
-          finalize(() => (this.loading = false))
-        )
+      this.loading = true;
+      this.tls57030Service.queryTLS57030(requestBody)
+        .pipe(finalize(() => this.loading = false))
         .subscribe({
-          next: (res) => {
+          next: res => {
             if (res?.Status === '0000' && res.Data) {
-              this.data = res.Data;
-              this.totalRecords = res.TotalCount ?? res.Data.length;
-              const tableEl = document.querySelector('p-table');
-              if (tableEl) {
-                (tableEl as any).rows = pageSize;
-              }
-            } else {
-              this.data = [];
-              this.totalRecords = 0;
-              console.warn('查詢失敗:', res?.Message);
+              this.data = pageIndex === 1 ? res.Data : [...this.data, ...res.Data];
+              this.totalRecords = res.TotalCount ?? this.data.length;
+              this.historyRequestBody = requestBody;
+              console.log(`第 ${pageIndex} 頁載入完成，共 ${this.data.length} 筆`);
             }
-          },
+          }
         });
     });
+  }
+
+  // 加載滾動事件，不動原邏輯
+  @HostListener('window:scroll', [])
+  onScroll(): void {
+    if (this.scrollLock || this.loading) return;
+
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight;
+
+    if (scrollTop + windowHeight >= docHeight - 200) {
+      const currentCount = this.data.length;
+      const total = this.totalRecords;
+
+      if (currentCount >= total) return;
+
+      this.scrollLock = true; //
+      const nextPage = (this.historyRequestBody?.PageIndex ?? 1) + 1;
+      const pageSize = this.queryForm.value.DisplayRowNumber ?? 20;
+
+      console.log(`準備載入第 ${nextPage} 頁`);
+
+      this.onSubmit(this.queryForm, { pageIndex: nextPage, pageSize });
+
+      setTimeout(() => (this.scrollLock = false), 1000);
+    }
   }
 }

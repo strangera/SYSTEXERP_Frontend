@@ -106,13 +106,11 @@ export class FIN11210CRUComponent extends BasicCruPageComponent<FIN11210Data> im
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ARG_NO' })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.ARG_No_Options = response.Data;
+        this.ARG_No_Options = response.Data
+          .map(item => ({
+            No: item.No,
+            Name: `${item.No} - ${item.Name}`
+          }));
       });
-  }
-
-  onARGNoChange(event: any) {
-    this.dataForm.patchValue({
-      ARG_Desc: this.ARG_No_Options.find(x => x.No === event)?.Name || ''
-    });
   }
 }

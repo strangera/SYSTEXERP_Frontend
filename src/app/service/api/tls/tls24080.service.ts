@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 
@@ -121,6 +121,8 @@ export interface VoidEditItem {
   TXN_Status: string;
 }
 
+export type TLS24080ResultData = TLTNoEditItem | DiscCodeEditItem | TLTIdEditItem | PayNoEditItem | PreOrderEditItem | VoidEditItem;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -130,11 +132,53 @@ export class Tls24080Service {
   constructor(private http: HttpClient) { }
 
   /**
-   * 查詢 POS5006 資料表
+   * 查詢 POS5006 資料表，並根據 EditType 過濾結果
    * @param params 查詢條件
-   * @returns 包含 ITLS24080Data 陣列的 API 響應
+   * @returns 包含特定 EditType 資料陣列的 Observable
    */
-  queryTLS24080(params: TLS24080Request): Observable<ApiResponse<TLS24080Data[]>> {
-    return this.http.post<ApiResponse<TLS24080Data[]>>(`${this.apiUrl}/queryTLS24080`, params);
+  queryTLS24080(params: TLS24080Request): Observable<ApiResponse<TLS24080ResultData[]>> {
+    return this.http.post<ApiResponse<TLS24080Data[]>>(`${this.apiUrl}/queryTLS24080`, params).pipe(
+      map(res => {
+        // 檢查 Data 陣列是否存在且非空
+        if (!res.Data || res.Data.length === 0) {
+          return { ...res, Data: [] }; // 如果沒有資料，回傳空的陣列
+        }
+
+        const dataContainer = res.Data[0];
+        let filteredData: TLS24080ResultData[] = [];
+
+        // 根據 EditType 提取對應的資料陣列
+        switch (params.EditType) {
+          case 'TLTNoEdit':
+            filteredData = dataContainer.TLTNoEdit;
+            break;
+          case 'DiscCodeEdit':
+            filteredData = dataContainer.DiscCodeEdit;
+            break;
+          case 'TLTIdEdit':
+            filteredData = dataContainer.TLTIdEdit;
+            break;
+          case 'PayNoEdit':
+            filteredData = dataContainer.PayNoEdit;
+            break;
+          case 'PreOrderEdit':
+            filteredData = dataContainer.PreOrderEdit;
+            break;
+          case 'VoidEdit':
+            filteredData = dataContainer.VoidEdit;
+            break;
+          default:
+            filteredData = [];
+            break;
+        }
+
+        // 回傳修改後的 ApiResponse 結構，Data 欄位現在是我們需要的陣列
+        return {
+          ...res,
+          Data: filteredData as TLS24080ResultData[],
+          TotalCount: filteredData.length > 0 ? res.TotalCount : 0 // 總數保持不變，或如果沒有資料則設為 0
+        };
+      })
+    );
   }
 }
