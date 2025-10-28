@@ -42,7 +42,7 @@
 </div>
 <div class="card">
   <app-table tableKey="TLS2C040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
-    [showEdit]="false" (detail)="onDetail($event)" [selectedItems]="selectedItems"
+    [showEdit]="false" (detail)="onEdit($event)" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [multiSortMeta]="[]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showReportMode]="false" [addButton]="addButton">
