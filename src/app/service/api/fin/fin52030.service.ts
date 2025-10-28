@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { AccNoList, FIN52030Data, FIN52030Detail, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescList, NoteDescPayload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { AccDescOption, AccNoList, FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescResponse, VendorList } from '@pages/fin/fin52030/fin52030.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -38,7 +38,7 @@ export class FIN52030Service {
   public readonly usrList = signal<Option[]>([]);
   public readonly orgNoList = signal<Option[]>([]);
   public readonly refNameList = signal<Option[]>([]);
-  public readonly noteDescList = signal<Option[]>([]);
+  public readonly noteDescList = signal<AccDescOption[]>([]);
 
   /** 傳票種類 */
   public readonly vouTypeOptions = signal<Option[]>([
@@ -146,13 +146,14 @@ export class FIN52030Service {
     ).subscribe();
   }
 
-  public getAccDescList(payload: NoteDescPayload): Observable<Option[]> {
+  public getAccDescList(AccNo: string[]): Observable<AccDescOption[]> {
     this.noteDescCancel$.next();
     this.noteDescLoading.set(!0);
-    return this.http.post<BaseQueryResponse<NoteDescList>>(`${apiUrl}/queryFIN52090`, { AccNo: Array.from(new Set(payload.AccNo)), NoteDesc: payload.NoteDesc }).pipe(
+    return this.http.post<NoteDescResponse>(`${apiUrl}/queryFIN52090`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
       take(1),
       takeUntil(this.noteDescCancel$),
-      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.NoteDesc, id: item.id } as Option))),
+      map(res => Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
+        ({ value: key, label: value[0], data: value.map((v, i) => ({ value: String(i), label: v })) } as AccDescOption))),
       tap(res => this.noteDescList.set(res)),
       finalize(() => {
         this.noteDescLoading.set(!1);

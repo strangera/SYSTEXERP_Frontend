@@ -20,7 +20,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, forkJoin, tap } from 'rxjs';
+import { combineLatest, finalize, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
@@ -105,18 +105,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.logger.debug(`set init table:`, [data]);
     if (!data.Details?.length) return;
 
-    this.service.getAccDescList({ AccNo: data.Details.map(v => v.AccNo) }).pipe(
-      tap(res => this.logger.debug(`get assDesc:`, [res])),
-    ).subscribe();
-
     this.dataForm.patchValue({
       TempNo: data.TempNo,
       TempName: data.TempName,
       VouType: data.VouType,
-      CRT_USR_No: data.CRT_USR_No,
-      CRT_Date: data.CRT_Date,
-      UPD_USR_No: data.UPD_USR_No,
-      UPD_Date: data.UPD_Date,
     });
 
     this.tableData.set(data.Details.map(v => ({
@@ -126,14 +118,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? this.service.usrMap().get(String(v.DetailNo))?.label,
-      NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label ?? v.NoteDesc,
-      UPD_USR_No: this.user.user_Name,
-      displayIndex: v.index,
-      UPD_Date: new Date(),
+      NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
     })));
 
     this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
-    if (!this.service.accNoMap().size || !this.service.vendorMap().size || !this.service.usrMap().size) return;
+    if (!this.service.accNoMap().size
+      || !this.service.vendorMap().size
+      || !this.service.usrMap().size
+      || !this.service.noteDescMap().size) return;
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
@@ -173,7 +165,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       header: '摘要',
       type: 'dropdown',
       disabled: () => this.service.noteDescLoading(),
-      options: () => this.service.noteDescList(),
+      options: (v: FIN52030DetailTable) => computed(() =>
+        this.service.noteDescList().find(item => item.value === v.AccNo)?.data ?? [])(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -228,15 +221,21 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.service.getOrgNoList();
     this.service.getRefNameList();
 
-    forkJoin([
+    combineLatest([
       this.service.getAccNoList(),
       this.service.getVendorList(),
       this.service.getUsrList(),
+      this.service.getAccDescList([]),
     ]).pipe(
-      tap(([_accnos, _vendors, _usrs]) => {
-        if (!this.isFormCreateable) return;
-        this.df().CRT_USR_No.setValue(this.user.user_Name);
-        this.df().CRT_Date.setValue(new Date());
+      tap(([accNos, vendors, usrs, accDescs]) => {
+        this.logger.debug(`init fork:`, [accNos, vendors, usrs, accDescs]);
+        if (!this.isFormCreateable) {
+          this.df().UPD_USR_No.setValue(this.user.user_Name);
+          this.df().UPD_Date.setValue(new Date());
+        } else {
+          this.df().CRT_USR_No.setValue(this.user.user_Name);
+          this.df().CRT_Date.setValue(new Date());
+        }
       }),
       finalize(() => {
         this.loading = !1;
@@ -251,11 +250,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().map(({ AccAmtD, AccAmtC, ...rest }, index) => ({
+        Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => ({
           ...rest,
           index,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
           AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
+          NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
         })),
       };
 
@@ -279,8 +279,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public onFieldChange(event: FieldChangeEvent<FIN52030DetailTable>): void {
     this.logger.debug(`onFieldChange:`, [event]);
-    const row = event.rowData;
-    const index = event.index;
 
     // 更新 tableData 並觸發重算合計
     this.tableData.update(current => {
@@ -297,9 +295,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           // 自動帶入科目名稱
           result[index].AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 自動帶入摘要
-          this.service.getAccDescList({ AccNo: [String(event.value)] }).pipe(
-            tap(res => result[index].NoteDesc = res[0].value ?? void 0),
-          ).subscribe();
+          result[index].NoteDesc = String(this.service.noteDescMap()
+            .get(event.value)?.data?.[0].label || event.value || '');
           break;
 
         case 'AccAmtD':
@@ -316,6 +313,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           // 設定目前選擇的組織代號
           this.selectedOrgId.set(String(event.value));
           result[index].SubDetailNo = '';
+          break;
+        case 'NoteDesc':
+          result[index].NoteDesc = String(this.service.noteDescMap()
+            .get(result[index].AccNo)?.data
+            ?.find(d => d.value === event.value)?.label
+            || event.value || '');
           break;
       }
 
