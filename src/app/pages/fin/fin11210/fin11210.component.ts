@@ -111,7 +111,11 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ARG_NO' })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.ARG_No_Options = response.Data;
+        this.ARG_No_Options = response.Data
+          .map(item => ({
+            No: item.No,
+            Name: `${item.No} - ${item.Name}`
+          }));
       });
   }
 }
