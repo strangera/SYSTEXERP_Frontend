@@ -52,17 +52,17 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
       label: '應收',
       displayText: '應收',
       icon: '',
-      action: (rowData: any) => { this.onEdit(rowData) },
+      action: (rowData: any) => { this.onDetail(rowData, '應收') },
     },
     {
       label: '應付',
       displayText: '應付',
       icon: '',
-      action: (rowData: any) => { this.onEdit(rowData) },
+      action: (rowData: any) => { this.onDetail(rowData, '應付') },
     },
   ];
 
-  // 下拉選單選項
+  //#region 下拉選單選項
   // 傳票種類
   srcSheetTypeOptions: IDropdownItem[] = [];
   // 傳票狀態
@@ -72,6 +72,7 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     { No: '2', Name: '確認' },
     { No: '3', Name: '過帳' }
   ];
+  //#endregion
 
   columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },

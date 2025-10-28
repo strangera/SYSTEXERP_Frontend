@@ -212,6 +212,8 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
         this.fileUploadComponent.clearFiles();
         // 關閉對話框
         this.dialogVisible = false;
+        // 重新查詢資料
+        this.onSubmit(this.queryForm);
       } else {
         this.messageService.errorBubble(res.Data.Errors[0]);
       }
