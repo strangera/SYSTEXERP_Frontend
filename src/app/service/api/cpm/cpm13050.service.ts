@@ -81,7 +81,7 @@ export class Cpm13050Service {
     return this.http.post<QueryCPM13050Response>(`${this.apiUrl}/queryCPM13050`, body).pipe(
       map(res => ({
         Status: res.Status,
-        Message: res.Message,
+        // Message: res.Message,
         TotalCount: res.TotalCount,
         TotalPage: res.TotalPage,
         Data: res.Data

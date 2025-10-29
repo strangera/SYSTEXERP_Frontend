@@ -8,13 +8,14 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatAmount,formatDateTime } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatAmount, formatDateTime } from '@shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Cpm13050Service, QueryCPM13050Request } from '@service/api/cpm/cpm13050.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { skip } from 'rxjs/operators';
 
 @Component({
   selector: 'app-cpm13050',
@@ -36,6 +37,7 @@ import { finalize } from 'rxjs';
   ]
 })
 export class CPM13050Component extends BasicQueryPageComponent<any> implements OnInit {
+  hasQueried = false;
   queryForm = this.formBuilder.group({
     TXN_BDATE: [new Date(), [Validators.required]],
     TXN_EDATE: [new Date(), [Validators.required]],
@@ -72,7 +74,6 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
-
   ngOnInit(): void {
     this.initializePage('CPM13050', '/CPM/CPM13050cru', this.queryForm, (frm) => this.onSubmit(frm));
     this.loadDropdowns();
@@ -80,19 +81,10 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
     // 初始化欄位
     this.updateTableColumns(this.queryForm.value.displayMode!);
 
-    // 監聽報表格式切換
-    this.queryForm.controls.displayMode.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(mode => {
-        this.updateTableColumns(mode!);
 
-        // 如果已經有查詢過的資料，自動重新查詢
-        if (this.historyRequestBody) {
-          console.log('切換顯示模式，自動重新查詢:', mode);
-          this.autoRequery();
-        }
-      });
   }
+
+
 
   /** 讀取下拉資料 */
   loadDropdowns(): void {
@@ -141,7 +133,7 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
         { field: 'PKG_disc_shop_name', header: '店家名稱', visible: true },
         { field: 'PKG_disc_rule_name', header: '折扣名稱', visible: true },
         { field: 'CNT', header: '筆數', visible: true, isSubTotal: true },
-        { field: 'PKG_discount_time', header: '總折抵時數', visible: true,format: formatAmount, isSubTotal: true  },
+        { field: 'PKG_discount_time', header: '總折抵時數', visible: true, format: formatAmount, isSubTotal: true },
         { field: 'PKG_discount_fee', header: '總折抵金額', visible: true, format: formatAmount, isSubTotal: true },
       ];
     }
@@ -151,14 +143,13 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const v = frm.value;
+      this.updateTableColumns(v.displayMode!);
       const body: QueryCPM13050Request = {
         PageSize: 30,
         PageIndex: 1,
-        OrderBy: '',
-        Offset: 0,
         SortBy: [{ field: 'TXN_Date', order: 1 }],
         TXN_BDATE: v.TXN_BDATE || undefined,
-        TXN_EDATE: v. TXN_EDATE || undefined,
+        TXN_EDATE: v.TXN_EDATE || undefined,
         shop_nameList: v.PKG_disc_shop_name ? [v.PKG_disc_shop_name] : [],
         rule_nameList: v.PKG_disc_rule_name ? [v.PKG_disc_rule_name] : [],
         ShowType: v.displayMode
@@ -189,6 +180,7 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this), finalize(() => this.loading = false))
       .subscribe({
         next: (res) => {
+          this.hasQueried = true;
           if (res?.Data?.Datas?.length > 0) {
             this.data = res.Data.Datas;
             this.footerData = res.Data.SumData ?? {};
@@ -201,7 +193,6 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
             this.footerData = {};
             this.subTotalData = [];
             this.totalRecords = 0;
-            this.messageService.warnBubble(res.Message || '查無資料。');
           }
         },
       });
@@ -210,7 +201,6 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
   /** 匯出 PDF */
   onExportPDF(): void {
     if (!this.historyRequestBody) {
-      this.messageService.warnBubble('請先查詢再匯出。');
       return;
     }
 
@@ -225,7 +215,6 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
   /** 匯出 Excel */
   onExportExcel(): void {
     if (!this.historyRequestBody) {
-      this.messageService.warnBubble('請先查詢再匯出。');
       return;
     }
 
@@ -240,7 +229,6 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
   /** 共用下載方法 */
   private downloadFile(blob: Blob, filename: string): void {
     if (!blob || blob.size === 0) {
-      this.messageService.warnBubble('無可匯出的資料。');
       return;
     }
     const url = window.URL.createObjectURL(blob);
