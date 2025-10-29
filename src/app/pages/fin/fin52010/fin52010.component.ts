@@ -12,8 +12,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
-import { FIN52010Data } from './fin52010.model';
+import { finalize, forkJoin, map, tap } from 'rxjs';
+import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 
 @Component({
   selector: 'app-fin52010',
@@ -36,9 +36,9 @@ import { FIN52010Data } from './fin52010.model';
 export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> implements OnInit {
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    AccYear: new FormControl<string>(new Date().getFullYear().toString()),
-    OpenDate: new FormControl<Date>(new Date(), [Validators.required]),
-    CloseDate: new FormControl<Date>(new Date(), [Validators.required]),
+    AccYear: new FormControl<string | void>(void 0, [Validators.required]),
+    OpenDate: new FormControl<Date | void>(void 0, [Validators.required]),
+    CloseDate: new FormControl<Date | void>(void 0, [Validators.required]),
     DefaultVouDate: new FormControl<Date | void>(void 0),
     ORG_ID: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoTotPL: new FormControl<string | void>(void 0, [Validators.required]),
@@ -73,125 +73,53 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.dataForm.setValue(store.value);
 
-    this.service.getOrgNoList();
-    this.service.getTblUsrOrgList();
-    this.service.getSYS1000();
-
-    this.service.loadFIN52010(this.user!.CompNo).pipe(
-      finalize(() => this.logger.debug(`loadFIN52010:`, [this.user]))
-    ).subscribe(res => {
-      this.dataForm.patchValue({
-        AccYear: res.AccYear,
-        OpenDate: res.OpenDate ? new Date(res.OpenDate) : void 0,
-        CloseDate: res.CloseDate ? new Date(res.CloseDate) : void 0,
-        ORG_ID: res.ORG_ID,
-        AccNoTotPL: res.AccNoTotPL,
-        AccNoCurPL: res.AccNoCurPL,
-        CashAccNo: res.CashAccNo,
-        AccNoAR: res.AccNoAR,
-        AccNoAP: res.AccNoAP,
-        AccNoInTax: res.AccNoInTax,
-        AccNoOutTax: res.AccNoOutTax,
-        AccNoPost: res.AccNoPost,
-        AccNoRemitFee: res.AccNoRemitFee,
+    forkJoin([
+      this.service.getTblUsrOrgList(),
+      this.service.getGLS1005DropDownList(),
+      this.service.loadFIN52010(this.user!.CompNo),
+    ]).pipe(
+      map(([tblUsrOrg, gls1005, { OpenDate, CloseDate, ...rest }]) => ({
+        ...rest,
+        OpenDate: OpenDate ? new Date(+OpenDate.slice(0, 4), +OpenDate.slice(4, 6) - 1, 1) : void 0,
+        CloseDate: CloseDate ? new Date(+CloseDate.slice(0, 4), +CloseDate.slice(4, 6) - 1, 1) : void 0,
         // advanceExpenseAccNo: res.advanceExpenseAccNo,
         // billTransferCon: res.billTransferCon as 'N' | 'Y',
-      });
+        tblUsrOrg,
+        gls1005,
+      })),
+      finalize(() => this.logger.debug(`init:`, [this.user, this.service.FIN52010Data()]))
+    ).subscribe(({ tblUsrOrg, gls1005, ...res }) => {
+      const orgLoading = this.service.tblUsrOrgLoading();
+      const gls1005Loading = this.service.gls1005Loading();
+
+      if (tblUsrOrg.length >= 0 && gls1005.length >= 0 && !orgLoading && !gls1005Loading) {
+        this.logger.debug(`patched:`, [res]);
+        this.dataForm.patchValue(res);
+      }
     });
-
-
-    // this.loading = !0;
-    // this.ProgNo = '150007';
-    // // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // this.IfdisplayService.getOptions().subscribe(
-    //   (data) => (this.displayOptions2 = data)
-    // );
-    // this.AnalysisdateCService.getOptions().subscribe(
-    //   (data) => (this.AnalysisdateCOptions = data)
-    // );
-    // this.vendorService.getVendors().subscribe((data) => {
-    //   this.vendorOptions = data;
-    // });
-    // this.flippingstateService.getOptions().subscribe((data) => {
-    //   this.FlippingstateOptions = data;
-    // });
-    // this.organizationNumberService
-    //   .getOrganizationNumbers()
-    //   .subscribe((data) => {
-    //     this.departmentOptions = data;
-    //   });
-    // // this.accountingaccountService.getOptions().subscribe((data) => {
-    // //   this.accountingaccountOptions = data;
-    // // });
   }
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      const { OpenDate, CloseDate, ...raw } = this.dataForm.getRawValue();
+      const payload = <FIN52010UpdatePayload>{
+        ...raw,
+        OpenDate: this.date.transform(OpenDate ?? new Date(), 'yyyyMM') ?? '',
+        CloseDate: this.date.transform(CloseDate ?? new Date(), 'yyyyMM') ?? '',
+        CompNo: this.user!.CompNo,
+      };
 
-      this.messageService.successBubble('更新成功');
-      this.loading = !1;
+      this.logger.debug(`onSubmit:`, [raw, payload]);
+
+      this.service.updateFIN52010Data(payload).pipe(
+        tap(({ Status }) => {
+          if (Status === '0000') this.messageService.successBubble('更新成功');
+        }),
+        finalize(() => this.loading = !1),
+      ).subscribe(res => {
+        this.logger.debug(`updateFIN52010Data result:`, [res]);
+      });
       this.queryStateService.setQueryState(this.ProgNo, this.dataForm.getRawValue());
-      this.logger.debug(`onSubmit:`, []);
     });
   };
-  // console.log(frm.value);
-  // this.submitted = true;
-  // this.loading = true;
-  // this.notificationService.blockUi();
-
-  // if (frm.valid && this.canQuery()) {
-  //   // Submit logic here
-  // }
-
-  //   this.loading = false;
-  //   this.notificationService.unblockUi();
-  // }
-
-  // onSubmitQuery(frm: FormGroup) {
-  //   this.onSubmit(frm);
-  // }
-
-  // onCreate() {
-  //   if (this.canAdd()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Create,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-  //   }
-  // }
-
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
-
-  // onDetail(data: any) {
-  //   let extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
-  // onClearForm() {
-  //   this.queryForm.reset(); // 重置表單
-  // }
 }
