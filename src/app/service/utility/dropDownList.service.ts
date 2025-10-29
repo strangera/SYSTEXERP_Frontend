@@ -188,6 +188,7 @@ export interface IPOS1018GUITrackResponse {
 // 新增 interface for 發票格式 API
 export interface ITDS1007Request {
   mid: number;
+  inv_guiTypeList?: string[];
 }
 
 export interface ITDS1007Response {
