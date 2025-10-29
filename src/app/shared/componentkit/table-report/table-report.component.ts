@@ -188,7 +188,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.dt.virtualScroll = false;
         this.dt.scrollHeight = 'flex';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
-        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+        this.updateGroupTotals(res.Data);
+        this.data = res.Data;
         this.cdr.detectChanges();
         if (res.Data.length < 30) {
           this.data = res.Data;
@@ -265,8 +266,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const groupKey = rowData[this.groupRowsBy];
       const field = col.field;
       const subtotalRow = this.subTotalData.find((item: any) => item[this.groupRowsBy as string] === groupKey);
-      const subtotal = subtotalRow ? subtotalRow[field] : 0;
-      return col.format ? col.format(subtotal) : subtotal;
+      if (subtotalRow) {
+        const subtotal = subtotalRow[field] ?? 0; // 使用 ?? 避免 undefined
+        return col.format ? col.format(subtotal) : subtotal;
+      }
     }
 
     const groupKey = rowData[this.groupRowsBy];

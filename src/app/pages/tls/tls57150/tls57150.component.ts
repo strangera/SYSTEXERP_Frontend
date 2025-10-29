@@ -202,7 +202,18 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
         IsOnlyShowDiff: formValue.IsOnlyShowDiff, // 是否只顯示差異
         pageIndex: 1,
         pageSize: 30,
-        SortBy: [{ field: 'PST_NO', order: 1 }],
+        SortBy: displayMode === 1 ?
+          [
+            { field: 'PST_Date', order: 1 },
+            { field: 'LOGO_No', order: 1 },
+            { field: 'PST_NO', order: 1 },
+          ] :
+          [
+            { field: 'PST_Date', order: 1 },
+            { field: 'LOGO_No', order: 1 },
+            { field: 'PST_NO', order: 1 },
+            { field: 'PLU_MagNo', order: 1 }
+          ],
       };
 
       this.tls57150Service.queryTLS57150(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
