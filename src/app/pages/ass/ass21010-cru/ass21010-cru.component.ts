@@ -97,6 +97,9 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
 
       this.service.updateASS21010(payload).pipe(
         tap(() => this.isFormCreateable ? this.dataForm.reset() : this.onCancel()),
+        tap(({ Status }) => {
+          if (Status === '0000') this.messageService.successBubble('儲存成功');
+        }),
         finalize(() => {
           this.loading = !1;
           this.logger.debug(`onSubmit:`, [d, payload]);

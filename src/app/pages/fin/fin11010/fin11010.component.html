@@ -1,8 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- TODO: 等待規格中 -->
-    <!-- <app-button btnType="report" (click)="onExport()" label="匯出申報資料"></app-button> -->
+    <app-button btnType="report" (click)="onExport()" label="匯出申報資料"></app-button>
     <app-button btnType="create" (click)="onCreate()" label="新增"></app-button>
   </div>
   <p-accordion>
@@ -44,8 +43,8 @@
 <div class="card">
   <app-table tableKey="FIN11010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
-    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled">
+    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{field: 'REP_BegGUIYM', order: 1}]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled">
   </app-table>
 </div>

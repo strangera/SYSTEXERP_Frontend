@@ -19,7 +19,7 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="字軌" [control]="dataForm.controls.INV_GUITrack"
+          <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -27,9 +27,10 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range label="發票日期" calendarType="dateRange" [startControl]="dataForm.controls.InvoiceDate_Start"
-            [endControl]="dataForm.controls.InvoiceDate_End" [submitted]="submitted"></app-calendar-range>
+          <app-calendar label="發票日期" calendarType="dateOne" controlName="InvoiceDate"
+          [control]="dataForm.controls.InvoiceDate" [submitted]="submitted"></app-calendar>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="買受人統一編號" controlName="Buyer_Uniform" [control]="dataForm.controls.Buyer_Uniform"
             [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value"
@@ -37,16 +38,16 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select label="課稅別" controlName="PUR_TaxType" [options]="taxTypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted"></app-multi-select>
+          <app-dropdown label="課稅別" controlName="PUR_TaxType" [options]="taxTypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text-range label="傳票號碼 " [startControl]="dataForm.controls.startVoucher_No"
             [endControl]="dataForm.controls.endVoucher_No"></app-input-text-range>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select label="資產註記" [control]="dataForm.controls.AssetType" [options]="AssetNoteOptions"
-            optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
+          <app-dropdown label="資產註記" [control]="dataForm.controls.AssetType" [options]="AssetNoteOptions"
+            optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="發票抬頭" [control]="dataForm.controls.PUR_InvoiceTitle"
