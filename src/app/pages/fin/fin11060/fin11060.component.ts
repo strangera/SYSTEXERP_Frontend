@@ -102,6 +102,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
 
   data: InvoiceRecord[] = [];
+  key = 'TXN_GUINo';
+  showSort = [{ field: 'TXN_Time', order: 1 },{ field: 'MIG_Time', order: 1 }]
   columns: Column[] = []; //顯示的column
   columnsType1: Column[] = [
     { field: 'TXN_No', header: '交易序號', visible: true },
@@ -174,7 +176,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     this.initializePage('FIN11060', 'FIN/FIN11060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
 
-    // 🔄 改成同步更新，不用 setTimeout
+    // 改成同步更新，不用 setTimeout
     this.queryForm.get('Query_Cond')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
       this.data = [];
       this.totalRecords = 0;
@@ -232,14 +234,17 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     switch (type) {
       case '1':
         this.columns = [...this.columnsType1];
+        this.key = 'TXN_No'
         console.log('切換為欄位1', this.columns);
         break;
       case '2':
         this.columns = [...this.columnsType2];
+        this.key = 'ECR_No'
         console.log('切換為欄位2', this.columns);
         break;
       case '3':
         this.columns = [...this.columnsType3];
+        this.key = 'TXN_Date'
         console.log('切換為欄位3', this.columns);
         break;
       default:

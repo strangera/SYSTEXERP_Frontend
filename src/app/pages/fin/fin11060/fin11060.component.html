@@ -53,7 +53,7 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- ✅ 單一 app-table -->
+<!-- 單一 app-table -->
 <div class="card mt-2">
   <app-table tableKey="FIN11060"
     [data]="data"
@@ -66,7 +66,7 @@
     (delete)="onDelete($event)"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    dataKey="id"
-    [showManage]="false">
+    dataKey="key"
+    [multiSortMeta]="showSort" [showManage]="false">
   </app-table>
 </div>
