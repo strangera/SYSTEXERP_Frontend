@@ -63,7 +63,7 @@ export class Cpm13060Service {
       // 保留原始 Data 結構
       return {
         Status: res.Status,
-        Message: res.Message,
+        // Message: res.Message,
         TotalCount: res.TotalCount,
         Data: res.Data
       };

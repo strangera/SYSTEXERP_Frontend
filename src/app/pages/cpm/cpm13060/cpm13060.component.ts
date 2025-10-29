@@ -106,12 +106,7 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
               this.footerData = {};
               this.subTotalData = [];
               this.totalRecords = 0;
-              this.messageService.warnBubble(res?.Message || '查無資料。');
             }
-          },
-          error: (err) => {
-            console.error('查詢錯誤:', err);
-            this.loading = false;
           },
         });
     });
@@ -144,10 +139,6 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         },
-        error: (err) => {
-          console.error('PDF 匯出失敗:', err);
-          this.messageService.warnBubble('PDF 匯出失敗。');
-        },
       });
   }
 
@@ -178,10 +169,6 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
           a.click();
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-        },
-        error: (err) => {
-          console.error('Excel 匯出失敗:', err);
-          this.messageService.warnBubble('Excel 匯出失敗。');
         },
       });
   }
