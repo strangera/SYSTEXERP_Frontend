@@ -72,6 +72,15 @@ export interface QueryTLS57150SummaryTotal {
   DIFF_SalePrc: number;       // 盤差售價總計
 }
 
+export interface QueryTLS57150DetailSubTotal {
+  PST_Date: string;        // 群組鍵 1
+  LOGO_No?: string;        // 群組鍵 2
+  PST_NO: string;          // 群組鍵 3
+  DIFF_Qty: number;        // 盤差數量小計
+  DIFF_AMT: number;        // 盤差成本小計
+  DIFF_SalePrc: number;    // 盤差售價小計
+}
+
 /**
  * API 回傳給前端的資料模型 (包裹了明細或彙總資料)
  */
@@ -80,8 +89,16 @@ export interface QueryTLS57150ApiResponse {
   SummaryData?: QueryTLS57150SummaryResponse[]; // 彙總報表數據 (當 ReportType 為 '彙總' 時填充)
   GrandTotal?: QueryTLS57150DetailGrandTotal; // 明細總計
   SummaryTotal?: QueryTLS57150SummaryTotal; // 彙總總計
+  SubTotals?: QueryTLS57150DetailSubTotal[]; // 當 ReportType 為 '明細' 時填充
 }
 
+export interface QueryTLS57150MappedResult {
+  Data: QueryTLS57150DetailResponse[] | QueryTLS57150SummaryResponse[];
+  TotalCount: number;
+  Message: string;
+  GrandTotal: QueryTLS57150DetailGrandTotal | QueryTLS57150SummaryTotal | undefined;
+  SubTotals?: QueryTLS57150DetailSubTotal[];
+}
 
 @Injectable({
   providedIn: 'root'
@@ -105,13 +122,14 @@ export class Tls57150Service {
 
         // 根據 ReportType 取得對應的總計數據 (GrandTotal 或 SummaryTotal)
         const grandTotal = body.ReportType === '明細' ? res.Data.GrandTotal : res.Data.SummaryTotal;
-
+        const subTotals = body.ReportType === '明細' ? res.Data.SubTotals : undefined;
         return {
           Data: data,
           TotalCount: res.TotalCount,
           Message: res.Message,
           GrandTotal: grandTotal,
-        };
+          SubTotals: subTotals, // 💡 新增回傳 SubTotals
+        } as QueryTLS57150MappedResult; // 💡 強制轉換型別
       })
     );
   }

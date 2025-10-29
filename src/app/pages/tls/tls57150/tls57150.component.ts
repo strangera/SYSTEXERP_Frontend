@@ -6,7 +6,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
@@ -16,7 +16,7 @@ import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { CheckboxModule } from 'primeng/checkbox'; // 引入 Checkbox 模組
 
 // TLS57150 專屬匯入
@@ -26,7 +26,8 @@ import {
   QueryTLS57150SummaryResponse,
   QueryTLS57150DetailGrandTotal,
   QueryTLS57150SummaryTotal,
-  Tls57150Service
+  Tls57150Service,
+  QueryTLS57150DetailSubTotal
 } from '@service/api/tls/tls57150.service';
 
 // 引入商品下拉表格所需的組件和服務
@@ -65,8 +66,8 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
     LOGO_No: [null as string[] | null], // 品牌代碼
     PST_Date_Start: [new Date(), [Validators.required]], // 盤點調整日期起
     PST_Date_End: [new Date(), [Validators.required]], // 盤點調整日期迄
-    PST_NO: [''], // 盤點單號
-    PLU_MagNo: [null], // 商品管理編號 (單選)
+    PST_NO: ['', [Validators.maxLength(20)]], // 盤點單號
+    PLU_MagNo: [null, [Validators.maxLength(20)]], // 商品管理編號 (單選)
     IsOnlyShowDiff: [true], // 是否只顯示差異 (預設為 true)
     DisplayMode: [1, [Validators.required]], // 1: 彙總, 2: 明細
   });
@@ -89,6 +90,7 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
 
   btnLoading = false;
   historyRequestBody: QueryTLS57150Request | null = null;
+  subTotalData: QueryTLS57150DetailSubTotal[] = [];
 
   // --- 商品管理編號 (Dropdown-Table) 相關屬性 ---
   opLoading = false;
@@ -142,31 +144,40 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
   updateTableColumns(displayMode: number | null) {
     if (displayMode === 1) { // 彙總模式 (QueryTLS57150SummaryResponse)
       this.columns = [
-        { field: 'HOS_NAME', header: '倉別', visible: true, showSort: true },
-        { field: 'LOGO_CH_NAME', header: '品牌', visible: true, showSort: true },
-        { field: 'PST_Date', header: '盤點日期', visible: true, showSort: true, format: formatDate },
-        { field: 'PST_NO', header: '盤點單號', visible: true, showSort: true },
-        { field: 'DIFF_Qty', header: '盤差數量', visible: true, showSort: true, format: formatAmount },
-        { field: 'DIFF_AMT', header: '盤差成本', visible: true, showSort: true, format: formatAmount },
-        { field: 'DIFF_SalePrc', header: '盤差售價', visible: true, showSort: true, format: formatAmount },
+        { field: 'HOS_NAME', header: '倉別', visible: true },
+        { field: 'LOGO_CH_NAME', header: '品牌', visible: true },
+        { field: 'PST_Date', header: '盤點日期', visible: true, format: formatDate },
+        { field: 'PST_NO', header: '盤點單號', visible: true },
+        { field: 'DIFF_Qty', header: '盤差數量', visible: true },
+        { field: 'DIFF_AMT', header: '盤差成本', visible: true, format: (v) => formatAmountWithDecimals(v) },
+        { field: 'DIFF_SalePrc', header: '盤差售價', visible: true, format: (v) => formatAmountWithDecimals(v) },
       ];
       this.data = [];
+      this.totalRecords = 0;
+      this.subTotalData = [];
+      this.footerTotal = undefined;
     } else if (displayMode === 2) { // 明細模式 (QueryTLS57150DetailResponse)
       this.columns = [
-        { field: 'HOS_NAME', header: '倉別', visible: true, showSort: true },
-        { field: 'LOGO_CH_NAME', header: '品牌', visible: true, showSort: true },
-        { field: 'PST_Date', header: '盤點日期', visible: true, showSort: true, format: formatDate },
-        { field: 'PST_NO', header: '盤點單號', visible: true, showSort: true },
-        { field: 'PLU_MagNo', header: '商品管理編號', visible: true, showSort: true },
-        { field: 'PLU_Name', header: '品名', visible: true, showSort: true },
-        { field: 'DIFF_Qty', header: '盤差數量', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
-        { field: 'DIFF_AMT', header: '盤差成本', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
-        { field: 'DIFF_SalePrc', header: '盤差售價', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'HOS_NAME', header: '倉別', visible: true },
+        { field: 'LOGO_CH_NAME', header: '品牌', visible: true },
+        { field: 'PST_Date', header: '盤點日期', visible: true, format: formatDate },
+        { field: 'PST_NO', header: '盤點單號', visible: true },
+        { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+        { field: 'PLU_Name', header: '品名', visible: true },
+        { field: 'DIFF_Qty', header: '盤差數量', visible: true, isSubTotal: true },
+        { field: 'DIFF_AMT', header: '盤差成本', visible: true, format: (v) => formatAmountWithDecimals(v), isSubTotal: true },
+        { field: 'DIFF_SalePrc', header: '盤差售價', visible: true, format: (v) => formatAmountWithDecimals(v), isSubTotal: true },
       ];
       this.data = [];
+      this.totalRecords = 0;
+      this.subTotalData = [];
+      this.footerTotal = undefined;
     } else {
       this.columns = [];
       this.data = [];
+      this.totalRecords = 0;
+      this.subTotalData = [];
+      this.footerTotal = undefined;
     }
   }
 
@@ -196,12 +207,16 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
 
       this.tls57150Service.queryTLS57150(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data && response.Data.length > 0) {
+          console.log(response);
+
           this.totalRecords = response.TotalCount || 0;
           this.footerTotal = response.GrandTotal || response.SummaryTotal; // 根據 ReportType 取得總計
           this.historyRequestBody = requestBody;
+          this.subTotalData = response.SubTotals;
           this.data = response.Data;
         } else {
           this.data = [];
+          this.subTotalData = [];
           this.totalRecords = 0;
         }
       });
