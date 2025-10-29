@@ -1,28 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { Tls12060Service } from '@service/api/tls/tls12060.service';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ECRNoService } from '@service/basic/ECRNo.service';
 import { Fin11060Service } from '@service/api/fin/fin11060.service';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { formatDate } from '@shared/componentkit/table2/table2.model';
+import { ChangeDetectorRef } from '@angular/core';
+import { finalize } from 'rxjs';
 
 export interface InvoiceBase {
   id: number;
@@ -63,7 +60,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   templateUrl: './fin11060.component.html',
   styleUrl: './fin11060.component.scss',
   standalone: true,
-  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent,  RadiobuttonComponent,  AccordionModule, FormsModule, ReactiveFormsModule,  CalendarRangeQuickComponent, DropdownComponent,  ReportTableGroupComponent, TranslateModule]
+  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent,  RadiobuttonComponent,  AccordionModule, FormsModule, ReactiveFormsModule,  CalendarRangeQuickComponent, DropdownComponent,  ReportTableGroupComponent, TranslateModule, TableComponent]
 })
 
 // 電子發票上送狀況表
@@ -105,12 +102,14 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
 
   data: InvoiceRecord[] = [];
+  key = 'TXN_GUINo';
+  showSort = [{ field: 'TXN_Time', order: 1 },{ field: 'MIG_Time', order: 1 }]
   columns: Column[] = []; //顯示的column
   columnsType1: Column[] = [
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'TXN_GUINO', header: '發票號碼', visible: true },
-    { field: 'TXN_Time', header: '發票日期', visible: true },
-    { field: 'MIG_Time', header: '上傳日期', visible: true },
+    { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
+    { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
     { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
     { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
     { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
@@ -122,13 +121,13 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   columnsType2: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Time', header: '發票日期', visible: true },
-    { field: 'MIG_Time', header: '上傳日期', visible: true },
+    { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
+    { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
     { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
     { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
     { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
@@ -140,13 +139,13 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   columnsType3: Column[] = [
     { field: 'TXN_Date', header: '交易日期', visible: true },
-    { field: 'TXN_Time', header: '發票日期', visible: true },
-    { field: 'MIG_Time', header: '上傳日期', visible: true },
+    { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
+    { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
     { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
     { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
     { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
@@ -158,7 +157,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   selectedItems: InvoiceRecord[] = [];// 多選項目
@@ -167,6 +166,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   constructor(
     private fin11060Service: Fin11060Service,
     private eCRNoService: ECRNoService,
+    private cdr: ChangeDetectorRef,
+
   ) {
     super();
   }
@@ -175,59 +176,75 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     this.initializePage('FIN11060', 'FIN/FIN11060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
 
-    // 監聽 condition_type 變化(切換顯示欄位)
-    this.queryForm.get('Query_Cond')?.valueChanges.subscribe((value) => {
+    // 改成同步更新，不用 setTimeout
+    this.queryForm.get('Query_Cond')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
+      this.data = [];
+      this.totalRecords = 0;
       this.updateColumnsByCondition(value);
+      this.cdr.detectChanges();
     });
 
-    // 預設初始欄位
+    // 初始欄位
     this.updateColumnsByCondition(this.queryForm.get('Query_Cond')?.value || '1');
   }
 
   onSubmit(frm: FormGroup) {
-    this.queryForm.get('SYS_StoreNo')?.setValue(this.authService.getUserInfo()?.SYS_StoreNo ?? '');
-    const midNum = Number(this.authService.getUserInfo()?.mid ?? 0); //section項目讀取字串轉換為number
-    this.queryForm.get('MID')?.setValue(midNum);
-    // this.queryForm.get('MID')?.setValue(this.authService.getUserInfo()?.mid ?? 0);
-    console.log('查詢條件', frm.value);
-    this.handleSubmit(frm, () => {
-      this.fin11060Service.queryFIN11060(frm.value).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            console.log('Result', this.data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+    // 設定登入資訊
+  this.queryForm.patchValue({
+    SYS_StoreNo: this.authService.getUserInfo()?.SYS_StoreNo ?? '',
+    MID: Number(this.authService.getUserInfo()?.mid ?? 0),
+  }, { emitEvent: false });
+
+  console.log('查詢條件', frm.value);
+
+  this.loading = true;
+  this.messageService.blockUi(); // 假設這是顯示 loading 遮罩
+
+  this.fin11060Service.queryFIN11060(frm.value)
+    .pipe(
+      untilDestroyed(this),
+      finalize(() => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        // this.cdr.markForCheck(); // 觸發畫面更新
+      })
+    )
+    .subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.data = response.Data ?? [];
+          this.totalRecords = response.TotalCount ?? this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          console.log('Result', this.data);
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(response.Message || '查詢失敗');
+        }
+      },
+      error: (err) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('API 呼叫失敗');
+      }
     });
   }
 
   //顯示欄位(初始為條件1)
   updateColumnsByCondition(value: string | string[] | null): void {
     const type = Array.isArray(value) ? value[0] : value;
-
     switch (type) {
       case '1':
         this.columns = [...this.columnsType1];
+        this.key = 'TXN_No'
         console.log('切換為欄位1', this.columns);
         break;
       case '2':
         this.columns = [...this.columnsType2];
+        this.key = 'ECR_No'
         console.log('切換為欄位2', this.columns);
         break;
       case '3':
         this.columns = [...this.columnsType3];
+        this.key = 'TXN_Date'
         console.log('切換為欄位3', this.columns);
         break;
       default:
