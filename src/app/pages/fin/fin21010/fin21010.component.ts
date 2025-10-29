@@ -11,51 +11,10 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, Column } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
-import { FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
-
-//主檔
-export interface APS1002 {
-  id: number;                              // 主鍵
-  mid: number;                             // ((0))
-
-  BNK_No: string;                          // 全省銀行代碼 (讀取APS1004銀行分行代碼檔，下拉BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME，不可重覆)
-  BNK_AccNo: string;                       // 帳號
-  BNK_BranchNo: string;                    // 銀行分行代號
-  BNK_AccType: string;                     // 存款代號 (SYS1000.BNK_ACCTYPE)
-  BNK_AccName: string;                     // 帳戶名稱
-  BNK_AccStatus: string;                   // 帳戶狀態 (0=正常)
-  BNK_DepositAccNo?: string | null;        // 公司銀行科目 (下拉 GLS1005.ACCNO，讀取 ACCNO, ACCCNAME)
-  BNK_CheckInAccNo?: string | null;        // 應付票據科目 (下拉 GLS1005.ACCNO，讀取 ACCNO, ACCCNAME)
-  BNK_CheckOutAccNo?: string | null;       // 應收票據科目 (下拉 GLS1005.ACCNO，讀取 ACCNO, ACCCNAME)
-
-  CRT_Date?: string | null;                // 建立日期 (datetime)
-  CRT_USR_No?: string | null;              // 建立人員
-  CRT_USR_Name?: string | null;            // 建立人員姓名
-  UPD_Date?: string | null;                // 變更日期 (datetime)
-  UPD_USR_No?: string | null;              // 變更人員
-  UPD_USR_Name?: string | null;            // 變更人員姓名
-
-  CanDel?: boolean;  //能否刪除(僅顯示)     // 看SA有沒有要卡控
-}
-
-export interface APS1004 {
-  id: number;                              // 主鍵
-  BNK_No: string;                          // 全省銀行代碼
-  BNK_BranchNo: string;                    // 銀行分行代號
-  BNK_BranchName: string;                  // 銀行分行名稱
-  ACC_LEN?: number | null;                 // 該行帳號最小長度 (沒有使用)
-  ACC_LEN_MAX?: number | null;             // 該行帳號最大長度 (沒有使用)
-  CRT_Date?: string | null;                // 建立日期
-  CRT_USR_No?: string | null;              // 建立人員
-  CRT_USR_Name?: string | null;            // 建立人員姓名
-  UPD_Date?: string | null;                // 變更日期
-  UPD_USR_No?: string | null;              // 變更人員
-  UPD_USR_Name?: string | null;            // 變更人員姓名
-}
+import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
 
 //1.2.1.1 公司銀行資料維護
 @Component({
@@ -93,7 +52,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  APS1004_Option: APS1004[] = []; // APS1004銀行分行代碼檔 -- 下拉BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME， 不可重覆
+  APS1004_Option: apiOption[] = []; // APS1004銀行分行代碼檔 -- 下拉BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME， 不可重覆
 
   // -----------看要不要由GLS1005_Option去mapping---------------------
   GLS1005_BNK_DepositAccNo_Option: apiOption[] = []; // 公司銀行科目  (accNo like '1103%')
@@ -221,31 +180,33 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
 
     console.log('deleteBody', deleteBody);
 
-    this.fin21010Service.deleteFIN21010(deleteBody).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
-      },
-    });
+    this.messageService.errorBubble('刪除目前不能多筆，請後端修正中');
 
-    console.log('刪除API待提供', deleteBody);
+    // this.fin21010Service.deleteFIN21010(deleteBody).subscribe({
+    //   next: (response) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm);
+    //   },
+    // });
 
-    this.selectedItems = [];
+    // this.selectedItems = [];
   }
 
   isRowSelectable(rowData: APS1002): boolean {
-    return rowData.CanDel ?? false;
+    // return rowData.CanDel ?? false;
+    //刪除先不卡控
+    return true;
   }
 
   loadOptions() {
@@ -287,5 +248,17 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
     });
 
+    // 查 APS1004 -- 下拉選單(
+      // No: BNK_NO+BNK_BRANCHNO銀行代碼、
+      // Name: 銀行名稱BNK_BRANCHNAME
+      // ) 範圍: 全找
+      this.dropdownApiService.queryAps1001({"SearchKeyword": ""}).subscribe((response) => {
+        const list = Array.isArray(response) ? response : [];
+        this.APS1004_Option = list.map((item: any) => ({
+          No: item.No, // 銀行代號
+          Name: item.Name, // 銀行名稱
+        }));
+        // console.log('銀行選項:', this.APS1004_Option);
+      });
   }
 }
