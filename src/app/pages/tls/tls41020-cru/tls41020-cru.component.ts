@@ -51,7 +51,7 @@ export class TLS41020CRUComponent
     id: [''],
     SYS_StoreNo: [''],
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
-    EDC_No: ['', [Validators.required, Validators.maxLength(10)]],
+  
     EDC_BegDate: ['', Validators.required],
     EDC_EndDate: ['', Validators.required],
     EDC_Status1: ['', Validators.required],
