@@ -155,6 +155,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
 
   public ngOnInit(): void {
     this.initializePage('ASS21020', '/ASS/ASS21020CRU', this.queryForm, this.onSubmit.bind(this));
+    const store = this.queryStateService.getQueryState(this.ProgNo);
+    if (store?.value) this.queryForm.setValue(store.value);
 
     this.service.tltNoSignal.set([]);
 
