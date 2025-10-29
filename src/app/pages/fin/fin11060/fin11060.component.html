@@ -53,39 +53,20 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- Group 1：交易序號 -->
-<ng-container [ngSwitch]="queryForm.get('Query_Cond')?.value">
-  <div class="card">
-    <!-- <app-report-table-group *ngSwitchCase="'1'" [columns]="columnsType1" [data]="data"
-      [subtotalFields]="['TXN_Time','MIG_Time']" [enableGrouping]="false" [reportTitle]="'電子發票上送表 - 條件1'"
-      [currentPage]="1" [showTotalOnly]="false" [defaultMergedView]="true">
-    </app-report-table-group> -->
-    <app-table tableKey="FIN11060" *ngSwitchCase="'1'" [data]="data" [columns]="columnsType1"
-      (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading"></app-table>
-
-    <!-- Group 2：收銀機號 -->
-    <!-- <app-report-table-group *ngSwitchCase="'2'" [columns]="columnsType2" [data]="data"
-      [subtotalFields]="['TXN_Time','MIG_Time']" [enableGrouping]="false" [reportTitle]="'電子發票上送表 - 條件2'"
-      [currentPage]="1" [showTotalOnly]="false" [defaultMergedView]="true">
-    </app-report-table-group> -->
-    <app-table tableKey="FIN11060" *ngSwitchCase="'2'" [data]="data" [columns]="columnsType2"
-      (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading"></app-table>
-
-    <!-- Group 3：交易日期 -->
-    <!-- <app-report-table-group *ngSwitchCase="'3'" [columns]="columnsType3" [data]="data"
-      [subtotalFields]="['TXN_Time','MIG_Time']" [enableGrouping]="false" [reportTitle]="'電子發票上送表 - 條件3'"
-      [currentPage]="1" [showTotalOnly]="false" [defaultMergedView]="true">
-    </app-report-table-group> -->
-    <app-table tableKey="FIN11060" *ngSwitchCase="'3'" [data]="data" [columns]="columnsType3"
-      (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading" ></app-table>
-  </div>
-</ng-container>
+<!-- ✅ 單一 app-table -->
+<div class="card mt-2">
+  <app-table tableKey="FIN11060"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="true"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    (delete)="onDelete($event)"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    dataKey="id"
+    [showManage]="false">
+  </app-table>
+</div>
