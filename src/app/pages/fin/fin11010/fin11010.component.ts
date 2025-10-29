@@ -43,7 +43,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     STO_StatusList: [[]],                                   // 狀態 (多選)
     REP_GUIYM_start: [''],                                  // 申報年月(起)
     REP_GUIYM_end: [''],                                    // 申報年月(訖)
-    ...createPaginationConfig([{ field: 'id', order: 1 }]) // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'REP_BegGUIYM', order: 1 }]) // 分頁和排序參數
   });
 
   totalRecords = 0;
