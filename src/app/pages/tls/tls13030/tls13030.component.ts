@@ -107,7 +107,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     tlt_building: ['', [Validators.maxLength(1)]],
     SortBy: [[]],
     org_idList: [[]],
-    // ✅ 一律用大寫分頁鍵
     PageSize: [20],
     PageIndex: [1],
   });
