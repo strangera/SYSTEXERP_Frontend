@@ -15,7 +15,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="能源類型"
                       controlName="ENG_Type"
-                      [showClear]="false"
+                      [showClear]="!1"
                       [options]="service.engTypeSignal()"
                       optionLabel="Name"
                       optionValue="No"
@@ -24,7 +24,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="錶號"
                       controlName="ENG_MeterNo"
-                      [showClear]="false"
+                      [showClear]="!1"
                       [options]="filteredMeterNo()"
                       optionLabel="ENG_MeterNo"
                       optionValue="ENG_MeterNo"
@@ -34,43 +34,43 @@
                         label="設備位置編號"
                         controlName="Location_No"
                         [control]="df().Location_No"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="樓層編號"
                         controlName="floor_no"
                         [control]="df().floor_no"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="樓層名稱"
                         controlName="floor_name"
                         [control]="df().floor_name"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="館別編號"
                         controlName="Building_No"
                         [control]="df().Building_No"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="館別名稱"
                         controlName="Building_Name"
                         [control]="df().Building_Name"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="平面圖X座標"
                         controlName="x_coord"
                         [control]="df().x_coord"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="平面圖Y座標"
                         controlName="y_coord"
                         [control]="df().y_coord"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
       </div>
 
@@ -82,7 +82,7 @@
                     (click)="onKancel()"></app-button>
         <app-button btnType="submit"
                     [loading]="loading"
-                    [disabled]="!rowEditValidSignal()"></app-button>
+                    [disabled]="!canSave()"></app-button>
       </div>
       }
     </form>
@@ -96,35 +96,36 @@
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
         <app-table #tb
-                   [showDetail]="false"
-                   [showEdit]="false"
-                   [alwaysEdit]="true"
-                   [alwaysBlurValidate]="true"
+                   [showDetail]="!1"
+                   [showEdit]="!1"
+                   [alwaysEdit]="!0"
+                   [alwaysBlurValidate]="!0"
                    [showCheckBox]="!isFormReadable"
-                   [showRowEdit]="true"
-                   [showManage]="true"
-                   [showHeader]="true"
+                   [showRowEdit]="!0"
+                   [showManage]="!0"
+                   [showHeader]="!0"
                    [showInsert]="!isFormReadable"
-                   [insertRowData]="true"
+                   [insertRowData]="!0"
                    [data]="filteredData()"
                    [totalRecords]="totalRecords()"
                    (delete)="onDelete($event)"
                    (fieldChange)="onFieldChange($event)"
-                   [rowEditCanSave]="rowEditValidSignal()"
-                   (rowEditInit)="onRowInit($event)"
+                   [rowEditCanSave]="rowEditCanSave()"
+                   (rowEditInit)="onRowInit()"
                    (rowEditSave)="onRowEdit($event)"
                    (rowEditCancel)="onRowEdit($event)"
                    [loading]="service.tableLoading()"
-                   [dataKey]="'Apply_No'"
-                   [tableKey]="'ASS21020_detail'"
+                   dataKey="Apply_No"
+                   tableKey="ASS21020_detail"
                    [columns]="columns">
-          <header *ngIf="!isFormReadable">
-            <div class="flex align-items-center justify-content-between w-full border-1 surface-border p-2">
-              <div></div>
+          @if (!isFormReadable) {
+          <header>
+            <div class="flex justify-content-end w-full border-1 surface-border p-2">
               <app-button label="自動依面積計算比率"
                           (click)="onAutoCalculate()"></app-button>
             </div>
           </header>
+          }
         </app-table>
       </p-panel>
     </div>
