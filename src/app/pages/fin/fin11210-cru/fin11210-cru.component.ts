@@ -113,4 +113,10 @@ export class FIN11210CRUComponent extends BasicCruPageComponent<FIN11210Data> im
           }));
       });
   }
+
+  onARGNoChange(event: any) {
+    this.dataForm.patchValue({
+      ARG_Desc: this.ARG_No_Options.find(x => x.No === event)?.Name.split(' - ')[1] || ''
+    });
+  }
 }
