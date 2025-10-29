@@ -23,6 +23,8 @@ import { ReportTableGroupComponent } from '@shared/componentkit/report-table-gro
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ECRNoService } from '@service/basic/ECRNo.service';
 import { Fin11060Service } from '@service/api/fin/fin11060.service';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { formatDate, formatDateTime } from '@shared/componentkit/table2/table2.model';
 
 export interface InvoiceBase {
   id: number;
@@ -63,7 +65,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   templateUrl: './fin11060.component.html',
   styleUrl: './fin11060.component.scss',
   standalone: true,
-  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent,  RadiobuttonComponent,  AccordionModule, FormsModule, ReactiveFormsModule,  CalendarRangeQuickComponent, DropdownComponent,  ReportTableGroupComponent, TranslateModule]
+  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent,  RadiobuttonComponent,  AccordionModule, FormsModule, ReactiveFormsModule,  CalendarRangeQuickComponent, DropdownComponent,  ReportTableGroupComponent, TranslateModule, TableComponent]
 })
 
 // 電子發票上送狀況表
@@ -109,8 +111,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   columnsType1: Column[] = [
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'TXN_GUINO', header: '發票號碼', visible: true },
-    { field: 'TXN_Time', header: '發票日期', visible: true },
-    { field: 'MIG_Time', header: '上傳日期', visible: true },
+    { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
+    { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
     { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
     { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
     { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
@@ -122,13 +124,13 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   columnsType2: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Time', header: '發票日期', visible: true },
-    { field: 'MIG_Time', header: '上傳日期', visible: true },
+    { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
+    { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
     { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
     { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
     { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
@@ -140,13 +142,13 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   columnsType3: Column[] = [
     { field: 'TXN_Date', header: '交易日期', visible: true },
-    { field: 'TXN_Time', header: '發票日期', visible: true },
-    { field: 'MIG_Time', header: '上傳日期', visible: true },
+    { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
+    { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
     { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
     { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
     { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
@@ -158,7 +160,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   selectedItems: InvoiceRecord[] = [];// 多選項目

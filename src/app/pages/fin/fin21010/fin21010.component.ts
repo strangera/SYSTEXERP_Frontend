@@ -14,7 +14,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
-import { APS1002, APS1004, FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
+import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
 
 //1.2.1.1 公司銀行資料維護
 @Component({
