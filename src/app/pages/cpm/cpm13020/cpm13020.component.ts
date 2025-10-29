@@ -108,29 +108,43 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
+ngOnInit(): void {
+  this.initializePage('CPM13020', 'cpm/cpm13020', this.queryForm, (form) => this.onSubmit(form));
 
-  ngOnInit(): void {
-    this.initializePage('CPM13020', 'cpm/cpm13020', this.queryForm, (form) => this.onSubmit(form));
+  this.dropDownListService.queryPOS1006_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe((res) => {
+      const rows = Array.isArray(res?.Data) ? res.Data : [];
+      this.paymentTypeOptions = rows.map((x: any) => ({
+        label: `${x.No ?? ''}-${x.Name ?? ''}`,
+        value: x.No ?? '',
+        Name: x.Name ?? '',
+        No: x.No ?? '',
+        PAY_Type: x.PAY_Type ?? '',
+      }));
+    });
 
-    this.dropDownListService.queryPOS1006_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        const rows = Array.isArray(res?.Data) ? res.Data : [];
-        this.paymentTypeOptions = rows.map((x: any) => ({
-          label: `${x.No ?? ''}-${x.Name ?? ''}`,
-          value: x.No ?? '',
-          Name: x.Name ?? '',
-          No: x.No ?? '',
-          PAY_Type: x.PAY_Type ?? '',
-        }));
-      });
+  // 檢視模式切換：清空總計
+  this.queryForm.controls.reportMode.valueChanges
+    .pipe(untilDestroyed(this))
+    .subscribe(v => {
+      this.reportMode = (v === 'POS' ? 'POS' : 'ALL');
+      this.grandTotal = null;
+    });
 
-    this.queryForm.controls.reportMode.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(v => {
-        this.reportMode = (v === 'POS' ? 'POS' : 'ALL');
-      });
-  }
+  // ✅ 用 get() 逐一訂閱，避免 controls[key] 型別造成 subscribe 聯集簽章錯誤
+  const keysToWatch = ['TXN_BDate', 'TXN_EDate', 'PAY_No'] as const;
+  keysToWatch.forEach(k => {
+    const ctrl = this.queryForm.get(k);
+    if (ctrl) {
+      ctrl.valueChanges
+        .pipe(untilDestroyed(this))
+        .subscribe(() => {
+          this.grandTotal = null;
+        });
+    }
+  });
+}
 
   // 解析 API 回傳的總計物件
 private extractGrandTotal(apiResp: any): any {
@@ -156,6 +170,9 @@ private extractGrandTotal(apiResp: any): any {
   // 送出：交由後端分頁/排序
 onSubmit = (frm: FormGroup) => {
   this.handleSubmit(frm, () => {
+    // ⬇️ 先清空總計，避免畫面殘留舊的總計
+    this.grandTotal = null;
+
     const val = this.queryForm.getRawValue();
     const payNoRaw = val?.PAY_No;
     const payNo: string | undefined =
@@ -177,26 +194,24 @@ onSubmit = (frm: FormGroup) => {
     const call$ = mode === 'ALL'
       ? this.cpm13020Service.queryAll(payload)
       : this.cpm13020Service.queryPos(payload);
-call$
-  .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-  .subscribe({
-    next: (resp) => {
-      console.log('API Response', resp);
-      // 只取 mainData
-      this.rows = Array.isArray(resp?.Data?.mainData)
-        ? resp.Data.mainData
-        : [];
-      this.totalRecords = Number(resp?.TotalCount ?? this.rows.length ?? 0);
-      this.grandTotal = this.extractGrandTotal(resp);
-    },
-    error: () => {
-      this.rows = [];
-      this.totalRecords = 0;
-      this.grandTotal = null;
-    },
-  });
+
+    call$
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (resp) => {
+          this.rows = Array.isArray(resp?.Data?.mainData) ? resp.Data.mainData : [];
+          this.totalRecords = Number(resp?.TotalCount ?? this.rows.length ?? 0);
+          this.grandTotal = this.extractGrandTotal(resp); // ⬅️ 新總計回來再更新
+        },
+        error: () => {
+          this.rows = [];
+          this.totalRecords = 0;
+          this.grandTotal = null;
+        },
+      });
   });
 };
+
 
   // <app-table-report> 查詢（直接打後端分頁，回傳 GrandTotal）
   public queryAllForReport = (body: any) => {
