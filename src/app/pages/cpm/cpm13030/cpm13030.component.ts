@@ -17,6 +17,7 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
 import { CPM13030Service } from '@service/api/cpm/cpm13030.service';
 import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-cpm13030',
@@ -36,6 +37,7 @@ import { DatePipe } from '@angular/common';
     TranslateModule,
     InputNumberComponent,
     CustomFooterTableComponent,
+    MultiSelectComponent,
     DatePipe
   ]
 })
@@ -86,6 +88,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     // 下拉清單載入
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.TLT_No_Options = res.Data.map(item => ({
+        value: item.No,
         ...item, label: `${item.No} - ${item.Name}`
       }));
     });

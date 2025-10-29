@@ -67,7 +67,7 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
     ...createPaginationConfig([{ field: 'NOT_SeqNo', order: 1 }]),
   });
 
-  ECRNoOptions: {label: string; value: string}[] = [];
+  ECRNoOptions: { label: string; value: string }[] = [];
 
   NOT_Status_Options = [
     { label: '已生效', value: 'A' },
@@ -128,7 +128,6 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   }
 
 
-  // ---- 查詢 ----
   onSubmit(frm: FormGroup) {
     const frmValue = frm.value;
     this.handleSubmit(frm, () => {
@@ -136,6 +135,7 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
         PageSize: frmValue?.pageSize || 10,
         PageIndex: (frmValue?.pageIndex ?? 1),
         SortBy: frmValue?.SortBy || [{ field: 'NOT_SeqNo', order: 1 }],
+        STO_No: '10',
         ECR_No: frmValue.ECR_No || '',
         NOT_BegDateTime: frmValue.NOT_BegDateTime,
         NOT_EndDateTime: frmValue.NOT_EndDateTime,
@@ -144,20 +144,20 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
       };
 
       this.loading = true;
-      this.tls41040Service.queryTLS41040(payload).subscribe({
-        next: (res) => {
-          this.data = res?.Data ?? [];
-          this.totalRecords = res?.TotalCount ?? 0;   // 分頁必填
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('TLS41040 查詢失敗:', err);
-          this.loading = false;
-        }
-      });
+      this.tls41040Service.queryTLS41040(payload)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe({
+          next: (res) => {
+            this.data = res?.Data ?? [];
+            this.totalRecords = res?.TotalCount ?? 0;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            console.log('查詢結果', this.data.find(x => x.ID === 69));
+          },
+          error: (err) => console.error('TLS41040 查詢失敗:', err)
+        });
     });
   }
+
 
   // ---- 刪除 ----
   onDelete(selectedRows: TLS41040Item[]): void {
