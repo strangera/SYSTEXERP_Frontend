@@ -17,6 +17,7 @@ import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
+import { tap } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
 import { ASS21020Data, TLTByFlag } from './ass21020.model';
 
@@ -154,6 +155,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
 
   public ngOnInit(): void {
     this.initializePage('ASS21020', '/ASS/ASS21020CRU', this.queryForm, this.onSubmit.bind(this));
+    const store = this.queryStateService.getQueryState(this.ProgNo);
+    if (store?.value) this.queryForm.setValue(store.value);
 
     this.service.tltNoSignal.set([]);
 
@@ -192,8 +195,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const totalItems = items.length;
 
     for (const item of items) {
-      this.service.deleteASS21020({ ENG_Type: this.service.engTypeMap.get(item.ENG_Type)!, ENG_MeterNo: item.ENG_MeterNo })
-        .subscribe(res => {
+      this.service.deleteASS21020({ ENG_Type: this.service.engTypeMap.get(item.ENG_Type)!, ENG_MeterNo: item.ENG_MeterNo }).pipe(
+        tap(() => {
           deletedCount++;
 
           if (deletedCount === totalItems) {
@@ -207,7 +210,11 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
               SYS_StoreNo: this.user?.SYS_StoreNo!,
             });
           }
-        });
+        }),
+        tap(({ Status }) => {
+          Status === '0000' && this.messageService.successBubble(`刪除錶號 ${item.ENG_MeterNo} 成功`);
+        }),
+      ).subscribe();
     }
   }
 }

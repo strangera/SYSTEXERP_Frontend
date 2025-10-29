@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { ASS21010Data, ASS21010Payload } from './ass21010.model';
 
 @Component({
@@ -83,6 +83,8 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   ngOnInit(): void {
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
+    const store = this.queryStateService.getQueryState(this.ProgNo);
+    if (store?.value) this.queryForm.setValue(store.value);
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
@@ -109,12 +111,14 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.authService.currentUserValue]);
     for (const d of data) {
       this.service.deleteASS21010({ ...d, ...this.usrData() })
-        .pipe(finalize(() => this.loading = !1))
-        .subscribe(res => {
-          if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
-          this.service.ASS21010Data.update(v => v.filter(d => data.some(item => d.ID !== item.ID)));
-          this.messageService.successBubble('刪除成功');
-        });
+        .pipe(
+          tap(() => this.service.ASS21010Data.update(v =>
+            v.filter(d => data.some(item => d.ID !== item.ID)))),
+          tap(({ Status }) => {
+            if (Status === '0000') this.messageService.successBubble('刪除成功');
+          }),
+          finalize(() => this.loading = !1),
+        ).subscribe();
     }
     this.service.loadASS21010(<ASS21010Payload>{
       ...this.queryForm.getRawValue(),

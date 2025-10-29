@@ -11,14 +11,12 @@
           <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="value"
             optionValue="value" [control]="dataForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="信用卡刷卡機代碼" controlName="EDC_No" [control]="dataForm.controls.EDC_No"
-            [submitted]="submitted"></app-input-text>
-        </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar-range startLabel="啟用日期" endLabel="停用日期" [startControl]="dataForm.controls.EDC_BegDate"
             [endControl]="dataForm.controls.EDC_EndDate" [submitted]="submitted"></app-calendar-range>
         </div>
+                  <div class="col-12 md:col-6 lg:col-4"></div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="中信刷卡機狀態" controlName="EDC_Status" [options]="EDC_Status_Option" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.EDC_Status1" [submitted]="submitted"></app-dropdown>

@@ -88,17 +88,15 @@ export class ASS21010Service implements OnDestroy {
     ).subscribe();
   }
 
-  public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus['Data']> {
+  public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus> {
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
-      map(res => res.Data),
     );
   }
 
-  public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus['Data']> {
+  public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus> {
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
-      map(res => res.Data),
     );
   }
 

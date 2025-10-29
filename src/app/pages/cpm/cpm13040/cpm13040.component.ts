@@ -72,7 +72,8 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     { field: 'CardType', header: '卡別', visible: true },
     { field: 'TXN_PayDesc', header: '聯名卡號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
     { field: 'TXN_PayAmt', header: '刷卡總金額', visible: true, format: formatAmount },
   ];

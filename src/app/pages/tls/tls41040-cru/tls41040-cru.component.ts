@@ -102,7 +102,16 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('TLS41040', this.dataForm);
+
+    // 確保主檔ID正確
+    if (this.rowdata?.ID) {
+      console.log('✅ 帶入主檔 ID:', this.rowdata.ID);
+    } else {
+      console.warn('⚠️ 無主檔 ID，更新會失敗');
+    }
+
     this.loadAndSetupColumns();
+
     this.data = (this.rowdata?.Details ?? []).map((d: TLS41040Detail) => ({
       ...d,
       ID: d.ID ?? 0,
@@ -110,6 +119,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     }));
     this.originalSnapshot = JSON.parse(JSON.stringify(this.data));
   }
+
 
   // ===== 載入選項並設定 Table 欄位 =====
   private loadAndSetupColumns() {
@@ -211,13 +221,13 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       })
     };
   }
-  /** Update payload */
-  /** Update payload */
+
   private createUpdateBody(frm: FormGroup) {
     const raw = frm.getRawValue();
 
     return {
       ID: Number(this.rowdata?.ID ?? 0),
+      STO_No: this.rowdata?.STO_No ?? '',
       NOT_DateTime: raw.NOT_DateTime,
       NOT_BegDateTime: raw.NOT_BegDateTime,
       NOT_EndDateTime: raw.NOT_EndDateTime,
@@ -233,6 +243,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
       Detail: this.data.map((d) => {
         const clone = { ...d };
+
         let status = clone.status ?? 'original';
 
         if (!clone.NOT_SeqNo) {
@@ -302,7 +313,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     return true;
   }
   onDataChange(updatedData: TLS41040Detail[]): void {
-    console.log('✅ onDataChange 觸發', updatedData);
+    console.log(' onDataChange 觸發', updatedData);
 
     this.data = updatedData.map((row) => {
       const snapshot = this.originalSnapshot.find((x) => x.NOT_SeqNo === row.NOT_SeqNo);
@@ -356,6 +367,8 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         serviceCall = this.tls41040Service.updateTLS41040(body);
       }
       console.log('送出 payload.Detail', body.Detail);
+      console.log('🧾 Update Body:', JSON.stringify(body, null, 2));
+
       serviceCall?.pipe(finalize(() => (this.loading = false))).subscribe({
         next: (res) => {
           this.messageService.successBubble(res.Message ?? '成功');
