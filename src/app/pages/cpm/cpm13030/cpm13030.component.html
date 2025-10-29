@@ -13,16 +13,16 @@
               [endControl]="queryForm.controls.TXN_EDATE" [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="building_noList" [options]="ECR_Group_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.building_noList" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="館別" controlName="building_noList" [options]="ECR_Group_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.building_noList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織名稱" controlName="org_nameList" [options]="org_id_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.org_nameList" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="組織名稱" controlName="org_nameList" [options]="org_id_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.org_nameList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號" controlName="tlt_noList" [options]="TLT_No_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_noList" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="專櫃編號" controlName="tlt_noList" [options]="TLT_No_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_noList" [submitted]="submitted"></app-multi-select>
           </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="櫃位名稱" controlName="TLT_NAME" [options]="TLT_NAME_Options" optionLabel="label"
