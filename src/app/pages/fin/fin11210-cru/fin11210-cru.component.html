@@ -14,8 +14,8 @@
         <!-- 參數代號/說明 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="參數代號/說明" controlName="ARG_No" [options]="ARG_No_Options" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.ARG_No" [submitted]="submitted"
-            [editable]="false"></app-dropdown>
+            optionValue="No" [control]="dataForm.controls.ARG_No" [submitted]="submitted" [editable]="false"
+            (valueChange)="onARGNoChange($event)"></app-dropdown>
         </div>
         <!-- 參數內容 -->
         <div class="col-12 md:col-6 lg:col-4">
