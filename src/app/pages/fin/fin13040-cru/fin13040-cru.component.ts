@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -8,15 +8,13 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TableEditComponent } from "@shared/componentkit/table-edit/table-edit.component";
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 
 @Component({
   selector: 'app-fin13040-cru',
@@ -24,10 +22,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   styleUrl: './fin13040-cru.component.scss',
   standalone: true,
   imports: [
-    TableComponent,
     InputTextRangeComponent,
-    MultiSelectComponent,
-    CalendarRangeComponent,
     MenubarComponent,
     PanelModule,
     FormsModule,
@@ -37,6 +32,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
     CalendarComponent,
     ButtonComponent,
     TranslateModule,
+    TableEditComponent
   ],
 })
 export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -49,28 +45,32 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     InvoiceDate: [null as Date | null, Validators.required],
     Buyer_Uniform: ['', Validators.required],
     PUR_TaxType: ['', Validators.required],
-    startVoucher_No: [''],
-    endVoucher_No: [''],
+    startVoucher_No: [null],
+    endVoucher_No: [null],
     AssetType: [[] as string[]],
-    PUR_InvoiceTitle: [''], // 暫不處理
+    PUR_InvoiceTitle: [''],
     Buyer_VenNo: [''],
     Buyer_Name: [''],
+    PUR_Tax: [0],
+    PUR_Amt: [0],
+    PUR_Net: [0],
   });
 
   /** 下拉選單與資料 */
   InvoiceType_Options: any[] = [];
-  SAL_Type_Options = getSYS1000Options('SAL_Type');
+  SAL_Type_Options = getSYS1000Options('T205');
   taxTypeOptions = getSYS1000Options('PUR_TaxType');
   AssetNoteOptions = getSYS1000Options('AssetType');
   Buyer_Uniform_Options: any[] = [];
 
   /** 明細資料表 */
-  columns: Column[] = [];
+  columns: EditColumn[] = [];
   data: any[] = [];
   totalRecords = 0;
   isTableDisabled = false;
   selectedRows: any[] = [];
   INV_ItemName_Options: any[] = [];
+
   constructor(
     private dropDownListService: DropDownListService,
     private fin13040Service: Fin13040Service
@@ -81,10 +81,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   // ======================== 初始化 ========================
   ngOnInit(): void {
     this.initializePage('FIN13040', this.dataForm);
-    this.loadINVItemOptions();
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
-    this.loadAndSetupColumns();
 
     const rowData = history.state?.rowdata;
     console.log('主檔資料:', rowData);
@@ -94,21 +92,30 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       this.loadDetail(rowData);
     }
 
+    //  SAL_Type 改變時重新載入品項
+    this.dataForm.get('SAL_Type')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((val) => {
+        console.log('[valueChanges] SAL_Type 改變:', val);
+        this.loadINVItemOptions();
+      });
+
+    // 如果初始化時 SAL_Type 已有值（例如編輯模式），延遲執行一次
+    setTimeout(() => {
+      const salType = this.dataForm.get('SAL_Type')?.value;
+      console.log('[init] SAL_Type 初始值:', salType);
+      if (salType) this.loadINVItemOptions();
+    }, 200);
+
+    // 買受人統編改變自動帶入廠商資訊
     this.dataForm.get('Buyer_Uniform')?.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((val) => {
         const selected = this.Buyer_Uniform_Options.find(o => o.value === val);
-        if (selected) {
-          this.dataForm.patchValue({
-            Buyer_VenNo: selected.VEN_No,
-            Buyer_Name: selected.VEN_Name,
-          });
-        } else {
-          this.dataForm.patchValue({
-            Buyer_VenNo: '',
-            Buyer_Name: '',
-          });
-        }
+        this.dataForm.patchValue({
+          Buyer_VenNo: selected?.VEN_No ?? '',
+          Buyer_Name: selected?.VEN_Name ?? '',
+        });
       });
   }
 
@@ -122,13 +129,14 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       InvoiceDate: this.formatValidDate(header.InvoiceDate),
       Buyer_Uniform: header.Buyer_Uniform ?? '',
       PUR_TaxType: header.PUR_TaxType ?? '',
-      startVoucher_No: header.Voucher_No ?? '',
-      endVoucher_No: header.Voucher_No ?? '',
+      startVoucher_No: header.Voucher_No ?? null,
+      endVoucher_No: header.Voucher_No ?? null,
       AssetType: header.AssetType ? [header.AssetType] : [],
       PUR_InvoiceTitle: header.Buyer_Name ?? '',
     });
-  }
 
+    console.log('[fillHeaderData] 已設定 SAL_Type =', header.SAL_Type);
+  }
   // ======================== 載入明細 ========================
   private loadDetail(rowData: any): void {
     const payload = {
@@ -153,12 +161,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           console.log('主檔資料(明細API):', header);
           console.log('明細資料:', details);
 
-          // 若明細API主檔資料有值，可覆蓋補全
           if (header?.InvoiceType) {
             this.fillHeaderData(header);
           }
 
-          // 明細表格資料
           this.data = details;
           this.totalRecords = this.data.length;
         },
@@ -166,7 +172,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // ======================== 下拉選單 ========================
-  /** 載入買受人統一編號下拉清單 */
+  /** 載入買受人統一編號 */
   loadBuyerUniformOptions(): void {
     this.dropDownListService
       .queryPOS2013_DropDownList({})
@@ -176,14 +182,15 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           const list = res?.Data ?? [];
           this.Buyer_Uniform_Options = list.map((item: any) => ({
             label: `${item.No} - ${item.Name}`,
-            value: item.No,          // 統一編號
-            VEN_No: item.VEN_No,     // 廠商編號
-            VEN_Name: item.Name,     // 廠商名稱
+            value: item.No,
+            VEN_No: item.VEN_No,
+            VEN_Name: item.Name,
           }));
         },
       });
   }
 
+  /** 載入發票類型 */
   loadInvoiceTypeOptions(): void {
     this.dropDownListService
       .queryTDS1007_DropDownList({ mid: 0 })
@@ -201,26 +208,55 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         },
       });
   }
+
+  /** 載入品項下拉 (TDS1008) */
   loadINVItemOptions(): void {
-    const salType = this.dataForm.get('SAL_Type')?.value || ''; // 對應主檔 SAL_Type
-    const body = { SAL_Type: [salType] };
+    const salType = this.dataForm.get('SAL_Type')?.value || '';
+    console.log('[loadINVItemOptions] 呼叫，SAL_Type =', salType);
+
+    if (!salType) {
+      console.warn('[loadINVItemOptions] SAL_Type 為空，不呼叫 API');
+      this.INV_ItemName_Options = [];
+      this.loadAndSetupColumns();
+      this.data = [];
+      this.tableEdit?.insertRow(true); // 這裡也可加（SAL_Type 清空時）
+      return;
+    }
 
     this.dropDownListService
-      .queryTDS1008_DropDownList(body.SAL_Type)
+      .queryTDS1008_DropDownList([salType])
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res) => {
-          const list = res?.Data ?? [];
+          console.log('[TDS1008 回傳原始資料]:', res);
+          let list: any[] = [];
+          if (Array.isArray((res as any)?.Data)) {
+            list = (res as any).Data.flatMap((d: any) => d?.Data ?? []);
+          } else if ((res as any)?.Data?.Data && Array.isArray((res as any).Data.Data)) {
+            list = (res as any).Data.Data;
+          } else {
+            console.warn('[TDS1008] Data 結構未知:', (res as any)?.Data);
+          }
+
           this.INV_ItemName_Options = list.map((item: any) => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName}`,
+            label: `${item.INV_ItemNo}`,
             value: item.INV_ItemNo,
             INV_ItemNo: item.INV_ItemNo,
             INV_ItemName: item.INV_ItemName,
             INV_UsageType: item.INV_UsageType,
           }));
+
+          this.loadAndSetupColumns();
+
+          this.data = [];
+          setTimeout(() => {
+            this.tableEdit?.insertRow(true);
+          });
         },
       });
   }
+
+
 
   // ======================== 工具 ========================
   private formatValidDate(dateStr: string | null | undefined): Date | null {
@@ -229,7 +265,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     const y = d.getFullYear();
     return y <= 1 ? null : d;
   }
-  /** 轉成 yyyyMM 申報年月 */
+
+  /** yyyyMM 格式 */
   private formatDeclareYM(date: any): string {
     if (!date) return '';
     const d = new Date(date);
@@ -238,53 +275,153 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     return `${y}${m}`;
   }
 
+  /** 更新主檔金額合計 */
+  updateMasterAmounts(): void {
+    const totalTax = this.data.reduce((sum, r) => sum + (Number(r.TXN_Tax) || 0), 0);
+    const totalAmt = this.data.reduce((sum, r) => sum + (Number(r.TXN_SaleAmt) || 0), 0);
+    const net = totalAmt - totalTax;
 
+    this.dataForm.patchValue({
+      PUR_Tax: totalTax,
+      PUR_Amt: totalAmt,
+      PUR_Net: net,
+    });
+  }
+
+  // ======================== 明細欄位設定 ========================
   private loadAndSetupColumns(): void {
     this.columns = [
-      { field: 'PLU_Name', header: '品項', type: 'input' },
-      { field: 'TXN_Qty', header: '數量', type: 'input' },
-      { field: 'TLT_No', header: '含稅金額(僅供參考)', type: 'input' },
-      { field: 'PLU_SalePrc', header: '單價', type: 'input' },
-      { field: 'TXN_SaleAmt', header: '銷售金額', type: 'input' },
+      {
+        field: 'PLU_No',
+        header: '貨號',
+        type: 'dropdown',
+        options: () => this.INV_ItemName_Options,
+        optionLabel: 'label',
+        optionValue: 'INV_ItemNo',
+        validate: [
+          (value: any) => ({
+            isValid: !!value,
+            errorMessage: ['請選擇貨號']
+          })
+        ],
+        calculate: (rowData, value) => {
+          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemNo === value);
+          return selected ? { PLU_Name: selected.INV_ItemName } : {};
+        },
+      },
+      {
+        field: 'PLU_Name',
+        header: '品名',
+        type: 'dropdown',
+        options: () =>
+          this.INV_ItemName_Options.map(opt => ({
+            label: opt.INV_ItemName,
+            value: opt.INV_ItemName,
+          })),
+        optionLabel: 'label',
+        optionValue: 'value',
+        validate: [
+          (value: any) => ({
+            isValid: !!value,
+            errorMessage: ['請選擇品名']
+          })
+        ],
+      },
+      {
+        field: 'TXN_Qty',
+        header: '數量',
+        type: 'inputNumber',
+        defaultValue: 1,
+        validate: [
+          (value: any) => ({
+            isValid: value !== null && value !== undefined && !isNaN(value) && Number(value) > 0,
+            errorMessage: ['數量必須大於 0']
+          })
+        ],
+        calculate: (rowData, value) => {
+          const qty = Number(value) || 0;
+          const price = Number(rowData.PLU_SalePrc) || 0;
+          const saleAmt = qty * price;
+          const tax = Math.round(saleAmt / 21);
+          return { TXN_SaleAmt: saleAmt, TXN_Tax: tax };
+        },
+      },
+      {
+        field: 'PLU_SalePrc',
+        header: '單價',
+        type: 'inputNumber',
+        defaultValue: 0,
+        validate: [
+          (value: any) => ({
+            isValid: value !== null && value !== undefined && !isNaN(value),
+            errorMessage: ['單價為必填且須為數字']
+          })
+        ],
+        calculate: (rowData, value) => {
+          const price = Number(value) || 0;
+          const qty = Number(rowData.TXN_Qty) || 0;
+          const saleAmt = qty * price;
+          const tax = Math.round(saleAmt / 21);
+          return { TXN_SaleAmt: saleAmt, TXN_Tax: tax };
+        },
+      },
+      {
+        field: 'TXN_SaleAmt',
+        header: '銷售金額',
+        type: 'inputNumber',
+        validate: [
+          (value: any) => ({
+            isValid: value !== null && value !== undefined && !isNaN(value),
+            errorMessage: ['請輸入有效的銷售金額']
+          })
+        ],
+      },
+      {
+        field: 'TXN_Tax',
+        header: '稅額',
+        type: 'inputNumber',
+        validate: [
+          (value: any) => ({
+            isValid: value !== null && value !== undefined && !isNaN(value),
+            errorMessage: ['請輸入有效的稅額']
+          })
+        ],
+      },
     ];
   }
 
-  // ======================== 明細操作 ========================
-  onRowEdit(rowData: any) {
-    const target = this.data.find((d) => d.ID === rowData.ID);
-    if (target) Object.assign(target, rowData);
-    if (rowData.status !== 'new' && rowData.status !== 'deleted') {
-      rowData.status = 'modified';
-    }
-    console.log('修改明細:', rowData);
-  }
 
-  onDeleteRow(selectedItems: any[]) {
-    console.log('刪除項目:', selectedItems);
-  }
+  // ======================== 儲存 ========================
+  @ViewChild('tableEdit') tableEdit!: TableEditComponent;
 
   onSubmit(form: FormGroup): void {
     if (!form.valid) {
+      form.markAllAsTouched();
+      return;
+    }
+    const v = form.value;
+    const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === v.Buyer_Uniform);
+    if (!selectedBuyer) {
+      alert('請選擇買受人統編');
+      return;
+    }
+    const validDetails = this.data.filter(d => !d._isAutoInsertCandidate);
+
+    if (validDetails.length === 0) {
+      alert('明細中沒有有效資料');
+      return;
+    }
+    const invalidDetail = validDetails.some((item) => !item.PLU_No || item.PLU_No.trim() === '');
+    if (invalidDetail) {
+      alert('明細中有缺少貨號的資料');
       return;
     }
 
-    const v = form.value;
     const toISO = (d: any): string | null => {
       if (!d) return null;
       const date = new Date(d);
       return isNaN(date.getTime()) ? null : date.toISOString();
     };
-
-    const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === v.Buyer_Uniform);
-    if (!selectedBuyer) {
-
-      return;
-    }
-
-    const invalidDetail = this.data.some((item) => !item.PLU_No || item.PLU_No.trim() === '');
-    if (invalidDetail) {
-      return;
-    }
 
     const header = {
       MID: 0,
@@ -301,19 +438,23 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       Group_Mark: 'N',
       Donate_Mark: 'N',
       PUR_TaxType: v.PUR_TaxType,
-      Voucher_No: v.startVoucher_No || '',
+      Voucher_No: v.startVoucher_No || null,
       AssetType: v.AssetType?.[0] ?? '',
       InvoiceTime: new Date().toISOString(),
       Invoice_Cancel: 'N',
-      PUR_Net: history.state?.rowdata?.PUR_Net ?? 0,
-      PUR_Tax: history.state?.rowdata?.PUR_Tax ?? 0,
-      PUR_Amt: history.state?.rowdata?.PUR_Amt ?? 0,
+      PUR_Net: this.dataForm.value.PUR_Net ?? 0,
+      PUR_Tax: this.dataForm.value.PUR_Tax ?? 0,
+      PUR_Amt: this.dataForm.value.PUR_Amt ?? 0,
+      CRT_USR_No: 'admin',
+      CRT_USR_Name: '系統管理員',
       CRT_Date: new Date().toISOString(),
+      UPD_USR_No: 'admin',
+      UPD_USR_Name: '系統管理員',
       UPD_Date: new Date().toISOString(),
-      Print_Date: null,
+      Print_Date: new Date().toISOString(),
     };
 
-    const details = this.data.map((item) => ({
+    const details = validDetails.map((item) => ({
       PLU_No: item.PLU_No?.trim() ?? '',
       PLU_Name: item.PLU_Name ?? '',
       TXN_Qty: Number(item.TXN_Qty ?? 0),
@@ -327,18 +468,27 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       FIN13040Detail_APS40235: details,
     };
 
-    console.log('Update payload:', payload);
+    console.log('[Update payload]', payload);
 
     this.fin13040Service
       .updateFIN13040(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res) => {
+          console.log('[updateFIN13040 回傳]', res);
           if (res?.Status === '0000') {
+            alert('更新成功');
             this.onCancel();
+          } else {
+            alert(`更新失敗，狀態碼：${res?.Status ?? '未知'}`);
           }
+        },
+        error: (err) => {
+          console.error('[updateFIN13040 錯誤]', err);
+          alert('呼叫 API 發生錯誤，請查看 console。');
         },
       });
   }
+
 
 }
