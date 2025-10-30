@@ -41,13 +41,13 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
     // 20251014: 新增 專櫃編號欄位
-    TLT_NO: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
+    TLT_No: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
 
     CanDel: [null],  //能否刪除(僅顯示) 卡控
   });
   //
   storageOptions: apiOption[] = [];
-  TLT_NO_Option: any[] = []; // 專櫃編號
+  TLT_No_Option: any[] = []; // 專櫃編號
   allquery: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
@@ -139,7 +139,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
 
       // 查詢 專櫃編號(這邊要用這支_後端提供的queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList )
       this.tls51060Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
-        this.TLT_NO_Option = response.Data.map((item: any) => ({
+        this.TLT_No_Option = response.Data.map((item: any) => ({
           No: item.No, // 專櫃編號代碼
           Label: item.No + '-' + item.Name, // 組合成顯示用的Label
         }));

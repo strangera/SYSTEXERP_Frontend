@@ -39,7 +39,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
     // 20251014: 新增專櫃編號欄位
-    // TLT_NO: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
+    // TLT_No: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]), // 分頁和排序參數
@@ -58,6 +58,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     { field: 'PLU_OrderPrcRate', header: '標準進貨折數', visible: false },
     { field: 'HOS_No', header: '建議倉別代碼', visible: true },
     { field: 'HOS_NAME', header: '建議倉別名稱', visible: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'VEN_No', header: '廠商編號', visible: false },
     { field: 'LOGO_Remark', header: '備註說明', visible: true }
   ];
