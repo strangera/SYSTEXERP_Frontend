@@ -120,13 +120,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     /*若廠商類型為3=員工id, 由使用者自行輸入 */
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
     tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱) --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
-    tlt_EngName: ['', [Validators.maxLength(100), this.validationService.alphanumericValidator]], // 品牌英文(專櫃名稱)
+    tlt_EngName: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 品牌英文(專櫃名稱)
     VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 廠商聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人電話
     VEN_BossTitle: ['', [Validators.maxLength(20)]], // 廠商聯絡人頭銜
     VEN_BossFax: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人傳真
     VEN_BossMobile: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人行動電話
-    VEN_BossEmail: ['', [Validators.maxLength(60), this.validationService.englishNumberSymbolValidator]], // 廠商聯絡人電子郵件
+    VEN_BossEmail: ['', [Validators.maxLength(60), this.validationService.noChineseValidator]], // 廠商聯絡人電子郵件
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司通訊地址
     VEN_PersonInCharge: ['', [Validators.maxLength(20)]], // 公司負責人
     business_type: [null, [Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
