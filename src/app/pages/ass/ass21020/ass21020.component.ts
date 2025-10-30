@@ -1,8 +1,7 @@
-import { Component, OnInit, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { EngType } from '@service/api/ass/ass21010.service';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -17,8 +16,8 @@ import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
-import { tap } from 'rxjs';
-import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
+import { finalize, tap } from 'rxjs';
+import { ASS2100ENGMeterType, EngType } from '../ass21010/ass21010.model';
 import { ASS21020Data, TLTByFlag } from './ass21020.model';
 
 @Component({
@@ -56,30 +55,30 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges, { equal: (a, b) => a === b });
-  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges, { equal: (a, b) => a === b });
-  private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges, { equal: (a, b) => a === b });
+  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
+  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
+  private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
   public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
 
-  public filteredMeterNo: ASS2100ENGMeterType[] = [];
+  public filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
 
   /** ENG_Type 改變時，帶出可用的meterNo */
   public readonly engTypeEffect = effect(() => {
     const engType = this.engTypeSignal();
     this.logger.debug(`engTypeEffect:`, [engType, this.queryForm.getRawValue()]);
-    this.filteredMeterNo = this.service.engMeterNoSignal().filter(i => {
+    this.filteredMeterNo.set(this.service.engMeterNoData().filter(item => {
       if (!engType?.length) return !0;
-      return this.service.engTypeSignal()!.some(t => t.Name === i.ENG_Type
-        && this.qf().ENG_Type.value?.some(v => v === t.No));
-    });
+      return this.service.engTypeList().some(t => t.label === item.ENG_Type
+        && this.qf().ENG_Type.value?.some(v => v === t.value));
+    }));
     this.logger.debug(`engType Effect:`, [this.filteredMeterNo]);
   }, { allowSignalWrites: !0 });
 
   /* meterNo改變時，帶出Location_No、ENG_Type */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    this.service.tltNoSignal.set([]);
+    this.service.tltNoData.set([]);
     this.logger.debug(`meterNoEffect:`, [meterNo, this.queryForm.getRawValue()]);
     if (!meterNo) return void this.queryForm.patchValue({
       TLT_No: void 0,
@@ -88,15 +87,18 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
       NET_SPACE: void 0,
       ENG_Rate: void 0,
     }, { emitEvent: !1 });
-    this.service.queryTltByFlag(meterNo);
-    const metro = this.service.engMeterNoMap.get(meterNo);
+    this.service.getTltByFlags(meterNo, +this.user!.mid);
+
+    const metro = this.service.engMeterNoMap().get(meterNo);
     this.logger.debug(`metroNo metro:`, [metro]);
     if (!metro) return;
-    const current = this.service.engTypeSignal().find(t => t.Name === metro.ENG_Type);
+
+    const current = this.service.engTypeList().find(t => t.label === metro.ENG_Type);
     this.logger.debug(`metroNo current:`, [current]);
     if (!current) return;
+
     this.queryForm.patchValue({
-      ENG_Type: this.qf().ENG_Type.value?.length ? this.qf().ENG_Type.value : [current.No as EngType],
+      ENG_Type: this.qf().ENG_Type.value?.length ? this.qf().ENG_Type.value : [current.value as EngType],
       Location_No: metro.Location_No,
     }, { emitEvent: !1 });
     this.logger.debug(`meterNo changes:`, [meterNo, current]);
@@ -107,7 +109,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const tltNo = this.tltNoSignal();
     this.logger.debug(`tltNoEffect:`, [tltNo, this.queryForm.getRawValue()]);
     if (!tltNo?.length) return;
-    const selected = this.service.tltByFlagMap.get(tltNo);
+    const selected = this.service.tltByFlagMap().get(tltNo);
     this.logger.debug(`tltNo selected:`, [selected]);
     if (!selected) return;
     this.queryForm.patchValue({
@@ -158,32 +160,33 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
 
-    this.service.tltNoSignal.set([]);
+    this.service.getEngMeterNos();
 
-    this.service.loadEngType();
-    this.service.loadEngMeterNo();
-
-    this.logger.debug(`init:`, []);
+    this.logger.debug(`init:`, [this.service.engTypeList(), this.service.engMeterNoData()]);
   }
 
   public onSubmit(): void {
-    this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.user]);
     this.handleSubmit(this.queryForm, () => {
-      const { SortBy, pageSize, pageIndex, ...field } = this.queryForm.getRawValue();
-      this.service.loadASS21020({
-        EngTypes: this.qf().ENG_Type.value!.join(),
-        ENG_Rate: this.qf().ENG_Rate.value!,
-        ENG_MeterNo: this.qf().ENG_MeterNo.value!,
-        Location_No: this.qf().Location_No.value || void 0,
+      const raw = {
+        ...this.queryForm.getRawValue(),
+        EngTypes: this.qf().ENG_Type.value?.join(),
         SYS_StoreNo: this.user?.SYS_StoreNo!,
-        Mid: Number(this.user?.mid)!,
-        SortBy: SortBy || void 0,
-        PageSize: pageSize || void 0,
-        PageIndex: pageIndex || void 0,
-      });
+      };
+
+      const payload = Object.keys(raw).reduce((acc, key) => {
+        const v = raw[key as keyof typeof raw];
+        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
+        return acc;
+      }, {} as any);
+
+      this.service.loadASS21020(payload).pipe(
+        finalize(() => {
+          this.loading = !1;
+          this.logger.debug('ASS21020 查詢結果:', [this.service.ASS21020Data()]);
+        }),
+      ).subscribe();
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.loading = !1;
     });
   }
 

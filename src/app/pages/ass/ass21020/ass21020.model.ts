@@ -1,5 +1,5 @@
-import { EngType } from '@service/api/ass/ass21010.service';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { EngType } from '../ass21010/ass21010.model';
 
 export interface ASS21020Data {
   Id?: number; // custom for sort
@@ -21,6 +21,8 @@ export interface ASS21020Detail {
   NET_SPACE?: number;
   ENG_Rate: number;
   ENG_Remark: string;
+  status?: 'original' | 'modified' | 'new' | 'deleted';
+  _isAutoInsertCandidate?: boolean;
 }
 
 export interface ASS21020Query extends BaseQueryRequest {
