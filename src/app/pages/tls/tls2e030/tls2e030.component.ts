@@ -8,14 +8,14 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { Tls2e030Data, Tls2e030EstBody, Tls2e030QueryBody, Tls2e030Service } from '@service/api/tls/tls2e030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { AsyncPipe } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { finalize } from 'rxjs';
-import { formatDate, formatYYYYMM } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
 // 2.2.14.3 專櫃帳款試算作業
 @Component({
@@ -35,7 +35,7 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   money_typeOptions = getSYS1000Options('money_type');
   sam_termnoOptions: { value: number, label: string }[] = []; // 期別選項
   data: Tls2e030Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'CRT_Date', header: '試算日期', visible: true, format: formatDate },
     { field: 'sam_yyymm', header: '試算年月', visible: true, format: formatYYYYMM },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -50,7 +50,6 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
     sam_yyymm: [new Date(), [Validators.required]],
     money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]],
     sam_termno: [1, [Validators.required]],
-    tlt_floor: [null],
     tlt_no: [null],
   });
   tlt_noOptions = this.dropdown.queryTltTalent();
@@ -66,7 +65,8 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   ngOnInit(): void {
     this.initializePage('TLS2E030');
     this.setupFormLinkage(); // 設定表單聯動
-  }/**
+  }
+  /**
      * 設定 money_type 與 sam_termno 的聯動邏輯
      */
   private setupFormLinkage(): void {
