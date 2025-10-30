@@ -8,12 +8,12 @@ import { option } from '../../../shared/models/sys/sysb000.model';
 export class dropDown51070 {
     // ---基本資料dropdown---
     // EC商品狀態(ECstatus) 已取消顯示 此項目暫時不使用
-    // statusOptions: option[] = [  //商品狀態
-    //     { value: '1', label: '正常' },
-    //     { value: '2', label: '停用' },
-    //     { value: '3', label: '停進' },
-    //     { value: '4', label: '下架' },
-    // ];
+    statusOptions: option[] = [  //商品狀態
+        { value: '1', label: '正常' },
+        { value: '2', label: '停用' },
+        { value: '3', label: '停進' },
+        { value: '4', label: '下架' },
+    ];
 
     // ---商品規格dropdown---
     attributeOptions: option[] = [ // 商品型態
@@ -28,8 +28,8 @@ export class dropDown51070 {
         { value: '1', label: '應稅' },
     ];
     pluTypeOptions: option[] = [ // 商品類別
-        { value: '1', label: '一般商品' },
-        { value: '8', label: '專櫃' },
+        { value: '1 ', label: '一般商品' }, //注意! 這邊有空白
+        { value: '8 ', label: '專櫃' }, //注意! 這邊有空白
         { value: 'CC', label: '專櫃商品' },
         { value: 'SC', label: '特殊條碼' }
     ];

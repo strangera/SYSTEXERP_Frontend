@@ -28,7 +28,7 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
   dataForm = this.formBuilder.nonNullable.group({
     // PLUUNIT  商品單位設定檔
     id: [],
-    UNIT_No: ['', [Validators.required, Validators.maxLength(2)]], // 單位代碼
+    UNIT_No: ['', [Validators.required, Validators.maxLength(2)]], // 單位編碼
     UNIT_NAME: ['', [Validators.required, Validators.maxLength(40)]], // 單位名稱
     UNIT_Attribute: ["1", [Validators.required, Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位 (預設1，目前只有基本單位沒有包裝單位)
     // CHILD_UNIT: ['', [Validators.maxLength(2)]], // 子項單位代號 --沒有使用
@@ -54,10 +54,10 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
     this.initializePage('TLS51050', this.dataForm);
     this.loadOptions();
 
-    // 0626新增 卡控 編輯的卡控 同 [刪除] ，若不可刪除也不可編輯 單位代碼
+    // 0626新增 卡控 編輯的卡控 同 [刪除] ，若不可刪除也不可編輯 單位編碼
     const canDelValue = this.dataForm.get('CanDel')?.value as unknown as boolean;
     if (canDelValue === false) {
-      this.dataForm.get('UNIT_No')?.disable();            // 單位代碼不可編輯
+      this.dataForm.get('UNIT_No')?.disable();            // 單位編碼不可編輯
     }
   }
 

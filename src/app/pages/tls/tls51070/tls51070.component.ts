@@ -36,7 +36,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     CAT_LNo: ['', [Validators.maxLength(6)]], // 大分類代碼 --POS2003
     CAT_MNo: ['', [Validators.maxLength(6)]], // 中分類代碼 POS20031
     CAT_SNo: ['', [Validators.maxLength(6)]], // 小分類代碼 POS20032
-    PLU_Attribute: ['1', [Validators.maxLength(16)]], // 商品型態 1一般、2進口、3買斷、4試銷、5寄賣*/ --南紡 商品型態 1一般、2進口、3買斷、4試銷、5寄賣
+    PLU_Attribute: [null, [Validators.maxLength(16)]], // 商品型態 1一般、2進口、3買斷、4試銷、5寄賣*/ --南紡 商品型態 1一般、2進口、3買斷、4試銷、5寄賣
     PLU_Unit: ['', [Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
     PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
     PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
@@ -339,7 +339,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       // console.log('專櫃編號代碼:', response.Data);
-    });  
+    });
   }
 
   //讀取 大分類表單 (該情況禁止 中小下拉選擇)
