@@ -112,6 +112,8 @@
                [data]="service.FIN53010Data()"
                [columns]="columns"
                [totalRecords]="service.totalRecords()"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+               [lazy]="true"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [loading]="service.tableLoading()"
