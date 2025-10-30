@@ -346,7 +346,8 @@ export type TableTypes =
   'default' |
   'dropdownTable' |
   'dropdownTableTemplate' |
-  'template';
+  'template' |
+  'detail';
 
 /** 可以用來做轉換的 Map */
 export const Maps = {

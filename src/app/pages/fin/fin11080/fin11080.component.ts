@@ -33,7 +33,7 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
   queryForm = this.formBuilder.group({
     TXN_Date_Start: ['', Validators.required], // 銷售日期_起
     TXN_Date_End: ['', Validators.required], // 銷售日期_訖
-    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }])
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
 
   totalRecords = 0;

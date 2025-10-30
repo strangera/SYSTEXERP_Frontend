@@ -81,4 +81,19 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> imp
         });
     });
   }
+
+  onDelete(selectedItems: FIN11050Data[]) {
+    this.confirmationService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const INV_GUITypeList = selectedItems.map(item => item.INV_GUIType);
+        this.fin11050Service.deleteFIN11050({ INV_GUITypeList })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
+  }
 }
