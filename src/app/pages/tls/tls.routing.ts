@@ -334,8 +334,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2d040cru', loadComponent: () => import('./tls2d040-cru/tls2d040-cru.component').then(m => m.TLS2D040CRUComponent) },
   // 部門使用券類設定作業 CRU
   { path: 'tls2d050cru', loadComponent: () => import('./tls2d050-cru/tls2d050-cru.component').then(m => m.TLS2D050CRUComponent) },
-  // 專櫃帳款試算作業 CRU
-  { path: 'tls2e030cru', loadComponent: () => import('./tls2e030-cru/tls2e030-cru.component').then(m => m.TLS2E030CRUComponent) },
   // 專櫃結帳前調整作業 CRU
   { path: 'tls2e060cru', loadComponent: () => import('./tls2e060-cru/tls2e060-cru.component').then(m => m.TLS2E060CRUComponent) },
   // 專櫃帳款結算作業 CRU
