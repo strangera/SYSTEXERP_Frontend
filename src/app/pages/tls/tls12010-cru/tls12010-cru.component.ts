@@ -211,7 +211,8 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         console.log('暫存廠商資料:', this.cachedVendorData);
       }
     } else {
-      console.warn('無法讀取明細資料，因為沒有提供PC_id');
+      if(this.crudstatus != CRUDStatus.Create)
+        console.warn('無法讀取明細資料，因為沒有提供PC_id');
     }
 
     // ✅ 加入判斷，初始化時也跳過這個 onCusTypeChange
@@ -319,6 +320,27 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         Label: item.No + '-' + item.Name //標籤
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
+
+      //2025/10/30: 加入規則: 新增模式 將接洽人員自動帶入登入者
+      if(this.crudstatus == CRUDStatus.Create){
+        const userInfo = this.authService?.getUserInfo?.();
+        console.log('登入用戶', userInfo);
+        if(this.contact_USR_Option && userInfo){ //接待人員清單存在就自動帶入
+          // 找出登入者在下拉選項中的對應值
+          const matchedUser = this.contact_USR_Option.find(
+            (u: apiOption) =>
+              u.No === userInfo.user_No || u.Name === userInfo.user_Name
+          );
+
+          if (matchedUser) {
+            this.dataForm.get('contact_USR_No')?.setValue(matchedUser.No);
+            this.dataForm.get('contact_USR_Name')?.setValue(matchedUser.Name);
+            console.log('自動帶入接洽人員:', matchedUser);
+          } else {
+            console.log('登入者不在接洽人員清單中:');
+          }
+        }
+      }
     });
 
     // 查 大分類(專櫃)
@@ -357,7 +379,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         Name: item.Name, // 接待人員 名稱
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
       }));
-      console.log('接待人員代號:', this.contact_USR_Option);
+      console.log('接洽人員代號:', this.contact_USR_Option);
     });
   }
 
