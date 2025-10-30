@@ -74,8 +74,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     Sale_DateEnd: [yesterday, [Validators.required]],  // 銷售日期_終止日(必填_預設昨天)
     Gen_DateStart: [null],  // 產檔日期_起始日
     Gen_DateEnd: [null],  // 產檔日期_終止日
-    TXN_GUINoStart: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
-    TXN_GUINoEnd: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
+    TXN_GUINoStart: [null, [Validators.maxLength(10), Validators.minLength(10)]], // 發票起始號碼
+    TXN_GUINoEnd: [null, [Validators.maxLength(10), Validators.minLength(10)]], // 發票結束號碼
     ECR_NoStart: [null, [Validators.maxLength(8)]], // 收銀機代號(起)
     ECR_NoEnd: [null, [Validators.maxLength(8)]], // 收銀機代號(迄)
     Query_Cond: ['1', Validators.required],  // 條件依據 送出 (銷售日期/收銀機號/收銀機號)
@@ -106,58 +106,58 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   showSort = [{ field: 'TXN_Time', order: 1 },{ field: 'MIG_Time', order: 1 }]
   columns: Column[] = []; //顯示的column
   columnsType1: Column[] = [
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'TXN_GUINO', header: '發票號碼', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
     { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
     { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
-    { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
-    { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
-    { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
-    { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true },
-    { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true },
-    { field: 'CF0401_9001', header: '一般交易_異常', visible: true },
-    { field: 'CF0501_9001', header: '作廢交易_異常', visible: true },
-    { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
-    { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
-    { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
+    // { field: 'TXN_No', header: '交易序號', visible: true },
+    // { field: 'TXN_GUINO', header: '發票號碼', visible: true },
+    { field: 'CF0401_9000', header: '一般交易_正常', visible: true, isTotal: true },
+    { field: 'CF0501_9000', header: '作廢交易_正常', visible: true, isTotal: true },
+    { field: 'CF0701_9000', header: '發票註銷_正常', visible: true, isTotal: true },
+    { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true, isTotal: true },
+    { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true, isTotal: true },
+    { field: 'CF0401_9001', header: '一般交易_異常', visible: true, isTotal: true },
+    { field: 'CF0501_9001', header: '作廢交易_異常', visible: true, isTotal: true },
+    { field: 'CF0701_9001', header: '發票註銷_異常', visible: true, isTotal: true },
+    { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true, isTotal: true },
+    { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true, isTotal: true },
+    // { field: 'ECR_No', header: '收銀機號', visible: true },
   ];
 
   columnsType2: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
     { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
-    { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
-    { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
-    { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
-    { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true },
-    { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true },
-    { field: 'CF0401_9001', header: '一般交易_異常', visible: true },
-    { field: 'CF0501_9001', header: '作廢交易_異常', visible: true },
-    { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
-    { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
-    { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
+    { field: 'CF0401_9000', header: '一般交易_正常', visible: true, isTotal: true },
+    { field: 'CF0501_9000', header: '作廢交易_正常', visible: true, isTotal: true },
+    { field: 'CF0701_9000', header: '發票註銷_正常', visible: true, isTotal: true },
+    { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true, isTotal: true },
+    { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true, isTotal: true },
+    { field: 'CF0401_9001', header: '一般交易_異常', visible: true, isTotal: true },
+    { field: 'CF0501_9001', header: '作廢交易_異常', visible: true, isTotal: true },
+    { field: 'CF0701_9001', header: '發票註銷_異常', visible: true, isTotal: true },
+    { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true, isTotal: true },
+    { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true, isTotal: true },
+    // { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   columnsType3: Column[] = [
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
     { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
-    { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
-    { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
-    { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
-    { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true },
-    { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true },
-    { field: 'CF0401_9001', header: '一般交易_異常', visible: true },
-    { field: 'CF0501_9001', header: '作廢交易_異常', visible: true },
-    { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
-    { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
-    { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
+    { field: 'CF0401_9000', header: '一般交易_正常', visible: true, isTotal: true },
+    { field: 'CF0501_9000', header: '作廢交易_正常', visible: true, isTotal: true },
+    { field: 'CF0701_9000', header: '發票註銷_正常', visible: true, isTotal: true },
+    { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true, isTotal: true },
+    { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true, isTotal: true },
+    { field: 'CF0401_9001', header: '一般交易_異常', visible: true, isTotal: true },
+    { field: 'CF0501_9001', header: '作廢交易_異常', visible: true, isTotal: true },
+    { field: 'CF0701_9001', header: '發票註銷_異常', visible: true, isTotal: true },
+    { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true, isTotal: true },
+    { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true, isTotal: true },
+    // { field: 'ECR_No', header: '收銀機號', visible: true },
+    // { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
   selectedItems: InvoiceRecord[] = [];// 多選項目
