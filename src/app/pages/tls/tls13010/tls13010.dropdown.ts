@@ -87,7 +87,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   depositPayment: [
     { value: '1', label: '現金' },
     { value: '2', label: '支票' },
-    { value: '3', label: '履約保證金' }
+    { value: '3', label: '匯款' }
   ],
   depositType: [
     { value: '1', label: '準時開業' },
