@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { finalize } from 'rxjs';
-import { FIN55050Service, FIN55050Data } from '../../../service/api/fin/fin55050.service';
+import { FIN55050Service, FIN55050Detail } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -16,6 +16,21 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { TableSubheaderComponent } from "@shared/componentkit/table/table-subheader/table-subheader.component";
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+
+export interface FIN55050Data {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+  _Details: FIN55050Detail[];
+}
+
+export interface GroupedFIN55050Detail extends FIN55050Detail {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+}
+
 
 @Component({
   selector: 'app-fin55050',
@@ -33,62 +48,57 @@ import { TableSubheaderComponent } from "@shared/componentkit/table/table-subhea
     RadiobuttonComponent,
     CheckboxModule,
     MultiSelectComponent,
-    TableSubheaderComponent
+    TableSubheaderComponent,
+    InputTextRangeComponent
   ]
 })
-export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> implements OnInit {
+export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> implements OnInit {
   queryForm = this.formBuilder.group({
-    VOUDATE_Start: [null],                          // 日期起
-    VOUDATE_End: [null],                            // 日期迄
-    ORG_ID: [null],       // 部門
-    ProjectNo: [null],    // 活動代碼
-    AccNo: [null],        // 科目代號
-    VOUNO: [null, Validators.maxLength(16)],        // 傳票號碼
-    DetailNo: [null],     // 廠商代號
-    PTA: [null],          // 立沖代號
-    SubDetailNo: [null],  // 對象別編號
-    AccountKey: [null],   // 對帳KEY
-    NoteDesc: [null],    // 摘要
-    VOUCHER_KIND: [null], // 傳票型態
-    PostFlag: [null],     // 傳票狀態
-    isSubDetailNo: [null], // 是否為對象別
-    ReportType: [null],    // 報表方式
-    PrintType: [null],      // 列印類型
+    DateFrom: [null, Validators.required],
+    DateTo: [null, Validators.required],
+    OrgIdList: [null],
+    AccNoList: [null],
+    VendorNoList: [null],
+    PTAFrom: [null],
+    PTATo: [null],
+    TargetNoList: [null],
+    Notes: [null],
+    VouTypeList: [null],
+    VouStatusList: [null],
+    IsTarget: ['Y', Validators.required],
     ...createPaginationConfig([])
   });
 
-  data: FIN55050Data[] = [];
-  selectedItems: FIN55050Data[] = [];
+  data: FIN55050Detail[] = [];
+  selectedItems: FIN55050Detail[] = [];
   totalRecords = 0;
 
   columns: Column[] = [
-    { field: 'ID', header: '序號', hidden: true },
-    { field: 'VOUNO', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'DETAILNO', header: '廠商代號/簡稱', visible: true },
-    { field: 'POSTFLAG', header: '狀態', visible: true },
+    { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
+    { field: 'Ven_Name', header: '廠商代號/簡稱', visible: true },
+    { field: 'VouStatus', header: '狀態', visible: true },
     { field: 'ORG_ID', header: '部門', visible: true },
-    { field: 'ORG_NAME', header: '部門名稱', visible: true },
+    { field: 'Org_Name', header: '部門名稱', visible: true },
     { field: 'ProjectNo', header: '活動', visible: true },
     { field: 'PTA', header: '立沖代號', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'D_AMT', header: '借方金額', visible: true, format: formatAmount },
-    { field: 'C_AMT', header: '貸方金額', visible: true, format: formatAmount },
-    { field: 'Balance', header: '餘額', visible: true, format: formatAmount },
+    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount },
+    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount },
+    { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount },
   ];
 
   //#region 下拉選單資料
-  ORG_IDOptions: any[] = []; // 部門
-  ProjectNoOptions: any[] = []; // 活動代碼
-  AccNoOptions: any[] = []; // 科目代號
-  DetailNoOptions: any[] = []; // 廠商代號
-  PostFlagOptions: any[] = [   // 傳票狀態
+  OrgIdListOptions: any[] = []; // 部門
+  AccNoListOptions: any[] = []; // 科目代號
+  VendorNoListOptions: any[] = []; // 廠商代號
+  VouStatusListOptions: any[] = [   // 傳票狀態
     { label: '作廢', value: '0' },
     { label: '建立', value: '1' },
     { label: '確認', value: '2' },
     { label: '過帳', value: '3' },
   ];
-  SubDetailNoOptions: any[] = []; // 對象別編號 TODO: 未找到dropDown api
-  VoucherKindOptions: any[] = [];  // 傳票型態 TODO: 未找到dropDown api
+  TargetNoListOptions: any[] = []; // 對象別編號 TODO: 未找到dropDown api
+  VouTypeListOptions: any[] = [];  // 傳票型態 TODO: 未找到dropDown api
   //#endregion
 
   constructor(
@@ -108,7 +118,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
       this.fin55050Service.queryFIN55050(form.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data.group1.VOUDATA;
+          this.data = this.restructureData(response.Data);
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
@@ -120,32 +130,17 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.ORG_IDOptions = response.Data
+        this.OrgIdListOptions = response.Data
           .map(item => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No
-          }));
-      });
-    // 活動代碼 TODO: 條件待確認
-    this.dropDownListService.getActivityOptions({
-      mid: 0,
-      str_no: '10',
-      pod_type: ['1', '2', '8'],
-      pod_status: '1',
-    })
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.ProjectNoOptions = response.Data
-          .map(item => ({
-            label: `${item.pod_no} - ${item.pod_desc}`,
-            value: item.pod_no
           }));
       });
     // 科目代號
     this.dropDownListService.queryGLS1005_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.AccNoOptions = response.Data
+        this.AccNoListOptions = response.Data
           .map(item => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No
@@ -155,11 +150,28 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.DetailNoOptions = response.Data
+        this.VendorNoListOptions = response.Data
           .map(item => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No
           }));
       });
+  }
+
+  restructureData(data: FIN55050Data[]): GroupedFIN55050Detail[] {
+    console.log(data);
+    const groupedDetails: GroupedFIN55050Detail[] = [];
+    data.forEach(item => {
+      item._Details.forEach(detail => {
+        groupedDetails.push({
+          ...detail,
+          AccNo: item.AccNo,
+          AccCName: item.AccCName,
+          VouDate: item.VouDate
+        });
+      });
+    });
+    console.log(groupedDetails);
+    return groupedDetails;
   }
 }
