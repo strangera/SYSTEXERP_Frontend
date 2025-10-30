@@ -121,7 +121,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
+    // { field: 'ECR_No', header: '收銀機號', visible: true },
   ];
 
   columnsType2: Column[] = [
