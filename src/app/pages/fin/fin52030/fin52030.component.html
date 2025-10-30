@@ -69,6 +69,8 @@
     <app-table [data]="service.FIN52030Data()"
                [columns]="columns"
                [totalRecords]="service.totalRecords()"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+               [lazy]="true"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [loading]="service.tableLoading()"
