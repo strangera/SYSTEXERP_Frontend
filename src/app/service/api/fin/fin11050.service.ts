@@ -37,6 +37,11 @@ export interface FIN11050UpdateRequest {
   INV_GUIName: string;       // 發票格式名稱
 }
 
+// --- 刪除 FIN11050 資料請求 Model ---
+export interface FIN11050DeleteRequest {
+  INV_GUITypeList: string[]; // 發票格式代號列表
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -59,5 +64,10 @@ export class Fin11050Service {
   // 修改
   updateFIN11050(data: FIN11050UpdateRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateFIN11050`, data);
+  }
+
+  // 刪除
+  deleteFIN11050(data: FIN11050DeleteRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteFIN11050`, data);
   }
 }

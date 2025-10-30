@@ -61,7 +61,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
       field: 'TXN_ProcStatus',
       header: '處理狀態',
       visible: true,
-      format: (value: string) => value === 'Y' ? '已處理' : '待處理'
+      format: (value: string) => value === 'Y' ? '已處理' : value === 'X' ? '過期' : '待處理'
     },
     {
       field: 'TXN_RspnTime',

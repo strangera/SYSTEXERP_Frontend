@@ -58,15 +58,12 @@
   <app-table tableKey="FIN11060"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="true" [showTotal]="true" [showManage]="false"
     [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
+    [lazy]="true" [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     (delete)="onDelete($event)"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    dataKey="key"
-    [multiSortMeta]="showSort" [showManage]="false">
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    dataKey="key" [multiSortMeta]="showSort">
   </app-table>
 </div>
