@@ -6,7 +6,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -15,6 +15,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { TableSubheaderComponent } from "@shared/componentkit/table/table-subheader/table-subheader.component";
 
 @Component({
   selector: 'app-fin55050',
@@ -31,7 +32,8 @@ import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-se
     CalendarRangeComponent,
     RadiobuttonComponent,
     CheckboxModule,
-    MultiSelectComponent
+    MultiSelectComponent,
+    TableSubheaderComponent
   ]
 })
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> implements OnInit {
@@ -61,7 +63,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
 
   columns: Column[] = [
     { field: 'ID', header: '序號', hidden: true },
-    { field: 'VOUNO', header: '傳票號碼', visible: true },
+    { field: 'VOUNO', header: '傳票號碼', visible: true, type: 'detail' },
     { field: 'DETAILNO', header: '廠商代號/簡稱', visible: true },
     { field: 'POSTFLAG', header: '狀態', visible: true },
     { field: 'ORG_ID', header: '部門', visible: true },
@@ -69,9 +71,9 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
     { field: 'ProjectNo', header: '活動', visible: true },
     { field: 'PTA', header: '立沖代號', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'D_AMT', header: '借方金額', visible: true },
-    { field: 'C_AMT', header: '貸方金額', visible: true },
-    { field: 'Balance', header: '餘額', visible: true },
+    { field: 'D_AMT', header: '借方金額', visible: true, format: formatAmount },
+    { field: 'C_AMT', header: '貸方金額', visible: true, format: formatAmount },
+    { field: 'Balance', header: '餘額', visible: true, format: formatAmount },
   ];
 
   //#region 下拉選單資料
@@ -106,7 +108,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
       this.fin55050Service.queryFIN55050(form.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data;
+          this.data = response.Data.group1.VOUDATA;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
