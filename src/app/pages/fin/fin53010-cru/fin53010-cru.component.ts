@@ -20,7 +20,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { combineLatest, finalize, Observable, tap } from 'rxjs';
+import { finalize, Observable, tap } from 'rxjs';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
@@ -64,10 +64,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
     /** ROC/IFRS 0:ROC 1:IFRS null:全部 */
     VouAccType: new FormControl<'0' | '1' | void>('0', [Validators.required]),
-    CRT_USR_No: new FormControl<string | void>(void 0),
-    UPD_USR_No: new FormControl<string | void>(void 0),
-    CRT_Date: new FormControl<Date | void>(void 0),
-    UPD_Date: new FormControl<Date | void>(void 0),
+    CRT_USR_No: new FormControl<string | void>(this.isFormCreateable ? this.user.user_No : void 0),
+    UPD_USR_No: new FormControl<string | void>(!this.isFormCreateable ? this.user.user_No : void 0),
+    CRT_Date: new FormControl<Date | void>(this.isFormCreateable ? new Date() : void 0),
+    UPD_Date: new FormControl<Date | void>(!this.isFormCreateable ? new Date() : void 0),
     CompNo: new FormControl<string | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
@@ -106,6 +106,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return !diff;
   });
 
+  public readonly loadingEffect = effect(() => {
+    const acc = this.service.accLoading();
+    const ven = this.service.venLoading();
+    const usr = this.service.usrLoading();
+    const org = this.service.orgNoLoading();
+    const voc = this.service.voucherTypeLoading();
+    const table = this.service.tableLoading();
+    const refName = this.service.refNameLoading();
+    const noteDesc = this.service.noteDescLoading();
+    this.loading = acc || ven || usr || org || refName || voc || noteDesc || table;
+  });
+
   // 載入資料的 effect
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
@@ -120,12 +132,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       VouNo: data.VouNo,
       VouType: ['1', '2', '3'].includes(String(data.VouType)) ? String(data.VouType) as '1' | '2' | '3' : '1',
       PostFlag: ['0', '1', '3'].includes(String(data.PostFlag)) ? String(data.PostFlag) as '0' | '1' | '3' : '0',
-      VoucherType: data.VoucherType?.trim() ?? 'GL',
+      VoucherType: data.VoucherType ?? 'GL ',
       VouDate: data.VouDate ? new Date(data.VouDate) : new Date(),
       Remark: data.Remark,
       INV_YN: (data.INV_YN ?? 'N') as 'N' | 'Y',
       VouAccType: ['0', '1'].includes(String(data.VouAccType)) ? String(data.VouAccType) as '0' | '1' : void 0,
       CompNo: data.CompNo,
+      ...data.CRT_USR_No ? { CRT_USR_No: data.CRT_USR_No } : {},
+      ...data.CRT_Date ? { CRT_Date: new Date(data.CRT_Date) } : {},
+      ...data.UPD_USR_No ? { UPD_USR_No: data.UPD_USR_No } : {},
+      ...data.UPD_Date ? { UPD_Date: new Date(data.UPD_Date) } : {},
     });
 
     this.tableData.set(data?.Details.map(v => ({
@@ -163,7 +179,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       type: 'dropdown',
       required: !0,
       showClear: !1,
-      disabled: () => this.service.accLoading(),
       options: () => this.service.accNoList(),
       optionLabel: 'value',
       optionValue: 'value',
@@ -173,7 +188,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     {
       field: 'DetailNo',
       header: '廠商/員工代號',
-      disabled: () => this.service.venLoading() || this.service.usrLoading(),
       type: 'template',
       templateRef: this.venUsrTemplate(),
     },
@@ -239,33 +253,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.FIN53010Detail.set(Object.create(null));
     this.loading = !0;
 
-    if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe();
-
+    this.service.getAccNoList();
+    this.service.getVendorList();
+    this.service.getUsrList();
     this.service.getOrgNoList();
     this.service.getRefNameList();
     this.service.getVoucherTypeList();
+    this.service.getAccDescList([]);
 
-    combineLatest([
-      this.service.getAccNoList(),
-      this.service.getVendorList(),
-      this.service.getUsrList(),
-      this.service.getAccDescList([]),
-    ]).pipe(
-      tap(([accNos, vendors, usrs, accDescs]) => {
-        this.logger.debug(`init forks:`, [accNos, vendors, usrs, accDescs]);
-        if (!this.isFormCreateable) {
-          this.df().UPD_USR_No.setValue(this.user.user_Name);
-          this.df().UPD_Date.setValue(new Date());
-        } else {
-          this.df().CRT_USR_No.setValue(this.user.user_Name);
-          this.df().CRT_Date.setValue(new Date());
-        }
-      }),
-      finalize(() => {
-        this.loading = !1;
-        this.logger.debug(`init:`, [this.rowdata, this.service.FIN53010Detail()]);
-      }),
-    ).subscribe();
+    if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe();
   }
 
   public onSubmit(): void {
@@ -281,6 +277,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
             AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
             ORG_ID: rest.ORG_ID || '100000',
+            VoucherType: d.VoucherType?.padEnd(3, ' ') || 'GL ',
             NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
           };
         }),
@@ -347,6 +344,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           this.selectedOrgId.set(String(event.value));
           result[index].SubDetailNo = '';
           break;
+
         case 'NoteDesc':
           result[index].NoteDesc = String(this.service.noteDescMap()
             .get(event.rowData.AccNo)?.data
@@ -425,8 +423,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   /** 選中的項目 */
-  public selectTemplateItem(rowData: FIN53010DetailTable, item?: Option): void {
+  public selectTemplateItem(rowData: FIN53010DetailTable, item?: Option & { short?: string; }): void {
     this.logger.debug('selectTemplateItem:', [rowData, item]);
-    [rowData.DetailNo, rowData.DetailName] = [item?.value ?? '', item?.['short'] ?? ''];
+    [rowData.DetailNo, rowData.DetailName] = [item?.value ?? '', item?.short ?? item?.label ?? ''];
   };
 }

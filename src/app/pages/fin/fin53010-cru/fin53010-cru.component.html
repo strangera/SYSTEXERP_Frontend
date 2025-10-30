@@ -161,6 +161,7 @@
                   optionLabel="label"
                   optionValue="value"
                   placeholder="選擇類型"
+                  [disabled]="service.usrLoading() || service.venLoading()"
                   (onChange)="onTemplateTypeChange($event)"
                   styleClass="w-10rem"></p-dropdown>
     </div>
@@ -184,7 +185,7 @@
                [rows]="10"
                [showCurrentPageReport]="!0"
                currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆"
-               [loading]="service.venLoading() || service.usrLoading()">
+               [loading]="loading">
         <ng-template pTemplate="header">
           <tr>
             <th>代號</th>

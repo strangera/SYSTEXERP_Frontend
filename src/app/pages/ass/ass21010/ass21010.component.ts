@@ -2,7 +2,7 @@ import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
+import { ASS21010Service } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -14,7 +14,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
-import { ASS21010Data, ASS21010Payload } from './ass21010.model';
+import { ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -37,10 +37,10 @@ import { ASS21010Data, ASS21010Payload } from './ass21010.model';
 export class ASS21010Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public queryForm = this.formBuilder.group({
-    ENG_Type: new FormControl<EngType[] | undefined>(void 0),
-    ENG_MeterNo: new FormControl<string | undefined>(void 0),
-    Location_No: new FormControl<string | undefined>(void 0),
-    ENG_Remark: new FormControl<string | undefined>(void 0),
+    ENG_Type: new FormControl<EngType[] | void>(void 0),
+    ENG_MeterNo: new FormControl<string | void>(void 0),
+    Location_No: new FormControl<string | void>(void 0),
+    ENG_Remark: new FormControl<string | void>(void 0),
     ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -86,7 +86,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.setValue(store.value);
 
-    this.service.loadEngType();
     this.service.loadEngMeterNo();
     this.service.loadLocationNo();
 

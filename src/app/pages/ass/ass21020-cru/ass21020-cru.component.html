@@ -16,15 +16,16 @@
                       label="能源類型"
                       controlName="ENG_Type"
                       [showClear]="!1"
-                      [options]="service.engTypeSignal()"
-                      optionLabel="Name"
-                      optionValue="No"
+                      [options]="service.engTypeList()"
+                      optionLabel="label"
+                      optionValue="value"
                       [control]="df().ENG_Type"
                       [submitted]="submitted"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="錶號"
                       controlName="ENG_MeterNo"
                       [showClear]="!1"
+                      [loading]="service.engMeterNoLoading()"
                       [options]="filteredMeterNo()"
                       optionLabel="ENG_MeterNo"
                       optionValue="ENG_MeterNo"
@@ -78,10 +79,9 @@
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel"
-                    [form]="dataForm"
-                    (click)="onKancel()"></app-button>
+                    [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [loading]="loading"
+                    [loading]="service.tableLoading()"
                     [disabled]="!canSave()"></app-button>
       </div>
       }
@@ -95,38 +95,18 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <app-table #tb
-                   [showDetail]="!1"
-                   [showEdit]="!1"
-                   [alwaysEdit]="!0"
-                   [alwaysBlurValidate]="!0"
-                   [showCheckBox]="!isFormReadable"
-                   [showRowEdit]="!0"
-                   [showManage]="!0"
-                   [showHeader]="!0"
-                   [showInsert]="!isFormReadable"
-                   [insertRowData]="!0"
-                   [data]="filteredData()"
-                   [totalRecords]="totalRecords()"
-                   (delete)="onDelete($event)"
-                   (fieldChange)="onFieldChange($event)"
-                   [rowEditCanSave]="rowEditCanSave()"
-                   (rowEditInit)="onRowInit()"
-                   (rowEditSave)="onRowEdit($event)"
-                   (rowEditCancel)="onRowEdit($event)"
-                   [loading]="service.tableLoading()"
-                   dataKey="Apply_No"
-                   tableKey="ASS21020_detail"
-                   [columns]="columns">
-          @if (!isFormReadable) {
-          <header>
-            <div class="flex justify-content-end w-full border-1 surface-border p-2">
-              <app-button label="自動依面積計算比率"
-                          (click)="onAutoCalculate()"></app-button>
-            </div>
-          </header>
-          }
-        </app-table>
+        <div class="flex justify-content-end w-full border-1 surface-border p-2 mb-2">
+          <app-button label="自動依面積計算比率"
+                      (click)="onAutoCalculate()"></app-button>
+        </div>
+        <app-table-edit [data]="tableData()"
+                        dataStatusField="status"
+                        (dataChange)="onDataChange($event)"
+                        [loading]="service.tableLoading()"
+                        [disabled]="isFormReadable"
+                        tableKey="ASS21020_detail"
+                        [columns]="columns">
+        </app-table-edit>
       </p-panel>
     </div>
   </div>

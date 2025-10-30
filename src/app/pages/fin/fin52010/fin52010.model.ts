@@ -1,4 +1,5 @@
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { Option } from '@service/utility/dropdown-api.model';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface FIN52010Data {
   AccNoAP: string;
@@ -21,9 +22,42 @@ export interface FIN52010Data {
 export type FIN52010DataResponse = Omit<BaseQueryResponse<FIN52010Data>, 'Data'> & { Data: FIN52010Data; };
 
 export interface FIN52010UpdatePayload {
-
+  CompNo?: string;
+  OpenDate?: string;
+  CloseDate?: string;
+  ORG_ID?: string;
+  CashAccNo?: string;
+  AccNoCurPL?: string;
+  AccNoPriPL?: string;
+  AccNoTotPL?: string;
+  AccNoAR?: string;
+  AccNoAP?: string;
+  AccNoInTax?: string;
+  AccNoOutTax?: string;
+  AccNoPost?: string;
+  AccNoRemitFee?: string;
+  AccYear?: string;
 }
 
 export interface FIN52010UpdateResult {
+  CompNo: string;
+  OpenDate: string;
+  CloseDate: string;
+  ORG_ID: string;
+  CashAccNo: string;
+  AccNoCurPL: string;
+  AccNoPriPL: string;
+  AccNoTotPL: string;
+  AccNoAR: string;
+  AccNoAP: string;
+  AccNoInTax: string;
+  AccNoOutTax: string;
+  AccNoPost: string;
+  AccNoRemitFee: string;
+  AccYear: string;
+}
 
+export interface GLS1005Option extends Pick<Option, 'value' | 'label'> {
+  No: string;
+  Name: string;
 }

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
@@ -73,6 +73,13 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     { field: 'DetailCount', header: '明細筆數' },
   ];
 
+  public readonly dropdownEffect = effect(() => {
+    const acc = this.service.accLoading();
+    const usr = this.service.usrLoading();
+    this.loading = acc || usr;
+    this.logger.debug(`dropdownEffect:`, { acc, usr, loading: this.loading });
+  });
+
   constructor(
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
@@ -88,16 +95,18 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     this.loading = !0;
 
     this.service.getVoucherTypeList();
-
-    forkJoin([
-      this.service.getUsrList(),
-      this.service.getAccNoList(),
-    ]).pipe(finalize(() => this.loading = !1)).subscribe(res => this.logger.debug(`init:`, [res]));
+    this.service.getAccNoList();
+    this.service.getUsrList();
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = this.queryForm.getRawValue();
+      const raw = {
+        ...this.queryForm.getRawValue(),
+        VouNoStart: this.qf().VouNoStart.value ? String(this.qf().VouNoStart.value).padStart(7, '0') : void 0,
+        VouNoEnd: this.qf().VouNoEnd.value ? String(this.qf().VouNoEnd.value).padStart(7, '0') : void 0,
+      };
+
       const payload = Object.keys(raw).reduce((acc, key) => {
         const v = raw[key as keyof typeof raw];
         if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
@@ -108,7 +117,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       this.service.FIN53010Data.set([]);
 
       this.service.loadFIN53010(payload).pipe(
-        tap(res => this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean)).subscribe()),
+        tap(res => this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean))),
         finalize(() => {
           this.loading = !1;
           this.logger.debug('FIN53010 查詢結果:', [this.service.FIN53010Data()]);
