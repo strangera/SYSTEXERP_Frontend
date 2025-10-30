@@ -120,8 +120,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (changes['data']) {
       if (this.data.length !== 0) {
         this.virtualData = [];
-        this.dt.virtualScroll = false;
-        this.dt.scrollHeight = 'flex';
+        if (this.dt) {
+          this.dt.virtualScroll = false;
+          this.dt.scrollHeight = 'flex';
+        }
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
         this.cdr.detectChanges();
