@@ -314,16 +314,157 @@ export class TLS13010DataLoaderService {
     console.log('📥 開始載入所有下拉選單選項');
 
     return forkJoin({
+      // 位置相關(用於 selector panel)
       location: this.loadLocationWithDetailsOptions(component),
+
+      // 廠商選項
       vendor: this.loadPOS2013Options(component),
+
+      // 洽談者選項
       negotiator: this.loadNegotiatorOptions(component),
-      bank: this.loadBankDropdownOptions(component)
+
+      // 銀行選項
+      bank: this.loadBankDropdownOptions(component),
+
+      // 🆕 新增:大分類選項
+      bustype: this.loadBustypeOptions(component),
+
+      // 🆕 新增:Location 相關選項(館別、樓層、區域、組織、單據別)
+      locationBundle: this.loadLocationBundleOptions(component)
     }).pipe(
-      tap(() => console.log(' 所有下拉選單選項載入完成')),
+      tap(() => {
+        console.log('✅ 所有下拉選單選項載入完成');
+
+        // 🔍 診斷:顯示載入結果
+        console.log('📊 下拉選單載入結果:', {
+          bustype: component.bustypeOptions?.length || 0,
+          building: component.buildingOptions?.length || 0,
+          floor: component.floorOptions?.length || 0,
+          region: component.regionOptions?.length || 0,
+          org: component.orgOptions?.length || 0,
+          paperType: component.paperTypeOptions?.length || 0,
+          vendor: component.pos2013Options?.length || 0,
+          negotiator: component.negotiatorOptions?.length || 0,
+          bank: component.bankDropdownOptions?.length || 0
+        });
+      }),
       catchError(error => {
         console.error('❌ 載入下拉選單選項失敗:', error);
         this.messageService.errorBubble('載入選項資料失敗,請重新整理頁面');
         return of(null);
+      })
+    );
+  }
+
+  /**
+   * 🆕 載入大分類選項
+   * @param component Component 實例
+   * @returns Observable
+   */
+  loadBustypeOptions(component: any): Observable<DropdownOption[]> {
+    console.log('🔄 載入大分類選項');
+
+    // 等待 Service 初始化
+    return new Observable<DropdownOption[]>(observer => {
+      // 延遲一點時間,確保 Service 初始化完成
+      setTimeout(() => {
+        if (this.tls13010DropdownService.bustypeOptions &&
+          this.tls13010DropdownService.bustypeOptions.length > 0) {
+          // Service 已經載入完成
+          component.bustypeOptions = this.tls13010DropdownService.bustypeOptions;
+          console.log('✅ 大分類載入完成(使用 Service 快取):', component.bustypeOptions.length);
+          observer.next(component.bustypeOptions);
+          observer.complete();
+        } else {
+          // Service 還沒載入完成,等待更久一點
+          console.log('⏳ 等待大分類選項載入...');
+          setTimeout(() => {
+            component.bustypeOptions = this.tls13010DropdownService.bustypeOptions || [];
+            console.log('✅ 大分類載入完成:', component.bustypeOptions.length);
+
+            if (component.bustypeOptions.length === 0) {
+              console.warn('⚠️ 大分類選項為空,可能需要檢查 API');
+            }
+
+            observer.next(component.bustypeOptions);
+            observer.complete();
+          }, 1000);
+        }
+      }, 300);
+    }).pipe(
+      catchError(error => {
+        console.error('❌ 載入大分類失敗:', error);
+        component.bustypeOptions = [];
+        this.messageService.warnBubble('載入大分類選項失敗');
+        return of<DropdownOption[]>([]);
+      })
+    );
+  }
+
+  /**
+   * 🆕 載入 Location 相關選項(館別、樓層、區域、組織、單據別)
+   * @param component Component 實例
+   * @returns Observable
+   */
+  loadLocationBundleOptions(component: any): Observable<any> {
+    console.log('🔄 批次載入 Location 相關選項');
+
+    return forkJoin({
+      building: this.locationOptionsService.getBuildingOptions(),
+      floor: this.locationOptionsService.getFloorOptions(),
+      region: this.locationOptionsService.getRegionOptions(),
+      org: this.locationOptionsService.getOrgOptions(),
+      paperType: this.locationOptionsService.getPaperTypeOptions('T101')
+    }).pipe(
+      tap(results => {
+        // 將結果設定到 Component 屬性
+        component.buildingOptions = results.building;
+        component.floorOptions = results.floor;
+        component.regionOptions = results.region;
+        component.orgOptions = results.org;
+        component.paperTypeOptions = results.paperType;
+
+        console.log('✅ Location 選項批次載入完成:', {
+          building: results.building.length,
+          floor: results.floor.length,
+          region: results.region.length,
+          org: results.org.length,
+          paperType: results.paperType.length
+        });
+
+        // 檢查是否有空陣列
+        if (results.building.length === 0) {
+          console.warn('⚠️ 館別選項為空');
+        }
+        if (results.floor.length === 0) {
+          console.warn('⚠️ 樓層選項為空');
+        }
+        if (results.region.length === 0) {
+          console.warn('⚠️ 區域選項為空');
+        }
+        if (results.org.length === 0) {
+          console.warn('⚠️ 組織選項為空');
+        }
+      }),
+      catchError(error => {
+        console.error('❌ 載入 Location 選項失敗:', error);
+
+        // 設定為空陣列
+        component.buildingOptions = [];
+        component.floorOptions = [];
+        component.regionOptions = [];
+        component.orgOptions = [];
+        component.paperTypeOptions = [];
+
+        this.messageService.warnBubble('載入位置相關選項失敗');
+
+        return of({
+          building: [],
+          floor: [],
+          region: [],
+          org: [],
+          paperType: []
+        });
       })
     );
   }
