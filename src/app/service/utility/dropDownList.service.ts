@@ -536,7 +536,7 @@ export class DropDownListService {
     return this.http.post<ApiResponse<TLS41010Item[]>>(
       `${this.apiUrl}/queryPOS1002TML_ALL_DropDownList`, {});
   }
-  // 查詢圖片下拉選單 (TDS1008)
+  // 查詢下拉選單 (TDS1008)
   queryTDS1008_DropDownList(SAL_Type: string[]): Observable<ApiResponse<IDropdownItem[]>> {
     const body = { SAL_Type };
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/QueryTDS1008_DropDownList`, body);

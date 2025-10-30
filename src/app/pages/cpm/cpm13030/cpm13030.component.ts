@@ -16,7 +16,7 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { CPM13030Service } from '@service/api/cpm/cpm13030.service';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 @Component({
@@ -38,7 +38,8 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
     InputNumberComponent,
     CustomFooterTableComponent,
     MultiSelectComponent,
-    DatePipe
+    DatePipe,
+    NgIf
   ]
 })
 export class CPM13030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -112,6 +113,22 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           Name: x.Name,
           No: x.No
         }));
+      });
+    this.queryForm.get('displayMode')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(mode => {
+        console.log('[displayMode 改變]', mode);
+
+        if (mode === 'M') {
+          this.queryForm.patchValue({
+            TXN_GUIBegNo: '',
+            TXN_TotSaleAmtStart: null,
+            TXN_TotSaleAmtEnd: null
+          });
+        }
+
+        // 觸發畫面更新
+        this.queryForm.updateValueAndValidity();
       });
   }
   private getPaginationParams(): { PageIndex: number; PageSize: number } {
@@ -267,16 +284,16 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         { field: 'ECR_LocNo', header: '位置編號', visible: true },
         { field: 'TLT_NAME', header: '櫃位名稱', visible: true },
         { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
-        { field: 'TXN_TotSaleAmt', header: '消費金額', visible: true , format: formatAmount},
+        { field: 'TXN_TotSaleAmt', header: '消費金額', visible: true, format: formatAmount },
+        { field: 'POSonline_Amt', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSonline_Time', header: '時數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSonline_Qty', header: '筆數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
-        { field: 'POSonline_Amt', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Amt', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSoffline_Time', header: '時數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSoffline_Qty', header: '筆數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
-        { field: 'POSoffline_Amt', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Amt', header: '金額', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'subTotal_Time', header: '時數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'subTotal_Qty', header: '筆數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
-        { field: 'subTotal_Amt', header: '金額', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
       ];
 
       this.columnGroup = [
@@ -291,17 +308,18 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         { field: 'building_desc', header: '館別', visible: true },
         { field: 'Org_Name', header: '組織名稱', visible: true },
         { field: 'ECR_No', header: 'POS機號', visible: true },
+        { field: 'TLT_No', header: '專櫃編號', visible: true },
         { field: 'ECR_LocNo', header: '位置編號', visible: true },
         { field: 'TLT_NAME', header: '櫃位名稱', visible: true },
+        { field: 'POSonline_Amt', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSonline_Time', header: '時數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSonline_Qty', header: '筆數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
-        { field: 'POSonline_Amt', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'POSoffline_Amt', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSoffline_Time', header: '時數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSoffline_Qty', header: '筆數', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
-        { field: 'POSoffline_Amt', header: '金額', visible: true, groupField: '強制折抵', format: formatAmount, isTotal: true, isSubTotal: true },
+        { field: 'subTotal_Amt', header: '金額', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'subTotal_Time', header: '時數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'subTotal_Qty', header: '筆數', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
-        { field: 'subTotal_Amt', header: '金額', visible: true, groupField: '小計', format: formatAmount, isTotal: true, isSubTotal: true },
       ];
 
       this.columnGroup = [

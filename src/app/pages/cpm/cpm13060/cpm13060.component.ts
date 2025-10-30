@@ -53,7 +53,7 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
     { field: 'building_desc', header: '館別', visible: true, showSort: true },
     { field: 'floor_desc', header: '樓層', visible: true, showSort: true },
     { field: 'ECR_No', header: '繳費機編號', visible: true, showSort: true },
-    { field: 'ECR_SubGroup', header: '區域', visible: true, showSort: true },
+    // { field: 'ECR_SubGroup', header: '區域', visible: true, showSort: true },
     { field: 'PKG_disc_rule_name', header: '折扣規則', visible: true, showSort: true },
     { field: 'Total_Fee', header: '金額', visible: true, showSort: true, align: 'right', format: formatAmount, isSubTotal: true },
     { field: 'Total_Time', header: '時數', visible: true, showSort: true, align: 'right', format: formatAmount, isSubTotal: true },

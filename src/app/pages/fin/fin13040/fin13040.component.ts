@@ -9,8 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CommonModule } from '@angular/common';
-// import { Fin14030Service } from '@service/api/fin/fin14030.service';
-import { createPaginationConfig, formatDate } from '@shared/componentkit/table2/table2.model';
+import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarModule } from 'primeng/calendar';
@@ -18,11 +17,12 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model'; // Ensure this path is correct
+import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
-import { format } from 'crypto-js';
+import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin13040',
@@ -72,7 +72,8 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     SAL_Type: [[]],
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
   });
-
+  btnLoading = false;
+  btnLoading2 = false;
   data: any[] = [];
   totalRecords = 0;
   InvoiceType_Options: { label: string; value: string }[] = [];
@@ -176,6 +177,79 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
           complete: () => (this.loading = false),
         });
     });
+  }
+  onExportPDF(): void {
+    this.exportReport(false);
+  }
+
+  onExportExcel(): void {
+    this.exportReport(true);
+  }
+
+  lastExportUrl: string | null = null;
+  private exportReport(isExcel: boolean): void {
+    if (isExcel) this.btnLoading2 = true;
+    else this.btnLoading = true;
+
+    const v = this.queryForm.value;
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [],
+      MID: 0,
+      STO_No: '10',
+      ID: 0, // 匯出整體報表時可給 0
+    };
+
+    console.log('[PrintFIN13040 payload]', payload);
+
+    this.fin13040Service
+      .printFIN13040(payload)
+      .pipe(
+        finalize(() => {
+          if (isExcel) this.btnLoading2 = false;
+          else this.btnLoading = false;
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          if (res?.Status === '0000' && res?.Data?.Print_URL) {
+            const url = res.Data.Print_URL;
+            const fullUrl = `${environment.ApiUrl.replace(/\/$/, '')}${url}`;
+            this.lastExportUrl = fullUrl;
+
+            const filename = decodeURIComponent(
+              url.split('/').pop() ?? (isExcel ? '三聯式發票.xlsx' : '三聯式發票.pdf')
+            );
+
+            const a = document.createElement('a');
+            a.href = fullUrl;
+            a.setAttribute('download', filename);
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
+          } else if (res?.body instanceof Blob) {
+            const blob = res.body;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `三聯式發票匯出.${isExcel ? 'xlsx' : 'pdf'}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
+          } else {
+            this.messageService.errorBubble(res?.Message ?? '匯出失敗');
+          }
+        },
+
+      });
   }
 
 }
