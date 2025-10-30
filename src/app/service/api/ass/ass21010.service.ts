@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
-import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
+import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus, EngType } from '@pages/ass/ass21010/ass21010.model';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import saveAs from 'file-saver';
 import { NGXLogger } from 'ngx-logger';
-import { Observable, Subject, finalize, map, of, take, takeUntil, tap } from 'rxjs';
+import { Observable, Subject, finalize, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -17,7 +17,13 @@ export class ASS21010Service implements OnDestroy {
   // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
 
   public readonly ASS21010Data = signal<ASS21010Data[]>([]);
-  public readonly engTypeSignal = signal<DropdownOption[]>([]);
+  public readonly totalRecords = signal<number>(0);
+
+  public readonly engTypeSignal = signal<DropdownOption[]>([
+    { No: EngType.水, Name: '水錶' },
+    { No: EngType.電, Name: '電錶' },
+    { No: EngType.瓦斯, Name: '瓦斯錶' },
+  ]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<DropdownOption[]>([]);
 
@@ -31,22 +37,11 @@ export class ASS21010Service implements OnDestroy {
   private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
 
-  public readonly totalRecords = signal<number>(0);
-
   constructor(
     private readonly http: HttpClient,
     // private readonly messageService: NotificationService,
     private readonly logger: NGXLogger,
   ) { }
-
-  public loadEngType(): void {
-    this.engTypeCancel$.next();
-    this.engTypeSignal.set([
-      { No: EngType.水, Name: '水錶' },
-      { No: EngType.電, Name: '電錶' },
-      { No: EngType.瓦斯, Name: '瓦斯錶' },
-    ]);
-  };
 
   public loadEngMeterNo(type?: EngType): void {
     this.engMeterNoCancel$.next();
@@ -149,10 +144,4 @@ export class ASS21010Service implements OnDestroy {
     this.locationCancel$.next();
     this.tableCancel$.next();
   }
-}
-
-export enum EngType {
-  水 = 'G01',
-  電 = 'G02',
-  瓦斯 = 'G03',
 }

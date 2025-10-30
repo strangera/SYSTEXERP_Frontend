@@ -67,6 +67,7 @@
                [columns]="columns"
                [totalRecords]="service.totalRecords()"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+               [multiSortMeta]="this.qf().SortBy.value!"
                [lazy]="true"
                [loading]="service.tableLoading()"
                [customReport]="true"
