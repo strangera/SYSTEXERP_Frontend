@@ -10,29 +10,29 @@ import { environment } from '../../../../environments/environment';
 export class CPM13040Service {
   private apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** 查詢報表 */
- queryCPM13040(data: any): Observable<any> {
+  queryCPM13040(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryCPM13040`, data);
   }
   queryCPM13040Detail(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryCPM13040Detail`, data);
   }
 
-    // /** 匯出 Excel */
-    //  exportCPM13040(body: any): Observable<HttpResponse<Blob>> {
-    //   return this.http.post(`${this.apiUrl}/exportCPM13040`, body, {
-    //     observe: 'response',
-    //     responseType: 'blob'
-    //   });
-    // }
+  /** 匯出 Excel */
+  exportCPM13040Excel(body: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportCPM13040Excel`, body, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 
-    // /** 匯出 PDF */
-    // exportCPM13040PDF(body: any): Observable<HttpResponse<Blob>> {
-    //   return this.http.post(`${this.apiUrl}/exportCPM13040PDF`, body, {
-    //     observe: 'response',
-    //     responseType: 'blob'
-    //   });
-    // }
+  /** 匯出 PDF */
+  exportCPM13040PDF(body: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportCPM13040PDF`, body, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 }
