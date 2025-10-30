@@ -53,6 +53,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     endVoucher_No: [''],
     AssetType: [[] as string[]],
     PUR_InvoiceTitle: [''], // 暫不處理
+    Buyer_VenNo: [''],
+    Buyer_Name: [''],
   });
 
   /** 下拉選單與資料 */
@@ -68,7 +70,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   totalRecords = 0;
   isTableDisabled = false;
   selectedRows: any[] = [];
-
+  INV_ItemName_Options: any[] = [];
   constructor(
     private dropDownListService: DropDownListService,
     private fin13040Service: Fin13040Service
@@ -79,18 +81,35 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   // ======================== 初始化 ========================
   ngOnInit(): void {
     this.initializePage('FIN13040', this.dataForm);
-
+    this.loadINVItemOptions();
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
     this.loadAndSetupColumns();
 
     const rowData = history.state?.rowdata;
-    console.log('📦 主檔資料:', rowData);
+    console.log('主檔資料:', rowData);
 
     if (rowData) {
       this.fillHeaderData(rowData);
       this.loadDetail(rowData);
     }
+
+    this.dataForm.get('Buyer_Uniform')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((val) => {
+        const selected = this.Buyer_Uniform_Options.find(o => o.value === val);
+        if (selected) {
+          this.dataForm.patchValue({
+            Buyer_VenNo: selected.VEN_No,
+            Buyer_Name: selected.VEN_Name,
+          });
+        } else {
+          this.dataForm.patchValue({
+            Buyer_VenNo: '',
+            Buyer_Name: '',
+          });
+        }
+      });
   }
 
   // ======================== 主檔填入 ========================
@@ -147,16 +166,19 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // ======================== 下拉選單 ========================
+  /** 載入買受人統一編號下拉清單 */
   loadBuyerUniformOptions(): void {
     this.dropDownListService
       .queryPOS2013_DropDownList({})
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res) => {
-          const data = res?.Data ?? [];
-          this.Buyer_Uniform_Options = data.map((item: any) => ({
+          const list = res?.Data ?? [];
+          this.Buyer_Uniform_Options = list.map((item: any) => ({
             label: `${item.No} - ${item.Name}`,
-            value: item.No,
+            value: item.No,          // 統一編號
+            VEN_No: item.VEN_No,     // 廠商編號
+            VEN_Name: item.Name,     // 廠商名稱
           }));
         },
       });
@@ -176,6 +198,26 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
               label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
               value: x.INV_GUIType,
             }));
+        },
+      });
+  }
+  loadINVItemOptions(): void {
+    const salType = this.dataForm.get('SAL_Type')?.value || ''; // 對應主檔 SAL_Type
+    const body = { SAL_Type: [salType] };
+
+    this.dropDownListService
+      .queryTDS1008_DropDownList(body.SAL_Type)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          const list = res?.Data ?? [];
+          this.INV_ItemName_Options = list.map((item: any) => ({
+            label: `${item.INV_ItemNo} - ${item.INV_ItemName}`,
+            value: item.INV_ItemNo,
+            INV_ItemNo: item.INV_ItemNo,
+            INV_ItemName: item.INV_ItemName,
+            INV_UsageType: item.INV_UsageType,
+          }));
         },
       });
   }
@@ -223,14 +265,26 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
   onSubmit(form: FormGroup): void {
     if (!form.valid) {
-     return;
+      return;
     }
+
     const v = form.value;
     const toISO = (d: any): string | null => {
       if (!d) return null;
       const date = new Date(d);
       return isNaN(date.getTime()) ? null : date.toISOString();
     };
+
+    const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === v.Buyer_Uniform);
+    if (!selectedBuyer) {
+
+      return;
+    }
+
+    const invalidDetail = this.data.some((item) => !item.PLU_No || item.PLU_No.trim() === '');
+    if (invalidDetail) {
+      return;
+    }
 
     const header = {
       MID: 0,
@@ -241,9 +295,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       InvoiceNumber: v.INV_GUINumber,
       InvoiceDate: toISO(v.InvoiceDate),
       INV_DeclareYM: this.formatDeclareYM(v.InvoiceDate),
-      Buyer_Uniform: v.Buyer_Uniform,
-      Buyer_VenNo: '', // 之後可根據下拉自動帶入
-      Buyer_Name: v.PUR_InvoiceTitle,
+      Buyer_Uniform: selectedBuyer.value,
+      Buyer_VenNo: selectedBuyer.VEN_No ?? '',
+      Buyer_Name: selectedBuyer.VEN_Name ?? '',
       Group_Mark: 'N',
       Donate_Mark: 'N',
       PUR_TaxType: v.PUR_TaxType,
@@ -260,7 +314,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     };
 
     const details = this.data.map((item) => ({
-      PLU_No: item.PLU_No ?? '',
+      PLU_No: item.PLU_No?.trim() ?? '',
       PLU_Name: item.PLU_Name ?? '',
       TXN_Qty: Number(item.TXN_Qty ?? 0),
       PLU_SalePrc: Number(item.PLU_SalePrc ?? 0),
@@ -286,6 +340,5 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         },
       });
   }
-
 
 }

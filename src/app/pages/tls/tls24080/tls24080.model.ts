@@ -87,7 +87,7 @@ export const VoidEditColumn: Column[] = [
   { field: 'TXN_GUITrack', header: '字軌' },
   { field: 'TXN_GUIBegNo', header: '發票起始號碼' },
   { field: 'TXN_GUIEndNo', header: '發票結束號碼' },
-  { field: 'TXN_TotGUI', header: '發票金額' },
+  { field: 'TXN_TotGUI', header: '發票金額', format: formatAmount },
   { field: 'Void_Date', header: '作廢日期', format: formatDate },
   { field: 'Void_USR_No', header: '作廢人員編號' },
   { field: 'Void_USR_Name', header: '作廢名稱' },

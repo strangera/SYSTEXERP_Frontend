@@ -35,6 +35,12 @@ interface TLS41040Item {
   Area_No: string;
   ID?: number;
   id?: number;
+  NOT_DispRt: string;
+  NOT_DispSpd: string;
+  NOT_DispBtn: string;
+  NOT_DispCd: string;
+  NOT_Prn: string;
+  NOT_DtlLimit: string;
 }
 
 @Component({

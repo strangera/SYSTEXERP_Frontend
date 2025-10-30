@@ -213,12 +213,89 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
             this.totalRecords = 0;
           }
         },
-        error: (err) => {
-          console.error('分頁載入失敗:', err);
-          this.data = [];
-          this.footerData = [];
-          this.totalRecords = 0;
-        }
       });
   }
+  /** 匯出 PDF */
+  onExportPDF() {
+    if (this.data.length === 0) return;
+
+    const v = this.queryForm.value;
+    const payload = {
+      TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
+      TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
+      CRD_Kind: v.CRD_Kind || '',
+      Org_Name: v.Org_Name || '',
+      TLT_No: v.TLT_No || '',
+    };
+
+    this.btnLoading = true;
+    this.messageService.blockUi();
+
+    this.cpm13040Service.exportCPM13040PDF(payload)
+      .pipe(finalize(() => {
+        this.btnLoading = false;
+        this.messageService.unblockUi();
+      }))
+      .subscribe({
+        next: (res) => {
+          if (res.body) {
+            const blob = new Blob([res.body], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+
+            // 建立 <a> 元素以觸發下載
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `阜爾APS停車抵扣表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        },
+      });
+  }
+
+  /** 匯出 Excel */
+  onExportExcel() {
+    if (this.data.length === 0) return;
+
+    const v = this.queryForm.value;
+    const payload = {
+      TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
+      TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
+      CRD_Kind: v.CRD_Kind || '',
+      Org_Name: v.Org_Name || '',
+      TLT_No: v.TLT_No || '',
+    };
+
+    this.btnLoading2 = true;
+    this.messageService.blockUi();
+
+    this.cpm13040Service.exportCPM13040Excel(payload)
+      .pipe(finalize(() => {
+        this.btnLoading2 = false;
+        this.messageService.unblockUi();
+      }))
+      .subscribe({
+        next: (res) => {
+          if (res.body) {
+            const blob = new Blob([res.body], {
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = window.URL.createObjectURL(blob);
+
+            // 建立 <a> 元素以觸發下載
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `阜爾APS停車抵扣表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        },
+
+      });
+  }
+
 }

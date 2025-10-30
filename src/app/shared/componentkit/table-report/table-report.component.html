@@ -48,7 +48,8 @@
               [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn [frozen]="!!col.frozen"
               [alignFrozen]="col.alignFrozen || 'right'">
               {{ col.header }}
-              <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.sortField ?? col.field" />
+              <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
+                [field]="col.sortField ?? col.field" />
             </th>
           </ng-container>
         </ng-container>
@@ -64,7 +65,7 @@
               showSort ? col.sortField ?? col.field : undefined
             " [pSortableColumnDisabled]="col.showSort === false" style="min-width: 55px">
             {{ col.header }}
-            <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
+            <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
           </th>
         </ng-container>
       </tr>
@@ -81,7 +82,7 @@
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
           [pSortableColumnDisabled]="col.showSort === false" class="text-center wrap-header" style="min-width: 55px">
           {{ col.header }}
-          <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
+          <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
         <th [hidden]="!showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
           管理

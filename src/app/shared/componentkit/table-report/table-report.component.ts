@@ -28,16 +28,11 @@ import { trigger, style, transition, animate } from '@angular/animations'; // 1.
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('fadeInOut', [
-      // 定義進入狀態 (當 *ngIf 為 true 時)
       transition(':enter', [
-        // 初始狀態：透明度 0，向上平移 10px
         style({ opacity: 0, transform: 'translateY(10px)' }),
-        // 最終狀態：在 300ms 內平滑變回正常狀態
         animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
       ]),
-      // 定義離開狀態 (當 *ngIf 為 false 時)
       transition(':leave', [
-        // 離開動畫：在 200ms 內變透明並略微向上移動
         animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-5px)' }))
       ])
     ])
@@ -193,7 +188,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.dt.virtualScroll = false;
         this.dt.scrollHeight = 'flex';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
-        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+        this.updateGroupTotals(res.Data);
+        this.data = res.Data;
         this.cdr.detectChanges();
         if (res.Data.length < 30) {
           this.data = res.Data;
@@ -270,8 +266,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const groupKey = rowData[this.groupRowsBy];
       const field = col.field;
       const subtotalRow = this.subTotalData.find((item: any) => item[this.groupRowsBy as string] === groupKey);
-      const subtotal = subtotalRow ? subtotalRow[field] : 0;
-      return col.format ? col.format(subtotal) : subtotal;
+      if (subtotalRow) {
+        const subtotal = subtotalRow[field] ?? 0; // 使用 ?? 避免 undefined
+        return col.format ? col.format(subtotal) : subtotal;
+      }
     }
 
     const groupKey = rowData[this.groupRowsBy];
