@@ -269,6 +269,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
       tlt_no: step1Data?.tlt_no || this.currentContractData?.tlt_no || '',
+      vendor_ven_no: step1Data?.vendor_ven_no || this.currentContractData?.vendor_ven_no || '',
       apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
       tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
       VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',

@@ -314,6 +314,7 @@ export interface ContractInfo {
   tlt_no: string;
   apply_no: string;
   tlt_name: string;
+  vendor_ven_no: string;
   VEN_Name: string;
   VEN_Address?: string;
   contract_subno?: string;

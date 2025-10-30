@@ -73,12 +73,12 @@ export const TLTTALENT_columns: Column[] = [
   // { field: 'total_amt', header: '年目標營業額(業主)', visible: true, format: formatAmount },
   // { field: 'total_amt_vendor', header: '年目標營業額(廠商)', visible: true, format: formatAmount },
 
-  // 保證金 準時開業、施工保證、契約屆滿保證票
+  // 保證金 準時開業、施工保證、契約屆滿
   // { field: 'open_deposit', header: '準時開業-保證金付款方式', visible: true },
   // { field: 'open_fees', header: '準時開業保證金金額', visible: true, format: formatAmount },
   // { field: 'construct_deposit', header: '施工保證-保證金付款方式', visible: true },
   // { field: 'construct_fees', header: '施工保證金額', visible: true, format: formatAmount },
-  // { field: 'expiration_deposit', header: '契約屆滿保證票-保證金付款方式', visible: true },
+  // { field: 'expiration_deposit', header: '契約屆滿-保證金付款方式', visible: true },
   // { field: 'expiration_fees', header: '契約屆滿保證金金額', visible: true, format: formatAmount },
   // { field: 'ticket_remarks', header: '保證票摘要', visible: true },
 

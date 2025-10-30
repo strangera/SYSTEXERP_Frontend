@@ -113,7 +113,7 @@ export const TOTAL_AMT_VENDOR_UNIT_OPTIONS = {
 export const DEPOSIT_PAYMENT_OPTIONS = {
   '1': '現金',
   '2': '支票',
-  '3': '履約保證金',
+  '3': '匯款',
 } as const;
 
 export const OVERALL_STATUS_OPTIONS = {
