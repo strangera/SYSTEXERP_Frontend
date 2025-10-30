@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service';
 import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { Option } from '@service/utility/dropdown-api.model';
 
 // 請求主體的介面 (與匯出共用)
 // 為了遵循 API 規範，我們需要將 QueryFIN55070Request 擴充，納入分頁/排序參數。
@@ -90,6 +91,7 @@ export interface FIN55070Data {
 })
 export class Fin55070Service {
   private readonly apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
+  private readonly apiDropUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 
   constructor(
     private http: HttpClient
@@ -133,4 +135,15 @@ export class Fin55070Service {
       responseType: 'blob' // <--- 關鍵：設定回傳類型為 Blob
     });
   }
+  getAccNoList(): Observable<Option[]> {
+  return this.http.post<{ Data: { AccNo: string; AccCName: string }[] }>(`${this.apiDropUrl}/queryAccNoDropdown`, {}).pipe(
+    map(res => res.Data.map(item => ({
+      value: item.AccNo,
+      label: item.AccNo+' - '+item.AccCName
+    } as Option)))
+  );
+}
+
+
+  
 }

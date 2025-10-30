@@ -15,7 +15,6 @@ import { TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { FIN55070Data, Fin55070Service } from '@service/api/fin/fin55070.service';
-import {FIN52030Service} from'@service/api/fin/fin52030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 
@@ -32,7 +31,7 @@ import { finalize } from 'rxjs';
 export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> implements OnInit {
 
   ORG_IDOptions = this.dropdown.querySys3100();
-  AccNo_Options=this.fin52030Service.getAccNoList();
+  AccNo_Options=this.fin55070Service.getAccNoList();
   queryForm = this.formBuilder.nonNullable.group({
      DateFrom: [new Date(), [Validators.required]],
      DateTo: [new Date(), [Validators.required]],
@@ -78,17 +77,14 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
   AccountcodeOptions: any[] = [];
   constructor(
     public readonly fin55070Service: Fin55070Service,
-    public readonly fin52030Service: FIN52030Service,
     private readonly dropdown: DropdownApiService
 
   ) {
     super(); // 呼叫父類建構子
   }
 
-
   ngOnInit(): void {
-
-
+    this.initializePage('FIN55070', '/FIN/FIN55070', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
@@ -121,5 +117,17 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
       getColumnSum(field: string): number {
   return this.data.reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
 }
+
+isNumericColumn(field: string): boolean {
+  return [
+    'Prior_DAmt',
+    'Prior_CAmt',
+    'Curr_DAmt',
+    'Curr_CAmt',
+    'Total_DAmt',
+    'Total_CAmt'
+  ].includes(field);
+}
+
 
 }

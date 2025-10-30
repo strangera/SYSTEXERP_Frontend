@@ -63,9 +63,12 @@
 
           <div class="col-12 md:col-4 lg:col-4">
             <p-checkbox
-              label="列印簽核欄"
-              controlName="Approvalcolumn"
-            ></p-checkbox>
+  label="列印簽核欄"
+  [formControl]="queryForm.controls.PrintSign"
+  binary="true">
+</p-checkbox>
+
+
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -105,9 +108,12 @@
         </ng-template>
         <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
   <tr style="height:46px">
-    <td>{{ rowIndex+1 }}</td>
-    <td *ngFor="let col of columns">
-      <ng-container *ngIf="col.field === 'Prior_DAmt' || col.field === 'Prior_CAmt' || col.field === 'Curr_DAmt' || col.field === 'Curr_CAmt' || col.field === 'Total_DAmt' || col.field === 'Total_CAmt'; else normalCell">
+    <td>{{ rowIndex + 1 }}</td>
+    <td *ngFor="let col of columns"
+        [ngClass]="{
+          'text-right': isNumericColumn(col.field)
+        }">
+      <ng-container *ngIf="isNumericColumn(col.field); else normalCell">
         {{ rowData[col.field] | number:'1.0-0' }}
       </ng-container>
       <ng-template #normalCell>
@@ -122,12 +128,12 @@
     <td></td>
     <td></td>
     <td  class="text-center font-bold">總計：</td>
-    <td>{{ getColumnSum('Prior_DAmt') | number:'1.0-0' }}</td>
-    <td>{{ getColumnSum('Prior_CAmt') | number:'1.0-0' }}</td>
-    <td>{{ getColumnSum('Curr_DAmt') | number:'1.0-0'}}</td>
-    <td>{{ getColumnSum('Curr_CAmt') | number:'1.0-0' }}</td>
-    <td>{{ getColumnSum('Total_DAmt') | number:'1.0-0' }}</td>
-    <td>{{ getColumnSum('Total_CAmt') | number:'1.0-0' }}</td>
+    <td class="text-right">{{ getColumnSum('Prior_DAmt') | number:'1.0-0' }}</td>
+    <td class="text-right">{{ getColumnSum('Prior_CAmt') | number:'1.0-0' }}</td>
+    <td class="text-right">{{ getColumnSum('Curr_DAmt') | number:'1.0-0' }}</td>
+    <td class="text-right">{{ getColumnSum('Curr_CAmt') | number:'1.0-0' }}</td>
+    <td class="text-right">{{ getColumnSum('Total_DAmt') | number:'1.0-0' }}</td>
+    <td class="text-right">{{ getColumnSum('Total_CAmt') | number:'1.0-0' }}</td>
   </tr>
   <tr>
     <td colspan="9" class="text-right font-bold">
