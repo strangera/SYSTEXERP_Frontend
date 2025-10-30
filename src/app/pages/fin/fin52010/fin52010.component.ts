@@ -65,7 +65,6 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     private readonly date: DatePipe,
   ) {
     super();
-    this.user = this.authService.getUserInfo();
   }
 
   public ngOnInit(): void {
