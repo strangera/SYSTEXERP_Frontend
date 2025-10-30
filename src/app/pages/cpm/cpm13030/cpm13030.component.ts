@@ -50,8 +50,8 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     org_nameList: [[]],
     tlt_noList: [[]],
     TXN_GUIBegNo: [''],
-    TXN_TotSaleAmtStart: [''],
-    TXN_TotSaleAmtEnd: [''],
+    TXN_TotSaleAmtStart: [null],
+    TXN_TotSaleAmtEnd: [null],
     displayMode: ['M'],
     ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
   });
@@ -114,11 +114,21 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         }));
       });
   }
+  private getPaginationParams(): { PageIndex: number; PageSize: number } {
+    const table = document.querySelector('app-customFooter-table') as any;
+    const pageIndex = table?.currentPage ?? 1;
+    const pageSize = table?.rows ?? 20;
+    return { PageIndex: pageIndex, PageSize: pageSize };
+  }
 
   /** 查詢報表 */
   onSubmit(frm: FormGroup): void {
+    // 先同步 PrimeNG Table 的分頁狀態（確保最新）
+    const pagination = this.getPaginationParams();
+    frm.patchValue(pagination);
+
     this.handleSubmit(frm, () => {
-      const v = frm.value;
+      const v = frm.getRawValue();
       const payload = {
         TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
         TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
@@ -126,28 +136,25 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         org_nameList: v.org_nameList || [],
         tlt_noList: v.tlt_noList || [],
         TXN_GUIBegNo: v.TXN_GUIBegNo || '',
-        TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart || 0,
-        TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd || 0,
+        TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart || null,
+        TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd || null,
         ShowType: v.displayMode,
-        PageIndex: v.PageIndex,
-        PageSize: v.PageSize,
+        PageIndex: v.pageIndex ?? 1,
+        PageSize: v.pageSize ?? 20,
       };
 
-
       this.loading = true;
-      this.cpm13030Service.queryCPM13030(payload)
-        .pipe(finalize(() => this.loading = false))
+      this.cpm13030Service
+        .queryCPM13030(payload)
+        .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (res) => {
-            const v = frm.value;
             if (res?.Data) {
               if (v.displayMode === 'M') {
-                // 彙總模式：資料在 SumDatas
                 this.data = res.Data.SumDatas || [];
                 this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
-                this.subTotalData = []; // 彙總模式通常不需要小計
+                this.subTotalData = [];
               } else {
-                // 明細模式：資料在 Datas
                 this.data = res.Data.Datas || [];
                 this.subTotalData = res.Data.SumDatas || [];
                 this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
@@ -162,28 +169,25 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
             }
           },
         });
-
     });
   }
+
 
   /** 匯出 Excel */
   onExportExcel(): void {
     this.btnLoading = true;
     const v = this.queryForm.value;
     const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
+      PageSize: v.pageSize ?? 0,
+      PageIndex: v.pageIndex ?? 0,
       TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
       TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
       building_noList: v.building_noList || [],
       org_nameList: v.org_nameList || [],
       tlt_noList: v.tlt_noList || [],
       TXN_GUIBegNo: v.TXN_GUIBegNo || '',
-      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || 0,
-      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || 0,
+      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || null,
+      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || null,
       ShowType: v.displayMode,
     };
 
@@ -209,19 +213,16 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     this.btnLoading2 = true;
     const v = this.queryForm.value;
     const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
+      PageSize: v.pageSize ?? 0,
+      PageIndex: v.pageIndex ?? 0,
       TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
       TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
       building_noList: v.building_noList || [],
       org_nameList: v.org_nameList || [],
       tlt_noList: v.tlt_noList || [],
       TXN_GUIBegNo: v.TXN_GUIBegNo || '',
-      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || 0,
-      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || 0,
+      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || null,
+      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || null,
       ShowType: v.displayMode,
     };
 
@@ -263,8 +264,10 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         { field: 'Org_Name', header: '組織名稱', visible: true },
         { field: 'ECR_No', header: 'POS機號', visible: true },
         { field: 'TLT_No', header: '專櫃編號', visible: true },
+        { field: 'ECR_LocNo', header: '位置編號', visible: true },
+        { field: 'TLT_NAME', header: '櫃位名稱', visible: true },
         { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
-        { field: 'TXN_TotSaleAmt', header: '消費金額', visible: true },
+        { field: 'TXN_TotSaleAmt', header: '消費金額', visible: true , format: formatAmount},
         { field: 'POSonline_Time', header: '時數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSonline_Qty', header: '筆數', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },
         { field: 'POSonline_Amt', header: '金額', visible: true, groupField: 'POS連線', format: formatAmount, isTotal: true, isSubTotal: true },

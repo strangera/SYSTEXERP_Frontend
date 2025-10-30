@@ -30,7 +30,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               
-              label="機台所屬專櫃編號"
+              label="專櫃編號"
               controlName="ECR_TLT_No"
               [control]="queryForm.controls.ECR_TLT_No"
               [submitted]="submitted"
@@ -82,7 +82,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
-              label="中信刷卡機端末機代碼"
+              label="中信刷卡機端末機號"
               controlName="EDC_TmID1"
               [control]="queryForm.controls.EDC_TmID1"
               [submitted]="submitted"
@@ -92,7 +92,7 @@
 
                     <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="聯信刷卡機機狀態"
+              label="聯合刷卡機機狀態"
               controlName="EDC_Status2"
               [options]="EDC_Status_Option"
               optionLabel="label"
@@ -105,7 +105,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
-              label="聯信刷卡機IP"
+              label="聯合刷卡機IP"
               controlName="EDC_IP2"
               [control]="queryForm.controls.EDC_IP2"
               [submitted]="submitted"
@@ -115,7 +115,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
-              label="聯信刷卡機端末機代碼"
+              label="聯合刷卡機端末機號"
               controlName="EDC_TmID2"
               [control]="queryForm.controls.EDC_TmID2"
               [submitted]="submitted"
@@ -151,6 +151,7 @@
     [showCheckBox]="true"
     [showDelete]="true"
     (delete)="onDelete($event)"
+    (detail)="onDetail($event, queryForm.value)"
 
    
     (lazyLoadData)="onLazyLoadData($event, queryForm)"

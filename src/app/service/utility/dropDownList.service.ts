@@ -188,6 +188,7 @@ export interface IPOS1018GUITrackResponse {
 // 新增 interface for 發票格式 API
 export interface ITDS1007Request {
   mid: number;
+  inv_guiTypeList?: string[];
 }
 
 export interface ITDS1007Response {
@@ -533,8 +534,11 @@ export class DropDownListService {
   // 查詢環境變數模板 (POS1002TML_ALL)
   queryPOS1002TML_ALL_DropDownList(): Observable<ApiResponse<TLS41010Item[]>> {
     return this.http.post<ApiResponse<TLS41010Item[]>>(
-      `${this.apiUrl}/queryPOS1002TML_ALL_DropDownList`,
-      {}
-    );
+      `${this.apiUrl}/queryPOS1002TML_ALL_DropDownList`, {});
+  }
+  // 查詢圖片下拉選單 (TDS1008)
+  queryTDS1008_DropDownList(SAL_Type: string[]): Observable<ApiResponse<IDropdownItem[]>> {
+    const body = { SAL_Type };
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/QueryTDS1008_DropDownList`, body);
   }
 }

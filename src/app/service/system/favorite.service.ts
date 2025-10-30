@@ -2,8 +2,13 @@ import { Injectable } from '@angular/core';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Favorite } from '@shared/component/menubar/menubar.component';
 import { ApiResponse } from './auth.service';
+
+interface Favorite {
+  USER_No: string | undefined,
+  PROG_No: string,
+  FVT_SeqNo: number
+}
 
 @Injectable({
   providedIn: 'root'

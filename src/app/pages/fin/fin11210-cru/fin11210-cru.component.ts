@@ -100,7 +100,9 @@ export class FIN11210CRUComponent extends BasicCruPageComponent<FIN11210Data> im
     this.dropDownListService.queryPOS1002_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.ECR_No_Options.push(...response.Data);
+        let tempAry = [{ Name: '全機台', No: 'ALL' }];
+        tempAry.push(...response.Data);
+        this.ECR_No_Options = tempAry;
       });
     // 取得參數代號下拉選單資料
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ARG_NO' })
@@ -112,5 +114,11 @@ export class FIN11210CRUComponent extends BasicCruPageComponent<FIN11210Data> im
             Name: `${item.No} - ${item.Name}`
           }));
       });
+  }
+
+  onARGNoChange(event: any) {
+    this.dataForm.patchValue({
+      ARG_Desc: this.ARG_No_Options.find(x => x.No === event)?.Name.split(' - ')[1] || ''
+    });
   }
 }
