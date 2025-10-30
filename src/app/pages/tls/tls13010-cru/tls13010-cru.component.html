@@ -639,6 +639,15 @@
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number
+                label="準時開業保證金"
+                controlName="open_fees"
+                [control]="dataForm.controls.open_fees"
+                [submitted]="submitted"
+                [readonly]="isFormReadonly"
+              ></app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
                 label="準時開業保證金付款方式"
                 controlName="open_deposit"
@@ -652,9 +661,9 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-number
-                label="準時開業保證金"
-                controlName="open_fees"
-                [control]="dataForm.controls.open_fees"
+                label="施工保證金"
+                controlName="construct_fees"
+                [control]="dataForm.controls.construct_fees"
                 [submitted]="submitted"
                 [readonly]="isFormReadonly"
               ></app-input-number>
@@ -673,9 +682,9 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-number
-                label="施工保證金"
-                controlName="construct_fees"
-                [control]="dataForm.controls.construct_fees"
+                label="契約屆滿保證金"
+                controlName="expiration_fees"
+                [control]="dataForm.controls.expiration_fees"
                 [submitted]="submitted"
                 [readonly]="isFormReadonly"
               ></app-input-number>
@@ -691,15 +700,6 @@
                 [submitted]="submitted"
                 [readonly]="isFormReadonly"
               ></app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number
-                label="契約屆滿保證金"
-                controlName="expiration_fees"
-                [control]="dataForm.controls.expiration_fees"
-                [submitted]="submitted"
-                [readonly]="isFormReadonly"
-              ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text

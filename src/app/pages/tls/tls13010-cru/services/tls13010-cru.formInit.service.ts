@@ -47,14 +47,14 @@ export class TLS13010FormInitService {
       deposit: 0,
       rece_yn: 'Y',                    // 是否使用業主收銀機:是
       pos_yn: 'Y',                     // 是否使用業主商店代號:是
-      cash_yn: 'N',
+      cash_yn: 'Y',                   // 是否為業主收現:是
       comm_yn: 'Y',                    // 是否為抽成:是
       rent_ahead: 'N',                 // 預收租金
       VEN_Address: '',
 
       // Y/N 欄位預設值
       invoice_type: '0',               // 請款單據別:發票
-      vip_yn: 'Y',
+      vip_yn: 'N',                      // 聯名卡:否
       credit_card: '',
       total_amt_unit: 'M',             // 預設為月
       total_amt_vendor_unit: 'M',      // 預設為月

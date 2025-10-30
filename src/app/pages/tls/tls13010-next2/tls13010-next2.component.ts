@@ -212,6 +212,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       id: this.currentTalentId || 'new',
       talent_id: step1Data?.talent_id || currentData?.talent_id || '',
       tlt_no: step1Data?.tlt_no || currentData?.tlt_no || '',
+      vendor_ven_no: step1Data?.vendor_ven_no || currentData?.vendor_ven_no || '',
       apply_no: step1Data?.apply_no || currentData?.apply_no || '',
       tlt_name: step1Data?.tlt_name || currentData?.tlt_name || '',
       VEN_Name: step1Data?.VEN_Name || currentData?.VEN_Name || '',
