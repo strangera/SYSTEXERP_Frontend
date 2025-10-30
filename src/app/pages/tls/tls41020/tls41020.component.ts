@@ -91,15 +91,15 @@ export class TLS41020Component
       format: this.formatDateTime,
     },
     { field: 'EDC_Status1Name', header: '中信刷卡機狀態', visible: true },
-    { field: 'EDC_Status2Name', header: '聯信刷卡機狀態', visible: true },
+    { field: 'EDC_Status2Name', header: '聯合刷卡機狀態', visible: true },
     { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
     { field: 'ECR_TLT_Name', header: '機台所屬櫃位名稱', visible: true },
     { field: 'ECR_LocNo', header: '機台所屬地點代號', visible: true },
     { field: 'LOCATION_Name', header: '機台所屬地點名稱', visible: true },
     { field: 'EDC_IP1', header: '中信刷卡機IP', visible: true },
-    { field: 'EDC_TmID1', header: '中信刷卡機端末機代碼', visible: true },
-    { field: 'EDC_IP2', header: '聯信刷卡機IP', visible: true },
-    { field: 'EDC_TmID2', header: '聯信刷卡機端末機代碼', visible: true },
+    { field: 'EDC_TmID1', header: '中信刷卡機端末機號', visible: true },
+    { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true },
+    { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true },
   ];
 
   EDC_Status_Option: any[] = [
