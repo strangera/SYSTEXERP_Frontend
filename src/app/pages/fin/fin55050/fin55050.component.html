@@ -104,6 +104,7 @@
     [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" [showSerialNo]="false" [showPaginator]="false" [groupRowsBy]="'AccNo'"
-    [groupRowsByName]="'AccName'">
+    [groupRowsByName]="'AccName'" [showExcel]="true" [showExcelExport]="true" [showExcelImport]="false"
+    (exportExcel)="onExportExcel($event)" [exportExcelLoading]="exportExcelLoading">
   </app-table-subheader>
 </div>

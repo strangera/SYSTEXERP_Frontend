@@ -174,4 +174,15 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     console.log(groupedDetails);
     return groupedDetails;
   }
+
+  // TODO: 匯出Excel
+  exportExcelLoading = false;
+  onExportExcel(event: any) {
+    this.exportExcelLoading = true;
+    console.log(event);
+    // 在這裡實現匯出Excel的邏輯
+  }
+
+
+
 }
