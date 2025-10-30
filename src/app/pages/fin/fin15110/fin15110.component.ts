@@ -49,10 +49,10 @@ import { environment } from 'src/environments/environment';
 })
 export class FIN15110Component extends BasicQueryPageComponent<any> implements OnInit {
 
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     TXN_DT_S: [new Date(), [Validators.required]],
     TXN_DT_E: [new Date(), [Validators.required]],
-    ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
+    ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }, { field: 'TXN_Date', order: 1 }, { field: 'TXN_GUINo', order: 1 }]),
   });
 
   data: any[] = [];
@@ -150,7 +150,7 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
   onExportExcel(): void {
     this.exportReport(true);
   }
-lastExportUrl: string | null = null;
+  lastExportUrl: string | null = null;
   private exportReport(isExcel: boolean): void {
     if (isExcel) this.btnLoading2 = true;
     else this.btnLoading = true;

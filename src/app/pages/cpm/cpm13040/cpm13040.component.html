@@ -40,27 +40,19 @@
 
 <!-- 第一個表格 -->
 <div class="card1 mt-3">
-  <app-table dataKey="CardType" tableKey="header" [columns]="headerColumns" [data]="headerData" [showPaginator]="false"
-    [showManage]="false" [showDelete]="false" [loading]="loadingHeader"></app-table>
+  <app-table dataKey="CardType" tableKey="header" [columns]="headerColumns" [data]="headerData" [showPaginator]="false" [showCaption]="false" [showManage]="false" [showFooter]="false"
+   [loading]="loadingHeader"></app-table>
 </div>
 
 <!-- 第二個表格 -->
-<div class="card mt-5">　
-  <app-customFooter-table tableKey="CPM13040" [data]="data" [columns]="columns" [totalRecords]="totalRecords" dataKey="TXN_Date"
-    (lazyLoadData)="onLazyLoadData($event, queryForm);" [footerData]="footerData" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [lazy]="true" [loading]="loading" [showManage]="false"
-    [showDelete]="false" [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]" [showReportMode]="false" [showTotal]="true"
-    (submit)="onSubmit(queryForm)">
-    <footer>
-      <div class="flex align-items-center justify-content-between w-full border-1 surface-border p-2">
-        <span class="ml-2">本報表金額為含稅金額</span>
-      </div>
-    </footer>
-  </app-customFooter-table>
-</div>
+<div class="card mt-5">
+  <app-customFooter-table tableKey="CPM13040" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    dataKey="TXN_Date" (lazyLoadData)="onLazyLoadData($event, queryForm);" [footerData]="footerData" [showFooter]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [lazy]="true" [loading]="loading"
+    [showManage]="false" [showDelete]="false" [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
+    [showReportMode]="false" [showTotal]="true" (submit)="onSubmit(queryForm)">
 
-
-<!-- <header>
+    <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
           <p-button styleClass="p-2" label="匯出阜爾APS停車抵扣表.PDF" [loading]="btnLoading" icon="pi pi-file-pdf"
@@ -69,4 +61,11 @@
             (click)="onExportExcel()" [disabled]="data.length === 0"></p-button>
         </div>
       </div>
-    </header> -->
+    </header>
+    <footer>
+      <div class="flex align-items-center justify-content-end w-full border-1 surface-border p-2">
+        <span class="ml-2">本報表金額為含稅金額</span>
+      </div>
+    </footer>
+  </app-customFooter-table>
+</div>

@@ -70,7 +70,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   totalRecords = 0;
   isTableDisabled = false;
   selectedRows: any[] = [];
-
+  INV_ItemName_Options: any[] = [];
   constructor(
     private dropDownListService: DropDownListService,
     private fin13040Service: Fin13040Service
@@ -81,7 +81,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   // ======================== 初始化 ========================
   ngOnInit(): void {
     this.initializePage('FIN13040', this.dataForm);
-
+    this.loadINVItemOptions();
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
     this.loadAndSetupColumns();
@@ -198,6 +198,26 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
               label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
               value: x.INV_GUIType,
             }));
+        },
+      });
+  }
+  loadINVItemOptions(): void {
+    const salType = this.dataForm.get('SAL_Type')?.value || ''; // 對應主檔 SAL_Type
+    const body = { SAL_Type: [salType] };
+
+    this.dropDownListService
+      .queryTDS1008_DropDownList(body.SAL_Type)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          const list = res?.Data ?? [];
+          this.INV_ItemName_Options = list.map((item: any) => ({
+            label: `${item.INV_ItemNo} - ${item.INV_ItemName}`,
+            value: item.INV_ItemNo,
+            INV_ItemNo: item.INV_ItemNo,
+            INV_ItemName: item.INV_ItemName,
+            INV_UsageType: item.INV_UsageType,
+          }));
         },
       });
   }
