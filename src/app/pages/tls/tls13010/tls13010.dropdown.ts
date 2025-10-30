@@ -92,7 +92,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   depositType: [
     { value: '1', label: '準時開業' },
     { value: '2', label: '施工保證' },
-    { value: '3', label: '契約屆滿保證票' }
+    { value: '3', label: '契約屆滿' }
   ]
 } as const;
 

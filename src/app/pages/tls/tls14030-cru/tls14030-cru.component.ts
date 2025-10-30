@@ -23,7 +23,7 @@ interface TLTTALENT {
   tlt_no: string
   open_fees: number, // 準時開業保證票
   construct_fees: number, // 施工保證票
-  expiration_fees: number, // 契約屆滿保證票
+  expiration_fees: number, // 契約屆滿
 }
 
 @Component({
@@ -53,7 +53,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
     tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
-    ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
+    ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿"
     ticket_no: ['', [Validators.required, Validators.maxLength(20)]], // 票據編號 手動輸入
     ticket_kind: [null, [Validators.maxLength(1)]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
     ticket_amount: [null as number | null, [Validators.required, Validators.min(0), Validators.maxLength(10)]], // 保證票金額 整數金額 "讀取 TLTTALENT 專櫃主檔相對的保證金金額"
@@ -78,7 +78,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   ticket_typeOption: option[] = [ //保證票型態
     { value: '1', label: '準時開業保證票' },
     { value: '2', label: '施工保證票' },
-    { value: '3', label: '契約屆滿保證票' },
+    { value: '3', label: '契約屆滿' },
   ];
 
   ticket_kindOption: option[] = [ //票據種類
