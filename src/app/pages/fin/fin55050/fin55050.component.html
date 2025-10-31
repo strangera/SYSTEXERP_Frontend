@@ -109,7 +109,7 @@
      
       (clickEvent)="onExportPDF()"
       [loading]="btnLoading"
-      [disabled]="loading || (data?.length || 0) === 0">
+      [disabled]="loading || (data.length || 0) === 0">
     </app-button>
 
     <app-button
@@ -118,7 +118,7 @@
     
       (clickEvent)="onExportXLSX()"
       [loading]="btnLoading"
-      [disabled]="loading || (data?.length || 0) === 0">
+      [disabled]="loading || (data.length || 0) === 0">
     </app-button>
   </div>
 

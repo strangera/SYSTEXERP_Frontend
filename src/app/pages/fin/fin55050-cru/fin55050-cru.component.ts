@@ -9,6 +9,7 @@ import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { FIN55050Store, VouNoIndexEntry, VoucherMeta } from '../fin55050/fin55050.store';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-fin55050-cru',
@@ -17,7 +18,8 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
     MenubarComponent,
     ButtonComponent,
     TranslateModule,
-    TableComponent
+    TableComponent,
+    NgIf
   ],
   templateUrl: './fin55050-cru.component.html'
 })
