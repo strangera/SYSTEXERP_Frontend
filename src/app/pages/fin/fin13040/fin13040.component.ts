@@ -72,8 +72,6 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     SAL_Type: [[]],
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
   });
-  btnLoading = false;
-  btnLoading2 = false;
   data: any[] = [];
   totalRecords = 0;
   InvoiceType_Options: { label: string; value: string }[] = [];
@@ -177,79 +175,6 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
           complete: () => (this.loading = false),
         });
     });
-  }
-  onExportPDF(): void {
-    this.exportReport(false);
-  }
-
-  onExportExcel(): void {
-    this.exportReport(true);
-  }
-
-  lastExportUrl: string | null = null;
-  private exportReport(isExcel: boolean): void {
-    if (isExcel) this.btnLoading2 = true;
-    else this.btnLoading = true;
-
-    const v = this.queryForm.value;
-    const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
-      MID: 0,
-      STO_No: '10',
-      ID: 0, // 匯出整體報表時可給 0
-    };
-
-    console.log('[PrintFIN13040 payload]', payload);
-
-    this.fin13040Service
-      .printFIN13040(payload)
-      .pipe(
-        finalize(() => {
-          if (isExcel) this.btnLoading2 = false;
-          else this.btnLoading = false;
-        })
-      )
-      .subscribe({
-        next: (res: any) => {
-          if (res?.Status === '0000' && res?.Data?.Print_URL) {
-            const url = res.Data.Print_URL;
-            const fullUrl = `${environment.ApiUrl.replace(/\/$/, '')}${url}`;
-            this.lastExportUrl = fullUrl;
-
-            const filename = decodeURIComponent(
-              url.split('/').pop() ?? (isExcel ? '三聯式發票.xlsx' : '三聯式發票.pdf')
-            );
-
-            const a = document.createElement('a');
-            a.href = fullUrl;
-            a.setAttribute('download', filename);
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
-          } else if (res?.body instanceof Blob) {
-            const blob = res.body;
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `三聯式發票匯出.${isExcel ? 'xlsx' : 'pdf'}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
-          } else {
-            this.messageService.errorBubble(res?.Message ?? '匯出失敗');
-          }
-        },
-
-      });
   }
 
 }

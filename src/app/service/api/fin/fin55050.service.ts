@@ -1,50 +1,112 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-// 查詢分類帳 Request
-export interface QueryFIN55050Request extends BaseQueryRequest {
-  DateFrom: string;           // 日期(起)
-  DateTo: string;             // 日期(迄)
-  OrgIdList?: string[];        // 部門
-  AccNoList?: string[];        // 科目代號
-  VendorNoList?: string[];     // 廠商代號
-  PTAFrom?: string;            // 立沖代號(起)
-  PTATo?: string;              // 立沖代號(迄)
-  TargetNoList?: string[];     // 對象別編號
-  Notes?: string;              // 摘要
-  VouTypeList?: string[];      // 傳票型態
-  VouStatusList?: string[];    // 傳票狀態
-  IsTarget: string;           // 是否為對象別(Y=是/N=否)
+export interface QueryFIN55050Payload {
+  pageSize: number;
+  pageIndex: number;
+  SortBy: { field: string; order: number }[];
+  DateFrom: string;
+  DateTo: string;
+  OrgIdList: string[];
+  AccNoList: string[];
+  VendorNoList: string[];
+  PTAFrom: string;
+  PTATo: string;
+  TargetNoList: string[];
+  Notes: string;
+  VouTypeList: string[];
+  VouStatusList: string[];
+  IsTarget: string;
 }
 
-// 傳票 Response 資料結構
-export interface FIN55050Detail {
-  VouNo: string;               // 傳票號碼
-  Ven_Name: string;            // 廠商代號/簡稱
-  VouStatus: string;           // 傳票狀態
-  ORG_ID: string;              // 部門
-  Org_Name: string;            // 部門名稱
-  ProjectNo: string;           // 活動
-  PTA: string;                 // 立沖代號
-  NoteDesc: string;            // 摘要
-  AccAmt_D: number;            // 借方金額
-  AccAmt_C: number;            // 貸方金額
-  OpeningBal: number;          // 餘額
+export interface ExportFIN55050Payload {
+  SortBy: { field: string; order: number }[];
+  DateFrom: string;
+  DateTo: string;
+  OrgIdList: string[];
+  AccNoList: string[];
+  VendorNoList: string[];
+  PTAFrom: string;
+  PTATo: string;
+  TargetNoList: string[];
+  Notes: string;
+  VouTypeList: string[];
+  VouStatusList: string[];
+  IsTarget: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface FIN55050Data {
+  ID: number;
+  VOUNO?: string;
+  DETAILNO?: string;
+  POSTFLAG?: string;
+  ORG_ID?: string;
+  ORG_NAME?: string;
+  ProjectNo?: string;
+  PTA?: string;
+  NoteDesc?: string;
+  D_AMT?: number;
+  C_AMT?: number;
+  Balance?: number;
+}
+
+export interface DropDownResp<T = { No: string; Name: string }[]> {
+  Status: string;
+  Data: T;
+  Error?: { Code: string; Message: string; Details?: string };
+  Meta?: { Timestamp: string; RequestId: string };
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+}
+
+@Injectable({ providedIn: 'root' })
 export class FIN55050Service {
-  private apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
+  private baseApi = environment.ApiUrl + '/FIN0000/GLS1000';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  // 查詢分類帳
-  queryFIN55050(req: QueryFIN55050Request): Observable<any> {
-    return this.http.post<BaseQueryResponse<FIN55050Detail>>(`${this.apiUrl}/queryFIN55050`, req);
+  /** 查詢（有分頁/排序） */
+  queryFIN55050(body: QueryFIN55050Payload): Observable<any> {
+    const url = `${this.baseApi}/queryFIN55050`;
+    return this.http.post<any>(url, body);
+    // 如果你的實際 query 路徑是根目錄也可改成：environment.ApiUrl + '/queryFIN55050'
+  }
+
+  /** 匯出 Excel（不分頁） */
+  exportFIN55050Excel(body: ExportFIN55050Payload): Observable<HttpResponse<Blob>> {
+    const url = `${this.baseApi}/exportFIN55050`;
+    return this.http.post(url, body, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** 匯出 PDF（不分頁） */
+  exportFIN55050PDF(body: ExportFIN55050Payload): Observable<HttpResponse<Blob>> {
+    const url = `${this.baseApi}/exportFIN55050PDF`;
+    return this.http.post(url, body, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  // =============================
+  // ✅ 下拉：POST、無 Body（null）
+  // =============================
+
+  /** 對象別下拉 (SubDetailNoOptions) */
+  queryGLS1016_DropDownList(): Observable<DropDownResp> {
+    const url = `${environment.ApiUrl}/queryGLS1016_DropDownList`;
+    return this.http.post<DropDownResp>(url, null);
+  }
+
+  /** 傳票型態下拉 (VoucherKindOptions) */
+  queryGLS1010_DropDownList(): Observable<DropDownResp> {
+    const url = `${environment.ApiUrl}/queryGLS1010_DropDownList`;
+    return this.http.post<DropDownResp>(url, null);
   }
 }
