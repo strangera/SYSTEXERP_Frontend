@@ -2,10 +2,9 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo"
                  class="flex-1"></app-menubar>
-    @if (!isFormReadable) {
+    @if (isFormCreateable) {
     <app-button btnType="query"
                 label="套用常用傳票"
-                [disabled]="!isFormCreateable"
                 (click)="onApplyTemplate()"></app-button>
     }
     <app-button btnType="back"
@@ -58,6 +57,7 @@
                       [options]="service.noteDescList()"
                       optionLabel="label"
                       optionValue="value"
+                      [loading]="service.noteDescLoading()"
                       [submitted]="submitted"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="補發票"
@@ -78,6 +78,7 @@
                       [options]="service.usrList()"
                       optionLabel="label"
                       optionValue="value"
+                      [loading]="service.usrLoading()"
                       [submitted]="submitted"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       calendarType="dateOne"
@@ -94,6 +95,7 @@
                       [options]="service.usrList()"
                       optionLabel="label"
                       optionValue="value"
+                      [loading]="service.usrLoading()"
                       [submitted]="submitted"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       calendarType="dateOne"
