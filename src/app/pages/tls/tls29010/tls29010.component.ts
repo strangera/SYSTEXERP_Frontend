@@ -122,15 +122,16 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   ];
 
   tlt_id_Options = [
-    { label: '1', value: '1' },
-    { label: '2', value: '2' },
-    { label: '3', value: '3' },
-    { label: '4', value: '4' },
-    { label: '5', value: '5' },
-    { label: '6', value: '6' },
-    { label: '7', value: '7' },
-    { label: '8', value: '8' },
-    { label: '9', value: '9' },
+    { label: '類別0', value: '0' },
+    { label: '類別1', value: '1' },
+    { label: '類別2', value: '2' },
+    { label: '類別3', value: '3' },
+    { label: '類別4', value: '4' },
+    { label: '類別5', value: '5' },
+    { label: '類別6', value: '6' },
+    { label: '類別7', value: '7' },
+    { label: '類別8', value: '8' },
+    { label: '類別9', value: '9' },
   ];
 
 

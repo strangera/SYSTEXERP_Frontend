@@ -24,7 +24,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   // 查詢
   queryForm = this.formBuilder.group({
     // PLUUNIT  商品單位設定檔
-    UNIT_No: ['', [Validators.maxLength(2)]], // 單位代碼
+    UNIT_No: ['', [Validators.maxLength(2)]], // 單位編碼
     UNIT_NAME: ['', [Validators.maxLength(40)]], // 單位名稱
     // UNIT_Attribute: ['', [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位
     // CHILD_UNIT: ['', [Validators.maxLength(2)]], // 子項單位代號 --沒有使用
@@ -46,10 +46,9 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
 
   data: PluUnit[] = [];
   columns: Column[] = [
-    { field: 'UNIT_No', header: '單位代碼', visible: true },
+    { field: 'UNIT_No', header: '單位編碼', visible: true },
     { field: 'UNIT_NAME', header: '單位名稱', visible: true },
-    { field: 'UNIT_Attribute', header: '單位屬性代碼', visible: true },
-    { field: 'UNIT_Attribute_NAME', header: '單位屬性名稱', visible: true },
+    { field: 'UNIT_Attribute_Name', header: '單位屬性名稱', visible: true },
     { field: 'UNIT_Remark', header: '備註說明', visible: true },
   ];
 

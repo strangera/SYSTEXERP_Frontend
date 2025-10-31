@@ -204,7 +204,7 @@
             " />
         </td>
         <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
-          (click)="editing ? $event.stopPropagation() : null" (dblclick)="detailRow(rowData)" [ngClass]="col.style"
+          (click)="editing ? $event.stopPropagation() : null" [ngClass]="col.style"
           [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
           <p-cellEditor *ngIf="showRowEdit">
             <ng-template pTemplate="input">
@@ -252,7 +252,7 @@
           </ng-container>
           <!-- 連結到cruPage Read -->
           <ng-container *ngIf="col.type === 'detail'">
-            <ng-container *ngIf="rowData[col.field] === '期初餘額' || rowData[col.field] === '總計'; else detailLink">
+            <ng-container *ngIf="rowData[col.field] === '期初餘額'; else detailLink">
               <span>
                 {{
                 col.format

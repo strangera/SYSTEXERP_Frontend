@@ -13,7 +13,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
-import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { NgIf } from '@angular/common';
@@ -22,9 +22,6 @@ import { finalize } from 'rxjs';
 import { TLS22010Query } from "../tls22010-cru/tls22010.model";
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-
-
-
 
 @Component({
   templateUrl: './tls22010.component.html',
@@ -104,7 +101,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   machinedisplayOptions: any[] = [];
   ECRNoOptions: any[] = [];
   footerData: any[] = [];
-  private skipAutoQueryOnce = false;
+  // private skipAutoQueryOnce = false;
 
   constructor(
     private floorService: FloorService,
@@ -128,25 +125,25 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   }
   // --------- 生命週期 ----------
   ngOnInit(): void {
-    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm);
+    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 下拉選項
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
 
-    const state = this.router.lastSuccessfulNavigation?.extras.state;
-    const isFromRelatedRoute = state?.['fromRoute']?.includes(this.ProgNo.toLowerCase());
-    if (isFromRelatedRoute) {
-      this.skipAutoQueryOnce = true;
+    // const state = this.router.lastSuccessfulNavigation?.extras.state;
+    // const isFromRelatedRoute = state?.['fromRoute']?.includes(this.ProgNo.toLowerCase());
+    // if (isFromRelatedRoute) {
+    //   this.skipAutoQueryOnce = true;
 
-      const res = this.queryStateService.getQueryStateValue(this.ProgNo + '_data');
-      if (res) {
-        this.data = res.Data ?? [];
-        this.footerData = res.footerData ?? [];
-        this.totalRecords = res.TotalCount ?? this.data.length;
-      }
-    }
+    //   const res = this.queryStateService.getQueryStateValue(this.ProgNo + '_data');
+    //   if (res) {
+    //     this.data = res.Data ?? [];
+    //     this.footerData = res.footerData ?? [];
+    //     this.totalRecords = res.TotalCount ?? this.data.length;
+    //   }
+    // }
   }
   /** 避免時區影響：以本地時間組 YYYY-MM-DD */
   private toYMD(d: Date): string {
@@ -154,14 +151,13 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup): void {
-    if (this.skipAutoQueryOnce) {
-      this.skipAutoQueryOnce = false;
-      return;
-    }
+    // if (this.skipAutoQueryOnce) {
+    //   this.skipAutoQueryOnce = false;
+    //   return;
+    // }
 
     this.handleSubmit(frm, () => {
       const raw = frm.value;
-
       const payload = {
         PageSize: raw.pageSize ?? 30,
         PageIndex: raw.pageIndex ?? 1,
@@ -194,7 +190,6 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
-
   // 覆寫父類別的 onDetail 方法，傳遞查詢條件到 CRU 頁面
   override onDetail(data: unknown) {
     const queryConditions = {
@@ -202,14 +197,9 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       footerData: this.footerData,
       TotalCount: this.totalRecords
     };
-
     // 儲存完整的查詢結果數據
     this.queryStateService.setQueryState(this.ProgNo + '_data', queryConditions);
-
     // 呼叫父類別的 onDetail 方法，傳遞查詢條件
     super.onDetail(data, queryConditions);
   }
-
-
-
 }
