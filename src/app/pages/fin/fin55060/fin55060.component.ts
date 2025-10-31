@@ -44,7 +44,7 @@ type FIN55060MainRow = {
     FormsModule,
     ReactiveFormsModule,
     CalendarRangeComponent,
-    DropdownComponent,
+    // DropdownComponent,
     ButtonComponent,
     TableReportComponent,
     TranslateModule,
