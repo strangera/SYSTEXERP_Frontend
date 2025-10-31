@@ -196,7 +196,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     tlt_name: ['', [Validators.required, Validators.maxLength(100)]], // 必填
     tlt_no: [''], // 必填但系統自動給號
     ven_no: ['', [Validators.required, Validators.maxLength(16)]],
-    ven_uniform: ['', [Validators.required, Validators.maxLength(10)]], // 必填
+    ven_uniform: ['', [Validators.maxLength(10)]], // 必填
     VEN_Name: ['', [Validators.maxLength(100)]], // 必填但自動帶入
     VEN_Address: [''],
     paper_type: ['', [Validators.maxLength(2)]],
@@ -470,6 +470,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           if (currentBusType) {
             this.dataLoaderService.ensureClassificationDataLoaded(this, currentBusType);
           }
+          console.log('🔍 執行初始驗證，當前 ven_uniform 值:', this.dataForm.get('ven_uniform')?.value);
+          this.validationService.updateAllValidators(this.dataForm);
         }, 500);
 
         setTimeout(() => {
@@ -831,43 +833,26 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }
     this.saveToWorkflow();
     // this.messageService.successBubble('Step 1 完成，可以進入下一步');
+    this.checkRequiredFieldsBeforeSubmit();
   }
 
   onSubmitNext(): void {
-
-
+    // 檢視模式：直接導航，不驗證
     if (this.isViewMode) {
-      // 檢視模式：直接導航，不帶參數
       this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
 
-    // 🔍 找出所有無效的欄位
-    const invalidControls: string[] = [];
-    Object.keys(this.dataForm.controls).forEach(key => {
-      const control = this.dataForm.get(key);
-      if (control && control.invalid && control.enabled) { // 只檢查啟用的控件
-        invalidControls.push(key);
-      }
-    });
-
-    if (invalidControls.length > 0) {
-      // this.messageService.warnBubble(`請檢查以下欄位: ${invalidControls.join(', ')}`);
-      this.messageService.warnBubble(`請檢查必填`);
+    // 使用統一的必填檢查方法
+    if (!this.checkRequiredFieldsBeforeSubmit()) {
       this.markFormGroupTouched(this.dataForm);
       return;
     }
 
-    // 編輯模式的原有邏輯
-    if (this.dataForm.valid) {
-      this.saveToWorkflow();
-      this.router.navigate(['account/tls/tls13010next1']);
-    } else {
-      // 🚨 臨時解決方案：強制通過
-      console.warn(' 強制通過驗證（臨時解決方案）');
-      this.saveToWorkflow();
-      this.router.navigate(['account/tls/tls13010next1']);
-    }
+    // 所有驗證通過，儲存並導航
+    this.saveToWorkflow();
+    this.router.navigate(['account/tls/tls13010next1']);
+    // this.messageService.successBubble('Step 1 完成，進入下一步');
   }
 
   onCancel(): void {
@@ -1508,19 +1493,54 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     );
   }
 
-  //檢查必填欄位 (可用於提交前驗證)
   private checkRequiredFieldsBeforeSubmit(): boolean {
+    // 🔍 先打印表單的所有錯誤
+    console.log('========== 表單驗證檢查 ==========');
+    console.log('表單是否有效:', this.dataForm.valid);
+    console.log('表單狀態:', this.dataForm.status);
+
+    // 🔍 檢查每個欄位的狀態
+    Object.keys(this.dataForm.controls).forEach(key => {
+      const control = this.dataForm.get(key);
+      if (control && control.errors) {
+        console.log(`❌ 欄位 "${key}" 有錯誤:`, {
+          value: control.value,
+          errors: control.errors,
+          touched: control.touched,
+          dirty: control.dirty
+        });
+      }
+    });
+    const venUniform = this.dataForm.get('ven_uniform')?.value;
+    const vendorNo = this.dataForm.get('vendor_no')?.value;
+    if (!venUniform && vendorNo) {
+      this.dataForm.patchValue({ ven_uniform: vendorNo }, { emitEvent: false });
+    }
+
     const result = this.formInitService.checkRequiredFields(this.dataForm);
 
     if (!result.isComplete) {
+      // 🔍 打印缺失的欄位
+      console.log('❌ 缺失的必填欄位:', result.missingFields);
+
       const missingFieldNames = result.missingFields
-        .map(field => this.formInitService.getFieldDisplayName(field))
+        .map(field => {
+          const displayName = this.formInitService.getFieldDisplayName(field);
+          const currentValue = this.dataForm.get(field)?.value;
+          console.log(`  - ${field} (${displayName}): 當前值 =`, currentValue);
+          return displayName;
+        })
         .join('、');
 
       this.messageService.warnBubble(`請填寫必填欄位: ${missingFieldNames}`);
+
+      // 🔍 額外的調試信息
+      console.log('========== 調試完成 ==========');
       return false;
     }
 
+    console.log('✅ 所有必填欄位已填寫');
+    console.log('========== 調試完成 ==========');
     return true;
   }
 
@@ -1560,7 +1580,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     });
 
     // 初始驗證器設定
-    this.validationService.updateAllValidators(this.dataForm);
+    // this.validationService.updateAllValidators(this.dataForm);
   }
 
   // //設定初始必填欄位
@@ -1611,11 +1631,20 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
  * 廠商選項被選中
  */
   onVendorOptionSelected(selectedOption: any): void {
+    console.log('📝 廠商被選中:', selectedOption);
+
     this.dataForm.patchValue({
-      vendor_ven_no: selectedOption.VEN_No,   // "00000000-2"
-      vendor_no: selectedOption.No,           // "00000000"
+      vendor_ven_no: selectedOption.VEN_No,   // "00000000-2" (完整編號)
+      vendor_no: selectedOption.No,           // "00000000" (統編)
+      ven_no: selectedOption.VEN_No,          // "00000000-2"
+      ven_uniform: selectedOption.No,         // "00000000" (統編) - 必填欄位！
       VEN_Name: selectedOption.Name,
       VEN_Address: selectedOption.VEN_Address
     }, { emitEvent: false });
+
+    console.log('✅ 已更新廠商資料，包含 ven_uniform:', this.dataForm.get('ven_uniform')?.value);
+
+    // 觸發儲存
+    this.saveToWorkflow();
   }
 }

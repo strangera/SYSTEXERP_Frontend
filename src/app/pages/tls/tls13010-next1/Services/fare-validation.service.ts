@@ -55,7 +55,7 @@ export class FareValidationService {
         // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_unitamt', label: '單價' },
         { field: 'tpy_qty', label: '數量' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '開立發票' }
       ],
       'B': [
@@ -74,7 +74,7 @@ export class FareValidationService {
         { field: 'tpy_edate', label: '扣款結束年月' },
         { field: 'tpy_totalamt', label: '總金額' },
         { field: 'tpy_amount', label: '每月金額' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }
       ],
       'D': [
@@ -83,7 +83,7 @@ export class FareValidationService {
         //TODO: 需求變更，暫時不檢查單位
         // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_rate', label: '比率' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }
       ],
       'E': [
@@ -92,7 +92,7 @@ export class FareValidationService {
         //TODO: 需求變更，暫時不檢查單位
         // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_rate', label: '比率' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }
       ]
     };

@@ -1,6 +1,6 @@
 // TLS13010 下拉選單選項 - 整理後版本（含洽談者）
 import { Injectable } from '@angular/core';
-import { forkJoin, Observable, map, of, tap, catchError } from 'rxjs';
+import { forkJoin, Observable, map, of, tap, catchError, retry, timer } from 'rxjs';
 import {
   DECO_TYPE_OPTIONS,
   MONEY_TYPE_OPTIONS,
@@ -137,19 +137,62 @@ export class TLS13010DropdownService {
     private negotiatorService: NegotiatorOptionsService,
 
   ) {
-    this.initAllOptions();
   }
 
   /**
-   * 初始化所有選項
+   * 初始化所有選項（由外部呼叫）
    */
-  private initAllOptions(): void {
-    this.initBustypeOptions();
-    this.initLocationOptions();
-    this.initDiscountOptions();
-    this.initPOS2013Options();
-    this.initNegotiatorOptions();
-    this.initPayNoOptions();
+  public initialize(): Observable<any> {
+    console.log('🚀 開始初始化所有下拉選單選項');
+
+    return forkJoin({
+      bustype: this.initBustypeOptionsWithRetry(),
+      location: this.initLocationOptionsWithRetry(),
+      discount: this.initDiscountOptionsWithRetry(),
+      pos2013: this.initPOS2013OptionsWithRetry(),
+      negotiator: this.initNegotiatorOptionsWithRetry(),
+      payNo: this.initPayNoOptionsWithRetry()
+    }).pipe(
+      tap(results => {
+        console.log('✅ 所有下拉選單選項載入完成:', {
+          bustype: results.bustype.length,
+          discount: results.discount.length,
+          pos2013: results.pos2013.length,
+          negotiator: results.negotiator.length,
+          payNo: results.payNo.length
+        });
+      }),
+      catchError(error => {
+        console.error('❌ 初始化選項時發生錯誤:', error);
+        return of({
+          bustype: [],
+          location: {},
+          discount: [],
+          pos2013: [],
+          negotiator: [],
+          payNo: []
+        });
+      })
+    );
+  }
+
+
+  private initBustypeOptionsWithRetry(): Observable<DropdownOption[]> {
+    return this.sysb800Service.getSystemTypes().pipe(
+      retry({ count: 3, delay: () => timer(1000) }),
+      map(response => response.map(item => ({
+        value: item.value,
+        label: item.label
+      }))),
+      tap(options => {
+        this.bustypeOptions = options;
+        console.log('✅ 大分類載入完成:', options.length);
+      }),
+      catchError(error => {
+        console.error('❌ 大分類載入失敗:', error);
+        return of([]);
+      })
+    );
   }
 
   /**
@@ -263,27 +306,30 @@ export class TLS13010DropdownService {
   /**
    * 載入所有 Location 相關選項（T101）
    */
-  private initLocationOptions(): void {
-    if (this.loadingStates.location) return;
+  private initLocationOptionsWithRetry(): Observable<any> {
+    console.log('🔄 開始載入 Location 選項');
 
-    forkJoin({
+    return forkJoin({
       building: this.locationService.getBuildingOptions(),
       floor: this.locationService.getFloorOptions(),
       region: this.locationService.getRegionOptions(),
       org: this.locationService.getOrgOptions(),
       location: this.locationService.getLocationOptions(),
       paperType: this.locationService.getPaperTypeOptions('T101')
-    }).subscribe({
-      next: (results) => {
+    }).pipe(
+      retry({
+        count: 2,
+        delay: () => timer(1000)
+      }),
+      tap(results => {
         this.buildingOptions = results.building;
         this.floorOptions = results.floor;
         this.regionOptions = results.region;
         this.orgOptions = results.org;
         this.locationOptions = results.location;
         this.paperTypeOptions = results.paperType;
-        this.loadingStates.location = true;
 
-        console.log('Location 選項載入完成:', {
+        console.log('✅ Location 選項載入完成:', {
           building: this.buildingOptions.length,
           floor: this.floorOptions.length,
           region: this.regionOptions.length,
@@ -291,91 +337,117 @@ export class TLS13010DropdownService {
           location: this.locationOptions.length,
           paperType: this.paperTypeOptions.length
         });
-      },
-      error: (error) => {
-        console.error('載入 Location 選項失敗:', error);
-      }
-    });
+      }),
+      catchError(error => {
+        console.error('❌ 載入 Location 選項失敗:', error);
+        this.buildingOptions = [];
+        this.floorOptions = [];
+        this.regionOptions = [];
+        this.orgOptions = [];
+        this.locationOptions = [];
+        this.paperTypeOptions = [];
+        return of({
+          building: [],
+          floor: [],
+          region: [],
+          org: [],
+          location: [],
+          paperType: []
+        });
+      })
+    );
   }
 
   /**
-   * 載入折扣別選項（T102）
-   */
-  private initDiscountOptions(): void {
-    if (this.loadingStates.discount) return;
+ * 載入折扣別選項（含重試）
+ */
+  private initDiscountOptionsWithRetry(): Observable<DropdownOption[]> {
+    console.log('🔄 開始載入折扣別選項');
 
-    this.locationService.getPaperTypeOptions('T102').subscribe({
-      next: (response: any[]) => {
+    return this.locationService.getPaperTypeOptions('T102').pipe(
+      retry({
+        count: 2,
+        delay: () => timer(1000)
+      }),
+      tap((response: any[]) => {
         this.discountTypeOptions = response;
-        this.loadingStates.discount = true;
-        console.log('折扣別選項載入完成:', this.discountTypeOptions.length);
-      },
-      error: (error) => {
-        console.error('載入折扣別選項失敗:', error);
+        console.log('✅ 折扣別選項載入完成:', this.discountTypeOptions.length);
+      }),
+      catchError(error => {
+        console.error('❌ 載入折扣別選項失敗:', error);
         this.discountTypeOptions = [];
-        this.loadingStates.discount = true;
-      }
-    });
+        return of<DropdownOption[]>([]);
+      })
+    );
   }
 
   /**
-   * 載入 POS2013 選項 (固定傳入 VEN_Flag = "1")
-   */
-  private initPOS2013Options(): void {
-    if (this.loadingStates.pos2013) return;
+ * 載入 POS2013 選項（含重試）
+ */
+  private initPOS2013OptionsWithRetry(): Observable<Pos2013DropdownOption[]> {
+    console.log('🔄 開始載入 POS2013 選項');
 
-    this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
-      next: (response: any[]) => {
+    return this.vendorCategoryService.getVendorCategoryNoNameOptions("1").pipe(
+      retry({
+        count: 2,
+        delay: () => timer(1000)
+      }),
+      tap((response: any[]) => {
         this.pos2013Options = response;
-        this.loadingStates.pos2013 = true;
-        console.log('POS2013選項載入完成:', this.pos2013Options.length);
-      },
-      error: (error) => {
-        console.error('載入POS2013選項失敗:', error);
+        console.log('✅ POS2013選項載入完成:', this.pos2013Options.length);
+      }),
+      catchError(error => {
+        console.error('❌ 載入POS2013選項失敗:', error);
         this.pos2013Options = [];
-        this.loadingStates.pos2013 = true;
-      }
-    });
+        return of<Pos2013DropdownOption[]>([]);
+      })
+    );
   }
 
   /**
-   * 載入洽談者選項
-   */
-  private initNegotiatorOptions(): void {
-    if (this.loadingStates.negotiator) return;
+  * 載入洽談者選項（含重試）
+  */
+  private initNegotiatorOptionsWithRetry(): Observable<DropdownOption[]> {
+    console.log('🔄 開始載入洽談者選項');
 
-    this.negotiatorService.getNegotiatorOptions().subscribe({
-      next: (response: any[]) => {
+    return this.negotiatorService.getNegotiatorOptions().pipe(
+      retry({
+        count: 2,
+        delay: () => timer(1000)
+      }),
+      tap((response: any[]) => {
         this.negotiatorOptions = response;
-        this.loadingStates.negotiator = true;
-        console.log('洽談者選項載入完成:', this.negotiatorOptions.length);
-      },
-      error: (error) => {
-        console.error('載入洽談者選項失敗:', error);
+        console.log('✅ 洽談者選項載入完成:', this.negotiatorOptions.length);
+      }),
+      catchError(error => {
+        console.error('❌ 載入洽談者選項失敗:', error);
         this.negotiatorOptions = [];
-        this.loadingStates.negotiator = true;
-      }
-    });
+        return of<DropdownOption[]>([]);
+      })
+    );
   }
 
   /**
-    * 載入支付編號選項 (POS1006)
-    */
-  private initPayNoOptions(): void {
-    if (this.loadingStates.payNo) return;
+ * 載入支付編號選項（含重試）
+ */
+  private initPayNoOptionsWithRetry(): Observable<DropdownOption[]> {
+    console.log('🔄 開始載入支付編號選項');
 
-    this.negotiatorService.getPOS1006Options().subscribe({
-      next: (response: any[]) => {
+    return this.negotiatorService.getPOS1006Options().pipe(
+      retry({
+        count: 2,
+        delay: () => timer(1000)
+      }),
+      tap((response: any[]) => {
         this.payNoOptions = response;
-        this.loadingStates.payNo = true;
-        console.log('支付編號選項載入完成:', this.payNoOptions.length);
-      },
-      error: (error) => {
-        console.error('載入支付編號選項失敗:', error);
+        console.log('✅ 支付編號選項載入完成:', this.payNoOptions.length);
+      }),
+      catchError(error => {
+        console.error('❌ 載入支付編號選項失敗:', error);
         this.payNoOptions = [];
-        this.loadingStates.payNo = true;
-      }
-    });
+        return of<DropdownOption[]>([]);
+      })
+    );
   }
 
   /**
@@ -414,20 +486,27 @@ export class TLS13010DropdownService {
   }
 
   /**
-   * 重新載入所有選項
-   */
-  reloadAllOptions(): void {
-    this.loadingStates = {
-      bustype: false,
-      busclass: false,
-      bussclass: false,
-      location: false,
-      discount: false,
-      pos2013: false,
-      negotiator: false,
-      payNo: false
-    };
-    this.initAllOptions();
+  * 重新載入所有選項
+  */
+  reloadAllOptions(): Observable<any> {
+    console.log('🔄 重新載入所有選項');
+
+    // 清空資料
+    this.bustypeOptions = [];
+    this.busClassOptions = [];
+    this.busSClassOptions = [];
+    this.buildingOptions = [];
+    this.floorOptions = [];
+    this.regionOptions = [];
+    this.orgOptions = [];
+    this.locationOptions = [];
+    this.paperTypeOptions = [];
+    this.discountTypeOptions = [];
+    this.pos2013Options = [];
+    this.negotiatorOptions = [];
+    this.payNoOptions = [];
+
+    return this.initialize();
   }
 
   /**
