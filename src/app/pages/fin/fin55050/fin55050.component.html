@@ -86,15 +86,13 @@
           </div>
 
           <!-- 立沖代號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="立沖代號"
-              controlName="PTA"
-              [control]="queryForm.controls.PTA"
-              [submitted]="submitted">
-            </app-input-text>
+         
+    <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range startLabel=" 立沖代號(起)" endLabel=" 立沖代號(迄)"
+              [startControl]="queryForm.controls.PTAFrom" [endControl]="queryForm.controls.PTATo"
+              [submitted]="submitted" [errorForGroup]="true" />
           </div>
-
+      
           <!-- 對象別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -108,35 +106,16 @@
             </app-multi-select>
           </div>
 
-          <!-- 對帳KEY（頁面展示用） -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="對帳KEY"
-              controlName="AccountKey"
-              [control]="queryForm.controls.AccountKey"
-              [submitted]="submitted">
-            </app-input-text>
-          </div>
-
-          <!-- 摘要 => Notes -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="摘要"
-              controlName="NoteDesc"
-              [control]="queryForm.controls.NoteDesc"
-              [submitted]="submitted">
-            </app-input-text>
-          </div>
 
           <!-- 傳票型態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="傳票型態"
-              controlName="VOUCHER_KIND"
+              controlName="VouTypeList"
               [options]="VoucherKindOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.VOUCHER_KIND"
+              [control]="queryForm.controls.VouTypeList"
               [submitted]="submitted">
             </app-multi-select>
           </div>
@@ -145,11 +124,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="傳票狀態"
-              controlName="PostFlag"
+              controlName="VouStatusList"
               [options]="PostFlagOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.PostFlag"
+              [control]="queryForm.controls.VouStatusList"
               [submitted]="submitted">
             </app-multi-select>
           </div>
@@ -165,28 +144,7 @@
             </app-radiobutton>
           </div>
 
-          <!-- 報表/列印（頁面用，不送後端） -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="報表方式"
-              groupname="g3"
-              [control]="queryForm.controls.ReportType"
-              [options]="[
-                { value: 1, label: '交易記錄之會計科目' },
-                { value: 2, label: '含無交易記錄之會計科目' }
-              ]"
-              [submitted]="submitted">
-            </app-radiobutton>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="列印方式"
-              groupname="g2"
-              [control]="queryForm.controls.PrintType"
-              [options]="[{ label: '分開列印', value: '0' },{ label: '合併列印', value: '1' }]"
-              [submitted]="submitted">
-            </app-radiobutton>
-          </div>
+
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

@@ -27,6 +27,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ButtonModule } from 'primeng/button';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 @Component({
   selector: 'app-fin55050',
@@ -46,6 +47,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     MultiSelectComponent,
     ButtonModule,
     TableReportComponent,
+    InputTextRangeComponent,
   ],
 })
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> implements OnInit {
@@ -67,12 +69,13 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
     AccNo: [null],
     VOUNO: [null, Validators.maxLength(16)],
     DetailNo: [null],
-    PTA: [null],
+     PTAFrom: [null],
+    PTATo: [null],
     SubDetailNo: [null],
     AccountKey: [null],
     NoteDesc: [null],
-    VOUCHER_KIND: [null],
-    PostFlag: [null],
+    VouTypeList: [null],
+    VouStatusList: [null],
     isSubDetailNo: [null],
     ReportType: [null],
     PrintType: [null],
@@ -98,13 +101,13 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
   // === 展開明細欄位（不包含 VouDate） ===
   detailcolumns: Column[] = [
     { field: 'VouNo',      header: '傳票號碼', visible: true },
-    { field: 'NoteDesc',   header: '摘要', visible: true },
     { field: 'Ven_Name',   header: '廠商', visible: true },
-    { field: 'VouStatus',  header: '狀態', visible: true },
+    { field: 'VouStatus',  header: '傳票狀態', visible: true },
     { field: 'ORG_ID',     header: '部門代號', visible: true },
     { field: 'Org_Name',   header: '部門名稱', visible: true },
-    { field: 'ProjectNo',  header: '活動代號', visible: true },
     { field: 'PTA',        header: '立沖代號', visible: true },
+    { field: 'ProjectNo',  header: '活動代號', visible: true },
+    { field: 'NoteDesc',   header: '摘要', visible: true },  
     { field: 'AccAmt_D',   header: '借方金額', visible: true, format: formatAmount },
     { field: 'AccAmt_C',   header: '貸方金額', visible: true, format: formatAmount },
     { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount },
@@ -232,8 +235,8 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
       OrgIdList:     this.ensureArr(raw?.ORG_ID),
       AccNoList:     this.ensureArr(raw?.AccNo),
       VendorNoList:  this.ensureArr(raw?.DetailNo),
-      PTAFrom:       raw?.PTA ?? '',
-      PTATo:         raw?.PTA ?? '',
+      PTAFrom:       raw?.PTAFrom ?? '',
+      PTATo:         raw?.PTATo ?? '',
       TargetNoList:  this.ensureArr(raw?.SubDetailNo),
       Notes:         raw?.NoteDesc ?? '',
       VouTypeList:   this.ensureArr(raw?.VOUCHER_KIND),
@@ -262,6 +265,8 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
           this.lastQueryBody = { ...body };
         });
     });
+
+    
   }
 
   /** 提供 app-table-report 查詢（相同聚合與日期區間邏輯） */
@@ -294,8 +299,8 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
       OrgIdList:     this.ensureArr(merged?.ORG_ID),
       AccNoList:     this.ensureArr(merged?.AccNo),
       VendorNoList:  this.ensureArr(merged?.DetailNo),
-      PTAFrom:       merged?.PTA ?? '',
-      PTATo:         merged?.PTA ?? '',
+      PTAFrom:       merged?.PTAFrom ?? '',
+      PTATo:         merged?.PTATo ?? '',
       TargetNoList:  this.ensureArr(merged?.SubDetailNo),
       Notes:         merged?.NoteDesc ?? '',
       VouTypeList:   this.ensureArr(merged?.VOUCHER_KIND),
@@ -338,12 +343,12 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
       OrgIdList: this.ensureArr(merged?.ORG_ID ?? (this.lastQueryBody as any)?.OrgIdList),
       AccNoList: this.ensureArr(merged?.AccNo ?? (this.lastQueryBody as any)?.AccNoList),
       VendorNoList: this.ensureArr(merged?.DetailNo ?? (this.lastQueryBody as any)?.VendorNoList),
-      PTAFrom: merged?.PTA ?? (this.lastQueryBody as any)?.PTAFrom ?? '',
-      PTATo:   merged?.PTA ?? (this.lastQueryBody as any)?.PTATo ?? '',
+      PTAFrom: merged?.PTAFrom ?? (this.lastQueryBody as any)?.PTAFrom ?? '',
+      PTATo:   merged?.PTATo ?? (this.lastQueryBody as any)?.PTATo ?? '',
       TargetNoList: this.ensureArr(merged?.SubDetailNo ?? (this.lastQueryBody as any)?.TargetNoList),
       Notes: merged?.NoteDesc ?? (this.lastQueryBody as any)?.Notes ?? '',
-      VouTypeList: this.ensureArr(merged?.VOUCHER_KIND ?? (this.lastQueryBody as any)?.VouTypeList),
-      VouStatusList: this.ensureArr(merged?.PostFlag ?? (this.lastQueryBody as any)?.VouStatusList),
+      VouTypeList: this.ensureArr(merged?.VouTypeList ?? (this.lastQueryBody as any)?.VouTypeList),
+      VouStatusList: this.ensureArr(merged?.VouStatusList ?? (this.lastQueryBody as any)?.VouStatusList),
       IsTarget: merged?.isSubDetailNo ?? (this.lastQueryBody as any)?.IsTarget ?? '',
     };
     return payload;
@@ -405,48 +410,72 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Data> imp
     return def;
   }
 
-  // === 下拉資料 ===
-  loadOptions() {
-    // 部門
-    this.dropDownListService.querySYS3100_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.ORG_IDOptions = response.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        })) ?? [];
-      });
 
-    // 活動代碼（頁面用）
-    this.dropDownListService.getActivityOptions({
-      mid: 0, str_no: '10', pod_type: ['1', '2', '8'], pod_status: '1',
-    })
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.ProjectNoOptions = response.Data?.map((item: any) => ({
-          label: `${item.pod_no} - ${item.pod_desc}`,
-          value: item.pod_no,
-        })) ?? [];
-      });
 
-    // 科目代號
-    this.dropDownListService.queryGLS1005_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.AccNoOptions = response.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        })) ?? [];
-      });
+// === 下拉資料 ===
+loadOptions() {
+  // 部門
+  this.dropDownListService.querySYS3100_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.ORG_IDOptions = response.Data?.map((item: any) => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No,
+      })) ?? [];
+    });
 
-    // 廠商代號
-    this.dropDownListService.queryPOS2013_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.DetailNoOptions = response.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        })) ?? [];
-      });
-  }
+  // 活動代碼（頁面用）
+  this.dropDownListService.getActivityOptions({
+    mid: 0, str_no: '10', pod_type: ['1', '2', '8'], pod_status: '1',
+  })
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.ProjectNoOptions = response.Data?.map((item: any) => ({
+        label: `${item.pod_no} - ${item.pod_desc}`,
+        value: item.pod_no,
+      })) ?? [];
+    });
+
+  // 科目代號
+  this.dropDownListService.queryGLS1005_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.AccNoOptions = response.Data?.map((item: any) => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No,
+      })) ?? [];
+    });
+
+  // 廠商代號
+  this.dropDownListService.queryPOS2013_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.DetailNoOptions = response.Data?.map((item: any) => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No,
+      })) ?? [];
+    });
+
+  // ✅ 對象別（SubDetailNoOptions）→ 改呼叫 fin55050Service（POST、無 body）
+  this.fin55050Service.queryGLS1016_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.SubDetailNoOptions = response.Data?.map((item: any) => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No,
+      })) ?? [];
+    });
+
+  // ✅ 傳票型態（VoucherKindOptions）→ 改呼叫 fin55050Service（POST、無 body）
+  this.fin55050Service.queryGLS1010_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.VoucherKindOptions = response.Data?.map((item: any) => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No,
+      })) ?? [];
+    });
+}
+
+
 }

@@ -60,7 +60,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   templateUrl: './fin11060.component.html',
   styleUrl: './fin11060.component.scss',
   standalone: true,
-  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent,  RadiobuttonComponent,  AccordionModule, FormsModule, ReactiveFormsModule,  CalendarRangeQuickComponent, DropdownComponent,  ReportTableGroupComponent, TranslateModule, TableComponent]
+  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent,  RadiobuttonComponent,  AccordionModule, FormsModule, ReactiveFormsModule,  CalendarRangeQuickComponent, DropdownComponent,   TranslateModule, TableComponent]
 })
 
 // 電子發票上送狀況表
