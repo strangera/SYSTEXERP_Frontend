@@ -76,7 +76,7 @@ export class TLS41020Component
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
+    // { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     {
       field: 'EDC_BegDate',
