@@ -49,7 +49,8 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   /** 3. 結算檢查 (Settle) 欄位 */
   readonly settleColumns: ReportColumn[] = [
     { field: 'step_num', header: '檢查順序', visible: true },
-    { field: 'master_key', header: '檢查內容', visible: true },
+    { field: 'step_desc', header: '檢查步驟', visible: true },
+    { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
     { field: 'isPass', header: '是否通過', visible: true },
     { field: 'check_result', header: '檢查明細', visible: true },
   ];
