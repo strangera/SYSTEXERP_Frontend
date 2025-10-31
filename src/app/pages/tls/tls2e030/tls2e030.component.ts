@@ -39,7 +39,7 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   private readonly LOG_COLUMNS: ReportColumn[] = [
     { field: 'step_num', header: '檢查順序', visible: true },
     { field: 'step_desc', header: '檢查步驟', visible: true },
-    { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
+    // { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
     { field: 'isPass', header: '是否通過', visible: true },
     { field: 'check_result', header: '檢查明細', visible: true },
   ];
@@ -133,7 +133,7 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
       this.currentColumns = this.QUERY_COLUMNS;
 
       // 2. 執行查詢
-      this.tls2e030Service.queryTls2e030(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tls2e030Service.queryTls2e030(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data; // 這裡的資料型別是 Tls2e030Data[]
         this.totalRecords = res.TotalCount;
         this.historyRequestBody = body;

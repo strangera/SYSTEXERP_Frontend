@@ -7,22 +7,23 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatDateTime, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service } from '@service/api/tls/tls2e070.service';
+import { formatDateTime, formatYN, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service, Tls2e070UpdateBody } from '@service/api/tls/tls2e070.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, NgStyle } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
 
 // 2.2.14.7 專櫃帳款結算作業
 @Component({
   selector: 'app-tls2e070',
   templateUrl: './tls2e070.component.html',
   standalone: true,
-  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
+  imports: [NgStyle, ButtonModule, AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
 export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> implements OnInit {
   /** 1. 查詢結果 (Query) 欄位 */
@@ -31,7 +32,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     { field: 'cls_termno', header: '結算期別', visible: true },
     { field: 'sale_proc_date', header: '結帳日期', visible: true, format: formatDateTime },
     { field: 'sale_proc_USR_Name', header: '結帳人員', visible: true },
-    { field: 'sale_lock', header: '是否鎖定', visible: true },
+    { field: 'sale_lock', header: '是否鎖定', visible: true, format: formatYN },
     { field: 'sale_lock_date', header: '鎖定日期', visible: true },
     { field: 'sale_lock_USR_Name', header: '鎖定人員', visible: true },
   ];
@@ -50,7 +51,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   readonly settleColumns: ReportColumn[] = [
     { field: 'step_num', header: '檢查順序', visible: true },
     { field: 'step_desc', header: '檢查步驟', visible: true },
-    { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
+    // { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
     { field: 'isPass', header: '是否通過', visible: true },
     { field: 'check_result', header: '檢查明細', visible: true },
   ];
@@ -62,6 +63,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
 
   // 將 data 型別改為 any[] 以容納不同結構的資料
   data: any = [];
+  selectedItems: any = [];
   // columns 不再固定，初始化為空或預設查詢欄位
   columns: ReportColumn[] = [];
 
@@ -78,7 +80,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   historyRequestBody: any;
   loading2 = false; // onSettle 專屬 loading
   loading3 = false; // onQueryRecord 專屬 loading
-
+  showCheckBox = false;
 
   constructor(
     public readonly tls2e070Service: Tls2e070Service,
@@ -143,6 +145,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   onSubmit(frm: FormGroup) {
     // 1. 設定欄位為查詢結果欄位
     this.columns = this.queryColumns;
+    this.showCheckBox = true;
 
     this.handleSubmit(frm, () => {
       const body = {
@@ -171,6 +174,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   onSettle(frm: FormGroup) {
     // 1. 設定欄位為結算檢查欄位
     this.columns = this.settleColumns;
+    this.showCheckBox = false;
     this.loading2 = true;
 
     const body = {
@@ -201,6 +205,8 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   onQueryRecord(frm: FormGroup) {
     // 1. 設定欄位為試算紀錄欄位
     this.columns = this.recordColumns;
+    this.showCheckBox = false;
+
     this.loading3 = true;
 
     const body = {
@@ -221,5 +227,24 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
       this.data = res.Data;
       this.totalRecords = res.TotalCount;
     });
+  }
+
+  btnLoading = false;
+  onUpdate() {
+    const body = {
+      idList: this.selectedItems.map((item: any) => item.id)
+    } as Tls2e070UpdateBody;
+    this.tls2e070Service.updateTLS2E070(body).pipe(
+      finalize(() => this.btnLoading = false),
+      untilDestroyed(this)
+    ).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.selectedItems = [];
+      this.onSubmit(this.queryForm);
+    });
+  }
+
+  isRowSelectable(row: any) {
+    return row.sale_lock !== 'Y';
   }
 }
