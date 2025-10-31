@@ -62,7 +62,7 @@
             </app-multi-select>
           </div>
 
-          <!-- 傳票號碼（不送到後端的展示欄位） -->
+          <!-- 傳票號碼（頁面展示用） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="傳票號碼"
@@ -95,7 +95,7 @@
             </app-input-text>
           </div>
 
-          <!-- 對象別編號 -->
+          <!-- 對象別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="對象別編號"
@@ -108,7 +108,7 @@
             </app-multi-select>
           </div>
 
-          <!-- 對帳KEY（不送到後端的展示欄位） -->
+          <!-- 對帳KEY（頁面展示用） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="對帳KEY"
@@ -128,7 +128,7 @@
             </app-input-text>
           </div>
 
-          <!-- 傳票型態 => VouTypeList -->
+          <!-- 傳票型態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="傳票型態"
@@ -141,7 +141,7 @@
             </app-multi-select>
           </div>
 
-          <!-- 傳票狀態 => VouStatusList -->
+          <!-- 傳票狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="傳票狀態"
@@ -154,7 +154,7 @@
             </app-multi-select>
           </div>
 
-          <!-- 是否為對象別 => IsTarget -->
+          <!-- 是否為對象別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="是否為對象別"
@@ -165,7 +165,7 @@
             </app-radiobutton>
           </div>
 
-          <!-- 報表方式 / 列印方式（頁面用，不送後端） -->
+          <!-- 報表/列印（頁面用，不送後端） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="報表方式"
@@ -187,14 +187,6 @@
               [submitted]="submitted">
             </app-radiobutton>
           </div>
-
-          <!-- 列印欄位（示意） -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <label class="flex mb-2">列印欄位</label>
-            <p-checkbox class="mr-2" [binary]="true" label="狀態"></p-checkbox>
-            <p-checkbox class="mr-2" [binary]="true" label="活動"></p-checkbox>
-            <p-checkbox class="mr-2" [binary]="true" label="立沖代號"></p-checkbox>
-          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -206,10 +198,11 @@
   </p-accordion>
 </div>
 
-<!-- 單一 app-table-report -->
+<!-- 主表(AccNo唯一) + 展開明細(details)；主表顯示傳票日期(區間) -->
 <div class="card">
   <app-table-report
     [tableKey]="'FIN55050'"
+    [dataKey]="'AccNo'"
     [lastQueryBody]="lastQueryBody"
     [data]="data"
     [columns]="columns"
@@ -218,9 +211,11 @@
     [showManage]="false"
     [showDelete]="false"
     [showReportMode]="false"
-    [queryFunction]="queryFIN55050ForReport">
+    [queryFunction]="queryFIN55050ForReport"
+    [expansionColumns]="detailcolumns"
+    [expansionDataKey]="'details'">
 
-    <!-- 匯出按鈕放進 header slot -->
+    <!-- 匯出按鈕 -->
     <header>
       <div class="flex justify-content-end gap-2">
         <p-button
