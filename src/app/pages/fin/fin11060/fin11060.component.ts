@@ -79,7 +79,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     ECR_NoStart: [null, [Validators.maxLength(8)]], // 收銀機代號(起)
     ECR_NoEnd: [null, [Validators.maxLength(8)]], // 收銀機代號(迄)
     Query_Cond: ['1', Validators.required],  // 條件依據 送出 (銷售日期/收銀機號/收銀機號)
-    Is_ShowErr: ['Y', [Validators.required]], //  是否只顯示異常
+    Is_ShowErr: ['N', [Validators.required]], //  是否只顯示異常
 
     //分頁查詢
     // ...createPaginationConfig([{ field: 'TXN_GUINo', order: 1 }]), // 分頁和排序參數
@@ -175,6 +175,29 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   ngOnInit(): void {
     this.initializePage('FIN11060', 'FIN/FIN11060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
+
+    //依據 起始產檔日期 自動寫入迄號(迄號必須是null)
+    this.queryForm.get('Gen_DateStart')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
+      if(this.queryForm.get('Gen_DateEnd')?.value == null){
+        this.queryForm.get('Gen_DateEnd')?.setValue(value); // 自動設置迄號
+      }
+    });
+
+    //依據 起始發票號碼 自動寫入迄號(迄號必須是null)
+    this.queryForm.get('TXN_GUINoStart')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
+      const TXN_GUINoStart = this.queryForm.get('TXN_GUINoStart')?.value as unknown as string
+      const TXN_GUINoEnd = this.queryForm.get('TXN_GUINoEnd')?.value
+      if(TXN_GUINoStart.length == 10 && TXN_GUINoEnd == null){ //這邊用 起號長度 + 終止為空 控制 
+        this.queryForm.get('TXN_GUINoEnd')?.setValue(value); // 自動設置迄號
+      }
+    });
+
+    //依據 起始收銀機號 自動寫入迄號(迄號必須是null)
+    this.queryForm.get('ECR_NoStart')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
+      if(this.queryForm.get('ECR_NoEnd')?.value == null){
+        this.queryForm.get('ECR_NoEnd')?.setValue(value); // 自動設置迄號
+      }
+    });
 
     // 改成同步更新，不用 setTimeout
     this.queryForm.get('Query_Cond')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
