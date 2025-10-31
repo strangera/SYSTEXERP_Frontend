@@ -11,6 +11,27 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { QueryStateService } from '../../../shared/service/query-state.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { finalize } from 'rxjs';
+
+/**
+ * formatTxnNo: 將輸入值補零至六位數。
+ * 無論輸入是數字或字串，都會在左側用 '0' 補足至六位。
+ * 例如: 164 -> "000164"
+ * 例如: 1234567 -> "1234567" (超過六位則保持不變)
+ * @param val 交易序號
+ * @returns 補零後的字串
+ */
+export const formatTxnNo = (val: number | string | null | undefined): string => {
+  // 檢查 val 是否為 null 或 undefined，若是則回傳空字串
+  if (val === null || val === undefined) {
+    return '';
+  }
+
+  const str = String(val);
+  // 使用 padStart(6, '0') 確保最小長度為 6，並用 '0' 填充
+  return str.padStart(6, '0');
+};
+
 
 export interface ITxnData {
   TXN_DATE: string;
@@ -41,7 +62,6 @@ export interface ITxnData {
 @Component({
   selector: 'app-tls22010-cru',
   templateUrl: './tls22010-cru.component.html',
-  styleUrls: ['./tls22010-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -67,7 +87,7 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
   footerData: any[] = [];
   historyRequestBody: unknown = null;
   columnscru: ReportColumn[] = [
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: formatTxnNo },
     { field: 'TXN_GUIBegNo', header: '起始發票號', visible: true },
     { field: 'TXN_GUIEndNo', header: '結束發票號', visible: true },
     { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount },
@@ -132,18 +152,12 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
 
 
     this.loading = true;
-    this.tls22010Service.queryTLS22010_Detail(body).subscribe({
+    this.tls22010Service.queryTLS22010_Detail(body).pipe(finalize(() => { this.queryForm.disable(); this.loading = false })).subscribe({
       next: (res) => {
-        const dataWrapper = res.Data || res;
-        this.data = dataWrapper.queryTLS22010_DetailDataList || [];
-        this.totalRecords = this.data.length || 0;
-        this.footerData = dataWrapper.queryTLS22010_DetailSum
-          ? dataWrapper.queryTLS22010_DetailSum
-          : {};
-
-        this.loading = false;
-        const viewOnly = true;
-        if (viewOnly) this.queryForm.disable();
+        this.historyRequestBody = body;
+        this.data = res.Data; // 列表
+        this.totalRecords = res.TotalCount || 0; // 總筆數
+        this.footerData = res.footerData; // 總結資料
       },
 
     });
