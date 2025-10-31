@@ -1,5 +1,4 @@
-import { DatePipe } from '@angular/common';
-import { Component, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52010Service } from '@service/api/fin/fin52010.service';
@@ -12,7 +11,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, forkJoin, map, tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 
 @Component({
@@ -20,6 +19,7 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
   templateUrl: './fin52010.component.html',
   styleUrl: './fin52010.component.scss',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     AccordionModule,
     FormsModule,
@@ -38,7 +38,9 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   public readonly dataForm = this.formBuilder.nonNullable.group({
     AccYear: new FormControl<string | void>(void 0, [Validators.required]),
     OpenDate: new FormControl<Date | void>(void 0, [Validators.required]),
+    OriOpenDate: new FormControl<string | void>(void 0),
     CloseDate: new FormControl<Date | void>(void 0, [Validators.required]),
+    OriCloseDate: new FormControl<string | void>(void 0),
     DefaultVouDate: new FormControl<Date | void>(void 0),
     ORG_ID: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoTotPL: new FormControl<string | void>(void 0, [Validators.required]),
@@ -59,66 +61,64 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     return this.dataForm.valid;
   });
 
+  public readonly dataEffect = effect(() => {
+    const orgUsr = this.service.orgUsrList();
+    const gls1005 = this.service.gls1005List();
+    const { OpenDate, CloseDate, ...rest } = this.service.FIN52010Data();
+
+    if (!orgUsr.length || !gls1005.length) return;
+    const orgLoading = this.service.orgUsrLoading();
+    const gls1005Loading = this.service.gls1005Loading();
+
+    if (orgLoading || gls1005Loading) return;
+    this.dataForm.patchValue({
+      ...rest,
+      OpenDate: OpenDate ? new Date(+OpenDate.slice(0, 4), +OpenDate.slice(4, 6) - 1, 1) : void 0,
+      CloseDate: CloseDate ? new Date(+CloseDate.slice(0, 4), +CloseDate.slice(4, 6) - 1, 1) : void 0,
+      OriOpenDate: OpenDate,
+      OriCloseDate: CloseDate,
+      // advanceExpenseAccNo: res.advanceExpenseAccNo,
+      // billTransferCon: res.billTransferCon as 'N' | 'Y',
+    });
+  }, { allowSignalWrites: !0 });
+
   constructor(
     public service: FIN52010Service,
     private readonly logger: NGXLogger,
-    private readonly date: DatePipe,
   ) {
     super();
+    this.user = this.authService.getUserInfo();
   }
 
   public ngOnInit(): void {
     this.initializePage('FIN52010', void 0, this.dataForm);
-    const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.dataForm.setValue(store.value);
 
-    forkJoin([
-      this.service.getTblUsrOrgList(),
-      this.service.getGLS1005DropDownList(),
-      this.service.loadFIN52010(this.user!.CompNo),
-    ]).pipe(
-      map(([tblUsrOrg, gls1005, { OpenDate, CloseDate, ...rest }]) => ({
-        ...rest,
-        OpenDate: OpenDate ? new Date(+OpenDate.slice(0, 4), +OpenDate.slice(4, 6) - 1, 1) : void 0,
-        CloseDate: CloseDate ? new Date(+CloseDate.slice(0, 4), +CloseDate.slice(4, 6) - 1, 1) : void 0,
-        // advanceExpenseAccNo: res.advanceExpenseAccNo,
-        // billTransferCon: res.billTransferCon as 'N' | 'Y',
-        tblUsrOrg,
-        gls1005,
-      })),
-      finalize(() => this.logger.debug(`init:`, [this.user, this.service.FIN52010Data()]))
-    ).subscribe(({ tblUsrOrg, gls1005, ...res }) => {
-      const orgLoading = this.service.tblUsrOrgLoading();
-      const gls1005Loading = this.service.gls1005Loading();
+    this.service.getTblUsrOrgList();
+    this.service.getGLS1005DropDownList();
+    this.service.loadFIN52010(this.user!.CompNo);
 
-      if (tblUsrOrg.length >= 0 && gls1005.length >= 0 && !orgLoading && !gls1005Loading) {
-        this.logger.debug(`patched:`, [res]);
-        this.dataForm.patchValue(res);
-      }
-    });
+    this.logger.debug(`init:`, [this.user]);
   }
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const { OpenDate, CloseDate, ...raw } = this.dataForm.getRawValue();
+      const { OriOpenDate, OriCloseDate, ...rest } = this.dataForm.value;
       const payload = <FIN52010UpdatePayload>{
-        ...raw,
-        OpenDate: this.date.transform(OpenDate ?? new Date(), 'yyyyMM') ?? '',
-        CloseDate: this.date.transform(CloseDate ?? new Date(), 'yyyyMM') ?? '',
+        ...rest,
+        AccYear: this.df().AccYear.value,
+        OpenDate: OriOpenDate,
+        CloseDate: OriCloseDate,
         CompNo: this.user!.CompNo,
       };
 
-      this.logger.debug(`onSubmit:`, [raw, payload]);
+      this.logger.debug(`onSubmit:`, [rest, payload]);
 
       this.service.updateFIN52010Data(payload).pipe(
-        tap(({ Status }) => {
-          if (Status === '0000') this.messageService.successBubble('更新成功');
-        }),
+        tap(res => this.messageService.successBubble(res.Message)),
         finalize(() => this.loading = !1),
       ).subscribe(res => {
         this.logger.debug(`updateFIN52010Data result:`, [res]);
       });
-      this.queryStateService.setQueryState(this.ProgNo, this.dataForm.getRawValue());
     });
   };
 }
