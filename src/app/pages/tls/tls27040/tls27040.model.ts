@@ -106,7 +106,7 @@ export const POS611XOptions = [
 
 export const queryFilterOptions = [
   { label: '收銀機號為空', value: 'ECR_NoBtn' },
-  { label: '專櫃編號為空', value: 'StoIDBtn' },
+  { label: '專櫃編號為空', value: 'TLT_NoBtn' },
   { label: '專櫃編號不存在', value: 'TLT_NoIsExistBtn' },
   { label: '交易流水號為空', value: 'TXN_NoBtn' },
   { label: '銷售日期為空', value: 'TxnDateBtn' },
