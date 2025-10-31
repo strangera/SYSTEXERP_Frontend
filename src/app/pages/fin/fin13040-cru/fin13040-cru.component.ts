@@ -15,6 +15,8 @@ import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableEditComponent } from "@shared/componentkit/table-edit/table-edit.component";
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { ButtonModule } from 'primeng/button';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-fin13040-cru',
@@ -32,7 +34,8 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
     CalendarComponent,
     ButtonComponent,
     TranslateModule,
-    TableEditComponent
+    TableEditComponent,
+    ButtonModule
   ],
 })
 export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -70,6 +73,12 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   isTableDisabled = false;
   selectedRows: any[] = [];
   INV_ItemName_Options: any[] = [];
+  btnLoading = false;
+  btnLoading2 = false;
+  /** 儲存後端主檔 ID */
+  public currentDetailId: number | null = null;
+
+  @ViewChild('tableEdit') tableEdit!: TableEditComponent;
 
   constructor(
     private dropDownListService: DropDownListService,
@@ -92,7 +101,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       this.loadDetail(rowData);
     }
 
-    //  SAL_Type 改變時重新載入品項
+    // SAL_Type 改變時重新載入品項
     this.dataForm.get('SAL_Type')?.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((val) => {
@@ -100,14 +109,13 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         this.loadINVItemOptions();
       });
 
-    // 如果初始化時 SAL_Type 已有值（例如編輯模式），延遲執行一次
+    // 初始若已有 SAL_Type
     setTimeout(() => {
       const salType = this.dataForm.get('SAL_Type')?.value;
-      console.log('[init] SAL_Type 初始值:', salType);
       if (salType) this.loadINVItemOptions();
     }, 200);
 
-    // 買受人統編改變自動帶入廠商資訊
+    // 統編帶出廠商資訊
     this.dataForm.get('Buyer_Uniform')?.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((val) => {
@@ -134,9 +142,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       AssetType: header.AssetType ? [header.AssetType] : [],
       PUR_InvoiceTitle: header.Buyer_Name ?? '',
     });
-
-    console.log('[fillHeaderData] 已設定 SAL_Type =', header.SAL_Type);
   }
+
   // ======================== 載入明細 ========================
   private loadDetail(rowData: any): void {
     const payload = {
@@ -158,21 +165,52 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           const header = data.FIN13040Detail_APS4023;
           const details = data.FIN13040Detail_APS40235 ?? [];
 
+          // 儲存主檔 ID
+          this.currentDetailId = header?.ID ?? null;
+
           console.log('主檔資料(明細API):', header);
           console.log('明細資料:', details);
 
-          if (header?.InvoiceType) {
-            this.fillHeaderData(header);
+          if (header?.InvoiceType) this.fillHeaderData(header);
+
+          const salType = header?.SAL_Type ?? '';
+          if (salType) {
+            this.dataForm.patchValue({ SAL_Type: salType });
           }
 
-          this.data = details;
-          this.totalRecords = this.data.length;
+          // 若尚未建立欄位 → 先載入品項再填入資料
+          if (this.columns.length === 0) {
+            this.loadINVItemOptions(() => this.fillDetailData(details));
+          } else {
+            this.fillDetailData(details);
+          }
         },
       });
   }
 
+  /** 將明細轉為 table-edit 可用格式 */
+  private fillDetailData(details: any[]): void {
+    if (!details || details.length === 0) {
+      console.warn('[fillDetailData] 明細為空，建立一筆空白行');
+      this.data = [];
+      setTimeout(() => this.tableEdit?.insertRow(true));
+      return;
+    }
+
+    this.data = details.map(d => ({
+      PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
+      PLU_Name: d.PLU_Name ?? '',
+      TXN_Qty: Number(d.TXN_Qty ?? 0),
+      PLU_SalePrc: Number(d.PLU_SalePrc ?? 0),
+      TXN_SaleAmt: Number(d.TXN_SaleAmt ?? 0),
+      TXN_Tax: Number(d.TXN_Tax ?? 0),
+    }));
+
+    this.totalRecords = this.data.length;
+    console.log('[填入的明細資料]', this.data);
+  }
+
   // ======================== 下拉選單 ========================
-  /** 載入買受人統一編號 */
   loadBuyerUniformOptions(): void {
     this.dropDownListService
       .queryPOS2013_DropDownList({})
@@ -190,7 +228,6 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
-  /** 載入發票類型 */
   loadInvoiceTypeOptions(): void {
     this.dropDownListService
       .queryTDS1007_DropDownList({ mid: 0 })
@@ -209,8 +246,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
-  /** 載入品項下拉 (TDS1008) */
-  loadINVItemOptions(): void {
+  /** 載入品項下拉 (TDS1008)，支援 callback */
+  loadINVItemOptions(done?: () => void): void {
     const salType = this.dataForm.get('SAL_Type')?.value || '';
     console.log('[loadINVItemOptions] 呼叫，SAL_Type =', salType);
 
@@ -218,8 +255,6 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       console.warn('[loadINVItemOptions] SAL_Type 為空，不呼叫 API');
       this.INV_ItemName_Options = [];
       this.loadAndSetupColumns();
-      this.data = [];
-      this.tableEdit?.insertRow(true); // 這裡也可加（SAL_Type 清空時）
       return;
     }
 
@@ -228,14 +263,11 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res) => {
-          console.log('[TDS1008 回傳原始資料]:', res);
           let list: any[] = [];
           if (Array.isArray((res as any)?.Data)) {
             list = (res as any).Data.flatMap((d: any) => d?.Data ?? []);
           } else if ((res as any)?.Data?.Data && Array.isArray((res as any).Data.Data)) {
             list = (res as any).Data.Data;
-          } else {
-            console.warn('[TDS1008] Data 結構未知:', (res as any)?.Data);
           }
 
           this.INV_ItemName_Options = list.map((item: any) => ({
@@ -248,15 +280,16 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
           this.loadAndSetupColumns();
 
-          this.data = [];
-          setTimeout(() => {
-            this.tableEdit?.insertRow(true);
-          });
+          // callback 用於載入明細
+          if (done) {
+            done();
+          } else {
+            // 新增模式才建立空白行
+            setTimeout(() => this.tableEdit?.insertRow(true));
+          }
         },
       });
   }
-
-
 
   // ======================== 工具 ========================
   private formatValidDate(dateStr: string | null | undefined): Date | null {
@@ -266,7 +299,6 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     return y <= 1 ? null : d;
   }
 
-  /** yyyyMM 格式 */
   private formatDeclareYM(date: any): string {
     if (!date) return '';
     const d = new Date(date);
@@ -275,12 +307,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     return `${y}${m}`;
   }
 
-  /** 更新主檔金額合計 */
   updateMasterAmounts(): void {
     const totalTax = this.data.reduce((sum, r) => sum + (Number(r.TXN_Tax) || 0), 0);
     const totalAmt = this.data.reduce((sum, r) => sum + (Number(r.TXN_SaleAmt) || 0), 0);
     const net = totalAmt - totalTax;
-
     this.dataForm.patchValue({
       PUR_Tax: totalTax,
       PUR_Amt: totalAmt,
@@ -288,7 +318,6 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  // ======================== 明細欄位設定 ========================
   private loadAndSetupColumns(): void {
     this.columns = [
       {
@@ -334,7 +363,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         defaultValue: 1,
         validate: [
           (value: any) => ({
-            isValid: value !== null && value !== undefined && !isNaN(value) && Number(value) > 0,
+            isValid: value !== null && !isNaN(value) && Number(value) > 0,
             errorMessage: ['數量必須大於 0']
           })
         ],
@@ -353,7 +382,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         defaultValue: 0,
         validate: [
           (value: any) => ({
-            isValid: value !== null && value !== undefined && !isNaN(value),
+            isValid: value !== null && !isNaN(value),
             errorMessage: ['單價為必填且須為數字']
           })
         ],
@@ -371,7 +400,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         type: 'inputNumber',
         validate: [
           (value: any) => ({
-            isValid: value !== null && value !== undefined && !isNaN(value),
+            isValid: value !== null && !isNaN(value),
             errorMessage: ['請輸入有效的銷售金額']
           })
         ],
@@ -382,7 +411,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         type: 'inputNumber',
         validate: [
           (value: any) => ({
-            isValid: value !== null && value !== undefined && !isNaN(value),
+            isValid: value !== null && !isNaN(value),
             errorMessage: ['請輸入有效的稅額']
           })
         ],
@@ -390,27 +419,26 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     ];
   }
 
-
   // ======================== 儲存 ========================
-  @ViewChild('tableEdit') tableEdit!: TableEditComponent;
-
   onSubmit(form: FormGroup): void {
     if (!form.valid) {
       form.markAllAsTouched();
       return;
     }
+
     const v = form.value;
     const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === v.Buyer_Uniform);
     if (!selectedBuyer) {
       alert('請選擇買受人統編');
       return;
     }
-    const validDetails = this.data.filter(d => !d._isAutoInsertCandidate);
 
+    const validDetails = this.data.filter(d => !d._isAutoInsertCandidate);
     if (validDetails.length === 0) {
       alert('明細中沒有有效資料');
       return;
     }
+
     const invalidDetail = validDetails.some((item) => !item.PLU_No || item.PLU_No.trim() === '');
     if (invalidDetail) {
       alert('明細中有缺少貨號的資料');
@@ -426,7 +454,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     const header = {
       MID: 0,
       STO_No: history.state?.rowdata?.STO_No ?? '10',
-      ID: history.state?.rowdata?.No ?? 0,
+      ID: this.currentDetailId ?? history.state?.rowdata?.No ?? 0,
       InvoiceType: v.InvoiceType,
       SAL_Type: v.SAL_Type,
       InvoiceNumber: v.INV_GUINumber,
@@ -479,16 +507,67 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           if (res?.Status === '0000') {
             alert('更新成功');
             this.onCancel();
-          } else {
-            alert(`更新失敗，狀態碼：${res?.Status ?? '未知'}`);
           }
-        },
-        error: (err) => {
-          console.error('[updateFIN13040 錯誤]', err);
-          alert('呼叫 API 發生錯誤，請查看 console。');
         },
       });
   }
+  /** 匯出 PDF */
+  onExportPDF(): void {
+    if (!this.currentDetailId || this.currentDetailId <= 0) {
+      return;
+    }
 
+    this.btnLoading = true;
 
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [],
+      MID: 0,
+      STO_No: '10',
+      ID: this.currentDetailId,
+    };
+
+    console.log('[PrintFIN13040 payload]', payload);
+
+    this.fin13040Service.printFIN13040(payload).subscribe({
+      next: async (res: any) => {
+        console.log('[printFIN13040 回傳]', res);
+
+        const contentType = res.headers?.get('Content-Type') || '';
+        const blob = res.body;
+
+        if (contentType.includes('application/json')) {
+          const text = await blob.text();
+          try {
+            const json = JSON.parse(text);
+            if (json?.Status === '0000' && json?.Data?.Print_URL) {
+              const url = `${environment.ApiUrl.replace(/\/$/, '')}${json.Data.Print_URL}`;
+              const filename = decodeURIComponent(
+                json.Data.Print_URL.split('/').pop() ?? '三聯式發票列印.pdf'
+              );
+
+              const a = document.createElement('a');
+              a.href = url;
+              a.setAttribute('download', filename);
+              a.click();
+            }
+          } catch (e) {
+            console.error('解析 JSON 失敗', e);
+          }
+          return;
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+        a.download = '三聯式發票列印.pdf';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      },
+      complete: () => {
+        this.btnLoading = false;
+      },
+    });
+  }
 }
