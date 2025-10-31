@@ -1,20 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -24,190 +10,66 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+
+import { TableModule } from 'primeng/table';
+import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { FIN55070Data, Fin55070Service } from '@service/api/fin/fin55070.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { HttpResponse } from '@angular/common/http';
+
 @Component({
   selector: 'app-fin55070',
   templateUrl: './fin55070.component.html',
   styleUrl: './fin55070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent, DropdownComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  imports: [ButtonModule,TableModule,CommonModule,MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent, DropdownComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
 })
-export class FIN55070Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
-  queryForm = this.formBuilder.group({
-    startserialticket: [],
-    endserialticket: [],
-    Subpoenatype: [],
-    SSubpoenadate: [],
-    ESubpoenadate: [],
-    Subpoenastatus: [],
-    Subpoenasummary: [],
-    builder: [],
-    Residualvalueyears: [],
-    Depreciation: [],
-    accountsummary: [],
-    Subpoenatype2: [],
-    Postingmethod: [],
-    year: [],
-    buildnumber: [],
-    confirmationnumber: [],
-    postingnumber: [],
-    yearmm: [],
-    Sbuilddate: [],
-    Ebuilddate: [],
-    printtype: [],
-    department: [],
-    activity: [],
-    vander: [],
-    Accountcode: [],
-    code: [],
-    Subpoenacode: [],
-    whether: [],
-    ifOptions: [],
-    summary: [],
-    reportingmethod: [],
-    Printingmethod: [],
-    Printingcolumn: [],
-    category: [],
-    display: [],
-    Approvalcolumn: [],
-  });
-
-  // Dropdown options
-  category
-    : any[] = [
-      { value: 1, label: '統制' },
-      { value: 2, label: '明細' },
-
-    ]
-  display
-    : any[] = [
-      { value: 1, label: '顯示' },
-      { value: 2, label: '不顯示' },
-
-    ]
-  printtype: any[] = [
-    { value: 1, label: 'A4(直印)' },
-    { value: 2, label: 'A4(橫印)' },
-    { value: 3, label: '一般' },
-  ]
-  Subpoenatype2: any[] = [
-    { value: 1, label: '贊助金傳票' },
-    { value: 2, label: '電匯EDI傳票' },
-    { value: 3, label: '年結傳票' },
-    { value: 4, label: '銀行資金調撥傳票' },
-    { value: 5, label: '零用金拋轉傳票' },
-    { value: 6, label: '票據兌現傳票' },
-    { value: 7, label: '支票沖轉傳票' },
-    { value: 8, label: '退票沖轉票據傳票' },
-    { value: 9, label: '開票傳票' },
-    { value: 10, label: '撤票沖轉票據傳票' },
-  ];
-
-  Reportingmethod: any[] = [
-    { value: 1, label: '交易記錄之會計科目' },
-    { value: 2, label: '含無交易記錄之會計科目' },
-  ];
-  Printingmethod
-    : any[] = [
-      { value: 1, label: '分開列印' },
-      { value: 2, label: '合併列印' },
-    ];
-  Postingmethod: any[] = [
-    { value: 1, label: '依明細勾選' },
-    { value: 2, label: '依過帳年月' },
-  ];
-  Printingcolumn
-    : any[] = [
-      { value: 1, label: '狀態' },
-      { value: 2, label: '活動' },
-      { value: 2, label: '立沖代號' },
-    ];
-  activity: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '會員紅利活動' },
-  ];
-  departmentOptions: any[] = [];
-
-  ifOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  detail: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-  Subpoenaformatl: any[] = [
-    { value: 1, label: '無特定' },
-    { value: 2, label: '應付票據' },
-    { value: 3, label: '應收票據' },
-  ];
-  Subpoenatype: any[] = [
-    { value: 1101, label: '現金收入傳票' },
-    { value: 110101, label: '現金支出傳票' },
-    { value: 110102, label: '轉帳傳票' },
-  ];
-  borrowloanOptions: any[] = [
-    { value: 1, label: '借' },
-    { value: 2, label: '貸' },
-  ];
-
-  accountingaccountOptions: any[] = [
-
-  ];
-
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' },
-  ];
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' },
-  ];
+export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> implements OnInit {
+  historyRequestBody: any;
+  ORG_IDOptions = this.dropdown.querySys3100();
+  AccNo_Options=this.fin55070Service.getAccNoList();
+  queryForm = this.formBuilder.nonNullable.group({
+     DateFrom: [new Date(), [Validators.required]],
+     DateTo: [new Date(), [Validators.required]],
+     Ledger_MD: [null],
+     OrgId: [],
+     AccNoFrom: [],
+     AccNoTo: [],
+     ShowAll: [false],
+     PrintSign: [false],
+   });
 
   typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
+    { value: null, label: '全部' },
+    { value: '0', label: '統制' },
+    { value: '1', label: '明細' },
   ];
+   display : any[] = [
+      { value: true, label: '顯示' },
+      { value: false, label: '不顯示' },
 
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
+    ]
 
-  Subpoenastatus: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' },
-  ];
 
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' },
-  ];
 
   // Table data
   data: any[] = [
 
   ];
-  filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'subjectCode', header: '科目代號', visible: true },
-    { field: 'subjectName', header: '科目名稱', visible: true },
-    { field: 'previousPeriodDebitAmount', header: '前期借方金額', visible: true },
-    { field: 'previousPeriodCreditAmount', header: '前期貸方金額', visible: true },
-    { field: 'currentPeriodDebitAmount', header: '本期借方金額', visible: true },
-    { field: 'currentPeriodCreditAmount', header: '本期貸方金額', visible: true },
-    { field: 'cumulativeDebitAmount', header: '累積借方金額', visible: true },
-    { field: 'cumulativeCreditAmount', header: '累積貸方金額', visible: true }
+   { field: 'AccNo', header: '科目代號', visible: true },
+  { field: 'AccCname', header: '科目名稱', visible: true },
+  { field: 'Prior_DAmt', header: '前期借方金額', visible: true },
+  { field: 'Prior_CAmt', header: '前期貸方金額', visible: true },
+  { field: 'Curr_DAmt', header: '本期借方金額', visible: true },
+  { field: 'Curr_CAmt', header: '本期貸方金額', visible: true },
+  { field: 'Total_DAmt', header: '累積借方金額', visible: true },
+  { field: 'Total_CAmt', header: '累積貸方金額', visible: true }
   ];
 
 
@@ -215,113 +77,132 @@ export class FIN55070Component extends BasicQpageComponent implements OnInit {
   // TypeScript Options
   AccountcodeOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService,
-    private userCodeService: UserCodeService
+    public readonly fin55070Service: Fin55070Service,
+    private readonly dropdown: DropdownApiService
 
   ) {
     super(); // 呼叫父類建構子
   }
 
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  usercode: any[] = [];
   ngOnInit(): void {
-    this.ProgNo = '150031';
-    // Initialize dropdown options
-
-    this.userCodeService
-      .getUserCode()
-      .subscribe((data) => (this.usercode = data));
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
-      });
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountingaccountOptions = data;
-    });
+    this.initializePage('FIN55070', '/FIN/FIN55070', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+     this.handleSubmit(frm, () => {
+          const body = {
+            ...frm.value
+          }
+          this.fin55070Service.queryFIN55070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+            this.data = response.Data
+            if (response.Data.length > 0) {
+          this.historyRequestBody = body;
+        }
+          });
+        });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
   onClearForm() {
     this.queryForm.reset(); // 重置表單
   }
+
+     loadCarsLazy(event: any) {
+       
+    }
+    
+      onExportPDF() {
+        if (!this.historyRequestBody) {
+              this.messageService.warnBubble('請先執行查詢以產生報表。');
+              return;
+            }
+            this.btnLoading = true;
+            this.fin55070Service.exportFIN55070PDF(this.historyRequestBody).pipe(
+              untilDestroyed(this),
+              finalize(() => this.btnLoading = false)
+            ).subscribe({
+              next: (response: HttpResponse<Blob>) => {
+                this.handleFileExport(response, '.pdf');
+              },
+            });
+      }
+      btnLoading = false;
+      onExportXLSX() {
+        if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.fin55070Service.exportFIN55070Excel(this.historyRequestBody).pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.xlsx');
+      },
+    });
+      }
+
+      getColumnSum(field: string): number {
+  return this.data.reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
+}
+
+isNumericColumn(field: string): boolean {
+  return [
+    'Prior_DAmt',
+    'Prior_CAmt',
+    'Curr_DAmt',
+    'Curr_CAmt',
+    'Total_DAmt',
+    'Total_CAmt'
+  ].includes(field);
+}
+
+ private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
+    }
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
+
+
 }
