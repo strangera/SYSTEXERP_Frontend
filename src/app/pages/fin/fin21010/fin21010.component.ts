@@ -177,30 +177,27 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
     };
-
     console.log('deleteBody', deleteBody);
 
-    this.messageService.errorBubble('刪除目前不能多筆，請後端修正中');
+    this.fin21010Service.deleteFIN21010(deleteBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
 
-    // this.fin21010Service.deleteFIN21010(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    // this.selectedItems = [];
+    this.selectedItems = [];
   }
 
   isRowSelectable(rowData: APS1002): boolean {
