@@ -71,6 +71,7 @@
                [data]="ecrTableData()"
                [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
+               [loading]="service.tableLoading()"
                [columns]="columns">
     </app-table>
   </div>
@@ -97,6 +98,7 @@
                (importExcel)="onImportExcel($event)"
                (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
                [lazy]="true"
+               [loading]="service.tableLoading()"
                [data]="tltTableData()"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_TLT'"

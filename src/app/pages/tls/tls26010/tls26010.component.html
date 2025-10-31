@@ -21,6 +21,7 @@
                             [options]="service.sys3800Data()"
                             optionLabel="Name"
                             optionValue="No"
+                            [loading]="service.sys3800Loading()"
                             [control]="qf().sys3800"
                             [submitted]="submitted"></app-multi-select>
           <app-multi-select class="col-12 md:col-6 lg:col-4"
@@ -29,6 +30,7 @@
                             [options]="service.sys3900Data()"
                             optionLabel="Name"
                             optionValue="No"
+                            [loading]="service.sys3900Loading()"
                             [control]="qf().sys3900"
                             [submitted]="submitted"></app-multi-select>
           <app-multi-select class="col-12 md:col-6 lg:col-4"
@@ -37,6 +39,7 @@
                             [options]="service.sys3A00Data()"
                             optionLabel="Name"
                             optionValue="No"
+                            [loading]="service.sys3A00Loading()"
                             [control]="qf().sys3A00"
                             [submitted]="submitted"></app-multi-select>
           <app-multi-select class="col-12 md:col-6 lg:col-4"
@@ -45,6 +48,7 @@
                             [options]="service.ecrData()"
                             optionLabel="ecr_name"
                             optionValue="ecr_no"
+                            [loading]="service.ecrLoading()"
                             [control]="qf().ecrNos"
                             [submitted]="submitted"></app-multi-select>
           <app-multi-select class="col-12 md:col-6 lg:col-4"
@@ -53,6 +57,7 @@
                             [options]="service.tltData()"
                             optionLabel="tlt_name"
                             optionValue="tlt_no"
+                            [loading]="service.tltLoading()"
                             [control]="qf().tltNos"
                             [submitted]="submitted"></app-multi-select>
           <div class="lg:col-4 d-none"></div>

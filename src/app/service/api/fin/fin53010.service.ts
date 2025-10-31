@@ -29,15 +29,15 @@ export class FIN53010Service {
 
   public readonly totalRecords = signal<number>(0);
 
-  public readonly tableLoading = signal(!1);
-  public readonly accLoading = signal(!1);
-  public readonly venLoading = signal(!1);
-  public readonly usrLoading = signal(!1);
-  public readonly orgNoLoading = signal(!1);
-  public readonly sys1000Loading = signal(!1);
-  public readonly voucherTypeLoading = signal(!1);
-  public readonly refNameLoading = signal(!1);
-  public readonly noteDescLoading = signal(!1);
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly accLoading = signal<boolean>(!1);
+  public readonly venLoading = signal<boolean>(!1);
+  public readonly usrLoading = signal<boolean>(!1);
+  public readonly orgNoLoading = signal<boolean>(!1);
+  public readonly sys1000Loading = signal<boolean>(!1);
+  public readonly voucherTypeLoading = signal<boolean>(!1);
+  public readonly refNameLoading = signal<boolean>(!1);
+  public readonly noteDescLoading = signal<boolean>(!1);
 
   public readonly cru = signal<boolean>(!1);
 

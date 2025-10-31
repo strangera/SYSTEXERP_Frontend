@@ -25,6 +25,7 @@
                       optionLabel="CampaignName"
                       optionValue="CampaignId"
                       [control]="df().pod_desc"
+                      [loading]="service.campaignLoading()"
                       [submitted]="submitted"></app-dropdown>
       </div>
 

@@ -5,6 +5,7 @@
     @if (!isFormReadable) {
     <app-button btnType="query"
                 label="套用常用傳票"
+                [disabled]="!isFormCreateable"
                 (click)="onApplyTemplate()"></app-button>
     }
     <app-button btnType="back"
@@ -132,7 +133,7 @@
                class="line-height-3 m-0 mb-3">
         <app-table-edit [showCheckBox]="!isFormReadable"
                         [showReorder]="!isFormReadable"
-                        [disabled]="isFormReadable"
+                        [disabled]="!isFormCreateable"
                         (fieldChange)="onFieldChange($event)"
                         (delete)="onDelete($event)"
                         (rowReorderData)="onRowReorder($event)"
