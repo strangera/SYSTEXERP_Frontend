@@ -97,8 +97,8 @@ export interface FIN53010Payload extends BaseQueryRequest, Partial<Pick<FIN53010
   Remark?: string;
   CRT_USR_No?: string;
   UPD_USR_No?: string;
-  VouNoStart?: number;
-  VouNoEnd?: number;
+  VouNoStart?: string;
+  VouNoEnd?: string;
   VouDateStart?: Date;
   VouDateEnd?: Date;
   CrtDateStart?: Date;

@@ -196,10 +196,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     new Map((this.tltNosSignal() || []).map(item => [item.tlt_no, item] as const))
   );
 
-  public dialogLoading() {
-    return this.dialogVisible() === 'ecr' ? this.service.ecrLoading :
-      this.dialogVisible() === 'tlt' ? this.service.tltLoading : !1;
-  }
+  public readonly dialogLoading = computed(() => {
+    return this.dialogVisible() === 'ecr' ? this.service.ecrLoading() :
+      this.dialogVisible() === 'tlt' ? this.service.tltLoading() : !1;
+  });
 
   public readonly columns: Column[] = [
     { field: 'ecr_no', header: '收銀機號' },
@@ -417,7 +417,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public onSelectionChange(event: (EcrItem | TltItem)[]): void {
     const dialog = this.dialogVisible();
-    if (!dialog || this.service.ecrLoading || this.service.tltLoading) return;
+    if (!dialog || this.service.ecrLoading() || this.service.tltLoading()) return;
     dialog === 'ecr' && this.df().ecr_nos.patchValue(<EcrItem[]>event);
     dialog === 'tlt' && this.df().tlt_nos.patchValue(<TltItem[]>event);
     this.logger.debug(`onSelectionChange:`, [dialog, event, this.dataForm.value]);

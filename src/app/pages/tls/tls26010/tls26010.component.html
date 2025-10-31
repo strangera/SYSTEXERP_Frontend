@@ -94,10 +94,10 @@
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [columns]="columns"
-               [totalRecords]="totalRecords()"
+               [totalRecords]="service.totalRecords()"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
-               [loading]="service.tableLoading"
+               [loading]="service.tableLoading()"
                (lazyLoadData)="onSubmit()"></app-table>
   </div>
 </div>

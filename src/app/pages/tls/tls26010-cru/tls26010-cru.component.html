@@ -66,6 +66,8 @@
                [showManage]="false"
                [showReportMode]="false"
                [isRowSelectable]="service.isRowSelectable"
+               (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+               [lazy]="true"
                [data]="ecrTableData()"
                [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
@@ -93,6 +95,8 @@
                [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
+               (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+               [lazy]="true"
                [data]="tltTableData()"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_TLT'"
@@ -116,7 +120,7 @@
                           optionValue="No"
                           appendTo="body"
                           [control]="df().sys3800"
-                          [loading]="service.sys3800Loading"
+                          [loading]="service.sys3800Loading()"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
@@ -127,7 +131,7 @@
                           optionValue="No"
                           appendTo="body"
                           [control]="df().sys3900"
-                          [loading]="service.sys3900Loading"
+                          [loading]="service.sys3900Loading()"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
@@ -138,7 +142,7 @@
                           optionValue="No"
                           appendTo="body"
                           [control]="df().sys3A00"
-                          [loading]="service.sys3A00Loading"
+                          [loading]="service.sys3A00Loading()"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12">
@@ -148,6 +152,8 @@
                    [showReportMode]="false"
                    [selectedItems]="dialogSelectedData"
                    (selectionChange)="onSelectionChange($event)"
+                   (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+                   [lazy]="true"
                    [data]="dialogData()"
                    [dataKey]="dialogDataKey()"
                    [tableKey]="dialogTableKey()"

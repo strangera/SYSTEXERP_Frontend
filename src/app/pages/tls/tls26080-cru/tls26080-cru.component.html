@@ -90,7 +90,7 @@
                    [tableKey]="'TLS26080_Counter'"
                    [columns]="counterColumns"
                    [columnGroup]="counterColumnsGroup"
-                   [totalRecords]="totalRecords()"
+                   [totalRecords]="service.detailTotalRecords()"
                    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
                    [lazy]="true"
                    [loading]="loading"

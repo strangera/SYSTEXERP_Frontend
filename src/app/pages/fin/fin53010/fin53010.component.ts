@@ -15,8 +15,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, forkJoin, tap } from 'rxjs';
-import { FIN53010Data } from './fin53010.model';
+import { finalize, tap } from 'rxjs';
+import { FIN53010Data, FIN53010Payload } from './fin53010.model';
 
 @Component({
   selector: 'app-fin53010',
@@ -40,6 +40,8 @@ import { FIN53010Data } from './fin53010.model';
 })
 export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> implements OnInit {
 
+  public readonly multiSortMeta = [{ field: 'id', order: 1 }];
+
   public readonly queryForm = this.formBuilder.group({
     VouNoStart: new FormControl<number | void>(void 0),
     VouNoEnd: new FormControl<number | void>(void 0),
@@ -60,14 +62,14 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     UpdDateEnd: new FormControl<Date | void>(void 0),
     /** ROC/IFRS 0:ROC 1:IFRS 2:全部 */
     VouAccType: new FormControl<'0' | '1' | '2'>('0'),
-    ...createPaginationConfig([{ field: 'id', order: 1 }]),
+    ...createPaginationConfig(this.multiSortMeta),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼' },
     { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions().find(vt => vt.value === d)?.label ?? d },
-    { field: 'VouDate', header: '傳票日期', format: d => this.datePipe.transform(d, 'yyyy/MM/dd') ?? d },
+    { field: 'VouDate', header: '傳票日期', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
     { field: 'Remark', header: '傳票摘要', format: d => this.service.noteDescMap().get(d)?.label ?? d },
     { field: 'AccAmt', header: '傳票金額' },
     { field: 'DetailCount', header: '明細筆數' },
@@ -83,7 +85,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   constructor(
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
-    private readonly datePipe: DatePipe,
+    private readonly date: DatePipe,
   ) {
     super();
   }
@@ -101,17 +103,20 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      const vns = this.qf().VouNoStart.value;
+      const vne = this.qf().VouNoEnd.value;
+
       const raw = {
         ...this.queryForm.getRawValue(),
-        VouNoStart: this.qf().VouNoStart.value ? String(this.qf().VouNoStart.value).padStart(7, '0') : void 0,
-        VouNoEnd: this.qf().VouNoEnd.value ? String(this.qf().VouNoEnd.value).padStart(7, '0') : void 0,
+        VouNoStart: vns ? String(vns).padEnd(12, '0') : void 0,
+        VouNoEnd: vne ? String(vne).padEnd(12, '9') : void 0,
       };
 
       const payload = Object.keys(raw).reduce((acc, key) => {
-        const v = raw[key as keyof typeof raw];
-        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
+        const v = (<Record<string, any>>raw)[key];
+        if (v !== null && v !== void 0 && v !== '') (<Record<string, any>>acc)[key] = v;
         return acc;
-      }, {} as any);
+      }, {} as FIN53010Payload);
 
       this.logger.debug(`onSubmit:`, [this.qf(), raw, payload]);
       this.service.FIN53010Data.set([]);
