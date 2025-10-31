@@ -1,7 +1,7 @@
 // contract-flow.service.ts - 整合 DataCleaner 版本
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import {
   CommissionItem,
   ConditionItem,
@@ -62,6 +62,34 @@ export class ContractFlowService {
     this.restoreViewMode(); // 初始化時恢復檢視模式狀態
   }
 
+  /**
+ * 🆕 為所有已勾選的扣款項目填入組織ID
+ */
+  private fillOrgIdForFares(fareItems: FareItem[], orgId: string | undefined): FareItem[] {
+    if (!orgId) {
+      console.warn('⚠️ 無組織ID，跳過填入');
+      return fareItems;
+    }
+
+    let fillCount = 0;
+
+    const result = fareItems.map(item => {
+      // 只處理已勾選的項目
+      if (item.is_selected && !item.org_id) {
+        fillCount++;
+        return {
+          ...item,
+          org_id: orgId
+        };
+      }
+      return item;
+    });
+
+    console.log(`🏢 已為 ${fillCount} 個扣款項目填入組織ID: ${orgId}`);
+
+    return result;
+  }
+
   // ========== 清理後的資料生成方法 ==========
   generateCleanSubmitData(): CleanSubmitData {
     console.log('開始生成清理後的提交資料...');
@@ -77,6 +105,20 @@ export class ContractFlowService {
     if (!step1Data) {
       throw new Error('缺少合約基本資料 (Step 1)');
     }
+
+    const selectedOrgId = step1Data?.org_id;
+
+    if (!selectedOrgId) {
+      console.warn('⚠️ CRU 未選擇組織ID');
+    } else {
+      console.log('🏢 從 CRU 取得組織ID:', selectedOrgId);
+    }
+
+    // 🆕 在清理扣款資料前，統一填入組織ID
+    const fareDataWithOrgId = this.fillOrgIdForFares(
+      this.cleanFareAmounts(step2Data || []),
+      selectedOrgId
+    );
 
     // 從 Step1 CRU 頁面取得合約日期
     const contractStartDate = this.formatDateForBackend(step1Data.tlt_bdate);
@@ -202,7 +244,7 @@ export class ContractFlowService {
           data: DataCleaner.cleanContractInfo(step1Data)
         },
 
-        deductions: DataCleaner.cleanDeductionItems(this.cleanFareAmounts(step2Data || [])),
+        deductions: DataCleaner.cleanDeductionItems(fareDataWithOrgId),
 
         // 關鍵修正：傳遞合約日期給 DataCleaner
         commissions: DataCleaner.cleanCommissionData(
@@ -443,7 +485,7 @@ export class ContractFlowService {
    * 新增：初始化新增模式工作流程
    */
   private initializeNewContractWorkflow(queryRowData: any): void {
-    const contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
 
     this.contractData = {
       contractId: contractId,
@@ -645,11 +687,12 @@ export class ContractFlowService {
       console.log('🔄 從 API 載入合約資料:', { talentId, mode });
 
       // 使用現有的查詢 API （您需要注入 TLS13010Service）
-      const response = await this.tls13010Service.queryTLS13010({
-        talent_id: talentId
-        // 其他必要參數...
-      }).toPromise();
-
+      const response = await firstValueFrom(
+        this.tls13010Service.queryTLS13010({
+          talent_id: talentId
+          // 其他必要參數...
+        })
+      );
       if (response?.Status === '0000' && response?.Data?.length > 0) {
         const contractData = response.Data[0];
         this.initializeFromContractData(contractData, mode);

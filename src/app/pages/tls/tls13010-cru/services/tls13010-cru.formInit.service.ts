@@ -205,7 +205,7 @@ export class TLS13010FormInitService {
   } {
     const requiredFields = [
       'tlt_name',
-      'ven_uniform',
+      // 'ven_uniform',
       'bus_type',
       'bus_class',
       'tlt_bdate',
