@@ -20,6 +20,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-fin55070',
@@ -29,13 +30,13 @@ import { finalize } from 'rxjs';
   imports: [ButtonModule,TableModule,CommonModule,MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent, DropdownComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> implements OnInit {
-
+  historyRequestBody: any;
   ORG_IDOptions = this.dropdown.querySys3100();
   AccNo_Options=this.fin55070Service.getAccNoList();
   queryForm = this.formBuilder.nonNullable.group({
      DateFrom: [new Date(), [Validators.required]],
      DateTo: [new Date(), [Validators.required]],
-     Ledger_MD: [''],
+     Ledger_MD: [null],
      OrgId: [],
      AccNoFrom: [],
      AccNoTo: [],
@@ -44,7 +45,7 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
    });
 
   typeOptions: any[] = [
-    { value: '', label: '全部' },
+    { value: null, label: '全部' },
     { value: '0', label: '統制' },
     { value: '1', label: '明細' },
   ];
@@ -94,6 +95,9 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
           }
           this.fin55070Service.queryFIN55070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
             this.data = response.Data
+            if (response.Data.length > 0) {
+          this.historyRequestBody = body;
+        }
           });
         });
   }
@@ -107,11 +111,35 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
     }
     
       onExportPDF() {
-        this.btnLoading = true;
+        if (!this.historyRequestBody) {
+              this.messageService.warnBubble('請先執行查詢以產生報表。');
+              return;
+            }
+            this.btnLoading = true;
+            this.fin55070Service.exportFIN55070PDF(this.historyRequestBody).pipe(
+              untilDestroyed(this),
+              finalize(() => this.btnLoading = false)
+            ).subscribe({
+              next: (response: HttpResponse<Blob>) => {
+                this.handleFileExport(response, '.pdf');
+              },
+            });
       }
       btnLoading = false;
       onExportXLSX() {
-        this.btnLoading = true;
+        if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.fin55070Service.exportFIN55070Excel(this.historyRequestBody).pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.xlsx');
+      },
+    });
       }
 
       getColumnSum(field: string): number {
@@ -128,6 +156,53 @@ isNumericColumn(field: string): boolean {
     'Total_CAmt'
   ].includes(field);
 }
+
+ private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
+    }
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
 
 
 }
