@@ -19,8 +19,7 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track" [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber"
@@ -28,7 +27,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="發票日期" calendarType="dateOne" controlName="InvoiceDate"
-          [control]="dataForm.controls.InvoiceDate" [submitted]="submitted"></app-calendar>
+            [control]="dataForm.controls.InvoiceDate" [submitted]="submitted"></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -39,7 +38,8 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="課稅別" controlName="PUR_TaxType" [options]="taxTypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted"></app-dropdown>
+            optionValue="value" [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted">
+          </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text-range label="傳票號碼 " [startControl]="dataForm.controls.startVoucher_No"
@@ -53,13 +53,24 @@
           <app-input-text label="發票抬頭" [control]="dataForm.controls.PUR_InvoiceTitle"
             [submitted]="submitted"></app-input-text>
         </div>
-        <app-table #table class="col-12" dataKey="ID" [columns]="columns" [data]="data" dataStatusField="status"
-          [showInsert]="!isTableDisabled" [showRowEdit]="!isTableDisabled" [showCheckBox]="!isTableDisabled"
-          [showDelete]="true" [deleteData]="false" (delete)="onDeleteRow($event)" [showEdit]="false"
-          [showDetail]="false" [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showReportMode]="false"
-          [insertRowData]="true" [disabled]="isTableDisabled" (selectionChange)="selectedRows = $event"
-          [selectedItems]="selectedRows" (dataChange)="data = $event" (rowEditSave)="onRowEdit($event.newData)">
-        </app-table>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12">
+          <app-table-edit #tableEdit [tableKey]="'InvoiceSeqNo'" [columns]="columns" [data]="data"
+            [showInsert]="!isTableDisabled" [showDelete]="true" [showCheckBox]="!isTableDisabled"
+            [disabled]="isTableDisabled" (dataChange)="data = $event" [autoInsertDefaultRow]="true"
+            (fieldChange)="updateMasterAmounts()">
+            <header>
+              <div class="flex justify-content-between align-items-center gap-2">
+                <div class="flex gap-2">
+                  <p-button styleClass="p-2" label="非二聯式收銀機發票調整作業.PDF" [loading]="btnLoading" icon="pi pi-file-pdf"
+                    (click)="onExportPDF()" [disabled]="!currentDetailId"></p-button>
+                </div>
+              </div>
+            </header>
+
+          </app-table-edit>
+        </div>
       </div>
 
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

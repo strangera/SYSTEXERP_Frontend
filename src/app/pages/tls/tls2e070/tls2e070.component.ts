@@ -5,7 +5,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { formatDateTime, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -23,7 +22,7 @@ import { AsyncPipe } from '@angular/common';
   selector: 'app-tls2e070',
   templateUrl: './tls2e070.component.html',
   standalone: true,
-  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
 export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> implements OnInit {
   /** 1. 查詢結果 (Query) 欄位 */
@@ -50,7 +49,8 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   /** 3. 結算檢查 (Settle) 欄位 */
   readonly settleColumns: ReportColumn[] = [
     { field: 'step_num', header: '檢查順序', visible: true },
-    { field: 'master_key', header: '檢查內容', visible: true },
+    { field: 'step_desc', header: '檢查步驟', visible: true },
+    { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
     { field: 'isPass', header: '是否通過', visible: true },
     { field: 'check_result', header: '檢查明細', visible: true },
   ];

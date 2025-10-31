@@ -55,6 +55,7 @@ export interface PluLogo {
   'HOS_No': string;
   'HOS_NAME': string;
   'VEN_No': string;
+  'TLT_No': string;
 
   'CRT_Date': Date;
   'CRT_USR_No': string;

@@ -59,7 +59,7 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN52030', '/FIN/FIN52030CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.setValue(store.value);
+    if (store?.value) this.queryForm.patchValue(store.value);
 
     this.loading = !0;
     forkJoin([

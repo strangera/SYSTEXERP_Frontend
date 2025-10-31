@@ -176,7 +176,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public ngOnInit(): void {
     this.initializePage('TLS21020', '/TLS/TLS21020CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState('TLS21020');
-    if (store?.value) this.queryForm.setValue(store.value);
+    if (store?.value) this.queryForm.patchValue(store.value);
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');

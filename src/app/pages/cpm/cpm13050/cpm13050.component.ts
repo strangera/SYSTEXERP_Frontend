@@ -133,8 +133,8 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
         { field: 'PKG_disc_shop_name', header: '店家名稱', visible: true },
         { field: 'PKG_disc_rule_name', header: '折扣名稱', visible: true },
         { field: 'CNT', header: '筆數', visible: true, isSubTotal: true },
-        { field: 'PKG_discount_time', header: '總折抵時數', visible: true, format: formatAmount, isSubTotal: true },
-        { field: 'PKG_discount_fee', header: '總折抵金額', visible: true, format: formatAmount, isSubTotal: true },
+        { field: 'PKG_discount_time', header: '實際抵扣時數', visible: true, format: formatAmount, isSubTotal: true },
+        { field: 'PKG_discount_fee', header: '實際抵扣金額', visible: true, format: formatAmount, isSubTotal: true },
       ];
     }
   }

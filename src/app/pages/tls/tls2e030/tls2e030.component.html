@@ -35,8 +35,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls2e030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+  <app-table-report tableKey="tls2e030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="currentColumns"
     [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
-    [queryFunction]="tls2e030Service.queryTls2e030.bind(tls2e030Service)">
+    [queryFunction]="tls2e030Service.queryTls2e030.bind(tls2e030Service)" [loading]="loading || loading2">
   </app-table-report>
 </div>

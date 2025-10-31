@@ -157,6 +157,10 @@
             <app-dropdown label="品牌代碼" controlName="LOGO_No" [options]="pluLogoOption" optionLabel="Label"
               optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="EC商品狀態" controlName="PLU_ECStatus" [options]="statusOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PLU_ECStatus" [submitted]="submitted"></app-dropdown>
+          </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">

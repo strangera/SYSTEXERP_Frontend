@@ -22,7 +22,6 @@ import { ASS21020Data, ASS21020Detail, ASS21020Query } from '../ass21020/ass2102
   templateUrl: './ass21020-cru.component.html',
   styleUrl: './ass21020-cru.component.scss',
   standalone: !0,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TranslateModule,
     ReactiveFormsModule,
@@ -350,7 +349,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   }
 
   private validateEngRate(value: number): { isValid: boolean; errorMessage: string[]; } {
-    if (!value || value !== 0) return { isValid: !0, errorMessage: [] };
+    if (value == null) return { isValid: !0, errorMessage: [] };
     return {
       isValid: this.ratePtn.test(value.toString()),
       errorMessage: this.ratePtn.test(value.toString()) ? [] : ['比率錯誤']
@@ -358,16 +357,19 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   }
 
   private isTableDataComplete(data: ASS21020Detail[]): boolean {
-    const hasEmptyTltNo = data.some(item => !item.TLT_No);
-    const hasEmptyRates = data.some(item => item.ENG_Rate == null || item.ENG_Rate === void 0);
-    const tltNos = data.map(item => item.TLT_No);
-    const hasDuplicates = tltNos.length !== new Set(tltNos).size;
-    const hasInvalidRates = data.some(item => {
-      const rate = item.ENG_Rate;
-      return isNaN(rate) || rate < 0 || rate > 100;
-    });
+    const tltNoSet = new Set<string>();
+    let idx = 0;
 
-    return !(hasEmptyTltNo || hasEmptyRates || hasDuplicates || hasInvalidRates);
+    while (idx < data.length) {
+      const item = data[idx++];
+      const { TLT_No, ENG_Rate } = item;
+
+      if (!TLT_No) return !1;
+      if (ENG_Rate == null || typeof ENG_Rate !== 'number' || ENG_Rate < 0 || ENG_Rate > 100) return !1;
+      if (tltNoSet.has(TLT_No)) return !1;
+      tltNoSet.add(TLT_No);
+    }
+    return !0;
   }
 
   private calculateTotalRate(data: ASS21020Detail[]): number {

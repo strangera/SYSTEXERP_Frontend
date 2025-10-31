@@ -141,7 +141,7 @@ export class FIN71010Component extends BasicQueryPageComponent<unknown> implemen
   public ngOnInit(): void {
     this.initializePage('FIN71010', 'FIN/FIN71010CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.setValue(store.value);
+    if (store?.value) this.queryForm.patchValue(store.value);
 
     // // Initialize dropdown options
     // this.funInfo = this.authService.getUserPermissions(this.ProgNo);

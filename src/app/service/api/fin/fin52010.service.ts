@@ -14,18 +14,19 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 export class FIN52010Service {
 
   private readonly dataCancel$ = new Subject<void>();
-  private readonly tblUsrOrgCancel$ = new Subject<void>();
+  private readonly orgUsrCancel$ = new Subject<void>();
   private readonly submitCancel$ = new Subject<void>();
   private readonly gls1005Cancel$ = new Subject<void>();
 
   public readonly FIN52010Data = signal<FIN52010Data>(Object.create(null));
 
   public readonly dataLoading = signal<boolean>(!1);
-  public readonly tblUsrOrgLoading = signal<boolean>(!1);
+  public readonly orgUsrLoading = signal<boolean>(!1);
   public readonly gls1005Loading = signal<boolean>(!1);
 
   public readonly submitting = signal<boolean>(!1);
 
+  public readonly orgUsrList = signal<TblUserOrgidItem[]>([]);
   public readonly orgList = signal<Option[]>([]);
   public readonly usrList = signal<Option[]>([]);
   public readonly gls1005List = signal<GLS1005Option[]>([]);
@@ -41,19 +42,18 @@ export class FIN52010Service {
     private readonly dropdownApi: DropdownApiService,
   ) { }
 
-  public loadFIN52010(CompNo: string = ''): Observable<FIN52010Data> {
+  public loadFIN52010(CompNo: string = ''): void {
     this.dataCancel$.next();
     this.dataLoading.set(!0);
-    return this.http.post<FIN52010DataResponse>(`${apiUrl}/queryFIN52010`, { CompNo }).pipe(
+    this.http.post<FIN52010DataResponse>(`${apiUrl}/queryFIN52010`, { CompNo }).pipe(
       take(1),
       takeUntil(this.dataCancel$),
       tap(res => this.FIN52010Data.set(res.Data)),
-      map(res => res.Data),
       finalize(() => {
         this.dataLoading.set(!1);
         this.logger.debug('查詢FIN52010結果:', [this.FIN52010Data()]);
       })
-    );
+    ).subscribe();
   }
 
   public updateFIN52010Data(payload: FIN52010UpdatePayload): Observable<BaseQueryResponse<FIN52010UpdateResult>> {
@@ -67,10 +67,10 @@ export class FIN52010Service {
     );
   }
 
-  public getGLS1005DropDownList(): Observable<GLS1005Option[]> {
+  public getGLS1005DropDownList(): void {
     this.gls1005Cancel$.next();
     this.gls1005Loading.set(!0);
-    return this.dropdownApi.queryGls1005().pipe(
+    this.dropdownApi.queryGls1005().pipe(
       take(1),
       takeUntil(this.gls1005Cancel$),
       map(res => res as GLS1005Option[] ?? []),
@@ -79,22 +79,21 @@ export class FIN52010Service {
         this.gls1005Loading.set(!1);
         this.logger.debug('查詢GLS1005結果:', [this.gls1005List()]);
       }),
-    );
+    ).subscribe();
   }
 
-  public getTblUsrOrgList(): Observable<TblUserOrgidItem[]> {
-    this.tblUsrOrgCancel$.next();
-    this.tblUsrOrgLoading.set(!0);
-    return this.dropdownApi.queryTblUserOrgid().pipe(
+  public getTblUsrOrgList(): void {
+    this.orgUsrCancel$.next();
+    this.orgUsrLoading.set(!0);
+    this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      takeUntil(this.tblUsrOrgCancel$),
+      takeUntil(this.orgUsrCancel$),
       map(res => res ?? []),
-      tap(res => this.orgList.set(res?.map(item => ({ value: item.Org_ID, label: item.Org_Name } as Option)) ?? [])),
-      tap(res => this.usrList.set(res?.map(item => ({ value: item.user_No, label: item.user_Name } as Option)) ?? [])),
+      tap(res => this.orgUsrList.set(res)),
       finalize(() => {
-        this.tblUsrOrgLoading.set(!1);
-        this.logger.debug('查詢TblUsrOrgList結果:', [this.orgList(), this.usrList()]);
+        this.orgUsrLoading.set(!1);
+        this.logger.debug('查詢TblUsrOrgList結果:', [this.orgUsrList()]);
       }),
-    );
+    ).subscribe();
   }
 }

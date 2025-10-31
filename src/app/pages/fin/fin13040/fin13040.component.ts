@@ -9,8 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CommonModule } from '@angular/common';
-// import { Fin14030Service } from '@service/api/fin/fin14030.service';
-import { createPaginationConfig, formatDate } from '@shared/componentkit/table2/table2.model';
+import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarModule } from 'primeng/calendar';
@@ -18,11 +17,12 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model'; // Ensure this path is correct
+import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
-import { format } from 'crypto-js';
+import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin13040',
@@ -72,7 +72,6 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     SAL_Type: [[]],
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
   });
-
   data: any[] = [];
   totalRecords = 0;
   InvoiceType_Options: { label: string; value: string }[] = [];
