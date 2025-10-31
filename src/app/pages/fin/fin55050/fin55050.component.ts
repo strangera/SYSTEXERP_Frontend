@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
 import { finalize } from 'rxjs';
-import { FIN55050Service, FIN55050Detail } from '../../../service/api/fin/fin55050.service';
+import {
+  FIN55050Service,
+  FIN55050Detail,
+  ExportFIN55050Payload
+} from '../../../service/api/fin/fin55050.service';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -15,12 +20,12 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CheckboxModule } from 'primeng/checkbox';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { TableSubheaderComponent } from "@shared/componentkit/table/table-subheader/table-subheader.component";
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { Router } from '@angular/router';
 
-// === 和你現有 interface 對齊 ===
+// 巢狀資料型別（父含 _Details）
 export interface FIN55050Data {
   AccNo: string;
   AccCName: string;
@@ -33,7 +38,7 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
   VouDate: string;
 }
 
-// === 引入 Store（放在本資料夾） ===
+// Store
 import { FIN55050Store } from './fin55050.store';
 
 @Component({
@@ -53,18 +58,34 @@ import { FIN55050Store } from './fin55050.store';
     CheckboxModule,
     MultiSelectComponent,
     TableSubheaderComponent,
-    InputTextRangeComponent
+    InputTextRangeComponent,
   ]
 })
-
-
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> implements OnInit {
-    readonly yesterday: Date = (() => {
+  // === 修正 router 注入衝突 ===
+
+
+  constructor(
+
+    private fin55050Service: FIN55050Service,
+    private dropDownListService: DropDownListService,
+    private fin55050Store: FIN55050Store
+  ) {
+    super();
+  }
+
+  readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
+
+  /** 匯出 loading 共用旗標 */
+  btnLoading = false;
+
+  /** 記住上一次查詢的 payload（供匯出使用） */
+  private lastQueryBody: any | null = null;
 
   queryForm = this.formBuilder.group({
     DateFrom: [this.yesterday, Validators.required],
@@ -82,8 +103,8 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     ...createPaginationConfig([])
   });
 
-  data: FIN55050Detail[] = [];
-  selectedItems: FIN55050Detail[] = [];
+  data: GroupedFIN55050Detail[] = [];
+  selectedItems: GroupedFIN55050Detail[] = [];
   totalRecords = 0;
 
   columns: Column[] = [
@@ -100,110 +121,194 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount },
   ];
 
-  //#region 下拉選單資料
-  OrgIdListOptions: any[] = []; // 部門
-  AccNoListOptions: any[] = []; // 科目代號
-  VendorNoListOptions: any[] = []; // 廠商代號
+  //#region 下拉
+  OrgIdListOptions: any[] = [];
+  AccNoListOptions: any[] = [];
+  VendorNoListOptions: any[] = [];
   VouStatusListOptions: any[] = [
     { label: '作廢', value: '0' },
     { label: '建立', value: '1' },
     { label: '確認', value: '2' },
     { label: '過帳', value: '3' },
   ];
-  TargetNoListOptions: any[] = []; // 對象別編號
-  VouTypeListOptions: any[] = [];  // 傳票型態
+  TargetNoListOptions: any[] = [];
+  VouTypeListOptions: any[] = [];
   //#endregion
 
-  constructor(
-    private fin55050Service: FIN55050Service,
-    private dropDownListService: DropDownListService,
-    private fin55050Store: FIN55050Store,   // 注入 Store
-    // private router: Router                   // 注入 Router（for detail 導頁）
-  ) {
-    super();
-  }
-
   ngOnInit(): void {
-    this.initializePage('FIN55050', 'axxount/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
+    // 正確明細路由
+    this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
       this.fin55050Service.queryFIN55050(form.getRawValue())
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          // 1) 先把「完整原始 Data（含 _Details）」存進 Store
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe((response) => {
+          // 存完整（含 _Details）到 Store
           this.fin55050Store.setResponse(response.Data);
 
-          // -- Debug: 確認真的寫入 store 了
-          console.log('[FIN55050] Store saved', {
-            dataCount: response?.Data?.length ?? 0,
-            vouNoIndexSize: this.fin55050Store.getVouNoSize(),
-            vouNoKeysSample: this.fin55050Store.getVouNoKeys().slice(0, 5)
-          });
-
-          // 2) 列表要用的扁平化資料
+          // 扁平化給清單
           this.data = this.restructureData(response.Data);
-          this.totalRecords = response.TotalCount;
+          this.totalRecords = response.TotalCount ?? this.data.length;
 
-          // 3) 保存查詢狀態
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          // 記住本次查詢（匯出用）
+          this.lastQueryBody = form.getRawValue();
+
+          // 保存查詢狀態（你的共用）
+          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
         });
     });
   }
 
-  // 點「明細」按鈕（或雙擊）時呼叫，帶 vouNo 去 CRU
+  /** 清單 → 明細 */
   override onDetail(row: GroupedFIN55050Detail) {
     const vouNo = row?.VouNo;
-    if (!vouNo) { return; }
-    // 這裡只帶 key，CRU 直接從 store 取
+    if (!vouNo) return;
     this.router.navigate(['account/fin/fin55050cru'], { state: { vouNo } });
   }
 
   loadOptions() {
-    // 部門
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.OrgIdListOptions = response.Data
-          .map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-      });
-    // 科目代號
+      .subscribe(res => this.OrgIdListOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+
     this.dropDownListService.queryGLS1005_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.AccNoListOptions = response.Data
-          .map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-      });
-    // 廠商代號
+      .subscribe(res => this.AccNoListOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.VendorNoListOptions = response.Data
-          .map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-      });
-  }
+      .subscribe(res => this.VendorNoListOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+  
+  this.fin55050Service.queryGLS1016_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.TargetNoListOptions = response.Data?.map((item: any) => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No,
+      })) ?? [];
+    });
 
+  // ✅ 傳票型態（VoucherKindOptions）→ 改呼叫 fin55050Service（POST、無 body）
+  this.fin55050Service.queryGLS1010_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(response => {
+      this.VouTypeListOptions = response.Data?.map((item: any) => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No,
+      })) ?? [];
+    });
+    }
+
+  /** 從巢狀資料展平成清單 */
   restructureData(data: FIN55050Data[]): GroupedFIN55050Detail[] {
-    const groupedDetails: GroupedFIN55050Detail[] = [];
-    (data ?? []).forEach(item => {
-      (item._Details ?? []).forEach(detail => {
-        groupedDetails.push({
+    const grouped: GroupedFIN55050Detail[] = [];
+    (data ?? []).forEach(parent => {
+      (parent._Details ?? []).forEach(detail => {
+        grouped.push({
           ...detail,
-          AccNo: item.AccNo,
-          AccCName: item.AccCName,
-          VouDate: item.VouDate
+          AccNo: parent.AccNo,
+          AccCName: parent.AccCName,
+          VouDate: parent.VouDate
         });
       });
     });
-    return groupedDetails;
+    return grouped;
   }
 
-  // 匯出Excel（預留）
-  exportExcelLoading = false;
-  onExportExcel(event: any) {
-    this.exportExcelLoading = true;
-    console.log(event);
+  // ========= 匯出 =========
+  onExportPDF() {
+     console.log('ExportPDF clicked');
+    if ((this.data?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+    const payload = this.buildExportBody();
+    if (!payload) return;
+
+    this.btnLoading = true;
+    this.fin55050Service.exportFIN55050PDF(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.pdf', '分類帳'),
+        error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
+      });
+  }
+
+  onExportXLSX() {
+    if ((this.data?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+    const payload = this.buildExportBody();
+    if (!payload) return;
+
+    this.btnLoading = true;
+    this.fin55050Service.exportFIN55050Excel(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.xlsx', '分類帳'),
+        error: () => this.messageService?.warnBubble?.('匯出 Excel 失敗。'),
+      });
+  }
+
+  /** 產生匯出 payload（不再使用 VOUDATE_*） */
+  private buildExportBody(): ExportFIN55050Payload | null {
+    const raw = this.lastQueryBody ?? this.queryForm.getRawValue();
+
+    const from = this.toDateOnly(raw?.DateFrom);
+    const to   = this.toDateOnly(raw?.DateTo);
+    if (!from || !to) {
+      this.messageService?.warnBubble?.('請先選擇「日期起、日期迄」再匯出。');
+      return null;
+    }
+
+    const payload: ExportFIN55050Payload = {
+      SortBy: this.sanitizeSortBy(raw?.SortBy ?? []),
+      DateFrom: from,
+      DateTo: to,
+      OrgIdList: this.ensureArr(raw?.OrgIdList),
+      AccNoList: this.ensureArr(raw?.AccNoList),
+      VendorNoList: this.ensureArr(raw?.VendorNoList),
+      PTAFrom: raw?.PTAFrom ?? '',
+      PTATo: raw?.PTATo ?? '',
+      TargetNoList: this.ensureArr(raw?.TargetNoList),
+      Notes: raw?.Notes ?? '',
+      VouTypeList: this.ensureArr(raw?.VouTypeList),
+      VouStatusList: this.ensureArr(raw?.VouStatusList),
+      IsTarget: raw?.IsTarget ?? '',
+    };
+    return payload;
+  }
+
+  // ========= 本地工具（避免依賴基底內部成員） =========
+  private toDateOnly(d: any): string | null {
+    if (!d) return null;
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt.getTime())) return null;
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const da = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${da}`;
+    // 若後端要 yyyymmdd 可改成: return `${y}${m}${da}`;
+  }
+
+  private sanitizeSortBy(sort: any[]): { field: string; order: number }[] {
+    if (!Array.isArray(sort)) return [];
+    return sort
+      .filter(s => s && s.field)
+      .map(s => ({ field: String(s.field), order: Number(s.order ?? 1) }));
+  }
+
+  private ensureArr<T = string>(val: any): T[] {
+    if (val == null) return [];
+    return Array.isArray(val) ? val : [val];
+  }
+
+  private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }
