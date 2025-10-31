@@ -13,15 +13,14 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableEditComponent } from "@shared/componentkit/table-edit/table-edit.component";
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { ButtonModule } from 'primeng/button';
 import { environment } from 'src/environments/environment';
+import { TableEditComponent } from './fin13040-table-edit/fin13040-table-edit.component';
+import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
 
 @Component({
   selector: 'app-fin13040-cru',
   templateUrl: './fin13040-cru.component.html',
-  styleUrl: './fin13040-cru.component.scss',
   standalone: true,
   imports: [
     InputTextRangeComponent,

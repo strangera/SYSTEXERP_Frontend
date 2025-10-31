@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
 import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -304,53 +304,67 @@ export class TLS13010DataLoaderService {
   }
 
   // ==================== 下拉選單載入 ====================
-
   /**
    * 載入所有初始下拉選單選項
-   * @param component Component 實例
-   * @returns Observable
    */
   loadAllInitialDropdownOptions(component: any): Observable<any> {
-    console.log('📥 開始載入所有下拉選單選項');
+    console.log('🔄 開始載入所有初始下拉選單選項');
 
-    return forkJoin({
-      // 位置相關(用於 selector panel)
-      location: this.loadLocationWithDetailsOptions(component),
+    // 使用 Service 的統一初始化方法
+    return this.tls13010DropdownService.initialize().pipe(
+      tap((results) => {
+        // 同步資料到 component
+        component.bustypeOptions = this.tls13010DropdownService.bustypeOptions;
+        component.buildingOptions = this.tls13010DropdownService.buildingOptions;
+        component.floorOptions = this.tls13010DropdownService.floorOptions;
+        component.regionOptions = this.tls13010DropdownService.regionOptions;
+        component.orgOptions = this.tls13010DropdownService.orgOptions;
+        component.paperTypeOptions = this.tls13010DropdownService.paperTypeOptions;
+        component.discountTypeOptions = this.tls13010DropdownService.discountTypeOptions;
+        component.pos2013Options = this.tls13010DropdownService.pos2013Options;
+        component.negotiatorOptions = this.tls13010DropdownService.negotiatorOptions;
+        component.payNoOptions = this.tls13010DropdownService.payNoOptions;
 
-      // 廠商選項
-      vendor: this.loadPOS2013Options(component),
+        console.log('✅ 下拉選單選項已同步到 Component:', {
+          bustype: component.bustypeOptions.length,
+          building: component.buildingOptions.length,
+          pos2013: component.pos2013Options.length,
+          negotiator: component.negotiatorOptions.length
+        });
 
-      // 洽談者選項
-      negotiator: this.loadNegotiatorOptions(component),
+        // 檢查關鍵 API 是否成功載入
+        const hasErrors = [];
+        if (component.bustypeOptions.length === 0) {
+          hasErrors.push('大分類');
+        }
+        if (component.pos2013Options.length === 0) {
+          hasErrors.push('廠商資料');
+        }
+        if (component.negotiatorOptions.length === 0) {
+          hasErrors.push('洽談者');
+        }
 
-      // 銀行選項
-      bank: this.loadBankDropdownOptions(component),
-
-      // 🆕 新增:大分類選項
-      bustype: this.loadBustypeOptions(component),
-
-      // 🆕 新增:Location 相關選項(館別、樓層、區域、組織、單據別)
-      locationBundle: this.loadLocationBundleOptions(component)
-    }).pipe(
-      tap(() => {
-        console.log('✅ 所有下拉選單選項載入完成');
-
-        // 🔍 診斷:顯示載入結果
-        console.log('📊 下拉選單載入結果:', {
-          bustype: component.bustypeOptions?.length || 0,
-          building: component.buildingOptions?.length || 0,
-          floor: component.floorOptions?.length || 0,
-          region: component.regionOptions?.length || 0,
-          org: component.orgOptions?.length || 0,
-          paperType: component.paperTypeOptions?.length || 0,
-          vendor: component.pos2013Options?.length || 0,
-          negotiator: component.negotiatorOptions?.length || 0,
-          bank: component.bankDropdownOptions?.length || 0
+        if (hasErrors.length > 0) {
+          console.warn(`⚠️ 以下選項載入失敗: ${hasErrors.join(', ')}`);
+          this.messageService.warnBubble(`部分資料載入失敗: ${hasErrors.join(', ')}，您可以重新整理頁面`);
+        }
+      }),
+      switchMap(() => {
+        // 繼續載入其他資料
+        return forkJoin({
+          location: this.loadLocationWithDetailsOptions(component),
+          bank: this.loadBankDropdownOptions(component)
+        });
+      }),
+      tap(additionalResults => {
+        console.log('✅ 所有初始資料載入完成:', {
+          location: additionalResults.location.length,
+          bank: additionalResults.bank.length
         });
       }),
       catchError(error => {
-        console.error('❌ 載入下拉選單選項失敗:', error);
-        this.messageService.errorBubble('載入選項資料失敗,請重新整理頁面');
+        console.error('❌ 載入初始資料時發生錯誤:', error);
+        this.messageService.errorBubble('載入資料失敗，請重新整理頁面');
         return of(null);
       })
     );

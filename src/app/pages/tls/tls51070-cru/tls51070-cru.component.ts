@@ -124,7 +124,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Unit: ['01', [Validators.required, Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔 --
 
     PLU_TaxType: ['1', [Validators.required, Validators.maxLength(1)]], // 售價稅別:0免稅,1應稅 預設 1應稅
-    PLU_Type: ['1', [Validators.required, Validators.maxLength(2)]], // 商品類別:1一般商品,8專櫃,CC:專櫃商品 ,SC:特殊條碼
+    PLU_Type: ['1 ', [Validators.required, Validators.maxLength(2)]], // 商品類別:1一般商品,8專櫃,CC:專櫃商品 ,SC:特殊條碼 (注意: 這邊是兩碼，會有空白)
 
     PLU_BoxQty: [1, [Validators.maxLength(4), Validators.min(0), Validators.max(9999)]], // 包裝入數(裝箱入數) / --南紡 包裝入數
     PLU_Length: [0, [Validators.maxLength(10), Validators.min(0), Validators.max(9999999999)]], //長度cm
@@ -188,7 +188,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ---商品規格dropdown---
   attributeOptions: option[] = this.dropDown51070.attributeOptions;  // 商品型態
   taxTypeOptions: option[] = this.dropDown51070.taxTypeOptions; // 稅別
-  pluTypeOptions: option[] = this.dropDown51070.pluTypeOptions; // 稅別
+  pluTypeOptions: option[] = this.dropDown51070.pluTypeOptions; // 商品類別
   // ---POS2020 dropdown區---
   transTypeOption: option[] = this.dropDown51070.transTypeOption;  //運輸方式
   purchaseTypeOption: option[] = this.dropDown51070.purchaseTypeOption;  // 採購狀態

@@ -63,7 +63,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     { value: '5', label: '寄賣' },
   ];
   unitOptions: apiOption[] = [];  //商品單位
-  statusOptions: option[] = [  //商品狀態
+  statusOptions: option[] = [  // EC商品狀態
     { value: '1', label: '正常' },
     { value: '2', label: '停用' },
     { value: '3', label: '停進' },

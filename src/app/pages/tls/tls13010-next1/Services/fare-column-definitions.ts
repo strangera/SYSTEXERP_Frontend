@@ -187,7 +187,7 @@ export class FareColumnDefinitions {
       },
       {
         field: 'tpy_amount',
-        header: '扣款金額',
+        header: '扣款金額(未稅)',
         type: 'number',
         editable: false,
         autoWidth: true,
@@ -200,8 +200,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',
@@ -536,8 +536,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',
@@ -718,8 +718,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',
@@ -848,8 +848,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',

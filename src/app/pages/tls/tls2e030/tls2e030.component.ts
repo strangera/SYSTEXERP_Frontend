@@ -25,6 +25,25 @@ import { formatDate, formatYYYYMM, ReportColumn } from '@shared/componentkit/tab
   imports: [TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
 export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> implements OnInit {
+  // 定義查詢結果欄位配置
+  private readonly QUERY_COLUMNS: ReportColumn[] = [
+    { field: 'CRT_Date', header: '試算日期', visible: true, format: formatDate },
+    { field: 'sam_yyymm', header: '試算年月', visible: true, format: formatYYYYMM },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'remarks', header: '試算說明', visible: true },
+    { field: 'CRT_USR_No', header: '執行者', visible: true },
+  ];
+
+  // 定義試算 Log 欄位配置
+  private readonly LOG_COLUMNS: ReportColumn[] = [
+    { field: 'step_num', header: '檢查順序', visible: true },
+    { field: 'step_desc', header: '檢查步驟', visible: true },
+    // { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
+    { field: 'isPass', header: '是否通過', visible: true },
+    { field: 'check_result', header: '檢查明細', visible: true },
+  ];
+
   // 完整的期別選項（基於您的描述）
   private readonly SAM_TERMNO_MAP = {
     '10': [1, 2, 3],
@@ -34,15 +53,12 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   totalRecords = 0;
   money_typeOptions = getSYS1000Options('money_type');
   sam_termnoOptions: { value: number, label: string }[] = []; // 期別選項
-  data: Tls2e030Data[] = [];
-  columns: ReportColumn[] = [
-    { field: 'CRT_Date', header: '試算日期', visible: true, format: formatDate },
-    { field: 'sam_yyymm', header: '試算年月', visible: true, format: formatYYYYMM },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'remarks', header: '試算說明', visible: true },
-    { field: 'CRT_USR_No', header: '執行者', visible: true },
-  ];
+  // 將 data 型別改為 any[] 以容納兩種不同結構的資料
+  data: any[] = [];
+
+  // 新增：當前使用的欄位配置
+  currentColumns: ReportColumn[] = [];
+
   queryForm = this.formBuilder.nonNullable.group({
     PageSize: [30],
     PageIndex: [1],
@@ -55,9 +71,11 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   tlt_noOptions = this.dropdown.queryTltTalent();
   tlt_floorOptions = this.dropdown.querySys3900();
   historyRequestBody: any | null = null;
+
+  // 注入 FormBuilder 和 MessageService 以確保功能完整
   constructor(
     public readonly tls2e030Service: Tls2e030Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
@@ -65,6 +83,8 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   ngOnInit(): void {
     this.initializePage('TLS2E030');
     this.setupFormLinkage(); // 設定表單聯動
+    // 預設使用查詢欄位
+    this.currentColumns = this.QUERY_COLUMNS;
   }
   /**
      * 設定 money_type 與 sam_termno 的聯動邏輯
@@ -109,8 +129,12 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
       money_type: frm.value.money_type
     } as Tls2e030QueryBody; // 轉換為正確的 Request Body 型別
     this.handleSubmit(frm, () => {
-      this.tls2e030Service.queryTls2e030(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data;
+      // 1. 切換顯示查詢欄位
+      this.currentColumns = this.QUERY_COLUMNS;
+
+      // 2. 執行查詢
+      this.tls2e030Service.queryTls2e030(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data; // 這裡的資料型別是 Tls2e030Data[]
         this.totalRecords = res.TotalCount;
         this.historyRequestBody = body;
       })
@@ -128,6 +152,8 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
       this.loading2 = true;
       this.tls2e030Service.estTls2e030(body).pipe(finalize(() => { this.loading = false; this.loading2 = false }), untilDestroyed(this)).subscribe(res => {
         this.messageService.successBubble(res.Message);
+        this.currentColumns = this.LOG_COLUMNS;
+        this.data = res.Data;
       })
     });
   }

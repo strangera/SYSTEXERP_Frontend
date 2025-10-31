@@ -8,7 +8,6 @@ export interface EditColumn {
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
   type?: 'input' | 'inputNumber' | 'dropdown' | 'date' | 'template'; // 欄位類型
-  defaultValue?: any; // 預設值
   groupField?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
