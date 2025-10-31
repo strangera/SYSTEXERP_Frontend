@@ -91,7 +91,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.setValue(store.value);
+    if (store?.value) this.queryForm.patchValue(store.value);
     this.loading = !0;
 
     this.service.getVoucherTypeList();

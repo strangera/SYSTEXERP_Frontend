@@ -66,7 +66,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
   public ngOnInit(): void {
     this.initializePage('FIN52090', '/FIN/FIN52090CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.setValue(store.value);
+    if (store?.value) this.queryForm.patchValue(store.value);
 
     this.service.accNo.set([]);
     this.service.getAccNo();
