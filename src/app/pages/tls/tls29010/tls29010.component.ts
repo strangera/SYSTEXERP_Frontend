@@ -18,6 +18,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -197,6 +198,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   // ----------------------------------------------------------------
   constructor(
     private tls29010Service: Tls29010Service,
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -309,8 +311,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   loadOption() {
     // 專櫃編號
-    this.tls29010Service
-      .queryTLTTALENT_Status_DropDownList({}).pipe(untilDestroyed(this))
+    this.dropDownListService
+      .queryTLTTALENT_DropDownList().pipe(untilDestroyed(this))
       .subscribe((response) => {
         this.tlt_No_Option = response.Data.map((item: apiOption) => ({
           No: item.No,
