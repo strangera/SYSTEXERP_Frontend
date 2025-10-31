@@ -34,6 +34,7 @@ export class FIN55060Service {
   private apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 
   constructor(private http: HttpClient) { }
+  //aBC
 
   // 查詢分類帳彙總報表
   queryFIN55060(req: QueryFIN55060Request): Observable<any> {
