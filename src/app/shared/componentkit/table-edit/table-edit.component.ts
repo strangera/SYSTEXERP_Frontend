@@ -23,7 +23,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { v4 as uuidv4 } from 'uuid';
 import { TableUtilityService } from './table-edit-utility.service';
 import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
-
+import { validateRequired } from './validate-field.model';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -48,7 +48,7 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
     SkeletonModule,
     FileUploadModule,
     CalendarModule,
-    OverlayPanelModule
+    OverlayPanelModule,
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
@@ -66,8 +66,6 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() loading = false;                               // 是否顯示 loading
   @Input() disabled = false;                              // 是否禁用 table
   @Input() multiSortMeta: SortMeta[] | null | undefined = undefined; // table 多重排序
-  @Input() autoInsertDefaultRow = false;// 是否自動插入預設列
-
   // 欄位群組
   @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   // select 選擇Row相關
@@ -119,8 +117,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   constructor(
     private readonly tableUtilityService: TableUtilityService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly messageService: NotificationService,
-    private cdRef: ChangeDetectorRef,
+    private readonly messageService: NotificationService
   ) { }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -141,12 +138,9 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
           return item;
         });
       }
+      // 如果資料中沒有 _isAutoInsertCandidate 欄位則新增
       if (!this.data.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
-        if (this.data.length === 0 && this.autoInsertDefaultRow) {
-          this.insertRow();
-          const lastRow = this.data[this.data.length - 1];
-          if (lastRow) lastRow._isAutoInsertCandidate = true;
-        }
+        this.insertRow();
       }
     }
   }
@@ -170,45 +164,31 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     this.dataChange.emit(this.data);
   }
   ngAfterContentInit(): void {
-    // 改為空，交由父層控制是否要插入
+    // setTimeout(() => {
+    //   if (!this.disabled && this.canInsert) {
+    //     this.insertRow();
+    //     this.cdr.detectChanges();
+    //   }
+    // }, 0);
   }
-
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
     event = event.filter((item: any) => !item._isAutoInsertCandidate);
     this.selectionChange.emit(event);
   }
-  insertRow(isAuto = false) {
-    if (this.disabled || !this.canInsert) return;
-    const hasCandidate = this.data.some(d => d._isAutoInsertCandidate);
-    if (isAuto && hasCandidate) return; // 不重複新增候選
+  // Insert 按鈕
+  insertRow() {
+    if (this.disabled || !this.canInsert) { return; }
     const { newRowData, data } = this.tableUtilityService.insertNewRow(
       this.data,
       this.columns,
       this.dataKey,
       this.defaultInsertData,
-      this.dataStatusField,
-      this.dataStatusValue
+      this.dataStatusField, // 將 dataStatusField 傳給服務
+      this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
-
-    // 套用 defaultValue
-    this.columns.forEach(col => {
-      const hasDefault = col.defaultValue !== undefined;
-      const isEmpty = newRowData[col.field] == null || newRowData[col.field] === '';
-      if (hasDefault && isEmpty) {
-        newRowData[col.field] = col.defaultValue;
-      }
-    });
-    if (isAuto) {
-      newRowData._isAutoInsertCandidate = true;
-    }
-    Object.assign(data[data.length - 1], newRowData);
-    this.data = [...data];
-    this.cdRef.detectChanges?.();
+    this.data = data;
   }
-
-
-
   // Delete 按鈕
   deleteRow(selectedItems: any) {
     if (this.disabled) { return; }
@@ -326,8 +306,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     if (col.validate) {
       for (const validateFn of col.validate) {
         // 將完整的 data 陣列傳遞給驗證函數，以支持跨行驗證（如重複值）
-        const safeValue = value ?? ''; // 防止 null
-        const validationResult = validateFn(safeValue, rowData, this.data, col.field, col.header);
+        const validationResult = validateFn(value, rowData, this.data, col.field, col.header);
         if (!validationResult.isValid) {
           isValidField = false;
           // 只顯示第一個錯誤訊息
