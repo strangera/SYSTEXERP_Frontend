@@ -4,7 +4,7 @@ import { FavoriteService } from '@service/system/favorite.service'; // 您的 Fa
 import { AuthService } from '@service/system/auth.service';
 import { SystemDataService } from '@service/system/system-data.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
-import { Observable, EMPTY, catchError, map, switchMap, tap, throwError } from 'rxjs';
+import { Observable, EMPTY, catchError, map, switchMap, tap, throwError, take } from 'rxjs'; // 導入 take
 
 // 假設您的 Favorite 介面已拉出
 interface FavoriteBody {
@@ -28,24 +28,12 @@ export class FavoriteStoreService {
 
   // 依賴於其他 Service 的 Computed
   private readonly userNo = computed(() => this.authService.currentUserValue?.user_No);
+  // 這裡保留 funRightsInfo 作為 Observable，用於 fetchFavorites 內部取值
   private readonly funRightsInfo = this.systemDataService.menuUpdated;
 
   constructor() {
-    // 當使用者登入狀態或權限變更時，自動觸發重新載入
-    this.funRightsInfo.pipe(
-      // 確保有 userNo 和權限資料
-      switchMap(funRights => {
-        const userNo = this.userNo();
-        if (!userNo || funRights.length === 0) return EMPTY;
-        return this.loadFavorites(userNo, funRights);
-      }),
-      catchError(error => {
-        console.error('Failed to load favorites in store:', error);
-        return EMPTY;
-      })
-    ).subscribe(); // 使用 Service 預設的生命週期
 
-    // 監聽使用者登入/登出，確保狀態清空/載入
+    // 監聽使用者登入/登出，確保狀態清空
     toObservable(this.userNo).subscribe(userNo => {
       if (!userNo) {
         this.favorites.set([]); // 登出時清空狀態
@@ -53,8 +41,38 @@ export class FavoriteStoreService {
     });
   }
 
-  private loadFavorites(userNo: string, funRights: FunsrightInfo[]): Observable<void> {
-    return this.favoriteService.getFavorites(userNo).pipe(
+  /**
+   * @description 公共方法：手動觸發載入我的最愛，確保使用當前正確的 userNo。
+   */
+  public fetchFavorites(): Observable<void> {
+    const userNo = this.userNo();
+    if (!userNo) {
+      this.favorites.set([]); // 如果沒有使用者，清空並返回
+      return EMPTY;
+    }
+
+    // 透過 funRightsInfo.pipe(take(1)) 確保在呼叫 API 時取得最新的功能權限資料
+    return this.funRightsInfo.pipe(
+      take(1), // 只取最新的菜單/權限資料
+      switchMap(funRights => {
+        if (funRights.length === 0) {
+          // 如果菜單資料還沒載入，可能需要等待，但為了避免無限等待，這裡先返回 EMPTY
+          // 實際應用中，如果菜單是透過一個 Resolver 載入，這裡應該會立即有值
+          return EMPTY;
+        }
+        // 使用當前最新的 userNo 和 funRights 呼叫載入方法
+        return this.loadFavorites(funRights);
+      }),
+      catchError(error => {
+        console.error('Failed to fetch favorites in store:', error);
+        return EMPTY;
+      })
+    );
+  }
+
+  private loadFavorites(funRights: FunsrightInfo[]): Observable<void> {
+    // ... (載入邏輯不變，它依賴外部傳入的 userNo 和 funRights)
+    return this.favoriteService.getFavorites().pipe(
       tap(response => {
         if (response.Status === '0000' && response.Data) {
           const favoritesWithDetails: FunsrightInfo[] = [];
@@ -80,7 +98,7 @@ export class FavoriteStoreService {
     );
   }
 
-  // **操作方法 (Actions)**
+  // **操作方法 (Actions) - 以下維持不變**
 
   toggleEditing() {
     this.editingFavorites.update(isEditing => !isEditing);
