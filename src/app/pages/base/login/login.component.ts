@@ -47,26 +47,57 @@ export class LoginComponent implements OnInit {
     private notemessage: NotificationService,
     private router: Router,
   ) { }
+ngOnInit(): void {
+  console.log('[LoginComponent] ngOnInit triggered');
 
-  ngOnInit(): void {
-    try {
-      if (typeof window !== 'undefined') {
-        const topWin = window.top as (Window & typeof globalThis) | null;
-        const selfWin = window.self as Window & typeof globalThis;
-
-        if (topWin && topWin !== selfWin) {
-          // 用 replace 避免使用者按上一頁又回到被嵌頁面造成循環
-          topWin.location.replace(window.location.href);
-          return;
-        }
+  try {
+    if (typeof window !== 'undefined') {
+      const topWin = window.top as (Window & typeof globalThis) | null;
+      const selfWin = window.self as Window & typeof globalThis;
+      if (topWin && topWin !== selfWin) {
+        console.log('[LoginComponent] 逃離 iframe');
+        topWin.location.replace(window.location.href);
+        return;
       }
-    } catch {
-      // 跨網域取 top 可能丟錯，fallback：至少把自己導向本頁以跳脫 iframe
-      window.location.replace(window.location.href);
     }
+  } catch {
+    console.log('[LoginComponent] iframe try-catch fallback');
+    window.location.replace(window.location.href);
+    return;
   }
 
-  /** 只存一次，目前頁面實際的完整 URL（例如 http://localhost:4200/login?...） */
+  const loggedIn = this.authService.isLoggedIn();
+  console.log('[LoginComponent] isLoggedIn:', loggedIn);
+
+  if (loggedIn) {
+    const redirect = this.getRedirectFromPreLoginOrLocation();
+    console.log('[LoginComponent] redirect:', redirect);
+
+    if (redirect) {
+      console.log('[LoginComponent] 已登入且有 redirectURL，開始 getOuterToken()');
+      this.saveCurrentUrlOnce();
+
+      this.authService.getOuterToken()
+        .pipe(first(), untilDestroyed(this))
+        .subscribe({
+          next: (res) => {
+            console.log('[LoginComponent] getOuterToken success:', res);
+            const target = this.appendOrReplaceParam(redirect, 'token', res.token);
+            console.log('[LoginComponent] redirect to:', target);
+            window.location.href = target;
+          },
+          error: (err) => {
+            console.error('[LoginComponent] getOuterToken error:', err);
+            this.notemessage.errorBubble('取得外部登入票證失敗，改為進入系統首頁');
+            this.router.navigate(['/sso/dashboard']);
+          }
+        });
+
+      return;
+    }
+  }
+}
+
   private saveCurrentUrlOnce(): void {
     if (typeof window === 'undefined') return;
     try {
@@ -80,33 +111,63 @@ export class LoginComponent implements OnInit {
   }
 
   /** 取出 redirectURL（優先讀取目前網址，其次讀 localStorage: preLoginUrlOnce） */
-  private getRedirectFromPreLoginOrLocation(): string {
-    // 先讀目前網址
-    try {
-      const u = new URL(window.location.href);
-      const direct = u.searchParams.get('redirectURL') || u.searchParams.get('redirect') || '';
-      if (direct) return decodeURIComponent(direct);
-    } catch { /* ignore */ }
+  /** 取出 redirectURL（優先讀取目前網址，其次讀 localStorage: preLoginUrlOnce） */
+private getRedirectFromPreLoginOrLocation(): string {
+  try {
+    const href = window.location.href;
+    console.log('[getRedirectFromPreLoginOrLocation] href:', href);
 
-    // 再讀 preLoginUrlOnce
-    const raw = localStorage.getItem(this.URL_KEY);
-    if (!raw) return '';
+    // ✅ 1. 嘗試用 URL 物件取出（大小寫都支援）
+    const u = new URL(href);
+    let direct =
+      u.searchParams.get('redirectURL') ||
+      u.searchParams.get('redirecturl') ||
+      u.searchParams.get('redirect') ||
+      '';
 
-    const q = raw.indexOf('?');
-    if (q === -1) return '';
-    const qs = raw.slice(q + 1);
-
-    for (const kv of qs.split('&')) {
-      if (!kv) continue;
-      const [k, v = ''] = kv.split('=');
-      if (!k) continue;
-      const key = k.toLowerCase();
-      if (key === 'redirecturl' || key === 'redirect') {
-        try { return decodeURIComponent(v); } catch { return v; }
+    if (direct) {
+      try {
+        const decoded = decodeURIComponent(direct);
+        console.log('[LoginComponent] redirect (URLSearchParams decoded):', decoded);
+        return decoded;
+      } catch {
+        console.log('[LoginComponent] redirect (URLSearchParams raw):', direct);
+        return direct;
       }
     }
+
+    // ✅ 2. fallback：直接用 regex 抓，容錯性最高
+    const match = href.match(/[?&](redirecturl|redirectURL|redirect)=([^&#]+)/i);
+    if (match && match[2]) {
+      const decoded = decodeURIComponent(match[2].replace(/\+/g, '%20'));
+      console.log('[LoginComponent] redirect (regex decoded):', decoded);
+      return decoded;
+    }
+
+    // ✅ 3. 再讀 localStorage 備份
+    const raw = localStorage.getItem(this.URL_KEY);
+    if (raw) {
+      const q = raw.indexOf('?');
+      if (q !== -1) {
+        const qs = raw.slice(q + 1);
+        for (const kv of qs.split('&')) {
+          const [k, v = ''] = kv.split('=');
+          if (/(redirecturl|redirect)/i.test(k)) {
+            const decoded = decodeURIComponent(v);
+            console.log('[LoginComponent] redirect (localStorage decoded):', decoded);
+            return decoded;
+          }
+        }
+      }
+    }
+
+    console.log('[LoginComponent] redirect not found anywhere');
+    return '';
+  } catch (err) {
+    console.error('[getRedirectFromPreLoginOrLocation] error:', err);
     return '';
   }
+}
 
   /** 安全地把查詢參數（token）附加/覆蓋到 URL 上 */
   private appendOrReplaceParam(url: string, key: string, value: string): string {
