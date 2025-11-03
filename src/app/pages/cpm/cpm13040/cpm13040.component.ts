@@ -100,12 +100,13 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
         }));
       });
 
-    // 專櫃編號下拉
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         this.TLT_No_Options = res.Data.map(item => ({
-          ...item, label: `${item.No} - ${item.Name}`
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+          ...item
         }));
       });
 
