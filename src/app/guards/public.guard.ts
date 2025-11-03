@@ -1,23 +1,35 @@
+// public.guard.ts
 import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { CanActivate, ActivatedRouteSnapshot, UrlTree, Router } from '@angular/router';
 import { AuthService } from '../service/system/auth.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PublicGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private auth: AuthService, private router: Router) {}
+// public.guard.ts
+canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
+  const loggedIn = this.auth.isLoggedIn();
+  const fullUrl = window.location.href; // <== 直接用原始網址解析
+  const redirect = route.queryParamMap.get('redirectURL') ?? route.queryParamMap.get('redirect');
 
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    if (this.authService.isLoggedIn()) {
-      // 已登入，導向主頁或其他已認證頁面
-      this.router.navigate(['/account/dashboard']); // 假設登入後去 dashboard
-      return false; // 阻止訪問
-    } else {
-      return true; // 允許訪問 (登入頁)
-    }
+  // 嘗試從原始網址中手動解析 redirectURL
+  const manualMatch = (() => {
+    const match = fullUrl.match(/[?&](redirectURL|redirect)=([^&#]+)/i);
+    return match ? decodeURIComponent(match[2]) : '';
+  })();
+
+  const finalRedirect = redirect || manualMatch;
+
+  console.log('[PublicGuard] isLoggedIn:', loggedIn, 'redirect:', finalRedirect);
+
+  if (!loggedIn) return true;
+  if (finalRedirect) {
+    console.log('[PublicGuard] 已登入且帶 redirectURL，放行');
+    return true;
   }
+
+  console.log('[PublicGuard] 已登入但未帶 redirect，導回 /sso/dashboard');
+  return this.router.parseUrl('/sso/dashboard');
+}
+
 }
