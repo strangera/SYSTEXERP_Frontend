@@ -203,13 +203,6 @@
       <ng-container>
         <h6>第一筆為最主要的國際條碼</h6>
         <!-- 國際條碼 POS2005 -->
-        <!-- <app-expandable-edit-table #pos2005Table title="多筆國際條碼" [mainColumns]="POS2005DataColumn" [data]="POS2005Data"
-          [loading]="expand2005Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
-          [readonly]="crudstatus === 'Read'" [defaultNewItem]="defaultNew2005" (save)="onRowSavePOS2005($event)"
-          (cancel)="onRowCancelPOS2005($event)" (batchDelete)="onBatchDelete2005($event)"
-          (addMainItem)="onAddPOS2005()"></app-expandable-edit-table> -->
-
         <app-table-edit title="多筆國際條碼" tableKey="PLU_No" [data]="POS2005Data" class="col-12"
           [columns]="POS2005DataColumn" (selectionChange)="selectedPOS2005Items = $event" [selectedItems]="selectedPOS2005Items"
           [rowValidate]="validate2005Row"
@@ -219,12 +212,17 @@
         <!-- 輸入廠商編號才能填寫   -->
         <!-- <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null"> -->
           <!-- 商品採購廠商 POS2020 -->
-          <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
+          <!-- <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
             [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
             [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
             [readonly]="crudstatus === 'Read'" [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)"
             (cancel)="onRowCancelPOS2020($event)" (batchDelete)="onBatchDelete2020($event)"
-            (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
+            (addMainItem)="onAddPOS2020()"></app-expandable-edit-table> -->
+          <app-table-edit title="商品採購廠商" tableKey="VEN_No" [data]="POS2020Data" class="col-12"
+            [columns]="POS2020DataColumn" (selectionChange)="selectedPOS2020Items = $event" [selectedItems]="selectedPOS2020Items"
+            [rowValidate]="validate2020Row"
+            (dataChange)="POS2020Data = $event" dataStatusField="status" [loading]="loading">
+          </app-table-edit> 
         <!-- </ng-container> -->
       </ng-container>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
