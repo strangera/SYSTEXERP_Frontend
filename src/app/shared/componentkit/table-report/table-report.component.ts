@@ -162,6 +162,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.updateGroupTotals(res.Data);
         this.cdr.detectChanges();
         this.data = [...this.data, ...res.Data];
+        this.dataChange.emit(this.data);
         this.virtualData = this.data;
         this.totalRecords = res.TotalCount || 0;
       }

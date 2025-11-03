@@ -57,7 +57,7 @@ export class FIN55060Service {
 
   /** 匯出 Excel（等後端 API ready 直接可用） */
   exportFIN55060Excel(body: ExportFIN55060Payload): Observable<HttpResponse<Blob>> {
-    const url = `${this.baseApi}/exportFIN55060Excel`;
+    const url = `${this.baseApi}/exportFIN55060`;
     return this.http.post(url, body, {
       responseType: 'blob',
       observe: 'response',
