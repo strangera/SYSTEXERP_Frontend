@@ -202,6 +202,44 @@
   }
 }
 
+::ng-deep .selector-overlay-panel {
+  .selector-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+
+    h4 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .close-button-fa {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: #6c757d;
+      padding: 0.5rem;
+      transition: all 0.2s;
+      border-radius: 50%;
+
+      &:hover {
+        color: #dc3545;
+        background-color: #f8f9fa;
+      }
+
+      &:focus {
+        outline: 2px solid #2196F3;
+        outline-offset: 2px;
+      }
+    }
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

@@ -694,7 +694,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       contact_Date: formData.contact_Date || '',
       vendor_ven_no: formData.vendor_ven_no || '',
       // 業務欄位
-      ven_uniform: formData.vendor_no || '', // "00000000" (統編)
+      ven_uniform: formData.ven_uniform || formData.vendor_no || '',
       paper_type: formData.paper_type || '',
       bus_type: formData.bus_type || '',
       bus_class: formData.bus_class || '',
