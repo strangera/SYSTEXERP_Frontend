@@ -99,7 +99,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     Notes: [null],
     VouTypeList: [null],
     VouStatusList: [null],
-    IsTarget: ['Y', Validators.required],
+    IsTarget: [null],
     ...createPaginationConfig([])
   });
 
@@ -135,11 +135,40 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   VouTypeListOptions: any[] = [];
   //#endregion
 
-  ngOnInit(): void {
-    // 正確明細路由
-    this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadOptions();
+ngOnInit(): void {
+  // 正確明細路由
+  this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
+  this.loadOptions();
+
+  // ✅ 無條件本地還原一次（不依賴 previousRoute）
+  const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+  if (saved) {
+    // 若你的 QueryStateService 回存的是字串日期，建議轉 Date（見下方 coerceDates）
+    this.queryForm.patchValue(this.coerceDates(saved), { emitEvent: false });
+    this.lastQueryBody = saved;  // 匯出時可沿用
   }
+
+  // ✅ 使用者改任何欄位就即時保存（含多選/文字/日期）
+  this.queryForm.valueChanges
+    .pipe(untilDestroyed(this))
+    .subscribe(() => {
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+    });
+}
+private coerceDates(raw: any) {
+  const fix = (v: any) => {
+    if (!v) return v;
+    if (v instanceof Date) return v;
+    // 支援 'YYYY-MM-DD' 或 ISO 字串
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? v : d;
+  };
+  return {
+    ...raw,
+    DateFrom: fix(raw?.DateFrom),
+    DateTo: fix(raw?.DateTo),
+  };
+}
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
@@ -161,12 +190,24 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
         });
     });
   }
+  override onLazyLoadData(event: any, form: FormGroup) {
+  // 先套用分頁/排序到表單，但不要觸發 valueChanges，避免多一次自動保存與重查
+  form.patchValue({
+    pageSize: event?.pageSize,
+    pageIndex: event?.pageIndex,
+    SortBy: event?.SortBy
+  }, { emitEvent: false });
+
+  // 立即保存最新分頁/排序到 QueryState（避免只換頁就跳走時遺失）
+  this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+}
+
 
   /** 清單 → 明細 */
   override onDetail(row: GroupedFIN55050Detail) {
     const vouNo = row?.VouNo;
     if (!vouNo) return;
-    this.router.navigate(['account/fin/fin55050cru'], { state: { vouNo } });
+    this.router.navigate(['account/fin/fin55050cru'], { state: { vouNo, fromRoute: this.router.url } });
   }
 
   loadOptions() {
