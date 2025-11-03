@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -19,7 +19,8 @@ export class Fin11200Service {
     PageIndex?: number;
     SortBy?: { field: string; order: number }[];
     GUI_YYMM?: string;
-    ECR_No?: string;
+    ECR_NoList?: string[];
+    GUI_StatusList: string[];
   }): Observable<any> {
     return this.http.post(`${this.apiUrl}/queryFIN11200`, params);
   }

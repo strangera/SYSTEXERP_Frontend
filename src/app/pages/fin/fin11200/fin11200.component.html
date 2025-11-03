@@ -7,13 +7,16 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-4" label="發票年"
+          <app-calendar calendarType="dateYearOne" controlName="GUI_YY" class="col-12 md:col-6 lg:col-4" label="發票年"
             [control]="queryForm.controls.GUI_YY" [submitted]="submitted" />
-          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="發票月" controlName="registerID" [options]="monthOptions"
+          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="發票月" controlName="GUI_MM" [options]="monthOptions"
             optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_MM" [submitted]="submitted" />
-          <app-multi-select class=" col-12 md:col-6 lg:col-4" label="收銀機號" controlName="registerID"
-            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_No"
+          <app-multi-select class=" col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_NoList"
+            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_NoList"
             [submitted]="submitted" />
+          <app-multi-select class=" col-12 md:col-6 lg:col-4" label="發票使用狀態" controlName="GUI_StatusList"
+            [options]="GUI_StatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.GUI_StatusList" [submitted]="submitted" />
         </div>
         <ul>
           <li>說明：</li>
