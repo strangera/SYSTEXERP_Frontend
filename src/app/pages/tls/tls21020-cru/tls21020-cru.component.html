@@ -33,7 +33,7 @@
                         [tableRequired]="true"
                         [showReorder]="false"
                         [insertDisabled]="!df().ENTRY_TYPE.value"
-                        [loading]="service.tableLoading"
+                        [loading]="service.tableLoading()"
                         [defaultInsertData]="defaultInsertData"
                         [isRowSelectable]="rowEditValid"></app-table-edit>
       </div>
@@ -43,7 +43,7 @@
         <app-button btnType="submit"
                     [label]="'存檔'"
                     [disabled]="canSave()"
-                    [loading]="service.tableLoading"></app-button>
+                    [loading]="service.tableLoading()"></app-button>
       </div>
     </form>
   </p-panel>

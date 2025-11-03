@@ -110,8 +110,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     });
   }, { allowSignalWrites: !0 });
 
-  public readonly totalRecords = computed(() => this.service.TLS26010Data().length);
-
   private readonly queryTLS26010 = computed<TLS26010Query & { isValid: boolean; }>(() => {
     const pod_sdate_S = this.podSdateSSignal() || this.service.dateS;
     const pod_sdate_E = this.podSdateESignal() || void 0;

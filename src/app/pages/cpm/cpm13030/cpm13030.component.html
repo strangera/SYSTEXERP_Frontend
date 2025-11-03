@@ -35,12 +35,13 @@
               optionValue="value" [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4" *ngIf="queryForm.value.displayMode === 'D'">
-            <app-input-number label="發票號碼" controlName="TXN_GUIBegNo" [submitted]="submitted"></app-input-number>
+            <app-input-text label="發票號碼" controlName="TXN_GUIBegNo" [submitted]="submitted" [control]="queryForm.controls.TXN_GUIBegNo"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4" *ngIf="queryForm.value.displayMode === 'D'">
-            <app-input-number-range label="發票金額" controlName="TXN_TotSaleAmtStart" controlNameEnd="TXN_TotSaleAmtEnd"
-              [submitted]="submitted">
+            <app-input-number-range label="發票金額" [startControl]="queryForm.controls.TXN_TotSaleAmtStart"
+              [endControl]="queryForm.controls.TXN_TotSaleAmtEnd" [submitted]="submitted">
             </app-input-number-range>
+
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

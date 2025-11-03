@@ -31,8 +31,14 @@ export class TLS21020Service {
   ]);
 
   private readonly tableCancel$ = new Subject<void>();
+  private readonly gls1005Cancel$ = new Subject<void>();
+  private readonly pos2013Cancel$ = new Subject<void>();
+  private readonly orgIdCancel$ = new Subject<void>();
 
-  public tableLoading = !1;
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly gls1005Loading = signal<boolean>(!1);
+  public readonly pos2013Loading = signal<boolean>(!1);
+  public readonly orgIdLoading = signal<boolean>(!1);
 
   constructor(
     private readonly http: HttpClient,
@@ -62,7 +68,7 @@ export class TLS21020Service {
 
   public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
     this.tableCancel$.next();
-    this.tableLoading = !0;
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, query)
       .pipe(
         take(1),
@@ -75,16 +81,22 @@ export class TLS21020Service {
           return res;
         }),
         tap(res => this.TLS21020Data.set(res.Data ?? [])),
-        finalize(() => this.tableLoading = !1),
+        finalize(() => this.tableLoading.set(!1)),
       );
   }
 
   public queryTLS21020_GLS1005(query: TLS21020GLS1005Query): void {
+    this.gls1005Cancel$.next();
+    this.gls1005Loading.set(!0);
     this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(`${apiUrl}/queryTLS21020_GLS1005`, query)
       .pipe(
         take(1),
+        takeUntil(this.gls1005Cancel$),
         tap(res => this.TLS21020GLS1005Data.set(res.Data ?? [])),
-        finalize(() => this.logger.debug(`TLS21020GLS1005 Data:`, [this.TLS21020GLS1005Data()])),
+        finalize(() => {
+          this.gls1005Loading.set(!1);
+          this.logger.debug(`TLS21020GLS1005 Data:`, [this.TLS21020GLS1005Data()]);
+        }),
       ).subscribe();
   }
 
@@ -98,31 +110,48 @@ export class TLS21020Service {
   }
 
   public getOrgIDs(): void {
+    this.orgIdCancel$.next();
+    this.orgIdLoading.set(!0);
     this.sysb400.querySYS3100_DropDownList()
       .pipe(
         take(1),
+        takeUntil(this.orgIdCancel$),
         map(res => res.Data?.map(item => ({ label: `${item.No} - ${item.Name || ''}`, value: item.No })) ?? []),
         tap(res => this.SYS3100Data.set(res)),
-        finalize(() => this.logger.debug(`SYS3100 Data:`, [this.SYS3100Data()])),
+        finalize(() => {
+          this.orgIdLoading.set(!1);
+          this.logger.debug(`SYS3100 Data:`, [this.SYS3100Data()]);
+        }),
       ).subscribe();
   }
 
   public getGLS1005s(): void {
+    this.gls1005Cancel$.next();
+    this.gls1005Loading.set(!0);
     this.dropdownApi.queryGls1005()
       .pipe(
         take(1),
         tap(res => res && this.GLS1005Data.set(res)),
-        finalize(() => this.logger.debug(`GLS1005 Data:`, [this.GLS1005Data()])),
+        finalize(() => {
+          this.gls1005Loading.set(!1);
+          this.logger.debug(`GLS1005 Data:`, [this.GLS1005Data()]);
+        }),
       ).subscribe();
   }
 
   // VEN_Flag = 廠商別：1 廠商統一編號 2 身分證字號 3 自編編號
   public getPOS2013s(VEN_Flag: '1' | '2' | '3'): void {
+    this.pos2013Cancel$.next();
+    this.pos2013Loading.set(!0);
     this.dropdownApi.queryPos2013({ VEN_Flag })
       .pipe(
         take(1),
+        takeUntil(this.pos2013Cancel$),
         tap(res => res && this.POS2013Data.set(res)),
-        finalize(() => this.logger.debug(`POS2013 Data:`, [this.POS2013Data()])),
+        finalize(() => {
+          this.pos2013Loading.set(!1);
+          this.logger.debug(`POS2013 Data:`, [this.POS2013Data()]);
+        }),
       ).subscribe();
   }
 }

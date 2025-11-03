@@ -55,10 +55,8 @@
 </div>
 <!-- 單一 app-table -->
 <div class="card mt-2">
-  <app-table tableKey="FIN11060"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="true" [showTotal]="true" [showManage]="false"
+  <app-table tableKey="FIN11060" [data]="data" [columns]="columns"
+    [showCheckBox]="false" [showTotal]="true" [showManage]="false" [showDelete]="false"
     [totalRecords]="totalRecords"
     [lazy]="true" [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"

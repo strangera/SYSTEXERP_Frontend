@@ -17,6 +17,7 @@
                       [options]="service.accNo()"
                       optionLabel="AccCName"
                       optionValue="AccNo"
+                      [loading]="service.accNoLoading()"
                       [control]="df().AccNo"
                       [submitted]="submitted"></app-dropdown>
 
@@ -31,7 +32,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [loading]="service.tableLoading"></app-button>
+                    [loading]="service.tableLoading()"></app-button>
       </div>
       }
     </form>

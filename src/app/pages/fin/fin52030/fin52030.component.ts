@@ -1,4 +1,4 @@
-import { Component, computed, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52030Service } from '@service/api/fin/fin52030.service';
@@ -49,6 +49,10 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     { field: 'DetailCount', header: '明細筆數' },
   ];
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading() || this.service.usrLoading() || this.service.accLoading();
+  });
+
   constructor(
     public readonly service: FIN52030Service,
     private readonly logger: NGXLogger,
@@ -62,11 +66,9 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     if (store?.value) this.queryForm.patchValue(store.value);
 
     this.loading = !0;
-    forkJoin([
-      this.service.getAccNoList(),
-      this.service.getUsrList(),
-    ]).pipe(finalize(() => this.loading = !1))
-      .subscribe(res => this.logger.debug(`init:`, res));
+
+    this.service.getAccNoList();
+    this.service.getUsrList();
   }
 
   public onSubmit(): void {
@@ -79,7 +81,6 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
       }, {} as any);
 
       this.logger.debug(`onSubmit:`, [payload]);
-      this.service.FIN52030Data.set([]);
 
       this.service.loadFIN52030(payload).pipe(
         finalize(() => {

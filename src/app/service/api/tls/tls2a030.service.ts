@@ -9,10 +9,17 @@ import { environment } from '../../../../environments/environment';
 export class TLS2A030Service {
   private apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   queryTLS2A030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2A030`, data);
+  }
+
+  exportTLS2A030(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/exportTLS2A030`, data, {
+      responseType: 'blob' as 'json',
+      observe: 'response',
+    });
   }
 
 

@@ -182,7 +182,7 @@
           <ng-container *ngIf="col.type === 'template'">
             <div class="input-wrapper" [attr.data-suffix]="col.suffix">
               <input pInputText readonly class="w-full min-w-max" [placeholder]="'請選擇' + (col.header || '')"
-                [value]="templateDisplayValue(rowData, col)" [disabled]="disabled" (click)="overlayPanel.show($event)" />
+                [value]="templateDisplayValue(rowData, col)" [disabled]="disabled || loading" (click)="overlayPanel.show($event)" />
               <p-overlayPanel #overlayPanel [dismissable]="true" [showCloseIcon]="false"
                 [ngStyle]="{'max-width': '50vw', 'min-width': '300px'}" [appendTo]="'body'">
                 <div class="grid p-fluid">

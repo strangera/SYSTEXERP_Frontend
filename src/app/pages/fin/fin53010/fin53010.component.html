@@ -62,6 +62,7 @@
                         controlName="CRT_USR_No"
                         [control]="qf().CRT_USR_No"
                         [options]="service.usrList()"
+                        [loading]="service.usrLoading()"
                         optionLabel="label"
                         optionValue="value"
                         [submitted]="submitted"></app-dropdown>
@@ -70,6 +71,7 @@
                         controlName="UPD_USR_No"
                         [control]="qf().UPD_USR_No"
                         [options]="service.usrList()"
+                        [loading]="service.usrLoading()"
                         optionLabel="label"
                         optionValue="value"
                         [submitted]="submitted"></app-dropdown>
@@ -116,6 +118,7 @@
                [lazy]="true"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
+               [multiSortMeta]="multiSortMeta"
                [loading]="service.tableLoading()"
                [dataKey]="'id'"
                [tableKey]="'FIN53010'"></app-table>

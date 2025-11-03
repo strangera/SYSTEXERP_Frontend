@@ -58,7 +58,7 @@
                         optionLabel="ClassCName"
                         optionValue="ClassNo"
                         [control]="qf().ClassNo"
-                        [loading]="service.classNoLoading"
+                        [loading]="service.classNoLoading()"
                         [submitted]="submitted"></app-dropdown>
 
           <app-dropdown class="col-12 md:col-6 lg:col-4"
@@ -119,7 +119,7 @@
                         [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          @if (service.treeLoading) {
+          @if (service.treeLoading()) {
           <p-progressSpinner></p-progressSpinner>
           } @else {
           <app-tree-dropdown [members]="service.FIN52080Tree()"
@@ -132,7 +132,7 @@
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      [loading]="service.tableLoading"></app-button>
+                      [loading]="service.tableLoading()"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -154,6 +154,6 @@
              [totalRecords]="totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
              [lazy]="true"
-             [loading]="service.tableLoading">
+             [loading]="service.tableLoading()">
   </app-table>
 </div>

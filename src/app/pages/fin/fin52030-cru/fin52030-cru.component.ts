@@ -95,6 +95,24 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     return !diff;
   });
 
+  public readonly dropdownEffect = effect(() => {
+    const accNos = this.service.accNoList();
+    const vendors = this.service.vendorList();
+    const usrs = this.service.usrList();
+    const accDescs = this.service.noteDescList();
+    const [name, date] = [this.user.user_Name, new Date()];
+
+    if (!accNos.length || !vendors.length || !usrs.length) return;
+    this.logger.debug('dropdown effect:', [accNos, vendors, usrs, accDescs, name, date]);
+
+    this.isFormCreateable
+      ? this.dataForm.patchValue({ CRT_USR_No: name, CRT_Date: date })
+      : this.dataForm.patchValue({ UPD_USR_No: name, UPD_Date: date });
+
+    this.loading = !1;
+    this.service.tableLoading.set(!1);
+  }, { allowSignalWrites: !0 });
+
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
       this.loading = !1;
@@ -209,7 +227,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     private logger: NGXLogger,
   ) {
     super();
-    this.authService.getUserInfo() && (this.user = this.authService.getUserInfo()!);
+    this.user = this.authService.getUserInfo()!;
   }
 
   public ngOnInit(): void {
@@ -220,29 +238,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     this.service.getOrgNoList();
     this.service.getRefNameList();
+    this.service.getAccNoList();
+    this.service.getVendorList();
+    this.service.getUsrList();
+    this.service.getAccDescList([]);
 
-    combineLatest([
-      this.service.getAccNoList(),
-      this.service.getVendorList(),
-      this.service.getUsrList(),
-      this.service.getAccDescList([]),
-    ]).pipe(
-      tap(([accNos, vendors, usrs, accDescs]) => {
-        this.logger.debug(`init fork:`, [accNos, vendors, usrs, accDescs]);
-        if (!this.isFormCreateable) {
-          this.df().UPD_USR_No.setValue(this.user.user_Name);
-          this.df().UPD_Date.setValue(new Date());
-        } else {
-          this.df().CRT_USR_No.setValue(this.user.user_Name);
-          this.df().CRT_Date.setValue(new Date());
-        }
-      }),
-      finalize(() => {
-        this.loading = !1;
-        this.service.tableLoading.set(!1);
-        this.logger.debug(`init:`, [this.rowdata, this.service.FIN52030Detail()]);
-      }),
-    ).subscribe();
+    this.logger.debug(`init:`, [this.user, this.rowdata]);
   }
 
   public onSubmit(): void {

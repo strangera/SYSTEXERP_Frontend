@@ -39,7 +39,7 @@
                         [options]="service.usrList()"
                         optionLabel="label"
                         optionValue="value"
-                        [disabled]="service.usrLoading()"
+                        [loading]="service.usrLoading()"
                         [control]="qf().CRT_USR_No"
                         [submitted]="submitted"></app-dropdown>
           <app-dropdown class="col-12 md:col-6 lg:col-4"
@@ -48,7 +48,7 @@
                         [options]="service.usrList()"
                         optionLabel="label"
                         optionValue="value"
-                        [disabled]="service.usrLoading()"
+                        [loading]="service.usrLoading()"
                         [control]="qf().UPD_USR_No"
                         [submitted]="submitted"></app-dropdown>
         </div>
@@ -56,7 +56,7 @@
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      [loading]="service.tableLoading()"></app-button>
+                      [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -73,7 +73,7 @@
                [lazy]="true"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading()"
+               [loading]="loading"
                [dataKey]="'id'"
                [tableKey]="'FIN52030'"></app-table>
   </div>

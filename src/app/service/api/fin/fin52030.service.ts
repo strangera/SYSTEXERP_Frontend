@@ -67,6 +67,7 @@ export class FIN52030Service {
   ) { }
 
   public loadFIN52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
+    this.FIN52030Data.set([]);
     this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, payload).pipe(
@@ -146,20 +147,19 @@ export class FIN52030Service {
     ).subscribe();
   }
 
-  public getAccDescList(AccNo: string[]): Observable<AccDescOption[]> {
+  public getAccDescList(AccNo: string[]): void {
     this.noteDescCancel$.next();
     this.noteDescLoading.set(!0);
-    return this.http.post<NoteDescResponse>(`${apiUrl}/queryFIN52090`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
+    this.http.post<NoteDescResponse>(`${apiUrl}/queryAccNoNoteDescDropdown`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
       take(1),
       takeUntil(this.noteDescCancel$),
-      map(res => Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
-        ({ value: key, label: value[0], data: value.map((v, i) => ({ value: String(i), label: v })) } as AccDescOption))),
-      tap(res => this.noteDescList.set(res)),
+      tap(res => this.noteDescList.set(Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
+        ({ value: key, label: (value as string[])[0], data: (value as string[]).map((v: string, i: number) => ({ value: String(i), label: v })) } as AccDescOption)))),
       finalize(() => {
         this.noteDescLoading.set(!1);
         this.logger.debug('查詢NoteDescList結果:', [this.noteDescList()]);
       }),
-    );
+    ).subscribe();
   }
 
   public getOrgNoList(): void {
@@ -172,44 +172,41 @@ export class FIN52030Service {
     ).subscribe();
   }
 
-  public getAccNoList(): Observable<Option[]> {
+  public getAccNoList(): void {
     this.accNoCancel$.next();
     this.accLoading.set(!0);
-    return this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
+    this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       takeUntil(this.accNoCancel$),
-      map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName, templateLabel: `${item.AccNo} - ${item.AccCName}` } as Option))),
-      tap(res => this.accNoList.set(res)),
+      tap(res => this.accNoList.set(res.Data.map(item => ({ value: item.AccNo, label: item.AccCName, templateLabel: `${item.AccNo} - ${item.AccCName}` } as Option)))),
       finalize(() => {
         this.accLoading.set(!1);
         this.logger.debug('查詢AccNoList結果:', [this.accNoList()]);
       }),
-    );
+    ).subscribe();
   }
 
-  public getVendorList(): Observable<Option[]> {
+  public getVendorList(): void {
     this.vendorCancel$.next();
     this.venLoading.set(!0);
-    return this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
+    this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
       take(1),
       takeUntil(this.vendorCancel$),
-      map(res => res?.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option)) ?? []),
-      tap(res => this.vendorList.set(res)),
+      tap(res => this.vendorList.set(res?.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option)) ?? [])),
       finalize(() => {
         this.venLoading.set(!1);
         this.logger.debug('查詢VendorList結果:', [this.vendorList()]);
       }),
-    );
+    ).subscribe();
   }
 
-  public getUsrList(): Observable<Option[]> {
+  public getUsrList(): void {
     this.usrCancel$.next();
-    return this.dropdownApi.queryTblUserOrgid().pipe(
+    this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
       takeUntil(this.usrCancel$),
-      map(res => res?.map(item => ({ value: item.Org_ID, label: item.Org_Name } as Option)) ?? []),
-      tap(res => this.usrList.set(res)),
+      tap(res => this.usrList.set(res?.map(item => ({ value: item.Org_ID, label: item.Org_Name } as Option)) ?? [])),
       finalize(() => this.logger.debug('查詢TblUserOrgidList結果:', [this.usrList()])),
-    );
+    ).subscribe();
   }
 }
