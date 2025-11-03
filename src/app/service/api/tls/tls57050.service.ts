@@ -19,7 +19,7 @@ export interface QueryTLS57050Request {
   PLU_OrgPLUNo: string,
   pageIndex: number,
   pageSize: number,
-  SortBy: SortMeta[]
+  SortBy?: SortMeta[]
 }
 
 export interface QueryTLS57050ApiResponse {

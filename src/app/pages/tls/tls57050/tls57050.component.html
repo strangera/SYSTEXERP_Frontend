@@ -17,9 +17,9 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" startLabel="銷售起始日期" endLabel="銷售結束日期"
-              startControlName="TXN_DateStart" endControlName="TXN_DateEnd" [submitted]="submitted"
-              [startControl]="queryForm.controls.TXN_Date_Start" [endControl]="queryForm.controls.TXN_Date_End" />
+            <app-calendar-range-quick label="銷售日期" startControlName="TXN_DateStart" endControlName="TXN_DateEnd"
+              [submitted]="submitted" [startControl]="queryForm.controls.TXN_Date_Start"
+              [endControl]="queryForm.controls.TXN_Date_End" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="收銀機號/名稱" controlName="ECR_No" [options]="ECR_NoOptions" optionLabel="label"

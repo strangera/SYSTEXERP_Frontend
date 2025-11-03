@@ -5,7 +5,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -21,6 +20,7 @@ import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
   selector: 'app-tls57050',
@@ -33,13 +33,13 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     ReactiveFormsModule,
     DropdownComponent,
     InputTextComponent,
-    CalendarRangeComponent,
     ButtonComponent,
     TranslateModule,
     DropdownTableComponent,
     ButtonModule,
     InputNumberComponent,
     TableReportComponent,
+    CalendarRangeQuickComponent
   ],
 })
 export class TLS57050Component extends BasicQueryPageComponent<DetailData | SummaryData> implements OnInit {
@@ -127,8 +127,8 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'TXN_TotQty', header: '數量' },
         { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount },
         { field: 'TXN_TotSaleAmt', header: '銷售金額', format: formatAmount },
-        { field: 'TotRebate', header: '整張折讓' },
-        { field: 'TotDisc', header: '整張折扣' },
+        { field: 'TotRebate', header: '整張折讓', format: formatAmount },
+        { field: 'TotDisc', header: '整張折扣', format: formatAmount },
       ];
       this.data = [];
     } else if (displayMode === 2) { // 明細模式
@@ -146,8 +146,8 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'TXN_Qty', header: '數量' },
         { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount },
         { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
-        { field: 'TotRebate', header: '整張折讓' },
-        { field: 'TotDisc', header: '整張折扣' },
+        { field: 'TotRebate', header: '整張折讓', format: formatAmount },
+        { field: 'TotDisc', header: '整張折扣', format: formatAmount },
       ];
       this.data = [];
     } else {
@@ -173,7 +173,6 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         PLU_OrgPLUNo: formValue.PLU_OrgPLUNo,
         pageIndex: 1,
         pageSize: 30,
-        SortBy: [{ field: 'TXN_SaleNoteNo', order: 1 }],
       };
 
       this.tls57050Service.queryTLS57050(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
