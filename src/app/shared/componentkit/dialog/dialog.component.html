@@ -1,14 +1,14 @@
 <p-dialog [(visible)]="visible" position="center" [focusOnShow]="false"
   [style]="{ width: width, height: height, maxWidth: maxWidth, minHeight: minHeight }" [header]="header" [modal]="true"
   [styleClass]="styleClass + ' p-fluid'" (visibleChange)="visibleChange.emit($event)" [maximizable]="true"
-  appendTo="body">
+  appendTo="body" [closable]="!loading">
   <ng-template pTemplate="content">
     <ng-content></ng-content>
   </ng-template>
   <ng-template pTemplate="footer" *ngIf="showFooter">
     <div class="grid justify-content-end gap-2 m-0 border-top-1 surface-border pt-3">
       <app-button btnType="back" (click)="visibleChange.emit(false)"></app-button>
-      <app-button label="確定" btnType="submit" (click)="saveDialog()" [disabled]="disable"></app-button>
+      <app-button label="確定" btnType="submit" (click)="saveDialog()" [loading]="loading" [disabled]="disable"></app-button>
     </div>
   </ng-template>
 </p-dialog>
