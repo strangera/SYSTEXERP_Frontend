@@ -36,9 +36,11 @@
             [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status"
             [submitted]="submitted"></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="樓層" controlName="ECR_SubGroup"
-            [options]="floorOptions" [control]="queryForm.controls.ECR_SubGroup"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="樓層" controlName="ECR_SubGroup" [options]="floorOption"
+            [control]="queryForm.controls.ECR_SubGroup" [optionValue]="'value'" [optionLabel]="'label'"
+            [submitted]="submitted">
+          </app-dropdown>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="位置編號" controlName="ECR_LocNo" [control]="queryForm.controls.ECR_LocNo"
               [options]="LocOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-dropdown>
@@ -90,8 +92,8 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="TLS41010" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)" [pageSizeSetting]="'A0'"
-    (edit)="onEdit($event)" [showCheckBox]="true" (selectionChange)="selectedItems = $event"
+  <app-table-report tableKey="TLS41010" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+    [pageSizeSetting]="'A0'" (edit)="onEdit($event)" [showCheckBox]="true" (selectionChange)="selectedItems = $event"
     [selectedItems]="selectedItems" [totalRecords]="totalRecords" [addButton]="addButton" [loading]="loading"
     [lastQueryBody]="lastQueryForm" [footerData]="footerTotal"
     [queryFunction]="tls41010Service.queryTLS41010.bind(tls41010Service)"

@@ -111,23 +111,10 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-  onImportExcel(event: any): void {
-    const file = event.files[0];
-    if (!file) {
-      console.error('No file selected for import');
-      return;
-    }
-  }
-
   onExportExcel(): void {
     const raw = this.queryForm.getRawValue();
 
     const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
       SaleDateStart:
         raw.SaleDateStart instanceof Date
           ? raw.SaleDateStart.toISOString()
@@ -138,7 +125,12 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
           : raw.SaleDateEnd ?? null,
       ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
       ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+      PageSize: 999999,
+      PageIndex: 1,
+      SortBy: [],
+      IsExcel: true,
     };
+
 
     console.log('匯出 payload:', payload);
     this.btnLoading2 = true;
@@ -146,20 +138,14 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     this.tls2a030Service.exportTLS2A030(payload).subscribe({
       next: (res) => {
         const blob = new Blob([res.body], {
-          type:
-            res.body.type ||
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         });
-
-        // 從 header 取 filename（若後端有回傳）
         const contentDisposition = res.headers.get('content-disposition');
         let filename = '溢欠彙總表.xlsx';
         if (contentDisposition) {
           const match = contentDisposition.match(/filename="?([^"]+)"?/);
           if (match) filename = decodeURIComponent(match[1]);
         }
-
-        // 下載
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -168,9 +154,9 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
         window.URL.revokeObjectURL(url);
         this.btnLoading2 = false;
       },
-
     });
   }
+
 
 
   onSubmit(form: FormGroup): void {
