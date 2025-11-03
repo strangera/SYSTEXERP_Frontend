@@ -28,6 +28,9 @@ import { QueryTLS41010Request } from '../../../service/api/tls/tls41010.service'
 import { NgIf } from '@angular/common';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { Tls46010Service } from '@service/api/tls/tls46010.service';
+import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
+
 @Component({
   selector: 'app-tls41010',
   templateUrl: './tls41010.component.html',
@@ -84,7 +87,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   data: TLS41010Data[] = [];
   selectedItems: TLS41010Data[] = [];
   totalRecords = 0;
-  floorOptions: any[] = [];
+  floorOption: apiOption[] = []; //樓層
   ECR_TmplNo_Option: IDropdownItem[] = [];
   // 複製設定 Dialog 相關
   dialogVisible = false;
@@ -122,7 +125,8 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     private dropDownListService: DropDownListService,
     private counterNameService: CounterNameService,
     private Router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private tls14030Service: Tls14030Service,
   ) {
     super();
   }
@@ -189,23 +193,24 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
             if (res?.Status === '0000' && res.Data) {
               const info = res.Data;
 
-              //對應樓層
-              const matchedFloor = this.floorOptions.find(
-                f =>
-                  f.value === info.ECR_SubGroup ||
-                  f.label === info.ECR_SubGroup ||
-                  f.label.includes(info.ECR_SubGroup)
+              // 對應樓層
+              const matchedFloor = this.floorOption.find((f: apiOption) =>
+                (f as any).value === info.ECR_SubGroup ||
+                (f as any).label === info.ECR_SubGroup ||
+                ((f as any).label?.includes?.(info.ECR_SubGroup))
               );
 
               this.queryForm.patchValue({
                 ECR_LocNo: info.ECR_LocNo ?? '',
                 ECR_Status: info.ECR_Status ?? '',
                 ECR_Group: info.ECR_Group ?? '',
-                ECR_SubGroup: matchedFloor ? matchedFloor.value : '',
+                ECR_SubGroup: matchedFloor ? ((matchedFloor as any).value ?? matchedFloor.No) : '',
                 ECR_AreaNo: info.ECR_AreaNo ?? '',
                 ECR_ActiveDateStart: info.tlt_bdate ? new Date(info.tlt_bdate) : null,
-                ECR_ActiveDateEnd: info.tlt_edate ? new Date(info.tlt_edate) : null
+                ECR_ActiveDateEnd: info.tlt_edate ? new Date(info.tlt_edate) : null,
               }, { emitEvent: false });
+
+
             } else {
               console.warn('查詢櫃位資料失敗:', res?.Message);
             }
@@ -254,15 +259,18 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       }
     });
-    this.locationOptionsService.getFloorOptions().subscribe({
-      next: (res) => {
-        this.floorOptions = res.map((item: any) => ({
-          label: item.name || item.FLOOR_NAME || item.label,
-          value: item.code || item.FLOOR_NO || item.value
+    // 樓層下拉
+    this.tls14030Service
+      .querySYS3900_DropDownList({})
+      .subscribe((response) => {
+        this.floorOption = response.Data.map((item: apiOption) => ({
+          ...item,
+          label: item.Name,
+          value: item.No
         }));
-      },
-      error: () => this.messageService.errorBubble('載入樓層選單失敗')
-    });
+      });
+
+
 
     this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
       if (locNo) {

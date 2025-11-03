@@ -224,8 +224,8 @@ export class AuthService {
   /**
    * 獲取外部 Token
    */
-  getOuterToken(): Observable<OuterTokenResponse> {
-    // 最佳實踐：移除不必要的 headers，依賴 HTTP 攔截器處理
-    return this.http.get<OuterTokenResponse>(`${this.apiUrl}/SSOLogin/getOuterToken`);
-  }
+getOuterToken(): Observable<OuterTokenResponse> {
+  console.log('[AuthService] 呼叫 /SSOLogin/getOuterToken');
+  return this.http.get<OuterTokenResponse>(`${this.apiUrl}/SSOLogin/getOuterToken`);
+}
 }

@@ -34,7 +34,7 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
   columns: Column[] = [
     { field: 'AccSubject', header: '會計科目', visible: true },
     { field: 'Ven_Name', header: '廠商代號/簡稱', visible: true },
-    { field: 'VouStatus', header: '狀態', visible: true },
+
     { field: 'NoteDesc', header: '摘要', visible: true },
     { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount },
     { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount },
