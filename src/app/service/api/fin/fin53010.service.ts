@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
+import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
 import { AccDescOption, AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, QueryFIN53010Detail, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -20,9 +21,10 @@ export class FIN53010Service {
   private readonly sys1000Cancel$ = new Subject<void>();
   private readonly voucherTypeCancel$ = new Subject<void>();
   private readonly orgNoCancel$ = new Subject<void>();
-  private readonly orgIdCancel$ = new Subject<void>();
   private readonly refNameCancel$ = new Subject<void>();
   private readonly noteDescCancel$ = new Subject<void>();
+  private readonly fin52030Cancel$ = new Subject<void>();
+  private readonly vocTempCancel$ = new Subject<void>();
 
   public readonly FIN53010Data = signal<FIN53010Data[]>([]);
   public readonly FIN53010Detail = signal<QueryFIN53010Detail>(Object.create(null));
@@ -38,6 +40,8 @@ export class FIN53010Service {
   public readonly voucherTypeLoading = signal<boolean>(!1);
   public readonly refNameLoading = signal<boolean>(!1);
   public readonly noteDescLoading = signal<boolean>(!1);
+  public readonly fin52030Loading = signal<boolean>(!1);
+  public readonly vocTempLoading = signal<boolean>(!1);
 
   public readonly cru = signal<boolean>(!1);
 
@@ -57,6 +61,10 @@ export class FIN53010Service {
   public readonly refNameList = signal<Option[]>([]);
   /** 摘要 */
   public readonly noteDescList = signal<AccDescOption[]>([]);
+  /** 常用傳票 */
+  public readonly voucherTemplateList = signal<FIN52030Data[]>([]);
+  /** 常用傳票明細 */
+  public readonly voucherTemplateDetail = signal<FIN52030DetailData>(Object.create(null));
 
   /** 傳票種類 */
   public readonly vouTypeOptions = signal<Option[]>([
@@ -159,6 +167,30 @@ export class FIN53010Service {
       takeUntil(this.tableCancel$),
       tap(res => this.logger.debug('刪除FIN53010結果:', [res])),
       finalize(() => this.tableLoading.set(!1))
+    );
+  }
+
+  public getFin52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
+    this.fin52030Cancel$.next();
+    this.fin52030Loading.set(!0);
+    return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, { ...payload, PageSize: 9999, PageIndex: 1 }).pipe(
+      take(1),
+      takeUntil(this.fin52030Cancel$),
+      tap(res => this.voucherTemplateList.set(res.Data)),
+      tap(res => this.logger.debug('查詢FIN52030結果:', [res])),
+      finalize(() => this.fin52030Loading.set(!1)),
+    );
+  }
+
+  public getFin52030Detail(TempNo: string, CompNo: string, Mid = 0): Observable<FIN52030DetailDataResponse> {
+    this.vocTempCancel$.next();
+    this.vocTempLoading.set(!0);
+    return this.http.post<FIN52030DetailDataResponse>(`${apiUrl}/GetFIN52030Detail`, { TempNo, CompNo, Mid }).pipe(
+      take(1),
+      takeUntil(this.vocTempCancel$),
+      tap(res => this.voucherTemplateDetail.set(res.Data)),
+      tap(res => this.logger.debug('查詢VoucherTemplateList結果:', [res])),
+      finalize(() => this.vocTempLoading.set(!1)),
     );
   }
 

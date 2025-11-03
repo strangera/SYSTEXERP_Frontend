@@ -5,7 +5,8 @@
     @if (isFormCreateable) {
     <app-button btnType="query"
                 label="套用常用傳票"
-                (click)="onApplyTemplate()"></app-button>
+                [loading]="service.fin52030Loading()"
+                (click)="getVocherTemplate()"></app-button>
     }
     <app-button btnType="back"
                 (click)="onCancel()"></app-button>
@@ -119,7 +120,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [disabled]="!dataForm.valid || !isBalanced()"
+                    [disabled]="!dataForm.valid || !isBalanced() || displayDialog()"
                     [loading]="service.tableLoading()"></app-button>
       </div>
       }
@@ -224,3 +225,37 @@
     </div>
   </div>
 </ng-template>
+
+
+<app-dialog [(visible)]="displayDialog"
+            header="選擇常用傳票"
+            [disable]="!selectedDetail().length"
+            [loading]="service.vocTempLoading()"
+            (save)="onApplyTemplate()">
+
+  <div class="grid p-fluid mt-3 mb-3">
+    <app-dropdown class="col-12 md:col-6 lg:col-4"
+                  label="傳票種類"
+                  controlName="VouType"
+                  [showClear]="!1"
+                  [disabled]="!isFormCreateable"
+                  [options]="service.vouTypeOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="df().VouType"
+                  [submitted]="submitted"></app-dropdown>
+  </div>
+
+  <app-table [dataKey]="'id'"
+             [tableKey]="'FIN53010_VocherTemplate'"
+             [showReportMode]="!1"
+             [showCaption]="!1"
+             [showHeader]="!1"
+             [showManage]="!1"
+             [showDelete]="!1"
+             [showCheckBox]="!0"
+             [selectionMode]="'single'"
+             [data]="service.voucherTemplateList()"
+             [columns]="templateColumns"
+             (selectionChange)="selectedDetail.set($event)"></app-table>
+</app-dialog>

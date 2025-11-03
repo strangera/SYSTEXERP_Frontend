@@ -86,7 +86,7 @@ export interface FIN53010Detail {
 export interface FIN53010DetailTable extends FIN53010Detail {
   AccAmtC?: number;
   AccAmtD?: number;
-  AccName?: string;
+  AccCName?: string;
   DetailName?: string;
   ReflNo?: string;
   clearingCode?: string;

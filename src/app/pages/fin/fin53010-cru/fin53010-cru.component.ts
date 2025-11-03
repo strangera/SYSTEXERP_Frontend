@@ -7,12 +7,14 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -21,6 +23,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, Observable, tap } from 'rxjs';
+import { FIN52030Data, FIN52030Detail, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
@@ -40,10 +43,12 @@ import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010Inser
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
+    DialogComponent,
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
     RadiobuttonComponent,
+    TableComponent,
     TableEditComponent,
   ],
 })
@@ -73,10 +78,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly df = computed(() => this.dataForm.controls);
 
   public readonly tableData = signal<FIN53010DetailTable[]>([]);
+  public readonly selectedDetail = signal<FIN52030DetailData[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
   public selectedItems: FIN53010Data[] = [];
-  public rowEditCanSave = !1;
+  public rowEditCanSave = signal<boolean>(!1);
+  public displayDialog = signal<boolean>(!1);
 
   public readonly footerData = computed(() => ({
     AccAmtD: this.debitTotal(),
@@ -184,7 +191,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       optionValue: 'value',
       templateLabel: 'templateLabel',
     },
-    { field: 'AccName', header: '科目名稱' },
+    { field: 'AccCName', header: '科目名稱' },
     {
       field: 'DetailNo',
       header: '廠商/員工代號',
@@ -241,11 +248,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'recKey', header: '對帳KEY值', type: 'input' },
   ]);
 
+  public readonly templateColumns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
+    { field: 'TempNo', header: '傳票號碼' },
+    { field: 'TempName', header: '傳票代號' },
+    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
+    { field: 'DetailCount', header: '明細筆數' },
+  ];
+
   constructor(
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
   ) {
     super();
+    this.user = this.authService.getUserInfo()!;
   }
 
   public ngOnInit(): void {
@@ -323,7 +338,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       switch (event.field) {
         case 'AccNo':
           // 自動帶入科目名稱
-          result[index].AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
+          result[index].AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 自動帶入摘要
           result[index].NoteDesc = String(this.service.noteDescMap()
             .get(event.value)?.data?.[0].label || event.value || '');
@@ -357,7 +372,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       result[index].SerNo = (index + 1) * 10;
 
       // 檢查是否可儲存
-      this.rowEditCanSave = !!result[index].AccNo && !!result[index].ORG_ID || !!this.isBalanced();
+      this.rowEditCanSave.set(!!result[index].AccNo && !!result[index].ORG_ID || !!this.isBalanced());
 
       return result;
     });
@@ -396,9 +411,55 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug(`onRowReorder:`, [event, this.tableData()]);
   }
 
+  public getVocherTemplate(): void {
+    const payload: FIN52030Payload = {
+      ...(this.df().VouType.value ? { VouType: this.df().VouType.value as FIN52030Payload['VouType'] } : {}),
+      // ...(this.isFormCreateable ? { CRT_USR_No: this.user.user_No } : {}),
+      // ...(!this.isFormCreateable ? { UPD_USR_No: this.user.user_No } : {}),
+    };
+
+    this.logger.debug('getVocherTemplate:', [payload]);
+    if (this.loading) return;
+    this.service.getFin52030(payload).pipe(
+      finalize(() => { this.loading = !1; this.displayDialog.set(!0); }),
+      tap(res => this.logger.debug('取得常用傳票結果:', [res]))
+    ).subscribe();
+  }
+
   public onApplyTemplate(): void {
-    this.logger.debug(`套用常用傳票:`, []);
-  };
+    this.logger.debug('onApplyTemplate:', [this.selectedDetail()]);
+    this.service.getFin52030Detail(this.selectedDetail()[0]?.TempNo, this.df().CompNo.value!, Number(this.user.mid)).pipe(
+      finalize(() => this.loading = !1),
+      tap(res => {
+        if (res.Status === '0000' && res.Data) {
+          this.logger.debug('套用常用傳票結果:', [res]);
+          const data = res.Data;
+          this.dataForm.patchValue({
+            VouType: data.VouType,
+            CRT_USR_No: data.CRT_USR_No ?? void 0,
+            CRT_Date: data.CRT_Date || void 0,
+            UPD_USR_No: data.UPD_USR_No ?? void 0,
+            UPD_Date: data.UPD_Date || void 0,
+          });
+          this.tableData.set(data.Details.map((v, index) => ({
+            ...v,
+            id: v.id!,
+            ...(v.AccDC === '0' ? { AccAmtC: v.AccAmt } : {}),
+            ...(v.AccDC === '1' ? { AccAmtD: v.AccAmt } : {}),
+            ...(v.NoteDesc ? { NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label } : {}),
+            AccNo: v.AccNo,
+            DetailNo: v.DetailNo,
+            AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
+            DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
+              ?? this.service.usrMap().get(String(v.DetailNo))?.label,
+            SerNo: v.SerNo,
+            index: v.index,
+          })));
+          this.displayDialog.set(!1);
+        }
+      })
+    ).subscribe();
+  }
 
   // Template 相關方法
   public onTemplateTypeChange(event: DropdownChangeEvent): void {
@@ -415,7 +476,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const term = this.templateSearchTerm?.trim().toLowerCase();
     if (!term) return src;
 
-    return src.filter((item: any) => {
+    return src.filter(item => {
       const label = item.label?.toLowerCase() || '';
       const value = item.value?.toLowerCase() || '';
       return label.includes(term) || value.includes(term);
