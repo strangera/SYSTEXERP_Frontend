@@ -1,138 +1,75 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate"
-              [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="日期" controlName="accountsummary"
+              [startControl]="queryForm.controls.SSubpoenadate" [endControl]="queryForm.controls.ESubpoenadate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門"
-              controlName="department"
-              [options]="departmentOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.department"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="部門" controlName="ORG_ID" [options]="ORG_IDOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="科目代號"
-              controlName="Accountcode"
-              [options]="accountingaccountOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Accountcode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="科目代號" controlName="AccNoFrom" [options]="AccNo_Options | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.AccNoFrom" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="廠商代號"
-              controlName="vander"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.vander"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VenNoOptions" optionLabel="Name" optionValue="No"
+              [control]="queryForm.controls.VEN_No" [submitted]="submitted" [editable]="false"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="立沖代號"
-              [startControl]="queryForm.controls.startserialticket"
-              [endControl]="queryForm.controls.endserialticket"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="立沖代號"
+              [startControl]="queryForm.controls.startserialticket" [endControl]="queryForm.controls.endserialticket"
+              [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="對象別編號"
-              controlName="code"
-              [options]="codeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.code"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-multi-select label="對象別編號" controlName="TargetNoList" [options]="TargetNoListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.TargetNoList"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="對帳KEY值"
-              controlName=" Subpoenacode"
-              [control]="queryForm.controls.Subpoenacode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="對帳KEY值" controlName=" Subpoenacode" [control]="queryForm.controls.Subpoenacode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票狀態"
-              controlName="Subpoenatype2"
-              [options]="Subpoenatype2"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenatype2"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-multi-select label="傳票型態" controlName="VouTypeList" [options]="VouTypeListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VouTypeList" [submitted]="submitted">
+            </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否為對象別"
-              controlName="ifOptions"
-              [options]="ifOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ifOptions"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="是否為對象別" controlName="ifOptions" [options]="ifOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ifOptions" [submitted]="submitted"></app-dropdown>
           </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table tableKey="TLS2a050" [showManage]="true" [data]="data" [columns]="columns"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showReportMode]="false"
+      [showDelete]="false" [showEdit]="false" (detail)="onDetail($event)">
+      <!-- <header>
+        <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
+          class="p-button-rounded p-button-text p-button-info" icon="fa fa-file-lines"
+          [disabled]="!canPerformAction('70')" (click)="exportReport()" />
+      </header> -->
+    </app-table>
   </div>
 </div>

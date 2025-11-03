@@ -17,6 +17,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { ButtonModule } from 'primeng/button';
 
 interface SalesRecord {
   PAY_NAME: string;
@@ -43,7 +44,8 @@ interface SalesRecord {
     DropdownRangeComponent,
     ButtonComponent,
     TableComponent,
-    TranslateModule
+    TranslateModule,
+    ButtonModule
   ]
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -62,7 +64,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
-
+  btnLoading2 = false;
   // 表格欄位
   columns: Column[] = [
     { field: 'PAY_NAME', header: '支付工具', visible: true },
@@ -120,8 +122,12 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   onExportExcel(): void {
     const raw = this.queryForm.getRawValue();
 
-    const condition = {
-      ...raw,
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [],
       SaleDateStart:
         raw.SaleDateStart instanceof Date
           ? raw.SaleDateStart.toISOString()
@@ -130,45 +136,42 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
         raw.SaleDateEnd instanceof Date
           ? raw.SaleDateEnd.toISOString()
           : raw.SaleDateEnd ?? null,
-      ECR_No: raw.ECR_No?.trim() ?? '',
       ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
-      ECR_No_End: raw.ECR_No_End?.trim() ?? ''
-    };
-
-    const payload = {
-      query_condition: {
-        ServiceName: 'queryTLS2A030',
-        Conditions: [condition]
-      },
-      report_title: '溢欠彙總表',
-      file_name: `TLS22030_${new Date().toISOString().slice(0, 10)}`,
-      columns: this.columns.filter(c => c.visible),
-      config: {
-        print_reportTitle: 'Y',
-        print_reportTitle_per_page: 'N',
-        print_eject: 'Y',
-        print_field_title: 'Y',
-        print_field_title_per_page: 'N'
-      }
+      ECR_No_End: raw.ECR_No_End?.trim() ?? '',
     };
 
     console.log('匯出 payload:', payload);
+    this.btnLoading2 = true;
 
-    this.http.post(`${environment.ApiUrl}/exportExcel`, payload, {
-      responseType: 'blob'
-    }).subscribe({
-      next: (blob) => {
+    this.tls2a030Service.exportTLS2A030(payload).subscribe({
+      next: (res) => {
+        const blob = new Blob([res.body], {
+          type:
+            res.body.type ||
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+
+        // 從 header 取 filename（若後端有回傳）
+        const contentDisposition = res.headers.get('content-disposition');
+        let filename = '溢欠彙總表.xlsx';
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) filename = decodeURIComponent(match[1]);
+        }
+
+        // 下載
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${payload.file_name}.xlsx`;
+        a.download = filename;
         a.click();
+        window.URL.revokeObjectURL(url);
+        this.btnLoading2 = false;
       },
-      error: (err) => {
-        console.error('Excel 匯出失敗', err);
-      }
+
     });
   }
+
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
@@ -204,11 +207,8 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.loading = false;
         },
-        error: (err) => {
-          console.error('TLS2A030 查詢失敗', err);
-          this.loading = false;
-        }
       });
     });
   }
+
 }
