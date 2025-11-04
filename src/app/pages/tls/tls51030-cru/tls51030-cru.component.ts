@@ -111,7 +111,7 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
 
     // 新增：在初始化後立即設置大分類代碼的禁用狀態
-    this.updateCATSNoDisabledState();
+    // this.updateCATSNoDisabledState();
   }
 
   private loadInitialData(): void {
@@ -140,41 +140,18 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
-  // 新增：自定義清空方法，保留大分類代碼
-  clearFormExceptCATSNo(): void {
-    const catSNoControl = this.dataForm.get('CAT_SNo');
-    const isCAT_MNoDisabled = catSNoControl?.disabled || false;  // 新增：檢查是否被禁用
-    const currentCATSNo = catSNoControl?.value;
-
-    this.dataForm.reset();
-
-    // 修正：只有在欄位被禁用且有值時才恢復
-    if (isCAT_MNoDisabled && currentCATSNo) {
-      this.dataForm.patchValue({
-        CAT_SNo: currentCATSNo,
-        id: 0
-      });
-    } else {
-      this.dataForm.patchValue({
-        id: 0
-      });
-    }
-
-    this.updateCATSNoDisabledState();
-  }
-
-  // 修正：更新大分類代碼欄位的禁用狀態
-  private updateCATSNoDisabledState(): void {
-    const field = this.dataForm.get('CAT_SNo');
-    if (field) {
-      // 編輯模式且 CanDel = false 時才禁用大分類代碼
-      if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
-        field.disable();
-      } else {
-        field.enable();
-      }
-    }
-  }
+  // // 修正：更新大分類代碼欄位的禁用狀態
+  // private updateCATSNoDisabledState(): void {
+  //   const field = this.dataForm.get('CAT_SNo');
+  //   if (field) {
+  //     // 編輯模式且 CanDel = false 時才禁用大分類代碼
+  //     if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
+  //       field.disable();
+  //     } else {
+  //       field.enable();
+  //     }
+  //   }
+  // }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
