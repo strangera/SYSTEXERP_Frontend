@@ -12,6 +12,7 @@ import {
 } from 'src/app/service/api/fin/fin55060.service';
 
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 import { AccordionModule } from 'primeng/accordion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -85,10 +86,11 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
   btnLoading = false;
   lastQueryBody: QueryFIN55060Payload | null = null;
 
+  /** 和 FIN55050 一樣：用 detail 欄位作為可點擊連結（這裡用 AccNo4） */
   columns: Column[] = [
-    // 群組欄位（供群組顯示；如要讓使用者看見可把 visible 改 true）
-    { field: 'AccNo4',     header: '四級科目',     visible: false },
-    { field: 'AccNo4Name', header: '四級科目名稱', visible: false },
+    { field: 'AccNo4',     header: '四級科目',       visible: true,  }, // ← 可點
+    // { field: 'AccNo4',     header: '四級科目',       visible: true,  type: 'detail' }, // ← 可點
+    { field: 'AccNo4Name', header: '四級科目名稱',   visible: true },
 
     { field: 'AccNo',      header: '科目代號',       visible: true },
     { field: 'AccCName',   header: '科目名稱',       visible: true },
@@ -138,7 +140,7 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     return sortBy.filter(s => s && typeof s.field === 'string' && !s.field.startsWith('_'));
   }
 
-  /** 以 AccNo4 群組的資料 -> 展平成平面列，並預先依 AccNo4 排序，利於子表頭呈現 */
+  /** 以 AccNo4 群組的資料 -> 展平成平面列，並依 AccNo4 排序，利於群組呈現 */
   private flattenGroupsToRows(groups: ApiGroup[] | null | undefined): TableRow[] {
     if (!Array.isArray(groups)) return [];
     const rows: TableRow[] = [];
@@ -207,21 +209,22 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     });
   }
 
-  /** lazy 分頁事件（由 app-table-subheader 觸發） */
+  /** lazy 分頁事件（由 app-table-subheader 觸發）—和 FIN55050 一樣的處理方式 */
   override onLazyLoadData(event: any, form: FormGroup) {
     if (!event) return;
-    const pageSize = event.rows ?? event.pageSize ?? form.value.pageSize ?? 30;
-    const first = event.first ?? 0;
-    const pageIndex = Math.floor(first / pageSize) + 1;
+    // FIN55050 風格：直接套用 event 的 pageIndex/pageSize/SortBy 到表單；不觸發 valueChanges
+    form.patchValue({
+      pageSize: event?.pageSize ?? event?.rows ?? form.value.pageSize,
+      pageIndex: event?.pageIndex ?? (event?.first != null
+        ? Math.floor((event.first) / (event.rows ?? event.pageSize ?? form.value.pageSize ?? 30)) + 1
+        : form.value.pageIndex),
+      SortBy: event?.SortBy ?? (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length
+        ? event.multiSortMeta.map((s: any) => ({ field: s.field, order: s.order }))
+        : (event?.sortField ? [{ field: event.sortField, order: event.sortOrder }] : [])),
+    }, { emitEvent: false });
 
-    let SortBy: any[] = [];
-    if (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length) {
-      SortBy = event.multiSortMeta.map((s: any) => ({ field: s.field, order: s.order }));
-    } else if (event.sortField) {
-      SortBy = [{ field: event.sortField, order: event.sortOrder }];
-    }
-
-    form.patchValue({ pageIndex, pageSize, SortBy }, { emitEvent: false });
+    // FIN55050 範例也會在 lazy 時立即查詢
+    // （HTML 已呼叫 onSubmit(queryForm)，這裡就不再主動呼叫以免重複）
   }
 
   // ========= 匯出（不含分頁/排序） =========
@@ -294,6 +297,13 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     const m = /filename="([^"]+)"/.exec(cd);
     if (m?.[1]) { try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch { return m[1]; } }
     return def;
+  }
+
+  // ========= 點擊 AccNo4（detail）導到 CRU =========
+  override onDetail(row: TableRow) {
+    if (!row?.AccNo4) return;
+    // 依你們慣例，將整列 row 與目前查詢條件都帶到 CRU
+    this.navigateWithState(CRUDStatus.Read, row, this.queryForm.getRawValue());
   }
 
   // ========= 下拉載入 =========

@@ -85,9 +85,8 @@
   </p-accordion>
 </div>
 
-<!-- 表格 + 匯出按鈕在同一個 CARD -->
+<!-- 表格 + 匯出按鈕在同一個 CARD，分頁模式依 FIN55050（不顯示 paginator / serialNo） -->
 <div class="card">
-  <!-- 右上角工具列：匯出 PDF / Excel -->
   <div class="flex justify-content-end gap-2 mb-2">
     <app-button
       label="匯出 PDF"
@@ -119,13 +118,14 @@
     [lazy]="true"
     [loading]="loading"
     [showSerialNo]="false"
-    [showPaginator]="true"
+    [showPaginator]="false"
     [showReportMode]="false"
     [groupRowsBy]="'AccNo4'"
     [groupRowsByName]="'AccNo4Name'"
     [showExcel]="false"
     [showExcelExport]="false"
     [showExcelImport]="false"
+    (detail)="onDetail($event)"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
   </app-table-subheader>
 </div>
