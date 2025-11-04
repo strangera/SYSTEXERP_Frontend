@@ -52,7 +52,8 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
   });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading() || this.service.closeLoading();
+    this.loading = this.service.tableLoading()
+      || this.service.closeLoading();
   });
 
   constructor(

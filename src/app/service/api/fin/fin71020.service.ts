@@ -18,7 +18,6 @@ export class FIN71020Service {
   private readonly tableCancel$ = new Subject<void>();
 
   public readonly tableLoading = signal<boolean>(!1);
-  public readonly saving = signal<boolean>(!1);
   public readonly usrLoading = signal<boolean>(!1);
   public readonly orgLoading = signal<boolean>(!1);
 
@@ -40,12 +39,14 @@ export class FIN71020Service {
   };
 
   public saveFIN71020(payload: FIN71020Insert | FIN71020Update, type: 'insert' | 'update' = 'insert'): Observable<BaseQueryResponse<unknown>> {
-    this.saving.set(!0);
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     payload = type === 'insert' ? payload as FIN71020Insert : payload as FIN71020Update;
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/${type}`, payload).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
       tap(res => this.logger.debug('FIN71020新增/修改結果:', [res])),
-      finalize(() => this.saving.set(!1)),
+      finalize(() => this.tableLoading.set(!1)),
     );
   }
 

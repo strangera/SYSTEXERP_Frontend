@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71010Service } from '@service/api/fin/fin71010.service';
@@ -44,6 +44,10 @@ export class FIN71010Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly filteredData = computed(() => {
     return this.service.FIN71010Data();
+  });
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading();
   });
 
   public opForm = this.formBuilder.group({

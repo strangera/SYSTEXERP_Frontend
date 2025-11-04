@@ -28,7 +28,7 @@ export class TLS26080Service {
   public readonly detailTotalRecords = signal<number>(0);
 
   // 讀取狀態
-  public readonly tableLoading = signal<boolean>(!1);
+  public readonly dataLoading = signal<boolean>(!1);
   public readonly approvalStatusLoading = signal<boolean>(!1);
   public readonly campaignLoading = signal<boolean>(!1);
   public readonly capItemsLoading = signal<boolean>(!1);
@@ -92,15 +92,15 @@ export class TLS26080Service {
 
   /** 查詢資料 */
   public loadTLS26080(query: TLS26080Query): void {
-    if (this.tableLoading()) return void (this.tableLoading.set(!1));
-    this.tableLoading.set(!0);
+    if (this.dataLoading()) return void (this.dataLoading.set(!1));
+    this.dataLoading.set(!0);
     this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
       take(1),
       takeUntil(this.dataCancel$),
       tap(response => this.totalRecords.set(response.TotalCount || 0)),
       tap(response => this.TLS26080Data.set(response.Data)),
       finalize(() => {
-        this.tableLoading.set(!1);
+        this.dataLoading.set(!1);
         console.log('查詢結果:', [this.TLS26080Data()]);
       })
     ).subscribe();
@@ -120,16 +120,16 @@ export class TLS26080Service {
 
   /** 專櫃活動 */
   public loadTLS26080Detail(query: string): void {
-    if (this.tableLoading()) return void (this.tableLoading.set(!1));
+    if (this.dataLoading()) return void (this.dataLoading.set(!1));
     this.detailCancel$.next();
-    this.tableLoading.set(!0);
+    this.dataLoading.set(!0);
     this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
       takeUntil(this.detailCancel$),
       tap(response => this.detailTotalRecords.set(response.TotalCount || 0)),
       tap(response => this.TLS26080Detail.set(response.Data)),
       finalize(() => {
-        this.tableLoading.set(!1);
+        this.dataLoading.set(!1);
         console.log('專櫃活動細節查詢結果:', [this.TLS26080Detail()]);
       })
     ).subscribe();
@@ -206,8 +206,12 @@ export class TLS26080Service {
   }
 
   public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
+    this.dataCancel$.next();
+    this.dataLoading.set(!0);
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
       take(1),
+      takeUntil(this.dataCancel$),
+      finalize(() => this.dataLoading.set(!1))
     );
   }
 

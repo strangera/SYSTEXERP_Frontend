@@ -94,7 +94,7 @@
                    [totalRecords]="service.detailTotalRecords()"
                    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
                    [lazy]="true"
-                   [loading]="loading"
+                   [loading]="service.dataLoading()"
                    (rowEditSave)="onInsert($event)"></app-table>
       </p-panel>
     </div>

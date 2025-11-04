@@ -204,11 +204,10 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
           deletedCount++;
           if (deletedCount === totalItems) this.onSubmit();
         }),
-        tap(({ Status }) => {
-          if (Status !== '0000') return this.messageService.errorBubble(`刪除錶號 ${item.ENG_MeterNo} 失敗，錯誤代碼 ${Status}`);
-          this.messageService.successBubble(`刪除錶號 ${item.ENG_MeterNo} 成功`);
-        }),
-      ).subscribe();
+      ).subscribe({
+        next: () => this.messageService.successBubble(`刪除錶號 ${item.ENG_MeterNo} 成功`),
+        error: () => this.messageService.errorBubble(`刪除錶號 ${item.ENG_MeterNo} 發生錯誤`),
+      });
     }
   }
 }

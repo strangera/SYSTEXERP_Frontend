@@ -367,8 +367,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
             if (!this.dialogVisible()) return;
             this.dialogVisible.set(!1);
             this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
-          }))
-        .subscribe();
+          })).subscribe({
+            next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+            error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+          });
     });
   };
 

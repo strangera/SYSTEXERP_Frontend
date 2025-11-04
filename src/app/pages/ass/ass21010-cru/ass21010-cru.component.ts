@@ -96,10 +96,11 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
       };
 
       this.service.updateASS21010(payload).pipe(
-        tap(({ Status }) => {
-          if (Status === '0000') this.messageService.successBubble('儲存成功');
-          this.onCancel();
-        })).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
+      });
     });
   }
 }

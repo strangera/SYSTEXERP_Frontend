@@ -24,24 +24,23 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   templateUrl: './fin54020.component.html',
   styleUrl: './fin54020.component.scss',
   standalone: true,
-  imports:
-    [NgStyle,
-      NgIf,
-      ButtonModule,
-      MenubarComponent,
-      AccordionModule,
-      FormsModule,
-      ReactiveFormsModule,
-      ButtonComponent,
-      InputTextComponent,
-      InputNumberRangeComponent,
-      DropdownComponent,
-      CalendarRangeComponent,
-      TranslateModule,
-      TableComponent
-    ],
+  imports: [
+    NgStyle,
+    NgIf,
+    ButtonModule,
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    ButtonComponent,
+    InputTextComponent,
+    InputNumberRangeComponent,
+    DropdownComponent,
+    CalendarRangeComponent,
+    TranslateModule,
+    TableComponent,
+  ],
 })
-
 export class FIN54020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     VouDateFrom: [new Date(), [Validators.required]],
@@ -53,10 +52,12 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
   });
 
   Subpoenastatus: IDropdownItem[] = [];
-  actionLoadingId: string | number | null = null;
-  selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
+  selectedItems: any[] = [];
+  selectAll = false;
+  btnLoading = false;
+
   columns: any[] = [
     { field: 'VouNo', header: '傳票號碼', visible: true },
     { field: 'Voucher_Name', header: '傳票種類', visible: true },
@@ -67,29 +68,30 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
     { field: 'AccAmt', header: '傳票金額', visible: true },
     { field: 'DetailCount', header: '明細筆數', visible: true },
   ];
+
   get selectedCount(): number {
     return this.selectedItems?.length ?? 0;
   }
+
   constructor(
     private dropDownListService: DropDownListService,
     private fin54020Service: Fin54020Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
-
 
   ngOnInit(): void {
     this.initializePage('FIN54020', '/FIN/FIN54020CRU', this.queryForm, (frm) => this.onSubmit(frm));
-    this.dropDownListService.queryGLS1010_DropDownList().subscribe(res => {
+
+    this.dropDownListService.queryGLS1010_DropDownList().subscribe((res) => {
       this.Subpoenastatus = res.Data;
     });
-
   }
+
+  /** 查詢 */
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const v = frm.value;
-      console.log('我的表單:', v);
-
       const payload = {
         ...v,
         VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : '',
@@ -99,44 +101,65 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
         VoucherType: v.VoucherType?.trim() || '',
       };
 
-      console.log('我擅自改變的樣子:', payload);
-
-
-
-      this.fin54020Service.queryFIN54020(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-          } else {
-            this.messageService.errorBubble(res.Message || '查詢失敗');
-          }
-        },
-      });
+      this.fin54020Service
+        .queryFIN54020(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.data = res.Data || [];
+              this.totalRecords = res.TotalCount || this.data.length;
+            } else {
+              this.messageService.errorBubble(res.Message || '查詢失敗');
+            }
+          },
+        });
     });
   }
+
+  /** 點擊「過帳」 */
   onReview(selectedItems: any[]): void {
     if (!selectedItems || selectedItems.length === 0) {
-      this.messageService.warnBubble('請先勾選要審核的項目');
+      this.messageService.warnBubble('請先勾選要過帳的項目');
       return;
     }
 
-    // // 依照 API 格式，包成 selectList
-    // const payload = {
-    //   PAY_Type: this.PAY_Type,
-    //   selectList: selectedItems.map(item => ({
-    //     ID: item.ID,
-    //     PAY_NO: item.PAY_NO,
-    //   }))
-    // };
-    // this.loading = true;
-    // this.tls2a010Service.updateTLS2A010(payload).subscribe({
-    //   next: () => {
-    //     this.messageService.successBubble('審核完成');
-    //     this.onSubmit(this.queryForm);
-    //     this.loading = false;
-    //   },
-    // });
-  }
+    const v = this.queryForm.value;
 
+    // 準備共用欄位
+    const commonPart = {
+      VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : '',
+      VouDateTo: v.VouDateTo ? formatDateToYYYY_MM_DD(v.VouDateTo) : '',
+      VouNoFrom: v.VouNoFrom?.trim() || '',
+      VouNoTo: v.VouNoTo?.trim() || '',
+      VoucherType: v.VoucherType?.trim() || '',
+    };
+
+    // 判斷是否為全選
+    const payload = {
+      SelectAll: this.selectAll,
+      ...commonPart,
+      VouNoList: this.selectAll
+        ? [] // 全選時不用傳 List
+        : selectedItems.map((item) => item.VouNo), // 部分選擇時傳 VouNo 清單
+    };
+
+    console.log('Update payload:', payload);
+
+    this.btnLoading = true;
+    this.fin54020Service
+      .updateFIN54020(payload)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble('過帳成功');
+            this.onSubmit(this.queryForm); // 過帳後重新查詢
+          } else {
+            this.messageService.errorBubble(res.Message || '過帳失敗');
+          }
+        },
+        error: () => this.messageService.errorBubble('系統錯誤'),
+      });
+  }
 }

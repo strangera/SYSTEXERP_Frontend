@@ -205,9 +205,9 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   public onDelete(data: TLS26010Data[]): void {
     this.logger.debug(`刪除活動:`, data);
     for (const item of data) this.service.deleteTLS26010(item)
-      .subscribe(res => {
-        if (res.Error) return this.messageService.errorBubble('刪除失敗', res.Message);
-        this.messageService.successBubble('刪除成功');
+      .subscribe({
+        next: () => this.messageService.successBubble('刪除成功'),
+        error: () => this.messageService.errorBubble('刪除失敗'),
       });
   }
 }

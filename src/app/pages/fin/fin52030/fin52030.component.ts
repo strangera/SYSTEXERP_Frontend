@@ -50,7 +50,12 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   ];
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading() || this.service.usrLoading() || this.service.accLoading();
+    this.loading = this.service.tableLoading()
+      || this.service.accLoading()
+      || this.service.venLoading()
+      || this.service.usrLoading()
+      || this.service.RefNameLoading()
+      || this.service.noteDescLoading();
   });
 
   constructor(
@@ -64,8 +69,6 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     this.initializePage('FIN52030', '/FIN/FIN52030CRU', this.queryForm, this.onSubmit.bind(this));
     const store = this.queryStateService.getQueryState(this.ProgNo);
     if (store?.value) this.queryForm.patchValue(store.value);
-
-    this.loading = !0;
 
     this.service.getAccNoList();
     this.service.getUsrList();
@@ -84,7 +87,6 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
 
       this.service.loadFIN52030(payload).pipe(
         finalize(() => {
-          this.loading = !1;
           this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue()]);
         }),
       ).subscribe();

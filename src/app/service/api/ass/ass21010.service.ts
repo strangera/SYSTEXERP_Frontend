@@ -84,14 +84,22 @@ export class ASS21010Service implements OnDestroy {
   }
 
   public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus> {
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
+      finalize(() => this.tableLoading.set(!1)),
     );
   }
 
   public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus> {
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
+      finalize(() => this.tableLoading.set(!1)),
     );
   }
 
