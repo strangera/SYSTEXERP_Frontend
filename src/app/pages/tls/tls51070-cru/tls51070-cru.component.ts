@@ -7,9 +7,8 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
-import { detail2005HandlerService } from './detail2005HandlerService';
 import { detail2020HandlerService } from './detail2020HandlerService';
 import { dropDown51070 } from './dropDown51070';
 import { Tls51060Service } from '../../../service/api/tls/tls51060.service';

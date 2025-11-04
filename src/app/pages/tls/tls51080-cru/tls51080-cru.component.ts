@@ -13,6 +13,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
@@ -36,13 +38,14 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
     HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
   });
   //
-  org_idOptions: apiOption[] = [];
+  SYS3100_Options: apiOption[] = [];
   building_noOptions: apiOption[] = [];
   STO_NoOptions: apiOption[] = [];
   // ----------------------------------------------------------------
   constructor(
     private tls51080Service: Tls51080Service,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -111,42 +114,17 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
   // 讀取dopropdown選項
   loadOptions() {
     {
-      // 組織代碼/組織名稱 SYS3100 JOIN POS1001
-      this.tls51080Service
-        .querySYS3100_join_POS1001_DropDownList({})
-        .subscribe((response) => {
-          this.org_idOptions = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
+      // 組織代碼 下拉
+      this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+        this.SYS3100_Options = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+        console.log('SYS3100_Options', this.SYS3100_Options);
+      })
 
-          // 如果org_id有資料進來，找出對應的完整No
-          if (this.dataForm.value.org_id) {
-            const matched = this.org_idOptions.find(opt => opt.No.startsWith(this.dataForm.value.org_id + '/'));
-            if (matched) {
-              this.dataForm.patchValue({
-                org_id: matched.No,  // 將org_id從 '0001' 改成 '0001/1000'
-              });
-            }
-          }
-        });
-
-      // 讀取館別代碼選項
-      this.tls51080Service
-        .querySYS3800_DropDownList({})
-        .subscribe((response) => {
-          this.building_noOptions = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
-
-          console.log('館別', this.building_noOptions);
-        });
-
-
-      //如果org_id有資料進來 找出對應的Label 並補上/後面的部分
+      // 館別 下拉
+      this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+        this.building_noOptions = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+        console.log('館別', this.building_noOptions);
+      })
     }
   }
 }
