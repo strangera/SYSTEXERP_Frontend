@@ -12,36 +12,56 @@ export interface FIN52030Data {
 /**
  * FIN52030 明細檔
  * AccAmt: 借貸方D/C 金額
+ * AccCName: 科目名稱
  * AccDC: 借貸方D/C
  * AccNo: 科目代號 (GLS1005)
  * DetailNo: 廠商/員工編號(廠商讀取 pos2013.ven_no, 員工讀取 tblUser.user_no
+ * DetailNoName: 廠商/員工名稱
  * NoteDesc: 摘要
  * ORG_ID: 組織代號
  * SerNo: 序號 (以10為單位序編)
  * SubDetailNo: 對象編號
+ * id: 明細檔 ID
  * index: 序號 (以10為單位序編) 起始0
  */
 export interface FIN52030Detail {
   AccAmt: number;
+  AccCName?: string;
   AccDC: string;
   AccNo: string;
   DetailNo?: string;
+  DetailNoName?: string;
   NoteDesc?: string;
   ORG_ID?: string;
   SerNo: number;
   SubDetailNo?: string;
-  index: number;
+  id?: number;
+  index?: number;
 }
 
+/**
+ * FIN52030 明細檔 (API 回傳用)
+ * Details: 明細資料陣列
+ * CRT_Date: 建立日期
+ * CRT_USR_No: 建立人員編號
+ * TempNo: 常用傳票編號
+ * TempName: 常用傳票名稱
+ * UPD_Date: 更新日期
+ * UPD_USR_No: 更新人員編號
+ * VouType: 傳票類別 1:現金收入2:現金支出3:轉帳傳票
+ * VouTypeName: 傳票類別名稱
+ * id: 主檔 ID
+ */
 export interface FIN52030DetailData {
   CRT_Date: Date;
   CRT_USR_No: string;
   Details: FIN52030Detail[];
-  TempName: string;
   TempNo: string;
+  TempName: string;
   UPD_Date: Date;
   UPD_USR_No: string;
   VouType: '1' | '2' | '3';
+  VouTypeName?: string;
   id: number;
 };
 
@@ -64,9 +84,9 @@ export interface FIN52030DetailTable extends FIN52030Detail {
 }
 
 export interface FIN52030Payload extends BaseQueryRequest {
-  TempNo: string;
-  VouType: string;
-  TempName: string;
+  TempNo?: string;
+  VouType?: '1' | '2' | '3';
+  TempName?: string;
   CRT_USR_No?: string;
   UPD_USR_No?: string;
 }

@@ -70,8 +70,8 @@
              [data]="service.TLS26080Data()"
              [dataKey]="'pod_no'"
              [columns]="columns"
-             [totalRecords]="totalRecords()"
+             [totalRecords]="service.totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
              [lazy]="true"
-             [loading]="service.tableLoading"></app-table>
+             [loading]="service.tableLoading()"></app-table>
 </div>

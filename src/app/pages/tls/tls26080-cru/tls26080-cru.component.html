@@ -25,6 +25,7 @@
                       optionLabel="CampaignName"
                       optionValue="CampaignId"
                       [control]="df().pod_desc"
+                      [loading]="service.campaignLoading()"
                       [submitted]="submitted"></app-dropdown>
       </div>
 
@@ -90,7 +91,7 @@
                    [tableKey]="'TLS26080_Counter'"
                    [columns]="counterColumns"
                    [columnGroup]="counterColumnsGroup"
-                   [totalRecords]="totalRecords()"
+                   [totalRecords]="service.detailTotalRecords()"
                    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
                    [lazy]="true"
                    [loading]="loading"

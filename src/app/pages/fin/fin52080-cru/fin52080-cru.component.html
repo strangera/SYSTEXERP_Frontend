@@ -112,7 +112,7 @@
       </div>
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        @if (service.treeLoading) {
+        @if (service.treeLoading()) {
         <p-progressSpinner></p-progressSpinner>
         } @else {
         <app-tree-dropdown [members]="service.FIN52080Tree()"

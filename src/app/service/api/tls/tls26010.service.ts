@@ -32,14 +32,16 @@ export class TLS26010Service implements OnDestroy {
   public readonly ecrData = signal<EcrItem[]>([]);
   public readonly tltData = signal<TltItem[]>([]);
 
+  public readonly totalRecords = computed(() => this.TLS26010Data().length);
+
   // 讀取狀態
-  public sys3800Loading = !1;
-  public sys3900Loading = !1;
-  public sys3A00Loading = !1;
-  public ecrLoading = !1;
-  public tltLoading = !1;
-  public tableLoading = !1;
-  public approvalStatusLoading = !1;
+  public readonly sys3800Loading = signal<boolean>(!1);
+  public readonly sys3900Loading = signal<boolean>(!1);
+  public readonly sys3A00Loading = signal<boolean>(!1);
+  public readonly ecrLoading = signal<boolean>(!1);
+  public readonly tltLoading = signal<boolean>(!1);
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly approvalStatusLoading = signal<boolean>(!1);
 
   // Request cancellation subjects
   private readonly sys3800Cancel$ = new Subject<void>();
@@ -85,13 +87,13 @@ export class TLS26010Service implements OnDestroy {
   /** 取得館別 */
   public loadSYS3800(): void {
     this.sys3800Cancel$.next();
-    this.sys3800Loading = !0;
+    this.sys3800Loading.set(!0);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, {}).pipe(
       take(1),
       takeUntil(this.sys3800Cancel$),
       tap(response => this.sys3800Data.set(response.Data)),
       finalize(() => {
-        this.sys3800Loading = !1;
+        this.sys3800Loading.set(!1);
         this.logger.debug('館別查詢結果:', this.sys3800Data());
       })
     ).subscribe();
@@ -100,13 +102,13 @@ export class TLS26010Service implements OnDestroy {
   /** 取得樓層 */
   public loadSYS3900(): void {
     this.sys3900Cancel$.next();
-    this.sys3900Loading = !0;
+    this.sys3900Loading.set(!0);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, {}).pipe(
       take(1),
       takeUntil(this.sys3900Cancel$),
       tap(response => this.sys3900Data.set(response.Data)),
       finalize(() => {
-        this.sys3900Loading = !1;
+        this.sys3900Loading.set(!1);
         this.logger.debug('樓層查詢結果:', this.sys3900Data());
       })
     ).subscribe();
@@ -115,13 +117,13 @@ export class TLS26010Service implements OnDestroy {
   /** 取得區域代碼 */
   public loadSYS3A00(): void {
     this.sys3A00Cancel$.next();
-    this.sys3A00Loading = !0;
+    this.sys3A00Loading.set(!0);
     this.http.post<any>(`${apiUrl}/querySYS3A00_DropDownList`, {}).pipe(
       take(1),
       takeUntil(this.sys3A00Cancel$),
       tap(response => this.sys3A00Data.set(response.Data)),
       finalize(() => {
-        this.sys3A00Loading = !1;
+        this.sys3A00Loading.set(!1);
         this.logger.debug('區域代碼查詢結果:', this.sys3A00Data());
       })
     ).subscribe();
@@ -131,13 +133,13 @@ export class TLS26010Service implements OnDestroy {
   public loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
     this.ecrCancel$.next();
     this.ecrData.set([]);
-    this.ecrLoading = !0;
+    this.ecrLoading.set(!0);
     this.http.post<BaseQueryResponse<EcrItem>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       takeUntil(this.ecrCancel$),
       tap(response => this.ecrData.set(response.Data)),
       finalize(() => {
-        this.ecrLoading = !1;
+        this.ecrLoading.set(!1);
         this.logger.debug('收銀機號查詢結果:', this.ecrData());
       }),
     ).subscribe();
@@ -147,13 +149,13 @@ export class TLS26010Service implements OnDestroy {
   public loadTLTTALENT(query: DependentDataQuery): void {
     this.tltCancel$.next();
     this.tltData.set([]);
-    this.tltLoading = !0;
+    this.tltLoading.set(!0);
     this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
       takeUntil(this.tltCancel$),
       tap(response => this.tltData.set(response.Data)),
       finalize(() => {
-        this.tltLoading = !1;
+        this.tltLoading.set(!1);
         this.logger.debug('專櫃編號查詢結果:', this.tltData());
       })
     ).subscribe();
@@ -162,13 +164,13 @@ export class TLS26010Service implements OnDestroy {
   /** 查詢預購活動檔期 */
   public loadTLS26010(query: TLS26010Query): void {
     this.queryCancel$.next();
-    this.tableLoading = !0;
+    this.tableLoading.set(!0);
     this.http.post<BaseQueryResponse<TLS26010Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010`, query).pipe(
       take(1),
       takeUntil(this.queryCancel$),
       tap(response => this.TLS26010Data.set(response.Data)),
       finalize(() => {
-        this.tableLoading = !1;
+        this.tableLoading.set(!1);
         this.logger.debug('預購活動檔期查詢結果:', this.TLS26010Data());
       })
     ).subscribe();
@@ -177,13 +179,13 @@ export class TLS26010Service implements OnDestroy {
   /** 查詢預購活動檔期 */
   public loadTLS26010Detail(query: { pod_no: string; }): void {
     this.detailCancel$.next();
-    this.tableLoading = !0;
+    this.tableLoading.set(!0);
     this.http.post<TLS26010DetailResponse>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010Detail`, query).pipe(
       take(1),
       takeUntil(this.detailCancel$),
       tap(response => this.TLS26010Detail.set(response.Data)),
       finalize(() => {
-        this.tableLoading = !1;
+        this.tableLoading.set(!1);
         this.logger.debug('預購活動檔期細節查詢結果:', this.TLS26010Detail());
       })
     ).subscribe();
@@ -191,13 +193,13 @@ export class TLS26010Service implements OnDestroy {
 
   /** 新增預購活動 */
   public insertTLS26010(payload: PodRequest): Observable<BaseQueryResponse<any>> {
-    if (this.tableLoading) { this.tableLoading = !1; return of(); };
-    this.tableLoading = !0;
+    if (this.tableLoading()) { this.tableLoading.set(!1); return of(); };
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26010`, payload).pipe(
       take(1),
       tap(() => { }),
       finalize(() => {
-        this.tableLoading = !1;
+        this.tableLoading.set(!1);
         this.logger.debug('新增結果:', this.TLS26010Data());
       })
     );
@@ -205,8 +207,8 @@ export class TLS26010Service implements OnDestroy {
 
   /** 更新預購活動 */
   public updateTLS26010(data: PodRequest): Observable<BaseQueryResponse<any>> {
-    if (this.tableLoading) { this.tableLoading = !1; return of(); };
-    this.tableLoading = !0;
+    if (this.tableLoading()) { this.tableLoading.set(!1); return of(); };
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26010`, data).pipe(
       take(1),
       tap((response) => {
@@ -238,7 +240,7 @@ export class TLS26010Service implements OnDestroy {
         }
       }),
       finalize(() => {
-        this.tableLoading = !1;
+        this.tableLoading.set(!1);
         this.logger.debug('更新結果:', this.TLS26010Data());
       })
     );
@@ -249,14 +251,14 @@ export class TLS26010Service implements OnDestroy {
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
       tap(() => this.TLS26010Data.set(this.TLS26010Data())),
-      finalize(() => this.tableLoading = !1)
+      finalize(() => this.tableLoading.set(!1))
     );
   }
 
   /** 核准或反核准預購活動 */
   public loadApproval(data: TLS26010Data): void {
-    if (this.approvalStatusLoading) return;
-    this.approvalStatusLoading = !0;
+    if (this.approvalStatusLoading()) return;
+    this.approvalStatusLoading.set(!0);
     const id = data.id;
     this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
       `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
@@ -273,7 +275,7 @@ export class TLS26010Service implements OnDestroy {
           return currentData;
         })),
         finalize(() => {
-          this.approvalStatusLoading = !1;
+          this.approvalStatusLoading.set(!1);
           this.logger.debug('核准結果:',);
         })
       ).subscribe();

@@ -21,8 +21,8 @@ export class FIN52090Service {
   private readonly tableCancel$ = new Subject<void>();
   private readonly accNoCancel$ = new Subject<void>();
 
-  public tableLoading = !1;
-  public accNoLoading = !1;
+  public tableLoading = signal<boolean>(!1);
+  public accNoLoading = signal<boolean>(!1);
 
   constructor(
     private readonly http: HttpClient,
@@ -31,13 +31,13 @@ export class FIN52090Service {
 
   public loadFIN52090(payload: FIN52090Query): Observable<BaseQueryResponse<FIN52090Data>> {
     this.tableCancel$.next();
-    this.tableLoading = !0;
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52090Data>>(`${apiUrl}/queryFIN52090`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52090Data.set(res.Data)),
       tap(() => this.logger.debug('查詢FIN52090結果:', [this.FIN52090Data()])),
-      finalize(() => this.tableLoading = !1)
+      finalize(() => this.tableLoading.set(!1))
     );
   };
 
@@ -50,14 +50,14 @@ export class FIN52090Service {
 
   public getAccNo(): void {
     this.accNoCancel$.next();
-    this.accNoLoading = !0;
+    this.accNoLoading.set(!0);
     this.http.post<BaseQueryResponse<AccNoDropdown>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       takeUntil(this.accNoCancel$),
       tap(res => this.accNo.set(res.Data)),
       tap(() => this.accNoMap = new Map(this.accNo().map(item => [item.AccNo, item.AccCName]))),
       tap(() => this.logger.debug('查詢AccNo結果:', [this.accNo()])),
-      finalize(() => this.accNoLoading = !1)
+      finalize(() => this.accNoLoading.set(!1))
     ).subscribe();
   };
 }

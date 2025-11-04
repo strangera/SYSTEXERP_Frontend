@@ -198,11 +198,15 @@ export class AuthService {
 
   /**
    * 統一清除本地儲存和導航
+   * 修正：避免使用 localStorage.clear()，只清除 AuthService 管理的 key。
    */
   private clearSessionAndLocalStorage(): void {
-    // ⚠️ 建議未來考慮只清除與 Auth 相關的 key，而不是 global clear()
+    // 修正：只移除 UserInfo 鍵，保留其他服務可能儲存的數據
+    localStorage.removeItem('UserInfo');
+
+    // 根據您的原始程式碼，sessionStorage 保持清除操作
     sessionStorage.clear();
-    localStorage.clear();
+
     this.userSubject.next(null);
     this.router.navigate(['/login'], { replaceUrl: true });
     this.queryStateService.clearAllQueryStates();
@@ -220,8 +224,8 @@ export class AuthService {
   /**
    * 獲取外部 Token
    */
-  getOuterToken(): Observable<OuterTokenResponse> {
-    // 最佳實踐：移除不必要的 headers，依賴 HTTP 攔截器處理
-    return this.http.get<OuterTokenResponse>(`${this.apiUrl}/SSOLogin/getOuterToken`);
-  }
+getOuterToken(): Observable<OuterTokenResponse> {
+  console.log('[AuthService] 呼叫 /SSOLogin/getOuterToken');
+  return this.http.get<OuterTokenResponse>(`${this.apiUrl}/SSOLogin/getOuterToken`);
+}
 }

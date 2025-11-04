@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { DialogModule } from 'primeng/dialog';
-import { PrimeTemplate } from 'primeng/api';
-import { ButtonComponent } from '../button/button.component';
 import { NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { PrimeTemplate } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonComponent } from '../button/button.component';
 
 @Component({
   selector: 'app-dialog',
@@ -22,6 +22,7 @@ export class DialogComponent {
   @Input() minHeight = '100px'; // 最小高度
   @Input() styleClass = ''; // 是否顯示footer
   @Input() showFooter = true; // 是否顯示footer
+  @Input() loading = false; // 是否顯示載入中
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter();
 

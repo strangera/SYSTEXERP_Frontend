@@ -18,6 +18,7 @@ import { CPM13030Service } from '@service/api/cpm/cpm13030.service';
 import { finalize } from 'rxjs';
 import { DatePipe, NgIf } from '@angular/common';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-cpm13030',
@@ -39,7 +40,8 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
     CustomFooterTableComponent,
     MultiSelectComponent,
     DatePipe,
-    NgIf
+    NgIf,
+    InputTextComponent
   ]
 })
 export class CPM13030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -53,7 +55,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     TXN_GUIBegNo: [''],
     TXN_TotSaleAmtStart: [null],
     TXN_TotSaleAmtEnd: [null],
-    displayMode: ['M'],
+    displayMode: ['M', [Validators.required]],
     ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
   });
   selectedItems: any[] = [];
@@ -153,12 +155,22 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         org_nameList: v.org_nameList || [],
         tlt_noList: v.tlt_noList || [],
         TXN_GUIBegNo: v.TXN_GUIBegNo || '',
-        TXN_TotSaleAmtStart: v.TXN_TotSaleAmtStart || null,
-        TXN_TotSaleAmtEnd: v.TXN_TotSaleAmtEnd || null,
+
+        TXN_TotSaleAmtStart:
+          v.TXN_TotSaleAmtStart !== null && v.TXN_TotSaleAmtStart !== undefined && v.TXN_TotSaleAmtStart !== ''
+            ? Number(v.TXN_TotSaleAmtStart)
+            : null,
+
+        TXN_TotSaleAmtEnd:
+          v.TXN_TotSaleAmtEnd !== null && v.TXN_TotSaleAmtEnd !== undefined && v.TXN_TotSaleAmtEnd !== ''
+            ? Number(v.TXN_TotSaleAmtEnd)
+            : null,
+
         ShowType: v.displayMode,
         PageIndex: v.pageIndex ?? 1,
         PageSize: v.pageSize ?? 20,
       };
+
 
       this.loading = true;
       this.cpm13030Service
@@ -203,8 +215,15 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       org_nameList: v.org_nameList || [],
       tlt_noList: v.tlt_noList || [],
       TXN_GUIBegNo: v.TXN_GUIBegNo || '',
-      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || null,
-      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || null,
+      TXN_TotSaleAmtStart:
+        v.TXN_TotSaleAmtStart !== null && v.TXN_TotSaleAmtStart !== undefined && v.TXN_TotSaleAmtStart !== ''
+          ? Number(v.TXN_TotSaleAmtStart)
+          : null,
+
+      TXN_TotSaleAmtEnd:
+        v.TXN_TotSaleAmtEnd !== null && v.TXN_TotSaleAmtEnd !== undefined && v.TXN_TotSaleAmtEnd !== ''
+          ? Number(v.TXN_TotSaleAmtEnd)
+          : null,
       ShowType: v.displayMode,
     };
 
@@ -238,8 +257,15 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       org_nameList: v.org_nameList || [],
       tlt_noList: v.tlt_noList || [],
       TXN_GUIBegNo: v.TXN_GUIBegNo || '',
-      TXN_TotSaleAmtStart: Number(v.TXN_TotSaleAmtStart) || null,
-      TXN_TotSaleAmtEnd: Number(v.TXN_TotSaleAmtEnd) || null,
+      TXN_TotSaleAmtStart:
+        v.TXN_TotSaleAmtStart !== null && v.TXN_TotSaleAmtStart !== undefined && v.TXN_TotSaleAmtStart !== ''
+          ? Number(v.TXN_TotSaleAmtStart)
+          : null,
+
+      TXN_TotSaleAmtEnd:
+        v.TXN_TotSaleAmtEnd !== null && v.TXN_TotSaleAmtEnd !== undefined && v.TXN_TotSaleAmtEnd !== ''
+          ? Number(v.TXN_TotSaleAmtEnd)
+          : null,
       ShowType: v.displayMode,
     };
 

@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, AddButton } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, AddButton, formatYN } from '../../../shared/componentkit/table/table.model';
 import { FIN11010Data, FIN11010QueryRequest, FIN11010Service, FIN11010UpdateStatusRequest } from '../../../service/api/fin/fin11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -15,11 +15,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
 import { DatePipe } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { ExportLabelService } from '@service/utility/exportLabel.service';
 
 @Component({
   selector: 'app-fin11010',
   templateUrl: './fin11010.component.html',
-  styleUrl: './fin11010.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -52,70 +53,24 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
 
   // #region 下拉選單選項定義
   // 總繳代號選項
-  orgCodeOptions = [
-    { No: '0', Name: '單一機構報繳' },
-    { No: '1', Name: '總機構彙總報繳' },
-    { No: '2', Name: '各單位(分支機構)分別申報' }
-  ];
+  orgCodeOptions = getSYS1000Options('REP_OrgCode');
 
   // 狀態選項
-  reviewStatusOptions = [
-    { No: '0', Name: '未確認' },
-    { No: '1', Name: '使用中' },
-    { No: '2', Name: '已過期' }
-  ];
+  reviewStatusOptions = getSYS1000Options('STO_Status');
 
   // 縣市別選項
-  cityOptions = [
-    { No: 'A', Name: '台北市' },
-    { No: 'B', Name: '台中市' },
-    { No: 'C', Name: '基隆市' },
-    { No: 'D', Name: '台南市' },
-    { No: 'E', Name: '高雄市' },
-    { No: 'F', Name: '新北市' },
-    { No: 'G', Name: '宜蘭縣' },
-    { No: 'H', Name: '桃園縣' },
-    { No: 'I', Name: '嘉義市' },
-    { No: 'J', Name: '新竹縣' },
-    { No: 'K', Name: '苗栗縣' },
-    { No: 'L', Name: '台中縣' },
-    { No: 'M', Name: '南投縣' },
-    { No: 'N', Name: '彰化縣' },
-    { No: 'O', Name: '新竹市' },
-    { No: 'P', Name: '雲林縣' },
-    { No: 'Q', Name: '嘉義縣' },
-    { No: 'R', Name: '台南縣' },
-    { No: 'S', Name: '高雄縣' },
-    { No: 'T', Name: '屏東縣' },
-    { No: 'U', Name: '花蓮縣' },
-    { No: 'V', Name: '台東縣' },
-    { No: 'W', Name: '金門縣' },
-    { No: 'X', Name: '澎湖縣' },
-    { No: 'Z', Name: '連江縣' }
-  ];
+  cityOptions = getSYS1000Options('STO_City');
   // #endregion
 
   columns: Column[] = [
     { field: 'id', header: '序號', visible: false },
     { field: 'STO_Uniform', header: '營業人統編', visible: true },
     { field: 'STO_TaxName', header: '營業人名稱', visible: true },
-    { field: 'STO_City', header: '縣市別', visible: true, format: (value: string) => this.cityOptions.find(option => option.No === value)?.Name || value },
+    { field: 'STO_City', header: '縣市別', visible: true, format: (value: string) => getSYS1000('STO_City', value) },
     { field: 'STO_Addr', header: '營業地址', visible: true },
-    { field: 'REP_OrgCode', header: '總繳代號', visible: true, format: (value: string) => this.orgCodeOptions.find(option => option.No === value)?.Name || value },
-    { field: 'STO_Direct', header: '直接扣抵法(Y/N)', visible: true, format: (value: string) => value === 'Y' ? '是' : '否' },
-    {
-      field: 'STO_Status',
-      header: '狀態',
-      visible: true,
-      format(value) {
-        switch (value) {
-          case "0": return "未確認";
-          case "1": return "使用中";
-          case "2": return "已過期";
-          default: return value;
-        }
-      }
-    },
+    { field: 'REP_OrgCode', header: '總繳代號', visible: true, format: (value: string) => getSYS1000('REP_OrgCode', value) },
+    { field: 'STO_Direct', header: '直接扣抵法(Y/N)', visible: true, format: formatYN },
+    { field: 'STO_Status', header: '狀態', visible: true, format: (value: string) => getSYS1000('STO_Status', value) },
     { field: 'REP_BegGUIYM', header: '申報年月起', visible: true },
     { field: 'REP_EndGUIYM', header: '申報年月訖', visible: true },
 
@@ -142,8 +97,9 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
 
 
   constructor(
-    private fin11010Service: FIN11010Service,
-    private datePipe: DatePipe,
+    private readonly fin11010Service: FIN11010Service,
+    private readonly exportLabelService: ExportLabelService,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -194,8 +150,22 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     },
   ];
 
+  exportLoading = false;
   onExport(): void {
-    // TODO: 實作匯出功能
+    const body = this.data.map(item => ({
+      ...item,
+      STO_Type: "1", //固定為 1
+      STO_MergeFlag: "N", // 固定為 N
+      STO_ModifyTime: this.datePipe.transform(new Date(), 'yyyyMMdd'), // 改成當下時間年月日 (民國)1141031
+    }));
+    this.exportLoading = true;
+    this.exportLabelService.ExportDXT(body)
+      .pipe(
+        finalize(() => this.exportLoading = false),
+        untilDestroyed(this),
+        tap((response) => this.exportLabelService.handleFileDownload(response, 'export_default.dxt'))
+      )
+      .subscribe();
   }
 
   deleteRow(rowData: FIN11010Data) {
