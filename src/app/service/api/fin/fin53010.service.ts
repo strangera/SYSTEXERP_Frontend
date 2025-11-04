@@ -67,27 +67,29 @@ export class FIN53010Service {
   public readonly voucherTemplateDetail = signal<FIN52030DetailData>(Object.create(null));
 
   /** 傳票種類 */
-  public readonly vouTypeOptions = signal<Option[]>([
+  public readonly vouTypeOptions = [
     { value: '1', label: '現金收入傳票' },
     { value: '2', label: '現金支出傳票' },
     { value: '3', label: '轉帳傳票' }
-  ]);
+  ];
   /** 傳票狀態 */
-  public readonly postFlagOptions = signal<Option[]>([
+  public readonly postFlagOptions = [
     { value: '0', label: '作廢' },
     { value: '1', label: '建立' },
     // { value: '2', label: '確認' },
     { value: '3', label: '過帳' },
-  ]);
-  public readonly INVOptions = signal<Option[]>([
+  ];
+  /** 發票選項 */
+  public readonly INVOptions = [
     { value: 'N', label: '否' },
     { value: 'Y', label: '是' },
-  ]);
-  public readonly vouAccTypeOptions = signal<Option[]>([
+  ];
+  /** 傳票型態 */
+  public readonly vouAccTypeOptions = [
     { value: '0', label: 'ROC' },
     { value: '1', label: 'IFRS' },
     ...(this.cru() ? [] : [{ value: void 0, label: '全部' }]),
-  ]);
+  ];
 
   public readonly accNoMap = computed(() =>
     new Map(this.accNoList().map(item => [item.value, item]))

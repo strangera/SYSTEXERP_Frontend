@@ -119,6 +119,12 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     this.logger.debug(`tltNo changes:`, [tltNo, selected]);
   }, { allowSignalWrites: !0 });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.engMeterNoLoading()
+      || this.service.tltByFlagLoading();
+  });
+
   public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21020Data; })[] = [
     { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
@@ -179,12 +185,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
         return acc;
       }, {} as any);
 
-      this.service.loadASS21020(payload).pipe(
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug('ASS21020 查詢結果:', [this.service.ASS21020Data()]);
-        }),
-      ).subscribe();
+      this.service.loadASS21020(payload).subscribe();
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
@@ -201,21 +202,11 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
       this.service.deleteASS21020({ ENG_Type: this.service.engTypeMap.get(item.ENG_Type)!, ENG_MeterNo: item.ENG_MeterNo }).pipe(
         tap(() => {
           deletedCount++;
-
-          if (deletedCount === totalItems) {
-            const formValues = this.queryForm.getRawValue();
-            this.service.loadASS21020({
-              EngTypes: formValues.ENG_Type!.join(),
-              ENG_Rate: formValues.ENG_Rate!,
-              ENG_MeterNo: formValues.ENG_MeterNo!,
-              Location_No: formValues.Location_No!,
-              Mid: Number(this.user?.mid)!,
-              SYS_StoreNo: this.user?.SYS_StoreNo!,
-            });
-          }
+          if (deletedCount === totalItems) this.onSubmit();
         }),
         tap(({ Status }) => {
-          Status === '0000' && this.messageService.successBubble(`刪除錶號 ${item.ENG_MeterNo} 成功`);
+          if (Status !== '0000') return this.messageService.errorBubble(`刪除錶號 ${item.ENG_MeterNo} 失敗，錯誤代碼 ${Status}`);
+          this.messageService.successBubble(`刪除錶號 ${item.ENG_MeterNo} 成功`);
         }),
       ).subscribe();
     }

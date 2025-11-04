@@ -541,4 +541,8 @@ export class DropDownListService {
     const body = { SAL_Type };
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/QueryTDS1008_DropDownList`, body);
   }
+  // 查詢傳票型態(GLS1010)下拉選單
+  queryGLS1010_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1010_DropDownList`, {});
+  }
 }

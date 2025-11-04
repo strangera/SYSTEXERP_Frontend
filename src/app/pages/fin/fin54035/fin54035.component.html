@@ -2,8 +2,6 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo"
                  class="flex-1"></app-menubar>
-    <app-button btnType="create"
-                (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
@@ -15,19 +13,18 @@
             id="queryForm"
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne"
-                          label="反關年月"
-                          controlName="yearmm"
-                          [control]="queryForm.controls.yearmm"
-                          [submitted]="submitted"></app-calendar>
-          </div> -->
+          <app-calendar class="col-12 md:col-6 lg:col-4"
+                        calendarType="dateMonthOne"
+                        label="關帳年月"
+                        controlName="DisplayYM"
+                        [disabled]="!0"
+                        [control]="qf().DisplayYM"
+                        [submitted]="submitted"></app-calendar>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"
-                      [form]="queryForm"></app-button>
-          <app-button btnType="query"
-                      [loading]="service.tableLoading()"></app-button>
+          <app-button btnType="submit"
+                      label="反關帳"
+                      [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>

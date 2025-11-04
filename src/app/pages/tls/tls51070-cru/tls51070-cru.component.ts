@@ -321,6 +321,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '', this.dataForm.get('PLU_OrderPrc')?.value || 0);
     }
 
+    // #region valueChange檢查
+
     // 觀察 大分類 是否為''
     this.dataForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
       // console.log('大分類變更為:', newValue);
@@ -515,6 +517,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
   }
 
+  // #region onSubmit檢查
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
@@ -588,6 +591,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       }
     }
 
+    // //都可以就清掉最後一筆(表單最後的新增項)
+    // this.POS2020Data = this.POS2020Data.slice(0,-1);
+    // this.POS2005Data = this.POS2005Data.slice(0,-1);
+
     //--檢查--
     // 商品管理編號：鍵值，自動編號，大分類編號(2碼)+10碼流水號+1碼檢查碼，檢查碼為EAN 檢查碼計算規則，流水號給號讀SER1001商品管理編號序號檔
     // 國際條碼：必填，沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)。
@@ -621,7 +628,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           //將新的資料id指定為0
           const processedPOS2020 = this.POS2020Data.map(item => {
             if (item.status === 'new') {
-              return { ...item, id: 0 }; // 把新項目的 id 改為 0
+              return{
+                id: 0, // 把新項目的 id 改為 0
+                VEN_No: item.VEN_No,
+                STO_No: item.STO_No,
+                PLU_Purchase: item.PLU_Purchase,
+                PLU_TransType: item.PLU_TransType,
+                PLU_TransDay: item.PLU_TransDay,
+                Remark: item.Remark,
+                VDP_LastStockDate: item.VDP_LastStockDate
+              }
             }
             return item; // 其他不變
           });
@@ -672,7 +688,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           //將新的資料id指定為0
           const processedPOS2020 = this.POS2020Data.map(item => {
             if (item.status === 'new') {
-              return { ...item, id: 0 }; // 把新項目的 id 改為 0
+              return{
+                id: 0, // 把新項目的 id 改為 0
+                VEN_No: item.VEN_No,
+                STO_No: item.STO_No,
+                PLU_Purchase: item.PLU_Purchase,
+                PLU_TransType: item.PLU_TransType,
+                PLU_TransDay: item.PLU_TransDay,
+                Remark: item.Remark,
+                VDP_LastStockDate: item.VDP_LastStockDate
+              }
             }
             return item; // 其他不變
           });
@@ -716,7 +741,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.dataForm.reset(); // 重置表單
   }
 
-  // 讀取dopropdown選項
+  // #region dopropdown
   loadOptions() {
     //查詢 商品單位
     this.tls51070Service
@@ -842,7 +867,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
   }
 
-  //讀取明細檔案
+  // #region 讀取明細檔案
   async loadDetail(pLU_MagNo: string, pLU_OrderPrc: number): Promise<void> {
     if (pLU_MagNo == '') {
       if (this.crudstatus !== CRUDStatus.Create)
@@ -868,7 +893,17 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         this.POS2005Data = this.pos2005Detail;
         this.POS2020Data = this.pos2020Detail.map(item => ({
-          ...item,
+          id: item.id,
+          PLU_MagNo: item.PLU_MagNo,
+          PLU_OrderPrc: item.PLU_OrderPrc,
+
+          VEN_No: item.VEN_No,
+          STO_No: item.STO_No,
+          PLU_Purchase: item.PLU_Purchase,
+          PLU_TransType: item.PLU_TransType,
+          PLU_TransDay: item.PLU_TransDay,
+          Remark: item.Remark,
+          VDP_LastStockDate: item.VDP_LastStockDate,
           status: 'old'
         }));
         this.img1001Data = this.img1001Detail;
