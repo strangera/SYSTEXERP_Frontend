@@ -178,4 +178,15 @@ export class TLS13010Service {
       tap((res) => console.log('作廢結果:', res)),
     );
   }
+
+  /**
+ * 刷新使用者資料權限範圍
+ */
+  refreshUserDataPermissions(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/RefreshUserDataPermissions`, {}).pipe(
+      tap((res) => console.log('刷新權限結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
 }
