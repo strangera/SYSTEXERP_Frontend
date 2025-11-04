@@ -68,7 +68,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼' },
-    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions().find(vt => vt.value === d)?.label ?? d },
+    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
     { field: 'VouDate', header: '傳票日期', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
     { field: 'Remark', header: '傳票摘要', format: d => this.service.noteDescMap().get(d)?.label ?? d },
     { field: 'AccAmt', header: '傳票金額' },

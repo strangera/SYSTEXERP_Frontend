@@ -251,7 +251,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly templateColumns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
     { field: 'TempName', header: '傳票代號' },
-    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
+    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions.find(({ value }) => value === v)?.label ?? v },
     { field: 'DetailCount', header: '明細筆數' },
   ];
 
