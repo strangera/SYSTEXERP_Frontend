@@ -188,6 +188,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
+   
   }
   // Delete 按鈕
   deleteRow(selectedItems: any) {

@@ -208,7 +208,6 @@
           [rowValidate]="validate2005Row"
           (dataChange)="POS2005Data = $event" dataStatusField="status" [loading]="loading">
         </app-table-edit>
-        <h6>不可刪除與上方表單相同的廠商編號</h6>
         <!-- 輸入廠商編號才能填寫   -->
         <!-- <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null"> -->
           <!-- 商品採購廠商 POS2020 -->
@@ -226,7 +225,7 @@
               Modified: 'modified',
               Deleted: 'deleted'
             }"
-            [rowValidate]="validate2020Row"
+            [rowValidate]="validate2020Row" [defaultInsertData]="defaultNew2020"
             (dataChange)="POS2020Data = $event" dataStatusField="status" [loading]="loading">
           </app-table-edit> 
         <!-- </ng-container> -->
