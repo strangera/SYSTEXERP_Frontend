@@ -216,6 +216,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
+   
   }
   // 處理 ngModelChange 事件，並發送給父元件
   onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
