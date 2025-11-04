@@ -41,10 +41,15 @@ export class TableUtilityService {
     dataStatusField: string, // 新增參數
     dataStatusValue: { Original: string; New: string; Modified: string; Deleted: string; } // 新增參數
   ): { newRowData: any, data: any[] } {
-    const newRowData: Record<string, any> = {};
+    // 1. 將 defaultInsertData 中的所有屬性複製到新行資料中
+    // 這樣就可以包含 'QQQ' 這樣未在 columns 中定義的欄位
+    const newRowData: Record<string, any> = { ...defaultInsertData };
+    // 2. 遍歷 columns，確保所有定義的欄位都存在。
+    // 如果欄位沒有在 defaultInsertData 中定義，則將其設為 null，以確保資料結構一致
     originalColumns.forEach(col => {
-      newRowData[col.field] = defaultInsertData[col.field] !== undefined
-        ? defaultInsertData[col.field] : null;
+      if (newRowData[col.field] === undefined) {
+        newRowData[col.field] = null;
+      }
     });
     const tempId = `temp-${new Date().getTime()}`;
     newRowData[dataKey] = tempId;
