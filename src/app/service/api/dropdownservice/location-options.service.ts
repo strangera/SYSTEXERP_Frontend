@@ -111,7 +111,7 @@ export class LocationOptionsService {
             pageSize: searchParams?.pageSize || 10
           };
 
-          console.log('✅ LocationService 處理後結果:', {
+          console.log(' LocationService 處理後結果:', {
             原始數量: res?.Data?.length || 0,
             處理後數量: results.length,
             總筆數: res?.TotalCount,
@@ -133,13 +133,18 @@ export class LocationOptionsService {
   private buildRequestBody(searchParams?: any): any {
     const body: any = {};
 
-    // ✅ 只有在有參數時才加入，不設預設值
+    //  只有在有參數時才加入，不設預設值
     if (searchParams?.pageSize !== undefined) {
       body.PageSize = searchParams.pageSize;
     }
 
     if (searchParams?.pageIndex !== undefined) {
-      body.PageIndex = searchParams.pageIndex + 1; // 後端通常是 1-based 索引
+      //  移除 +1，或者根據實際情況調整
+      // 如果前端已經是 1-based，就不需要 +1
+      body.PageIndex = searchParams.pageIndex;
+
+      // 或者如果前端是 0-based，確保正確轉換
+      // body.PageIndex = searchParams.pageIndex > 0 ? searchParams.pageIndex : 1;
     }
 
     if (searchParams?.SortBy && Array.isArray(searchParams.SortBy)) {

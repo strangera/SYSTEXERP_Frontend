@@ -18,6 +18,7 @@ import { ButtonComponent } from "@shared/componentkit/button/button.component";
 import { DialogModule } from "primeng/dialog";
 import { MenubarComponent } from "@shared/component/menubar/menubar.component";
 import { Button } from "primeng/button";
+import { ContractSubmitService } from '../tls13010-next3/SubmitService/contract-submit.service';
 
 @Component({
   selector: 'app-tls13010-next2',
@@ -65,8 +66,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     private contractFlowService: ContractFlowService,
     private tls13010Service: TLS13010Service,
     private commissionDataService: CommissionDataService,
-    private validationService: CommissionValidationService, // 新建
-    private tableService: CommissionTableService, // 新建
+    private validationService: CommissionValidationService,
+    private tableService: CommissionTableService,
+    private contractSubmitService: ContractSubmitService,
     private cdr: ChangeDetectorRef
   ) {
     super();
@@ -772,61 +774,46 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   // === 驗證和提交 ===
-  onSubmitNext(): void {
-    const validation = this.validationService.validateAllData(this.commissionData);
+  async onSubmitNext(): Promise<void> {
+    console.log('📝 Next2: 準備提交契約資料');
 
+    // 驗證資料
+    const validation = this.validationService.validateAllData(this.commissionData);
     if (!validation.isValid) {
       this.notificationService.errorBubble(validation.errors[0]);
       return;
     }
 
-    if (this.isViewMode) {
-      this.navigateToNext();
-      return;
-    }
+    // 保存到工作流程
+    this.saveToWorkflow();
 
-    if (this.isGeneralCommissionMode) {
-      this.showConfirmDialog = true;
-    } else {
-      this.navigateToNext();
+    try {
+      this.loading = true;
+
+      // 使用統一的提交服務
+      const result = await this.contractSubmitService.submitContract({
+        isNext2Flow: true, // ⭐ 標記為 Next2 流程
+        onSuccess: (response) => {
+          console.log('Next2 提交成功，額外處理:', response);
+        },
+        onError: (error) => {
+          console.error('Next2 提交失敗，額外處理:', error);
+        }
+      });
+
+      if (!result.success) {
+        console.error('Next2: 提交流程失敗');
+      }
+
+    } finally {
+      this.loading = false;
     }
   }
 
   onConfirmDialogResult(confirmed: boolean): void {
     this.showConfirmDialog = false;
     if (confirmed) {
-      this.submitContract();
-    }
-  }
-
-  private async submitContract(): Promise<void> {
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    try {
-      const cleanData = this.contractFlowService.generateCleanSubmitData();
-      const response = await lastValueFrom(this.tls13010Service.submitFinalTLS13010(cleanData));
-
-      this.notificationService.successBubble('契約資料提交成功！');
-      this.contractFlowService.onSubmitSuccess();
-
-      setTimeout(() => {
-        this.router.navigate(['account/tls/tls13010']);
-      }, 2000);
-
-    } catch (error) {
-      this.notificationService.errorBubble('契約資料提交失敗');
-    } finally {
-      this.loading = false;
-      this.notificationService.unblockUi();
-    }
-  }
-
-  private navigateToNext(): void {
-    if (this.isGeneralCommissionMode) {
-      this.router.navigate(['account/tls/tls13010']);
-    } else {
-      this.router.navigate(['account/tls/tls13010next3']);
+      this.onSubmitNext();
     }
   }
 
@@ -1043,5 +1030,28 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   private generateTempId(): string {
     return 'temp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+  }
+
+  /**
+ * 前往 Next3（不提交後端，只導航）
+ */
+  onGoToNext3(): void {
+    console.log('📝 Next2: 前往 Next3 設定條件');
+
+    // 驗證資料
+    const validation = this.validationService.validateAllData(this.commissionData);
+    if (!validation.isValid) {
+      this.notificationService.errorBubble(validation.errors[0]);
+      return;
+    }
+
+    // 只保存到暫存，不提交後端
+    this.saveToWorkflow();
+
+    // 直接導航到 Next3
+    this.router.navigate(['account/tls/tls13010next3']);
+
+    // 提示訊息
+    // this.notificationService.infoBubble('抽成資料已暫存，請繼續設定條件');
   }
 }
