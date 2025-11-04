@@ -140,7 +140,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
       const res = this.queryStateService.getQueryStateValue(this.ProgNo + '_data');
       if (res) {
-        this.data = res.Data ?? [];
+        console.log(res);
+        this.data = [...res.Data];
         this.footerData = res.footerData ?? [];
         this.totalRecords = res.TotalCount ?? this.data.length;
         this.historyRequestBody = res.payload;
@@ -180,6 +181,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
         finalize(() => this.loading = false)
       ).subscribe(response => {
         this.data = response.Data ?? [];
+        this.allData = response.Data ?? [];
         this.footerData = { group_name: '總計', ...(response.footerData[0] ?? {}) };
         this.totalRecords = response.TotalCount ?? this.data.length;
 
