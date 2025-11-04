@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe, NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -18,7 +18,7 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import * as XLSX from 'xlsx';
 import { TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/tls26080.model';
 
@@ -107,6 +107,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     });
     this.logger.debug(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
   }, { allowSignalWrites: !0 });
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.dataLoading()
+      || this.service.approvalStatusLoading()
+      || this.service.campaignLoading()
+      || this.service.capItemsLoading()
+      || this.service.fileUploadLoading()
+      || this.service.exampleDownLoading();
+  });
 
   // 環友資料表
   campaignColumns: Column[] = [
@@ -209,11 +218,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
       this.service.insertTLS26080(payload).pipe(
         tap(() => this.dataForm.reset()),
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug(`onSubmit:`, [d, payload]);
-        })
-      ).subscribe();
+      ).subscribe({
+        next: () => this.messageService.successBubble('新增成功'),
+        error: () => this.messageService.errorBubble('新增失敗'),
+      });
     });
   }
 

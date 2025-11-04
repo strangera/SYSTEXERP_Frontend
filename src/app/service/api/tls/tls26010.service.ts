@@ -44,6 +44,7 @@ export class TLS26010Service {
   public readonly approvalStatusLoading = signal<boolean>(!1);
 
   // Request cancellation subjects
+  private readonly tableCancel$ = new Subject<void>();
   private readonly sys3800Cancel$ = new Subject<void>();
   private readonly sys3900Cancel$ = new Subject<void>();
   private readonly sys3A00Cancel$ = new Subject<void>();
@@ -208,9 +209,11 @@ export class TLS26010Service {
   /** 更新預購活動 */
   public updateTLS26010(data: PodRequest): Observable<BaseQueryResponse<any>> {
     if (this.tableLoading()) { this.tableLoading.set(!1); return of(); };
+    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26010`, data).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
       tap((response) => {
         if (response.Status === '0000') {
           // 更新本地數據
@@ -248,8 +251,11 @@ export class TLS26010Service {
 
   /** 刪除預購活動 */
   public deleteTLS26010({ id }: TLS26010Data): Observable<BaseQueryResponse<any>> {
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
       tap(() => this.TLS26010Data.set(this.TLS26010Data())),
       finalize(() => this.tableLoading.set(!1))
     );

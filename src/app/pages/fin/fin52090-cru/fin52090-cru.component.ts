@@ -9,7 +9,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
 import { FIN52090Insert } from '../fin52090/fin52090.model';
 
 @Component({
@@ -36,6 +35,11 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly loadingEffect = computed(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.accNoLoading();
+  });
+
   constructor(
     public readonly service: FIN52090Service,
     private readonly logger: NGXLogger,
@@ -61,9 +65,7 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
 
       this.logger.debug(`onSubmit:`, [payload]);
 
-      this.service.saveFIN52090Data(payload).pipe(
-        finalize(() => this.loading = !1),
-      ).subscribe(res => {
+      this.service.saveFIN52090Data(payload).subscribe(res => {
         if (res.Status !== '0000') return this.messageService.errorBubble('資料儲存失敗，請再次檢查欄位');
         this.messageService.successBubble('資料儲存成功');
         this.onCancel();

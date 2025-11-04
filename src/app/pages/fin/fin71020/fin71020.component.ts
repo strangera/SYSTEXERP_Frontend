@@ -1,4 +1,4 @@
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, effect } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71020Service } from '@service/api/fin/fin71020.service';
@@ -12,7 +12,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
 import { FIN71020Data } from './fin71020.model';
 
 @Component({
@@ -50,6 +49,12 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
   });
 
   public readonly totalRecords = computed(() => this.filteredData().length);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.usrLoading()
+      || this.service.orgLoading();
+  });
 
   public readonly columns: Column[] = [
     { field: 'Keep_UsrNo', header: '保管人代碼' },
@@ -145,11 +150,7 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
 
-      this.service.loadFIN71020({
-        ...this.queryForm.getRawValue(),
-      }).pipe(
-        finalize(() => this.loading = !1),
-      ).subscribe();
+      this.service.loadFIN71020({ ...this.queryForm.getRawValue() }).subscribe();
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });

@@ -57,7 +57,7 @@
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      [loading]="service.tableLoading"></app-button>
+                      [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -72,11 +72,10 @@
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading"
                [tableKey]="'FIN52090'"
                [dataKey]="'AccNo'"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
-               [loading]="service.tableLoading"></app-table>
+               [loading]="service.tableLoading()"></app-table>
   </div>
 </div>

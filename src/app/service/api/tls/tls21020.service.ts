@@ -101,11 +101,17 @@ export class TLS21020Service {
   }
 
   public updateTLS21020(query: TLS21020UpdateQuery[]): Observable<BaseQueryResponse<unknown>> {
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/updateTLS21020`, { GLS1020Datas: query })
       .pipe(
         take(1),
+        takeUntil(this.tableCancel$),
         tap(res => { }),
-        finalize(() => this.logger.debug(`updateTLS21020`, [])),
+        finalize(() => {
+          this.logger.debug(`updateTLS21020`, []);
+          this.tableLoading.set(!1);
+        }),
       );
   }
 

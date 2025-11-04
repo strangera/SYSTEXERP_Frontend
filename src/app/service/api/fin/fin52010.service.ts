@@ -15,7 +15,6 @@ export class FIN52010Service {
 
   private readonly dataCancel$ = new Subject<void>();
   private readonly orgUsrCancel$ = new Subject<void>();
-  private readonly submitCancel$ = new Subject<void>();
   private readonly gls1005Cancel$ = new Subject<void>();
 
   public readonly FIN52010Data = signal<FIN52010Data>(Object.create(null));
@@ -23,8 +22,6 @@ export class FIN52010Service {
   public readonly dataLoading = signal<boolean>(!1);
   public readonly orgUsrLoading = signal<boolean>(!1);
   public readonly gls1005Loading = signal<boolean>(!1);
-
-  public readonly submitting = signal<boolean>(!1);
 
   public readonly orgUsrList = signal<TblUserOrgidItem[]>([]);
   public readonly orgList = signal<Option[]>([]);
@@ -57,13 +54,13 @@ export class FIN52010Service {
   }
 
   public updateFIN52010Data(payload: FIN52010UpdatePayload): Observable<BaseQueryResponse<FIN52010UpdateResult>> {
-    this.submitCancel$.next();
-    this.submitting.set(!0);
+    this.dataCancel$.next();
+    this.dataLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52010UpdateResult>>(`${apiUrl}/updateFIN52010`, payload).pipe(
       take(1),
-      takeUntil(this.submitCancel$),
+      takeUntil(this.dataCancel$),
       tap(res => this.logger.debug('更新FIN52010結果:', [res])),
-      finalize(() => this.submitting.set(!1))
+      finalize(() => this.dataLoading.set(!1))
     );
   }
 

@@ -70,6 +70,15 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     };
   });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.dataLoading()
+      || this.service.campaignLoading()
+      || this.service.capItemsLoading()
+      || this.service.fileUploadLoading()
+      || this.service.exampleDownLoading()
+      || this.service.approvalStatusLoading();
+  });
+
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26080Data; })[] = [
     { field: 'pod_no', header: '活動編號' },
     { field: 'pod_desc', header: '活動名稱' },
@@ -99,14 +108,12 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     this.handleSubmit(this.queryForm, () => {
       this.service.loadTLS26080(this.queryTLS26080());
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.loading = !1;
     });
   }
 
   // 刪除項目
   public onDelete(event: TLS26080Data[]): void {
-    this.service.deleteTLS26080(event.map(v => String(v.id)))
-      .pipe(finalize(() => this.loading = !1))
+    this.service.deleteTLS26080(event.map(v => String(v.id))).pipe()
       .subscribe({
         next: () => this.messageService.successBubble('刪除成功'),
         error: () => this.messageService.errorBubble('刪除失敗')

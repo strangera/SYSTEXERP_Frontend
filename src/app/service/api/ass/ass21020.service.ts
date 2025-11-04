@@ -42,17 +42,13 @@ export class ASS21020Service {
     new Map(this.tltNoData().map(item => [item.TLT_No, item]))
   );
 
-  public readonly engMeterNoLoading = signal<boolean>(!1);
   public readonly tableLoading = signal<boolean>(!1);
+  public readonly engMeterNoLoading = signal<boolean>(!1);
   public readonly tltByFlagLoading = signal<boolean>(!1);
-  public readonly updating = signal<boolean>(!1);
-  public readonly deleting = signal<boolean>(!1);
 
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
   private readonly tltByFlagCancel$ = new Subject<void>();
-  private readonly updatingCancel$ = new Subject<void>();
-  private readonly deletingCancel$ = new Subject<void>();
 
   public readonly totalRecords = signal<number>(0);
 
@@ -78,25 +74,26 @@ export class ASS21020Service {
   };
 
   public updateASS21020(payload: ASS21020Update[]): Observable<ASS21020UpdateStatus> {
-    this.updatingCancel$.next();
-    this.updating.set(!0);
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/updateASS21020`, { UpdateASS21020Datas: payload }).pipe(
       take(1),
-      takeUntil(this.updatingCancel$),
+      takeUntil(this.tableCancel$),
       finalize(() => {
-        this.updating.set(!1);
+        this.tableLoading.set(!1);
         this.logger.debug('更新ASS21020結果:', [payload]);
       }),
     );
   }
 
   public deleteASS21020(payload: ASS21020Delete): Observable<ASS21020UpdateStatus> {
-    this.deletingCancel$.next();
-    this.deleting.set(!0);
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/deleteASS21020`, payload).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
       finalize(() => {
-        this.deleting.set(!1);
+        this.tableLoading.set(!1);
         this.logger.debug(`deleteASS21020:`, [payload]);
       })
     );

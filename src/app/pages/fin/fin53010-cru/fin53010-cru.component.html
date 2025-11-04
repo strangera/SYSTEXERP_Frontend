@@ -121,7 +121,7 @@
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
                     [disabled]="!dataForm.valid || !isBalanced() || displayDialog()"
-                    [loading]="service.tableLoading()"></app-button>
+                    [loading]="loading"></app-button>
       </div>
       }
     </form>

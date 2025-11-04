@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
@@ -62,6 +62,13 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.logger.debug(`tableEffect:`, [types, meters, locs]);
   }, { allowSignalWrites: !0 });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.engMeterNoLoading()
+      || this.service.locationLoading()
+      || this.service.exportLoading();
+  });
+
   public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21010Data; exportFormat?: unknown[]; })[] = [
     {
       field: 'ENG_Type',
@@ -102,7 +109,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
       this.logger.debug(`onSubmit:`, [payload]);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.loading = !1;
     });
   }
 
@@ -113,11 +119,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
         .pipe(
           tap(() => this.service.ASS21010Data.update(v =>
             v.filter(d => data.some(item => d.ID !== item.ID)))),
-          tap(({ Status }) => {
-            if (Status === '0000') this.messageService.successBubble('刪除成功');
-          }),
-          finalize(() => this.loading = !1),
-        ).subscribe();
+        ).subscribe({
+          next: () => this.messageService.successBubble('刪除成功'),
+          error: () => this.messageService.errorBubble('刪除失敗')
+        });
     }
     this.service.loadASS21010(<ASS21010Payload>{
       ...this.queryForm.getRawValue(),

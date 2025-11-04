@@ -20,14 +20,13 @@
                       optionLabel="Name"
                       optionValue="No"
                       [control]="df().ENG_Type"
-                      [loading]="service.engMeterNoLoading()"
                       [disabled]="!isFormCreateable"
                       [submitted]="submitted"></app-dropdown>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="錶號"
                         controlName="ENG_MeterNo"
                         [control]="df().ENG_MeterNo"
-                        [disabled]="!isFormCreateable"
+                        [disabled]="!isFormCreateable || service.engMeterNoLoading()"
                         [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="設備位置編號"

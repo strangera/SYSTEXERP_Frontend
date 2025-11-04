@@ -114,21 +114,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   });
 
   public readonly loadingEffect = effect(() => {
-    const acc = this.service.accLoading();
-    const ven = this.service.venLoading();
-    const usr = this.service.usrLoading();
-    const org = this.service.orgNoLoading();
-    const voc = this.service.voucherTypeLoading();
-    const table = this.service.tableLoading();
-    const refName = this.service.refNameLoading();
-    const noteDesc = this.service.noteDescLoading();
-    this.loading = acc || ven || usr || org || refName || voc || noteDesc || table;
+    this.loading = this.service.accLoading()
+      || this.service.venLoading()
+      || this.service.usrLoading()
+      || this.service.orgNoLoading()
+      || this.service.voucherTypeLoading()
+      || this.service.tableLoading()
+      || this.service.refNameLoading()
+      || this.service.noteDescLoading();
   });
 
   // 載入資料的 effect
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
-      this.loading = !1;
       this.service.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
@@ -161,7 +159,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
     })));
 
-    this.logger.debug(`loading detail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
+    this.logger.debug(`loadingDetail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
     if (!this.service.accNoMap().size
       || !this.service.vendorMap().size
       || !this.service.usrMap().size
@@ -266,7 +264,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public ngOnInit(): void {
     this.initializePage('FIN53010', this.dataForm);
     this.service.FIN53010Detail.set(Object.create(null));
-    this.loading = !0;
 
     this.service.getAccNoList();
     this.service.getVendorList();
@@ -312,13 +309,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        finalize(() => this.loading = !1),
-        tap(res => {
-          if (res.Status !== '0000') return;
-          this.messageService.successBubble(this.isFormCreateable ? '新增傳票成功' : '更新傳票成功');
-          this.onCancel();
-        })
-      ).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+        error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+      });
     });
   }
 
@@ -391,7 +386,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.deleteFIN53010Data(ids).pipe(
       finalize(() => this.service.loadFIN53010Detail(this.rowdata!.id))
-    ).subscribe();
+    ).subscribe({
+      next: () => this.messageService.successBubble('刪除成功'),
+      error: () => this.messageService.errorBubble('刪除失敗')
+    });
   }
 
   public onRowReorder(event: TableRowReorderEvent): void {
@@ -421,7 +419,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug('getVocherTemplate:', [payload]);
     if (this.loading) return;
     this.service.getFin52030(payload).pipe(
-      finalize(() => { this.loading = !1; this.displayDialog.set(!0); }),
+      finalize(() => this.displayDialog.set(!0)),
       tap(res => this.logger.debug('取得常用傳票結果:', [res]))
     ).subscribe();
   }
@@ -429,7 +427,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public onApplyTemplate(): void {
     this.logger.debug('onApplyTemplate:', [this.selectedDetail()]);
     this.service.getFin52030Detail(this.selectedDetail()[0]?.TempNo, this.df().CompNo.value!, Number(this.user.mid)).pipe(
-      finalize(() => this.loading = !1),
       tap(res => {
         if (res.Status === '0000' && res.Data) {
           this.logger.debug('套用常用傳票結果:', [res]);

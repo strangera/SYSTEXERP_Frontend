@@ -109,13 +109,11 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       ? this.dataForm.patchValue({ CRT_USR_No: name, CRT_Date: date })
       : this.dataForm.patchValue({ UPD_USR_No: name, UPD_Date: date });
 
-    this.loading = !1;
     this.service.tableLoading.set(!1);
   }, { allowSignalWrites: !0 });
 
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
-      this.loading = !1;
       this.service.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
@@ -146,6 +144,15 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       || !this.service.noteDescMap().size) return;
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.accLoading()
+      || this.service.venLoading()
+      || this.service.usrLoading()
+      || this.service.RefNameLoading()
+      || this.service.noteDescLoading();
+  });
 
   // Template 相關屬性
   public selectedTemplateType = 'vendor';
@@ -223,7 +230,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   ]);
 
   constructor(
-    public service: FIN52030Service,
+    public readonly service: FIN52030Service,
     private logger: NGXLogger,
   ) {
     super();
@@ -232,7 +239,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public ngOnInit(): void {
     this.initializePage('FIN52030', this.dataForm);
-    this.loading = !0;
 
     if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata!.id).subscribe();
 
@@ -273,8 +279,11 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         : this.service.updateFIN52030Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        finalize(() => this.loading = !1),
-      ).subscribe(res => res.Status === '0000' && this.onCancel());
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+        error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+      });
     });
   }
 
@@ -346,7 +355,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     this.service.deleteFIN52030Data(ids).pipe(
       finalize(() => this.service.loadFIN52030Detail(this.rowdata!.id))
-    ).subscribe();
+    ).subscribe({
+      next: () => this.messageService.successBubble('刪除成功'),
+      error: () => this.messageService.errorBubble('刪除失敗')
+    });
   }
 
   public onRowReorder(event: TableRowReorderEvent): void {

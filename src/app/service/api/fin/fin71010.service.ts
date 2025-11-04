@@ -16,7 +16,7 @@ export class FIN71010Service {
 
   private readonly tableCancel$ = new Subject<void>();
 
-  public tableLoading = !1;
+  public tableLoading = signal<boolean>(!1);
   constructor(
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,
@@ -24,13 +24,13 @@ export class FIN71010Service {
 
   public loadFIN71010(payload: unknown): Observable<BaseQueryResponse<Record<string, any>>> {
     this.tableCancel$.next();
-    this.tableLoading = !0;
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/queryFIN71010`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN71010Data.set(res.Data)),
       tap(() => this.logger.debug('查詢FIN71010結果:', [this.FIN71010Data()])),
-      finalize(() => this.tableLoading = !1)
+      finalize(() => this.tableLoading.set(!1))
     );
   };
 }

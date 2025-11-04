@@ -42,8 +42,12 @@ export class FIN52090Service {
   };
 
   public saveFIN52090Data(payload: FIN52090Insert): Observable<BaseQueryResponse<FIN52090Data>> {
+    this.tableCancel$.next();
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52090Data>>(`${apiUrl}/insertFIN52090`, payload).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
+      finalize(() => this.tableLoading.set(!1)),
       tap(res => this.logger.debug('更新FIN52090結果:', [res])),
     );
   };
