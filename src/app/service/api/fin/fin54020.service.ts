@@ -15,4 +15,7 @@ export class Fin54020Service {
   queryFIN54020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryFIN54020`, data);
   }
+  updateFIN54020(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateFIN54020`, data);
+  }
 }
