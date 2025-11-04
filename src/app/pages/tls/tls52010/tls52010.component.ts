@@ -53,7 +53,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     LOGO_NoList: [null], // 品牌代碼 multi-select
     VEN_No: [''], // 廠商編號 multi-select
     queryNo: ['', [Validators.maxLength(20)]], // 查詢編號 input
-    PO_StatusList: [null, [Validators.required]], // 採購單狀態 multi-select
+    PO_StatusList: [null], // 採購單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range
     APPLY_Date_End: [null], // 申請日期 迄
@@ -91,8 +91,8 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'PO_TotalBuyNet', header: '進價未稅小計', visible: true, format: formatAmount }, // 採購總淨額
     { field: 'PO_TotalBuyTax', header: '進價稅額小計', visible: true, format: formatAmount }, // 採購總稅額
     { field: 'PO_TotalBuyAmt', header: '進價合計', visible: true, format: formatAmount }, // 採購總金額
-    { field: 'PO_TotalSaleNet', header: '售價未稅小計', visible: true, format: formatAmount }, // 銷售總淨額
-    { field: 'PO_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount }, // 銷售總稅額
+    // { field: 'PO_TotalSaleNet', header: '售價未稅小計', visible: true, format: formatAmount }, // 銷售總淨額
+    // { field: 'PO_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount }, // 銷售總稅額
     { field: 'PO_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount }, // 銷售總金額
     { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '審核人員編號', visible: true }, // 核准人員編號
