@@ -30,10 +30,10 @@ import { FIN54030Data } from './fin54030.model';
 export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    DisplayYM: <Date | void>void 0,
-    TargetYM: '',
-    CntPostFlag1: 0,
-    CntPostFlag3: 0,
+    DisplayYM: new FormControl<Date | void>(void 0),
+    TargetYM: new FormControl<string>(''),
+    CntPostFlag1: new FormControl<number>(0),
+    CntPostFlag3: new FormControl<number>(0),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
