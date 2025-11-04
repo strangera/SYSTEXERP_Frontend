@@ -54,7 +54,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     TXN_No: [null, [Validators.maxLength(8)]],
     PLU_MagNo: ['', [Validators.maxLength(20)]],
     PLU_No: [null, [Validators.maxLength(20)]],
-    PLU_OrgPLUNo: [null],
+    PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
   });
   totalRecords = 0;
   displayModeOptions = [
