@@ -8,14 +8,13 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatAmount, formatDateTime } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatAmount, formatDateTime, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Cpm13050Service, QueryCPM13050Request } from '@service/api/cpm/cpm13050.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { skip } from 'rxjs/operators';
 
 @Component({
   selector: 'app-cpm13050',
@@ -148,8 +147,8 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
         PageSize: 30,
         PageIndex: 1,
         SortBy: [{ field: 'TXN_Date', order: 1 }],
-        TXN_BDATE: v.TXN_BDATE || undefined,
-        TXN_EDATE: v.TXN_EDATE || undefined,
+        TXN_BDATE: formatDateToYYYY_MM_DD(v.TXN_BDATE) || undefined,
+        TXN_EDATE: formatDateToYYYY_MM_DD(v.TXN_EDATE) || undefined,
         shop_nameList: v.PKG_disc_shop_name ? [v.PKG_disc_shop_name] : [],
         rule_nameList: v.PKG_disc_rule_name ? [v.PKG_disc_rule_name] : [],
         ShowType: v.displayMode

@@ -50,7 +50,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     TXN_EDATE: [new Date(), [Validators.required]],
     TXN_BDATE: [new Date(), [Validators.required]],
     building_noList: [[]],
-    org_nameList: [[]],
+    org_idList: [[]],
     tlt_noList: [[]],
     TXN_GUIBegNo: [''],
     TXN_TotSaleAmtStart: [null],
@@ -152,7 +152,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
         TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
         TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
         building_noList: v.building_noList || [],
-        org_nameList: v.org_nameList || [],
+        org_idList: v.org_idList || [],
         tlt_noList: v.tlt_noList || [],
         TXN_GUIBegNo: v.TXN_GUIBegNo || '',
 
@@ -212,7 +212,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
       TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
       building_noList: v.building_noList || [],
-      org_nameList: v.org_nameList || [],
+      org_idList: v.org_idList || [],
       tlt_noList: v.tlt_noList || [],
       TXN_GUIBegNo: v.TXN_GUIBegNo || '',
       TXN_TotSaleAmtStart:
@@ -254,7 +254,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       TXN_BDATE: this.datePipe.transform(v.TXN_BDATE, 'yyyy-MM-dd'),
       TXN_EDATE: this.datePipe.transform(v.TXN_EDATE, 'yyyy-MM-dd'),
       building_noList: v.building_noList || [],
-      org_nameList: v.org_nameList || [],
+      org_idList: v.org_idList || [],
       tlt_noList: v.tlt_noList || [],
       TXN_GUIBegNo: v.TXN_GUIBegNo || '',
       TXN_TotSaleAmtStart:

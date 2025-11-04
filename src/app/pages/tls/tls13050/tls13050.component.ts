@@ -67,11 +67,10 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount },
     { field: 'commissionRate', header: '抽成率', visible: true },
     { field: 'underLimitCommission', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount },
-    { field: 'completionRate', header: '年度包底營業額完成率', visible: true },
+    { field: 'finishedrate', header: '年度包底營業額完成率', visible: true },
     { field: 'check_day', header: '月結天數', visible: true },
   ];
   buildingNoOptions: IDropdownItem[] = [];
-
 
   constructor(
     private locationOptionsService: LocationOptionsService,
