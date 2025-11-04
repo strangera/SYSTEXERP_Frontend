@@ -94,7 +94,7 @@ export class FIN71020CRUComponent extends BasicCruPageComponent<FIN71020Data> im
       };
 
       this.service.saveFIN71020(payload, this.isFormCreateable ? 'insert' : 'update').pipe(
-        tap(res => res.Status === '2000' && this.onCancel()),
+        tap(res => res.Status === '0000' && this.onCancel()),
       ).subscribe({
         next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
         error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
