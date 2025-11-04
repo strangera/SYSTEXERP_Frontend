@@ -220,6 +220,12 @@
             (addMainItem)="onAddPOS2020()"></app-expandable-edit-table> -->
           <app-table-edit title="商品採購廠商" tableKey="VEN_No" [data]="POS2020Data" class="col-12"
             [columns]="POS2020DataColumn" (selectionChange)="selectedPOS2020Items = $event" [selectedItems]="selectedPOS2020Items"
+            [dataStatusValue]="{
+              Original: 'old',
+              New: 'new',
+              Modified: 'modified',
+              Deleted: 'deleted'
+            }"
             [rowValidate]="validate2020Row"
             (dataChange)="POS2020Data = $event" dataStatusField="status" [loading]="loading">
           </app-table-edit> 
