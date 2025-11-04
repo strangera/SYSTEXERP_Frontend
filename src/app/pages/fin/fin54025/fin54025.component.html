@@ -1,63 +1,50 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳票號碼"
-              [startControl]="queryForm.controls.startserialticket"
-              [endControl]="queryForm.controls.endserialticket"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="傳票號碼"
+              [startControl]="queryForm.controls.startserialticket" [endControl]="queryForm.controls.endserialticket"
+              [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="傳票日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate"
-              [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="傳票日期" controlName="accountsummary"
+              [startControl]="queryForm.controls.SSubpoenadate" [endControl]="queryForm.controls.ESubpoenadate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table tableKey="TLS2a050" [showManage]="true" [data]="data" [columns]="columns"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showReportMode]="false"
+      [showDelete]="false" [showEdit]="false" (detail)="onDetail($event)">
+      <header>
+        <div class="flex align-items-center mb-5">
+          <p-button label="過帳" severity="success" (click)="onReview(selectedItems)" [disabled]="selectedCount === 0"
+            [ngStyle]="{
+            height: '16px',
+            fontSize: '16px',
+            padding: '0 2px',
+            marginRight: '7px',
+          }"></p-button>
+        </div>
+      </header>
+    </app-table>
   </div>
 </div>

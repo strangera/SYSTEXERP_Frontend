@@ -19,6 +19,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 interface LogoOption {
   No: string;
@@ -63,10 +64,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]),
   });
 
-  BUD_StatusOptions: { label: string; value: string }[] = [
-    { label: '未審核', value: "0" },
-    { label: '已審核', value: "1" },
-  ];
+  BUD_StatusOptions = getSYS1000Options('BUD_Status');
 
   columns: Column[] = [
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
