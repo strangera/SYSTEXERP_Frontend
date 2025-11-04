@@ -29,7 +29,6 @@ export interface Option {
 @Component({
   selector: 'app-fin15030',
   templateUrl: './fin15030.component.html',
-  styleUrl: './fin15030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -49,8 +48,8 @@ export interface Option {
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    INV_Remark_S: ['', [Validators.maxLength(10)]],             // 退出/折讓單號起 (string(10))
-    INV_Remark_E: ['', [Validators.maxLength(10)]],             // 退出/折讓單號訖 (string(20))
+    INV_Remark_S: ['', [Validators.maxLength(16)]],             // 退出/折讓單號起 (string(10))
+    INV_Remark_E: ['', [Validators.maxLength(16)]],             // 退出/折讓單號訖 (string(20))
     INV_GUIType: [null],                                        // 發票格式 (dropdown)
     GUI_Track: [null],                                          // 字軌 (string(2))
     TXN_GUINo_S: ['', [Validators.maxLength(8)]],               // 發票號碼起 (string(8))
@@ -99,7 +98,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'TXN_Uniform', header: '統一編號', visible: true }
   ];
 
-  //#region 
+  //#region
   // TDS1007
   invoiceFormatOptions: Option[] = [];   // 發票格式
   guiTrackOptions: Option[] = [];        // 字軌
