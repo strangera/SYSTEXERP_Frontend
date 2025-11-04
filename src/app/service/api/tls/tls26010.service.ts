@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, Injectable, OnDestroy, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -12,7 +12,7 @@ import { environment } from 'src/environments/environment';
 const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
-export class TLS26010Service implements OnDestroy {
+export class TLS26010Service {
   private readonly d = (() => {
     const n = new Date(), y = n.getFullYear(), m = n.getMonth();
     return { start: new Date(y, m, 1), end: new Date(y, m + 1, 0) };
@@ -280,15 +280,5 @@ export class TLS26010Service implements OnDestroy {
         })
       ).subscribe();
     this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
-  }
-
-  ngOnDestroy(): void {
-    this.sys3800Cancel$.complete();
-    this.sys3900Cancel$.complete();
-    this.sys3A00Cancel$.complete();
-    this.ecrCancel$.complete();
-    this.tltCancel$.complete();
-    this.queryCancel$.complete();
-    this.detailCancel$.complete();
   }
 }
