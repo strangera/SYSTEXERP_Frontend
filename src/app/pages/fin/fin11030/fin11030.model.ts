@@ -31,7 +31,7 @@ export interface APS2001Data {
 }
 
 export const columns: Column[] = [
-  { field: 'id', header: '序號', visible: true },
+  // { field: 'id', header: '序號', visible: true },
   { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
   { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },
   { field: 'SAL_GUIEndMM', header: '終止月份', visible: false },
