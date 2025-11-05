@@ -71,7 +71,11 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
 
-    ...createPaginationConfig([{ field: 'org_id', order: 1 }])
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'org_id', order: 1 }]],
+
+    // ...createPaginationConfig([{ field: 'org_id', order: 1 }])
   });
 
   // 日期查詢條件表單

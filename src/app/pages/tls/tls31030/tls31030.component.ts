@@ -13,7 +13,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -72,8 +72,11 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
 
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'bus_type', order: 1 }]],
 
-    ...createPaginationConfig([{ field: 'bus_type', order: 1 }])
+    // ...createPaginationConfig([{ field: 'bus_type', order: 1 }])
   });
 
   // 日期查詢條件表單
