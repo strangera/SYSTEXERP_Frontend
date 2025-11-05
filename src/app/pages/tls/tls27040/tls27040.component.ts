@@ -9,7 +9,7 @@ import { TranslateModule } from '@ngx-translate/core'; // Add this import as req
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, queryTxnTypeOptions } from './tls27040.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS27040Data, TLS27040Service, TotalData } from '@service/api/tls/tls27040.service';
+import { QueryTLS27040Request, TLS27040Data, TLS27040Service, TotalData } from '@service/api/tls/tls27040.service';
 import { finalize } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
 import { todayStart } from '@shared/models/system/query-form.model';
@@ -22,6 +22,8 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AsyncPipe } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -41,7 +43,8 @@ import { AsyncPipe } from '@angular/common';
     CalendarRangeComponent,
     RadiobuttonComponent,
     DropdownComponent,
-    AsyncPipe
+    AsyncPipe,
+    ButtonModule
   ]
 })
 export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> implements OnInit {
@@ -87,6 +90,9 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
   EntryFgOptions = getSYS1000Options('EntryFg');
   TermNoOptions = SystemOptionsService.getOptions('T109');
   queryFilterOptions = queryFilterOptions;
+  btnLoading = false;
+  historyRequestBody: QueryTLS27040Request | null = null;
+
   constructor(
     public readonly tls27040Service: TLS27040Service,
     private readonly dropdown: DropdownApiService
@@ -107,6 +113,7 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
           ...item,
           dataKey: item.ID + item.tableName
         })) : [];
+        this.historyRequestBody = body;
         this.footerData = res.footerData && res.footerData.length > 0 ? res.footerData[0] : { group_name: '總計', TxnAmt: 0 };
         this.totalRecords = res.TotalCount;
         this.lastQueryBody = body;
@@ -126,6 +133,104 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
       this.messageService.successBubble(res.Message);
       this.onSubmit(this.queryForm);
     });
+  }
+
+  /**
+   *  新增：匯出 PDF 報表 (呼叫 tls27040Service.exportTLS27040PDF)
+   */
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      return;
+    }
+    this.btnLoading = true;
+    this.tls27040Service.exportTLS27040PDF(this.historyRequestBody).pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.pdf');
+      },
+      error: (err) => {
+        console.error('PDF 匯出失敗:', err);
+        //  可以在這裡添加錯誤提示邏輯
+      }
+    });
+  }
+
+  /**
+   * 新增：匯出 Excel 報表 (呼叫 tls27040Service.exportTLS27040Excel)
+   */
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      return;
+    }
+    this.btnLoading = true;
+    this.tls27040Service.exportTLS27040Excel(this.historyRequestBody).pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.xlsx');
+      },
+      error: (err) => {
+        console.error('Excel 匯出失敗:', err);
+        //  可以在這裡添加錯誤提示邏輯
+      }
+    });
+  }
+
+  /**
+   *  複製自 tls27040.component.ts 的通用檔案處理邏輯
+   * 處理檔案匯出的通用邏輯
+   */
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+  }
+
+  /**
+   *  複製自 tls27040.component.ts 的通用檔案處理邏輯
+   * 輔助方法：從 header 獲取檔名
+   */
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
+    }
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
   }
 }
 function processSelectedCodes(selectedValues: string[][]) {
