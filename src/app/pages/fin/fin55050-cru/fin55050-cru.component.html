@@ -1,6 +1,10 @@
-<div class="card">
+<div class="card" *ngIf="initialized">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-menubar
+      [ProgNo]="ProgNo"
+      [customBreadcrumbItems]="crumbs"
+      class="flex-1">
+    </app-menubar>
     <app-button btnType="back" (click)="back()"></app-button>
   </div>
 
@@ -14,24 +18,12 @@
     </div>
   </div>
 
-  <!-- 四項資訊（來自 queryFIN55050Detail 第一筆） -->
+  <!-- 四項資訊 -->
   <div class="grid text-sm text-700">
-    <div class="col-12 md:col-3">
-      <span class="mr-2">傳票日期：</span>
-      <span class="font-medium">{{ meta?.vouDate || '' }}</span>
-    </div>
-    <div class="col-12 md:col-3">
-      <span class="mr-2">傳票型態：</span>
-      <span class="font-medium">{{ meta?.vouType || '' }}</span>
-    </div>
-    <div class="col-12 md:col-3">
-      <span class="mr-2">傳票編號：</span>
-      <span class="font-medium">{{ meta?.vouNo || '' }}</span>
-    </div>
-    <div class="col-12 md:col-3">
-      <span class="mr-2">狀態：</span>
-      <span class="font-medium">{{ meta?.vouStatus || '' }}</span>
-    </div>
+    <div class="col-12 md:col-3"><span class="mr-2">傳票日期：</span><span class="font-medium">{{ meta?.vouDate || '' }}</span></div>
+    <div class="col-12 md:col-3"><span class="mr-2">傳票型態：</span><span class="font-medium">{{ meta?.vouType || '' }}</span></div>
+    <div class="col-12 md:col-3"><span class="mr-2">傳票編號：</span><span class="font-medium">{{ meta?.vouNo || '' }}</span></div>
+    <div class="col-12 md:col-3"><span class="mr-2">狀態：</span><span class="font-medium">{{ meta?.vouStatus || '' }}</span></div>
   </div>
 </div>
 
