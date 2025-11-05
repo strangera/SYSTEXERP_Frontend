@@ -51,7 +51,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     HOS_NoList: [null], // 倉庫代碼 multi-select
     LOGO_NoList: [null], // 品牌代碼 multi-select
     VEN_No: [null], // 廠商編號 multi-select
-    CRN_StatusList: [null, [Validators.required]], // 採購單狀態 multi-select
+    CRN_StatusList: [null], // 採購單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range
     APPLY_Date_End: [null], // 申請日期 迄

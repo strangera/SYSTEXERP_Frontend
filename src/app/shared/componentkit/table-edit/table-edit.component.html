@@ -143,12 +143,12 @@
             <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" appendTo="body"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
               [placeholder]="'請輸入' + col.header" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
-              [optionValue]="col.optionValue"
+              [optionValue]="col.optionValue" [filter]="true"
               [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [disabled]=" (col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
               [editable]="true" (onChange)="onValueChange(rowData,$event.value, col, index)"
-              (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
-              [virtualScrollItemSize]="40" [showClear]="col.showClear ?? true"
+              (onHide)="onValueChange(rowData,rowData[col.field], col, index);onDropdownHide(rowData, col)"
+              [virtualScroll]="true" [virtualScrollItemSize]="40" [showClear]="col.showClear ?? true"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }">
               <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
@@ -182,12 +182,14 @@
           <ng-container *ngIf="col.type === 'template'">
             <div class="input-wrapper" [attr.data-suffix]="col.suffix">
               <input pInputText readonly class="w-full min-w-max" [placeholder]="'請選擇' + (col.header || '')"
-                [value]="templateDisplayValue(rowData, col)" [disabled]="disabled || loading" (click)="overlayPanel.show($event)" />
+                [value]="templateDisplayValue(rowData, col)" [disabled]="disabled || loading"
+                (click)="overlayPanel.show($event)" />
               <p-overlayPanel #overlayPanel [dismissable]="true" [showCloseIcon]="false"
                 [ngStyle]="{'max-width': '50vw', 'min-width': '300px'}" [appendTo]="'body'">
                 <div class="grid p-fluid">
                   <ng-container *ngIf="col.templateRef">
-                    <ng-container *ngTemplateOutlet="col.templateRef!; context: { $implicit: rowData, col, overlayPanel }"></ng-container>
+                    <ng-container
+                      *ngTemplateOutlet="col.templateRef!; context: { $implicit: rowData, col, overlayPanel }"></ng-container>
                   </ng-container>
                 </div>
               </p-overlayPanel>

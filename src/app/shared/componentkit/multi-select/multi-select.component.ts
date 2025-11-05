@@ -51,6 +51,7 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() maxSelectedLabels = 3; // 預設值，可被覆寫
   @Input() filter = true;
   @Input() dataKey = this.optionValue;
+  @Input() showClear = true;
   private _options: any[] = [];
 
   ngOnInit(): void {

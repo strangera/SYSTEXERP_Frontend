@@ -9,7 +9,7 @@
   <p-dropdown styleClass="w-full" [id]="controlName" [formControl]="control"
     [placeholder]="customPlaceholder || placeholder" [options]="options" [optionLabel]="optionLabel"
     [optionValue]="optionValue" [showClear]="showClear" [filterBy]="filterBy"
-    [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
+    [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" (onHide)="onDropdownHide()"
     [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
     [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="true"
     [virtualScrollItemSize]="40" [editable]="editable" [loading]="loading" [filter]="filter">

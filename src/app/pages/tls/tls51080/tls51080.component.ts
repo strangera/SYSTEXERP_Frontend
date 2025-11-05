@@ -1,3 +1,4 @@
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -12,6 +13,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 2.5.1.8  分倉資料處理
 @Component({
@@ -78,7 +81,10 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
   selectedItems: POS2034[] = [];// 多選項目
 
   // ----------------------------------------------------------------
-  constructor(private tls51080Service: Tls51080Service) {
+  constructor(
+    private tls51080Service: Tls51080Service,
+    private readonly dropDownListService: DropDownListService,
+  ) {
     super();
   }
 
@@ -177,42 +183,16 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
 
   loadOptions() {
     {
-      // 部門下拉
-      this.tls51080Service
-        .querySYS3100_join_POS1001_DropDownList({})
-        .subscribe((response) => {
-          this.org_idOptions = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
-          
-          console.log('org_idOptions:', this.org_idOptions);
-        });
-
-
-      // 組織代碼下拉
-      this.tls51080Service
-        .querySYS3100_DropDownList({})
-        .subscribe((response) => {
-          this.SYS3100_Options = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
-
-          console.log('SYS3100_Options:', this.SYS3100_Options);
-        });
-      // 讀取館別代碼選項
-      this.tls51080Service
-        .querySYS3800_DropDownList({})
-        .subscribe((response) => {
-          this.building_noOptions = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
-        });
+      // 組織代碼 下拉
+      this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+            this.SYS3100_Options = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+            console.log('組織', this.SYS3100_Options);
+      })
+      // 館別 下拉
+      this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+            this.building_noOptions = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+            console.log('館別', this.building_noOptions);
+      })
     }
   }
 
