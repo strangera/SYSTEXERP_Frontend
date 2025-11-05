@@ -23,10 +23,14 @@
       </th>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-rowspan="rowspan" let-rowgroup="rowgroup">
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-rowspan="rowspan" let-rowgroup="rowgroup"
+    let-rowGroupIndex="rowGroupIndex">
     <tr [pSelectableRow]="rowData" [style]="{ height: '24px' }" [pSelectableRowIndex]="rowIndex">
 
-      <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
+      <td class="text-center" pFrozenColumn>
+        <span *ngIf="rowgroup">
+          {{ rowData['GroupIndex'] }} </span>
+      </td>
 
       <td *ngIf="rowgroup" [attr.rowspan]="rowspan" [ngStyle]="{'text-align': 'center', 'vertical-align': 'top'}">
         <span>
@@ -84,7 +88,7 @@
 
       <td [ngStyle]="{'text-align': 'right'}">
         <span>
-          {{formatAmountNo0(rowData['C_AMT'] | number:'1.2-2')}}
+          {{formatAmountNo0(rowData['C_AMT'])}}
         </span>
       </td>
 
