@@ -9,7 +9,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { NgIf } from '@angular/common';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
-import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 type DetailRow = {
@@ -66,50 +65,56 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private fin55050Service: FIN55050Service,
-    private route: ActivatedRoute,
-
   ) {
     super();
   }
 
-  ngOnInit(): void {
+ngOnInit(): void {
+  // 1) 先決定 ProgNo（從 localStorage 補上，讀不到就用預設）
+  try {
+    const savedProg = localStorage.getItem('FIN55050_CRU_PROGNO');
+    this.ProgNo = savedProg && savedProg.trim() ? savedProg : 'FIN55050';
+  } catch {
     this.ProgNo = 'FIN55050';
-    (this as any).initializePage?.(this.ProgNo, 'account/fin/fin55050');
-
-    // 只用 sessionStorage 交接，讀到就清掉
-    const handoff = this.readHandoff(); // { vouNo, fromRoute? }
-    const vouNo = handoff?.vouNo
-      ?? this.route.snapshot.queryParamMap.get('vouNo')    // 備援：若你偶爾仍帶 query
-      ?? this.route.snapshot.paramMap.get('vouNo')         // 備援：若你有 /:vouNo 路由
-      ?? '';
-
-    if (handoff?.fromRoute) {
-      (this as any).fromRoute = handoff.fromRoute;
-    }
-
-    if (vouNo) {
-      this.vouNo = vouNo;
-      this.loadDetail(vouNo);
-    } else {
-      this.messageService?.warnBubble?.('缺少傳票號碼（vouNo）。');
-    }
   }
 
-  /** 一次性讀取並清除 handoff */
-private readHandoff(): { vouNo?: string; fromRoute?: string } | null {
-  try {
-    const raw = sessionStorage.getItem('FIN55050_CRU_HANDOFF');
-    if (!raw) return null;
-    sessionStorage.removeItem('FIN55050_CRU_HANDOFF'); // 讀完即清
-    const obj = JSON.parse(raw) as { vouNo?: string; fromRoute?: string };
-    console.log('[FIN55050CRU] handoff read:', obj);
-    return obj;
-  } catch {
-    return null;
+  // 2) 立即初始化 Menubar／權限（⚠️ CRU 這邊用單一參數）
+  (this as any).initializePage?.(this.ProgNo);
+
+  // 3) 讀取交接資料後載入明細
+  const handoff = this.readHandoffLocal(); // { vouNo, fromRoute? }
+  const vouNo = handoff?.vouNo ?? '';
+
+  if (handoff?.fromRoute) {
+    (this as any).fromRoute = handoff.fromRoute;
+  }
+
+  if (vouNo) {
+    this.vouNo = vouNo;
+    this.loadDetailAndClearOnSuccess(vouNo);
+  } else {
+    this.messageService?.warnBubble?.('缺少傳票號碼（vouNo）。');
   }
 }
 
-  private loadDetail(vouNo: string): void {
+
+
+  /** 從 localStorage 讀（不立刻刪） */
+  private readHandoffLocal(): { vouNo?: string; fromRoute?: string } | null {
+    try {
+      const raw = localStorage.getItem('FIN55050_CRU_HANDOFF');
+      if (!raw) return null;
+      const obj = JSON.parse(raw) as { vouNo?: string; fromRoute?: string; ts?: number };
+      console.log('[FIN55050CRU] handoff read (localStorage):', obj);
+      return { vouNo: obj?.vouNo, fromRoute: obj?.fromRoute };
+    } catch (err) {
+      this.messageService?.warnBubble?.('讀取交接資料失敗。');
+      return null;
+    }
+  }
+
+  /** 取到資料且 API 成功回來之後，再清除 handoff，避免「刪太快」 */
+  private loadDetailAndClearOnSuccess(vouNo: string): void {
     this.loading = true;
 
     this.fin55050Service
@@ -144,17 +149,22 @@ private readHandoff(): { vouNo?: string; fromRoute?: string } | null {
             __rowid: idx + 1,
             AccSubject: [r.ACCNO ?? '', r.AccCName ?? ''].filter(Boolean).join(' ')
           }));
+
+          // ✅ API 成功＋資料呈現後再清除 handoff
+          try { localStorage.removeItem('FIN55050_CRU_HANDOFF'); } catch {}
         },
         error: (err) => {
           console.error('[FIN55050CRU] queryFIN55050Detail error:', err);
           this.rows = [];
           this.meta = null;
           this.messageService?.errorBubble?.('載入傳票明細失敗。');
+          // 失敗時保留 handoff，讓重整仍可讀到
         },
       });
   }
 
   back(): void {
-    this.router.navigate(['account/fin/fin55050']);
+    // 若有自訂返回按鈕可接自家邏輯；這裡用簡單的 history
+    history.back();
   }
 }
