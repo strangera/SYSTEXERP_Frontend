@@ -7,6 +7,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CheckboxComponent } from '@shared/componentkit/checkbox/checkbox.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -43,6 +44,7 @@ import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010Inser
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
+    CheckboxComponent,
     DialogComponent,
     DropdownComponent,
     InputTextComponent,
@@ -169,6 +171,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
+  public readonly vouTypeTemp = signal<'1' | '2' | '3' | void>(void 0);
+  public readonly vouTermSearchTemp = signal<string>('');
+  public readonly detailCountTemp = signal<boolean | null>(null);
+  public readonly filteredVoucherTemplateList = computed(() =>
+    this.service.voucherTemplateList().filter(v => {
+      return (!this.vouTypeTemp() || v.VouType === this.vouTypeTemp())
+        && (this.detailCountTemp() === null ? !0 : this.detailCountTemp() ? v.DetailCount > 0 : v.DetailCount === 0)
+        && (v.TempNo.includes(this.vouTermSearchTemp()) || v.TempName.includes(this.vouTermSearchTemp()));
+    })
+  );
+
   public selectedTemplateType = 'vendor';
   public templateSearchTerm = '';
   public readonly templateOptions = [
@@ -270,7 +283,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getUsrList();
     this.service.getOrgNoList();
     this.service.getRefNameList();
-    this.service.getVoucherTypeList();
     this.service.getAccDescList([]);
 
     if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe();
@@ -485,4 +497,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug('selectTemplateItem:', [rowData, item]);
     [rowData.DetailNo, rowData.DetailName] = [item?.value ?? '', item?.short ?? item?.label ?? ''];
   };
+
+  public vouTermChange(event: Event): void {
+    this.logger.debug(`vouTermChange:`, [event]);
+    this.vouTermSearchTemp.set((<HTMLInputElement>event.target).value?.toString() || '');
+  }
+
+  public vouTypeChange(event: '1' | '2' | '3' | void): void {
+    this.logger.debug(`vouTypeChange:`, [event]);
+    this.vouTypeTemp.set(<'1' | '2' | '3' | void>event);
+    this.df().VouType.patchValue(event);
+  }
 }

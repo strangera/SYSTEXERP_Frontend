@@ -5,7 +5,7 @@
     @if (isFormCreateable) {
     <app-button btnType="query"
                 label="套用常用傳票"
-                [loading]="service.fin52030Loading()"
+                [loading]="service.fin52030Loading() ||loading "
                 (click)="getVocherTemplate()"></app-button>
     }
     <app-button btnType="back"
@@ -238,24 +238,32 @@
                   label="傳票種類"
                   controlName="VouType"
                   [showClear]="!1"
-                  [disabled]="!isFormCreateable"
                   [options]="service.vouTypeOptions"
                   optionLabel="label"
                   optionValue="value"
                   [control]="df().VouType"
-                  [submitted]="submitted"></app-dropdown>
+                  (valueChange)="vouTypeChange($event)"></app-dropdown>
+    <app-input-text class="col-12 md:col-6 lg:col-4"
+                    label="傳票號碼/代號"
+                    (inputChange)="vouTermChange($event)"></app-input-text>
+    <app-checkbox class="col-12 md:col-6 lg:col-4"
+                  label="明細數量 (有/無/全部)"
+                  [tri]="!0"
+                  (valueChange)="detailCountTemp.set($event)"></app-checkbox>
   </div>
 
-  <app-table [dataKey]="'id'"
-             [tableKey]="'FIN53010_VocherTemplate'"
-             [showReportMode]="!1"
-             [showCaption]="!1"
-             [showHeader]="!1"
-             [showManage]="!1"
-             [showDelete]="!1"
-             [showCheckBox]="!0"
-             [selectionMode]="'single'"
-             [data]="service.voucherTemplateList()"
-             [columns]="templateColumns"
-             (selectionChange)="selectedDetail.set($event)"></app-table>
+  <div [style]="{ 'min-height': '50vh', 'max-height': '75vh' }">
+    <app-table [showReportMode]="!1"
+               [showCaption]="!1"
+               [showHeader]="!1"
+               [showManage]="!1"
+               [showDelete]="!1"
+               [showCheckBox]="!0"
+               [selectionMode]="'single'"
+               [dataKey]="'id'"
+               [tableKey]="'FIN53010_VocherTemplate'"
+               [data]="filteredVoucherTemplateList()"
+               [columns]="templateColumns"
+               (selectionChange)="selectedDetail.set($event)"></app-table>
+  </div>
 </app-dialog>
