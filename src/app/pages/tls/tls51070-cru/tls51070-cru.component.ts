@@ -54,6 +54,7 @@ export const fieldSectionMap: FieldSectionMap = {
   PLU_Reserve2: '商品規格(二)',
   PLU_Reserve3: '商品規格(二)',
 
+  TLT_NO: '商品資訊',
   LOGO_No: '商品資訊',
   PLU_SalePrc: '商品資訊',
   PLU_Status: '商品資訊',
@@ -154,7 +155,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 商品資訊 顯示畫面
     TLT_NO: ['', [Validators.required, Validators.maxLength(12), this.validationService.noChineseValidator]], // 專櫃編號
     LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌代碼 ---PLULOGO
-    PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
+    PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10), Validators.min(0)]], // 商品售價
     STK_CurrentQty: [{ value: 0, disabled: true }], // 庫存量 讀POS2099 新增固定0 ---後端直接提供(不允許編輯)---
     PLU_OrderPrc: [{ value: 0, disabled: true }], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
     PLU_SafeQty: [{ value: 0, disabled: true }], // 安全存量
@@ -263,7 +264,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       status: 'new'
     };
 
-    console.log('2020模板', this.defaultNew2020);
+    // console.log('2020模板', this.defaultNew2020);
   }
 
   // ------圖檔設定主檔 (IMG1001) 編輯表格----------------------------
@@ -419,16 +420,52 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 觀察 廠商編號(VEN_No)發生變化時確認 是否要寫入POS2020
     this.dataForm.get('VEN_No')?.valueChanges.subscribe(value => {
       if (value) {
-        if (!this.POS2020Data.some(item => item.VEN_No === value)) {
+        // if (!this.POS2020Data.some(item => item.VEN_No === value)) {
           // [POS2020不存在] && [廠商編號在vendorOptions] 時才將POS2004 [廠商編號]自動寫入 POS2020Data
-          if (this.POS2020Data.length === 0 && this.vendorOptions.some(item => item.value === value)) {
-            //如果表單還沒對應的POS2020就跳出提示
-            this.messageService.infoBubble('POS2020表單無對應的廠商編號，已經自動新增一筆');
-            const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
-            const plu_OrderPrc = this.dataForm.get('PLU_OrderPrc')?.value || 0;
-            this.createDefaultNew2020(pluMagno, plu_OrderPrc, value);
-          }
+          // if (this.POS2020Data.length === 0 && this.vendorOptions.some(item => item.value === value)) {
+          //   //如果表單還沒對應的POS2020就跳出提示
+          //   this.messageService.infoBubble('POS2020表單無對應的廠商編號，已經自動新增一筆');
+          //   const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
+          //   const plu_OrderPrc = this.dataForm.get('PLU_OrderPrc')?.value || 0;
+          //   this.createDefaultNew2020(pluMagno, plu_OrderPrc, value);
+          // }
+        // }
+
+        // [POS2020不存在] && [廠商編號在vendorOptions] 時才將POS2004 [廠商編號]自動寫入 POS2020Data
+        const exists = this.POS2020Data.some(item => item.VEN_No === value);
+        const isValidVendor = this.vendorOptions.some(item => item.value === value);
+
+        // [POS2020不存在] && [廠商編號在vendorOptions]
+        if (!exists && isValidVendor) {
+          this.messageService.infoBubble('POS2020表單無對應的廠商編號，已自動新增一筆');
+
+          const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
+          const plu_OrderPrc = this.dataForm.get('PLU_OrderPrc')?.value || 0;
+
+          // 1️⃣ 先產生預設物件
+          const newItem = {
+            id: 0,
+            PLU_MagNo: pluMagno,
+            VEN_No: value,
+            STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? '',
+            PLU_OrderPrc: plu_OrderPrc,
+
+            PLU_Purchase: '1',
+            PLU_TransType: '1',
+            PLU_TransDay: null,
+            Remark: null,
+            VDP_LastStockDate: null,
+
+            status: 'new'
+          };
+
+          // 2️⃣ 實際新增進 POS2020Data
+          this.POS2020Data.push(newItem);
+
+          // 3️⃣ （可選）若你要立即觸發畫面刷新：
+          this.POS2020Data = [...this.POS2020Data];
         }
+
         // 重新查詢專櫃編號選單
         this.tls51070Service.queryTLTTALENT_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => {
           this.TLT_NO_Option = response.Data.map((item: any) => ({
@@ -470,7 +507,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       if (this.crudstatus == CRUDStatus.Create && this.cachedBrand) {
         const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
         const PLU_OrderPrcRate = this.cachedBrand.PLU_OrderPrcRate;
-        if (PLU_SalePrc && PLU_OrderPrcRate) {
+        if (PLU_SalePrc != null && PLU_OrderPrcRate != null) {
           const result = Number(((PLU_SalePrc * PLU_OrderPrcRate * 0.01) / 1.05).toFixed(2));
           this.dataForm.get('PLU_OrderPrc')?.setValue(result);
         }
@@ -490,7 +527,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           item.PLU_OrderPrc = newOrderPrc ?? 0;
         }
       });
-      console.log('已更新 POS2020 新項目的 目前進價', newOrderPrc);
+      // console.log('已更新 POS2020 新項目的 目前進價', newOrderPrc);
     });
     // }
   }
@@ -649,16 +686,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
           console.log('insert', requestBody);
 
-          // this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
-          //   this.messageService.successBubble('POS2004主檔新增成功');
+          this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
+            this.messageService.successBubble('POS2004主檔新增成功');
 
-          //   const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
-          //   console.log('新增取號:', newSeqNo);
+            const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+            console.log('新增取號:', newSeqNo);
 
-          //   // 進行圖片檔更新
-          //   await this.createImage(newSeqNo); // 傳入圖片
-          //   this.onCancel();
-          // });
+            // 進行圖片檔更新
+            await this.createImage(newSeqNo); // 傳入圖片
+            this.onCancel();
+          });
         }
         break;
       case CRUDStatus.Edit:
@@ -686,7 +723,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
                 Remark: item.Remark || null,
                 VDP_LastStockDate: item.VDP_LastStockDate || null,
                 
-                status: item.status
+                // status: item.status
               }
             }
             return{
@@ -700,7 +737,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
                 Remark: item.Remark || null,
                 VDP_LastStockDate: item.VDP_LastStockDate || null,
                 
-                status: item.status
+                // status: item.status
               }
           });
 
@@ -712,21 +749,21 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
           console.log('update', JSON.stringify(requestBody, null, 2));
 
-          // this.tls51070Service.updateTLS51070(requestBody).subscribe({
-          //   next: async () => {
-          //     // 用 this.img1001Data 裡的 IMG_SeqNo 呼叫 createImage
-          //     const seqNo = this.dataForm.get('PLU_MagNo')?.value; //圖片編號抓商品管理碼
-          //     if (!seqNo) {
-          //       console.log('IMGData', this.img1001Data);
-          //       console.warn('⚠️ 商品管理碼(PLU_MagNo)為空，無法更新圖片');
-          //       return;
-          //     }
-          //     await this.createImage(seqNo);
-          //     await this.deleteImages();
+          this.tls51070Service.updateTLS51070(requestBody).subscribe({
+            next: async () => {
+              // 用 this.img1001Data 裡的 IMG_SeqNo 呼叫 createImage
+              const seqNo = this.dataForm.get('PLU_MagNo')?.value; //圖片編號抓商品管理碼
+              if (!seqNo) {
+                console.log('IMGData', this.img1001Data);
+                console.warn('⚠️ 商品管理碼(PLU_MagNo)為空，無法更新圖片');
+                return;
+              }
+              await this.createImage(seqNo);
+              await this.deleteImages();
 
-          //     this.onCancel(); // 儲存後，會返回列表
-          //   }
-          // });
+              this.onCancel(); // 儲存後，會返回列表
+            }
+          });
         }
         break;
     }
@@ -789,7 +826,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         // 等廠商編號好了再寫入POS2020欄位(廠商下拉)
         this.POS2020DataColumn = [
           // { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
-          { field: 'STO_No', header: '店號(預設)', type: 'inputNumber', width: '12rem', disabled: () => true }, // 之後會拿掉
           { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.vendorOptions },
 
           { field: 'PLU_TransType', header: '運輸方式', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.transTypeOption },  // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
@@ -798,7 +834,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           { field: 'PLU_OrderPrc', header: '目前進價', width: '12rem' }, // readonly: 目前進價 > 顯示 最後進價
           //readonly，商品新增時，最後進價=POS2004的標準進價PLU_OrderPrc，之後進價異動透過進價/售價變價作業(關帳作業、啟動變價時更新)
 
-          { field: 'VDP_LastStockDate', header: '最後進貨日期', type: 'date', width: '12rem' }, //  readonly，商品新增時，不給值，進貨作業驗收更新
+          { field: 'VDP_LastStockDate', header: '最後進貨日期', width: '12rem' }, //  readonly，商品新增時，不給值，進貨作業驗收更新
           { field: 'Remark', header: '備註', type: 'input', width: '12rem' },
         ];
       });
