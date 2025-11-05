@@ -9,6 +9,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { NgIf } from '@angular/common';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 type DetailRow = {
   VouDate?: string | null;
@@ -64,53 +66,92 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private fin55050Service: FIN55050Service,
+    private route: ActivatedRoute,
+
   ) {
     super();
   }
 
   ngOnInit(): void {
-    const state = history.state ?? {};
-    this.vouNo = state?.vouNo ?? '';
-    if (!this.vouNo) {
-      this.messageService?.warnBubble?.('未帶入傳票號碼。');
-      return;
+    this.ProgNo = 'FIN55050';
+    (this as any).initializePage?.(this.ProgNo, 'account/fin/fin55050');
+
+    // 只用 sessionStorage 交接，讀到就清掉
+    const handoff = this.readHandoff(); // { vouNo, fromRoute? }
+    const vouNo = handoff?.vouNo
+      ?? this.route.snapshot.queryParamMap.get('vouNo')    // 備援：若你偶爾仍帶 query
+      ?? this.route.snapshot.paramMap.get('vouNo')         // 備援：若你有 /:vouNo 路由
+      ?? '';
+
+    if (handoff?.fromRoute) {
+      (this as any).fromRoute = handoff.fromRoute;
     }
 
+    if (vouNo) {
+      this.vouNo = vouNo;
+      this.loadDetail(vouNo);
+    } else {
+      this.messageService?.warnBubble?.('缺少傳票號碼（vouNo）。');
+    }
+  }
+
+  /** 一次性讀取並清除 handoff */
+private readHandoff(): { vouNo?: string; fromRoute?: string } | null {
+  try {
+    const raw = sessionStorage.getItem('FIN55050_CRU_HANDOFF');
+    if (!raw) return null;
+    sessionStorage.removeItem('FIN55050_CRU_HANDOFF'); // 讀完即清
+    const obj = JSON.parse(raw) as { vouNo?: string; fromRoute?: string };
+    console.log('[FIN55050CRU] handoff read:', obj);
+    return obj;
+  } catch {
+    return null;
+  }
+}
+
+  private loadDetail(vouNo: string): void {
     this.loading = true;
-    // 直接打明細 API
+
     this.fin55050Service
-      .queryFIN55050Detail({ VouNo: this.vouNo })
+      .queryFIN55050Detail({ VouNo: vouNo })
+      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (resp: any) => {
-          const list: DetailRow[] = (resp?.Data ?? []) as DetailRow[];
+          const list: DetailRow[] = resp?.Data ?? resp ?? [];
 
-          // 設定表頭 meta（以第一筆為準）
-          const first = list[0] ?? {};
+          if (!Array.isArray(list) || list.length === 0) {
+            this.rows = [];
+            this.meta = null;
+            this.messageService?.warnBubble?.('查無資料或傳票號碼不正確。');
+            return;
+          }
+
+          const head = list[0] ?? {};
+          const vouTypeName =
+            (head as any).VoucherType_Name ??
+            (head as any).VouType_Name ??
+            '';
+
           this.meta = {
-            vouDate: (first.VouDate ?? '') as string,
-            vouType: (first.VoucherType_Name ?? first.VouType_Name ?? '') as string,
-            vouNo: this.vouNo,
-            vouStatus: (first.VouStatus ?? '') as string,
+            vouDate: (head.VouDate ?? '') as string,
+            vouType: vouTypeName,
+            vouNo: (head.VouNo ?? vouNo) as string,
+            vouStatus: (head.VouStatus ?? '') as string,
           };
 
-          // 明細列
-          this.rows = list.map((r, i) => ({
-            __rowid: i,
-            AccSubject: `${r.ACCNO ?? ''} ${r.AccCName ?? ''}`.trim(),
+          this.rows = list.map((r, idx) => ({
             ...r,
+            __rowid: idx + 1,
+            AccSubject: [r.ACCNO ?? '', r.AccCName ?? ''].filter(Boolean).join(' ')
           }));
         },
-        error: () => {
-          this.messageService?.warnBubble?.('讀取傳票明細失敗。');
+        error: (err) => {
+          console.error('[FIN55050CRU] queryFIN55050Detail error:', err);
           this.rows = [];
-          this.meta = {
-            vouDate: '',
-            vouType: '',
-            vouNo: this.vouNo,
-            vouStatus: '',
-          };
-        }
-      }).add(() => (this.loading = false));
+          this.meta = null;
+          this.messageService?.errorBubble?.('載入傳票明細失敗。');
+        },
+      });
   }
 
   back(): void {
