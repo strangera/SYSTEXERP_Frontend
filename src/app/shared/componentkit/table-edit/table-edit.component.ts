@@ -216,7 +216,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
-   
+
   }
   // 處理 ngModelChange 事件，並發送給父元件
   onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
@@ -270,6 +270,30 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     // 由於數據綁定和驗證已經更新了 `this.data`，再次發送 `dataChange`
     this.dataChange.emit(this.data);
+  }
+  onDropdownHide(rowData: any, col: any) {
+    const currentValue = rowData[col.field];
+    if (col.type === 'dropdown') {
+      const options = this.getOptions(rowData, col) || [];
+      let isValidOption = false;
+      if (currentValue === null || currentValue === undefined) {
+        isValidOption = true;
+      } else {
+        const valueKey = col.optionValue || col.optionLabel; // 如果沒有 optionValue，可能 PrimeNG 會用 Label 來綁定
+        isValidOption = options.some((option: any) => {
+          if (valueKey && option[valueKey] === currentValue) {
+            return true;
+          }
+          if (!col.optionValue && typeof currentValue === 'object' && option === currentValue) {
+            return true;
+          }
+          return false;
+        });
+      }
+      if (!isValidOption) {
+        rowData[col.field] = null;
+      }
+    }
   }
   // Delete 按鈕
   deleteRow(selectedItems: any) {
