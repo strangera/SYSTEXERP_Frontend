@@ -24,7 +24,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { Router } from '@angular/router';
 
 export interface FIN55050Data {
   AccNo: string;
@@ -63,7 +62,6 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   constructor(
     private fin55050Service: FIN55050Service,
     private dropDownListService: DropDownListService,
-
   ) {
     super();
   }
@@ -75,7 +73,10 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     return d;
   })();
 
+  /** 匯出 loading 共用旗標 */
   btnLoading = false;
+
+  /** 記住上一次查詢的 payload（供匯出使用） */
   private lastQueryBody: any | null = null;
 
   queryForm = this.formBuilder.group({
@@ -112,7 +113,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount },
   ];
 
-  // 下拉
+  //#region 下拉
   OrgIdListOptions: any[] = [];
   AccNoListOptions: any[] = [];
   VendorNoListOptions: any[] = [];
@@ -124,6 +125,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   ];
   TargetNoListOptions: any[] = [];
   VouTypeListOptions: any[] = [];
+  //#endregion
 
   ngOnInit(): void {
     this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
@@ -161,9 +163,14 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       this.fin55050Service.queryFIN55050(form.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
+          // 直接展平成清單供列表顯示
           this.data = this.restructureData(response.Data);
           this.totalRecords = response.TotalCount ?? this.data.length;
+
+          // 記住本次查詢（匯出用）
           this.lastQueryBody = form.getRawValue();
+
+          // 保存查詢狀態
           this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
         });
     });
@@ -179,38 +186,20 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
   }
 
-  /** 點傳票號碼：只用 sessionStorage 交接，然後開新分頁（不帶 query） */
-/** 點傳票號碼：用 sessionStorage 交接 */
-override onDetail(row: GroupedFIN55050Detail) {
-  const vouNo = row?.VouNo;
-  if (!vouNo) {
-    this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
-    return;
+  /** 清單 → 明細：改用 localStorage 交接，然後開新分頁 */
+  override onDetail(row: GroupedFIN55050Detail) {
+    const vouNo = row?.VouNo;
+    if (!vouNo) {
+      this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
+      return;
+    }
+
+    this.saveHandoff(vouNo);
+
+    // 不帶 query，CRU 會從 localStorage 讀
+    const url = '/account/fin/fin55050cru';
+    setTimeout(() => window.open(url, '_blank', 'noopener'), 30); // 確保寫入完成
   }
-
-  // 1️⃣ 儲存交接資料
-  this.saveHandoff(vouNo);
-
-  // 2️⃣ 開新分頁（確保相同 domain）
-  const targetUrl = '/account/fin/fin55050cru';
-  setTimeout(() => window.open(targetUrl, '_blank'), 100); // 延遲 100ms 確保已寫入
-}
-
-/** 寫入 sessionStorage */
-private saveHandoff(vouNo: string): void {
-  try {
-    const handoff = {
-      vouNo,
-      fromRoute: window.location.pathname,
-      ts: Date.now(),
-    };
-    sessionStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
-
-    console.log('[FIN55050] handoff stored:', handoff);
-  } catch (err) {
-    console.error('[FIN55050] handoff save failed:', err);
-  }
-}
 
   loadOptions() {
     this.dropDownListService.querySYS3100_DropDownList()
@@ -244,6 +233,7 @@ private saveHandoff(vouNo: string): void {
       });
   }
 
+  /** 從巢狀資料展平成清單 */
   restructureData(data: FIN55050Data[]): GroupedFIN55050Detail[] {
     const grouped: GroupedFIN55050Detail[] = [];
     (data ?? []).forEach(parent => {
@@ -259,6 +249,7 @@ private saveHandoff(vouNo: string): void {
     return grouped;
   }
 
+  // ========= 匯出 =========
   onExportPDF() {
     if ((this.data?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
     const payload = this.buildExportBody();
@@ -287,6 +278,7 @@ private saveHandoff(vouNo: string): void {
       });
   }
 
+  /** 產生匯出 payload（不再使用 VOUDATE_*） */
   private buildExportBody(): ExportFIN55050Payload | null {
     const raw = this.lastQueryBody ?? this.queryForm.getRawValue();
 
@@ -315,6 +307,7 @@ private saveHandoff(vouNo: string): void {
     return payload;
   }
 
+  // ========= 本地工具 =========
   private toDateOnly(d: any): string | null {
     if (!d) return null;
     const dt = (d instanceof Date) ? d : new Date(d);
@@ -347,6 +340,24 @@ private saveHandoff(vouNo: string): void {
     a.click();
     window.URL.revokeObjectURL(url);
   }
+
+
+/** 交接資料：localStorage（分頁共享）；CRU 會讀 */
+private saveHandoff(vouNo: string): void {
+  try {
+    const handoff = {
+      vouNo,
+      fromRoute: window.location.pathname,
+      ts: Date.now(),
+    };
+    localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+
+    // ✅ 同步存 ProgNo，讓 CRU 一進來就能 initialize
+    localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
+  } catch (err) {
+    this.messageService?.warnBubble?.('寫入交接資料失敗。');
+  }
+}
 
 
 }
