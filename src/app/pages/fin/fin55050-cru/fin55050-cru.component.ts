@@ -1,22 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
+import { NgIf } from '@angular/common';
+import { MenuItem } from 'primeng/api';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { NgIf } from '@angular/common';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
-import { finalize } from 'rxjs';
 
 type DetailRow = {
   VouDate?: string | null;
   VouNo?: string | null;
   VouType_Name?: string | null;
   VouStatus?: string | null;
-  VoucherType_Name?: string | null;
   ACCNO?: string | null;
   AccCName?: string | null;
   Org_Name?: string | null;
@@ -37,21 +37,24 @@ type VoucherMeta = {
 @Component({
   selector: 'app-fin55050-cru',
   standalone: true,
-  imports: [
-    MenubarComponent,
-    ButtonComponent,
-    TranslateModule,
-    TableComponent,
-    NgIf
-  ],
+  imports: [MenubarComponent, ButtonComponent, TableComponent, TranslateModule, NgIf],
   templateUrl: './fin55050-cru.component.html'
 })
 export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   override ProgNo = 'FIN55050';
 
+  // ✅ 給 Menubar 用的自訂麵包屑
+  crumbs: MenuItem[] = [
+    { label: '人資財會模組' },
+    { label: '總帳管理系統' },
+    { label: '報表查詢' },
+    { label: '分類帳', disabled: true }
+  ];
+
   vouNo = '';
-  rows: Array<DetailRow & { __rowid: number; AccSubject: string }> = [];
+  initialized = false;
   meta: VoucherMeta | null = null;
+  rows: Array<DetailRow & { __rowid: number; AccSubject: string }> = [];
 
   columns: Column[] = [
     { field: 'AccSubject', header: '會計科目', visible: true },
@@ -63,108 +66,88 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'Remark',   header: '備註',     visible: true },
   ];
 
-  constructor(
-    private fin55050Service: FIN55050Service,
-  ) {
+  constructor(private fin55050Service: FIN55050Service) {
     super();
   }
 
-ngOnInit(): void {
-  // 1) 先決定 ProgNo（從 localStorage 補上，讀不到就用預設）
-  try {
-    const savedProg = localStorage.getItem('FIN55050_CRU_PROGNO');
-    this.ProgNo = savedProg && savedProg.trim() ? savedProg : 'FIN55050';
-  } catch {
-    this.ProgNo = 'FIN55050';
+  ngOnInit(): void {
+    // 1) ProgNo：優先讀 localStorage；沒有就回寫預設值
+    try {
+      const savedProg = localStorage.getItem('FIN55050_CRU_PROGNO');
+      this.ProgNo = savedProg && savedProg.trim() ? savedProg : 'FIN55050';
+      if (!savedProg) localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo);
+    } catch {
+      this.ProgNo = 'FIN55050';
+      try { localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo); } catch {}
+    }
+
+    // 2) 初始化頁面（註冊 Menubar 權限路徑）
+    try {
+      this.initializePage(this.ProgNo);
+    } catch (err) {
+      this.messageService?.warnBubble?.('頁面初始化失敗。');
+    }
+    this.initialized = true;
+
+    // 3) 讀取交接資料（vouNo）
+    const handoff = this.readHandoffLocal();
+    const vouNo = handoff?.vouNo ?? '';
+    if (handoff?.fromRoute) (this as any).fromRoute = handoff.fromRoute;
+
+    if (vouNo) {
+      this.vouNo = vouNo;
+      this.loadDetailAndClearOnSuccess(vouNo);
+    } else {
+      this.messageService?.warnBubble?.('缺少傳票號碼（vouNo）。');
+    }
   }
 
-  // 2) 立即初始化 Menubar／權限（⚠️ CRU 這邊用單一參數）
-  (this as any).initializePage?.(this.ProgNo);
-
-  // 3) 讀取交接資料後載入明細
-  const handoff = this.readHandoffLocal(); // { vouNo, fromRoute? }
-  const vouNo = handoff?.vouNo ?? '';
-
-  if (handoff?.fromRoute) {
-    (this as any).fromRoute = handoff.fromRoute;
-  }
-
-  if (vouNo) {
-    this.vouNo = vouNo;
-    this.loadDetailAndClearOnSuccess(vouNo);
-  } else {
-    this.messageService?.warnBubble?.('缺少傳票號碼（vouNo）。');
-  }
-}
-
-
-
-  /** 從 localStorage 讀（不立刻刪） */
   private readHandoffLocal(): { vouNo?: string; fromRoute?: string } | null {
     try {
       const raw = localStorage.getItem('FIN55050_CRU_HANDOFF');
       if (!raw) return null;
-      const obj = JSON.parse(raw) as { vouNo?: string; fromRoute?: string; ts?: number };
-      console.log('[FIN55050CRU] handoff read (localStorage):', obj);
+      const obj = JSON.parse(raw);
       return { vouNo: obj?.vouNo, fromRoute: obj?.fromRoute };
-    } catch (err) {
-      this.messageService?.warnBubble?.('讀取交接資料失敗。');
+    } catch {
       return null;
     }
   }
 
-  /** 取到資料且 API 成功回來之後，再清除 handoff，避免「刪太快」 */
   private loadDetailAndClearOnSuccess(vouNo: string): void {
     this.loading = true;
-
     this.fin55050Service
       .queryFIN55050Detail({ VouNo: vouNo })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (resp: any) => {
-          const list: DetailRow[] = resp?.Data ?? resp ?? [];
-
-          if (!Array.isArray(list) || list.length === 0) {
+          const list: DetailRow[] = resp?.Data ?? [];
+          if (!list.length) {
             this.rows = [];
             this.meta = null;
             this.messageService?.warnBubble?.('查無資料或傳票號碼不正確。');
             return;
           }
-
-          const head = list[0] ?? {};
-          const vouTypeName =
-            (head as any).VoucherType_Name ??
-            (head as any).VouType_Name ??
-            '';
-
+          const head = list[0];
           this.meta = {
-            vouDate: (head.VouDate ?? '') as string,
-            vouType: vouTypeName,
-            vouNo: (head.VouNo ?? vouNo) as string,
-            vouStatus: (head.VouStatus ?? '') as string,
+            vouDate: head.VouDate ?? '',
+            vouType: head.VouType_Name ?? '',
+            vouNo: head.VouNo ?? vouNo,
+            vouStatus: head.VouStatus ?? '',
           };
-
-          this.rows = list.map((r, idx) => ({
+          this.rows = list.map((r, i) => ({
             ...r,
-            __rowid: idx + 1,
+            __rowid: i + 1,
             AccSubject: [r.ACCNO ?? '', r.AccCName ?? ''].filter(Boolean).join(' ')
           }));
-
-          // ✅ API 成功＋資料呈現後再清除 handoff
-          try { localStorage.removeItem('FIN55050_CRU_HANDOFF'); } catch {}
+          // 清除 handoff（避免舊資料干擾）
+          localStorage.removeItem('FIN55050_CRU_HANDOFF');
         },
-        error: (err) => {
-          console.error('[FIN55050CRU] queryFIN55050Detail error:', err);
-          this.rows = [];
-          this.meta = null;
-          this.messageService?.errorBubble?.('載入傳票明細失敗。');
-          // 失敗時保留 handoff，讓重整仍可讀到
-        },
+        error: () => this.messageService?.errorBubble?.('載入傳票明細失敗。'),
       });
   }
 
-  back(): void {
-    // 若有自訂返回按鈕可接自家邏輯；這裡用簡單的 history
-    history.back();
-  }
+back(): void {
+  this.router.navigate(['/account/fin/fin55050']);
+  // 或：this.router.navigateByUrl('/account/fin/fin55050');
+}
 }

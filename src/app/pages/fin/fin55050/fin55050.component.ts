@@ -80,8 +80,10 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   private lastQueryBody: any | null = null;
 
   queryForm = this.formBuilder.group({
-    DateFrom: [this.yesterday, Validators.required],
-    DateTo: [this.yesterday, Validators.required],
+    // DateFrom: [this.yesterday, Validators.required],
+    // DateTo: [this.yesterday, Validators.required],
+        DateFrom: [new Date(2024, 9, 1), Validators.required],
+    DateTo: [new Date(2024, 9, 1), Validators.required],
     OrgIdList: [null],
     AccNoList: [null],
     VendorNoList: [null],
@@ -129,6 +131,9 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   ngOnInit(): void {
     this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
+    // ✅ 預先把 ProgNo 寫入一次，避免你從其它地方直開 CRU
+    try { localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); } catch {}
+
     this.loadOptions();
 
     const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
@@ -186,7 +191,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
   }
 
-  /** 清單 → 明細：改用 localStorage 交接，然後開新分頁 */
+  /** 清單 → 明細（CRU）：使用 localStorage 交接資料 */
   override onDetail(row: GroupedFIN55050Detail) {
     const vouNo = row?.VouNo;
     if (!vouNo) {
@@ -194,11 +199,23 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       return;
     }
 
-    this.saveHandoff(vouNo);
+    // 儲存交接資料到 localStorage（含 ProgNo）
+    try {
+      const handoff = {
+        vouNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); // ✅ 存 ProgNo
+      console.log('[FIN55050] 已儲存 handoff:', handoff);
+    } catch (err) {
+      console.error('[FIN55050] handoff save failed:', err);
+      this.messageService?.warnBubble?.('寫入交接資料失敗。');
+    }
 
-    // 不帶 query，CRU 會從 localStorage 讀
-    const url = '/account/fin/fin55050cru';
-    setTimeout(() => window.open(url, '_blank', 'noopener'), 30); // 確保寫入完成
+    // 開新分頁
+    window.open('/account/fin/fin55050cru', '_blank', 'noopener');
   }
 
   loadOptions() {
@@ -340,24 +357,4 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     a.click();
     window.URL.revokeObjectURL(url);
   }
-
-
-/** 交接資料：localStorage（分頁共享）；CRU 會讀 */
-private saveHandoff(vouNo: string): void {
-  try {
-    const handoff = {
-      vouNo,
-      fromRoute: window.location.pathname,
-      ts: Date.now(),
-    };
-    localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
-
-    // ✅ 同步存 ProgNo，讓 CRU 一進來就能 initialize
-    localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
-  } catch (err) {
-    this.messageService?.warnBubble?.('寫入交接資料失敗。');
-  }
-}
-
-
 }
