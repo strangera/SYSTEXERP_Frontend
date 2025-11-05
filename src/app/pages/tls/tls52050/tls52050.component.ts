@@ -60,7 +60,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     MAM_No: ['', [Validators.maxLength(16)]],// 變價單號
     VEN_No: [null],              // 廠商編號
     LOGO_No: [null],             // 品牌代碼
-    MAM_Status: [null, [Validators.required]],// 進價變價單狀態
+    MAM_Status: [null],// 進價變價單狀態
     APPLY_USR_No: [null],        // 申請人
     APRV_USR_No: [null],         // 審核人
     APPLY_Date_Start: [null],  // 申請日期起
