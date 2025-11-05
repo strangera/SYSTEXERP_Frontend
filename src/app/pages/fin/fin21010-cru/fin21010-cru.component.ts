@@ -16,6 +16,7 @@ import { APS1002, Fin21010Service } from '@service/api/fin/fin21010.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 //1.2.1.1 公司銀行資料維護 CRU
 @Component({
@@ -142,7 +143,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     // 讀取dopropdown選項
     loadOptions() {
       // 查 SYS1000.BNK_ACCTYPE 存款代號 -- 下拉選單
-      this.dropdownApiService.querySys1000({ "SYS_Type": "BNK_ACCTYPE" }).subscribe((response) => {
+      this.dropdownApiService.querySys1000({ "SYS_Type": "BNK_ACCTYPE" }).pipe(untilDestroyed(this)).subscribe((response) => {
         const list = Array.isArray(response) ? response : [];
         this.BNK_AccType_Option = list.map((item: any) => ({
           No: item.No, // 存款代號 代號
@@ -152,17 +153,17 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       });
 
       // 查 GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME
-      this.dropdownApiService.queryGls1005_BNK_DepositAcc().subscribe((response) => {
+      this.dropdownApiService.queryGls1005_BNK_DepositAcc().pipe(untilDestroyed(this)).subscribe((response) => {
         const list = Array.isArray(response) ? response : [];
         this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
           No: item.No, // 公司銀行科目 代號
           Name: item.Name, // 公司銀行科目 名稱
-          Label: item.No+' / '+item.Name
+          Label: item.No + '-' + item.Name
         }));
         // console.log('公司銀行科目:', this.GLS1005_BNK_DepositAccNo_Option);
       });
 
-      this.dropdownApiService.queryGls1005_BNK_CheckInAcc().subscribe((response) => {
+      this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
         const list = Array.isArray(response) ? response : [];
         this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
           No: item.No, // 應付票據科目 代號
@@ -171,7 +172,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
         // console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
       });
 
-      this.dropdownApiService.queryGls1005_BNK_CheckOutAcc().subscribe((response) => {
+      this.dropdownApiService.queryGls1005_BNK_CheckOutAcc().pipe(untilDestroyed(this)).subscribe((response) => {
         const list = Array.isArray(response) ? response : [];
         this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
           No: item.No, // 應收票據科目 代號
@@ -184,13 +185,14 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       // No: BNK_NO+BNK_BRANCHNO銀行代碼、
       // Name: 銀行名稱BNK_BRANCHNAME
       // ) 範圍: 全找
-      this.dropdownApiService.queryAps1001({"SearchKeyword": ""}).subscribe((response) => {
+      this.dropdownApiService.queryAps1001({"SearchKeyword": ""}).pipe(untilDestroyed(this)).subscribe((response) => {
         const list = Array.isArray(response) ? response : [];
         this.APS1004_Option = list.map((item: any) => ({
-          No: item.No, // 銀行代號
-          Name: item.Name, // 銀行名稱
+          No: item.No, // 全省銀行 代碼
+          Name: item.Name, // 全省銀行 名稱
+          Label: item.No + '-' + item.Name, // 代號+名稱
         }));
-        // console.log('銀行選項:', this.APS1004_Option);
+        console.log('全省銀行代碼:', this.APS1004_Option);
       });
     }
 }
