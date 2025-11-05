@@ -1,10 +1,10 @@
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { finalize, map } from 'rxjs';
+import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
@@ -18,9 +18,10 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle, NgIf } from '@angular/common';
+import { NgStyle, NgIf, AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 export const enum CRNtatus {
   已申請 = '0',
   已審核 = '2',
@@ -42,7 +43,7 @@ export const enum CRNtatus {
     ])
   ],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
+  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
 })
 export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -102,11 +103,11 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     { field: 'UPD_USR_No', header: '變更人員編號', visible: false }, // 變更人員編號
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
-  warehouseOptions: { label: string, value: string }[] = []; // 倉別
-  brandOptions: { label: string, value: string }[] = []; // 品牌代碼
-  vendorOptions: { label: string, value: string }[] = []; // 廠商編號
-  crnstatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
-  userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
+  warehouseOptions = this.dropdown.queryPos2034(); // 倉別
+  brandOptions = this.dropdown.queryPluLogo(); // 品牌代碼
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  crnstatusOptions = getSYS1000Options('CRN_Status') // 採購單狀態 (靜態資料)
+  userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
   addButton: AddButton[] = [
     { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.已審核); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已申請 }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.已申請); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已審核 }, // 反審核
@@ -114,34 +115,11 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   ];
   constructor(
     private tls52020Service: Tls52020Service,
-    private dropDownListService: DropDownListService,
+    private dropdown: DropdownApiService,
     private tls52010Service: Tls52010Service
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS52020', 'tls/tls52020cru', this.queryForm, (form) => this.onSubmit(form));
-    // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.No + ' - ' + item.Name, value: item.No })))
-    ).subscribe(options => { this.warehouseOptions = options; });
-    // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => { this.brandOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
-    // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => { this.vendorOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
-    // 採購單狀態 (PO_Status) - 靜態資料，已更新為你提供的正確值
-    this.crnstatusOptions = [
-      { label: '已申請', value: '0' },
-      { label: '已審核', value: '2' },
-      { label: '部分驗收', value: '3' },
-      { label: '全部驗收', value: '4' },
-      { label: '強制結案', value: '6' },
-      { label: '作廢', value: '9' },
-    ];
-    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options;
-    });
   }
   // 表單提交處理方法
   onSubmit(frm: FormGroup) {

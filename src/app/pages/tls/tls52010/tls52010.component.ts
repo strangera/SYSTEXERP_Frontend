@@ -64,7 +64,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     CLOS_USR: [null], // 強制結案人員 multi-select
     CLOS_Date_Start: [null], // 強制結案日期 起 calendar-range
     CLOS_Date_End: [null], // 強制結案日期 迄
-    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: -1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   data: ITLS52010Data[] = [];

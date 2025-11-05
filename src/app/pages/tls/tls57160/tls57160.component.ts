@@ -13,7 +13,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-// 💡 匯入 Tls57160FooterItem 才能用於 footerTotal 的型別
+//  匯入 Tls57160FooterItem 才能用於 footerTotal 的型別
 import { Tls57160DataItem, Tls57160Request, Tls57160Service, Tls57160FooterItem } from '@service/api/tls/tls57160.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize } from 'rxjs';
@@ -22,8 +22,8 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { yesterday } from '@shared/models/system/query-form.model';
-import { ButtonModule } from 'primeng/button'; // 💡 新增匯入 ButtonModule
-import { HttpResponse } from '@angular/common/http'; // 💡 新增匯入 HttpResponse
+import { ButtonModule } from 'primeng/button'; //  新增匯入 ButtonModule
+import { HttpResponse } from '@angular/common/http'; //  新增匯入 HttpResponse
 
 @Component({
   selector: 'app-tls57160',
@@ -44,9 +44,9 @@ import { HttpResponse } from '@angular/common/http'; // 💡 新增匯入 HttpRe
     InputNumberComponent,
     ButtonComponent,
     TranslateModule,
-    ButtonModule // 💡 匯入 p-button 所需的模組
+    ButtonModule //  匯入 p-button 所需的模組
   ],
-  providers: [DatePipe] // 💡 確保 DatePipe 存在
+  providers: [DatePipe] //  確保 DatePipe 存在
 })
 export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -63,7 +63,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
   HOS_NOOptions = this.dropdown.queryPos2034();
   LOGO_NoOptions = this.dropdown.queryPluLogo();
   totalRecords = 0;
-  // 💡 footerTotal 型別修正為 Tls57160FooterItem
+  //  footerTotal 型別修正為 Tls57160FooterItem
   footerTotal: Tls57160FooterItem | null = null;
   historyRequestBody: Tls57160Request | null = null;
   data: Tls57160DataItem[] = [];
@@ -114,7 +114,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     { field: '合計', header: '合計' }
   ];
 
-  // 💡 新增按鈕 Loading 屬性
+  //  新增按鈕 Loading 屬性
   btnLoading = false;
 
   // --- 商品管理編號 (Dropdown-Table) 相關屬性 ---
@@ -156,7 +156,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
         ...formValue,
         STK_Date: this.datePipe.transform(formValue.STK_Date, 'yyyy-MM-dd'),
       };
-      // 💡 調整 SortBy 以符合 API 需求
+      //  調整 SortBy 以符合 API 需求
       if (!requestBody.SortBy) {
         requestBody.SortBy = [{ field: 'PLU_MagNo', order: 1 }];
       }
@@ -166,21 +166,21 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
           this.totalRecords = response.TotalCount;
           console.log(response);
 
-          // 💡 總計資料使用 footerData 的第一個元素 (型別為 Tls57160FooterItem)
+          //  總計資料使用 footerData 的第一個元素 (型別為 Tls57160FooterItem)
           this.footerTotal = response.footerData?.[0] ?? null;
           this.historyRequestBody = requestBody;
           this.data = response.Data;
         } else {
           this.data = [];
           this.totalRecords = 0;
-          this.footerTotal = null; // 💡 查無資料時清空總計
+          this.footerTotal = null; //  查無資料時清空總計
         }
       });
     });
   }
 
   /**
-   * 💡 新增：匯出 PDF 報表 (呼叫 tls57160Service.exportTLS57160PDF)
+   *  新增：匯出 PDF 報表 (呼叫 tls57160Service.exportTLS57160PDF)
    */
   onExportPDF() {
     if (!this.historyRequestBody) {
@@ -196,13 +196,13 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
       },
       error: (err) => {
         console.error('PDF 匯出失敗:', err);
-        // 💡 可以在這裡添加錯誤提示邏輯
+        //  可以在這裡添加錯誤提示邏輯
       }
     });
   }
 
   /**
-   * 💡 新增：匯出 Excel 報表 (呼叫 tls57160Service.exportTLS57160Excel)
+   *  新增：匯出 Excel 報表 (呼叫 tls57160Service.exportTLS57160Excel)
    */
   onExportXLSX() {
     if (!this.historyRequestBody) {
@@ -218,13 +218,13 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
       },
       error: (err) => {
         console.error('Excel 匯出失敗:', err);
-        // 💡 可以在這裡添加錯誤提示邏輯
+        //  可以在這裡添加錯誤提示邏輯
       }
     });
   }
 
   /**
-   * 💡 複製自 tls57150.component.ts 的通用檔案處理邏輯
+   *  複製自 tls57150.component.ts 的通用檔案處理邏輯
    * 處理檔案匯出的通用邏輯
    */
   private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
@@ -245,7 +245,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
   }
 
   /**
-   * 💡 複製自 tls57150.component.ts 的通用檔案處理邏輯
+   *  複製自 tls57150.component.ts 的通用檔案處理邏輯
    * 輔助方法：從 header 獲取檔名
    */
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
