@@ -41,7 +41,7 @@
       <!-- 群組內的每一張子表 -->
       <ng-container *ngFor="let sub of group.subTables; let si = index">
 
-        <!-- si===0：完整抬頭；樓層旁顯示抽成類別（統一樣式） -->
+        <!-- si===0：完整抬頭；順序：公司/標題 → 大分類/銷售/製表 → 專櫃 → 區域 → 樓層+抽成 → 交易總件數/退貨件數 → 退貨金額 -->
         <div class="grid p-fluid mb-2" *ngIf="si === 0; else onlyTltIdBanner">
           <div class="col-12 text-center text-2xl font-bold">南紡流通事業股份有限公司</div>
           <div class="col-12 text-center text-xl font-bold">專櫃日對帳單</div>
@@ -60,9 +60,11 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">製表日期：{{ printedAt }}</div>
 
+          <!-- 專櫃 -->
           <div class="col-12 md:col-6 lg:col-4">
             專櫃：{{ group.header.tltNo }} / {{ group.header.tltName }}
           </div>
+
 
           <!-- 樓層 + 抽成類別 並排（抽成類別用統一樣式） -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -73,8 +75,22 @@
             </span>
           </div>
 
+
+          <!-- 交易總件數／退貨件數（改在樓層＋抽成類別之後） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            交易總件數：{{ (sub?.rows?.[0]?.total_count || 0) | number:'1.0-0' }}
+            /
+            退貨件數：{{ (sub?.rows?.[0]?.return_qty || 0) | number:'1.0-0' }}
+          </div>
+                              <!-- 區域（搬到專櫃下面） -->
           <div class="col-12 md:col-6 lg:col-4">
             區域：{{ group.header.area || '－' }}
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">   </div>
+          <!-- 退貨金額（新增） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            退貨金額：{{ (sub?.rows?.[0]?.return_amt || 0) | number:'1.0-0' }}
           </div>
         </div>
 

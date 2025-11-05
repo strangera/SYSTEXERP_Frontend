@@ -64,7 +64,6 @@ interface TltGroup {
   ],
 })
 export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
-  // 原始資料
   data: any[] = [];
   dataForm = this.formBuilder.nonNullable.group({ showBusType: true });
 
@@ -97,7 +96,6 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
 
   constructor(private location: Location) { super(); }
 
-  /** 明細欄位（對齊畫面） */
   columns = [
     { field: 'SYS_Name', header: '區分', visible: true },
     { field: 'sad_sale_qty', header: '銷貨筆數', visible: true },
@@ -246,7 +244,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   }
 
   // =========================
-  //        匯出 PDF
+  //        匯出 PDF（抬頭順序同步 HTML）
   // =========================
   exportPDF(orientation: 'p' | 'l' = 'l'): void {
     const columnCount = this.selectedColumns.length;
@@ -264,14 +262,19 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
 
     let currentY = 60;
 
-    /** 第一張表的完整群組抬頭（樓層旁顯示抽成類別） */
-    const drawFullGroupHeader = (g: TltGroup, firstTltId: string) => {
+    /** 第一張表的完整群組抬頭（順序：專櫃 → 區域 → 樓層＋抽成 → 交易總件數/退貨件數 → 退貨金額） */
+    const drawFullGroupHeader = (g: TltGroup, firstSub: SubTable) => {
+      const firstRow = firstSub?.rows?.[0] ?? {};
+      const totalCount = Number(firstRow?.total_count ?? 0);
+      const returnQty  = Number(firstRow?.return_qty ?? 0);
+      const returnAmt  = Number(firstRow?.return_amt ?? 0);
+
       const leftX = marginLeft;
       const midX = leftX + 240;
       const rightX = pageWidth - marginLeft;
       const lineGap = 18;
 
-      const needed = 110;
+      const needed = 140;
       const pageHeight = doc.internal.pageSize.getHeight();
       if (pageHeight - currentY < needed) {
         doc.addPage();
@@ -294,11 +297,25 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       doc.text(`製表日期：${this.printedAt}`, rightX, currentY, { align: 'right' });
       currentY += lineGap;
 
-      // 樓層 + 抽成類別 並排
+      // 專櫃
       doc.text(`專櫃：${g.header.tltNo} / ${g.header.tltName}`, leftX, currentY);
-      doc.text(`樓層：${g.header.floor ?? '－'}  抽成類別：${firstTltId || '無'}`, midX, currentY);
-      doc.text(`區域：${g.header.area ?? '－'}`, rightX, currentY, { align: 'right' });
-      currentY += lineGap + 5;
+      currentY += lineGap;
+
+      // 區域（搬到專櫃下面）
+      doc.text(`區域：${g.header.area ?? '－'}`, leftX, currentY);
+      currentY += lineGap;
+
+      // 樓層 + 抽成類別
+      doc.text(`樓層：${g.header.floor ?? '－'}  抽成類別：${firstSub?.tltId || '無'}`, leftX, currentY);
+      currentY += lineGap;
+
+      // 交易總件數／退貨件數
+      doc.text(`交易總件數：${totalCount} / 退貨件數：${returnQty}`, leftX, currentY);
+      currentY += lineGap;
+
+      // 退貨金額
+      doc.text(`退貨金額：${this.moneyFormat(returnAmt)}`, leftX, currentY);
+      currentY += 10;
     };
 
     /** 後續表僅顯示置中的抽成類別橫幅 */
@@ -319,7 +336,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       group.subTables.forEach((sub, si) => {
         // 標題區：第一張表完整抬頭，後續只顯示抽成類別
         if (si === 0) {
-          drawFullGroupHeader(group, sub.tltId);
+          drawFullGroupHeader(group, sub);
         } else {
           drawCenteredTltIdBanner(sub.tltId);
         }
@@ -356,7 +373,6 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
           this.selectedColumns.forEach(col => {
             if (col.field === '__index') totalRow[col.field] = '總計';
             else if (this.subtotalFields.includes(col.field)) {
-              totalRow[col.header] = undefined; // for safety no
               totalRow[col.field] = this.moneyFormat(group.grandAll[col.field] ?? 0);
             } else totalRow[col.field] = '';
           });
@@ -404,7 +420,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   }
 
   // =========================
-  //        匯出 Excel
+  //        匯出 Excel（抬頭順序同步 HTML）
   // =========================
   exportExcel(): void {
     import('xlsx').then((xlsx) => {
@@ -414,22 +430,24 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
         const rows: any[] = [];
 
         group.subTables.forEach((sub, si) => {
+          const firstRow = sub?.rows?.[0] ?? {};
+          const totalCount = Number(firstRow?.total_count ?? 0);
+          const returnQty  = Number(firstRow?.return_qty ?? 0);
+          const returnAmt  = Number(firstRow?.return_amt ?? 0);
+
           if (si === 0) {
-            // 第一張表：完整資訊（樓層旁邊顯示抽成類別）
-            rows.push({
-              '公司': '南紡流通事業股份有限公司',
-              '標題': '專櫃日對帳單',
-            });
+            // 第一張表：完整資訊（同步 HTML/PDF 的順序）
+            rows.push({ '公司': '南紡流通事業股份有限公司', '標題': '專櫃日對帳單' });
             rows.push({
               '大分類': this.showBusType ? `${group.header.busType ?? ''}/${group.header.busTypeName ?? ''}`.replace(/\/$/, '') : '',
               '銷售日期': this.formatDate(group.header.txnDate || ''),
               '製表日期': this.printedAt,
             });
-            rows.push({
-              '專櫃': `${group.header.tltNo} / ${group.header.tltName}`,
-              '樓層＋抽成類別': `${group.header.floor ?? '－'} / 抽成類別：${sub.tltId || '無'}`,
-              '區域': group.header.area ?? '',
-            });
+            rows.push({ '專櫃': `${group.header.tltNo} / ${group.header.tltName}` });
+            rows.push({ '區域': group.header.area ?? '' });
+            rows.push({ '樓層＋抽成類別': `${group.header.floor ?? '－'} / 抽成類別：${sub.tltId || '無'}` });
+            rows.push({ '交易總件數／退貨件數': `${totalCount} / ${returnQty}` });
+            rows.push({ '退貨金額': this.moneyFormat(returnAmt) });
             rows.push({});
           } else {
             // 後續表：只顯示置中的抽成類別
