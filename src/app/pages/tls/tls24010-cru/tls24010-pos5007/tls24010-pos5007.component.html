@@ -135,7 +135,6 @@
   <ng-template pTemplate="footer">
     <tr>
       <td [attr.colspan]="isFormCreateable ? store_way === '2' ? 8 : 8 : 7" class="text-right">
-        <span class="text-red-500" *ngIf="TXN_SaleAmtTotal < 0">銷售總計不得為負數</span>
         總計
       </td>
       <td class="text-right">$ {{TXN_SaleAmtTotal | number:'1.0-0'}}</td>
