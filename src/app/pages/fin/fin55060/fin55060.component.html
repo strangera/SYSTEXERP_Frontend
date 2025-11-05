@@ -1,5 +1,5 @@
 <div class="card">
-  <div class="flex gap-2 mb-2">
+  <div class="flex gap-2 mb-2 align-items-center">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
 
@@ -10,72 +10,73 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
 
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)" class="grid p-fluid">
-        <!-- 日期(起訖) -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            label="日期"
-            calendarType="dateRange"
-            [startControl]="queryForm.controls.TXN_BDATE"
-            [endControl]="queryForm.controls.TXN_EDATE"
-            [submitted]="submitted">
-          </app-calendar-range>
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- 日期(起訖) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="日期"
+              [startControl]="queryForm.controls.TXN_BDATE"
+              [endControl]="queryForm.controls.TXN_EDATE"
+              [submitted]="submitted">
+            </app-calendar-range>
+          </div>
+
+          <!-- 部門 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="部門"
+              controlName="org_idList"
+              [options]="org_idListOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.org_idList"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+
+          <!-- 活動代碼 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="活動代碼"
+              controlName="ProjectNoList"
+              [options]="ProjectNoListOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ProjectNoList"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+
+          <!-- 科目代號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="科目代號"
+              controlName="AccNoList"
+              [options]="AccNoListOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.AccNoList"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+
+          <!-- 廠商代號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="廠商代號"
+              controlName="DetailNoList"
+              [options]="DetailNoListOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.DetailNoList"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
         </div>
 
-        <!-- 部門：與 FIN55050 相同資料來源 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
-            label="部門"
-            controlName="ORG_ID"
-            [options]="ORG_IDOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.ORG_ID"
-            [submitted]="submitted">
-          </app-multi-select>
-        </div>
-
-        <!-- 活動代碼：與 FIN55050 相同資料來源 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
-            label="活動代碼"
-            controlName="ProjectNo"
-            [options]="ProjectNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.ProjectNo"
-            [submitted]="submitted">
-          </app-multi-select>
-        </div>
-
-        <!-- 科目代號：與 FIN55050 相同資料來源 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
-            label="科目代號"
-            controlName="AccNo"
-            [options]="AccNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.AccNo"
-            [submitted]="submitted">
-          </app-multi-select>
-        </div>
-
-        <!-- 明細代號（常配的廠商清單）：與 FIN55050 相同資料來源 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
-            label="廠商代號"
-            controlName="DetailNo"
-            [options]="DetailNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.DetailNo"
-            [submitted]="submitted">
-          </app-multi-select>
-        </div>
-
-        <!-- 查詢/清除按鈕 -->
-        <div class="col-12 text-right mt-2">
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -84,42 +85,47 @@
   </p-accordion>
 </div>
 
-<!-- 主表 + 展開明細（detailcolumn） -->
+<!-- 表格 + 匯出按鈕在同一個 CARD，分頁模式依 FIN55050（不顯示 paginator / serialNo） -->
 <div class="card">
-  <app-table-report
-    [tableKey]="'FIN55060'"
-    [dataKey]="'AccNo4'"
-    [lastQueryBody]="lastQueryBody"
+  <div class="flex justify-content-end gap-2 mb-2">
+    <app-button
+      label="匯出 PDF"
+      icon="pi pi-file-pdf"
+      (clickEvent)="onExportPDF()"
+      [loading]="btnLoading"
+      [disabled]="loading || (data.length || 0) === 0">
+    </app-button>
+
+    <app-button
+      label="匯出 Excel"
+      icon="pi pi-file-excel"
+      (clickEvent)="onExportXLSX()"
+      [loading]="btnLoading"
+      [disabled]="loading || (data.length || 0) === 0">
+    </app-button>
+  </div>
+
+  <app-table-subheader
+    tableKey="FIN55060"
+    dataKey="AccNo4"                
     [data]="data"
     [columns]="columns"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
+    [showCheckBox]="false"
     [showManage]="false"
     [showDelete]="false"
+    [multiSortMeta]="[]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    [showSerialNo]="false"
+    [showPaginator]="false"
     [showReportMode]="false"
-    [queryFunction]="queryFIN55060ForReport"
-    [expansionColumns]="detailcolumns"
-    [expansionDataKey]="'details'">
-
-    <!-- 匯出按鈕 -->
-    <header>
-      <div class="flex justify-content-end gap-2">
-        <p-button
-          styleClass="p-2"
-          label="匯出分類帳彙總報表 PDF"
-          icon="pi pi-file"
-          [loading]="btnLoading"
-          (click)="onExportPDF()">
-        </p-button>
-
-        <p-button
-          styleClass="p-2"
-          label="匯出分類帳彙總報表 Excel"
-          icon="pi pi-file-excel"
-          [loading]="btnLoading"
-          (click)="onExportXLSX()">
-        </p-button>
-      </div>
-    </header>
-  </app-table-report>
+    [groupRowsBy]="'AccNo4'"
+    [groupRowsByName]="'AccNo4Name'"
+    [showExcel]="false"
+    [showExcelExport]="false"
+    [showExcelImport]="false"
+    (detail)="onDetail($event)"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
+  </app-table-subheader>
 </div>

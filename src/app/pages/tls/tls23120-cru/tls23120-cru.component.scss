@@ -1,11 +1,41 @@
+/* ===============================
+   抽成類別：統一樣式（0/1 相同）
+   =============================== */
+.commission-line {
+  font-size: 16px;      /* 以 0 為主的字級 */
+  font-weight: 700;     /* 粗體，與 0 一致 */
+  line-height: 1.2;
+}
+
+.commission-label {
+  color: #2563eb;       /* tailwind 的 text-blue-600 */
+}
+
+.commission-value {
+  color: #dc2626;       /* tailwind 的 text-red-600 */
+}
+
+/* ===============================
+   PrimeNG p-table 配色（依你原則）
+   =============================== */
+
+/* Header 顏色 */
+:host ::ng-deep .p-datatable thead th {
+  background-color: #c7d2fe !important;  /* 指定的藍紫色 */
+  color: #000 !important;
+  font-weight: 600;
+  text-align: center;
+}
+
 /* Footer 小計/總計配色（作用在 <tfoot>） */
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row > td {
-  background-color: #9cb1fb !important; /* 小計 */
+  background-color: #9cb1fb !important;  /* 小計 */
   color: #001a4d;
   font-weight: 600;
 }
+
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row > td {
-  background-color: #c7d2fe !important; /* 總計 */
+  background-color: #c7d2fe !important;  /* 總計 */
   color: #001a4d;
   font-weight: 700;
   border-top: 2px solid #6aa9ff;
@@ -18,23 +48,16 @@
   font-weight: 700;
 }
 
-/* Header 顏色 */
-:host ::ng-deep .p-datatable thead th {
-  background-color: #c7d2fe !important; /* 指定的藍紫色 */
-  color: #000 !important;
-  font-weight: 600;
-  text-align: center;
+/* 斑馬紋（奇數灰、偶數白） */
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(odd) > td {
+  background-color: #e0e0e0 !important;
 }
 
-/* Body 斑馬紋：奇數灰、偶數白 */
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(odd) > td {
-  background-color: #e0e0e0 !important;  /* #FFE0E0E0 等效 */
-}
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(even) > td {
   background-color: #ffffff !important;
 }
 
-/* 滑過效果不要蓋掉 footer 的顏色 */
+/* 滑過效果不要蓋掉 footer 的顏色（僅微調亮度） */
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row:hover > td,
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row:hover > td,
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr.grandtotal-row:hover > td {
