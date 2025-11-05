@@ -1,7 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2 align-items-center">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-
   </div>
 
   <p-accordion>
@@ -106,8 +105,7 @@
     <app-button
       label="匯出 PDF"
       icon="pi pi-file-pdf"
-     
-      (clickEvent)="onExportPDF()"
+      (click)="onExportPDF()"
       [loading]="btnLoading"
       [disabled]="loading || (data.length || 0) === 0">
     </app-button>
@@ -115,8 +113,7 @@
     <app-button
       label="匯出 Excel"
       icon="pi pi-file-excel"
-    
-      (clickEvent)="onExportXLSX()"
+      (click)="onExportXLSX()"
       [loading]="btnLoading"
       [disabled]="loading || (data.length || 0) === 0">
     </app-button>
@@ -140,7 +137,7 @@
     [showPaginator]="false"
     [showReportMode]="false"
     [groupRowsBy]="'AccNo'"
-    [groupRowsByName]="'AccName'"
+    [groupRowsByName]="'AccCName'"
     [showExcel]="false"
     [showExcelExport]="false"
     [showExcelImport]="false">
