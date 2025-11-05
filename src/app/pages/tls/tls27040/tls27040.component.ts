@@ -12,7 +12,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { QueryTLS27040Request, TLS27040Data, TLS27040Service, TotalData } from '@service/api/tls/tls27040.service';
 import { finalize } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
-import { todayStart } from '@shared/models/system/query-form.model';
+import { todayStart, toHHmm } from '@shared/models/system/query-form.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -24,6 +24,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { AsyncPipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -105,6 +106,10 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
+        TxnDate_Start: formatDateToYYYY_MM_DD(frm.value.TxnDate_Start),
+        TxnDate_End: formatDateToYYYY_MM_DD(frm.value.TxnDate_End),
+        TxnTime_Start: toHHmm(frm.value.TxnTime_Start),
+        TxnTime_End: toHHmm(frm.value.TxnTime_End),
         TxnTypeList: processSelectedCodes(frm.value.TxnTypeList),
         CrdTxnFgList: processSelectedCodes(frm.value.CrdTxnFgList),
       }
