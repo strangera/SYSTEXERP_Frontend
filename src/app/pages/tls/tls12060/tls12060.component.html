@@ -90,9 +90,5 @@
       dataKey="id" [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
       [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true" [loading]="loading" [isRowSelectable]="isRowSelectable"></app-table>
-    <!-- <app-report-table-group [columns]="columns" [data]="data"
-        [enableGrouping]="false" [reportTitle]="'招商進度監控表'" [currentPage]="1" [showTotalOnly]="false"
-        [defaultMergedView]="true">
-      </app-report-table-group> -->
   </div>
 </div>

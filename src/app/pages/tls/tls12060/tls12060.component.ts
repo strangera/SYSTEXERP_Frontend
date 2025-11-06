@@ -19,6 +19,7 @@ import { Tls12060Service } from '@service/api/tls/tls12060.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { createPaginationConfig, formatDateTime } from '@shared/componentkit/table2/table2.model';
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface response10260 {
   "id": number,
@@ -135,7 +136,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     // console.log('查詢條件', frm.value);
     console.log('查詢條件', JSON.stringify(frm.value, null, 2));
     this.handleSubmit(frm, () => {
-      this.tls12060Service.queryTLS12060(frm.value).subscribe({
+      this.tls12060Service.queryTLS12060(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             //將
@@ -157,61 +158,14 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       });
     });
   }
-
-  // 刪除項目
-  onDelete(data: response10260 | response10260[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    // const deleteBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
-
-    // this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    this.selectedItems = [];
-  }
-
+  
   isRowSelectable(): boolean {
     return false;
   }
 
   loadOptions() {
     // 查 接待人員
-    this.tls12060Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+    this.tls12060Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 代碼
         Name: item.Name, // 接待人員 名稱
@@ -220,7 +174,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       console.log('接待人員代號:', this.contact_USR_Option);
     });
     // 查 大分類(專櫃)
-    this.tls12060Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+    this.tls12060Service.queryTLTBUSTYPE_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.bus_type_Option = response.Data.map((item: any) => ({
         No: item.No, // 大分類(專櫃) 號
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
@@ -228,7 +182,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       console.log('大分類代號:', this.bus_type_Option);
     });
     // 查 樓層
-    this.tls12060Service.querySYS3900_DropDownList({}).subscribe((response) => {
+    this.tls12060Service.querySYS3900_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.floor_Option = response.Data.map((item: any) => ({
         No: item.No, // 樓層 號
         Name: item.Name, // 樓層 名稱
@@ -237,7 +191,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       console.log('大分類代號:', this.floor_Option);
     });
     //查 位置編號
-    this.tls12060Service.queryPOS2002_DropDownList({}).subscribe((response) => {
+    this.tls12060Service.queryPOS2002_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.location_Option = response.Data.map((item: any) => ({
         No: item.No, // 位置編號
         Name: item.Name, // 位置 名稱
@@ -246,7 +200,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       console.log('location_Option:', this.location_Option);
     });
     // 查 區域代碼
-    this.tls12060Service.querySYS3A00_DropDownList({}).subscribe((response) => {
+    this.tls12060Service.querySYS3A00_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.area_Option = response.Data.map((item: any) => ({
         No: item.No, // 區域代碼
         Name: item.Name, // 區域 名稱
@@ -255,7 +209,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       console.log('area_Option:', this.area_Option);
     });
     // 查 櫃編
-    this.tls12060Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+    this.tls12060Service.queryTLTTALENT_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.TLTTalent_Option = response.Data.map((item: any) => ({
         No: item.No, // 櫃編 代碼
         Name: item.Name, // 櫃編 名稱
@@ -265,7 +219,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     });
 
     // 查 統編
-    this.tls12060Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).subscribe((response) => {
+    this.tls12060Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).pipe(untilDestroyed(this)).subscribe((response) => {
       // 去除重複的 No，只保留第一筆
       const uniqueMap = new Map<string, any>();
       response.Data.forEach((item: any) => {
@@ -288,7 +242,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     });
 
     //查 館別
-    this.tls12060Service.querySYS3800_DropDownList({}).subscribe((response) => {
+    this.tls12060Service.querySYS3800_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.tlt_building_Option = response.Data.map((item: apiOption) => ({
         No: item.No,
         Name: item.Name,

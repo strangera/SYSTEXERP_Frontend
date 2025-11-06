@@ -211,7 +211,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
-      this.tls29010Service.queryTLS29010(frm.value).subscribe({
+      this.tls29010Service.queryTLS29010(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
@@ -262,7 +262,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     };
 
     console.log('刪除資料', deleteBody);
-    this.tls29010Service.deleteTLS29010M(deleteBody).subscribe({
+    this.tls29010Service.deleteTLS29010M(deleteBody).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
@@ -312,8 +312,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   loadOption() {
     // 專櫃編號
     this.dropDownListService
-      .queryTLTTALENT_DropDownList().pipe(untilDestroyed(this))
-      .subscribe((response) => {
+      .queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.tlt_No_Option = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
