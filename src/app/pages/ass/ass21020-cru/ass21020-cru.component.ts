@@ -130,7 +130,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   /** 統一初始化效果器 */
   public readonly initEffect = effect(() => {
-    const engTypes = this.service.engTypeList();
+    const engTypes = this.service.engTypeOptions;
     const meterNos = this.service.engMeterNoData();
 
     if (!engTypes.length || !meterNos.length) return;

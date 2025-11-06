@@ -1,16 +1,17 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, OnDestroy, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus, EngType } from '@pages/ass/ass21010/ass21010.model';
+import { Option } from '@service/utility/dropdown-api.model';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import saveAs from 'file-saver';
 import { NGXLogger } from 'ngx-logger';
-import { Observable, Subject, finalize, take, takeUntil, tap } from 'rxjs';
+import { Observable, finalize, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
 @Injectable({ providedIn: 'root' })
-export class ASS21010Service implements OnDestroy {
+export class ASS21010Service {
 
   public readonly isRowSelectable = (rowData: unknown) =>
     !!rowData;
@@ -19,11 +20,11 @@ export class ASS21010Service implements OnDestroy {
   public readonly ASS21010Data = signal<ASS21010Data[]>([]);
   public readonly totalRecords = signal<number>(0);
 
-  public readonly engTypeSignal = signal<DropdownOption[]>([
-    { No: EngType.水, Name: '水錶' },
-    { No: EngType.電, Name: '電錶' },
-    { No: EngType.瓦斯, Name: '瓦斯錶' },
-  ]);
+  public readonly engTypeOptions: Option[] = [
+    { value: EngType.水, label: '水錶' },
+    { value: EngType.電, label: '電錶' },
+    { value: EngType.瓦斯, label: '瓦斯錶' },
+  ];
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<DropdownOption[]>([]);
 
@@ -32,11 +33,6 @@ export class ASS21010Service implements OnDestroy {
   public tableLoading = signal<boolean>(!1);
   public exportLoading = signal<boolean>(!1);
 
-  private readonly engTypeCancel$ = new Subject<void>();
-  private readonly engMeterNoCancel$ = new Subject<void>();
-  private readonly locationCancel$ = new Subject<void>();
-  private readonly tableCancel$ = new Subject<void>();
-
   constructor(
     private readonly http: HttpClient,
     // private readonly messageService: NotificationService,
@@ -44,11 +40,9 @@ export class ASS21010Service implements OnDestroy {
   ) { }
 
   public loadEngMeterNo(type?: EngType): void {
-    this.engMeterNoCancel$.next();
     this.engMeterNoLoading.set(!0);
     this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
       take(1),
-      takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
       finalize(() => {
         this.engMeterNoLoading.set(!1);
@@ -58,11 +52,9 @@ export class ASS21010Service implements OnDestroy {
   };
 
   public loadLocationNo(): void {
-    this.locationCancel$.next();
     this.locationLoading.set(!0);
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
-      takeUntil(this.locationCancel$),
       tap(response => this.locationSignal.set(response.Data)),
       finalize(() => {
         this.locationLoading.set(!1);
@@ -72,11 +64,9 @@ export class ASS21010Service implements OnDestroy {
   };
 
   public loadASS21010(payload: ASS21010Payload): void {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(response => this.totalRecords.set(response.Data.TotalCount || 0)),
       tap(response => this.ASS21010Data.set(response.Data.Data)),
       finalize(() => this.tableLoading.set(!1)),
@@ -84,21 +74,17 @@ export class ASS21010Service implements OnDestroy {
   }
 
   public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       finalize(() => this.tableLoading.set(!1)),
     );
   }
 
   public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       finalize(() => this.tableLoading.set(!1)),
     );
   }
@@ -144,12 +130,5 @@ export class ASS21010Service implements OnDestroy {
       }),
       finalize(() => this.exportLoading.set(!1))
     ).subscribe();
-  }
-
-  ngOnDestroy(): void {
-    this.engTypeCancel$.next();
-    this.engMeterNoCancel$.next();
-    this.locationCancel$.next();
-    this.tableCancel$.next();
   }
 }

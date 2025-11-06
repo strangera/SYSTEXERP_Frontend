@@ -5,7 +5,7 @@ import { Option, TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
@@ -13,9 +13,6 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52010Service {
 
-  private readonly dataCancel$ = new Subject<void>();
-  private readonly orgUsrCancel$ = new Subject<void>();
-  private readonly gls1005Cancel$ = new Subject<void>();
 
   public readonly FIN52010Data = signal<FIN52010Data>(Object.create(null));
 
@@ -40,11 +37,9 @@ export class FIN52010Service {
   ) { }
 
   public loadFIN52010(CompNo: string = ''): void {
-    this.dataCancel$.next();
     this.dataLoading.set(!0);
     this.http.post<FIN52010DataResponse>(`${apiUrl}/queryFIN52010`, { CompNo }).pipe(
       take(1),
-      takeUntil(this.dataCancel$),
       tap(res => this.FIN52010Data.set(res.Data)),
       finalize(() => {
         this.dataLoading.set(!1);
@@ -54,22 +49,18 @@ export class FIN52010Service {
   }
 
   public updateFIN52010Data(payload: FIN52010UpdatePayload): Observable<BaseQueryResponse<FIN52010UpdateResult>> {
-    this.dataCancel$.next();
     this.dataLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52010UpdateResult>>(`${apiUrl}/updateFIN52010`, payload).pipe(
       take(1),
-      takeUntil(this.dataCancel$),
       tap(res => this.logger.debug('更新FIN52010結果:', [res])),
       finalize(() => this.dataLoading.set(!1))
     );
   }
 
   public getGLS1005DropDownList(): void {
-    this.gls1005Cancel$.next();
     this.gls1005Loading.set(!0);
     this.dropdownApi.queryGls1005().pipe(
       take(1),
-      takeUntil(this.gls1005Cancel$),
       map(res => res as GLS1005Option[] ?? []),
       tap(res => this.gls1005List.set(res)),
       finalize(() => {
@@ -80,11 +71,9 @@ export class FIN52010Service {
   }
 
   public getTblUsrOrgList(): void {
-    this.orgUsrCancel$.next();
     this.orgUsrLoading.set(!0);
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      takeUntil(this.orgUsrCancel$),
       map(res => res ?? []),
       tap(res => this.orgUsrList.set(res)),
       finalize(() => {

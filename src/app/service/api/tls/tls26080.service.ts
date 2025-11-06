@@ -4,7 +4,7 @@ import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS26080Uplo
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
-import { catchError, EMPTY, finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { catchError, EMPTY, finalize, Observable, take, tap } from 'rxjs';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { environment } from 'src/environments/environment';
 
@@ -35,10 +35,6 @@ export class TLS26080Service {
   public readonly fileUploadLoading = signal<boolean>(!1);
   public readonly exampleDownLoading = signal<boolean>(!1);
 
-  private readonly dataCancel$ = new Subject<void>();
-  private readonly detailCancel$ = new Subject<void>();
-  private readonly fileUploadCancel$ = new Subject<void>();
-  private readonly keyInCancel$ = new Subject<void>();
 
   // 下拉選單資料
   public departmentItems = signal<DropdownOption[]>([]);
@@ -96,7 +92,6 @@ export class TLS26080Service {
     this.dataLoading.set(!0);
     this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
       take(1),
-      takeUntil(this.dataCancel$),
       tap(response => this.totalRecords.set(response.TotalCount || 0)),
       tap(response => this.TLS26080Data.set(response.Data)),
       finalize(() => {
@@ -121,11 +116,9 @@ export class TLS26080Service {
   /** 專櫃活動 */
   public loadTLS26080Detail(query: string): void {
     if (this.dataLoading()) return void (this.dataLoading.set(!1));
-    this.detailCancel$.next();
     this.dataLoading.set(!0);
     this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
-      takeUntil(this.detailCancel$),
       tap(response => this.detailTotalRecords.set(response.TotalCount || 0)),
       tap(response => this.TLS26080Detail.set(response.Data)),
       finalize(() => {
@@ -166,10 +159,8 @@ export class TLS26080Service {
 
   public uploadFile(file: FormData): void {
     this.fileUploadLoading.set(!0);
-    this.fileUploadCancel$.next();
     this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
       take(1),
-      takeUntil(this.fileUploadCancel$),
       tap(response => {
         const data = response.Data;
         console.log(`uploadFile:`, [response]);
@@ -206,11 +197,9 @@ export class TLS26080Service {
   }
 
   public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
-    this.dataCancel$.next();
     this.dataLoading.set(!0);
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
       take(1),
-      takeUntil(this.dataCancel$),
       finalize(() => this.dataLoading.set(!1))
     );
   }
@@ -266,13 +255,11 @@ export class TLS26080Service {
       keyiInTLS26080: data,
     }).pipe(
       take(1),
-      takeUntil(this.keyInCancel$),
       tap(response => {
         const d = response.Data;
         if (!d.Success) {
           this.dealErrorFilePath(d);
           this.TLS26080Detail.update(v => v.filter(i => i.id !== data.id)); // 更新參照
-          this.keyInCancel$.next();
           console.log(`keyInTLS26080 fail:`, [response, this.TLS26080Detail()]);
           this.messageService.errorBox(response.Message || '鍵入失敗');
         } else {
@@ -287,6 +274,5 @@ export class TLS26080Service {
   }
 
   ngOnDestroy(): void {
-    this.fileUploadCancel$.next();
   }
 }

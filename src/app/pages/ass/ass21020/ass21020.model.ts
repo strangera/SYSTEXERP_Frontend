@@ -28,7 +28,7 @@ export interface ASS21020Detail {
 export interface ASS21020Query extends BaseQueryRequest {
   EngTypes?: string;
   ENG_MeterNo?: string;
-  Location_No?: string;
+  TLT_No?: string;
   SYS_StoreNo?: string;
   Mid?: number;
   ENG_Rate?: number;

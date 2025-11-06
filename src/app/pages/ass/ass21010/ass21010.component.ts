@@ -34,7 +34,7 @@ import { ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
     TableComponent,
   ],
 })
-export class ASS21010Component extends BasicQueryPageComponent<unknown> implements OnInit {
+export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> implements OnInit {
 
   public queryForm = this.formBuilder.group({
     ENG_Type: new FormControl<EngType[] | void>(void 0),
@@ -45,22 +45,18 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  // 變化追蹤
-  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
-  private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
-  private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
+  /* ENG_Type 改變時,篩選 MeterNo 選項 */
+  public readonly filteredMeterNo = computed(() => {
+    const selectedTypes = this.qf().ENG_Type.value;
+    if (!selectedTypes?.length) return this.service.engMeterNoSignal();
+    return this.service.engMeterNoSignal().filter(item =>
+      selectedTypes.some(v => v === item.ENG_Type));
+  });
 
   public readonly usrData = computed(() => ({
     SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
     Mid: Number(this.authService.currentUserValue!.mid),
   }));
-
-  public readonly tableEffect = effect(() => {
-    const types = this.engTypeSignal() || [];
-    const meters = this.engMeterSignal() || [];
-    const locs = this.locationSignal() || [];
-    this.logger.debug(`tableEffect:`, [types, meters, locs]);
-  }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.tableLoading()
@@ -73,7 +69,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     {
       field: 'ENG_Type',
       header: '能源類型',
-      format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v,
+      format: v => this.service.engTypeOptions.find(t => t.value === v)?.label || v,
       exportFormat: [{ G01: '水錶' }, { G02: '電錶' }, { G03: '瓦斯錶' }],
     },
     { field: 'ENG_MeterNo', header: '錶號' },
@@ -89,9 +85,8 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   ngOnInit(): void {
+    this.service.ASS21010Data.set([]);
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
-    const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.patchValue(store.value);
 
     this.service.loadEngMeterNo();
     this.service.loadLocationNo();

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { FIN54030Data, FIN54030Response } from '@pages/fin/fin54030/fin54030.model';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
@@ -10,8 +10,6 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN54030Service {
 
-  private readonly tableCancel$ = new Subject<void>();
-  private readonly closeCancel$ = new Subject<void>();
 
   public readonly FIN54030Data = signal<FIN54030Data>(Object.create(null));
 
@@ -34,11 +32,9 @@ export class FIN54030Service {
   ];
 
   public loadFIN54030(): void {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     this.http.post<FIN54030Response>(`${apiUrl}/queryFIN54030`, {}).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(res => {
         this.totalRecords.set(res.TotalCount || 0);
         this.FIN54030Data.set(res.Data);
@@ -49,11 +45,9 @@ export class FIN54030Service {
   }
 
   public closeFIN54030(CloseYM: string, CloseType: '1' | '2'): void {
-    this.closeCancel$.next();
     this.closeLoading.set(!0);
     this.http.post<FIN54030Response>(`${apiUrl}/closeFIN54030`, { CloseYM, CloseType }).pipe(
       take(1),
-      takeUntil(this.closeCancel$),
       finalize(() => this.closeLoading.set(!1))
     ).subscribe();
   }
