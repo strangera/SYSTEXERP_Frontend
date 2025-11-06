@@ -23,6 +23,8 @@ import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { environment } from 'src/environments/environment';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-fin15110',
@@ -45,6 +47,7 @@ import { environment } from 'src/environments/environment';
     ButtonModule,
     CustomFooterTableComponent,
     DatePipe,
+    MultiSelectComponent,
   ],
 })
 export class FIN15110Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -52,6 +55,8 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DT_S: [new Date(), [Validators.required]],
     TXN_DT_E: [new Date(), [Validators.required]],
+    ECR_No: [[]],
+    DATE_TYPE: [[] as string[]],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }, { field: 'TXN_Date', order: 1 }, { field: 'TXN_GUINo', order: 1 }]),
   });
 
@@ -60,6 +65,7 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
   footerData: any[] = [];
   btnLoading = false;
   btnLoading2 = false;
+  ECRNoOptions: IDropdownItem[] = [];
 
   columns: Column[] = [
     { field: 'Ecr_No', header: '收銀機號', visible: true, showSort: true },
@@ -73,9 +79,14 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_Tax', header: '稅額', visible: true, showSort: true, format: formatAmount, isTotal: true },
     { field: 'TXN_VoidDT', header: '發票作廢日', visible: true, showSort: true },
   ];
-
+  DATE_TYPEOptions = [
+    { label: '開立', value: '1' },
+    { label: '作廢', value: '2' },
+    { label: '加總', value: '3' },
+  ];
   constructor(
     private readonly fin15110Service: FIN15110Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly datePipe: DatePipe
   ) {
     super();
@@ -83,6 +94,11 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('FIN15110', '/FIN/FIN15110CRU', this.queryForm, (frm) => this.onSubmit(frm));
+    this.dropDownListService.queryPOS1002_DropDownList().subscribe((data) => {
+      this.ECRNoOptions = data.Data;
+    });
+    const allValues = this.DATE_TYPEOptions.map(opt => opt.value);
+    this.queryForm.get('DATE_TYPE')?.setValue(allValues);
   }
 
   onSubmit(frm: FormGroup): void {
@@ -101,6 +117,7 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
         STO_No: '10',
         TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
         TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+
       };
 
 
