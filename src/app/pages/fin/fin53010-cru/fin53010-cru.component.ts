@@ -24,7 +24,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, Observable, tap } from 'rxjs';
-import { FIN52030Data, FIN52030Detail, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
+import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
@@ -342,44 +342,52 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         return result;
       }
 
+      const rowData = result[index];
+      this.logger.debug(`rowData :`, [rowData, event.rowData]);
       switch (event.field) {
         case 'AccNo':
           // 自動帶入科目名稱
-          result[index].AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
+          rowData.AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 自動帶入摘要
-          result[index].NoteDesc = String(this.service.noteDescMap()
+          rowData.NoteDesc = String(this.service.noteDescMap()
             .get(event.value)?.data?.[0].label || event.value || '');
           break;
 
         case 'AccAmtD':
           // 自動互斥借貸方金額
-          if (event.value) result[index].AccAmtC = void 0;
+          if (event.value) rowData.AccAmtC = void 0;
           break;
 
         case 'AccAmtC':
           // 自動互斥借貸方金額
-          if (event.value) result[index].AccAmtD = void 0;
+          if (event.value) rowData.AccAmtD = void 0;
           break;
 
         case 'ORG_ID':
           // 設定目前選擇的組織代號
           this.selectedOrgId.set(String(event.value));
-          result[index].SubDetailNo = '';
+          rowData.SubDetailNo = '';
           break;
 
         case 'NoteDesc':
-          result[index].NoteDesc = String(this.service.noteDescMap()
-            .get(event.rowData.AccNo)?.data
+          rowData.NoteDesc = String(this.service.noteDescMap().get(event.rowData.AccNo)?.data
             ?.find(d => d.value === event.value)?.label
             || event.value || '');
           break;
       }
 
+      // 如果會計科目是進項稅額，且組織是部門，則自動改為共同
+      if (rowData.AccNo?.startsWith('1232')
+        && this.service.orgMap().get(rowData.ORG_ID || '')?.label?.endsWith('部')) {
+        rowData.AccNo = '123208';
+        rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
+      }
+
       // 更新 SerNo
-      result[index].SerNo = (index + 1) * 10;
+      rowData.SerNo = (index + 1) * 10;
 
       // 檢查是否可儲存
-      this.rowEditCanSave.set(!!result[index].AccNo && !!result[index].ORG_ID || !!this.isBalanced());
+      this.rowEditCanSave.set(!!rowData.AccNo && !!rowData.ORG_ID || !!this.isBalanced());
 
       return result;
     });

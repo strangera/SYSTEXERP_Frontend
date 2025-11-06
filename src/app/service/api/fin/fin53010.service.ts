@@ -89,6 +89,9 @@ export class FIN53010Service {
   public readonly usrMap = computed(() =>
     new Map(this.usrList().map(item => [item.value, item]))
   );
+  public readonly orgMap = computed(() =>
+    new Map(this.orgNoList().map(item => [item.value, item]))
+  );
   public readonly noteDescMap = computed(() =>
     new Map(this.noteDescList().map(item => [item.value, item]))
   );
