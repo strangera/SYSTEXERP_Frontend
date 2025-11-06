@@ -229,4 +229,36 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
       error: () => (this.loading = false),
     });
   }
+  // ---------------- 刪除 ----------------
+  onDelete(selectedRows: any[]): void {
+    if (!selectedRows || selectedRows.length === 0) {
+      this.messageService.warnBubble('請選擇要刪除的資料');
+      return;
+    }
+    const idList = selectedRows
+      .map((item) => item.id)
+      .filter((id) => id !== undefined && id !== null);
+
+    if (idList.length === 0) {
+      this.messageService.warnBubble('選取的資料沒有有效的 ID');
+      return;
+    }
+    const payload = { idList };
+    this.loading = true;
+    this.tls42010Service
+      .deleteTLS42010(payload)
+      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(`刪除失敗：${res.Message || '未知錯誤'}`);
+          }
+        },
+
+      });
+  }
+
 }

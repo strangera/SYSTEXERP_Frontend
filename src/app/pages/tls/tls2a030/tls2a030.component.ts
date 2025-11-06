@@ -2,7 +2,7 @@ import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -14,10 +14,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { ButtonModule } from 'primeng/button';
+
 
 interface SalesRecord {
   PAY_NAME: string;
@@ -65,7 +65,13 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
   btnLoading2 = false;
+
+  // 緩存完整資料，避免重複 API 呼叫
+  private cachedFullData: any[] = [];
+  private cachedFooterData: any[] = [];
+  private lastQueryParams: string = '';
   // 表格欄位
+
   columns: Column[] = [
     { field: 'PAY_NAME', header: '支付工具', visible: true },
     { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount, isTotal: true },
@@ -131,8 +137,6 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       IsExcel: true,
     };
 
-
-    console.log('匯出 payload:', payload);
     this.btnLoading2 = true;
 
     this.tls2a030Service.exportTLS2A030(payload).subscribe({
@@ -157,44 +161,126 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup) {
+    // 更新表單控制項的值
+    form.patchValue({
+      pageIndex: event.pageIndex,
+      pageSize: event.pageSize,
+      SortBy: event.SortBy
+    });
 
+    // 檢查是否為純分頁操作（查詢條件沒變）
+    const raw = form.getRawValue();
+    const currentQueryParams = JSON.stringify({
+      SaleDateStart: raw.SaleDateStart,
+      SaleDateEnd: raw.SaleDateEnd,
+      ECR_No_Start: raw.ECR_No_Start,
+      ECR_No_End: raw.ECR_No_End
+    });
 
+    if (currentQueryParams === this.lastQueryParams && this.cachedFullData.length > 0) {
+      // 使用緩存資料進行前端分頁
+      this.performClientSidePaging(event.pageIndex, event.pageSize);
+    } else {
+      // 查詢條件改變，需要重新呼叫 API
+      this.onSubmit(form);
+    }
+  }
+
+  private performClientSidePaging(pageIndex: number, pageSize: number) {
+    const startIndex = (pageIndex - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pagedData = this.cachedFullData.slice(startIndex, endIndex);
+
+    this.data = structuredClone(pagedData.map((it: any) => ({
+      ...it,
+      Compare_CD: it?.Compare_CD,
+      Compare_AB: it?.Compare_AB
+    })));
+
+    this.footerData = [...this.cachedFooterData];
+    this.totalRecords = this.cachedFullData.length;
+  }
   onSubmit(form: FormGroup): void {
+    this.data = [];
+    this.footerData = [];
+
     this.handleSubmit(form, () => {
-      this.tls2a030Service.queryTLS2A030(form.value).subscribe({
+      const raw = form.getRawValue();
+
+      // 構建 API 請求參數，確保包含分頁資訊
+      const payload = {
+        SaleDateStart:
+          raw.SaleDateStart instanceof Date
+            ? raw.SaleDateStart.toISOString()
+            : raw.SaleDateStart ?? null,
+        SaleDateEnd:
+          raw.SaleDateEnd instanceof Date
+            ? raw.SaleDateEnd.toISOString()
+            : raw.SaleDateEnd ?? null,
+        ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
+        ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+        PageSize: raw.pageSize ?? 20,
+        PageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy ?? [],
+        IsExcel: false,
+      };
+
+      // 更新查詢參數緩存
+      this.lastQueryParams = JSON.stringify({
+        SaleDateStart: payload.SaleDateStart,
+        SaleDateEnd: payload.SaleDateEnd,
+        ECR_No_Start: payload.ECR_No_Start,
+        ECR_No_End: payload.ECR_No_End
+      });
+
+      this.tls2a030Service.queryTLS2A030(payload).subscribe({
         next: (res) => {
           const main = res?.Data?.mainData ?? [];
           const total = res?.Data?.totalData?.[0] ?? null;
 
-          // 綁定主資料
-          this.data = main.map((it: any) => ({
+          // 緩存完整資料
+          this.cachedFullData = [...main];
+
+          // 因為後端沒有實作分頁，在前端實作分頁邏輯
+          const pageSize = payload.PageSize;
+          const pageIndex = payload.PageIndex;
+          const startIndex = (pageIndex - 1) * pageSize;
+          const endIndex = startIndex + pageSize;
+
+          // 取得當前頁面的資料
+          const pagedData = main.slice(startIndex, endIndex);
+
+          this.data = structuredClone(pagedData.map((it: any) => ({
             ...it,
             Compare_CD: it?.Compare_CD,
             Compare_AB: it?.Compare_AB
-          }));
+          })));
 
-          // 綁定總計
           if (total) {
-            this.footerData = [
-              {
-                group_name: '總計',
-                OVER_PayAmt: total.OVER_Total_PayAmt,
-                PreAudit_OVER_PayAmt: total.PreAudit_OVER_Total_PayAmt,
-                Actual_ReceivedAmt: total.Actual_ReceivedAmt_Total,
-                BOOK_PayAmt: total.BOOK_Total_PayAmt,
-                Compare_CD: '',
-                Compare_AB: ''
-              }
-            ];
+            const footerRow = {
+              group_name: '總計',
+              OVER_PayAmt: total.OVER_Total_PayAmt,
+              PreAudit_OVER_PayAmt: total.PreAudit_OVER_Total_PayAmt,
+              Actual_ReceivedAmt: total.Actual_ReceivedAmt_Total,
+              BOOK_PayAmt: total.BOOK_Total_PayAmt,
+              Compare_CD: '',
+              Compare_AB: ''
+            };
+            this.footerData = [footerRow];
+            this.cachedFooterData = [footerRow];
           } else {
             this.footerData = [];
+            this.cachedFooterData = [];
           }
 
-          this.totalRecords = res?.TotalCount ?? this.data.length;
+          // 設定總筆數為原始資料的長度
+          this.totalRecords = main.length;
           this.loading = false;
         },
       });
     });
   }
+
 
 }

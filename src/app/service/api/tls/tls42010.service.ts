@@ -15,6 +15,9 @@ export class Tls42010Service {
   queryTLS42010M(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS42010M`, data);
   }
+  deleteTLS42010(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS42010`, data);
+  }
 
   // 查詢 POS1004M 資料表 - 明細
   queryTLS42010_Detail(data: any): Observable<any> {
