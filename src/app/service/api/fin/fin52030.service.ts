@@ -5,7 +5,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
@@ -13,13 +13,6 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52030Service {
 
-  private readonly tableCancel$ = new Subject<void>();
-  private readonly accNoCancel$ = new Subject<void>();
-  private readonly vendorCancel$ = new Subject<void>();
-  private readonly usrCancel$ = new Subject<void>();
-  private readonly orgNoCancel$ = new Subject<void>();
-  private readonly RefNameCancel$ = new Subject<void>();
-  private readonly noteDescCancel$ = new Subject<void>();
 
   public readonly FIN52030Data = signal<FIN52030Data[]>([]);
   public readonly FIN52030Detail = signal<FIN52030DetailData>(Object.create(null));
@@ -68,11 +61,9 @@ export class FIN52030Service {
 
   public loadFIN52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
     this.FIN52030Data.set([]);
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(res => this.totalRecords.set(res.TotalCount || 0)),
       tap(res => this.FIN52030Data.set(res.Data)),
       finalize(() => {
@@ -85,7 +76,6 @@ export class FIN52030Service {
   public loadFIN52030Detail(id: number): Observable<FIN52030DetailDataResponse> {
     return this.http.post<FIN52030DetailDataResponse>(`${apiUrl}/queryFIN52030Detail`, { id }).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(res => this.FIN52030Detail.set(res.Data)),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -95,11 +85,9 @@ export class FIN52030Service {
   }
 
   public updateFIN52030Data(payload: FIN52030UpdatePayload): Observable<BaseQueryResponse<FIN52030Data>> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/updateFIN52030`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(res => { }),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -109,11 +97,9 @@ export class FIN52030Service {
   }
 
   public insertFIN52030Data(payload: FIN52030InsertPayload): Observable<BaseQueryResponse<FIN52030Data>> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/insertFIN52030`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(res => { }),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -123,11 +109,9 @@ export class FIN52030Service {
   }
 
   public deleteFIN52030Data(payload: number[]): Observable<BaseQueryResponse<Record<string, any>>> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/deleteFIN52030`, { ids: payload }).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(res => { }),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -137,10 +121,8 @@ export class FIN52030Service {
   }
 
   public getRefNameList(): void {
-    this.RefNameCancel$.next();
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
-      takeUntil(this.RefNameCancel$),
       map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
       tap(res => this.refNameList.set(res)),
       finalize(() => this.logger.debug('查詢RefNameList結果:', [this.refNameList()])),
@@ -148,11 +130,9 @@ export class FIN52030Service {
   }
 
   public getAccDescList(AccNo: string[]): void {
-    this.noteDescCancel$.next();
     this.noteDescLoading.set(!0);
     this.http.post<NoteDescResponse>(`${apiUrl}/queryAccNoNoteDescDropdown`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
       take(1),
-      takeUntil(this.noteDescCancel$),
       tap(res => this.noteDescList.set(Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
         ({ value: key, label: (value as string[])[0], data: (value as string[]).map((v: string, i: number) => ({ value: String(i), label: v })) } as AccDescOption)))),
       finalize(() => {
@@ -163,21 +143,17 @@ export class FIN52030Service {
   }
 
   public getOrgNoList(): void {
-    this.orgNoCancel$.next();
     this.dropdownApi.querySys3100().pipe(
       take(1),
-      takeUntil(this.orgNoCancel$),
       tap(res => this.orgNoList.set(res ?? [])),
       finalize(() => this.logger.debug('查詢OrgNoList結果:', [this.orgNoList()])),
     ).subscribe();
   }
 
   public getAccNoList(): void {
-    this.accNoCancel$.next();
     this.accLoading.set(!0);
     this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
-      takeUntil(this.accNoCancel$),
       tap(res => this.accNoList.set(res.Data.map(item => ({ value: item.AccNo, label: item.AccCName, templateLabel: `${item.AccNo} - ${item.AccCName}` } as Option)))),
       finalize(() => {
         this.accLoading.set(!1);
@@ -187,11 +163,9 @@ export class FIN52030Service {
   }
 
   public getVendorList(): void {
-    this.vendorCancel$.next();
     this.venLoading.set(!0);
     this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
       take(1),
-      takeUntil(this.vendorCancel$),
       tap(res => this.vendorList.set(res?.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option)) ?? [])),
       finalize(() => {
         this.venLoading.set(!1);
@@ -201,10 +175,8 @@ export class FIN52030Service {
   }
 
   public getUsrList(): void {
-    this.usrCancel$.next();
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      takeUntil(this.usrCancel$),
       tap(res => this.usrList.set(res?.map(item => ({ value: item.Org_ID, label: item.Org_Name } as Option)) ?? [])),
       finalize(() => this.logger.debug('查詢TblUserOrgidList結果:', [this.usrList()])),
     ).subscribe();

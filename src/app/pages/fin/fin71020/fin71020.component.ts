@@ -121,30 +121,11 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
 
   public ngOnInit(): void {
     this.initializePage('FIN71020', '/FIN/FIN71020CRU', this.queryForm, this.onSubmit.bind(this));
-    const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.patchValue(store.value);
 
     this.service.getKeepUsrNo();
     this.service.getKeepOrgId();
 
     this.logger.debug(`init:`, []);
-
-
-    // this.ProgNo = '170002';
-    // // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // this.IfdisplayService.getOptions().subscribe(
-    //   (data) => (this.displayOptions = data)
-    // );
-    // this.IfdisplayService.getOptions().subscribe(
-    //   (data) => (this.displayOptions2 = data)
-    // );
-    // this.vendorService.getVendors().subscribe((data) => {
-    //   this.vendorOptions = data;
-    // });
-    // this.userCodeService
-    //   .getUserCode()
-    //   .subscribe((data) => (this.usercode = data));
   }
 
   public onSubmit(): void {
@@ -154,18 +135,5 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
-
-
-    // console.log(frm.value);
-    // this.submitted = true;
-    // this.loading = true;
-    // this.notificationService.blockUi();
-
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
-
-    // this.loading = false;
-    // this.notificationService.unblockUi();
   }
 }
