@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -23,6 +24,9 @@ export interface Tls13080QueryRequest {
   ven_uniform?: string; // 根據規格推測為廠商統一編號
   /** 組織代碼 */
   org_id?: string;
+  PageSize: number;
+  PageIndex: number;
+  SortBy?: SortMeta[];
 }
 
 /**
@@ -53,7 +57,7 @@ export interface Tls13080Response {
   /** 合約版次 */
   contract_subno: string;
   /** 組織代碼 */
-  org_id: string; // TODO 後端可能要給(不確定建立需不需要)
+  org_id: string;
 }
 
 /**
@@ -62,14 +66,14 @@ export interface Tls13080Response {
  */
 export interface Tls13080CreateItem {
   talent_id: number;
-  cap_type: string; // 固定為 'D'
+  // cap_type: string; // 固定為 'D'
   cap_item: string; // 扣款代號
   tpy_bdate: string; // 契約起始年月 (YYMM)
   tpy_edate: string; // 契約到期年月 (YYMM)
-  tpy_amount: number; // 固定為 0
-  tpy_totalamt: number; // 固定為 0
-  down_payment: number; // 固定為 0
-  period_nos: number; // 固定為 0
+  // tpy_amount: number; // 固定為 0
+  // tpy_totalamt: number; // 固定為 0
+  // down_payment: number; // 固定為 0
+  // period_nos: number; // 固定為 0
   cap_saletype: string; // 銷售類型
   edc_bank: string | null; // 收單行
   instms_type: string | null; // 期數
@@ -101,8 +105,8 @@ export class Tls13080Service {
    * 整批新增合約扣款項目
    * @param data 要新增的合約扣款項目清單
    */
-  createTLS13080(data: Tls13080CreateRequest): Observable<ApiResponse<number>> {
+  isnertTLS13080(data: Tls13080CreateRequest): Observable<ApiResponse<number>> {
     // 假設後端新增 API 路徑為 /createTLS13080
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/createTLS13080`, data);
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/isnertTLS13080`, data);
   }
 }

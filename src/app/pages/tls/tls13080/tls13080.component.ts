@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'; // 引入 AbstractControl
 import { TranslateModule } from '@ngx-translate/core';
@@ -65,6 +65,8 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
     tlt_term_type: [null], // 抽成別
     ven_uniform: [null], // 廠商統一編號
     org_id: [null], // 組織代碼
+    PageSize: [30],
+    PageIndex: [1],
   });
 
   tlt_noListOptions = this.dropdown.queryTltTalent();
@@ -92,6 +94,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
   constructor(
     private readonly dropdown: DropdownApiService,
     public readonly tls13080Service: Tls13080Service,
+    private readonly datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
@@ -137,11 +140,16 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
   }
 
   onSubmit(frm: FormGroup) {
+    const body = {
+      ...frm.getRawValue(),
+      tlt_bdate_Start: this.datePipe.transform(frm.value.tlt_bdate_Start, 'yyyy-MM-dd'),
+      tlt_bdate_End: this.datePipe.transform(frm.value.tlt_bdate_End, 'yyyy-MM-dd'),
+    }
     this.handleSubmit(frm, () => {
-      this.tls13080Service.queryTLS13080(frm.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.tls13080Service.queryTLS13080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.lastQueryBody = frm.getRawValue();
+        this.lastQueryBody = body
         this.selectedItems = [];
       })
     });
@@ -153,31 +161,27 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
       const formValue = frm.value;
       const request: Tls13080CreateRequest = this.selectedItems.map(item => ({
         talent_id: item.talent_id,
-        cap_type: formValue.cap_type as string, // 'D' // '?' 要傳？ // TODOL 後端應該會自動帶入
+        // cap_type: formValue.cap_type as string, // 'D'
         cap_item: formValue.cap_item as string,
-        tpy_bdate: '?', // this.getYYMM(item.tlt_bdate), // TODO: 不確定是否需要轉？ convert(varchar(6), tlttalent.tlt_bdate, 112)
-        tpy_edate: '?', // this.getYYMM(item.tlt_edate), // TODO: 不確定是否需要轉？ convert(varchar(6), tlttalent.tlt_edate, 112)
-        tpy_amount: 0, // TODO // '?'
-        tpy_totalamt: 0, // TODO // '?'
-        down_payment: 0, // TODO // '?'
-        period_nos: 0, // TODO // '?'
+        tpy_bdate: item.tlt_bdate,
+        tpy_edate: item.tlt_edate,
         cap_saletype: formValue.cap_saletype as string,
         edc_bank: formValue.edc_bank as string | null,
         instms_type: formValue.instms_type as string | null,
         pay_no: formValue.pay_no as string,
-        tpy_rate: (formValue.tpy_rate || 0) / 100, // TODO: 這邊可能後端會算，那前端就直接給值
-        org_id: '?' // item.org_id, // 組織代碼取自選取的合約資料 // TODO: 不確定要不要給後端？
+        tpy_rate: formValue.tpy_rate,
+        org_id: item.org_id,
       }));
       // 4. 提示確認訊息
       this.confirmationService.confirm({
         acceptLabel: '執行',
         rejectLabel: '取消',
-        message: `共有 ${request.length} 家合約要增加 NN XXXXX 抽成率為 999.99%`, // TODO 確認NN 跟 XX 是啥
+        message: `共有 ${request.length} 家合約要增加 ${formValue.cap_item} ${formValue.cap_saletype} 抽成率為 999.99%`, // TODO: cap_saletype 要改成 扣款名稱
         header: `確認寫入合約？`,
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           this.loading = true;
-          this.tls13080Service.createTLS13080(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.tls13080Service.isnertTLS13080(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
             this.messageService.successBubble(res.Message);
             this.selectedItems = []; // 清空選取
             this.data = []; // 清空表格資料
