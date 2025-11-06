@@ -361,7 +361,7 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
       `專櫃：${g.header.tltNo} / ${g.header.tltName}`,
       // 樓層 + 抽成類別放同一格（如 HTML）
       `樓層：${g.header.floor || '－'}  抽成類別：${firstSub?.tltId || '無'}`,
-      `交易總件數／退貨件數：${totalCount} / ${returnQty}`,
+      `交易總件數：${totalCount}／退貨件數：${returnQty}`,
 
       `區域：${g.header.area || '－'}`,
       '', // 對齊 HTML 中的空白 col-4
