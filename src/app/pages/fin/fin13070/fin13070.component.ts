@@ -21,7 +21,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   selector: 'app-fin13070',
   templateUrl: './fin13070.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent,  InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
 })
 export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> implements OnInit {
   queryForm = this.formBuilder.group({
