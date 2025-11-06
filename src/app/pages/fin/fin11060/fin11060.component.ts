@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
@@ -12,7 +12,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ECRNoService } from '@service/basic/ECRNo.service';
 import { Fin11060Service } from '@service/api/fin/fin11060.service';
@@ -166,8 +165,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   constructor(
     private fin11060Service: Fin11060Service,
     private eCRNoService: ECRNoService,
-    private cdr: ChangeDetectorRef,
-
+    private cdr: ChangeDetectorRef
   ) {
     super();
   }
@@ -223,6 +221,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   this.loading = true;
   this.messageService.blockUi(); // 假設這是顯示 loading 遮罩
 
+  // 測試: 2025/01/0-2025/12/31
   this.fin11060Service.queryFIN11060(frm.value)
     .pipe(
       untilDestroyed(this),
@@ -274,54 +273,6 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
         this.columns = [];
     }
   }
-
-  // 刪除項目
-  onDelete(data: InvoiceRecord | InvoiceRecord[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    // const deleteBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
-
-    // this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    this.selectedItems = [];
-  }
-
 
   loadOptions() {
     // 查 收銀機號
