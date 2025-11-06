@@ -68,5 +68,5 @@
     [totalRecords]="totalRecords" [data]="data" [columns]="columns" [showCheckBox]="true" [showManage]="false"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
     [queryFunction]="tls13080Service.queryTLS13080.bind(tls13080Service)" [showCaption]="false"
-    (selectAllChange)="isAllSelected = $event"></app-table-report>
+    (selectAllChange)="isAllSelected = $event" [isAllSelected]="isAllSelected"></app-table-report>
 </div>

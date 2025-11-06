@@ -45,7 +45,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
   dataForm = this.formBuilder.nonNullable.group({
     cap_type: [{ value: 'D', disabled: true }], // 扣款類型 (固定 D)
     cap_item: [null, [Validators.required]], // 扣款代號
-    tpy_rate: [null, [Validators.required, Validators.max(9999999)]], // 抽成率% numeric(8, 6)
+    tpy_rate: [null, [Validators.required, Validators.max(100)]], // 抽成率% numeric(8, 6)
     cap_saletype: [null, [Validators.required]], // 銷售類型
     instms_type: [null], // 期數
     edc_bank: [null], // 收單行
@@ -176,8 +176,6 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
    * 新增邏輯
    */
   override onCreate(frm: FormGroup) {
-    console.log(this.isAllSelected);
-
     this.handleSubmit(frm, () => {
       this.loading = false;
       const formValue = frm.value;
@@ -206,7 +204,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
         Query: this.lastQueryBody || {} as Tls13080QueryRequest, // 傳入上次查詢條件，若為 null 則傳入空物件
       };
 
-      // 4. 取得扣款代號名稱 (用於提示訊息) 💡 修正邏輯
+      // 4. 取得扣款代號名稱 (用於提示訊息)  修正邏輯
       const capItemOption = this.capItemDetails.find(opt => opt.CAP_Item === formValue.cap_item);
       const capItemName = capItemOption ? capItemOption.CAP_Name : formValue.cap_item; // 使用 CAP_Name
 
@@ -217,7 +215,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
       this.confirmationService.confirm({
         acceptLabel: '執行',
         rejectLabel: '取消',
-        message: `共有 ${request.selectList.length} 家合約要增加 ${formValue.cap_item} (${capItemName}) 抽成率為 ${tpyRate}%`,
+        message: `共有 ${this.isAllSelected ? this.totalRecords : request.selectList.length} 家合約要增加 ${formValue.cap_item} (${capItemName}) 抽成率為 ${tpyRate}%`,
         header: `確認寫入合約？`,
         icon: 'pi pi-exclamation-triangle',
         accept: () => {

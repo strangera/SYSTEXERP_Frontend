@@ -63,7 +63,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (data) { return this.isRowSelectable(data); }
     return false; //
   };
-  isAllSelected = false;                            // 是否全選
+  @Input() isAllSelected = false;                            // 是否全選
   @Output() dataChange = new EventEmitter<any[]>();               // 用來儲存查詢結果
   // Header 相關
   @Input() showCaption = true;                         // 是否顯示 Caption
