@@ -1,27 +1,29 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class FIN15100Service {
-  private apiUrl = `${environment.ApiUrl}/FIN0000/FIN15000`;
+  private apiUrl = `${environment.ApiUrl}/FIN15100`;
 
   constructor(private http: HttpClient) {}
 
-  QueryFIN15100(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryFIN15100`, body);
+  queryFIN15100(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryFIN15100`, data);
   }
-
-  /** 取得報表產出 URL */
-  PrintFIN15110(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/printFIN15110`, body);
-  }
-
-  /** 直接用後端 URL 下載檔案 */
-  downloadFile(url: string): Observable<Blob> {
-    return this.http.get(url, { responseType: 'blob' });
+    // 新增：呼叫列印 API
+  printFIN15100(data: {
+    INV_DeclareYM: string;
+    TXN_Ret_NoS?: string | null;
+    TXN_Ret_NoE?: string | null;
+    InvoiceTrack?: string | null;
+    InvoiceNumberS?: string | null;
+    InvoiceNumberE?: string | null;
+    Mid: number;
+    STO_No: string;
+  }): Observable<any> {
+    const url = `${environment.ApiUrl}/FIN0000/INV1000/PrintFIN15100`;
+    return this.http.post<any>(url, data);
   }
 }
