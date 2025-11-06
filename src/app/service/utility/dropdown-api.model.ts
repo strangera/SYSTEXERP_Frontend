@@ -354,6 +354,7 @@ export interface Pos1008Item {
  */
 export interface Pos1006Item extends IDropdownItem {
   PAY_Type: string;
+  PAY_OverPay: string;
 }
 
 /**

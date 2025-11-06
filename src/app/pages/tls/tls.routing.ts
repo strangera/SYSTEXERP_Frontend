@@ -29,6 +29,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls13060', loadComponent: () => import('./tls13060/tls13060.component').then(m => m.TLS13060Component) },
   // 調整櫃位合約一覽表
   { path: 'tls13070', loadComponent: () => import('./tls13070/tls13070.component').then(m => m.TLS13070Component) },
+  // 整批新增合約扣款作業
+  { path: 'tls13080', loadComponent: () => import('./tls13080/tls13080.component').then(m => m.TLS13080Component) },
   // 合約狀態清單
   { path: 'tls14010', loadComponent: () => import('./tls14010/tls14010.component').then(m => m.TLS14010Component) },
   // 專櫃契約書列印
