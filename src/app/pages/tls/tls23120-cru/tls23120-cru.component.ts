@@ -109,9 +109,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     { field: 'sad_preorder_amt', header: '預售金額', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
     { field: 'sad_settle_qty', header: '結帳筆數', visible: true },
     { field: 'sad_settle_amt', header: '結帳金額', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
-    { field: 'return_qty', header: '退貨件數', visible: true },
-    { field: 'return_amt', header: '退貨金額', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
-    { field: 'total_count', header: '總交易筆數', visible: true },
+
   ];
 
   /** 排序：大分類 → 專櫃 → 抽成類別 */
