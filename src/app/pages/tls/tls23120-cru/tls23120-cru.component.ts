@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import {
   Location,
   DatePipe,
+  DecimalPipe,
   NgFor,
   NgIf,
   NgClass,
@@ -10,23 +12,36 @@ import {
   NgSwitchDefault,
 } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { PdfService } from '../../../service/basic/pdf.service';
-import { ColumnLabelService } from '../../../service/basic/column-label.service';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { PrimeTemplate } from 'primeng/api';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-interface GroupedDataItem {
-  tltKey: string;
-  talentKey: string;
+
+interface SubTable {
+  tltId: string;
   rows: any[];
-  showSubtotal?: boolean;
-  showTotal?: boolean;
+  subtotal: Record<string, number>;
+}
+
+interface TltGroup {
+  tltNo: string;
+  header: {
+    tltNo: string;
+    tltName: string;
+    busType?: string;
+    busTypeName?: string;
+    floor?: string;
+    area?: string;
+    txnDate?: string;
+  };
+  subTables: SubTable[];
+  grandAll: Record<string, number>; // 此 TLT_NO 所有 TLT_ID 合計
 }
 
 @Component({
@@ -48,34 +63,22 @@ interface GroupedDataItem {
     NgSwitchCase,
     NgSwitchDefault,
     DatePipe,
+    DecimalPipe, // 支援 | number
   ],
 })
 export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
-  // 原始欄位與資料
   data: any[] = [];
-  dataForm = this.formBuilder.nonNullable.group({
-    showBusType: true,
-  });
+  dataForm = this.formBuilder.nonNullable.group({ showBusType: true });
 
   printedAt = '';
   dateStart = '';
   dateEnd = '';
   queryFormValue: any;
-  groupByField = 'TLT_NO';
-  groupByLabel = '專櫃';
-  groupedData: GroupedDataItem[] = [];
-  reportTitle = '專櫃日對帳單';
-  dateRangeLabel = '日期區間';
 
-  // 顯示控制
   pageSize = 1000;
-  showGroupedBody = true;
-  showRowsPerTableDialog = false;
-  showColumnDialog = false;
-
-  // 選項與欄位控制
   rowsPerTable = 1000;
-  tempRowsPerTable = 1000;
+
+  /** 小計/總計要彙總的欄位 */
   subtotalFields: string[] = [
     'sad_sale_qty',
     'sad_sale_namt',
@@ -85,61 +88,49 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     'sad_preorder_amt',
     'sad_settle_qty',
     'sad_settle_amt',
+    'return_qty',
+    'return_amt',
+    'total_count',
   ];
 
   selectedColumns: any[] = [];
   availableColumns: any[] = [];
-  tempSelectedColumns: any[] = [];
+  tltGroups: TltGroup[] = [];
 
-  constructor(
-    private location: Location,
-    private pdfService: PdfService,
-    private columnLabelService: ColumnLabelService
-  ) {
-    super();
-  }
+  constructor(private location: Location) { super(); }
 
   columns = [
     { field: 'SYS_Name', header: '區分', visible: true },
     { field: 'sad_sale_qty', header: '銷貨筆數', visible: true },
-    {
-      field: 'sad_sale_namt',
-      header: '淨銷貨',
-      visible: true,
-      style: 'text-right',
-      format: (v: any) => this.moneyFormat(v),
-    },
-    {
-      field: 'sad_sale_tax',
-      header: '營業稅',
-      visible: true,
-      style: 'text-right',
-      format: (v: any) => this.moneyFormat(v),
-    },
-    {
-      field: 'sad_sale_amt',
-      header: '銷貨金額',
-      visible: true,
-      style: 'text-right',
-      format: (v: any) => this.moneyFormat(v),
-    },
+    { field: 'sad_sale_namt', header: '淨銷貨', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
+    { field: 'sad_sale_tax', header: '營業稅', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
+    { field: 'sad_sale_amt', header: '銷貨金額', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
     { field: 'sad_preorder_qty', header: '預售筆數', visible: true },
-    {
-      field: 'sad_preorder_amt',
-      header: '預售金額',
-      visible: true,
-      style: 'text-right',
-      format: (v: any) => this.moneyFormat(v),
-    },
+    { field: 'sad_preorder_amt', header: '預售金額', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
     { field: 'sad_settle_qty', header: '結帳筆數', visible: true },
-    {
-      field: 'sad_settle_amt',
-      header: '結帳金額',
-      visible: true,
-      style: 'text-right',
-      format: (v: any) => this.moneyFormat(v),
-    },
+    { field: 'sad_settle_amt', header: '結帳金額', visible: true, style: 'text-right', format: (v: any) => this.moneyFormat(v) },
+
   ];
+
+  /** 排序：大分類 → 專櫃 → 抽成類別 */
+  multiSortMeta = [
+    { field: 'bus_type', order: 1 },
+    { field: 'TLT_NO', order: 1 },
+    { field: 'TLT_ID', order: 1 },
+  ];
+
+  private compareNullable(a?: string | number | null, b?: string | number | null) {
+    const aa = (a ?? '').toString();
+    const bb = (b ?? '').toString();
+    return aa.localeCompare(bb, undefined, { numeric: true, sensitivity: 'base' });
+  }
+  private rowComparator = (x: any, y: any) => {
+    const byBusType = this.compareNullable(x?.bus_type, y?.bus_type);
+    if (byBusType !== 0) return byBusType;
+    const byTltNo = this.compareNullable(x?.TLT_NO, y?.TLT_NO);
+    if (byTltNo !== 0) return byTltNo;
+    return this.compareNullable(x?.TLT_ID, y?.TLT_ID);
+  };
 
   async ngOnInit(): Promise<void> {
     const state = history.state;
@@ -149,7 +140,8 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     this.availableColumns = this.columns;
 
     if (state?.data && Array.isArray(state.data)) {
-      this.data = state.data;
+      // 注意：列表頁已將欄位正規化含 TXN_DATE/FLOOR_NO/AREA_NO
+      this.data = [...state.data].sort(this.rowComparator);
       this.queryFormValue = state.queryFormValue;
       this.dateStart = state.queryFormValue?.TXN_DateStart || '';
       this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
@@ -160,435 +152,89 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }
 
-    this.availableColumns = [...this.columns];
     this.buildSelectedColumns();
-    this.splitData();
+    this.buildTltGroups();
     this.initializePage('TLS23120', this.dataForm);
   }
 
   buildSelectedColumns(): void {
     const withIndex = [{ header: '序號', field: '__index' }];
     this.selectedColumns = withIndex.concat(this.columns);
-    this.tempSelectedColumns = [...this.columns];
   }
 
-  applyColumnSelection(): void {
-    const withIndex = [{ header: '序號', field: '__index' }];
-    this.selectedColumns = withIndex.concat(this.tempSelectedColumns);
-    this.showColumnDialog = false;
-  }
-
-  applyRowsPerTableChange(): void {
-    if (this.tempRowsPerTable > 0) {
-      this.rowsPerTable = this.tempRowsPerTable;
-      this.splitData();
-      this.showRowsPerTableDialog = false;
+  /** 加總工具 */
+  private calcSum(rows: any[], fields: string[]): Record<string, number> {
+    const out: Record<string, number> = {};
+    for (const f of fields) out[f] = 0;
+    for (const r of rows) {
+      for (const f of fields) {
+        const v = Number(String(r?.[f] ?? 0).toString().replace(/,/g, ''));
+        if (Number.isFinite(v)) out[f] += v;
+      }
     }
+    return out;
   }
 
-  onToggleGroupedBody(): void {
-    this.showGroupedBody = !this.showGroupedBody;
+  /** 生成 TLT_NO 群組 → 群組內按 TLT_ID 分表；總計列出現在該群組最後一張表 */
+  private buildTltGroups(): void {
+    const map = new Map<string, any[]>();
+    this.data.forEach(row => {
+      const key = row?.TLT_NO ?? '未分類';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(row);
+    });
+
+    const groups: TltGroup[] = [];
+
+    Array.from(map.entries())
+      .sort((a, b) => this.compareNullable(a[0], b[0]))
+      .forEach(([tltNo, rowsOfThisTlt]) => {
+        const subMap = new Map<string, any[]>();
+        rowsOfThisTlt.forEach(r => {
+          const id = (r?.TLT_ID ?? '').toString();
+          if (!subMap.has(id)) subMap.set(id, []);
+          subMap.get(id)!.push(r);
+        });
+
+        const first = rowsOfThisTlt[0] ?? {};
+        const header = {
+          tltNo,
+          tltName: first?.tlt_name ?? '',
+          busType: first?.bus_type ?? '',
+          busTypeName: first?.bus_type_name ?? '',
+          floor: first?.floor_desc ?? first?.FLOOR_NO ?? '－',
+          area: first?.AREA_NO ?? first?.area_no ?? '－',
+          txnDate: first?.TXN_DATE ?? first?.sad_date ?? '',
+        };
+
+        const grandAll = this.calcSum(rowsOfThisTlt, this.subtotalFields);
+
+        const subTables: SubTable[] = Array.from(subMap.entries())
+          .sort((a, b) => this.compareNullable(a[0], b[0]))
+          .map(([tltId, rows]) => ({
+            tltId,
+            rows,
+            subtotal: this.calcSum(rows, this.subtotalFields),
+          }));
+
+        groups.push({ tltNo, header, subTables, grandAll });
+      });
+
+    this.tltGroups = groups;
   }
 
-  getRowIndex(_groupIndex: number, rowIndex: number): number {
-    return rowIndex + 1;
-  }
-
+  // --- UI helpers ---
   get showBusType(): boolean {
     return !!this.dataForm.get('showBusType')?.value;
   }
-
-  getSubtotal(group: any[], field: string): string {
-    const sum = group.reduce((acc, row) => {
-      const value = row[field];
-      const numeric = +String(value ?? 0).replace(/,/g, '');
-      return acc + (isNaN(numeric) ? 0 : numeric);
-    }, 0);
-    return sum.toLocaleString();
+  getRowIndex(_groupIndex: number, rowIndex: number): number {
+    return rowIndex + 1;
   }
-
   moneyFormat(value: any): string {
     const n = Number(String(value ?? 0).replace(/,/g, ''));
     return isFinite(n) ? n.toLocaleString('en-US') : '0';
   }
-
-  printPage(): void {
-    const printContents = document.getElementById('print-section')?.innerHTML;
-    if (!printContents) {
-      this.messageService.warnBubble('⚠️ 找不到要列印的區塊');
-      return;
-    }
-
-    const popupWin = window.open('', '_blank', 'top=0,left=0,height=100%,width=auto');
-    if (!popupWin) return;
-
-    popupWin.document.open();
-    popupWin.document.write(`
-      <html>
-        <head>
-          <title>列印報表</title>
-          <style>
-            body { font-family: 'Noto Sans TC', sans-serif; padding: 20px; }
-            table, th, td { border: 1px solid #000; border-collapse: collapse; }
-            th, td { padding: 4px; text-align: center; }
-            /* Header 顏色 */
-            thead th { background-color: #c7d2fe !important; color: #000 !important; font-weight: 600; }
-            /* Body 斑馬紋 */
-            tbody tr:nth-child(odd) td { background-color: #E0E0E0 !important; }
-            tbody tr:nth-child(even) td { background-color: #FFFFFF !important; }
-            /* 小計、總計 */
-            tfoot tr.subtotal-row td { background-color: #9cb1fb !important; color: #001a4d; font-weight: 600; }
-            tfoot tr.total-row td { background-color: #c7d2fe !important; color: #001a4d; font-weight: 700; border-top: 2px solid #6aa9ff; }
-            /* 防止 hover/active 覆蓋 */
-            tfoot tr.total-row:hover td,
-            tfoot tr.subtotal-row:hover td { filter: brightness(0.98); }
-          </style>
-        </head>
-        <body onload="window.print(); window.close();">
-          ${printContents}
-        </body>
-      </html>
-    `);
-    popupWin.document.close();
-  }
-
-  splitData(): void {
-    const groupedMap = new Map<string, Map<string, any[]>>();
-
-    this.data.forEach((item) => {
-      const tltKey = item[this.groupByField] ?? '未分類';
-      const talentKey = item['Talent_ID'] ?? '無';
-
-      if (!groupedMap.has(tltKey)) groupedMap.set(tltKey, new Map());
-      const subGroup = groupedMap.get(tltKey)!;
-      if (!subGroup.has(talentKey)) subGroup.set(talentKey, []);
-      subGroup.get(talentKey)!.push(item);
-    });
-
-    this.groupedData = [];
-
-    groupedMap.forEach((talentMap, tltKey) => {
-      const allRows: any[] = [];
-      talentMap.forEach((rows) => allRows.push(...rows));
-
-      const talentKeys = Array.from(talentMap.keys());
-      const isSingleTalent = talentKeys.length === 1;
-
-      this.groupedData.push({
-        tltKey,
-        talentKey: isSingleTalent ? talentKeys[0] : '混合',
-        rows: allRows,
-        showSubtotal: isSingleTalent,
-        showTotal: true,
-      });
-    });
-     this.applySortForGroups();
-  }
-
-  goBack(): void {
-    this.location.back();
-  }
-
-  /** 依群組第一列準備表頭資料（每張表各自的抬頭） */
-/** 依群組第一列準備表頭資料（每張表各自的抬頭，與 HTML 對齊） */
-private getHeaderInfoByGroup(firstRow: any) {
-  const salesDate = firstRow?.TXN_DATE ?? this.dateStart;
-
-  // 與 HTML 一致的欄位優先序
-  const biz = `${firstRow?.bus_type ?? ''}/${firstRow?.bus_type_name ?? ''}`.replace(/^\/$/, '');
-  const counter = `${firstRow?.TLT_NO ?? ''}/${firstRow?.tlt_name ?? ''}`.replace(/^\/$/, '');
-  const floor = firstRow?.floor_desc ?? firstRow?.FLOOR_NO ?? '－'; // ← HTML 用 floor_desc
-  const area = firstRow?.AREA_NO ?? firstRow?.area_no ?? '－';      // ← HTML 用 AREA_NO
-  const cutType = firstRow?.TLT_ID ?? '無';
-
-  // 與 HTML 一致：交易總件數/退貨件數/退貨金額
-  const totalCount = Number(firstRow?.total_count ?? this.data?.length ?? 0);
-  const returnQty  = Number(firstRow?.return_qty ?? 0);
-  const returnAmt  = Number(firstRow?.return_amt ?? 0);
-
-  return {
-    company: '南紡流通事業股份有限公司',
-    title: '專櫃日對帳單',
-    biz,
-    counter,
-    area,
-    salesDate: this.formatDate(salesDate),
-    floor,
-    cutType,
-    madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
-    totalCount,
-    returnQty,
-    returnAmt,
-    showBusType: this.showBusType,
-  };
-}
-
-
-
-/** 畫出與 HTML 相同資訊排版（1: 大分類/日期/製表；2: 專櫃/樓層+抽成/交易總件數+退貨件數；3: 區域/空白/退貨金額） */
-private drawGroupHeaderOnce(
-  doc: jsPDF,
-  info: any,
-  pageWidth: number,
-  marginLeft: number,
-  currentY: number,
-): number {
-  const leftX = marginLeft;
-  const midX = leftX + 240;
-  const rightX = pageWidth - marginLeft;
-  const lineGap = 18;
-
-  const safeTop = 40;
-  let y = Math.max(currentY, safeTop + 10);
-
-  // 保留足夠空間給表頭，不夠就換頁
-  const needed = 110;
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const remaining = pageHeight - y;
-  if (remaining < needed) {
-    doc.addPage();
-    y = safeTop + 10;
-  }
-
-  // 公司/標題
-  doc.setFontSize(16);
-  doc.text(info.company || '', pageWidth / 2, y, { align: 'center' });
-  y += 25;
-
-  doc.setFontSize(14);
-  doc.text(info.title || '', pageWidth / 2, y, { align: 'center' });
-  y += 25;
-
-  doc.setFontSize(10);
-
-  // 第1列（左：大分類／中：銷售日期／右：製表日期）—與 HTML 一致（左欄可空）
-  if (info.showBusType) {
-    doc.text(`大分類：${info.biz || '－'}`, leftX, y);
-  }
-  doc.text(`銷售日期：${info.salesDate || '－'}`, midX, y);
-  doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
-  y += lineGap;
-
-  // 第2列（左：專櫃／中：樓層+抽成類別／右：交易總件數+退貨件數）
-  doc.text(`專櫃：${info.counter || '－'}`, leftX, y);
-  doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType ?? '無'}`, midX, y);
-  doc.text(`交易總件數：${info.totalCount ?? 0} / 退貨件數：${info.returnQty ?? 0}`, rightX, y, { align: 'right' });
-  y += lineGap;
-
-  // 第3列（左：區域／中：留白／右：退貨金額）
-  doc.text(`區域：${info.area || '－'}`, leftX, y);
-  doc.text(`退貨金額：${info.returnAmt ?? 0}`, rightX, y, { align: 'right' });
-
-  return y + 20;
-}
-
-
-
-
-  /** 匯出 PDF（含配色：Header/斑馬紋/小計/總計） */
-/** 匯出 PDF：每個群組只畫一次表頭 */
-exportPDF(orientation: 'p' | 'l' = 'p'): void {
-  const columnCount = this.selectedColumns.length;
-  const columnWidth = 80;
-  const customWidth = Math.max(595, columnCount * columnWidth);
-
-  const doc = new jsPDF({ orientation, unit: 'pt', format: [customWidth, 842] });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const marginLeft = 40;
-
-  const HEADER_COLOR: [number, number, number] = [199, 210, 254];
-  const ODD_ROW_COLOR: [number, number, number] = [224, 224, 224];
-  const EVEN_ROW_COLOR: [number, number, number] = [255, 255, 255];
-  const SUBTOTAL_COLOR: [number, number, number] = [156, 177, 251];
-  const TOTAL_COLOR: [number, number, number] = [199, 210, 254];
-
-  doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
-  doc.setFont('Noto Sans TC');
-
-  let currentY = 60; // ← 一開始 60 就好，之後都由流程推進
-
-  this.groupedData.forEach((group, gIdx) => {
-    // 若剩餘空間很小，先換頁（避免表頭被擠）
-    const pageHeight = doc.internal.pageSize.getHeight();
-    if (pageHeight - currentY < 160) {
-      doc.addPage();
-      currentY = 60;
-    } else if (gIdx > 0) {
-      currentY += 20; // 群組間留白
-    }
-
-    // 依該群組第一列畫一次表頭：回傳表格起始 Y
-    const firstRow = group?.rows?.[0] ?? {};
-    const info = this.getHeaderInfoByGroup(firstRow);
-    currentY = this.drawGroupHeaderOnce(doc, info, pageWidth, marginLeft, currentY);
-
-    const tableColumns = this.selectedColumns.map(col => ({
-      header: col.header,
-      dataKey: col.field,
-    }));
-
-    const tableData: any[] = group.rows.map((row, rowIndex) => {
-      const obj: any = {};
-      this.selectedColumns.forEach(col => {
-        obj[col.field] = col.field === '__index'
-          ? rowIndex + 1
-          : col.format
-            ? col.format(row[col.field])
-            : row[col.field];
-      });
-      return obj;
-    });
-
-    if (group.showSubtotal) {
-      const subtotalRow: any = { __type: 'subtotal' };
-      this.selectedColumns.forEach(col => {
-        if (col.field === '__index') subtotalRow[col.field] = '小計';
-        else if (this.subtotalFields.includes(col.field))
-          subtotalRow[col.field] = this.getSubtotal(group.rows, col.field);
-        else subtotalRow[col.field] = '';
-      });
-      tableData.push(subtotalRow);
-    }
-
-    if (group.showTotal) {
-      const totalRow: any = { __type: 'total' };
-      this.selectedColumns.forEach(col => {
-        if (col.field === '__index') totalRow[col.field] = '總計';
-        else if (this.subtotalFields.includes(col.field))
-          totalRow[col.field] = this.getSubtotal(group.rows, col.field);
-        else totalRow[col.field] = '';
-      });
-      tableData.push(totalRow);
-    }
-
-    autoTable(doc, {
-      startY: currentY,                 // ← 直接用我們計算的 Y
-      columns: tableColumns,
-      body: tableData,
-      pageBreak: 'auto',                // ← 讓表格內部自己換頁
-      styles: {
-        font: 'Noto Sans TC',
-        fontSize: 9,
-        halign: 'center',
-        valign: 'middle',
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        font: 'Noto Sans TC',
-        fontStyle: 'normal',
-        fontSize: 10,
-        fillColor: HEADER_COLOR,
-        textColor: [0, 0, 0],
-        halign: 'center',
-      },
-      theme: 'grid',
-      margin: { left: marginLeft, right: marginLeft }, // ← 拿掉 top
-
-      didParseCell: (data) => {
-        const raw: any = data?.row?.raw || {};
-        if (data.section === 'body') {
-          if (raw.__type === 'subtotal') {
-            data.cell.styles.fillColor = SUBTOTAL_COLOR;
-          } else if (raw.__type === 'total') {
-            data.cell.styles.fillColor = TOTAL_COLOR;
-          } else {
-            const isOdd = (data.row.index % 2) === 0;
-            data.cell.styles.fillColor = isOdd ? ODD_ROW_COLOR : EVEN_ROW_COLOR;
-          }
-        }
-      },
-
-      didDrawPage: (hookData: any) => {
-        // 只放頁碼，不畫表頭
-        const rightX = pageWidth - marginLeft;
-        const pageNo =
-          (doc as any).internal?.getCurrentPageInfo?.().pageNumber ??
-          hookData?.pageNumber ?? 1;
-        doc.setFontSize(9);
-        doc.text(`頁數：${pageNo}`, rightX, 30, { align: 'right' });
-      },
-    });
-
-    // 下一段從表格結束後繼續
-    currentY = (doc as any).lastAutoTable.finalY + 30;
-  });
-
-  doc.save(`專櫃日對帳單_${new Date().toISOString()}.pdf`);
-}
-
-
-
-  /** 依「圖一」準備表頭資料 */
-  private getHeaderInfo() {
-    const first = this.data?.[0] ?? {};
-    const salesDate =
-      this.queryFormValue?.TXN_DateStart || first?.TXN_DATE || this.dateStart;
-    const biz = `${first?.bus_type ?? ''}/${first?.bus_type_name ?? ''}`.replace(/^\/$/, '');
-    const counter = `${first?.TLT_NO ?? ''}/${first?.tlt_name ?? ''}`.replace(/^\/$/, '');
-    const area = first?.AREA_NO ?? '';
-    const floor = first?.FLOOR_NO ?? '';
-    const cutType = first?.TLT_ID ?? '0';
-    const returnQty = first?.return_qty ?? 0;
-    const returnAmt = first?.return_amt ?? 0;
-    const totalTxns = this.data?.length ?? 0;
-
-    return {
-      company: '南紡流通事業股份有限公司',
-      title: '專櫃日對帳單',
-      biz,
-      counter,
-      area,
-      salesDate: this.formatDate(salesDate),
-      floor,
-      cutType,
-      madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
-      totalTxns,
-      returnQty,
-      returnAmt,
-    };
-  }
-
-  /** 表頭繪製 */
-  private drawReportHeader(
-    doc: jsPDF,
-    info: any,
-    marginLeft: number,
-    pageWidth: number,
-    pageNo: number
-  ) {
-    const leftX = marginLeft;
-    const midX = leftX + 240;
-    const rightX = pageWidth - marginLeft;
-    const lineGap = 18;
-
-    doc.setFontSize(16);
-    doc.text(info.company || '', pageWidth / 2, 50, { align: 'center' });
-    doc.setFontSize(14);
-    doc.text(info.title || '', pageWidth / 2, 75, { align: 'center' });
-
-    doc.setFontSize(10);
-    let y = 110;
-
-    // 第1列
-    doc.text(`大分類：${info.biz || '－'}`, leftX, y);
-    doc.text(`銷售日期：${info.salesDate || '－'}`, midX, y);
-    doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
-    y += lineGap;
-
-    // 第2列
-    doc.text(`專櫃：${info.counter || '－'}`, leftX, y);
-    doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType}`, midX, y);
-    doc.text(`交易總件數：${info.totalTxns} / 退貨件數：${info.returnQty}`, rightX, y, { align: 'right' });
-    y += lineGap;
-
-    // 第3列
-    doc.text(`區域：${info.area || '－'}`, leftX, y);
-    doc.text(`退貨金額：${info.returnAmt}`, rightX, y, { align: 'right' });
-
-    // 頁碼
-    doc.text(`頁數：${pageNo}`, rightX, 95, { align: 'right' });
-  }
-
+  goBack(): void { this.location.back(); }
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -599,99 +245,345 @@ exportPDF(orientation: 'p' | 'l' = 'p'): void {
     return `${y}/${m}/${d}`;
   }
 
-  /** 你原本的摘要 PDF（若未使用可忽略） */
-  exportSummaryPDF(): void {
-    this.pdfService.exportReportPDF({
-      orientation: 'l',
-      title: '專櫃日對帳單',
-      dateStart: this.dateStart,
-      dateEnd: this.dateEnd,
-      printedAt: this.printedAt,
-      columns: this.columns,
-      data: this.data,
-      subtotalFields: this.subtotalFields,
-      summaryText: [],
-      mergeTotalCols: 1,
-    });
-  }
+// =========================
+//        匯出 PDF
+// =========================
+exportPDF(orientation: 'p' | 'l' = 'l'): void {
+  const columnCount = this.selectedColumns.length;
+  const columnWidth = 80;
+  const customWidth = Math.max(595, columnCount * columnWidth);
 
-  exportExcel(): void {
-    import('xlsx').then((xlsx) => {
-      const rows = this.data.map((row) => {
-        const o: Record<string, any> = {};
-        o['專櫃'] = `${row?.TLT_NO ?? ''} / ${row?.tlt_name ?? ''}`;
-        o['抽成類別'] = row?.TLT_ID ?? '';
-        this.columns.forEach((col) => {
-          o[col.header] =
-            typeof col.format === 'function'
-              ? col.format(row[col.field])
-              : row[col.field];
-        });
-        return o;
-      });
+  const doc = new jsPDF({ orientation, unit: 'pt', format: [customWidth, 842] });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const marginLeft = 40;
 
-      const ws = xlsx.utils.json_to_sheet(rows);
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
-      xlsx.writeFile(wb, `專櫃日對帳單_${new Date().toISOString()}.xlsx`);
-    });
-  }
+  // 字型註冊（若已註冊會 throw，忽略即可）
+  try {
+    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
+  } catch {}
+  doc.setFont('Noto Sans TC', 'normal');
 
-  exportSummaryExcel(): void {
-    import('xlsx').then((xlsx) => {
-      const rows = this.data.map((row: any) => {
-        const o: Record<string, any> = {};
-        o['專櫃'] = `${row?.TLT_NO ?? ''} / ${row?.tlt_name ?? ''}`;
-        o['抽成類別'] = row?.TLT_ID ?? '';
-        this.columns.forEach((col: any) => {
-          o[col.header] =
-            typeof col.format === 'function'
-              ? col.format(row[col.field])
-              : row[col.field];
-        });
-        return o;
-      });
+  const HEADER_COLOR: [number, number, number]   = [199, 210, 254];
+  const ODD_ROW_COLOR: [number, number, number]  = [224, 224, 224];
+  const EVEN_ROW_COLOR: [number, number, number] = [255, 255, 255];
+  const SUBTOTAL_COLOR: [number, number, number] = [156, 177, 251];
+  const TOTAL_COLOR: [number, number, number]    = [199, 210, 254];
 
-      const ws = xlsx.utils.json_to_sheet(rows);
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
-      xlsx.writeFile(wb, `專櫃日對帳單_${new Date().toISOString()}.xlsx`);
-    });
-  }
-  // component.ts
-multiSortMeta = [
-  { field: 'bus_type', order: 1 }, // 1=升冪
-  { field: 'TLT_NO', order: 1 },
-];
-  private compareNullable(a?: string | number | null, b?: string | number | null) {
-  const aa = (a ?? '').toString();
-  const bb = (b ?? '').toString();
-  // 用 localeCompare 的 numeric 模式，能把 "2" < "10" 視為數值比較
-  return aa.localeCompare(bb, undefined, { numeric: true, sensitivity: 'base' });
-}
-// 依「大分類 → 專櫃編號」的列比較子
-private rowComparator = (x: any, y: any) => {
-  const byBusType = this.compareNullable(x?.bus_type, y?.bus_type);
-  if (byBusType !== 0) return byBusType;
-  return this.compareNullable(x?.TLT_NO, y?.TLT_NO);
-};
+  let currentY = 60;
 
-// 準備/更新 groupedData 後呼叫一次
-private applySortForGroups() {
-  if (!Array.isArray(this.groupedData)) return;
-
-  // 先把每個群組內的 rows 排好
-  this.groupedData.forEach(g => {
-    if (Array.isArray(g?.rows)) {
-      g.rows = [...g.rows].sort(this.rowComparator);
+  // 三欄網格小工具（和 HTML 的三欄排版一致）
+  const drawKeyValueGrid = (
+    items: string[],
+    startX: number,
+    startY: number,
+    opts?: {
+      cols?: number;
+      colGap?: number;
+      rowGap?: number;
+      rowHeight?: number;
+      fontSize?: number;
+      align?: 'left' | 'center' | 'right';
+      rightMargin?: number;
     }
+  ): number => {
+    const {
+      cols = 3,
+      colGap = 24,
+      rowGap = 10,
+      rowHeight = 14,
+      fontSize = 10,
+      align = 'left',
+      rightMargin = marginLeft,
+    } = opts || {};
+
+    const usableWidth = pageWidth - startX - rightMargin;
+    const colWidth = (usableWidth - colGap * (cols - 1)) / cols;
+
+    doc.setFont('Noto Sans TC', 'normal');
+    doc.setFontSize(fontSize);
+
+    items.forEach((text, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = startX + col * (colWidth + colGap);
+      const y = startY + row * (rowHeight + rowGap);
+      doc.text(String(text ?? ''), x, y, { align });
+    });
+
+    const rows = Math.ceil(items.length / cols);
+    return startY + rows * (rowHeight + rowGap);
+  };
+
+  const drawCenteredTltIdBanner = (tltId: string) => {
+    if (pageHeight - currentY < 40) {
+      doc.addPage();
+      doc.setFont('Noto Sans TC', 'normal');
+      currentY = 60;
+    }
+    doc.setFontSize(12);
+    doc.text(`抽成類別：${tltId || '無'}`, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 14;
+  };
+
+  const drawFullGroupHeader = (g: any, firstSub: any) => {
+    const firstRow = firstSub?.rows?.[0] ?? {};
+    const totalCount = Number(firstRow?.total_count ?? 0);
+    const returnQty  = Number(firstRow?.return_qty ?? 0);
+    const returnAmt  = Number(firstRow?.return_amt ?? 0);
+
+    // 估算高度，不夠就換頁
+    const needed = 160;
+    if (pageHeight - currentY < needed) {
+      doc.addPage();
+      doc.setFont('Noto Sans TC', 'normal');
+      currentY = 60;
+    }
+
+    // 公司＋標題（置中，與 HTML 對齊）
+    doc.setFont('Noto Sans TC', 'normal');
+    doc.setFontSize(16);
+    doc.text('南紡流通事業股份有限公司', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 25;
+
+    doc.setFontSize(14);
+    doc.text('專櫃日對帳單', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 25;
+
+    // 與 HTML 同順序的三欄陣列
+    const infoItems: string[] = [
+      this.showBusType
+        ? `大分類：${`${g.header.busType ?? ''}/${g.header.busTypeName ?? ''}`.replace(/\/$/, '')}`
+        : '大分類：',
+      `銷售日期：${this.formatDate(g.header.txnDate || '')}`,
+      `製表日期：${this.printedAt}`,
+
+      `專櫃：${g.header.tltNo} / ${g.header.tltName}`,
+      // 樓層 + 抽成類別放同一格（如 HTML）
+      `樓層：${g.header.floor || '－'}  抽成類別：${firstSub?.tltId || '無'}`,
+      `交易總件數：${totalCount}／退貨件數：${returnQty}`,
+
+      `區域：${g.header.area || '－'}`,
+      '', // 對齊 HTML 中的空白 col-4
+      `退貨金額：${this.moneyFormat(returnAmt)}`,
+    ];
+
+    currentY = drawKeyValueGrid(infoItems, marginLeft, currentY, {
+      cols: 3,
+      colGap: 24,
+      rowGap: 10,
+      rowHeight: 14,
+      fontSize: 10,
+      align: 'left',
+      rightMargin: marginLeft,
+    });
+
+    currentY += 10;
+  };
+
+  // 主流程
+  this.tltGroups.forEach((group: any, gIdx: number) => {
+    if (gIdx > 0) currentY += 10;
+
+    group.subTables.forEach((sub: any, si: number) => {
+      if (si === 0) drawFullGroupHeader(group, sub);
+      else drawCenteredTltIdBanner(sub.tltId);
+
+      const tableColumns = this.selectedColumns.map((col: any) => ({ header: col.header, dataKey: col.field }));
+
+      const bodyRows: any[] = sub.rows.map((row: any, rowIndex: number) => {
+        const obj: any = {};
+        this.selectedColumns.forEach((col: any) => {
+          obj[col.field] = col.field === '__index'
+            ? rowIndex + 1
+            : (typeof col.format === 'function' ? col.format(row[col.field]) : row[col.field]);
+        });
+        return obj;
+      });
+
+      const subtotalRow: any = {};
+      this.selectedColumns.forEach((col: any) => {
+        if (col.field === '__index') subtotalRow[col.field] = '小計';
+        else if (this.subtotalFields.includes(col.field)) {
+          subtotalRow[col.field] = this.moneyFormat(sub.subtotal[col.field] ?? 0);
+        } else subtotalRow[col.field] = '';
+      });
+      (subtotalRow as any).__type = 'subtotal';
+      bodyRows.push(subtotalRow);
+
+      const isLastSub = si === group.subTables.length - 1;
+      if (isLastSub) {
+        const totalRow: any = {};
+        this.selectedColumns.forEach((col: any) => {
+          if (col.field === '__index') totalRow[col.field] = '總計';
+          else if (this.subtotalFields.includes(col.field)) {
+            totalRow[col.field] = this.moneyFormat(group.grandAll[col.field] ?? 0);
+          } else totalRow[col.field] = '';
+        });
+        (totalRow as any).__type = 'total';
+        bodyRows.push(totalRow);
+      }
+
+      autoTable(doc, {
+        startY: currentY,
+        columns: tableColumns,
+        body: bodyRows,
+        pageBreak: 'auto',
+        styles: {
+          font: 'Noto Sans TC',
+          fontStyle: 'normal',
+          fontSize: 9,
+          halign: 'center',
+          valign: 'middle',
+          textColor: [0, 0, 0],
+        },
+        headStyles: {
+          font: 'Noto Sans TC',
+          fontStyle: 'normal',
+          fontSize: 10,
+          fillColor: HEADER_COLOR,
+          textColor: [0, 0, 0],
+          halign: 'center',
+        },
+        theme: 'grid',
+        margin: { left: marginLeft, right: marginLeft },
+
+        didParseCell: (data) => {
+          const raw: any = data?.row?.raw || {};
+          data.cell.styles.font = 'Noto Sans TC';
+          data.cell.styles.fontStyle = 'normal';
+
+          if (data.section === 'body') {
+            if (raw.__type === 'subtotal') {
+              data.cell.styles.fillColor = SUBTOTAL_COLOR;
+            } else if (raw.__type === 'total') {
+              data.cell.styles.fillColor = TOTAL_COLOR;
+            } else {
+              const isOdd = (data.row.index % 2) === 0;
+              data.cell.styles.fillColor = isOdd ? ODD_ROW_COLOR : EVEN_ROW_COLOR;
+            }
+          }
+        },
+
+        didDrawPage: (hookData: any) => {
+          const rightX = pageWidth - marginLeft;
+          const pageNo = (doc as any).internal?.getCurrentPageInfo?.().pageNumber ?? hookData?.pageNumber ?? 1;
+          doc.setFont('Noto Sans TC', 'normal');
+          doc.setFontSize(9);
+          doc.text(`頁數：${pageNo}`, rightX, 30, { align: 'right' });
+        },
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 24;
+    });
+
+    currentY += 8;
   });
 
-  // 再依各群組第一列的關鍵欄位，決定群組顯示順序
-  this.groupedData = [...this.groupedData].sort((a, b) => {
-    const ra = a?.rows?.[0] ?? {};
-    const rb = b?.rows?.[0] ?? {};
-    return this.rowComparator(ra, rb);
+  doc.save(`專櫃日對帳單_${new Date().toISOString()}.pdf`);
+}
+
+// =========================
+//        匯出 Excel
+// =========================
+
+exportExcel(): void {
+  import('xlsx').then((xlsx) => {
+    const wb = xlsx.utils.book_new();
+
+    const chunk3 = (arr: string[]) => {
+      const out: any[] = [];
+      for (let i = 0; i < arr.length; i += 3) {
+        out.push([arr[i] ?? '', arr[i + 1] ?? '', arr[i + 2] ?? '']);
+      }
+      return out;
+    };
+
+    this.tltGroups.forEach((group: any) => {
+      const aoa: any[][] = [];
+      let maxTableCols = 3;
+
+      group.subTables.forEach((sub: any, si: number) => {
+        const firstRow = sub?.rows?.[0] ?? {};
+        const totalCount = Number(firstRow?.total_count ?? 0);
+        const returnQty  = Number(firstRow?.return_qty ?? 0);
+        const returnAmt  = Number(firstRow?.return_amt ?? 0);
+
+        if (si === 0) {
+          aoa.push(['南紡流通事業股份有限公司', '專櫃日對帳單', '']);
+
+          const infoItems: string[] = [
+            this.showBusType
+              ? `大分類：${`${group.header.busType ?? ''}/${group.header.busTypeName ?? ''}`.replace(/\/$/, '')}`
+              : '大分類：',
+            `銷售日期：${this.formatDate(group.header.txnDate || '')}`,
+            `製表日期：${this.printedAt}`,
+
+            `專櫃：${group.header.tltNo} / ${group.header.tltName}`,
+            `樓層：${group.header.floor || '－'}  抽成類別：${sub.tltId || '無'}`,
+            `交易總件數／退貨件數：${totalCount} / ${returnQty}`,
+
+            `區域：${group.header.area || '－'}`,
+            '',
+            `退貨金額：${this.moneyFormat(returnAmt)}`,
+          ];
+          aoa.push(...chunk3(infoItems));
+          aoa.push(['']); // 空白隔行
+        } else {
+          aoa.push([`抽成類別：${sub.tltId || '無'}`, '', '']);
+        }
+
+        const headers = ['序號', ...this.selectedColumns.filter((c: any) => c.field !== '__index').map((c: any) => c.header)];
+        aoa.push(headers);
+        maxTableCols = Math.max(maxTableCols, headers.length);
+
+        sub.rows.forEach((r: any, idx: number) => {
+          const row = [
+            idx + 1,
+            ...this.selectedColumns
+              .filter((c: any) => c.field !== '__index')
+              .map((c: any) => (typeof c.format === 'function' ? c.format(r[c.field]) : r[c.field]) ?? ''),
+          ];
+          aoa.push(row);
+        });
+
+        aoa.push([
+          '小計',
+          ...this.selectedColumns
+            .filter((c: any) => c.field !== '__index')
+            .map((c: any) => (this.subtotalFields.includes(c.field) ? this.moneyFormat(sub.subtotal[c.field] ?? 0) : '')),
+        ]);
+
+        if (si === group.subTables.length - 1) {
+          aoa.push([
+            '總計',
+            ...this.selectedColumns
+              .filter((c: any) => c.field !== '__index')
+              .map((c: any) => (this.subtotalFields.includes(c.field) ? this.moneyFormat(group.grandAll[c.field] ?? 0) : '')),
+          ]);
+        }
+
+        aoa.push(['']); // 空白隔行
+      });
+
+      // ✅ 修正：去掉 origin，aoa_to_sheet 會自動從 A1 開始
+      const ws = xlsx.utils.aoa_to_sheet(aoa);
+
+      // （可選）合併 A1:B1
+      // ws['!merges'] = ws['!merges'] || [];
+      // ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } });
+
+      // 欄寬
+      ws['!cols'] = Array(Math.max(maxTableCols, 3)).fill({ wch: 20 });
+
+      const safeName = `${group.header.tltNo}`.substring(0, 31).replace(/[\\/?*\[\]]/g, '_');
+      xlsx.utils.book_append_sheet(wb, ws, safeName || '報表');
+    });
+
+    const fileName = `專櫃日對帳單_${new Date().toISOString()}.xlsx`;
+    xlsx.writeFile(wb, fileName);
   });
 }
+
+
 }

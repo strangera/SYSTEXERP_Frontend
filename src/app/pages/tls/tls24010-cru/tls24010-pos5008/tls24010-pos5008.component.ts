@@ -189,7 +189,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     const txnPayDescControl = formGroup.get('TXN_PayDesc');
     const txnCouponNoControl = formGroup.get('TXN_CouponNo');
     // 1. 通用驗證：TXN_PayAmt 必須
-    txnPayAmtControl?.setValidators([Validators.required, Validators.min(0)]);
+    txnPayAmtControl?.setValidators([Validators.required]);
 
     // 2. 條件驗證
     if (rowData.PAY_Type === '0') {

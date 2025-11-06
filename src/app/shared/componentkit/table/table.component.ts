@@ -84,6 +84,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   /** 是否顯示 匯出按鈕 @default true */
   @Input() showReportMode = true;
   /** 是否顯示 匯出PDF按鈕 @default true */
+
+  @Input() pageOrientation: string | null = 'Landscape'; // PDF橫式
+  @Input() pageSizeSetting: string | null = 'A4'; // PDF A4
+
   @Input() showReportPDF = true;
   /** 是否顯示 匯出Excel按鈕 @default true */
   @Input() showReportExcel = true;

@@ -84,12 +84,12 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
     
-    { field: 'NormalSales', header: '正品', groupField: 'budgetAmt', visible: true }, // 正品 (來源尚未提供)
-    { field: 'SpecialSales', header: '特價 ', groupField: 'budgetAmt', visible: true }, // 特價 (來源尚未提供)
-    { field: 'Discount95Sales', header: '95折 ', groupField: 'budgetAmt', visible: true }, // 95折 (來源尚未提供)
-    { field: 'Discount90Sales', header: '9折 ', groupField: 'budgetAmt', visible: true }, // 9折 (來源尚未提供)
-    { field: 'Discount80Sales', header: '8折 ', groupField: 'budgetAmt', visible: true }, // 8折 (來源尚未提供)
-    { field: 'Discount70Sales', header: '7折 ', groupField: 'budgetAmt', visible: true }, // 7折 (來源尚未提供)
+    { field: 'NormalSales', header: '正品', groupField: 'budgetAmt', visible: true }, // 正品
+    { field: 'SpecialSales', header: '特價 ', groupField: 'budgetAmt', visible: true }, // 特價
+    { field: 'Discount95Sales', header: '95折 ', groupField: 'budgetAmt', visible: true }, // 95折
+    { field: 'Discount90Sales', header: '9折 ', groupField: 'budgetAmt', visible: true }, // 9折
+    { field: 'Discount80Sales', header: '8折 ', groupField: 'budgetAmt', visible: true }, // 8折
+    { field: 'Discount70Sales', header: '7折 ', groupField: 'budgetAmt', visible: true }, // 7折
     { field: 'AchievementRate', header: '達成率', groupField: 'budgetAmt', visible: true, format: (value) => formatPercentage(value, 2) },
     
     { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
@@ -178,8 +178,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
     console.log('單抽成別之營業報表print請求', JSON.stringify(formValue, null, 2));
 
     this.btnLoading = true;
-    this.tls31050Service.printTLS31050Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
+    this.tls31050Service.printTLS31050Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
         this.messageService.successBubble(res.Message);
         if (res.Data && res.Data.Print_URL) {
           const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
@@ -189,27 +188,6 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
   }
 
   queryTLS31050Detail() {
-
-    // ---
-    // 測試資料可以用
-    // {
-    //   "TXN_DateS": "2024-11-11",
-    //   "TXN_DateE": "2024-11-11",
-    //   "tlt_building": [],
-    //   "tlt_floor": [],
-    //   "area_no": [],
-    //   "bus_type": [],
-    //   "bus_class": [],
-    //   "bus_sclass": [],
-    //   "tlt_kind": ["1"], // 正櫃
-    //   "tlt_term_type": "3", // 一般抽成
-    //   "org_id": ["102130"], // 化妝品
-    //   "TaxType": "0",
-    //   "IsRece_Yn": null
-    // }
-    // 來看不同的特價、折數金額
-    // ---
-
     // 把 bus_type 從 string[] 轉成 string
     const request: TLS31050DetailRequest = {
       ...this.queryConditions,
@@ -225,6 +203,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
       console.log('單抽成別之營業報表response', res.Data);
       this.data = res.Data;
       this.totalRecords = res.TotalCount;
+      this.historyRequestBody = request;
     })
   }
 }

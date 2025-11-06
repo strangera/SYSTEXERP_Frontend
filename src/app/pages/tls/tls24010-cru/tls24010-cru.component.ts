@@ -229,12 +229,12 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.handleSubmit(frm, () => {
       this.loading = false;
       this.pos5007Comp?.POS5007Data.forEach(item => {
-        if (item.TXN_Qty === null || item.TXN_Qty === undefined || item.TXN_Qty <= 0) {
-          this.messageService.errorBubble('請輸入正確的銷售數量', '銷售數量必須大於1');
+        if (item.TXN_Qty === null || item.TXN_Qty === undefined) {
+          this.messageService.errorBubble('請輸入正確的銷售數量', '銷售數量必須有值');
           return
         }
-        if (item.TXN_SaleAmt === null || item.TXN_SaleAmt === undefined || item.TXN_SaleAmt <= 0) {
-          this.messageService.errorBubble('請輸入正確的單價金額', '單價金額必須大於1');
+        if (item.TXN_SaleAmt === null || item.TXN_SaleAmt === undefined) {
+          this.messageService.errorBubble('請輸入正確的單價金額', '銷售數量必須有值');
           return
         }
       });

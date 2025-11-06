@@ -20,6 +20,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { NgStyle } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 export const enum POStatus {
   已確認 = '1',
@@ -67,14 +68,14 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     APRV_USR: [''], // 審核人員
     APRV_Date_Start: [''], // 審核(驗收)日期起
     APRV_Date_End: [''], // 審核(驗收)日期迄
-    ...createPaginationConfig([{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: -1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   warehouseOptions: IDropdownItem[] = []; // 倉別
   pluMagNoOptions: { label: string, value: string }[] = []; // 商品管理編號
   brandOptions: IDropdownItem[] = []; // 品牌代碼
   vendorOptions: IDropdownItem[] = []; // 廠商編號
-  poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
+  poStatusOptions = getSYS1000Options('PO_Status');// 採購單狀態 (靜態資料)
   userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];

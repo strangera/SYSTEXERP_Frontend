@@ -142,8 +142,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: this.formatDateTime,
     },
-    { field: 'PUR_GUIDate_YYYYMM', header: '發票年月', visible: true },
-    { field: 'PUR_RepYYYYMM', header: '資料所屬年月', visible: true },
+
+    { field: 'PUR_GUIDate_YYYYMM', header: '資料所屬年月', visible: true },
     { field: 'PUR_VenUniform', header: '廠商統編', visible: true },
     { field: 'PUR_Amt', header: '發票總金額', visible: true },
     { field: 'PUR_Net', header: '發票未稅金額', visible: true },
@@ -164,81 +164,132 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
   ) {
     super();
   }
+ngOnInit(): void {
+  // ---- 小工具：把 YYYYMM / YYYY-MM / YYYY/MM / YYYYMMDD 轉為該月 1 號的 Date ----
+  const toMonthDate = (val: any): Date | null => {
+    if (val == null || val === '') return null;
+    if (val instanceof Date && !isNaN(val.getTime())) return val;
 
-  ngOnInit(): void {
-    this.initializePage('FIN13050', '/fin/FIN13050cru', this.queryForm);
-    this.fin13050Service.queryVendorList().subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.vendorOptions = list.map((v: any) => ({
-        label: `${v.VEN_No}-${v.VEN_Name}`,
-        value: v.VEN_No,
-      }));
-      this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_No, v]));
-    });
-      this.fin13050Service.queryAPS2002DropDownList().subscribe((res) => {
+    const s = String(val).trim();
+    // 1) 直接抓數字
+    const digits = s.replace(/\D/g, '');
+
+    // YYYYMMDD -> 取 YYYYMM
+    if (/^\d{8}$/.test(digits)) {
+      const y = Number(digits.slice(0, 4));
+      const m = Number(digits.slice(4, 6)) - 1;
+      return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
+    }
+
+    // YYYYMM
+    if (/^\d{6}$/.test(digits)) {
+      const y = Number(digits.slice(0, 4));
+      const m = Number(digits.slice(4, 6)) - 1;
+      return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
+    }
+
+    // YYYY-MM / YYYY/MM
+    const m2 = s.match(/^(\d{4})[-\/](\d{1,2})$/);
+    if (m2) {
+      const y = Number(m2[1]);
+      const m = Number(m2[2]) - 1;
+      return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
+    }
+
+    return null;
+  };
+
+  // ---- 小工具：把控制值（若為字串）轉回 Date，避免月曆顯示 202208/01 等怪值 ----
+  const normalizeMonthControl = (ctrl: any) => {
+    const v = ctrl?.value;
+    if (v == null) return;
+    // 若已是 Date 就不處理；其餘嘗試轉回 Date
+    if (!(v instanceof Date)) {
+      const d = toMonthDate(v);
+      if (d) ctrl.patchValue(d, { emitEvent: false });
+    }
+  };
+
+  // === 頁面初始化（會還原查詢狀態到表單） ===
+  this.initializePage('FIN13050', '/fin/FIN13050cru', this.queryForm);
+
+  // === 下拉資料 ===
+  this.fin13050Service.queryVendorList().subscribe((res) => {
     const list = res?.Data ?? [];
-    this.PUR_VoucherTypeOptions = list.map(x => ({
+    this.vendorOptions = list.map((v: any) => ({
+      label: `${v.VEN_No}-${v.VEN_Name}`,
+      value: v.VEN_No,
+    }));
+    this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_No, v]));
+  });
+
+  this.fin13050Service.queryAPS2002DropDownList().subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.PUR_VoucherTypeOptions = list.map((x: any) => ({
       value: String(x.No),
       label: String(x.Name),
     }));
   });
-    this.fin13050Service.querySYS1000DropDownList('PUR_DirectType').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.directTypeOptions = list.map((x: any) => ({
-        value: String(x.No), // No -> value
-        label: String(x.Name), // Name -> label
-      }));
-    });
 
+  this.fin13050Service.querySYS1000DropDownList('PUR_DirectType').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.directTypeOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: String(x.Name),
+    }));
+  });
 
-    this.fin13050Service
-      .querySYS1000DropDownList('PUR_TaxType')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.taxTypeOptions = list.map((x: any) => ({
-          value: String(x.No), // No -> value
-          label: String(x.Name), // Name -> label
-        }));
-      });
+  this.fin13050Service.querySYS1000DropDownList('PUR_TaxType').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.taxTypeOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: String(x.Name),
+    }));
+  });
 
-    this.fin13050Service
-      .querySYS1000DropDownList('PUR_DiscNo')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.PUR_DiscNoOptions = list.map((x: any) => ({
-          value: String(x.No), // No -> value
-          label: String(x.Name), // Name -> label
-        }));
-      });
-    this.fin13050Service
-      .querySYS1000DropDownList('PUR_Type')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.typeOptions = list.map((x: any) => ({
-          value: String(x.No), // No -> value
-          label: String(x.Name), // Name -> label
-        }));
-      });
+  this.fin13050Service.querySYS1000DropDownList('PUR_DiscNo').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.PUR_DiscNoOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: String(x.Name),
+    }));
+  });
 
-          this.fin13050Service
-      .querySYS1000DropDownList('SYS_ORIGIN')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.SYS_ORIGINOptions = list.map((x: any) => ({
-          value: String(x.No), // No -> value
-          label: String(x.Name), // Name -> label
-        }));
-      });
+  this.fin13050Service.querySYS1000DropDownList('PUR_Type').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.typeOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: String(x.Name),
+    }));
+  });
 
-      
-const toStr = (v: any) => (v == null ? v : String(v));
-  this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe(v => {
+  this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.SYS_ORIGINOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: String(x.Name),
+    }));
+  });
+
+  // === 發票號碼輸入：若被輸入數字，改成字串避免被格式化 ===
+  const toStr = (v: any) => (v == null ? v : String(v));
+  this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe((v) => {
     if (typeof v === 'number') {
       this.queryForm.controls.PUR_GUINo.patchValue(toStr(v), { emitEvent: false });
     }
   });
- 
+
+  // === 關鍵：把可能被還原成字串的年月欄位轉回 Date ===
+  normalizeMonthControl(this.queryForm.controls.PUR_RepYYYYMM);
+  normalizeMonthControl(this.queryForm.controls.PUR_GUIDate_YYYYMM);
+
+  // （可選）確保清除時會變回 null，而不是空字串
+  // 若你有自訂 clear 按鈕元件，這段可不需要
+  this.queryForm.valueChanges.subscribe(() => {
+    // nothing; 這裡只是保留鉤子，必要時可加入狀態同步
+  });
 }
+
 /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
 /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
 private arr<T = any>(
@@ -481,51 +532,59 @@ Object.keys(payload).forEach((k) => {
   }
   // 建議放在 class 內靠前處
   private defaultSort = [{ field: 'PUR_RepYYYYMM', order: 1 } as any];
-
-  private buildInitialQueryValues() {
+private buildInitialQueryValues() {
   return {
     pageIndex: 1,
     pageSize: 20,
-    SortBy: this.defaultSort,
+    SortBy: this.defaultSort as SortMeta[],
 
-    // 多選欄位 -> []
-    PUR_VoucherType: [],
-    PUR_GUITrack: undefined,
-    PUR_GUINoStart: undefined,
-    PUR_GUINoEnd: undefined,
+    // 單值欄位
+    PUR_GUITrack: null,
+    PUR_GUINo: null,
 
+    // 日期/年月欄位
     PUR_GUIDate_Start: null,
     PUR_GUIDate_End: null,
+    PUR_GUIDate_YYYYMM: null,
+    PUR_RepYYYYMM: null,
 
-    // 年月也視為多選 -> []
-    PUR_GUIDate_YYYYMM: [],
-    PUR_RepYYYYMM: [],
+    // 多選或輸入欄位（清空 -> null）
+    PUR_VoucherType: null,
+    PUR_VenUniform: null,
+    PUR_Amt_Small: null,
+    PUR_Amt_Big: null,
+    PUR_Net_Small: null,
+    PUR_Net_Big: null,
+    PUR_Tax_Small: null,
+    PUR_Tax_Big: null,
+    PUR_DirectType: null,
+    PUR_TaxType: null,
+    PUR_DiscNo: null,
+    PUR_Type: null,
+    SYS_ORIGIN: null,
+    SAL_Type: null,
+    PUR_Remark: null,
+    Source_Doc_No: null,
+    Voucher_No: null,
 
-    PUR_VenUniform: [],
-
-    PUR_Amt_Small: undefined,
-    PUR_Amt_Big: undefined,
-    PUR_Net_Small: undefined,
-    PUR_Net_Big: undefined,
-    PUR_Tax_Small: undefined,
-    PUR_Tax_Big: undefined,
-
-    PUR_DirectType: [],
-    PUR_TaxType: [],
-    PUR_Type: [],
-
-    Source_Doc_No: [],
-    Voucher_No: [],
-    SAL_Type: [],      // 系統別：多選
-    PUR_Remark: [],
-
-    CRT_USR_Name: [],
+    CRT_USR_Name: null,
     CRT_Date_Start: null,
     CRT_Date_End: null,
-    UPD_USR_Name: [],
+    UPD_USR_Name: null,
     UPD_Date_Start: null,
     UPD_Date_End: null,
   };
+}
+
+
+// fin13050.component.ts（類別內）
+onClear(): void {
+  const init = this.buildInitialQueryValues();
+  this.queryForm.reset(init);  // 型別就對了
+
+  // （可選）清表格
+  this.data = [];
+  this.totalRecords = 0;
 }
 
 

@@ -107,5 +107,9 @@ export class FIN55050Service {
     const url = `${environment.ApiUrl}/queryGLS1010_DropDownList`;
     return this.http.post<DropDownResp>(url, null);
   }
+queryFIN55050Detail(body: { VouNo: string }): Observable<any> {
+  const url = `${this.apiUrl}/queryFIN55050Detail`.replace('/FIN0000/GLS1000', '/FIN0000/GLS1000'); // 保持同路徑前綴
+  return this.http.post<any>(`${environment.ApiUrl}/FIN0000/GLS1000/queryFIN55050Detail`, body);
+}
 
 }
