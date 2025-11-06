@@ -411,21 +411,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (newValue === false) {
       // 取消勾選的處理邏輯
       if (originalType === 'annual') {
-        // 年度業績：直接設為 deleted，會從顯示中移除
+        // 年度業績：設為 deleted（年度業績可以刪除）
         rowData._status = 'deleted';
         console.log('年度業績項目設為 deleted');
       } else if (originalType === 'discount' || originalType === 'level') {
-        // 折扣和層級：根據是否有有效ID決定處理方式
-        if (this.hasValidId(rowData)) {
-          // 現有項目：設為 deleted 狀態（會在最終清理時進入 toDelete）
-          rowData._status = 'deleted';
-          console.log(`${originalType} 現有項目設為 deleted (ID: ${rowData.id})`);
-        } else {
-          // 新項目：直接從數組移除（不需要發送到後端）
-          console.log(`${originalType} 新項目將被移除 (臨時ID: ${rowData.id})`);
-          // 這裡可以選擇設為 deleted 或者在同步時直接移除
-          rowData._status = 'deleted';
-        }
+        // 🔑 方案 B：discount 和 level 只更新 selected 狀態，不刪除
+        // 不設定 _status = 'deleted'，只是取消勾選
+        console.log(`${originalType} 取消勾選，但保留資料 (ID: ${rowData.id})`);
+        // selected 已經在前面更新了，這裡不需要做任何事
       } else {
         // 其他類型的通用處理
         rowData._status = 'deleted';
@@ -448,14 +441,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (originalType === 'discount') {
       const parentItem = this.findParentOfDetailItem(rowData);
       if (parentItem) {
-        console.log('🔄 折扣設定勾選狀態變更，同步到層級抽成');
-        this.syncDiscountChangesToLevel(parentItem);
+        console.log('🔄 折扣設定勾選狀態變更，直接調用 syncDiscountLevelBasedOnSelection');
+        // 🔑 直接調用 table service 的方法來同步單個 discount 對應的 level
+        this.tableService.syncDiscountLevelBasedOnSelection(parentItem, rowData);
+        // 更新主數組
+        this.updateMainArray(parentItem);
       }
     }
 
     console.log('selected 處理完成，最終狀態:', rowData._status);
   }
-
   /**
    * 處理主項目欄位變更
    */
@@ -676,7 +671,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       case 'discount':
         commissionItem.discountSettingItems = currentTabItems.map(item => ({
           id: item.id,
-          _source: item._source,  // 🔑 保留 _source
+          _source: item._source,  // 🔑 加這個
           selected: item.selected || false,
           cag_barcode: item.cag_barcode || '',
           tlt_bdate: this.ensureValidDate(item.tlt_bdate),
@@ -703,14 +698,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       case 'level':
         commissionItem.discountLevelItems = currentTabItems.map(item => ({
           id: item.id,
-          _source: item._source,  // 🔑 保留 _source
+          _source: item._source,  // 🔑 加這個
           selected: item.selected || false,
           cag_barcode: item.cag_barcode || '',
-          contract_period: item.contract_period || '',  // 🔑 保留 contract_period
+          contract_period: item.contract_period || '',  // 🔑 加這個
           level_bmount: item.level_bmount || 0,
           level_eamount: item.level_eamount || 0,
           level_charge_rate: item.level_charge_rate || 0,
-          charged_id: item.charged_id,  // 🔑 保留 charged_id（重要！）
+          charged_id: item.charged_id,  // 🔑 加這個（最重要！）
           _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
           is_configured: item.is_configured || false,
           is_enabled: item.is_enabled || false

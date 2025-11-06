@@ -69,16 +69,24 @@ export class CommissionTableService {
     this.updateItemInArray(parentData, commissionData);
   }
 
-  // 🔑 新增：根據折扣設定的勾選狀態，同步處理層級抽成項目（方案 B）
-  private syncDiscountLevelBasedOnSelection(parentItem: CommissionItem, discountItem: DiscountSettingItem): void {
+  // 🔑 根據折扣設定的勾選狀態，同步處理層級抽成項目（方案 B）
+  syncDiscountLevelBasedOnSelection(parentItem: CommissionItem, discountItem: DiscountSettingItem): void {
     const linkedLevelItems = parentItem.discountLevelItems?.filter(
       level => level.charged_id === discountItem.id
     ) || [];
 
+    console.log(`🔍 syncDiscountLevelBasedOnSelection:`, {
+      discountId: discountItem.id,
+      discountBarcode: discountItem.cag_barcode,
+      discountSelected: discountItem.selected,
+      discountSource: discountItem._source,
+      linkedLevelCount: linkedLevelItems.length
+    });
+
     if (discountItem.selected) {
       // --- 勾選邏輯 ---
-      if (linkedLevelItems.length === 0 && discountItem._source === 'api') {
-        // 如果是 API 來的 discount 且沒有對應的 level，新增一個
+      if (linkedLevelItems.length === 0) {
+        // 🔑 不管 discount 是 API 還是 new，只要沒有對應的 level 就新增
         const contractPeriod = this.formatContractPeriod(discountItem.tlt_bdate, discountItem.tlt_edate);
 
         const newLevelItem: DiscountLevelItem = {
@@ -96,7 +104,7 @@ export class CommissionTableService {
           is_enabled: true
         };
         parentItem.discountLevelItems.push(newLevelItem);
-        console.log(`✅ 已為折扣 ${discountItem.cag_barcode} 新增一個 Level 項目`);
+        console.log(`✅ 已為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 新增一個 Level 項目 (ID: ${newLevelItem.id})`);
       } else if (linkedLevelItems.length > 0) {
         // 如果已存在 level，將 selected 設為 true
         linkedLevelItems.forEach(level => {

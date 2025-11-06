@@ -67,7 +67,7 @@ export class TLS13010Next2ColumnsConfig {
         field: 'selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
+        editable: false,
         directEdit: true,
       },
       // {
