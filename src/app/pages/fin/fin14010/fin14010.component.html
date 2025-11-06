@@ -8,9 +8,6 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateMonthRange" label="資料所屬年月(快速碼)"
-            [startControl]="queryForm.controls.REP_GUIYM_start" [endControl]="queryForm.controls.REP_GUIYM_end"
-            [submitted]="submitted" /> -->
             <div class="col-12 md:col-6 lg:col-4">
               <app-calendar calendarType="dateMonthOne"
                 label="資料所屬年月"
@@ -31,7 +28,7 @@
 
 <div class="card">
   <app-table dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showCheckBox]="true"
-    (delete)="onDelete($event)" [showDetail]="false" (selectionChange)="selectedRows = $event"
+    [showDetail]="false" (selectionChange)="selectedRows = $event"
     [showDelete] ="false" [showCheckBox]="false"
     [selectedItems]="selectedRows" [multiSortMeta]="[{ field: 'ID', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"

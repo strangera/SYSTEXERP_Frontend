@@ -18,7 +18,6 @@ import { option } from '@shared/models/sys/sysb000.model';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
-  // 這個table有點神奇，沒有id(先新增一個)
   id: number;
 
   /** 分店編號 */
@@ -273,9 +272,6 @@ export interface TDS1002 {
 export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
   queryForm = this.formBuilder.group({
       // TDS1002 營業人銷售額與稅額申報書檔 參考11020
-      // REP_GUIYM_start: [null, [Validators.required]], // 資料所屬年月
-      // REP_GUIYM_end: [null, [Validators.required]], // 資料所屬年月
-
       REP_GUIYM: [null, [Validators.required]], // 資料所屬年月
       ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
     });
@@ -318,7 +314,6 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
 
     constructor(
       private fin14010Service: Fin14010Service,
-      private validationService: ValidationService
     ) {
       super(); // 呼叫父類建構子
     }
@@ -335,7 +330,7 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
         }
 
         console.log('申報request', JSON.stringify(body, null, 2));
-
+        // 測試可用2024/08
 
         this.fin14010Service.queryFIN14010(body).pipe(untilDestroyed(this)).subscribe({
           next: (response) => {
@@ -352,8 +347,8 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
         });
       });
     }
-    onDelete(selectedRows: TDS1002[]) {
-      const ids = selectedRows.map(row => row.id);
+    // onDelete(selectedRows: TDS1002[]) {
+    //   const ids = selectedRows.map(row => row.id);
       // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
       //   next: () => {
       //     this.onSubmit(this.queryForm);
@@ -361,7 +356,7 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
       //   },
       //   error: () => { this.loading = false; },
       // });
-    }
+    // }
   
     isRowSelectable(row: TDS1002) {
       // return row.CanDel;

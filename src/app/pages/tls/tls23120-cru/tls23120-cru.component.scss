@@ -2,7 +2,7 @@
    抽成類別：統一樣式（0/1 相同）
    =============================== */
 .commission-line {
-  font-size: 16px;      /* 以 0 為主的字級 */
+  font-size: 16px;      /* 與 0 版一致的字級 */
   font-weight: 700;     /* 粗體，與 0 一致 */
   line-height: 1.2;
 }
@@ -16,24 +16,46 @@
 }
 
 /* ===============================
-   PrimeNG p-table 配色（依你原則）
+   PrimeNG p-table：表頭置中 + 配色
    =============================== */
 
-/* Header 顏色 */
+/* 表頭內容用 flex 排版，強制整體置中（含排序 icon） */
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th .p-column-header-content {
+  justify-content: center;
+}
+
+/* 可滾動表頭（scrollable）情境 */
+:host ::ng-deep .p-datatable .p-datatable-scrollable-header-table
+  .p-datatable-thead > tr > th .p-column-header-content {
+  justify-content: center;
+}
+
+/* 備援：th 本身也置中，避免個別樣式覆蓋 */
 :host ::ng-deep .p-datatable thead th {
+  text-align: center;
   background-color: #c7d2fe !important;  /* 指定的藍紫色 */
   color: #000 !important;
   font-weight: 600;
-  text-align: center;
 }
 
-/* Footer 小計/總計配色（作用在 <tfoot>） */
+/* 排序圖示與文字間距（可微調） */
+:host ::ng-deep .p-datatable .p-sortable-column
+  .p-column-header-content .p-sortable-column-icon {
+  margin-left: 0.25rem;
+}
+
+/* ===============================
+   Footer 小計 / 總計 配色
+   =============================== */
+
+/* <tfoot> 小計列 */
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row > td {
   background-color: #9cb1fb !important;  /* 小計 */
   color: #001a4d;
   font-weight: 600;
 }
 
+/* <tfoot> 總計列 */
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row > td {
   background-color: #c7d2fe !important;  /* 總計 */
   color: #001a4d;
@@ -41,14 +63,16 @@
   border-top: 2px solid #6aa9ff;
 }
 
-/* 若總計列出現在 tbody（視你的模板而定） */
+/* 若總計列出現在 tbody（視模板而定） */
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr.grandtotal-row > td {
   background-color: #ffe08a !important;
   color: #5a4100;
   font-weight: 700;
 }
 
-/* 斑馬紋（奇數灰、偶數白） */
+/* ===============================
+   斑馬紋（奇數灰、偶數白）
+   =============================== */
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(odd) > td {
   background-color: #e0e0e0 !important;
 }
@@ -57,7 +81,9 @@
   background-color: #ffffff !important;
 }
 
-/* 滑過效果不要蓋掉 footer 的顏色（僅微調亮度） */
+/* ===============================
+   Hover 效果：不要蓋掉重點色
+   =============================== */
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row:hover > td,
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row:hover > td,
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr.grandtotal-row:hover > td {

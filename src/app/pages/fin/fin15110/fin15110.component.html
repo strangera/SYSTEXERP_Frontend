@@ -12,6 +12,14 @@
             <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.TXN_DT_S"
               [endControl]="queryForm.controls.TXN_DT_E" [submitted]="submitted"></app-calendar-range-quick>
           </div>
+          <div class="col-12 md:col-4">
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions"
+              [control]="queryForm.controls.ECR_No" [submitted]="submitted" optionLabel="Name" optionValue="No" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="資料種類" controlName="DATE_TYPE" [options]="DATE_TYPEOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.DATE_TYPE" [submitted]="submitted"></app-multi-select>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -26,22 +34,10 @@
 
 
 <div class="card mt-5">
-  <app-customFooter-table
-    tableKey="FIN15110"
-    [data]="data"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [footerData]="footerData"
-    dataKey="Ecr_No"
-    [lazy]="true"
-    [loading]="loading"
-    [showManage]="false"
-    [showDelete]="false"
-    [multiSortMeta]="queryForm.controls.SortBy.value"
-    [showReportMode]="false"
-    [showTotal]="true"
-    (lazyLoadData)="onLazyLoadData($event)"
-  >
+  <app-customFooter-table tableKey="FIN15110" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [footerData]="footerData" dataKey="Ecr_No" [lazy]="true" [loading]="loading" [showManage]="false"
+    [showDelete]="false" [multiSortMeta]="queryForm.controls.SortBy.value" [showReportMode]="false" [showTotal]="true"
+    (lazyLoadData)="onLazyLoadData($event)">
 
     <header>
       <div class="flex justify-content-between align-items-center gap-2">

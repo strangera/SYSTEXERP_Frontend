@@ -6,8 +6,6 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-          <!-- <app-input-text label="資料別" controlName="REP_DataType" [control]="dataForm.controls.REP_DataType"
-          [submitted]="submitted" /> -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="資料別" controlName="REP_DataType" [options]="REP_DataType_Option"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.REP_DataType"

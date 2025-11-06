@@ -1,176 +1,125 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { TaxableService } from '../../../service/basic/taxable.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgFor, NgIf } from '@angular/common';
-
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
-// 2.2.18.2 大分類換開品項維護作業
 @Component({
   selector: 'app-tls2j020-cru',
   templateUrl: './tls2j020-cru.component.html',
-  styleUrl: './tls2j020-cru.component.scss',
+  styleUrls: ['./tls2j020-cru.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    TableEditComponent,
+    DropdownComponent,
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    NgFor,
+    InputTextComponent,
+    ButtonComponent,
+    NgIf,
+    TranslateModule
+  ]
 })
-export class TLS2J020CRUComponent extends BasicCrupageComponent implements OnInit {
-  //
-  industryOptions: any[] = [];
-  taxOptions: any[] = [];
-  // ----------------------------------------------------------------
+export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    industry: [, [Validators.required]], // DropDown
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    bus_type: ['', Validators.required],
   });
-  // ----------------------------------------------------------------
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private taxableService: TaxableService,
-  ) {
-    super();  // 呼叫父類建構子
+
+  mode: CRUDStatus = CRUDStatus.Create; // 新增 or 編輯模式
+  override formTitle = '';
+  busTypeOptions: any[] = [];
+  data: any[] = [];
+  selectedItems: any[] = [];
+  totalRecords = 0;
+  createColumns: EditColumn[] = [
+    { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '200px' },
+    {
+      field: 'Item_TaxType', header: '稅別', type: 'dropdown', width: '150px',
+      options: [
+        { label: '應稅', value: 'T' },
+        { label: '免稅', value: 'F' }
+      ]
+    },
+  ];
+
+  /**  編輯時使用的欄位配置（不同格式） */
+  editColumns: EditColumn[] = [
+    { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '250px' },
+    { field: 'Item_TaxType', header: '稅別', type: 'input', width: '150px' },
+    { field: 'LastModifiedDate', header: '最後修改時間', type: 'input', width: '180px' },
+  ];
+
+  /**  動態決定顯示哪組欄位 */
+  get columns(): EditColumn[] {
+    return this.mode === CRUDStatus.Create ? this.createColumns : this.editColumns;
+  }
+
+
+  constructor(private dropDownListService: DropDownListService) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '220091';
-    //
-    // ----------------------------------------------------------------
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => {
-      this.industryOptions = data;
-    });
+    // 取得狀態與資料
+    const state = history.state;
+    this.mode = state.crudstatus;
+    const rowData = state.rowdata;
 
-    // ----------------------------------------------------------------
-    this.taxableService.getSystemTypes().subscribe(data => {
-      this.taxOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    // 初始化頁面
+    this.initializePage('TLS2J020', this.dataForm);
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+    // 下拉選項
+    this.loadOptions();
+
+    if (this.mode === CRUDStatus.Edit && rowData) {
+      this.formTitle = '編輯大分類換開品項';
+      // 編輯模式不顯示上方 dropdown，只顯示明細表
+      this.dataForm.patchValue(rowData);
+      this.data = rowData.details ?? [];
+    } else {
+      this.formTitle = '新增大分類換開品項';
+      this.dataForm.reset();
+      this.data = [];
     }
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+  loadOptions() {
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.busTypeOptions = response.Data.map((item: any) => ({
+          Name: `${item.No}-${item.Name}`,
+          No: item.No
+        }));
+      });
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      name: ['', [Validators.required, Validators.maxLength(5)]], // Input Text
-      tax: [, [Validators.required]], // DropDown
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      this.loading = true;
+      if (this.mode === CRUDStatus.Create) {
+        console.log('新增資料:', form.value, this.data);
+        // call 新增 API
+      } else if (this.mode === CRUDStatus.Edit) {
+        console.log('編輯資料:', form.value, this.data);
+        // call 更新 API
+      }
+      this.loading = false;
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
-  }
-
-  onCancel() {
-    this.router.navigate(['/TLS2000/TLS2J020']);
-  }
-  //---------------------------------------------------------------------------------------------------------------
 }

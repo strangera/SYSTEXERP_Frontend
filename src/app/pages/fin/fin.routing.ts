@@ -58,18 +58,15 @@ export const finRoutes: Routes = [
   { path: 'fin13070', loadComponent: () => import('./fin13070/fin13070.component').then(m => m.FIN13070Component) },
   //折讓資料刪除作業
   { path: 'fin13080', loadComponent: () => import('./fin13080/fin13080.component').then(m => m.FIN13080Component) },
-  // 補登進項稅額
+  // 申報書維護
   { path: 'fin14010', loadComponent: () => import('./fin14010/fin14010.component').then(m => m.FIN14010Component) },
   { path: 'fin14010cru', loadComponent: () => import('./fin14010-cru/fin14010-cru.component').then(m => m.FIN14010CRUComponent) },
-  // 進貨退出或折讓資料維護
+  // 資料結轉
   { path: 'fin14020', loadComponent: () => import('./fin14020/fin14020.component').then(m => m.FIN14020Component) },
-  { path: 'fin14020cru', loadComponent: () => import('./fin14020-cru/fin14020-cru.component').then(m => m.FIN14020CRUComponent) },
-  // 補登銷項稅額
+  // 形成申報書
   { path: 'fin14030', loadComponent: () => import('./fin14030/fin14030.component').then(m => m.FIN14030Component) },
-  { path: 'fin14030cru', loadComponent: () => import('./fin14030-cru/fin14030-cru.component').then(m => m.FIN14030CRUComponent) },
-  // 銷貨退回或折讓資料維護
+  // 形成媒體申報檔
   { path: 'fin14040', loadComponent: () => import('./fin14040/fin14040.component').then(m => m.FIN14040Component) },
-  { path: 'fin14040cru', loadComponent: () => import('./fin14040-cru/fin14040-cru.component').then(m => m.FIN14040CRUComponent) },
   // 申報書維護
   { path: 'fin15010', loadComponent: () => import('./fin15010/fin15010.component').then(m => m.FIN15010Component) },
   { path: 'fin15010cru', loadComponent: () => import('./fin15010-cru/fin15010-cru.component').then(m => m.FIN15010CRUComponent) },

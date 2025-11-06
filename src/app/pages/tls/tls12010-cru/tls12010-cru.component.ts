@@ -21,6 +21,7 @@ import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls12010DetailService } from './tls12010-detail.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
@@ -170,9 +171,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   }
   // 展開式表格的載入狀態
   expandDetailLoading = false;
-  // ------
 
-  //
   cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身分證、3=員工id）
     { value: '1', label: '統編' },
     { value: '2', label: '身分證' },
@@ -242,7 +241,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
     console.log('讀取資料', this.dataForm.value);
 
-    // ✅ 最後設為 false，代表資料已匯入完成，之後就會開始觸發 valueChanges
+    // 最後設為 false，代表資料已匯入完成，之後就會開始觸發 valueChanges
     this.skipValueChanges = false;
   }
 
@@ -253,6 +252,19 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
+    }
+
+    // 有輸入明細就必須輸入其他商場(other_shop): 防止user誤輸入
+    if (this.potentialDetail.length > 0) {
+      // 找出是否有空白的其他商場欄位
+      const hasEmptyOtherShop = this.potentialDetail.some(
+        d => !d.other_shop || d.other_shop.trim() === ''
+      );
+
+      if (hasEmptyOtherShop) {
+        this.messageService.errorBubble('不允許輸入空的 其他商場 名稱');
+        return;
+      }
     }
 
     //將新的資料id指定為null
@@ -278,7 +290,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         if (this.canAdd()) {
           console.log('insert:', JSON.stringify(body, null, 2));
           console.log('detail', this.potentialDetail);
-          this.tls12010Service.insertTLS12010(body).subscribe(() => {
+          this.tls12010Service.insertTLS12010(body).pipe(untilDestroyed(this)).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             this.dataForm.reset(); // 重置表單
@@ -289,7 +301,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         if (this.canEdit()) {
           console.log('update:', JSON.stringify(body, null, 2));
           console.log('detail', this.potentialDetail);
-          this.tls12010Service.updateTLS12010(body).subscribe(() => {
+          this.tls12010Service.updateTLS12010(body).pipe(untilDestroyed(this)).subscribe(() => {
             this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });
@@ -302,7 +314,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   }
 
   submitForm(frm: FormGroup) {
-    console.log('提交');
     this.onSubmit(frm);
   }
 
@@ -313,7 +324,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   // 讀取dopropdown選項
   loadOptions() {
     // 查詢 接待人員
-    this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+    this.tls12010Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 名稱
         Name: item.Name, // 接待人員 名稱
@@ -344,7 +355,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     });
 
     // 查 大分類(專櫃)
-    this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+    this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.bus_type_Option = response.Data.map((item: any) => ({
         No: item.No, // 大分類(專櫃) 號
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
@@ -353,7 +364,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     });
 
     // 查 品牌
-    this.tls12010Service.queryPLULOGO_DropDownList({}).subscribe((response) => {
+    this.tls12010Service.queryPLULOGO_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.tlt_name_Option = response.Data.map((item: any) => ({
         No: item.No, // 品牌主代碼
         Name: item.Name, //品牌名稱
@@ -364,7 +375,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     });
 
     // 查 經營方式
-    this.tls12010Service.querySYS1000_DropDownList({ "SYS_Type": 'T117' }).subscribe((response) => {
+    this.tls12010Service.querySYS1000_DropDownList({ "SYS_Type": 'T117' }).pipe(untilDestroyed(this)).subscribe((response) => {
       this.business_type_Option = response.Data.map((item: any) => ({
         No: item.No, // 經營方式 代碼
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
@@ -373,7 +384,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     });
 
     // 查詢 接待人員
-    this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+    this.tls12010Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 代碼
         Name: item.Name, // 接待人員 名稱
@@ -386,7 +397,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   // 讀取明細資料
   async loadDetailData(PC_id: string): Promise<void> {
     console.log('要求PC_id資料:', PC_id);
-    this.tls12010Service.queryTLS12010_Detail({ "PC_id": PC_id }).subscribe((response) => {
+    this.tls12010Service.queryTLS12010_Detail({ "PC_id": PC_id }).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === '0000') {
         this.potentialDetail = response.Data.map((item: any) => ({
           ...item,
@@ -510,5 +521,4 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   onBatchDeleteDetail(selectedItems: any[]): void {
     this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail);
   }
-
 }

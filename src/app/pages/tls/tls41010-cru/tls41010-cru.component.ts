@@ -234,9 +234,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
-        ...item, label: `${item.No} ${item.Name}`,
+        label: `${item.Name}`, // 顯示用
+        value: item.Name,
+        No: item.No,
+        Name: item.Name
       }));
     });
+
     //收銀員下拉選單
     this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
       if (res?.Data) {
@@ -272,18 +276,26 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         }));
       }
     });
-    // 綁定位置編號選取 → 自動帶出名稱
-    this.dataForm.get('ECR_LocNo')?.valueChanges.subscribe(selectedNo => {
-      const selected = this.LocOptions.find(c => c.value === selectedNo);
-      if (selected) {
-        this.dataForm.patchValue({
-          ECR_TLT_Name: selected.Name,
+
+    this.dataForm.get('ECR_LocNo')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(selectedNo => {
+        const selected = this.LocOptions.find(c => c.value === selectedNo);
+        if (!selected) return;
+
+        const patch: any = {
           ECR_Group: selected.tlt_building,
           ECR_SubGroup: selected.tlt_floor,
-          ECR_AreaNo: selected.area_no
-        }, { emitEvent: false });
-      }
-    });
+          ECR_AreaNo: selected.area_no,
+        };
+
+        if (this.isFormCreateable && !this.dataForm.get('ECR_TLT_Name')?.value) {
+          patch.ECR_TLT_Name = selected.Name;
+        }
+
+        this.dataForm.patchValue(patch, { emitEvent: false });
+      });
+
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
       if (tmplNo) {
@@ -307,26 +319,23 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       .subscribe((selectedNo) => {
         if (!selectedNo) return;
 
-        // 呼叫查詢 API
         this.tls41010Service.queryTLT_NoInfo(selectedNo).subscribe({
           next: (res) => {
             if (res?.Status === '0000' && res.Data) {
               const info = res.Data;
               console.log('自動帶入櫃位資訊:', info);
 
-              this.dataForm.patchValue({
-                ECR_LocNo: info.ECR_LocNo || '',
-                ECR_Status: info.ECR_Status || '',
-                ECR_Group: info.ECR_Group || '',
-                ECR_SubGroup: info.ECR_SubGroup || '',
-                ECR_AreaNo: info.ECR_AreaNo || '',
-                ECR_ActiveDate: info.tlt_bdate ? new Date(info.tlt_bdate) : null,
-                ECR_CloseDate: info.tlt_edate ? new Date(info.tlt_edate) : null,
-              }, { emitEvent: false });
+              //  無論新增或編輯，都可 patch，但限定特定欄位
+              const patch: any = {};
 
-              if (this.isFormCreateable) {
-                this.dataForm.get('ECR_Status')?.enable({ emitEvent: false });
-              }
+              // 只要櫃位查詢回來有值，就覆蓋（不動沒給值的欄位）
+              if (info.ECR_LocNo) patch.ECR_LocNo = info.ECR_LocNo;
+              if (info.ECR_Group) patch.ECR_Group = info.ECR_Group;
+              if (info.ECR_SubGroup) patch.ECR_SubGroup = info.ECR_SubGroup;
+              if (info.ECR_AreaNo) patch.ECR_AreaNo = info.ECR_AreaNo;
+              if (info.tlt_bdate) patch.ECR_ActiveDate = new Date(info.tlt_bdate);
+              if (info.tlt_edate) patch.ECR_CloseDate = new Date(info.tlt_edate);
+              this.dataForm.patchValue(patch, { emitEvent: false });
             } else {
               console.warn('查詢櫃位資訊失敗:', res?.Message);
             }
@@ -334,6 +343,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err),
         });
       });
+
+
   }
 
   /** 套用範本資料 */
@@ -364,7 +375,6 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
         }
       },
-      error: (err) => console.error('查詢 TLS41010 失敗', err),
     });
   }
 

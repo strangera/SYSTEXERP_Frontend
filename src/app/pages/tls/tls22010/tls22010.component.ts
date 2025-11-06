@@ -116,7 +116,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     switch (row.Status_Code) {
       case '#': // 粉紅：L檔金額異常
         return 'bg-pink-100 text-red-600';
-      case '!': // 咖啡：L檔未上送
+      case '⚠': // 咖啡：L檔未上送
         return 'bg-amber-100 text-amber-800';
       case '@': // 綠：Z報與L檔不平
         return 'bg-green-100 text-green-700';
@@ -124,6 +124,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
         return '';
     }
   }
+
   // --------- 生命週期 ----------
   ngOnInit(): void {
     this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm);

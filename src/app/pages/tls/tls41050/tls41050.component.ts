@@ -155,7 +155,9 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   selectedItems: POS1002[] = [];// 多選項目
 
   // ----------------------------------------------------------------
-  constructor(private tls41050Service: Tls41050Service) {
+  constructor(
+    private tls41050Service: Tls41050Service
+  ) {
     super();
   }
 
@@ -167,7 +169,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   onSubmit(frm: FormGroup) {
     console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      this.tls41050Service.queryTLS41050(frm.value).subscribe({
+      this.tls41050Service.queryTLS41050(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
@@ -196,7 +198,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
 
   loadOptions() {
     // 查收銀機號
-    this.tls41050Service.queryPOS1002_DropDownList({}).subscribe((response) => {
+    this.tls41050Service.queryPOS1002_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.POS1002_Option = response.Data.map((item: any) => ({
         No: item.No, // 收銀機號
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
@@ -204,7 +206,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
       console.log('收銀機號:', this.TLTTALENT_Option);
     });
     // 查專櫃主檔
-    this.tls41050Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+    this.tls41050Service.queryTLTTALENT_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.TLTTALENT_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃主代碼
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label

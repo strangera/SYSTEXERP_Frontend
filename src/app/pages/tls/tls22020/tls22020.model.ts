@@ -62,7 +62,7 @@ const baseColumns: Column[] = [
 // 每個付款別的「三個子欄位」
 const paymentColumns: Column[] = payNoDataList.flatMap((item) => [
   { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
-  { header: '帳單', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
+  { header: 'Z帳', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
   { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
 ]);
 
