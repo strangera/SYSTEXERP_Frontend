@@ -314,7 +314,6 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
 
     constructor(
       private fin14010Service: Fin14010Service,
-      private validationService: ValidationService
     ) {
       super(); // 呼叫父類建構子
     }

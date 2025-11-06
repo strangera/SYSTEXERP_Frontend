@@ -81,7 +81,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       {
         "mid": this.queryForm.get("Mid")?.value,
         "STO_No": this.queryForm.get("STO_No")?.value
-      }).subscribe({
+      }).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
           this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string }) => ({
