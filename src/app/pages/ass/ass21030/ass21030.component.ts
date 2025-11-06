@@ -149,7 +149,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       console.log('送出查詢條件',  JSON.stringify(formValue, null, 2));
 
       this.handleSubmit(frm, () => {
-        this.ass21030Service.queryASS21030(formValue).subscribe({
+        this.ass21030Service.queryASS21030(formValue).pipe(untilDestroyed(this)).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
               this.data = (response.Data || []).map((item: any) => {
@@ -213,7 +213,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   
       console.log('deleteBody', deleteBody);
   
-      this.ass21030Service.deleteASS21030(deleteBody).subscribe({
+      this.ass21030Service.deleteASS21030(deleteBody).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.messageService.successBubble('選中項目刪除成功');
@@ -241,7 +241,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   
     loadOptions() {
       // 查 取得能源表號
-      this.ass21030Service.queryENG1001_ENG_MeterNo_DropDownList({}).subscribe((response) => {
+      this.ass21030Service.queryENG1001_ENG_MeterNo_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
         this.ENG_MeterNo_Option = response.Data.map((item: any) => ({
           No: item.ENG_MeterNo, // 能源表號
           Name: item.ENG_MeterNo,
