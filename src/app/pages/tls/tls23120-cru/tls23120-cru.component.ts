@@ -249,6 +249,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
 //        匯出 PDF
 // =========================
 exportPDF(orientation: 'p' | 'l' = 'l'): void {
+  // ===== 基本頁面設定 =====
   const columnCount = this.selectedColumns.length;
   const columnWidth = 80;
   const customWidth = Math.max(595, columnCount * columnWidth);
@@ -258,23 +259,51 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
   const pageHeight = doc.internal.pageSize.getHeight();
   const marginLeft = 40;
 
-  // 字型註冊（若已註冊會 throw，忽略即可）
+  // ===== 字型（若已註冊會 throw，忽略即可） =====
   try {
     doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
   } catch {}
   doc.setFont('Noto Sans TC', 'normal');
 
+  // ===== 顏色設定 =====
   const HEADER_COLOR: [number, number, number]   = [199, 210, 254];
   const ODD_ROW_COLOR: [number, number, number]  = [224, 224, 224];
   const EVEN_ROW_COLOR: [number, number, number] = [255, 255, 255];
   const SUBTOTAL_COLOR: [number, number, number] = [156, 177, 251];
   const TOTAL_COLOR: [number, number, number]    = [199, 210, 254];
+  const BLUE: [number, number, number]           = [ 37,  99, 235];
+  const RED:  [number, number, number]           = [220,  38,  38];
 
   let currentY = 60;
 
-  // 三欄網格小工具（和 HTML 的三欄排版一致）
+  // =========================
+  //   抬頭三欄小工具（支援右移 dx、分段上色）
+  // =========================
+  type Part = { text: string; color?: [number, number, number] };
+  type GridItem =
+    | string
+    | {
+        parts: Part[];
+        dx?: number;                                  // 往右位移（pt）
+        align?: 'left' | 'center' | 'right';          // 文字對齊（預設 left）
+        fontSize?: number;                            // 單格字級（預設 10）
+      };
+
+  const drawParts = (x: number, y: number, parts: Part[], baseFontSize = 10) => {
+    let cursorX = x;
+    doc.setFont('Noto Sans TC', 'normal');
+    doc.setFontSize(baseFontSize);
+    parts.forEach(p => {
+      if (p.color) doc.setTextColor(...p.color);
+      else doc.setTextColor(0, 0, 0);
+      doc.text(p.text, cursorX, y, { baseline: 'alphabetic' });
+      cursorX += doc.getTextWidth(p.text);
+    });
+    doc.setTextColor(0, 0, 0); // 還原
+  };
+
   const drawKeyValueGrid = (
-    items: string[],
+    items: GridItem[],
     startX: number,
     startY: number,
     opts?: {
@@ -300,39 +329,88 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
     const usableWidth = pageWidth - startX - rightMargin;
     const colWidth = (usableWidth - colGap * (cols - 1)) / cols;
 
-    doc.setFont('Noto Sans TC', 'normal');
-    doc.setFontSize(fontSize);
-
-    items.forEach((text, i) => {
+    items.forEach((item, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const x = startX + col * (colWidth + colGap);
+      let x = startX + col * (colWidth + colGap);
       const y = startY + row * (rowHeight + rowGap);
-      doc.text(String(text ?? ''), x, y, { align });
+
+      if (typeof item === 'string') {
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('Noto Sans TC', 'normal');
+        doc.setFontSize(fontSize);
+        doc.text(item, x, y, { align });
+      } else {
+        const dx = item.dx ?? 0;
+        const localAlign = item.align ?? align;
+        const localSize = item.fontSize ?? fontSize;
+
+        let leftX = x;
+        if (localAlign !== 'left') {
+          const totalW = item.parts.reduce((s, p) => s + doc.getTextWidth(p.text), 0);
+          if (localAlign === 'center') leftX = x + (colWidth - totalW) / 2;
+          if (localAlign === 'right')  leftX = x + colWidth - totalW;
+        }
+        drawParts(leftX + dx, y, item.parts, localSize);
+      }
     });
 
     const rows = Math.ceil(items.length / cols);
     return startY + rows * (rowHeight + rowGap);
   };
 
-  const drawCenteredTltIdBanner = (tltId: string) => {
-    if (pageHeight - currentY < 40) {
-      doc.addPage();
-      doc.setFont('Noto Sans TC', 'normal');
-      currentY = 60;
-    }
-    doc.setFontSize(12);
-    doc.text(`抽成類別：${tltId || '無'}`, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 14;
-  };
+  // =========================
+  //   抽成類別置中橫幅（藍字）
+  // =========================
+// =========================
+//   抽成類別置中橫幅（標籤藍色，tltId 紅色）
+// =========================
+const drawCenteredTltIdBanner = (tltId: string) => {
+  if (pageHeight - currentY < 40) {
+    doc.addPage();
+    doc.setFont('Noto Sans TC', 'normal');
+    currentY = 60;
+  }
 
+  const label = '抽成類別：';
+  const value = tltId || '無';
+
+  doc.setFont('Noto Sans TC', 'normal');
+  doc.setFontSize(12);
+
+  // 先量寬，讓（label+value）整段可以真正置中
+  const labelW = doc.getTextWidth(label);
+  const valueW = doc.getTextWidth(value);
+  const totalW = labelW + valueW;
+
+  // 讓整段置中：從 page 中央往左半個 totalW 當起點
+  let startX = (pageWidth / 2) - (totalW / 2);
+
+  // 標籤：藍色
+  doc.setTextColor(...BLUE);
+  doc.text(label, startX, currentY, { baseline: 'alphabetic' });
+
+  // 值：紅色，接在標籤後面
+  startX += labelW;
+  doc.setTextColor(...RED);
+  doc.text(value, startX, currentY, { baseline: 'alphabetic' });
+
+  // 還原為黑色
+  doc.setTextColor(0, 0, 0);
+
+  currentY += 14;
+};
+
+
+  // =========================
+  //   完整抬頭（公司/標題 + 三欄資訊）
+  // =========================
   const drawFullGroupHeader = (g: any, firstSub: any) => {
     const firstRow = firstSub?.rows?.[0] ?? {};
     const totalCount = Number(firstRow?.total_count ?? 0);
     const returnQty  = Number(firstRow?.return_qty ?? 0);
     const returnAmt  = Number(firstRow?.return_amt ?? 0);
 
-    // 估算高度，不夠就換頁
     const needed = 160;
     if (pageHeight - currentY < needed) {
       doc.addPage();
@@ -340,7 +418,7 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
       currentY = 60;
     }
 
-    // 公司＋標題（置中，與 HTML 對齊）
+    // 公司 + 標題
     doc.setFont('Noto Sans TC', 'normal');
     doc.setFontSize(16);
     doc.text('南紡流通事業股份有限公司', pageWidth / 2, currentY, { align: 'center' });
@@ -350,22 +428,71 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
     doc.text('專櫃日對帳單', pageWidth / 2, currentY, { align: 'center' });
     currentY += 25;
 
-    // 與 HTML 同順序的三欄陣列
-    const infoItems: string[] = [
-      this.showBusType
-        ? `大分類：${`${g.header.busType ?? ''}/${g.header.busTypeName ?? ''}`.replace(/\/$/, '')}`
-        : '大分類：',
-      `銷售日期：${this.formatDate(g.header.txnDate || '')}`,
-      `製表日期：${this.printedAt}`,
-
-      `專櫃：${g.header.tltNo} / ${g.header.tltName}`,
-      // 樓層 + 抽成類別放同一格（如 HTML）
-      `樓層：${g.header.floor || '－'}  抽成類別：${firstSub?.tltId || '無'}`,
-      `交易總件數：${totalCount}／退貨件數：${returnQty}`,
-
-      `區域：${g.header.area || '－'}`,
-      '', // 對齊 HTML 中的空白 col-4
-      `退貨金額：${this.moneyFormat(returnAmt)}`,
+    // 與 HTML 同順序（指定右移與顏色）
+    const infoItems: GridItem[] = [
+      // 1 大分類
+      (this.showBusType
+        ? { parts: [{ text: `大分類：${`${g.header.busType ?? ''}/${g.header.busTypeName ?? ''}`.replace(/\/$/, '')}` }] }
+        : { parts: [{ text: '大分類：' }] }
+      ),
+      // 2 銷售日期（值紅、右移 20pt）
+      {
+        dx: 70,
+        parts: [
+          { text: '銷售日期：' },
+          { text: this.formatDate(g.header.txnDate || '') },
+        ],
+      },
+      // 3 製表日期（值紅）
+      {
+        dx: 80,
+        parts: [
+          { text: '製表日期：' },
+          { text: this.printedAt},
+        ],
+      },
+      // 4 專櫃（值紅）
+      {
+        parts: [
+          { text: '專櫃：' },
+          { text: `${g.header.tltNo} / ${g.header.tltName}` },
+        ],
+      },
+      // 5 樓層 + 抽成類別（樓層值紅、抽成類別藍，右移 20pt）
+      {
+        dx: 70,
+        parts: [
+          { text: '樓層：' },
+          { text: `${g.header.floor || '－'}`},
+          { text: '  抽成類別：', color: BLUE },
+          { text: `${firstSub?.tltId || '無'}`, color: RED},
+        ],
+      },
+      // 6 交易總件數／退貨件數（值紅）
+      {
+        dx: 80,
+        parts: [
+          { text: '交易總件數／退貨件數：' },
+          { text: `${totalCount} / ${returnQty}` },
+        ],
+      },
+      // 7 區域（值紅）
+      {
+        parts: [
+          { text: '區域：' },
+          { text: `${g.header.area || '－'}` },
+        ],
+      },
+      // 8 空白位（保持三欄節奏）
+      { parts: [{ text: '' }] },
+      // 9 退貨金額（值紅）
+      {
+        dx: 80,
+        parts: [
+          { text: '退貨金額：' },
+          { text: this.moneyFormat(returnAmt) },
+        ],
+      },
     ];
 
     currentY = drawKeyValueGrid(infoItems, marginLeft, currentY, {
@@ -381,7 +508,9 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
     currentY += 10;
   };
 
-  // 主流程
+  // =========================
+  //   主流程：各群組 / 子表
+  // =========================
   this.tltGroups.forEach((group: any, gIdx: number) => {
     if (gIdx > 0) currentY += 10;
 
@@ -389,8 +518,10 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
       if (si === 0) drawFullGroupHeader(group, sub);
       else drawCenteredTltIdBanner(sub.tltId);
 
+      // 欄位
       const tableColumns = this.selectedColumns.map((col: any) => ({ header: col.header, dataKey: col.field }));
 
+      // 明細
       const bodyRows: any[] = sub.rows.map((row: any, rowIndex: number) => {
         const obj: any = {};
         this.selectedColumns.forEach((col: any) => {
@@ -401,6 +532,7 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
         return obj;
       });
 
+      // 小計
       const subtotalRow: any = {};
       this.selectedColumns.forEach((col: any) => {
         if (col.field === '__index') subtotalRow[col.field] = '小計';
@@ -411,6 +543,7 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
       (subtotalRow as any).__type = 'subtotal';
       bodyRows.push(subtotalRow);
 
+      // 總計（最後一張子表）
       const isLastSub = si === group.subTables.length - 1;
       if (isLastSub) {
         const totalRow: any = {};
@@ -424,6 +557,7 @@ exportPDF(orientation: 'p' | 'l' = 'l'): void {
         bodyRows.push(totalRow);
       }
 
+      // 表格
       autoTable(doc, {
         startY: currentY,
         columns: tableColumns,
