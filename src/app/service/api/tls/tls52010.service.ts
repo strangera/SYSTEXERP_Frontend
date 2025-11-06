@@ -94,7 +94,6 @@ export interface IPOS2004DetailData {
   UNIT_NAME: string; // 單位名稱
   PLU_BoxQty: number; // 包裝入數
   PLU_StockTaxType: string; // 進貨稅別
-  POD_SaleTax?: number; // 售價稅別
   PLU_TaxType: string; // 售價稅別
   PLU_SalePrc_UNI?: number; // 單價
   PLU_SalePrc?: number; // 售價
@@ -212,7 +211,6 @@ export interface IPOS2017Data {
   POD_BuyAmt: number,
   PLU_TaxType: string,
   POD_SalePrc: number,
-  POD_SaleTax: number,
   POD_SaleAmt: number,
   POD_Remark: string,
   UNIT_NAME: string,
