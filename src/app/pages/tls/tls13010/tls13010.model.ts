@@ -501,6 +501,7 @@ export interface DiscountSettingItem {
   tlt_edate: Date;
   cag_charge_rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+  _source?: 'api' | 'new';
 
   is_configured: boolean;
   is_enabled: boolean;
@@ -526,12 +527,15 @@ export interface AnnualPerformanceItem {
 
 export interface DiscountLevelItem {
   id?: number | string;
+  charged_id?: number | string;
   selected: boolean;
   cag_barcode: string;
   level_bmount: number;
   level_eamount: number;
   level_charge_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+  _source?: 'api' | 'new';
+  contract_period?: string;
 
   is_configured: boolean;
   is_enabled: boolean;
@@ -1111,7 +1115,8 @@ export class DataCleaner {
         cag_barcode: detail.cag_barcode || '',
         level_bmount: this.parseNumber(detail.level_bmount) || 0,
         level_eamount: this.parseNumber(detail.level_eamount) || 0,
-        level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0
+        level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0,
+        charged_id: detail.charged_id
       };
 
       switch (detail._status) {
@@ -1443,6 +1448,7 @@ export interface YearChargeDetailApiItem {
 
 export interface LevelChargeDetailApiItem {
   id: number;
+  charged_id: number;
   talent_id: number;
   tlt_id: string;
   seq_no: number;

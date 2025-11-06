@@ -324,6 +324,7 @@ export class CommissionDataService {
     // 否則只轉換現有資料
     return chargeDetails.map(detail => ({
       id: detail.id || this.generateTempId(),
+      _source: 'api',  // 🆕 標記為 API 來的資料
       selected: true,
       cag_barcode: detail.cag_barcode || '',
       tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
@@ -337,6 +338,7 @@ export class CommissionDataService {
 
   /**
    * 建立完整的折扣項目列表（包含所有選項）
+   * 為所有 8 種折扣別建立項目，但只有既有資料的會被勾選
    */
   private buildCompleteDiscountItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountSettingItem[] {
     const result: DiscountSettingItem[] = [];
@@ -346,38 +348,40 @@ export class CommissionDataService {
     const isNewContractWithoutData = existingDetails.length === 0;
 
     options.discountOptions?.forEach((option, index) => {
-      // 修改：使用 filter 而不是 find，處理同一折扣別的多筆資料
+      // 找出這個折扣別的所有既有資料
       const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
 
       if (existingItems.length > 0) {
-        // 為每個既有項目創建一筆記錄
+        // 有既有資料：為每筆既有資料建立項目（已勾選）
         existingItems.forEach(existingItem => {
           result.push({
             id: existingItem.id || this.generateTempId(),
+            _source: 'api',  // 🆕 API 來的資料
             selected: true,
             cag_barcode: existingItem.cag_barcode,
             tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
             tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
             cag_charge_rate: existingItem.cag_charge_rate || 0,
             _status: 'original',
-            is_configured: existingItem.is_configured || true,
-            is_enabled: existingItem.is_enabled || true
+            is_configured: true,
+            is_enabled: true
           });
         });
       } else {
-        // 未設定的項目處理邏輯保持不變
+        // 沒有既有資料：建立未勾選的項目（除了正品預設勾選）
         const isFirstOption = index === 0;
         const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
           (option.value === '000' || option.label?.includes('正品'));
 
         result.push({
           id: this.generateTempId(),
+          _source: 'new',  // 🆕 前端新增的資料
           selected: shouldSelectByDefault,
           cag_barcode: option.value,
           tlt_bdate: contractStartDate,
           tlt_edate: contractEndDate,
-          cag_charge_rate: shouldSelectByDefault ? 0 : 0,
-          _status: shouldSelectByDefault ? 'new' : 'new',
+          cag_charge_rate: 0,
+          _status: 'new',
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault
         });
@@ -413,11 +417,14 @@ export class CommissionDataService {
       // 只轉換現有資料（保持原有邏輯）
       return levelDetails.map(detail => ({
         id: detail.id || this.generateTempId(),
+        _source: 'api',  // 🆕 API 來的資料
         selected: true,
         cag_barcode: detail.cag_barcode || '',
+        contract_period: '', // 🆕 稍後會由 component 填入
         level_bmount: detail.level_bmount || 0,
         level_eamount: detail.level_eamount || 0,
         level_charge_rate: detail.level_charge_rate || 0,
+        charged_id: detail.charged_id || undefined, // 🔑 加入 charged_id
         _status: 'original',
         is_configured: true,
         is_enabled: true
@@ -425,51 +432,32 @@ export class CommissionDataService {
     }
   }
 
+  /**
+   * 建立層級抽成項目
+   * 只載入既有的層級資料，不預先建立新項目
+   * 新項目由 syncDiscountToLevel 根據折扣設定動態產生
+   */
   private buildCompleteLevelItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
-    const result: DiscountLevelItem[] = [];
-    const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
-    const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
+    // 只處理既有資料，不預先建立新項目
+    if (existingDetails.length === 0) {
+      return [];  // 沒有既有資料，返回空陣列
+    }
 
-    const isNewContractWithoutData = existingDetails.length === 0;
-
-    options.discountOptions?.forEach((option, index) => {
-      // Use filter to handle multiple existing items for the same cag_barcode
-      const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
-
-      if (existingItems.length > 0) {
-        existingItems.forEach(existingItem => {
-          result.push({
-            id: existingItem.id || this.generateTempId(),
-            selected: true,
-            cag_barcode: existingItem.cag_barcode,
-            level_bmount: existingItem.level_bmount || 0,
-            level_eamount: existingItem.level_eamount || 0,
-            level_charge_rate: existingItem.level_charge_rate || 0,
-            _status: 'original',
-            is_configured: existingItem.is_configured ?? true,
-            is_enabled: existingItem.is_enabled ?? true
-          });
-        });
-      } else {
-        const isFirstOption = index === 0;
-        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
-          (option.value === '000' || option.label?.includes('正品'));
-
-        result.push({
-          id: this.generateTempId(),
-          selected: shouldSelectByDefault,
-          cag_barcode: option.value,
-          level_bmount: 0,
-          level_eamount: 0,
-          level_charge_rate: shouldSelectByDefault ? 0 : 0,
-          _status: shouldSelectByDefault ? 'new' : 'new',
-          is_configured: shouldSelectByDefault,
-          is_enabled: shouldSelectByDefault
-        });
-      }
-    });
-
-    return result;
+    // 只載入既有的層級資料
+    return existingDetails.map(existingItem => ({
+      id: existingItem.id || this.generateTempId(),
+      _source: 'api',  // 🆕 API 來的資料
+      selected: true,
+      cag_barcode: existingItem.cag_barcode,
+      contract_period: '', // 🆕 稍後會由 component 填入
+      level_bmount: existingItem.level_bmount || 0,
+      level_eamount: existingItem.level_eamount || 0,
+      level_charge_rate: existingItem.level_charge_rate || 0,
+      charged_id: existingItem.charged_id || undefined, // 🔑 加入 charged_id
+      _status: 'original',
+      is_configured: existingItem.is_configured ?? true,
+      is_enabled: existingItem.is_enabled ?? true
+    }));
   }
 
   // ============ 工具方法 ============
