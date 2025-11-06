@@ -1,7 +1,7 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'; // 引入 AbstractControl
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core'; //  引入 TranslateService
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -16,8 +16,10 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Tls13080CreateRequest, Tls13080QueryRequest, Tls13080Response, Tls13080Service } from '@service/api/tls/tls13080.service';
+import { Tls13080InsertRequest, Tls13080QueryRequest, Tls13080Response, Tls13080Service } from '@service/api/tls/tls13080.service'; // 💡 修正 Tls13080CreateRequest 為 Tls13080InsertRequest
 import { finalize } from 'rxjs';
+import { DropDownListService, IAPS1003Item } from '@service/utility/dropDownList.service';
+import { TableSelectAllChangeEvent } from 'primeng/table';
 
 @Component({
   selector: 'app-tls13080',
@@ -41,7 +43,7 @@ import { finalize } from 'rxjs';
 export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response> implements OnInit {
   formTitle = '合約扣款項目';
   dataForm = this.formBuilder.nonNullable.group({
-    cap_type: [{ value: 'D', disabled: true }], // 扣款類型
+    cap_type: [{ value: 'D', disabled: true }], // 扣款類型 (固定 D)
     cap_item: [null, [Validators.required]], // 扣款代號
     tpy_rate: [null, [Validators.required, Validators.max(9999999)]], // 抽成率% numeric(8, 6)
     cap_saletype: [null, [Validators.required]], // 銷售類型
@@ -63,7 +65,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
     tlt_bdate_Start: [null], // 契約起日
     tlt_bdate_End: [null], // 契約迄日
     tlt_term_type: [null], // 抽成別
-    ven_uniform: [null], // 廠商統一編號
+    ven_uniform: [null], // 廠商統一編號 (已修正為 ven_uniform)
     org_id: [null], // 組織代碼
     PageSize: [30],
     PageIndex: [1],
@@ -74,7 +76,9 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
   tlt_term_typeOptions = getSYS1000Options('tlt_term_type');
   ven_uniform_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   org_idOptions = this.dropdown.querySys3100();
+  capItemDetails: IAPS1003Item[] = [];
 
+  isAllSelected = false;
   data: Tls13080Response[] = [];
   selectedItems: Tls13080Response[] = [];
   columns: ReportColumn[] = [
@@ -93,13 +97,17 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
 
   constructor(
     private readonly dropdown: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
     public readonly tls13080Service: Tls13080Service,
-    private readonly datePipe: DatePipe
+    private readonly datePipe: DatePipe,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS13080');
     this.setupConditionalValidation();
+    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }).pipe(untilDestroyed(this)).subscribe(data => {
+      this.capItemDetails = data.Data;
+    });
   }
 
   /** 根據 cap_saletype 變化，動態設置 instms_type 和 edc_bank 的必填規則 */
@@ -115,11 +123,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
     });
   }
 
-  private applyValidationRules(
-    capSaletype: string | null,
-    instmsTypeControl: AbstractControl,
-    edcBankControl: AbstractControl
-  ): void {
+  private applyValidationRules(capSaletype: string | null, instmsTypeControl: AbstractControl, edcBankControl: AbstractControl): void {
     // 預設先清除所有必填和值
     instmsTypeControl.clearValidators();
     instmsTypeControl.setValue(null, { emitEvent: false });
@@ -139,12 +143,20 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
     edcBankControl.updateValueAndValidity();
   }
 
+  /**
+   * 查詢邏輯
+   */
   onSubmit(frm: FormGroup) {
-    const body = {
+    if (!this.dataForm.get('cap_item')?.value) {
+      this.messageService.errorBubble('請先選擇 扣款代碼');
+      return;
+    }
+    const body: Tls13080QueryRequest = {
       ...frm.getRawValue(),
+      cap_item: this.dataForm.get('cap_item')?.value,
       tlt_bdate_Start: this.datePipe.transform(frm.value.tlt_bdate_Start, 'yyyy-MM-dd'),
       tlt_bdate_End: this.datePipe.transform(frm.value.tlt_bdate_End, 'yyyy-MM-dd'),
-    }
+    } as Tls13080QueryRequest;
     this.handleSubmit(frm, () => {
       this.tls13080Service.queryTLS13080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
@@ -154,42 +166,78 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
       })
     });
   }
-
+  /** 輔助方法：根據 cap_item 尋找 gui_flag */
+  private getGuiFlagByCapItem(capItem: string | null): string {
+    if (!capItem) return '';
+    const detail = this.capItemDetails.find(item => item.CAP_Item === capItem); // 假設下拉選單的 value 對應 CAP_Item
+    return detail ? detail.GUI_FLAG : 'N'; // 找不到則回傳預設值 'N'
+  }
+  /**
+   * 新增邏輯
+   */
   override onCreate(frm: FormGroup) {
-    // 1. 驗證扣款資訊表單
+    console.log(this.isAllSelected);
+
     this.handleSubmit(frm, () => {
+      this.loading = false;
       const formValue = frm.value;
-      const request: Tls13080CreateRequest = this.selectedItems.map(item => ({
+      if (!this.selectedItems || this.selectedItems.length === 0) {
+        this.messageService.warnBubble('請至少選擇一筆合約資料');
+        return;
+      }
+      // 2. 組裝 selectList (選取的合約資訊)
+      const selectList = this.selectedItems.map(item => ({
         talent_id: item.talent_id,
-        // cap_type: formValue.cap_type as string, // 'D'
-        cap_item: formValue.cap_item as string,
-        tpy_bdate: item.tlt_bdate,
-        tpy_edate: item.tlt_edate,
-        cap_saletype: formValue.cap_saletype as string,
-        edc_bank: formValue.edc_bank as string | null,
-        instms_type: formValue.instms_type as string | null,
-        pay_no: formValue.pay_no as string,
-        tpy_rate: formValue.tpy_rate,
+        tlt_bdate: item.tlt_bdate, // 直接使用 YYYY-MM-DD 格式
+        tlt_edate: item.tlt_edate, // 直接使用 YYYY-MM-DD 格式
         org_id: item.org_id,
       }));
-      // 4. 提示確認訊息
+      // 3. 組裝完整 Request Body (扁平化結構)
+      const request: Tls13080InsertRequest = {
+        isAll: this.isAllSelected || false,
+        cap_item: formValue.cap_item as string,
+        cap_saletype: formValue.cap_saletype as string,
+        instms_type: formValue.instms_type as string | null,
+        edc_bank: formValue.edc_bank as string | null,
+        pay_no: formValue.pay_no as string,
+        gui_flag: this.getGuiFlagByCapItem(formValue.cap_item),
+        tpy_rate: formValue.tpy_rate,
+        selectList: selectList,
+        Query: this.lastQueryBody || {} as Tls13080QueryRequest, // 傳入上次查詢條件，若為 null 則傳入空物件
+      };
+
+      // 4. 取得扣款代號名稱 (用於提示訊息) 💡 修正邏輯
+      const capItemOption = this.capItemDetails.find(opt => opt.CAP_Item === formValue.cap_item);
+      const capItemName = capItemOption ? capItemOption.CAP_Name : formValue.cap_item; // 使用 CAP_Name
+
+      // 取得銷售類型名稱 (如果提示訊息中也需要這個)
+      const tpyRate = (formValue.tpy_rate || 0).toFixed(2);
+
+      // 5. 提示確認訊息
       this.confirmationService.confirm({
         acceptLabel: '執行',
         rejectLabel: '取消',
-        message: `共有 ${request.length} 家合約要增加 ${formValue.cap_item} ${formValue.cap_saletype} 抽成率為 999.99%`, // TODO: cap_saletype 要改成 扣款名稱
+        message: `共有 ${request.selectList.length} 家合約要增加 ${formValue.cap_item} (${capItemName}) 抽成率為 ${tpyRate}%`,
         header: `確認寫入合約？`,
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           this.loading = true;
-          this.tls13080Service.isnertTLS13080(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-            this.messageService.successBubble(res.Message);
-            this.selectedItems = []; // 清空選取
-            this.data = []; // 清空表格資料
-            this.totalRecords = 0; // 清空總筆數
-            this.lastQueryBody = null; // 清空上次查詢條件
+          this.tls13080Service.insertTLS13080(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.selectedItems = []; // 清空選取
+              this.data = [];
+              this.totalRecords = 0;
+              this.queryForm.reset();
+              this.dataForm.reset();
+            },
           });
         }
       });
     });
+  }
+
+  selectAllChange(event: TableSelectAllChangeEvent) {
+    console.log(event.checked);
   }
 }

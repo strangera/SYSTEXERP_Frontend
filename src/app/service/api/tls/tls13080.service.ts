@@ -7,7 +7,6 @@ import { environment } from 'src/environments/environment';
 
 /**
  * TLS13080 整批新增合約扣款作業 - 查詢條件 Request
- * 根據規格畫面上的查詢欄位定義。
  */
 export interface Tls13080QueryRequest {
   /** 專櫃編號 (多選，以清單傳遞) */
@@ -17,7 +16,7 @@ export interface Tls13080QueryRequest {
   /** 契約起始日 - 起 */
   tlt_bdate_Start?: string;
   /** 契約到期日 - 迄 */
-  tlt_bdate_End?: string;
+  tlt_edate_End?: string;
   /** 抽成別 */
   tlt_term_type?: string;
   /** 廠商統一編號 */
@@ -31,7 +30,6 @@ export interface Tls13080QueryRequest {
 
 /**
  * TLS13080 整批新增合約扣款作業 - 查詢結果 Response Item
- * 根據 C# 屬性定義 (合約資料清單)
  */
 export interface Tls13080Response {
   /** 合約編號系統 id (long) */
@@ -58,31 +56,41 @@ export interface Tls13080Response {
   contract_subno: string;
   /** 組織代碼 */
   org_id: string;
+  /** 廠商統一編號 (補齊 Swagger Response 欄位) */
+  ven_uniform: string;
 }
 
+
 /**
- * TLS13080 整批新增合約扣款作業 - 寫入資料庫的單一項目結構
- * 結構對應 tlttalent_fare table 的欄位
+ * TLS13080 整批新增合約扣款作業 - selectList 內部的單一合約項目
  */
-export interface Tls13080CreateItem {
+export interface Tls13080SelectListItem {
   talent_id: number;
-  // cap_type: string; // 固定為 'D'
-  cap_item: string; // 扣款代號
-  tpy_bdate: string; // 契約起始年月 (YYMM)
-  tpy_edate: string; // 契約到期年月 (YYMM)
-  // tpy_amount: number; // 固定為 0
-  // tpy_totalamt: number; // 固定為 0
-  // down_payment: number; // 固定為 0
-  // period_nos: number; // 固定為 0
-  cap_saletype: string; // 銷售類型
-  edc_bank: string | null; // 收單行
-  instms_type: string | null; // 期數
-  pay_no: string; // 支付編號
-  tpy_rate: number; // 抽成率 (已除以 100)
+  tlt_bdate: string; // 契約起始日 (YYYY-MM-DD)
+  tlt_edate: string; // 契約到期日 (YYYY-MM-DD)
   org_id: string; // 組織代碼
 }
 
-export type Tls13080CreateRequest = Tls13080CreateItem[];
+/**
+ * TLS13080 整批新增合約扣款作業 - 新增 Request (扁平化結構)
+ * 修正: 新增 isAll 和 Query 欄位
+ */
+export interface Tls13080InsertRequest {
+  /** 💡 新增: 是否全選查詢結果 */
+  isAll: boolean;
+  cap_item: string; // 扣款代號
+  cap_saletype: string; // 銷售類型
+  instms_type: string | null; // 期數
+  edc_bank: string | null; // 收單行
+  pay_no: string; // 支付編號
+  gui_flag: string; // 需從 cap_item 帶出
+  tpy_rate: number; // 抽成率 (%)
+  /** 只有當 isAll=false 時，selectList 才有作用 */
+  selectList: Tls13080SelectListItem[];
+  /** 💡 新增: 查詢條件 (用於 isAll=true 時) */
+  Query: Tls13080QueryRequest;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -105,8 +113,7 @@ export class Tls13080Service {
    * 整批新增合約扣款項目
    * @param data 要新增的合約扣款項目清單
    */
-  isnertTLS13080(data: Tls13080CreateRequest): Observable<ApiResponse<number>> {
-    // 假設後端新增 API 路徑為 /createTLS13080
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/isnertTLS13080`, data);
+  insertTLS13080(data: Tls13080InsertRequest): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS13080`, data);
   }
 }

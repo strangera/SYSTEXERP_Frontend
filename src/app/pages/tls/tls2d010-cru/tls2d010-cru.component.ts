@@ -203,7 +203,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       pod: this.dropDownListService.queryTALPORDERM_DropDownList(),
       acc: this.dropDownListService.queryGLS1005_DropDownList(),
       org: this.dropDownListService.querySYS3100_DropDownList(),
-      capItem: this.dropDownListService.queryAPS1003DropDownList({ cap_typeList: [] })
+      capItem: this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] })
     })
       .pipe(untilDestroyed(this))
       .subscribe(({ tlt, pod, acc, org, capItem }) => {
@@ -377,9 +377,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     };
   }
   onSubmit(): void {
-      if (this.isDetailMode) {
-    return; // 檢視模式下不做任何動作
-  }
+    if (this.isDetailMode) {
+      return; // 檢視模式下不做任何動作
+    }
     this.submitted = true;
 
     // 判斷是否為更新

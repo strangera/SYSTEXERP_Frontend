@@ -293,7 +293,6 @@ export class DropdownApiService {
       shareReplay(1) // 避免重複查詢;
     );
   }
-
   // --- POS 相關 ---
 
   /** 查詢後台主機IP(POS10015) */

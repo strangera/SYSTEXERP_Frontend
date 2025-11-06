@@ -302,7 +302,11 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.btnLoading = true;
     this.messageService.blockUi();
     if (frm.valid) {
-      this.tls24010Service.exportTLS24010PDF(frm.value).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
+      const body = {
+        ...frm.value,
+        TXN_Date: frm.value.TXN_Date ? formatDateToYYYY_MM_DD(frm.value.TXN_Date) : '',
+      }
+      this.tls24010Service.exportTLS24010PDF(body).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
         this.handleFileExport(res, '.pdf');
       })
       this.submitted = false;

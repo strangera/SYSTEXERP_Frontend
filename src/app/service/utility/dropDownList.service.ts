@@ -107,6 +107,10 @@ export interface IAPS1003Request {
   cap_typeList: string[];
 }
 
+export interface CAP_ItemRequest {
+  CAP_ItemList: string[]
+}
+
 export interface IPOS20031Request {
   CAT_LNo: string[];
 }
@@ -218,7 +222,7 @@ export interface IAPS1003Item {
   CAP_Item: string;
   CAP_Name: string;
   AccNo?: string;
-  GUI_FLAG?: string;
+  GUI_FLAG: string;
   CAP_TaxType?: string;
   CAP_Type: string;
 }
@@ -520,7 +524,7 @@ export class DropDownListService {
     return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);
   }
   // 查詢扣款代碼檔(APS1003) 下拉選單
-  queryAPS1003DropDownList(params: IAPS1003Request): Observable<ApiResponse<IAPS1003Item[]>> {
+  queryAPS1003DropDownList(params: CAP_ItemRequest): Observable<ApiResponse<IAPS1003Item[]>> {
     return this.http.post<ApiResponse<IAPS1003Item[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryAPS1003DropDownList`, params);
   }
   // 查詢CPM11010 Service_Id資料表下拉選單

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
+import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
 import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
 import { TableReportUtilityService } from './table-report-utility.service';
@@ -39,7 +39,7 @@ import { trigger, style, transition, animate } from '@angular/animations'; // 1.
   ]
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
-  @ViewChild('dt') private dt!: Table;
+  @ViewChild('dt') public dt!: Table;
   @Input({ required: true }) lastQueryBody?: any;              // 用來儲存上一次的查詢條件
   @Input({ required: true }) totalRecords = 0;                // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];                // 用來儲存查詢結果
@@ -57,6 +57,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showCheckBox = false;
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
+  @Output() selectAllChange = new EventEmitter<boolean>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => {
     if (data) { return this.isRowSelectable(data); }
@@ -230,9 +231,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.isAllSelected) {
       this.selectedItems = [...this.data];
       this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(true);
     } else {
       this.selectedItems = [...this.selectedItems];
       this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(true);
     }
   }
   onScroll(event: any) {
@@ -251,6 +254,18 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     }
     this.cdr.detectChanges();
+  }
+  onSelectAllChange(event: TableSelectAllChangeEvent) {
+    this.isAllSelected = event.checked;
+    if (this.isAllSelected) {
+      this.selectedItems = [...this.data];
+      this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(true);
+    } else {
+      this.selectedItems = [];
+      this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(false);
+    }
   }
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;
