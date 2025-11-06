@@ -157,7 +157,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   }
 
   /* ----------------- 總計對應 ----------------- */
-  // 信用卡明細總計：欄位 -> API 總計鍵
   private readonly creditTotalFieldMap: Record<string, string> = {
     TXN_PayAmt:      'TotalPayAmt',
     TXN_Point:       'TotalPoint',
@@ -165,7 +164,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     EDC_InstEachAmt: 'TotalInstEachAmt',
   };
 
-  // 專櫃卡別分析總計：欄位 -> API 總計鍵
   private readonly counterTotalFieldMap: Record<string, string> = {
     AE_Count: 'TOTAL_AE_Count', AE_Amount: 'TOTAL_AE_Amount',
     DA_Count: 'TOTAL_DA_Count', DA_Amount: 'TOTAL_DA_Amount',
@@ -178,7 +176,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   };
 
   /* ----------------- 欄位設定（依模式切換） ----------------- */
-  columns: any[] = []; // 作用中欄位
+  columns: any[] = [];
 
   private columnsCredit = [
     { field: 'TXN_Date', header: '銷售日期', format: (v: any) => this.formatDate(v), visible: true },
@@ -197,35 +195,46 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     { field: 'EDC_InstEachAmt', header: '每期分期金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
   ];
 
+  /**
+   * 方法2：移除 groupField，將多層表頭改為單層欄位，以避免 p-table 計算 scroll 高度出錯
+   */
   private columnsCounter = [
     { field: 'TXN_Date', header: '銷售日期', format: (v: any) => this.formatDate(v), visible: true },
     { field: 'ECR_No',   header: '收銀機號', visible: true },
     { field: 'tlt_no',   header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃編號/名稱', visible: true, style: 'text-left' },
 
-    { field: 'AE_Count',   header: '筆數', groupField: 'AE',       style: 'text-right', isTotal: true, visible: true },
-    { field: 'AE_Amount',  header: '金額', groupField: 'AE',       style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // AE
+    { field: 'AE_Count',  header: 'AE 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'AE_Amount', header: 'AE 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'DA_Count',   header: '筆數', groupField: 'DA',       style: 'text-right', isTotal: true, visible: true },
-    { field: 'DA_Amount',  header: '金額', groupField: 'DA',       style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // DA
+    { field: 'DA_Count',  header: 'DA 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'DA_Amount', header: 'DA 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'MASTER_Count',  header: '筆數', groupField: 'MASTER', style: 'text-right', isTotal: true, visible: true },
-    { field: 'MASTER_Amount', header: '金額', groupField: 'MASTER', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // MASTER
+    { field: 'MASTER_Count',  header: 'MASTER 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'MASTER_Amount', header: 'MASTER 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'VISA_Count',  header: '筆數', groupField: 'VISA',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'VISA_Amount', header: '金額', groupField: 'VISA',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // VISA
+    { field: 'VISA_Count',  header: 'VISA 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'VISA_Amount', header: 'VISA 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'JCB_Count',  header: '筆數', groupField: 'JCB',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'JCB_Amount', header: '金額', groupField: 'JCB',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // JCB
+    { field: 'JCB_Count',  header: 'JCB 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'JCB_Amount', header: 'JCB 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'UnionPay_Count',  header: '筆數', groupField: 'UnionPay',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'UnionPay_Amount', header: '金額', groupField: 'UnionPay',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // UnionPay
+    { field: 'UnionPay_Count',  header: 'UnionPay 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'UnionPay_Amount', header: 'UnionPay 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'Others_Count',  header: '筆數', groupField: 'Others',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'Others_Amount', header: '金額', groupField: 'Others',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // Others
+    { field: 'Others_Count',  header: '其他 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'Others_Amount', header: '其他 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'Total_Count',  header: '筆數', groupField: 'Total',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'Total_Amount', header: '金額', groupField: 'Total',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    // Total
+    { field: 'Total_Count',  header: '合計 筆數',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'Total_Amount', header: '合計 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
   ];
 
   /* ----------------- 生命週期 ----------------- */
@@ -267,64 +276,193 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     this.acquiringBankService.getAcquiringBanks().subscribe(data => this.acquiringBankOptions = data);
   }
 
-  /* ----------------- 查詢（按鈕）— 固定 pageSize=30 ----------------- */
-/* ----------------- 查詢（按鈕）— 固定 pageSize=30 ----------------- */
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const val = this.queryForm.getRawValue() as any;
+  /* ----------------- 查詢（按鈕）— 統一送大小寫分頁參數 ----------------- */
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const val = this.queryForm.getRawValue() as any;
 
-    const defaultSort = this.viewMode === 'counter'
-      ? this.defaultSortCounter
-      : this.defaultSortCredit;
+      const defaultSort = this.viewMode === 'counter'
+        ? this.defaultSortCounter
+        : this.defaultSortCredit;
 
-    const sortByArr: any[] =
-      (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy :
-        (this.sortMeta.length ? this.sortMeta : defaultSort)).map((s: any) => ({ ...s }));
+      const sortByArr: any[] =
+        (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy :
+          (this.sortMeta.length ? this.sortMeta : defaultSort)).map((s: any) => ({ ...s }));
 
-    // 固定傳 30（保險同時設定大小寫）
-    const payload = this.prune({
-TXN_DateStart: this.toDateOnly(val?.TXN_DateStart ?? this.yesterday),
-TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd   ?? this.yesterday),
+      const payloadBase = this.prune({
+        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart ?? this.yesterday),
+        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd   ?? this.yesterday),
 
-      ECR_No     : this.ensureArr(val?.ECR_No),
-      TLT_No     : this.ensureArr(val?.tlt_no),
-      CRD_Type   : this.ensureArr(val?.CRD_Type),
-      CRD_No     : (val?.CRD_No ?? '') || undefined,
-      TXN_PayAmt : (val?.TXN_PayAmt === '' || val?.TXN_PayAmt == null) ? undefined : Number(val.TXN_PayAmt),
+        ECR_No     : this.ensureArr(val?.ECR_No),
+        TLT_No     : this.ensureArr(val?.tlt_no),
+        CRD_Type   : this.ensureArr(val?.CRD_Type),
+        CRD_No     : (val?.CRD_No ?? '') || undefined,
+        TXN_PayAmt : (val?.TXN_PayAmt === '' || val?.TXN_PayAmt == null) ? undefined : Number(val.TXN_PayAmt),
 
-      tlt_building: (val?.tlt_building ?? '') || undefined,
-      tlt_floor   : this.ensureArr(val?.tlt_floor),
-      org_id      : this.ensureArr(val?.org_id),
+        tlt_building: (val?.tlt_building ?? '') || undefined,
+        tlt_floor   : this.ensureArr(val?.tlt_floor),
+        org_id      : this.ensureArr(val?.org_id),
 
-      IsHaveTERM_No: this.toBoolOrNull(val?.IsHaveTERM_No),
-      TERM_No      : this.ensureArr(val?.TERM_No),
-      Acquirer     : this.ensureArr(val?.Acquirer),
-      Conn_Status  : (val?.ConnStatus ?? '') || undefined,
+        IsHaveTERM_No: this.toBoolOrNull(val?.IsHaveTERM_No),
+        TERM_No      : this.ensureArr(val?.TERM_No),
+        Acquirer     : this.ensureArr(val?.Acquirer),
+        Conn_Status  : (val?.ConnStatus ?? '') || undefined,
 
-      pageSize: 30,
-      pageIndex: Number(val?.pageIndex) || 1,
-      PageSize: 30,
-      PageIndex: Number(val?.pageIndex) || 1,
-      SortBy: sortByArr,
+        SortBy: sortByArr,
+      });
+
+      // ✅ 同時夾帶大小寫的分頁參數，避免端點只吃其中一種
+      const pageIndex = Number(val?.pageIndex) || 1;
+      const pageSize = 30;
+      const payload = {
+        ...payloadBase,
+        pageIndex, pageSize,
+        PageIndex: pageIndex, PageSize: pageSize,
+      };
+
+      // 提供給 app-table-report
+      this.historyRequestBody = { ...payload };
+
+      this.loading = true;
+      this.messageService?.blockUi();
+
+      const call$ = this.viewMode === 'counter'
+        ? this.tls23090Service.queryTLS23090CounterCard(payload)
+        : this.tls23090Service.queryTLS23090(payload);
+
+      call$.pipe(finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      })).subscribe({
+        next: (res: any) => {
+          if (this.viewMode === 'counter') {
+            // ====== 專櫃卡別分析：rows ======
+            const items: any[] =
+              Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+              Array.isArray(res?.Data)            ? res.Data :
+              [];
+
+            const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
+              Number(obj?.[brand]?.[field] ?? 0);
+
+            const rows = items.map((r: any, i: number) => {
+              const list = r?.CRD_Type_List || {};
+              return {
+                TXN_Date: r?.TXN_Date,
+                ECR_No  : r?.ECR_No,
+                tlt_no  : r?.tlt_no,
+                tlt_name: r?.tlt_name,
+
+                AE_Count:       pick(list, 'AE', 'Count'),       AE_Amount:       pick(list, 'AE', 'Amount'),
+                DA_Count:       pick(list, 'DA', 'Count'),       DA_Amount:       pick(list, 'DA', 'Amount'),
+                MASTER_Count:   pick(list, 'MASTER', 'Count'),   MASTER_Amount:   pick(list, 'MASTER', 'Amount'),
+                VISA_Count:     pick(list, 'VISA', 'Count'),     VISA_Amount:     pick(list, 'VISA', 'Amount'),
+                JCB_Count:      pick(list, 'JCB', 'Count'),      JCB_Amount:      pick(list, 'JCB', 'Amount'),
+                UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
+                Others_Count:   pick(list, 'Others', 'Count'),   Others_Amount:   pick(list, 'Others', 'Amount'),
+                Total_Count:    pick(list, 'Total', 'Count'),    Total_Amount:    pick(list, 'Total', 'Amount'),
+
+                _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+              };
+            });
+
+            this.columns = this.columnsCounter;
+            this.data = rows;
+
+            // 以 API 總筆數為主，沒有就用 rows.length
+            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+            // ✅ 專櫃卡別總計
+            this.grandTotal = this.computeCounterGrandTotal(res);
+
+          } else {
+            // ====== 信用卡明細：rows ======
+            const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
+            const takeDetails = (w: any) =>
+              w?.tLS23090_CreditDetails ?? w?.TLS23090_CreditDetails ?? w?.CreditDetails ?? w?.Details ?? [];
+
+            const rows = wrappers
+              .flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : [])
+              .map((r: any, idx: number) => ({
+                ...r,
+                _rowKey: `crt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TXN_No ?? idx}`,
+              }));
+
+            this.columns = this.columnsCredit;
+            this.data = rows;
+            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+            // ✅ 信用卡明細總計
+            this.grandTotal = this.computeCreditGrandTotal(wrappers);
+          }
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.grandTotal = {};
+        },
+      });
     });
+  }
 
-    // 提供給 app-table-report
-    this.historyRequestBody = { ...payload };
+  /* ----------------- 給 app-table-report 的查詢函式（統一送大小寫分頁參數） ----------------- */
 
-    this.loading = true;
-    this.messageService?.blockUi();
+  /** 信用卡明細（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
+  public queryTLS23090CreditForReport = (body: any) =>
+    this.tls23090Service.queryTLS23090({
+      ...(body || {}),
+      // 補齊日期與分頁（大小寫都送）
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+      pageSize: body?.pageSize ?? 30,
+      pageIndex: body?.pageIndex ?? 1,
+      PageSize: body?.PageSize ?? body?.pageSize ?? 30,
+      PageIndex: body?.PageIndex ?? body?.pageIndex ?? 1,
+    })
+      .pipe(
+        map((res: any) => {
+          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
+          const takeDetails = (w: any) =>
+            w?.tLS23090_CreditDetails ?? w?.TLS23090_CreditDetails ?? w?.CreditDetails ?? w?.Details ?? [];
 
-    const call$ = this.viewMode === 'counter'
-      ? this.tls23090Service.queryTLS23090CounterCard(payload)
-      : this.tls23090Service.queryTLS23090(payload);
+          const rows = wrappers
+            .flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : [])
+            .map((r: any, idx: number) => ({
+              ...r,
+              _rowKey: `crt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TXN_No ?? idx}`,
+            }));
 
-    call$.pipe(finalize(() => {
-      this.loading = false;
-      this.messageService?.unblockUi();
-    })).subscribe({
-      next: (res: any) => {
-        if (this.viewMode === 'counter') {
-          // ====== 專櫃卡別分析：rows ======
+          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+          // GrandTotal：以 API wrapper 的 Total* 為準（多 wrapper 則相加）
+          const grand: Record<string, number> = {};
+          Object.entries(this.creditTotalFieldMap).forEach(([field, apiKey]) => {
+            const sum = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
+            grand[field] = sum;
+          });
+
+          const isFirstPage = (!body?.pageIndex && !body?.PageIndex) || Number(body?.pageIndex ?? body?.PageIndex) === 1;
+          if (isFirstPage) {
+            this.grandTotal = { ...grand };
+          }
+
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
+
+  /** 專櫃卡別分析（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
+  public queryTLS23090CounterForReport = (body: any) =>
+    this.tls23090Service
+      .queryTLS23090CounterCard({
+        ...(body || {}),
+        // ✅ 關鍵：大小寫分頁參數都送
+        pageSize: body?.pageSize ?? 30,
+        pageIndex: body?.pageIndex ?? 1,
+        PageSize: body?.PageSize ?? body?.pageSize ?? 30,
+        PageIndex: body?.PageIndex ?? body?.pageIndex ?? 1,
+      })
+      .pipe(
+        map((res: any) => {
           const items: any[] =
             Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
             Array.isArray(res?.Data)            ? res.Data :
@@ -354,147 +492,25 @@ TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd   ?? this.yesterday),
             };
           });
 
-          this.columns = this.columnsCounter;
-          this.data = rows;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          // ====== 專櫃卡別分析：✅ 這裡就把「總計」算好 ======
-          this.grandTotal = this.computeCounterGrandTotal(res);
+          // GrandTotal 取 Data[0] 上的 Totals/Summary/平放欄位
+          const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
+          const grand: Record<string, number> = {};
+          Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
+            grand[field] = Number(
+              carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
+            );
+          });
 
-        } else {
-          // ====== 信用卡明細：rows ======
-          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
-          const takeDetails = (w: any) =>
-            w?.tLS23090_CreditDetails ?? w?.TLS23090_CreditDetails ?? w?.CreditDetails ?? w?.Details ?? [];
+          const isFirstPage = (!body?.pageIndex && !body?.PageIndex) || Number(body?.pageIndex ?? body?.PageIndex) === 1;
+          if (isFirstPage) {
+            this.grandTotal = { ...grand };
+          }
 
-          const rows = wrappers
-            .flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : [])
-            .map((r: any, idx: number) => ({
-              ...r,
-              _rowKey: `crt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TXN_No ?? idx}`,
-            }));
-
-          this.columns = this.columnsCredit;
-          this.data = rows;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-          // ====== 信用卡明細：✅ 這裡就把「總計」算好 ======
-          this.grandTotal = this.computeCreditGrandTotal(wrappers);
-        }
-      },
-      error: () => {
-        this.data = [];
-        this.totalRecords = 0;
-        this.grandTotal = {}; // 失敗時清空以隱藏總計列
-      },
-    });
-  });
-}
-
-
-  /* ----------------- 給 app-table-report 的查詢函式（固定 30） ----------------- */
-
-  /** 信用卡明細（✅ 產出 GrandTotal 並同步本地） */
-  /** 信用卡明細（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
-public queryTLS23090CreditForReport = (body: any) =>
-  this.tls23090Service.queryTLS23090({
-    ...(body || {}),
-    pageSize: 30,
-    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-  })
-    .pipe(
-      map((res: any) => {
-        const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
-        const takeDetails = (w: any) =>
-          w?.tLS23090_CreditDetails ?? w?.TLS23090_CreditDetails ?? w?.CreditDetails ?? w?.Details ?? [];
-
-        // rows
-        const rows = wrappers
-          .flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : [])
-          .map((r: any, idx: number) => ({
-            ...r,
-            _rowKey: `crt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TXN_No ?? idx}`,
-          }));
-
-        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-        // GrandTotal：以 API wrapper 的 Total* 為準（多 wrapper 則相加）
-        const grand: Record<string, number> = {};
-        Object.entries(this.creditTotalFieldMap).forEach(([field, apiKey]) => {
-          const sum = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
-          grand[field] = sum;
-        });
-
-        // ⬅⬅ 只在第 1 頁同步到 component 狀態，避免後續載入覆蓋
-        const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
-        if (isFirstPage) {
-          this.grandTotal = { ...grand };
-        }
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-      })
-    );
-
-/** 專櫃卡別分析（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
-public queryTLS23090CounterForReport = (body: any) =>
-  this.tls23090Service
-    .queryTLS23090CounterCard({ ...(body || {}), PageSize: 30, pageSize: 30 })
-    .pipe(
-      map((res: any) => {
-        const items: any[] =
-          Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-          Array.isArray(res?.Data)            ? res.Data :
-          [];
-
-        const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
-          Number(obj?.[brand]?.[field] ?? 0);
-
-        const rows = items.map((r: any, i: number) => {
-          const list = r?.CRD_Type_List || {};
-          return {
-            TXN_Date: r?.TXN_Date,
-            ECR_No  : r?.ECR_No,
-            tlt_no  : r?.tlt_no,
-            tlt_name: r?.tlt_name,
-
-            AE_Count:       pick(list, 'AE', 'Count'),       AE_Amount:       pick(list, 'AE', 'Amount'),
-            DA_Count:       pick(list, 'DA', 'Count'),       DA_Amount:       pick(list, 'DA', 'Amount'),
-            MASTER_Count:   pick(list, 'MASTER', 'Count'),   MASTER_Amount:   pick(list, 'MASTER', 'Amount'),
-            VISA_Count:     pick(list, 'VISA', 'Count'),     VISA_Amount:     pick(list, 'VISA', 'Amount'),
-            JCB_Count:      pick(list, 'JCB', 'Count'),      JCB_Amount:      pick(list, 'JCB', 'Amount'),
-            UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
-            Others_Count:   pick(list, 'Others', 'Count'),   Others_Amount:   pick(list, 'Others', 'Amount'),
-            Total_Count:    pick(list, 'Total', 'Count'),    Total_Amount:    pick(list, 'Total', 'Amount'),
-
-            _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-          };
-        });
-
-        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-        // GrandTotal 取 Data[0] 上的 Totals/Summary/平放欄位
-        const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
-        const grand: Record<string, number> = {};
-        Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
-          grand[field] = Number(
-            carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
-          );
-        });
-
-        // ⬅⬅ 只在第 1 頁同步到 component 狀態
-        const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
-        if (isFirstPage) {
-          this.grandTotal = { ...grand };
-        }
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-      })
-    );
-
-
-  /** 專櫃卡別分析（✅ 產出 GrandTotal 並同步本地） */
-  
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
 
   /* ----------------- 檢視模式切換 ----------------- */
   onModeChange(): void { this.applyViewMode(); }
@@ -516,7 +532,7 @@ public queryTLS23090CounterForReport = (body: any) =>
   /* ----------------- 匯出（不帶 pageSize/pageIndex） ----------------- */
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
-    const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = this.historyRequestBody;
+    const { pageSize, PageSize, pageIndex, PageIndex, ...rest } = this.historyRequestBody; // ✅ 去掉分頁欄位
     return rest;
   }
 
@@ -589,12 +605,6 @@ public queryTLS23090CounterForReport = (body: any) =>
   }
 
   /* ----------------- 小工具 ----------------- */
-  private toIso(x: any): string | undefined {
-    if (!x) return undefined;
-    const d = typeof x === 'string' ? new Date(x) : (x as Date);
-    if (isNaN(d.getTime())) return undefined;
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
-  }
   private ensureArr = (v: any) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]));
   private toBoolOrNull(v: any): boolean | null {
     if (typeof v === 'boolean') return v;
@@ -637,40 +647,37 @@ public queryTLS23090CounterForReport = (body: any) =>
     for (const col of this.columns) {
       if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
     }
-    // 若想在某欄位顯示「總計」字樣，解開下一行並在 HTML 綁定 footerLabelField
-    // footer['tlt_name'] = '總計';
     return footer;
   }
-  /** 由信用卡明細的 wrapper 陣列，依 API 回傳的 Total* 欄位累加出對應的總計 */
-private computeCreditGrandTotal(wrappers: any[]): Record<string, number> {
-  const grand: Record<string, number> = {};
-  Object.entries(this.creditTotalFieldMap).forEach(([field, apiKey]) => {
-    const sum = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
-    grand[field] = sum;
-  });
-  return grand;
-}
 
-/** 由「專櫃卡別分析」API 的回應，取 Totals/Summary/平放的總計鍵，對應到欄位 */
-private computeCounterGrandTotal(res: any): Record<string, number> {
-  const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
-  const grand: Record<string, number> = {};
-  Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
-    grand[field] = Number(
-      carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
-    );
-  });
-  return grand;
-}
-// 1) 新增這個工具函式（放在 component 裡即可）
-private toDateOnly(x: any): string | undefined {
-  if (!x) return undefined;
-  const d = typeof x === 'string' ? new Date(x) : (x as Date);
-  if (isNaN(d.getTime())) return undefined;
-  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+  private computeCreditGrandTotal(wrappers: any[]): Record<string, number> {
+    const grand: Record<string, number> = {};
+    Object.entries(this.creditTotalFieldMap).forEach(([field, apiKey]) => {
+      const sum = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
+      grand[field] = sum;
+    });
+    return grand;
+  }
+
+  private computeCounterGrandTotal(res: any): Record<string, number> {
+    const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
+    const grand: Record<string, number> = {};
+    Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
+      grand[field] = Number(
+        carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
+      );
+    });
+    return grand;
+  }
+
+  // yyyy-MM-dd（date-only）
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 }
