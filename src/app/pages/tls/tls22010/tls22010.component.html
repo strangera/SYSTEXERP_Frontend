@@ -13,12 +13,12 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+            <app-multi-select label="樓層" [options]="floorOptions | async" optionLabel="Name" optionValue="No"
               [control]="queryForm.controls.floor_noList" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>
           </div>
 
@@ -55,10 +55,9 @@
 </div>
 <div class="card">
   <app-table-report tableKey="TLS22010" dataKey="ID" [data]="data" (detail)="onDetail($event)"
-    (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [totalRecords]="totalRecords"
-    [loading]="loading" [showDelete]="false" [showDetail]="true" [showEdit]="false" [showReportMode]="false"
-    [showReportMode]="false" [footerData]="footerData" [columns]="columns7" [lastQueryBody]="historyRequestBody"
-    [queryFunction]="tls22010Service.queryTLS22010.bind(tls22010Service)" (dataChange)="allData = $event">
+    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false" [showDetail]="true" [showEdit]="false"
+    [showReportMode]="false" [footerData]="footerData" [columns]="columns" [lastQueryBody]="historyRequestBody"
+    [queryFunction]="tls22010Service.queryTLS22010.bind(tls22010Service)" [addButton]="addButton">
     <header>
       <div class="flex justify-content-between align-items-center mb-2">
         <div>
@@ -142,3 +141,14 @@
     </li>
   </ul>
 </div>
+
+
+
+<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="onDialogClose($event)" [showFooter]="false"
+  width="95vw">
+  <app-table-report tableKey="TLS22010CRU" [data]="dialogData" [columns]="columnscru" [showCheckBox]="false"
+    dataKey="TXN_No" [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" [showManage]="false"
+    [showDelete]="false" [lastQueryBody]="dialogHistoryRequestBody" [footerData]="dialogFooterData"
+    [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)" apiUrl="queryTLS22010_Detail"
+    [customReport]="true" (exportEvent)="onExport($event)"></app-table-report>
+</app-dialog>

@@ -119,6 +119,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   }
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
+      this.isAllSelected = false;
       // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
       const pageSize = this.lastQueryBody?.pageSize || 30;
 
@@ -126,7 +127,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.virtualData = [];
         if (this.dt) {
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = 'flex';
+          this.dt.scrollHeight = '450px';
         }
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
@@ -136,7 +137,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         if (this.data.length < pageSize) {
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = 'flex';
+          this.dt.scrollHeight = '450px';
         } else {
           this.dt.virtualScroll = true;
           this.dt.scrollHeight = '450px';
@@ -203,7 +204,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       if (res && res.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;
-        this.dt.scrollHeight = 'flex';
+        this.dt.scrollHeight = '450px';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
@@ -214,7 +215,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.data = res.Data;
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = 'flex';
+          this.dt.scrollHeight = '450px';
         } else {
           this.dt.virtualScroll = true;
           this.dt.scrollHeight = '450px';

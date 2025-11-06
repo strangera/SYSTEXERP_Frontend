@@ -15,7 +15,6 @@ export class Tls22010Service {
       map(res => {
         if (res?.Data?.queryTLS22010_DataList) {
           const sum = res.Data.queryTLS22010_Sum;
-
           // 明細 + 收銀機號 icon
           res.Data = res.Data.queryTLS22010_DataList.map((item: any) => {
             let iconHtml = '';
@@ -46,7 +45,7 @@ export class Tls22010Service {
         const summary = dataWrapper.queryTLS22010_DetailSum || null;
         return {
           Data: list,
-          TotalCount: list.length,
+          TotalCount: res.TotalCount,
           footerData: summary
         };
       })
