@@ -41,7 +41,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     TXN_Date_Start: [new Date(), [Validators.required]],
     TXN_Date_End: [new Date(), [Validators.required]],
     CRD_Kind: [''],
-    Org_Name: [''],
+    Org_ID: [''],
     TLT_No: [''],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
@@ -71,7 +71,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_Date', header: '日期', visible: true },
     { field: 'CardType', header: '卡別', visible: true },
     { field: 'TXN_PayDesc', header: '聯名卡號', visible: true },
-    { field: 'Org_Name', header: '組織名稱', visible: true },
+    { field: 'Org_ID', header: '組織名稱', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
@@ -122,7 +122,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
       CRD_Kind: v.CRD_Kind || '',
-      Org_Name: v.Org_Name || '',
+      Org_ID: v.Org_ID || '',
       TLT_No: v.TLT_No || '',
     };
 
@@ -184,7 +184,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
       CRD_Kind: v.CRD_Kind || '',
-      Org_Name: v.Org_Name || '',
+      Org_ID: v.Org_ID || '',
       TLT_No: v.TLT_No || '',
       pageSize: event.pageSize,
       pageIndex: event.pageIndex,
@@ -225,7 +225,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
       CRD_Kind: v.CRD_Kind || '',
-      Org_Name: v.Org_Name || '',
+      Org_ID: v.Org_ID || '',
       TLT_No: v.TLT_No || '',
     };
 
@@ -265,7 +265,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
       CRD_Kind: v.CRD_Kind || '',
-      Org_Name: v.Org_Name || '',
+      Org_ID: v.Org_ID || '',
       TLT_No: v.TLT_No || '',
     };
 

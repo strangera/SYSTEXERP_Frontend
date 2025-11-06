@@ -499,15 +499,13 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem, event?: MouseEvent) {
-    if (this.crudstatus === CRUDStatus.Read) return;
-
-    //切換前，先把目前表單內容寫回目前選中的按鍵
-    if (this.selected) {
+    // 切換前，先把目前表單內容寫回目前選中的按鍵（編輯模式限定）
+    if (this.crudstatus !== CRUDStatus.Read && this.selected) {
       Object.assign(this.selected, this.selectedKeyForm.getRawValue());
     }
 
-    if (event?.shiftKey) {
-      // Shift 多選模式
+    // Shift 多選模式（只有在非 Read 模式才允許）
+    if (event?.shiftKey && this.crudstatus !== CRUDStatus.Read) {
       const exists = this.selectedKeys.includes(k);
       if (exists) {
         this.selectedKeys = this.selectedKeys.filter(x => x !== k);
@@ -515,12 +513,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         this.selectedKeys.push(k);
       }
     } else {
-      // 一般單選模式
+      // 單選模式（查看或編輯都可）
       this.selected = k;
       this.selectedKeys = [k];
     }
 
-    // 新選取按鍵的屬性帶入表單
+    // 更新右側表單內容
     this.selectedKeyForm.patchValue({
       KB_Func: k.KB_Func ?? '',
       KB_Switch: k.KB_Switch ?? 'Y',
@@ -538,7 +536,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     });
 
     this.updateMergeDisplay();
+
+    // 若是 Read 模式，把右側表單 disable（禁止編輯）
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.selectedKeyForm.disable({ emitEvent: false });
+    } else {
+      this.selectedKeyForm.enable({ emitEvent: false });
+    }
   }
+
 
   onPageChange(newPageIndex: number) {
     if (this.selected) {
