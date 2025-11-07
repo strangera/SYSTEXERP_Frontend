@@ -8,13 +8,14 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Button } from 'primeng/button';
 import { TLS2E100Service } from '@service/api/tls/tls2e100.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-tls2e100',
@@ -43,7 +44,10 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
     tlt_buildingList: [[]],
     org_idList: [[]],
     ven_no: [''],
-    ...createPaginationConfig([{ field: 'apply_no', order: 1 }]),
+    // 分頁欄位
+    pageIndex: [1],
+    pageSize: [30],
+    SortBy: [[{ field: 'apply_no,tlt_id', order: 1 }]],
   });
 
   columns: any[] = [
@@ -82,7 +86,8 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private dropDownListService: DropDownListService,
     private locationOptionsService: LocationOptionsService,
-    public readonly tls2e100Service: TLS2E100Service
+    public readonly tls2e100Service: TLS2E100Service,
+    private datePipe: DatePipe,
   ) {
     super();
   }
@@ -140,18 +145,11 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
   /** 查詢 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const ymValue = frm.value.sad_date
-        ? new Date(frm.value.sad_date).getFullYear().toString()
-        : '';
-
+      const ymValue = frm.value.sad_date ? this.datePipe.transform(frm.value.sad_date, 'yyyy') ?? '' : '';
       const payload = {
         ...frm.value,
         sad_date: ymValue,
-        pageIndex: 1,
-        pageSize: 30,
-        SortBy: [{ field: 'apply_no', order: 1 }]
       };
-
       this.tls2e100Service.queryTLS2E100(payload)
         .pipe(untilDestroyed(this))
         .subscribe({
@@ -165,7 +163,6 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
           },
           complete: () => (this.loading = false),
         });
-
     });
   }
 
