@@ -2,12 +2,13 @@ import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
 import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
 import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
 import { formatAmount, formatDate, formatDateTime, formatDateTimeToHHMMSS } from "@shared/componentkit/table/table.model"
+import { formatTxnNo } from "@shared/models/system/query-form.model";
 // --- POS6118 聯信特店MIS LOG檔案 ---
 export const columns: ReportColumn[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 ECR_No
-  { field: 'TXN_No', header: '交易流水號' }, // 對應 TXN_No
+  { field: 'TXN_No', header: '交易流水號', format: formatTxnNo }, // 對應 TXN_No
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 TLT_No
-  { field: 'PayCrdType', header: '卡別', format: (value) => getSYS1000('NCML_PayCrdType', value) }, // 對應 PayCrdType
+  { field: 'CRD_Type', header: '卡別', format: (value) => getSYS1000('CRD_Type', value) }, // 對應 CRD_Type
   { field: 'TxnAmt', header: '金額', format: formatAmount, isTotal: true }, // 對應 TxnAmt (number)
   { field: 'TxnDate', header: '銷售日期', format: formatDate }, // 對應 TxnDate (DATE)
   { field: 'TxnTime', header: '銷售時間', format: formatDateTimeToHHMMSS }, // 對應 TxnTime (string/time), 使用新函式只顯示時間
@@ -18,7 +19,7 @@ export const columns: ReportColumn[] = [
   { field: 'TxnType', header: '銷售狀況', format: (value) => TxnTypeOptions.find(item => item.value === value)?.label || value }, // 對應 TxnType
   { field: 'CrdTxnFg', header: '交易類別', format: (value) => CrdTxnFgOptions.find(item => item.value === value)?.label || value }, // 對應 CrdTxnFg
   // { field: 'CheckStatus', header: '比對備註', format: (value) => getSYS1000('CTBC_Check', value) }, // 對應 CheckStatus
-  { field: 'EntryFg', header: '輸入狀態', format: (value) => getSYS1000('EntryFg', value) }, // 對應 CheckStatus
+  { field: 'EntryFg', header: '輸入狀態', format: (value) => getSYS1000('EntryFg', value) }, // 對應 EntryFg
   { field: 'TermNo', header: '分期期數', format: (value) => getSYS1000('T109', value), exportFormat: transformOptionsForExport(getSYS1000Options('T109')) }, // 對應 TermNo
   { field: 'acquiring_Bank', header: '收單行' }, // 變更標題為 '收單行'
   { field: 'FileName', header: '請款來源' }, // 新增
