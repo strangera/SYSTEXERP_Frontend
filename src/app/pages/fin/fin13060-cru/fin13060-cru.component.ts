@@ -27,8 +27,9 @@ import { CalenderoneComponent } from '@shared/componentkit/calenderone/calendero
 import { ValidationService } from '@shared/service/validation.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 
-/** Typed Forms：每個欄位都給明確的 FormControl 型別 */
+/** 依 updateFIN13060Request（後端為主）的 Typed Form */
 interface Fin13060CruForm {
+  ID: FormControl<number | null>;
   mid: FormControl<number | null>;
   SYS_StoreNo: FormControl<string | null>;
 
@@ -43,8 +44,8 @@ interface Fin13060CruForm {
   INV_GUITrack: FormControl<string | null>;
   INV_GUINumber: FormControl<string | null>;
 
-  TXN_Date: FormControl<Date | string | null>;
-  INV_DeclareYM: FormControl<Date | null>;   // 月份控件一律用 Date
+  TXN_Date: FormControl<Date | string | null>; // UI 收 Date/string，送出字串($date)
+  INV_DeclareYM: FormControl<Date | null>;     // UI 月份控件，送出 'YYYYMM'
 
   TXN_SaleAmt: FormControl<number | null>;
   TXN_Net: FormControl<number | null>;
@@ -54,14 +55,11 @@ interface Fin13060CruForm {
 
   Source_Doc_No: FormControl<string | null>;
   Voucher_No: FormControl<string | null>;
-  SAL_Type: FormControl<string | null>;
-  SYS_ORIGIN: FormControl<string | null>;
+  SAL_Type: FormControl<string | null>;  // 系統別（T205）
   AssetType: FormControl<string | null>;
   INV_Remark: FormControl<string | null>;
   Tlt_No: FormControl<string | null>;
   Ven_No: FormControl<string | null>;
-
-  ID: FormControl<number | null>;
 }
 
 @Component({
@@ -90,11 +88,9 @@ export class FIN13060CRUComponent
   @Output() fieldChange = new EventEmitter<any>();
 
   // 下拉選項
-  PUR_VoucherTypeOptions: any[] = [];
   taxTypeOptions: any[] = [];
-  SAL_TypeOptions: any[] = [];
+  SAL_TypeOptions: any[] = [];   // 系統別（T205）
   AssetNoteOptions: any[] = [];
-  SYS_ORIGINOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = []; // 專櫃
   INV_NoneTaxOptions: any[] = [];
@@ -129,8 +125,10 @@ export class FIN13060CRUComponent
     return new Date(y, m - 1, 1);
   }
 
-  /** 完整 Typed FormGroup —— 讓 template 可用 dataForm.controls.欄位 直接取用 */
+  /** Typed FormGroup */
   dataForm: FormGroup<Fin13060CruForm> = new FormGroup<Fin13060CruForm>({
+    ID: new FormControl<number | null>(null),
+
     mid: new FormControl<number | null>({ value: null, disabled: true }, { validators: [Validators.required] }),
     SYS_StoreNo: new FormControl<string | null>({ value: null, disabled: true }, { validators: [Validators.required] }),
 
@@ -166,22 +164,19 @@ export class FIN13060CRUComponent
       validators: [Validators.minLength(16), Validators.maxLength(16), Validators.pattern(/^[A-Z0-9]{16}$/)],
     }),
     Voucher_No: new FormControl<string | null>(null),
-    SAL_Type: new FormControl<string | null>(null),
+    SAL_Type: new FormControl<string | null>(null), // 系統別 (T205)
     AssetType: new FormControl<string | null>(null),
     INV_Remark: new FormControl<string | null>(null),
     Tlt_No: new FormControl<string | null>(null),
     Ven_No: new FormControl<string | null>(null),
-    SYS_ORIGIN: new FormControl<string | null>(null),
-
-    ID: new FormControl<number | null>(null),
   });
 
   constructor(
-    private fin13060Service: FIN13060Service,
-    private counterNameService: CounterNameService,
-    private fin13050Service: FIN13050Service,
-    private validationService: ValidationService,
-    private ECRNoService: ECRNoService,
+    private readonly fin13060Service: FIN13060Service,
+    private readonly counterNameService: CounterNameService,
+    private readonly fin13050Service: FIN13050Service,
+    private readonly validationService: ValidationService,
+    private readonly ECRNoService: ECRNoService,
   ) {
     super();
   }
@@ -196,15 +191,16 @@ export class FIN13060CRUComponent
         res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) ?? [];
     });
 
+    // 資產註記
     this.fin13050Service.querySYS1000DropDownList('AssetType').subscribe((res) => {
       const list = res?.Data ?? [];
       this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
     });
 
+    // 零稅銷售註記（預設「否」或 value='0'）
     this.fin13050Service.querySYS1000DropDownList('INV_NoneTax').subscribe((res) => {
       const list = res?.Data ?? [];
       this.INV_NoneTaxOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-      // 新增預設「否」
       if (this.crudstatus === CRUDStatus.Create && !this.dataForm.controls.INV_NoneTax.value) {
         const defaultNo =
           this.INV_NoneTaxOptions.find(o => o.label?.includes('否'))?.value ??
@@ -216,30 +212,30 @@ export class FIN13060CRUComponent
       }
     });
 
+    // 發票格式
     this.fin13060Service.queryAPS2002DropDownList().subscribe((res) => {
       const list = res?.Data ?? [];
       this.INV_GUITypeOptions = list.map(x => ({ value: String(x.No), label: String(x.Name) }));
     });
 
+    // 收銀機號
     this.ECRNoService.getECRNo().subscribe(res => {
       this.ECRNoOptions = (res ?? []).map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.SYS_ORIGINOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
-
+    // 系統別（T205）
     this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
       const list = res?.Data ?? [];
       this.SAL_TypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
     });
 
+    // 稅別
     this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res) => {
       const list = res?.Data ?? [];
       this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
     });
 
+    // 發票種類
     this.fin13050Service.querySYS1000DropDownList('TXN_GUIPaper').subscribe((res) => {
       const list = res?.Data ?? [];
       this.TXN_GUIPaperOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
@@ -325,33 +321,35 @@ export class FIN13060CRUComponent
       ECR_No: '收銀機號',
       TXN_No: '交易序號',
       TXN_GUIPaper: '發票種類',
-      INV_GUITrack: '字軌',
-      INV_GUINumber: '發票號碼',
+      INV_GUITrack: '發票字軌',
+      INV_GUINumber: '發票數字',
       TXN_Date: '發票日期',
       INV_DeclareYM: '申報年月',
       TXN_SaleAmt: '發票總金額',
       TXN_Net: '發票未稅金額',
       TXN_Tax: '稅額',
-      PLU_TaxType: '課稅別',
+      PLU_TaxType: '稅別',
       Source_Doc_No: '憑證單號',
       Voucher_No: '傳票號碼',
       AssetType: '資產註記',
       INV_Remark: '備註',
       Tlt_No: '專櫃編號',
-      Ven_No: '廠客代號',
-      SYS_ORIGIN: '系統別',
+      Ven_No: '廠商編號',
       INV_NoneTax: '零稅銷售註記',
       INV_Cancel: '是否作廢',
-      INV_GUIType: '發票格式',
+      INV_GUIType: '格式代號',
+      SAL_Type: '系統別',
     };
 
-    // 有錯先全部用中文吐出，並阻擋送出
+    // 有錯先吐出中文錯誤並阻擋送出
     if (this.showErrorsIfInvalid(form, LABELS)) return;
 
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
-      // ★ 組裝後端需要的 payload（insert 與 update 通用；update 另外帶 ID）
+
+      // ★ 依後端 schema 組裝 payload（Update/Insert 共用；Insert 會拿掉 ID）
       const payload = {
+        ID: raw.ID != null ? Number(raw.ID) : 0,                    // update 帶 ID
         mid: Number(raw.mid ?? 0),
         SYS_StoreNo: this.normalize(raw.SYS_StoreNo),
         ECR_No: this.normalize(raw.ECR_No),
@@ -362,33 +360,31 @@ export class FIN13060CRUComponent
         INV_GUIType: this.normalize(raw.INV_GUIType),
         INV_GUITrack: this.normalize(raw.INV_GUITrack),
         INV_GUINumber: this.normalize(raw.INV_GUINumber),
-        TXN_Date: this.toDateOnlyString(raw.TXN_Date) ?? '',
-        INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM) ?? '',
+        TXN_Date: this.toDateOnlyString(raw.TXN_Date) ?? '',        // string($date) => 'YYYY-MM-DD'
+        INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM) ?? '',      // string => 'YYYYMM'
         TXN_SaleAmt: raw.TXN_SaleAmt != null ? Number(raw.TXN_SaleAmt) : 0,
         TXN_Net: raw.TXN_Net != null ? Number(raw.TXN_Net) : 0,
         TXN_Tax: raw.TXN_Tax != null ? Number(raw.TXN_Tax) : 0,
         PLU_TaxType: this.normalize(raw.PLU_TaxType),
         Source_Doc_No: this.normalize(raw.Source_Doc_No),
         Voucher_No: this.normalize(raw.Voucher_No),
-        SAL_Type: this.normalize(raw.SAL_Type),
+        SAL_Type: this.normalize(raw.SAL_Type),                     // 系統別（T205）
         AssetType: this.normalize(raw.AssetType),
         INV_Remark: this.normalize(raw.INV_Remark),
         Tlt_No: this.normalize(raw.Tlt_No),
         Ven_No: this.normalize(raw.Ven_No),
-        SYS_ORIGIN: this.normalize(raw.SYS_ORIGIN),
       } as const;
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        this.fin13060Service.insertFIN13060(payload).subscribe(() => {
+        const { ID, ...insertPayload } = payload; // Insert 不帶 ID
+        this.fin13060Service.insertFIN13060(insertPayload).subscribe(() => {
           this.messageService.successBubble('新增成功');
           this.dataForm.reset();
           this.hydrateStoreInfoFromLocalStorage();
           this.updateDisabledState();
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        const id = form.controls.ID.getRawValue();
-        const upd = id != null ? { ...payload, ID: Number(id) } : payload;
-        this.fin13060Service.updateFIN13060(upd).subscribe(() => {
+        this.fin13060Service.updateFIN13060(payload).subscribe(() => {
           this.messageService.successBubble('更新成功');
           this.onCancel();
         });
