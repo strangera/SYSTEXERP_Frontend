@@ -144,6 +144,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     },
 
     { field: 'PUR_GUIDate_YYYYMM', header: '資料所屬年月', visible: true },
+    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
     { field: 'PUR_VenUniform', header: '廠商統編', visible: true },
     { field: 'PUR_Amt', header: '發票總金額', visible: true },
     { field: 'PUR_Net', header: '發票未稅金額', visible: true },
