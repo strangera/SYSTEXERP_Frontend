@@ -69,7 +69,7 @@ export class CommissionTableService {
     this.updateItemInArray(parentData, commissionData);
   }
 
-  // 🔑 根據折扣設定的勾選狀態，同步處理層級抽成項目（方案 B）
+  // 根據折扣設定的勾選狀態，同步處理層級抽成項目
   syncDiscountLevelBasedOnSelection(parentItem: CommissionItem, discountItem: DiscountSettingItem): void {
     const linkedLevelItems = parentItem.discountLevelItems?.filter(
       level => level.charged_id === discountItem.id
@@ -86,6 +86,8 @@ export class CommissionTableService {
     if (discountItem.selected) {
       // --- 勾選邏輯 ---
       if (linkedLevelItems.length === 0) {
+
+
         // 🔑 不管 discount 是 API 還是 new，只要沒有對應的 level 就新增
         const contractPeriod = this.formatContractPeriod(discountItem.tlt_bdate, discountItem.tlt_edate);
 
@@ -108,7 +110,7 @@ export class CommissionTableService {
       } else if (linkedLevelItems.length > 0) {
         // 如果已存在 level，將 selected 設為 true
         linkedLevelItems.forEach(level => {
-          level.selected = true;
+          level.selected = false;
         });
         console.log(`🔄 已將折扣 ${discountItem.cag_barcode} 的 ${linkedLevelItems.length} 個 Level 項目 selected 設為 true`);
       }
