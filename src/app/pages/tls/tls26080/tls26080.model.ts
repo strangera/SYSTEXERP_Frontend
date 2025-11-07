@@ -26,7 +26,7 @@ export interface TLS26080Data {
 
 export interface TLS26080Detail {
   id: number;
-  talent_id: number;
+  talent_id: number | string;
   tlt_id: string;
   tlt_id_desc: string;
   tlt_no: string;
