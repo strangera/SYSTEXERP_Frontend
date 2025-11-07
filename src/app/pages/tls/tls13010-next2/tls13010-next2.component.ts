@@ -180,9 +180,123 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       // 修復日期問題：確保折扣項目有正確的日期
       this.fixDiscountItemDates(item);
 
+      // 🆕 初始化 discount 的 selected 狀態（根據是否有對應的 level）
+      this.initializeDiscountSelectedState(item);
+
+      // 🆕 填充 level 的 contract_period 欄位
+      this.fillLevelContractPeriod(item);
+
+      // 🆕 同步折扣設定到層級抽成
+      // 確保層級抽成項目的數量和內容與折扣設定一致
+      this.syncDiscountChangesToLevel(item);
+
       // 更新顯示項目
       this.tableService.updateDetailItems(item);
     });
+  }
+
+  /**
+   * 🆕 初始化 discount 和 level 的 selected 狀態（雙向同步）
+   * 邏輯：如果 level 存在且不是 deleted，則 discount 和 level 都設為 selected = true
+   */
+  private initializeDiscountSelectedState(commissionItem: CommissionItem): void {
+    if (!commissionItem.discountSettingItems || !commissionItem.discountLevelItems) {
+      return;
+    }
+
+    // 先處理每個 discount
+    commissionItem.discountSettingItems.forEach(discount => {
+      // 找到對應的 level（_status !== 'deleted'）
+      const correspondingLevels = commissionItem.discountLevelItems.filter(
+        level => level.charged_id === discount.id && level._status !== 'deleted'
+      );
+
+      if (correspondingLevels.length > 0) {
+        // 如果有對應的 level，discount 和 level 都設為 selected = true
+        discount.selected = true;
+        correspondingLevels.forEach(level => {
+          level.selected = true;
+        });
+      } else {
+        // 如果沒有對應的 level，discount 設為 selected = false（除非原本就是勾選的）
+        // 這裡保持原本的狀態，不強制改變
+      }
+    });
+
+    // 再處理沒有對應 discount 的 level（理論上不應該發生，但保險起見）
+    commissionItem.discountLevelItems.forEach(level => {
+      if (level._status === 'deleted') {
+        level.selected = false;
+        return;
+      }
+
+      const correspondingDiscount = commissionItem.discountSettingItems.find(
+        d => d.id === level.charged_id
+      );
+
+      if (correspondingDiscount) {
+        // level 的 selected 跟隨 discount
+        level.selected = correspondingDiscount.selected;
+      } else {
+        // 沒有對應的 discount，設為 false
+        level.selected = false;
+      }
+    });
+
+    console.log('✅ 初始化 selected 狀態完成:', {
+      discounts: commissionItem.discountSettingItems.map(d => ({
+        id: d.id,
+        cag_barcode: d.cag_barcode,
+        selected: d.selected
+      })),
+      levels: commissionItem.discountLevelItems.map(l => ({
+        id: l.id,
+        charged_id: l.charged_id,
+        cag_barcode: l.cag_barcode,
+        selected: l.selected,
+        _status: l._status
+      }))
+    });
+  }
+
+  /**
+   * 🆕 填充 level 的 contract_period 欄位
+   */
+  private fillLevelContractPeriod(commissionItem: CommissionItem): void {
+    if (!commissionItem.discountSettingItems || !commissionItem.discountLevelItems) {
+      return;
+    }
+
+    commissionItem.discountLevelItems.forEach(level => {
+      // 找到對應的 discount
+      const correspondingDiscount = commissionItem.discountSettingItems.find(
+        d => d.id === level.charged_id
+      );
+
+      if (correspondingDiscount) {
+        // 格式化合約期間
+        level.contract_period = this.formatContractPeriod(
+          correspondingDiscount.tlt_bdate,
+          correspondingDiscount.tlt_edate
+        );
+      }
+    });
+  }
+
+  /**
+   * 🆕 格式化合約期間顯示
+   */
+  private formatContractPeriod(startDate: any, endDate: any): string {
+    const formatDate = (date: any) => {
+      if (!date) return '';
+      const d = date instanceof Date ? date : new Date(date);
+      if (isNaN(d.getTime())) return '';
+      return d.toISOString().split('T')[0];
+    };
+
+    const start = formatDate(startDate);
+    const end = formatDate(endDate);
+    return start && end ? `${start} ~ ${end}` : '';
   }
 
   /**
@@ -297,21 +411,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (newValue === false) {
       // 取消勾選的處理邏輯
       if (originalType === 'annual') {
-        // 年度業績：直接設為 deleted，會從顯示中移除
+        // 年度業績：設為 deleted（年度業績可以刪除）
         rowData._status = 'deleted';
         console.log('年度業績項目設為 deleted');
       } else if (originalType === 'discount' || originalType === 'level') {
-        // 折扣和層級：根據是否有有效ID決定處理方式
-        if (this.hasValidId(rowData)) {
-          // 現有項目：設為 deleted 狀態（會在最終清理時進入 toDelete）
-          rowData._status = 'deleted';
-          console.log(`${originalType} 現有項目設為 deleted (ID: ${rowData.id})`);
-        } else {
-          // 新項目：直接從數組移除（不需要發送到後端）
-          console.log(`${originalType} 新項目將被移除 (臨時ID: ${rowData.id})`);
-          // 這裡可以選擇設為 deleted 或者在同步時直接移除
-          rowData._status = 'deleted';
-        }
+        // 🔑 方案 B：discount 和 level 只更新 selected 狀態，不刪除
+        // 不設定 _status = 'deleted'，只是取消勾選
+        console.log(`${originalType} 取消勾選，但保留資料 (ID: ${rowData.id})`);
+        // selected 已經在前面更新了，這裡不需要做任何事
       } else {
         // 其他類型的通用處理
         rowData._status = 'deleted';
@@ -330,9 +437,20 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       }
     }
 
+    // 🆕 如果是折扣設定的 selected 變更，同步到層級抽成
+    if (originalType === 'discount') {
+      const parentItem = this.findParentOfDetailItem(rowData);
+      if (parentItem) {
+        console.log('🔄 折扣設定勾選狀態變更，直接調用 syncDiscountLevelBasedOnSelection');
+        // 🔑 直接調用 table service 的方法來同步單個 discount 對應的 level
+        this.tableService.syncDiscountLevelBasedOnSelection(parentItem, rowData);
+        // 更新主數組
+        this.updateMainArray(parentItem);
+      }
+    }
+
     console.log('selected 處理完成，最終狀態:', rowData._status);
   }
-
   /**
    * 處理主項目欄位變更
    */
@@ -469,14 +587,65 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   onDetailTabChange(event: { rowData: any, tabId: string }): void {
     const { rowData, tabId } = event;
 
+    console.log('='.repeat(100));
+    console.log('🔄 onDetailTabChange 開始');
+    console.log('目標標籤:', tabId);
+    console.log('當前標籤:', rowData.currentTab);
+    console.log('切換前的 discountLevelItems:', rowData.discountLevelItems?.map((l: any) => ({
+      id: l.id,
+      charged_id: l.charged_id,
+      cag_barcode: l.cag_barcode,
+      selected: l.selected,
+      _status: l._status,
+      contract_period: l.contract_period
+    })));
+    console.log('切換前的 discountSettingItems:', rowData.discountSettingItems?.map((d: any) => ({
+      id: d.id,
+      cag_barcode: d.cag_barcode,
+      selected: d.selected,
+      _status: d._status
+    })));
+
     // 先強制同步當前標籤的數據
     this.forceSyncCurrentTabData(rowData);
+
+    console.log('同步後的 discountLevelItems:', rowData.discountLevelItems?.map((l: any) => ({
+      id: l.id,
+      charged_id: l.charged_id,
+      selected: l.selected,
+      _status: l._status
+    })));
 
     // 設定新標籤
     rowData.currentTab = tabId;
 
+    // 🆕 如果切換到層級標籤，需要動態更新欄位定義
+    if (tabId === 'level') {
+      console.log('🔄 切換到層級標籤，同步折扣設定並更新欄位');
+
+      console.log('同步前的 level 數量:', rowData.discountLevelItems?.length);
+
+      // 同步折扣設定到層級抽成
+      this.syncDiscountChangesToLevel(rowData);
+
+      console.log('同步後的 level 數量:', rowData.discountLevelItems?.length);
+      console.log('同步後的 discountLevelItems:', rowData.discountLevelItems?.map((l: any) => ({
+        id: l.id,
+        charged_id: l.charged_id,
+        selected: l.selected,
+        _status: l._status
+      })));
+
+      // 更新層級欄位定義（使用當前項目的折扣設定）
+      this.updateLevelColumnsForItem(rowData);
+    }
+
+    console.log('準備刷新顯示');
     // 更新顯示項目
     this.refreshItemDetailDisplay(rowData);
+
+    console.log('刷新後的 detailItems 數量:', rowData.detailItems?.length);
+    console.log('='.repeat(100));
 
     // 保存
     this.saveToWorkflow();
@@ -502,6 +671,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       case 'discount':
         commissionItem.discountSettingItems = currentTabItems.map(item => ({
           id: item.id,
+          _source: item._source,  // 🔑 加這個
           selected: item.selected || false,
           cag_barcode: item.cag_barcode || '',
           tlt_bdate: this.ensureValidDate(item.tlt_bdate),
@@ -528,11 +698,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       case 'level':
         commissionItem.discountLevelItems = currentTabItems.map(item => ({
           id: item.id,
+          _source: item._source,  // 🔑 加這個
           selected: item.selected || false,
           cag_barcode: item.cag_barcode || '',
+          contract_period: item.contract_period || '',  // 🔑 加這個
           level_bmount: item.level_bmount || 0,
           level_eamount: item.level_eamount || 0,
           level_charge_rate: item.level_charge_rate || 0,
+          charged_id: item.charged_id,  // 🔑 加這個（最重要！）
           _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
           is_configured: item.is_configured || false,
           is_enabled: item.is_enabled || false
@@ -548,6 +721,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const currentTab = commissionItem.currentTab || 'discount';
     let sourceArray: any[] = [];
 
+    console.log('='.repeat(80));
+    console.log('🔍 refreshItemDetailDisplay 開始');
+    console.log('當前標籤:', currentTab);
+    console.log('抽成類別:', commissionItem.tlt_id);
+
     switch (currentTab) {
       case 'discount':
         sourceArray = commissionItem.discountSettingItems || [];
@@ -560,19 +738,134 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         break;
     }
 
-    // 只過濾真正的 deleted（annual 刪除），不過濾 selected 狀態
+    console.log('📦 原始資料:', {
+      類型: currentTab,
+      總數: sourceArray.length,
+      項目: sourceArray.map(item => ({
+        id: item.id,
+        charged_id: item.charged_id,
+        cag_barcode: item.cag_barcode,
+        selected: item.selected,
+        _status: item._status,
+        level_bmount: item.level_bmount,
+        level_eamount: item.level_eamount
+      }))
+    });
+
+    // 如果是 level 標籤,檢查 discount 資料
+    if (currentTab === 'level') {
+      console.log('🔍 檢查對應的 discount 資料:');
+      console.log('所有 discountSettingItems:', commissionItem.discountSettingItems?.map(d => ({
+        id: d.id,
+        cag_barcode: d.cag_barcode,
+        selected: d.selected,
+        _status: d._status,
+        tlt_bdate: d.tlt_bdate,
+        tlt_edate: d.tlt_edate
+      })));
+
+      // 取得有效的 discount
+      const validDiscounts = commissionItem.discountSettingItems
+        ?.filter(d => d.selected && d._status !== 'deleted') || [];
+
+      console.log('✅ 有效的 discounts:', {
+        數量: validDiscounts.length,
+        IDs: validDiscounts.map(d => d.id),
+        明細: validDiscounts.map(d => ({
+          id: d.id,
+          cag_barcode: d.cag_barcode,
+          tlt_bdate: d.tlt_bdate,
+          tlt_edate: d.tlt_edate
+        }))
+      });
+
+      const validDiscountIds = new Set(validDiscounts.map(d => d.id));
+
+      console.log('🔑 有效的 discount IDs 集合:', Array.from(validDiscountIds));
+
+      // 檢查每個 level 項目
+      console.log('📋 檢查每個 level 項目:');
+      sourceArray.forEach((level, index) => {
+        const hasMatching = validDiscountIds.has(level.charged_id);
+        console.log(`  Level ${index + 1}:`, {
+          id: level.id,
+          charged_id: level.charged_id,
+          charged_id_type: typeof level.charged_id,
+          cag_barcode: level.cag_barcode,
+          _status: level._status,
+          有對應discount: hasMatching,
+          對應的discount: validDiscounts.find(d => d.id === level.charged_id)?.id
+        });
+      });
+    }
+
+    // 過濾邏輯
     commissionItem.detailItems = sourceArray
       .filter(item => {
-        // 只有 annual 才需要過濾 deleted 狀態讓項目消失
-        if (currentTab === 'annual' && item._status === 'deleted') {
+        console.log(`  🔍 過濾項目 (id: ${item.id}):`, {
+          _status: item._status,
+          會被過濾: item._status === 'deleted'
+        });
+
+        // 1. 所有類型都要過濾 deleted 狀態
+        if (item._status === 'deleted') {
+          console.log(`    ❌ 項目 ${item.id} 被過濾 (deleted)`);
           return false;
         }
+
+        // 2. Level 額外檢查：
+        //    (a) 過濾 selected === false 的項目（方案 B）
+        //    (b) 是否有對應的 discount
+        if (currentTab === 'level') {
+          // 🆕 方案 B：過濾掉 selected === false 的 level
+          if (item.selected === false) {
+            console.log(`    ❌ 項目 ${item.id} 被過濾 (selected = false)`);
+            return false;
+          }
+
+          const validDiscounts = commissionItem.discountSettingItems
+            ?.filter(d => d.selected && d._status !== 'deleted') || [];
+          const validDiscountIds = new Set(validDiscounts.map(d => d.id));
+
+          const hasMatchingDiscount = validDiscountIds.has(item.charged_id);
+
+          console.log(`    🔍 Level 項目 ${item.id} 檢查:`, {
+            selected: item.selected,
+            charged_id: item.charged_id,
+            charged_id_type: typeof item.charged_id,
+            有對應: hasMatchingDiscount,
+            可用IDs: Array.from(validDiscountIds),
+            可用IDs_types: Array.from(validDiscountIds).map(id => typeof id)
+          });
+
+          if (!hasMatchingDiscount) {
+            console.log(`    ❌ 項目 ${item.id} 被過濾 (無對應 discount)`);
+            console.log(`    charged_id: ${item.charged_id} (${typeof item.charged_id})`);
+            console.log(`    可用的 discount IDs: ${Array.from(validDiscountIds).join(', ')}`);
+            return false;
+          }
+
+          console.log(`    ✅ 項目 ${item.id} 保留 (有對應 discount 且 selected = true)`);
+        }
+
         return true;
       })
       .map(item => ({
         ...item,
         _originalType: currentTab
       }));
+
+    console.log('📊 過濾結果:', {
+      原始數量: sourceArray.length,
+      過濾後數量: commissionItem.detailItems.length,
+      顯示項目: commissionItem.detailItems.map(i => ({
+        id: i.id,
+        charged_id: i.charged_id,
+        cag_barcode: i.cag_barcode,
+        _status: i._status
+      }))
+    });
+    console.log('='.repeat(80));
   }
   /**
    * 確保日期格式正確
@@ -741,6 +1034,77 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           break;
         }
     }
+  }
+
+  /**
+   * 處理按鈕點擊事件
+   */
+  onButtonClick(event: { action: string, rowData: any, parentData?: any }): void {
+    const { action, rowData, parentData } = event;
+
+    console.log('🔘 按鈕點擊:', { action, rowData, parentData });
+
+    switch (action) {
+      case 'copyDiscount':
+        this.handleCopyDiscount(rowData, parentData);
+        break;
+      default:
+        console.warn('未知的按鈕動作:', action);
+    }
+  }
+
+  /**
+   * 處理複製折扣設定
+   */
+  private handleCopyDiscount(discountItem: any, parentData: any): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法複製項目');
+      return;
+    }
+
+    console.log('📋 複製折扣設定:', discountItem);
+
+    // 使用 table service 複製項目
+    const result = this.tableService.copyDiscountItem(discountItem, parentData, this.discountOptions);
+
+    if (result.success) {
+      // 同步到層級抽成
+      this.syncDiscountChangesToLevel(parentData);
+
+      // 更新顯示
+      this.refreshItemDetailDisplay(parentData);
+      this.updateMainArray(parentData);
+      this.saveToWorkflow();
+
+      this.notificationService.successBubble('折扣設定已複製');
+    } else {
+      this.notificationService.errorBubble(result.message || '複製失敗');
+    }
+  }
+
+  /**
+   * 同步折扣設定變更到層級抽成
+   */
+  private syncDiscountChangesToLevel(parentData: any): void {
+    // 使用 table service 的同步方法
+    this.tableService.syncDiscountToLevel(parentData, this.discountOptions);
+
+    // 如果當前在層級標籤，需要重新產生層級抽成的下拉選項
+    if (parentData.currentTab === 'level') {
+      this.updateLevelColumnsForItem(parentData);
+    }
+  }
+
+  /**
+   * 更新特定項目的層級抽成欄位定義（動態下拉選項）
+   */
+  private updateLevelColumnsForItem(parentData: any): void {
+    // 從折扣設定取得層級抽成的下拉選項
+    const levelOptions = this.tableService.getDiscountOptionsForLevel(parentData, this.discountOptions);
+
+    // 更新層級欄位的選項
+    this.levelColumns = TLS13010Next2ColumnsConfig.getLevelColumns(levelOptions);
+    this.updateDetailColumns();
   }
 
   // === 標籤切換 ===

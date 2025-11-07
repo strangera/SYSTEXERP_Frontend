@@ -48,7 +48,7 @@ export class TLS13010Next2ColumnsConfig {
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true },
       { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true },
-      { field: 'cag_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
+      { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
     ];
   }
 
@@ -67,20 +67,26 @@ export class TLS13010Next2ColumnsConfig {
         field: 'selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
+        editable: false,
         directEdit: true,
       },
-      {
-        field: 'copy_button',
-        header: '複製',
-        type: 'button',
-        buttonLabel: '複製',
-        buttonIcon: 'pi pi-copy',
-        buttonClass: 'p-button-sm p-button-secondary',
-        buttonTooltip: '複製此扣款項目',
-        editable: false
-      },
+      // {
+      //   field: 'copy_button',
+      //   header: '複製',
+      //   type: 'button',
+      //   buttonLabel: '複製',
+      //   buttonIcon: 'pi pi-copy',
+      //   buttonClass: 'p-button-sm p-button-secondary',
+      //   buttonTooltip: '複製此扣款項目',
+      //   editable: false
+      // },
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
+      {
+        field: 'contract_period',  // 🆕 新增欄位
+        header: '合約期間',
+        type: 'text',
+        editable: false  // 不可編輯
+      },
       { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },
       { field: 'level_eamount', header: '業績計算金額(迄)', type: 'number', editable: true },
       { field: 'level_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
