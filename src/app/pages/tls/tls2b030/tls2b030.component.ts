@@ -65,7 +65,7 @@ type SortItem = { field: string; order: 1 | -1 };
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
   /* ----------------- 狀態 ----------------- */
   data: TLS2B030Row[] = [];
-  columnsReady = false; 
+  columnsReady = false;
   totalRecords = 0;
   selectedItems: TLS2B030Row[] = [];
   lastQueryBody: any = null;
@@ -77,13 +77,9 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   // 欄位/付款清單
   columns: ReportColumn[] = [];
   payTypes: PayTypeItem[] = [];
-  // ===== 狀態 =====
 
-viewTotalRecords = 0;      // 首屏用，先用本頁筆數撐表，高度穩定後再切回 totalRecords
-tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新查詢時 ++）
-
-
-
+  viewTotalRecords = 0;  // 首屏用，先用本頁筆數撐表，高度穩定後再切回 totalRecords
+  tableVer = 0;          // 強制重建 table 的 key（欄位動態/重新查詢時 ++）
 
   // 下拉資料
   floorOptions: any[] = [];
@@ -100,9 +96,51 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
     return d;
   })();
 
-  // 金額格式
-  moneyFormat = (value: number): string =>
-    value != null ? Number(value || 0).toLocaleString('en-US') : '0';
+  // ========= 金額格式（更穩定）=========
+  private readonly moneyNF = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 4, // 若要固定兩位 => 2/2
+  });
+
+  moneyFormat = (value: unknown): string => {
+    if (value == null || value === '') return '0';
+    const num = typeof value === 'string' ? Number(value.replace(/,/g, '')) : Number(value);
+    return Number.isFinite(num) ? this.moneyNF.format(num) : '0';
+  };
+
+  /** 把一列中所有 Pay_Dif_* 與 PPay_Dif_sum 改成帶千分位的字串（顯示用） */
+  private formatMoneyFieldsInRow(flat: any): void {
+    Object.keys(flat).forEach((k) => {
+      if (k === 'PPay_Dif_sum' || k.startsWith('Pay_Dif_')) {
+        flat[k] = this.moneyFormat(flat[k] as unknown);
+      }
+    });
+  }
+
+  /** 把 footer 的金額欄位也一併轉成字串（顯示用） */
+  private formatMoneyFieldsInFooter(footer: any): any {
+    const out: any = {};
+    Object.keys(footer || {}).forEach((k) => {
+      if (k === 'PPay_Dif_sum' || k.startsWith('Pay_Dif_')) {
+        out[k] = this.moneyFormat(footer[k] as unknown);
+      } else {
+        out[k] = footer[k];
+      }
+    });
+    return out;
+  }
+
+  /** 寬鬆轉數字（吃 number/string/含逗點/null/undefined） */
+  private toNumberLoose(v: unknown): number {
+    if (v == null || v === '') return 0;
+    if (typeof v === 'string') {
+      const n = Number(v.replace(/,/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    }
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+  // ====================================
 
   // 預設排序
   readonly defaultSort: SortItem[] = [{ field: 'TLT_Name', order: 1 }];
@@ -132,7 +170,7 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
     private ecrNoService: ECRNoService,
-     private cdr: ChangeDetectorRef, 
+    private cdr: ChangeDetectorRef,
     private counterNameService: CounterNameService
   ) {
     super();
@@ -224,12 +262,12 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
       field: `Pay_Dif_${pt.No}`,
       header: pt.Name,
       style: 'text-right',
-      format: this.moneyFormat,
+      format: this.moneyFormat, // 若 TableReport 有用到 format，這裡也會生效
       isTotal: true,
     }));
 
     const totalCol: ReportColumn[] = [
-      { field: 'PPay_Dif_sum', header: '總金額', format: this.moneyFormat, isTotal: true },
+      { field: 'PPay_Dif_sum', header: '總金額' , format: this.moneyFormat, isTotal: true },
     ];
 
     this.columns = [...baseCols, ...payCols, ...totalCol];
@@ -255,12 +293,10 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (list) => {
-          // 可依需求排序；若不想排序，直接用 list
           this.payTypes = [...list].sort((a, b) => a.No.localeCompare(b.No, 'zh-Hant'));
           this.buildColumnsFromPayTypes(this.payTypes);
           this.columnsReady = true;
 
-          // 寫回快取
           try {
             sessionStorage.setItem(
               this.COL_CACHE_KEY,
@@ -269,7 +305,6 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
           } catch { /* storage full or disallowed */ }
         },
         error: () => {
-          // 欄位一定要有；若 API 失敗，至少給最小欄位，避免整頁卡死
           this.payTypes = [];
           this.columns = [
             { field: 'ECR_No',  header: '收銀機號' },
@@ -291,12 +326,18 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
         const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
           const flat: any = { ...r };
 
-          // 攤平 PayDiffs => Pay_Dif_XX 欄位
+          // 攤平巢狀 -> 先轉 number，再格式化成字串（顯示）
           if (r?.PayDiffs) {
-            Object.entries(r.PayDiffs).forEach(([k, v]) => {
-              flat[k] = v ?? 0;
+            Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
+              flat[k] = this.toNumberLoose(v);
             });
           }
+          if (flat.PPay_Dif_sum != null) {
+            flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
+          }
+
+          // 轉顯示用字串（含千分位）
+          this.formatMoneyFieldsInRow(flat);
 
           flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
           return flat;
@@ -312,11 +353,16 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
           if (sumRaw) {
             const footer: any = {};
             Object.keys(sumRaw).forEach((k) => {
-              const v = sumRaw[k] ?? 0;
-              if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = v;
-              if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = v;
+              const raw = sumRaw[k] ?? 0;
+              const num = typeof raw === 'string' ? Number(raw.replace(/,/g, '')) : Number(raw);
+              const safe = Number.isFinite(num) ? num : 0;
+
+              if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
+              if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
             });
-            this.footerData = footer;
+
+            // footer 轉顯示用字串（含千分位）
+            this.footerData = this.formatMoneyFieldsInFooter(footer);
           } else {
             this.footerData = undefined;
           }
@@ -381,92 +427,108 @@ tableVer = 0;              // 強制重建 table 的 key（欄位動態/重新�
   }
 
   /* ----------------- Submit（固定 pageSize=30；等欄位就緒） ----------------- */
-onSubmit(frm: FormGroup) {
-  this.submitted = true;
+  onSubmit(frm: FormGroup) {
+    this.submitted = true;
 
-  // 驗證
-  if (this.queryForm.invalid) {
-    this.queryForm.markAllAsTouched();
-    this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
-    return;
-  }
-
-  // 組 payload（首次固定 30 筆）
-  const raw = this.queryForm.getRawValue();
-  const payload = this.buildPayload(raw);
-  payload.pageIndex = 1;
-  payload.pageSize  = 30;
-
-  // 重置畫面狀態
-  this.loading = true;
-  this.data = [];
-  this.selectedItems = [];
-  this.footerData = undefined;
-  this.totalRecords = 0;        // 清乾淨，避免殘留
-  this.viewTotalRecords = 0;    // 首屏先 0，等資料回來後用本頁筆數撐
-  this.tableVer++;              // ↩️ 讓 <app-table-report> 強制重建（欄位/狀態都乾淨）
-
-  this.tls2b030Service
-    .queryTLS2B030(payload)
-    .pipe(untilDestroyed(this))
-    .subscribe({
-next: (response) => {
-  const dataAny = response?.Data as any;
-  const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-  const sumRaw  = dataAny?.SumPayDiffs ?? null;
-
-  const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
-    const flat: any = { ...r };
-    if (r?.PayDiffs) {
-      Object.entries(r.PayDiffs).forEach(([k, v]) => (flat[k] = (v as number) ?? 0));
+    // 驗證
+    if (this.queryForm.invalid) {
+      this.queryForm.markAllAsTouched();
+      this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
+      return;
     }
-    flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
-    return flat as TLS2B030Row;
-  });
 
-  this.data = rows;
+    // 組 payload（首次固定 30 筆）
+    const raw = this.queryForm.getRawValue();
+    const payload = this.buildPayload(raw);
+    payload.pageIndex = 1;
+    payload.pageSize  = 30;
 
-  // 先用「本頁筆數」撐出高度，避免臨界筆數撐破
-  this.viewTotalRecords = this.data.length;
-
-  // 🔑 立刻跑一次變更偵測，讓 DOM 先以本頁筆數成形
-  this.cdr.detectChanges();
-
-  // 下一個 tick 再切回真正總筆數，啟用虛擬捲動/續載
-  const realTotal = Number(response?.TotalCount ?? rows.length) || rows.length;
-  setTimeout(() => {
-    this.totalRecords = realTotal;
-    this.viewTotalRecords = realTotal;
-    this.lastQueryBody = { ...payload };
-  });
-
-  // footer 處理同你原本
-  if (sumRaw) {
-    const footer: any = {};
-    Object.keys(sumRaw).forEach((k) => {
-      const v = (sumRaw as any)[k] ?? 0;
-      if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = v;
-      if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = v;
-    });
-    this.footerData = footer;
-  } else {
+    // 重置畫面狀態
+    this.loading = true;
+    this.data = [];
+    this.selectedItems = [];
     this.footerData = undefined;
+    this.totalRecords = 0;        // 清乾淨，避免殘留
+    this.viewTotalRecords = 0;    // 首屏先 0，等資料回來後用本頁筆數撐
+    this.tableVer++;              // ↩️ 讓 <app-table-report> 強制重建（欄位/狀態都乾淨）
+
+    this.tls2b030Service
+      .queryTLS2B030(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          const dataAny = response?.Data as any;
+          const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+          const sumRaw  = dataAny?.SumPayDiffs ?? null;
+
+          const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
+            const flat: any = { ...r };
+
+            // 攤平 PayDiffs -> 先數字化
+            if (r?.PayDiffs) {
+              Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
+                flat[k] = this.toNumberLoose(v);
+              });
+            }
+            // 總金額也數字化
+            if (flat.PPay_Dif_sum != null) {
+              flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
+            }
+
+            // 轉顯示用字串（含千分位）
+            this.formatMoneyFieldsInRow(flat);
+
+            flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+            return flat as TLS2B030Row;
+          });
+
+          this.data = rows;
+
+          // 先用「本頁筆數」撐出高度，避免臨界筆數撐破
+          this.viewTotalRecords = this.data.length;
+
+          // 立刻跑一次變更偵測，讓 DOM 先以本頁筆數成形
+          this.cdr.detectChanges();
+
+          // 下一個 tick 再切回真正總筆數，啟用虛擬捲動/續載
+          const realTotal = Number(response?.TotalCount ?? rows.length) || rows.length;
+          setTimeout(() => {
+            this.totalRecords = realTotal;
+            this.viewTotalRecords = realTotal;
+            this.lastQueryBody = { ...payload };
+          });
+
+          // footer（總計列）
+          if (sumRaw) {
+            const footer: any = {};
+            Object.keys(sumRaw).forEach((k) => {
+              const rawv = (sumRaw as any)[k] ?? 0;
+              const num = typeof rawv === 'string' ? Number(rawv.replace(/,/g, '')) : Number(rawv);
+              const safe = Number.isFinite(num) ? num : 0;
+
+              if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
+              if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
+            });
+
+            // footer 轉顯示用字串（含千分位）
+            this.footerData = this.formatMoneyFieldsInFooter(footer);
+          } else {
+            this.footerData = undefined;
+          }
+
+          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('API error:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
+          this.footerData = undefined;
+          this.loading = false;
+        },
+      });
   }
-
-  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-  this.loading = false;
-},
-      error: (err) => {
-        console.error('API error:', err);
-        this.data = [];
-        this.totalRecords = 0;
-        this.viewTotalRecords = 0;
-        this.footerData = undefined;
-        this.loading = false;
-      },
-    });
-}
-
 
   onClear(frm: FormGroup) {
     frm.reset({
