@@ -607,30 +607,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       return;
     }
 
-    // 驗證 POS2005 明細
-    // --------------------------
-    for (let i = 0; i < this.POS2005Data.length; i++) {
-        const row = this.POS2005Data[i];
-        const result = this.validate2005Row(row);
-        if (!result.isValid) {
-            this.messageService.unblockUi();
-            this.messageService.errorBubble(`POS2005 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
-            return;
-        }
-    }
-
-    // 驗證 POS2005 明細
-    // --------------------------
-    for (let i = 0; i < this.POS2020Data.length; i++) {
-        const row = this.POS2020Data[i];
-        const result = this.validate2020Row(row);
-        if (!result.isValid) {
-            this.messageService.unblockUi();
-            this.messageService.errorBubble(`POS2020 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
-            return;
-        }
-    }
-
     // POS2004 國際條碼 和 POS2005國際條碼必須對應，且POS2004要在第一筆
     // 另外可以允許兩者都是null(此情況後端會自動依照商品編號設置)
 
@@ -680,6 +656,30 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.POS2020Data = this.POS2020Data.filter(v => v.VEN_No !== '');
 
     console.log('POS2005Data',this.POS2005Data);
+
+    // 驗證 POS2005 明細
+    // --------------------------
+    for (let i = 0; i < this.POS2005Data.length; i++) {
+        const row = this.POS2005Data[i];
+        const result = this.validate2005Row(row);
+        if (!result.isValid) {
+            this.messageService.unblockUi();
+            this.messageService.errorBubble(`POS2005 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
+            return;
+        }
+    }
+
+    // 驗證 POS2020 明細
+    // --------------------------
+    for (let i = 0; i < this.POS2020Data.length; i++) {
+        const row = this.POS2020Data[i];
+        const result = this.validate2020Row(row);
+        if (!result.isValid) {
+            this.messageService.unblockUi();
+            this.messageService.errorBubble(`POS2020 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
+            return;
+        }
+    }
 
     //--檢查--
     // 商品管理編號：鍵值，自動編號，大分類編號(2碼)+10碼流水號+1碼檢查碼，檢查碼為EAN 檢查碼計算規則，流水號給號讀SER1001商品管理編號序號檔
