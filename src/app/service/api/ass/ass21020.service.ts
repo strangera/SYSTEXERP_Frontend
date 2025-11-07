@@ -5,7 +5,7 @@ import { ASS21020Data, ASS21020Delete, ASS21020Query, ASS21020Update, ASS21020Up
 import { Option } from '@service/utility/dropdown-api.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2000';
@@ -18,11 +18,11 @@ export class ASS21020Service {
   public readonly tltNoData = signal<TLTByFlag[]>([]);
 
   /** 能源類型下拉選單 */
-  public readonly engTypeList = signal<Option[]>([
+  public readonly engTypeOptions: Option[] = [
     { value: EngType.水, label: '水錶' },
     { value: EngType.電, label: '電錶' },
     { value: EngType.瓦斯, label: '瓦斯錶' },
-  ]);
+  ];
 
   /** 能源類型對應表 */
   public readonly engTypeMap = new Map<string, EngType>([
@@ -42,17 +42,10 @@ export class ASS21020Service {
     new Map(this.tltNoData().map(item => [item.TLT_No, item]))
   );
 
-  public readonly engMeterNoLoading = signal<boolean>(!1);
   public readonly tableLoading = signal<boolean>(!1);
+  public readonly engMeterNoLoading = signal<boolean>(!1);
   public readonly tltByFlagLoading = signal<boolean>(!1);
-  public readonly updating = signal<boolean>(!1);
-  public readonly deleting = signal<boolean>(!1);
 
-  private readonly engMeterNoCancel$ = new Subject<void>();
-  private readonly tableCancel$ = new Subject<void>();
-  private readonly tltByFlagCancel$ = new Subject<void>();
-  private readonly updatingCancel$ = new Subject<void>();
-  private readonly deletingCancel$ = new Subject<void>();
 
   public readonly totalRecords = signal<number>(0);
 
@@ -62,71 +55,51 @@ export class ASS21020Service {
   ) { }
 
   public loadASS21020(query: ASS21020Query): Observable<BaseQueryResponse<ASS21020Data>> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/queryASS21020`, query).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
-      tap(() => this.ASS21020Data.set([])),
       tap(({ TotalCount }) => this.totalRecords.set(TotalCount || 0)),
       tap(({ Data }) => this.ASS21020Data.set(Data.map((item, index) => ({ ...item, Id: index + 1 })))),
-      finalize(() => {
-        this.tableLoading.set(!1);
-        this.logger.debug('查詢ASS21020結果:', [this.ASS21020Data()]);
-      })
+      tap(res => this.logger.debug(`查詢ASS21020結果:`, [res])),
+      finalize(() => this.tableLoading.set(!1))
     );
   };
 
   public updateASS21020(payload: ASS21020Update[]): Observable<ASS21020UpdateStatus> {
-    this.updatingCancel$.next();
-    this.updating.set(!0);
+    this.tableLoading.set(!0);
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/updateASS21020`, { UpdateASS21020Datas: payload }).pipe(
       take(1),
-      takeUntil(this.updatingCancel$),
-      finalize(() => {
-        this.updating.set(!1);
-        this.logger.debug('更新ASS21020結果:', [payload]);
-      }),
+      tap(res => this.logger.debug(`更新ASS21020結果:`, [res])),
+      finalize(() => this.tableLoading.set(!1))
     );
   }
 
   public deleteASS21020(payload: ASS21020Delete): Observable<ASS21020UpdateStatus> {
-    this.deletingCancel$.next();
-    this.deleting.set(!0);
+    this.tableLoading.set(!0);
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/deleteASS21020`, payload).pipe(
       take(1),
-      finalize(() => {
-        this.deleting.set(!1);
-        this.logger.debug(`deleteASS21020:`, [payload]);
-      })
+      tap(() => this.logger.debug(`刪除ASS21020結果:`, [payload])),
+      finalize(() => this.tableLoading.set(!1))
     );
   }
 
   public getEngMeterNos(): void {
-    this.engMeterNoCancel$.next();
     this.engMeterNoLoading.set(!0);
     this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${environment.ApiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, {}).pipe(
       take(1),
-      takeUntil(this.engMeterNoCancel$),
       tap(res => this.engMeterNoData.set(res.Data)),
-      finalize(() => {
-        this.engMeterNoLoading.set(!1);
-        this.logger.debug('查詢EngMeterNo結果:', [this.engMeterNoData()]);
-      })
+      tap(res => this.logger.debug(`查詢EngMeterNo結果:`, [res])),
+      finalize(() => this.engMeterNoLoading.set(!1))
     ).subscribe();
   };
 
   public getTltByFlags(ENG_MeterNo: string, MID: number): void {
-    this.tltByFlagCancel$.next();
     this.tltByFlagLoading.set(!0);
     this.http.post<BaseQueryResponse<TLTByFlag>>(`${environment.ApiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID, ENG_MeterNo }).pipe(
       take(1),
-      takeUntil(this.tltByFlagCancel$),
       tap(res => this.tltNoData.set(res.Data)),
-      finalize(() => {
-        this.tltByFlagLoading.set(!1);
-        this.logger.debug('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltNoData()]);
-      })
+      tap(res => this.logger.debug(`查詢TltByFlag參數:`, [res])),
+      finalize(() => this.tltByFlagLoading.set(!1))
     ).subscribe();
   }
 }

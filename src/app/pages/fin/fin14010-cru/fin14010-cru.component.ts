@@ -16,10 +16,10 @@ import { Fin14010Service } from '@service/api/fin/fin14010.service';
 import { option } from '@shared/models/sys/sysb000.model';
 import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
-  // 這個table有點神奇，沒有id(先新增一個)
   ID: number;
 
   /** 分店編號 */
@@ -279,13 +279,13 @@ export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> impleme
     REP_DataType: ['', [Validators.required, Validators.maxLength(1)]], // 資料別
     REP_GUIYM: ['', [Validators.required, Validators.maxLength(6)]], // 資料所屬年月
 
-    REP_PurBuyExternal: [null, [Validators.maxLength(16)]], // 購買國外勞務給付額
-    REP_PurImportNoTax: [null, [Validators.maxLength(16)]], // 進口免稅貨物
-    REP_PurcTotalSaleAmt: [null, [Validators.maxLength(16)]], // 固定資產
-    REP_PurfTotalSaleAmt: [null, [Validators.maxLength(16)]], // 進貨及費用
+    REP_PurBuyExternal: [null, [Validators.maxLength(16), this.validationService.numberValidator]], // 購買國外勞務給付額
+    REP_PurImportNoTax: [null, [Validators.maxLength(16), this.validationService.numberValidator]], // 進口免稅貨物
+    REP_PurcTotalSaleAmt: [null, [Validators.maxLength(16), this.validationService.numberValidator]], // 固定資產
+    REP_PurfTotalSaleAmt: [null, [Validators.maxLength(16), this.validationService.numberValidator]], // 進貨及費用
 
-    REP_TaxSum08: [null, [Validators.maxLength(16)]], // 上期(月)累積留抵稅額
-    REP_TaxSum13: [null, [Validators.maxLength(16)]], // 得退稅限額合計
+    REP_TaxSum08: [null, [Validators.maxLength(16), this.validationService.numberValidator]], // 上期(月)累積留抵稅額
+    REP_TaxSum13: [null, [Validators.maxLength(16), this.validationService.numberValidator]], // 得退稅限額合計
   });
 
   minDate?: Date;
@@ -327,17 +327,12 @@ export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> impleme
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // console.log('insert', JSON.stringify(body, null, 2));
-            // this.fin14010Service.updateFIN14010(formValue).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            //   this.dataForm.reset(); // 重置表單
-            // });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             console.log('update', JSON.stringify(body, null, 2));
-            this.fin14010Service.updateFIN14010(body).subscribe(() => {
+            this.fin14010Service.updateFIN14010(body).pipe(untilDestroyed(this)).subscribe(() => {
               // this.messageService.successBubble('更新成功');
               this.onCancel(); // 儲存後，會返回列表
             });

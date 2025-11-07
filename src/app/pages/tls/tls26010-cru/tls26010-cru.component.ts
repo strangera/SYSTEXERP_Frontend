@@ -201,6 +201,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.dialogVisible() === 'tlt' ? this.service.tltLoading() : !1;
   });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.sys3800Loading()
+      || this.service.sys3900Loading()
+      || this.service.sys3A00Loading()
+      || this.service.tableLoading();
+  });
+
   public readonly columns: Column[] = [
     { field: 'ecr_no', header: '收銀機號' },
     { field: 'ecr_name', header: '收銀機名稱' },
@@ -241,7 +248,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26010', this.dataForm);
-    this.isFormCreateable && this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
 
     this.dependencyChangeSubject.pipe(
       debounceTime(400),
@@ -339,7 +345,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      this.loading = !0;
       const d = this.dataForm.getRawValue();
       const payload: PodRequest = {
         ecr_list: this.ecrTableFiltered(),
@@ -359,13 +364,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
         .pipe(
           tap(() => { if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel(); }),
           finalize(() => {
-            this.loading = !1;
-            if (this.dialogVisible()) {
-              this.dialogVisible.set(!1);
-              this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
-            }
-          }))
-        .subscribe();
+            if (!this.dialogVisible()) return;
+            this.dialogVisible.set(!1);
+            this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+          })).subscribe({
+            next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+            error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+          });
     });
   };
 

@@ -90,3 +90,12 @@ export const todayStart = (() => {
   d.setHours(0, 0, 0, 0);
   return d;
 })();
+
+/**
+ * 將 Date 物件轉換為 "HH:mm" 格式的字串
+ * 可用在時間欄位的轉換
+*/
+export const toHHmm = (date: Date | null | undefined): string => {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+  return date.toTimeString().slice(0, 5); // "14:32"
+};

@@ -1,5 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
-import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, computed, effect } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21020Service } from '@service/api/tls/tls21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -10,7 +10,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 
 @Component({
@@ -41,6 +41,13 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
 
   private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
   private readonly ABATYN = (v: any) => v?.ABAT_YN === 'N';
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.gls1005Loading()
+      || this.service.pos2013Loading()
+      || this.service.orgIdLoading();
+  });
 
   public readonly columns: EditColumn[] = [
     {
@@ -138,10 +145,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
-    this.service.queryTLS21020({ ENTRY_TYPE: this.rowdata?.ENTRY_TYPE! }).pipe(
-      tap(),
-      finalize(() => this.loading = !1),
-    ).subscribe();
+    this.service.queryTLS21020({ ENTRY_TYPE: this.rowdata?.ENTRY_TYPE! }).subscribe();
 
     // this.service.queryTLS21020_GLS1005({ AccDC: this.rowdata?.AccDC! });
 
@@ -168,9 +172,11 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
       }));
       this.logger.debug(`onSubmit:`, [data, payload]);
       this.service.updateTLS21020(payload).pipe(
-        tap(res => res.Status === '2000' && this.onCancel()),
-        finalize(() => this.loading = !1),
-      ).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
+      });
     });
   }
 

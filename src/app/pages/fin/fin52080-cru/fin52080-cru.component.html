@@ -57,6 +57,7 @@
                       optionLabel="ClassCName"
                       optionValue="ClassNo"
                       [showClear]="false"
+                      [loading]="service.classNoLoading()"
                       [control]="df().ClassNo"
                       [submitted]="submitted"></app-dropdown>
 
@@ -125,6 +126,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
+                    [loading]="loading"
                     [disabled]="dataForm.invalid"></app-button>
       </div>
       }

@@ -55,6 +55,7 @@
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增收銀機"
+                  [loading]="service.ecrLoading()"
                   (click)="onOpenDialog('ecr')"></app-button>
     </div>
   </div>
@@ -82,6 +83,7 @@
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增專櫃"
+                  [loading]="service.tltLoading()"
                   (click)="onOpenDialog('tlt')"></app-button>
     </div>
   </div>
@@ -111,7 +113,8 @@
             [header]="dialogHeader()"
             (visibleChange)="onVisibleChange($event)"
             (save)="onDialogSubmit()"
-            [height]="'auto'">
+            [height]="'auto'"
+            [loading]="loading">
   <form [formGroup]="dataForm">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">

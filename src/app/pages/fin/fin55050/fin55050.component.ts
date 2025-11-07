@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
 import { finalize } from 'rxjs';
+
 import {
   FIN55050Service,
   FIN55050Detail,
@@ -23,9 +24,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { Router } from '@angular/router';
 
-// 巢狀資料型別（父含 _Details）
 export interface FIN55050Data {
   AccNo: string;
   AccCName: string;
@@ -37,9 +36,6 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
   AccCName: string;
   VouDate: string;
 }
-
-// Store
-import { FIN55050Store } from './fin55050.store';
 
 @Component({
   selector: 'app-fin55050',
@@ -62,14 +58,10 @@ import { FIN55050Store } from './fin55050.store';
   ]
 })
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> implements OnInit {
-  // === 修正 router 注入衝突 ===
-
 
   constructor(
-
     private fin55050Service: FIN55050Service,
     private dropDownListService: DropDownListService,
-    private fin55050Store: FIN55050Store
   ) {
     super();
   }
@@ -90,6 +82,8 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   queryForm = this.formBuilder.group({
     DateFrom: [this.yesterday, Validators.required],
     DateTo: [this.yesterday, Validators.required],
+    //     DateFrom: [new Date(2024, 9, 1), Validators.required],
+    // DateTo: [new Date(2024, 9, 1), Validators.required],
     OrgIdList: [null],
     AccNoList: [null],
     VendorNoList: [null],
@@ -135,79 +129,93 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   VouTypeListOptions: any[] = [];
   //#endregion
 
-ngOnInit(): void {
-  // 正確明細路由
-  this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
-  this.loadOptions();
+  ngOnInit(): void {
+    this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
+    // ✅ 預先把 ProgNo 寫入一次，避免你從其它地方直開 CRU
+    try { localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); } catch {}
 
-  // ✅ 無條件本地還原一次（不依賴 previousRoute）
-  const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
-  if (saved) {
-    // 若你的 QueryStateService 回存的是字串日期，建議轉 Date（見下方 coerceDates）
-    this.queryForm.patchValue(this.coerceDates(saved), { emitEvent: false });
-    this.lastQueryBody = saved;  // 匯出時可沿用
+    this.loadOptions();
+
+    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+    if (saved) {
+      this.queryForm.patchValue(this.coerceDates(saved), { emitEvent: false });
+      this.lastQueryBody = saved;
+    }
+
+    this.queryForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      });
   }
 
-  // ✅ 使用者改任何欄位就即時保存（含多選/文字/日期）
-  this.queryForm.valueChanges
-    .pipe(untilDestroyed(this))
-    .subscribe(() => {
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-    });
-}
-private coerceDates(raw: any) {
-  const fix = (v: any) => {
-    if (!v) return v;
-    if (v instanceof Date) return v;
-    // 支援 'YYYY-MM-DD' 或 ISO 字串
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? v : d;
-  };
-  return {
-    ...raw,
-    DateFrom: fix(raw?.DateFrom),
-    DateTo: fix(raw?.DateTo),
-  };
-}
+  private coerceDates(raw: any) {
+    const fix = (v: any) => {
+      if (!v) return v;
+      if (v instanceof Date) return v;
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    };
+    return {
+      ...raw,
+      DateFrom: fix(raw?.DateFrom),
+      DateTo: fix(raw?.DateTo),
+    };
+  }
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
       this.fin55050Service.queryFIN55050(form.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
-          // 存完整（含 _Details）到 Store
-          this.fin55050Store.setResponse(response.Data);
-
-          // 扁平化給清單
+          // 直接展平成清單供列表顯示
           this.data = this.restructureData(response.Data);
           this.totalRecords = response.TotalCount ?? this.data.length;
 
           // 記住本次查詢（匯出用）
           this.lastQueryBody = form.getRawValue();
 
-          // 保存查詢狀態（你的共用）
+          // 保存查詢狀態
           this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
         });
     });
   }
+
   override onLazyLoadData(event: any, form: FormGroup) {
-  // 先套用分頁/排序到表單，但不要觸發 valueChanges，避免多一次自動保存與重查
-  form.patchValue({
-    pageSize: event?.pageSize,
-    pageIndex: event?.pageIndex,
-    SortBy: event?.SortBy
-  }, { emitEvent: false });
+    form.patchValue({
+      pageSize: event?.pageSize,
+      pageIndex: event?.pageIndex,
+      SortBy: event?.SortBy
+    }, { emitEvent: false });
 
-  // 立即保存最新分頁/排序到 QueryState（避免只換頁就跳走時遺失）
-  this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-}
+    this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+  }
 
-
-  /** 清單 → 明細 */
+  /** 清單 → 明細（CRU）：使用 localStorage 交接資料 */
   override onDetail(row: GroupedFIN55050Detail) {
     const vouNo = row?.VouNo;
-    if (!vouNo) return;
-    this.router.navigate(['account/fin/fin55050cru'], { state: { vouNo, fromRoute: this.router.url } });
+    if (!vouNo) {
+      this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
+      return;
+    }
+
+    // 儲存交接資料到 localStorage（含 ProgNo）
+    try {
+      const handoff = {
+        vouNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); // ✅ 存 ProgNo
+      console.log('[FIN55050] 已儲存 handoff:', handoff);
+    } catch (err) {
+      console.error('[FIN55050] handoff save failed:', err);
+      this.messageService?.warnBubble?.('寫入交接資料失敗。');
+    }
+
+    // 開新分頁
+    window.open('/account/fin/fin55050cru', '_blank', 'noopener');
   }
 
   loadOptions() {
@@ -222,26 +230,25 @@ private coerceDates(raw: any) {
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => this.VendorNoListOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
-  
-  this.fin55050Service.queryGLS1016_DropDownList()
-    .pipe(untilDestroyed(this))
-    .subscribe(response => {
-      this.TargetNoListOptions = response.Data?.map((item: any) => ({
-        label: `${item.No} - ${item.Name}`,
-        value: item.No,
-      })) ?? [];
-    });
 
-  // ✅ 傳票型態（VoucherKindOptions）→ 改呼叫 fin55050Service（POST、無 body）
-  this.fin55050Service.queryGLS1010_DropDownList()
-    .pipe(untilDestroyed(this))
-    .subscribe(response => {
-      this.VouTypeListOptions = response.Data?.map((item: any) => ({
-        label: `${item.No} - ${item.Name}`,
-        value: item.No,
-      })) ?? [];
-    });
-    }
+    this.fin55050Service.queryGLS1016_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.TargetNoListOptions = response.Data?.map((item: any) => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        })) ?? [];
+      });
+
+    this.fin55050Service.queryGLS1010_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.VouTypeListOptions = response.Data?.map((item: any) => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        })) ?? [];
+      });
+  }
 
   /** 從巢狀資料展平成清單 */
   restructureData(data: FIN55050Data[]): GroupedFIN55050Detail[] {
@@ -261,7 +268,6 @@ private coerceDates(raw: any) {
 
   // ========= 匯出 =========
   onExportPDF() {
-     console.log('ExportPDF clicked');
     if ((this.data?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
     const payload = this.buildExportBody();
     if (!payload) return;
@@ -318,7 +324,7 @@ private coerceDates(raw: any) {
     return payload;
   }
 
-  // ========= 本地工具（避免依賴基底內部成員） =========
+  // ========= 本地工具 =========
   private toDateOnly(d: any): string | null {
     if (!d) return null;
     const dt = (d instanceof Date) ? d : new Date(d);
@@ -327,7 +333,6 @@ private coerceDates(raw: any) {
     const m = String(dt.getMonth() + 1).padStart(2, '0');
     const da = String(dt.getDate()).padStart(2, '0');
     return `${y}-${m}-${da}`;
-    // 若後端要 yyyymmdd 可改成: return `${y}${m}${da}`;
   }
 
   private sanitizeSortBy(sort: any[]): { field: string; order: number }[] {

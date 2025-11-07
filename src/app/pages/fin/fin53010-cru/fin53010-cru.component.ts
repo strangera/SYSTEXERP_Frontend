@@ -7,6 +7,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CheckboxComponent } from '@shared/componentkit/checkbox/checkbox.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -23,7 +24,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, Observable, tap } from 'rxjs';
-import { FIN52030Data, FIN52030Detail, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
+import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
@@ -43,6 +44,7 @@ import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010Inser
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
+    CheckboxComponent,
     DialogComponent,
     DropdownComponent,
     InputTextComponent,
@@ -114,21 +116,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   });
 
   public readonly loadingEffect = effect(() => {
-    const acc = this.service.accLoading();
-    const ven = this.service.venLoading();
-    const usr = this.service.usrLoading();
-    const org = this.service.orgNoLoading();
-    const voc = this.service.voucherTypeLoading();
-    const table = this.service.tableLoading();
-    const refName = this.service.refNameLoading();
-    const noteDesc = this.service.noteDescLoading();
-    this.loading = acc || ven || usr || org || refName || voc || noteDesc || table;
+    this.loading = this.service.accLoading()
+      || this.service.venLoading()
+      || this.service.usrLoading()
+      || this.service.orgNoLoading()
+      || this.service.voucherTypeLoading()
+      || this.service.tableLoading()
+      || this.service.refNameLoading()
+      || this.service.noteDescLoading();
   });
 
   // 載入資料的 effect
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
-      this.loading = !1;
       this.service.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
@@ -161,7 +161,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
     })));
 
-    this.logger.debug(`loading detail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
+    this.logger.debug(`loadingDetail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
     if (!this.service.accNoMap().size
       || !this.service.vendorMap().size
       || !this.service.usrMap().size
@@ -171,6 +171,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
+  public readonly vouTypeTemp = signal<'1' | '2' | '3' | void>(void 0);
+  public readonly vouTermSearchTemp = signal<string>('');
+  public readonly detailCountTemp = signal<boolean | null>(null);
+  public readonly filteredVoucherTemplateList = computed(() =>
+    this.service.voucherTemplateList().filter(v => {
+      return (!this.vouTypeTemp() || v.VouType === this.vouTypeTemp())
+        && (this.detailCountTemp() === null ? !0 : this.detailCountTemp() ? v.DetailCount > 0 : v.DetailCount === 0)
+        && (v.TempNo.includes(this.vouTermSearchTemp()) || v.TempName.includes(this.vouTermSearchTemp()));
+    })
+  );
+
   public selectedTemplateType = 'vendor';
   public templateSearchTerm = '';
   public readonly templateOptions = [
@@ -251,7 +262,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly templateColumns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
     { field: 'TempName', header: '傳票代號' },
-    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
+    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions.find(({ value }) => value === v)?.label ?? v },
     { field: 'DetailCount', header: '明細筆數' },
   ];
 
@@ -266,14 +277,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public ngOnInit(): void {
     this.initializePage('FIN53010', this.dataForm);
     this.service.FIN53010Detail.set(Object.create(null));
-    this.loading = !0;
 
     this.service.getAccNoList();
     this.service.getVendorList();
     this.service.getUsrList();
     this.service.getOrgNoList();
     this.service.getRefNameList();
-    this.service.getVoucherTypeList();
     this.service.getAccDescList([]);
 
     if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe();
@@ -312,13 +321,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        finalize(() => this.loading = !1),
-        tap(res => {
-          if (res.Status !== '0000') return;
-          this.messageService.successBubble(this.isFormCreateable ? '新增傳票成功' : '更新傳票成功');
-          this.onCancel();
-        })
-      ).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+        error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+      });
     });
   }
 
@@ -335,44 +342,52 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         return result;
       }
 
+      const rowData = result[index];
+      this.logger.debug(`rowData :`, [rowData, event.rowData]);
       switch (event.field) {
         case 'AccNo':
           // 自動帶入科目名稱
-          result[index].AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
+          rowData.AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 自動帶入摘要
-          result[index].NoteDesc = String(this.service.noteDescMap()
+          rowData.NoteDesc = String(this.service.noteDescMap()
             .get(event.value)?.data?.[0].label || event.value || '');
           break;
 
         case 'AccAmtD':
           // 自動互斥借貸方金額
-          if (event.value) result[index].AccAmtC = void 0;
+          if (event.value) rowData.AccAmtC = void 0;
           break;
 
         case 'AccAmtC':
           // 自動互斥借貸方金額
-          if (event.value) result[index].AccAmtD = void 0;
+          if (event.value) rowData.AccAmtD = void 0;
           break;
 
         case 'ORG_ID':
           // 設定目前選擇的組織代號
           this.selectedOrgId.set(String(event.value));
-          result[index].SubDetailNo = '';
+          rowData.SubDetailNo = '';
           break;
 
         case 'NoteDesc':
-          result[index].NoteDesc = String(this.service.noteDescMap()
-            .get(event.rowData.AccNo)?.data
+          rowData.NoteDesc = String(this.service.noteDescMap().get(event.rowData.AccNo)?.data
             ?.find(d => d.value === event.value)?.label
             || event.value || '');
           break;
       }
 
+      // 如果會計科目是進項稅額，且組織是部門，則自動改為共同
+      if (rowData.AccNo?.startsWith('1232')
+        && this.service.orgMap().get(rowData.ORG_ID || '')?.label?.endsWith('部')) {
+        rowData.AccNo = '123208';
+        rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
+      }
+
       // 更新 SerNo
-      result[index].SerNo = (index + 1) * 10;
+      rowData.SerNo = (index + 1) * 10;
 
       // 檢查是否可儲存
-      this.rowEditCanSave.set(!!result[index].AccNo && !!result[index].ORG_ID || !!this.isBalanced());
+      this.rowEditCanSave.set(!!rowData.AccNo && !!rowData.ORG_ID || !!this.isBalanced());
 
       return result;
     });
@@ -391,7 +406,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.deleteFIN53010Data(ids).pipe(
       finalize(() => this.service.loadFIN53010Detail(this.rowdata!.id))
-    ).subscribe();
+    ).subscribe({
+      next: () => this.messageService.successBubble('刪除成功'),
+      error: () => this.messageService.errorBubble('刪除失敗')
+    });
   }
 
   public onRowReorder(event: TableRowReorderEvent): void {
@@ -421,7 +439,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug('getVocherTemplate:', [payload]);
     if (this.loading) return;
     this.service.getFin52030(payload).pipe(
-      finalize(() => { this.loading = !1; this.displayDialog.set(!0); }),
+      finalize(() => this.displayDialog.set(!0)),
       tap(res => this.logger.debug('取得常用傳票結果:', [res]))
     ).subscribe();
   }
@@ -429,7 +447,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public onApplyTemplate(): void {
     this.logger.debug('onApplyTemplate:', [this.selectedDetail()]);
     this.service.getFin52030Detail(this.selectedDetail()[0]?.TempNo, this.df().CompNo.value!, Number(this.user.mid)).pipe(
-      finalize(() => this.loading = !1),
       tap(res => {
         if (res.Status === '0000' && res.Data) {
           this.logger.debug('套用常用傳票結果:', [res]);
@@ -488,4 +505,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug('selectTemplateItem:', [rowData, item]);
     [rowData.DetailNo, rowData.DetailName] = [item?.value ?? '', item?.short ?? item?.label ?? ''];
   };
+
+  public vouTermChange(event: Event): void {
+    this.logger.debug(`vouTermChange:`, [event]);
+    this.vouTermSearchTemp.set((<HTMLInputElement>event.target).value?.toString() || '');
+  }
+
+  public vouTypeChange(event: '1' | '2' | '3' | void): void {
+    this.logger.debug(`vouTypeChange:`, [event]);
+    this.vouTypeTemp.set(<'1' | '2' | '3' | void>event);
+    this.df().VouType.patchValue(event);
+  }
 }

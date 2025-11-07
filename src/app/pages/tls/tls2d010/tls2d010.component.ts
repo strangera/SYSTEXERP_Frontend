@@ -118,7 +118,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.dropDownListService.queryAPS1003DropDownList({ cap_typeList: [] }) // 參數照 interface
+    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }) // 參數照 interface
       .subscribe((res) => {
         this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
           CAP_Item: item.CAP_Item, // 扣款項目代碼

@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71010Service } from '@service/api/fin/fin71010.service';
@@ -44,6 +44,10 @@ export class FIN71010Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly filteredData = computed(() => {
     return this.service.FIN71010Data();
+  });
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading();
   });
 
   public opForm = this.formBuilder.group({
@@ -140,23 +144,6 @@ export class FIN71010Component extends BasicQueryPageComponent<unknown> implemen
 
   public ngOnInit(): void {
     this.initializePage('FIN71010', 'FIN/FIN71010CRU', this.queryForm, this.onSubmit.bind(this));
-    const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.patchValue(store.value);
-
-    // // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // this.IfdisplayService.getOptions().subscribe(
-    //   (data) => (this.displayOptions = data)
-    // );
-    // this.IfdisplayService.getOptions().subscribe(
-    //   (data) => (this.displayOptions2 = data)
-    // );
-    // this.vendorService.getVendors().subscribe((data) => {
-    //   this.vendorOptions = data;
-    // });
-    // this.userCodeService
-    //   .getUserCode()
-    //   .subscribe((data) => (this.usercode = data));
   }
 
   public onSubmit(): void {
@@ -172,20 +159,6 @@ export class FIN71010Component extends BasicQueryPageComponent<unknown> implemen
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
-
-
-
-    // console.log(frm.value);
-    // this.submitted = true;
-    // this.loading = true;
-    // this.notificationService.blockUi();
-
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
-
-    // this.loading = false;
-    // this.notificationService.unblockUi();
   }
 
   public onAutoCompleteInputChange(event: Record<string, any>): void {

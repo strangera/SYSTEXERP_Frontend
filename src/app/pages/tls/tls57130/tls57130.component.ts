@@ -27,8 +27,8 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 })
 export class TLS57130Component extends BasicQueryPageComponent<Tls57130DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_DateStart: [null, [Validators.required]],// 交易日期(起) - 必填
-    TXN_DateEnd: [null, [Validators.required]],    // 交易日期(迄) - 必填
+    TXN_DateStart: [new Date(), [Validators.required]],// 交易日期(起) - 必填
+    TXN_DateEnd: [new Date(), [Validators.required]],    // 交易日期(迄) - 必填
     LOGO_No: [null],// 品牌條件
     HOS_NO: [null],// 倉別條件
     RNK_No: [null],// 顯示名次

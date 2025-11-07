@@ -17,6 +17,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { option } from '../../../shared/models/sys/sysb000.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface POS1002 {
   ID: number; // decimal(19,0)
@@ -150,7 +151,7 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update', formValue);
-          this.tls41050Service.updateTLS41050(formValue).subscribe(() => {
+          this.tls41050Service.updateTLS41050(formValue).pipe(untilDestroyed(this)).subscribe(() => {
             this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });

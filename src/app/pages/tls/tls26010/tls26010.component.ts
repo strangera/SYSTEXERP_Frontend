@@ -37,16 +37,16 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
 })
 export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> implements OnInit {
 
-  public queryForm = this.formBuilder.nonNullable.group({
-    sys3800: new FormControl<string[] | undefined>(void 0), // 館別
-    sys3900: new FormControl<string[] | undefined>(void 0), // 樓層
-    sys3A00: new FormControl<string[] | undefined>(void 0), // 區域
-    ecrNos: new FormControl<string[] | undefined>(void 0), // 收銀機號
-    tltNos: new FormControl<string[] | undefined>(void 0), // 專櫃ID
-    podSdateS: new FormControl<Date | undefined>(this.service.dateS), // 起始日期(起)
-    podSdateE: new FormControl<Date | undefined>(void 0), // 起始日期(迄)
-    podEdateS: new FormControl<Date | undefined>(void 0), // 截止日期(起)
-    podEdateE: new FormControl<Date | undefined>(void 0), // 截止日期(迄)
+  public queryForm = this.formBuilder.group({
+    sys3800: new FormControl<string[] | void>(void 0), // 館別
+    sys3900: new FormControl<string[] | void>(void 0), // 樓層
+    sys3A00: new FormControl<string[] | void>(void 0), // 區域
+    ecrNos: new FormControl<string[] | void>(void 0), // 收銀機號
+    tltNos: new FormControl<string[] | void>(void 0), // 專櫃ID
+    podSdateS: new FormControl<Date | void>(this.service.dateS), // 起始日期(起)
+    podSdateE: new FormControl<Date | void>(void 0), // 起始日期(迄)
+    podEdateS: new FormControl<Date | void>(void 0), // 截止日期(起)
+    podEdateE: new FormControl<Date | void>(void 0), // 截止日期(迄)
   }, {
     validators: [
       (group) => {
@@ -157,6 +157,16 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     };
   });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.sys3800Loading()
+      || this.service.sys3900Loading()
+      || this.service.sys3A00Loading()
+      || this.service.ecrLoading()
+      || this.service.tltLoading()
+      || this.service.tableLoading()
+      || this.service.approvalStatusLoading();
+  });
+
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26010Data; })[] = [
     { field: 'pod_no', header: '預售活動編號' },
     { field: 'pod_desc', header: '活動名稱' },
@@ -188,7 +198,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     this.handleSubmit(this.queryForm, () => {
       this.service.loadTLS26010(this.queryTLS26010());
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.loading = !1;
     });
   };
 
@@ -196,10 +205,9 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   public onDelete(data: TLS26010Data[]): void {
     this.logger.debug(`刪除活動:`, data);
     for (const item of data) this.service.deleteTLS26010(item)
-      .pipe(finalize(() => this.loading = !1))
-      .subscribe(res => {
-        if (res.Error) return this.messageService.errorBubble('刪除失敗', res.Message);
-        this.messageService.successBubble('刪除成功');
+      .subscribe({
+        next: () => this.messageService.successBubble('刪除成功'),
+        error: () => this.messageService.errorBubble('刪除失敗'),
       });
   }
 }

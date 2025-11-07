@@ -236,6 +236,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
+    console.log(this.selectedItemsDialog);
+
     this.data = [
       ...this.data,
       ...this.selectedItemsDialog.map(item => ({
@@ -298,6 +300,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         PLU_Unit: item.PLU_Unit,
         PLU_BoxQty: item.PLU_BoxQty,
         PLU_StockTaxType: item.PLU_StockTaxType,
+        POD_SaleTax: item.PLU_TaxType === '1' ? Math.round((item.POD_SaleAmt || 0) * 0.05) : 0,
         PLU_TaxType: item.PLU_TaxType,
         POD_SubQty: item.POD_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
         POD_BuyPrc: item.PLU_SalePrc_UNI || 0, // 採購單價 (未稅進價)

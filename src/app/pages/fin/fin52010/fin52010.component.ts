@@ -82,8 +82,14 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     });
   }, { allowSignalWrites: !0 });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.dataLoading()
+      || this.service.orgUsrLoading()
+      || this.service.gls1005Loading();
+  });
+
   constructor(
-    public service: FIN52010Service,
+    public readonly service: FIN52010Service,
     private readonly logger: NGXLogger,
   ) {
     super();
@@ -113,11 +119,9 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
       this.logger.debug(`onSubmit:`, [rest, payload]);
 
-      this.service.updateFIN52010Data(payload).pipe(
-        tap(res => this.messageService.successBubble(res.Message)),
-        finalize(() => this.loading = !1),
-      ).subscribe(res => {
-        this.logger.debug(`updateFIN52010Data result:`, [res]);
+      this.service.updateFIN52010Data(payload).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
       });
     });
   };

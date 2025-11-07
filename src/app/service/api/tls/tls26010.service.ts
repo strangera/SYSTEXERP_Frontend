@@ -1,18 +1,18 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, Injectable, OnDestroy, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, Observable, of, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, Observable, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
-export class TLS26010Service implements OnDestroy {
+export class TLS26010Service {
   private readonly d = (() => {
     const n = new Date(), y = n.getFullYear(), m = n.getMonth();
     return { start: new Date(y, m, 1), end: new Date(y, m + 1, 0) };
@@ -44,13 +44,6 @@ export class TLS26010Service implements OnDestroy {
   public readonly approvalStatusLoading = signal<boolean>(!1);
 
   // Request cancellation subjects
-  private readonly sys3800Cancel$ = new Subject<void>();
-  private readonly sys3900Cancel$ = new Subject<void>();
-  private readonly sys3A00Cancel$ = new Subject<void>();
-  private readonly ecrCancel$ = new Subject<void>();
-  private readonly tltCancel$ = new Subject<void>();
-  private readonly queryCancel$ = new Subject<void>();
-  private readonly detailCancel$ = new Subject<void>();
 
   public readonly ecrDataMap = computed(() => {
     return new Map<string, EcrItem>(this.ecrData().map(ecr => ([ecr.ecr_no!, ecr])));
@@ -86,11 +79,9 @@ export class TLS26010Service implements OnDestroy {
 
   /** 取得館別 */
   public loadSYS3800(): void {
-    this.sys3800Cancel$.next();
     this.sys3800Loading.set(!0);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, {}).pipe(
       take(1),
-      takeUntil(this.sys3800Cancel$),
       tap(response => this.sys3800Data.set(response.Data)),
       finalize(() => {
         this.sys3800Loading.set(!1);
@@ -101,11 +92,9 @@ export class TLS26010Service implements OnDestroy {
 
   /** 取得樓層 */
   public loadSYS3900(): void {
-    this.sys3900Cancel$.next();
     this.sys3900Loading.set(!0);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, {}).pipe(
       take(1),
-      takeUntil(this.sys3900Cancel$),
       tap(response => this.sys3900Data.set(response.Data)),
       finalize(() => {
         this.sys3900Loading.set(!1);
@@ -116,11 +105,9 @@ export class TLS26010Service implements OnDestroy {
 
   /** 取得區域代碼 */
   public loadSYS3A00(): void {
-    this.sys3A00Cancel$.next();
     this.sys3A00Loading.set(!0);
     this.http.post<any>(`${apiUrl}/querySYS3A00_DropDownList`, {}).pipe(
       take(1),
-      takeUntil(this.sys3A00Cancel$),
       tap(response => this.sys3A00Data.set(response.Data)),
       finalize(() => {
         this.sys3A00Loading.set(!1);
@@ -131,12 +118,10 @@ export class TLS26010Service implements OnDestroy {
 
   /** 取得收銀機號 */
   public loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
-    this.ecrCancel$.next();
     this.ecrData.set([]);
     this.ecrLoading.set(!0);
     this.http.post<BaseQueryResponse<EcrItem>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
-      takeUntil(this.ecrCancel$),
       tap(response => this.ecrData.set(response.Data)),
       finalize(() => {
         this.ecrLoading.set(!1);
@@ -147,12 +132,10 @@ export class TLS26010Service implements OnDestroy {
 
   /** 取得專櫃編號 */
   public loadTLTTALENT(query: DependentDataQuery): void {
-    this.tltCancel$.next();
     this.tltData.set([]);
     this.tltLoading.set(!0);
     this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
-      takeUntil(this.tltCancel$),
       tap(response => this.tltData.set(response.Data)),
       finalize(() => {
         this.tltLoading.set(!1);
@@ -163,11 +146,9 @@ export class TLS26010Service implements OnDestroy {
 
   /** 查詢預購活動檔期 */
   public loadTLS26010(query: TLS26010Query): void {
-    this.queryCancel$.next();
     this.tableLoading.set(!0);
     this.http.post<BaseQueryResponse<TLS26010Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010`, query).pipe(
       take(1),
-      takeUntil(this.queryCancel$),
       tap(response => this.TLS26010Data.set(response.Data)),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -178,11 +159,9 @@ export class TLS26010Service implements OnDestroy {
 
   /** 查詢預購活動檔期 */
   public loadTLS26010Detail(query: { pod_no: string; }): void {
-    this.detailCancel$.next();
     this.tableLoading.set(!0);
     this.http.post<TLS26010DetailResponse>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010Detail`, query).pipe(
       take(1),
-      takeUntil(this.detailCancel$),
       tap(response => this.TLS26010Detail.set(response.Data)),
       finalize(() => {
         this.tableLoading.set(!1);
@@ -248,6 +227,7 @@ export class TLS26010Service implements OnDestroy {
 
   /** 刪除預購活動 */
   public deleteTLS26010({ id }: TLS26010Data): Observable<BaseQueryResponse<any>> {
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
       tap(() => this.TLS26010Data.set(this.TLS26010Data())),
@@ -280,15 +260,5 @@ export class TLS26010Service implements OnDestroy {
         })
       ).subscribe();
     this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
-  }
-
-  ngOnDestroy(): void {
-    this.sys3800Cancel$.complete();
-    this.sys3900Cancel$.complete();
-    this.sys3A00Cancel$.complete();
-    this.ecrCancel$.complete();
-    this.tltCancel$.complete();
-    this.queryCancel$.complete();
-    this.detailCancel$.complete();
   }
 }

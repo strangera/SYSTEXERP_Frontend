@@ -291,7 +291,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         if (this.canAdd()) {
           // console.log('insert', body);
           console.log('insert', JSON.stringify(body, null, 2));
-          this.tls29010Service.insertTLS29010(body).subscribe(() => {
+          this.tls29010Service.insertTLS29010(body).pipe(untilDestroyed(this)).subscribe(() => {
             this.messageService.successBubble('新增成功');
 
             // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
@@ -312,7 +312,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update:', JSON.stringify(body, null, 2));
-          this.tls29010Service.updateTLS29010(body).subscribe(() => {
+          this.tls29010Service.updateTLS29010(body).pipe(untilDestroyed(this)).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });
@@ -352,8 +352,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
     // 部門編號(SYS3100)
     this.tls29010Service
-      .querySYS3100_DropDownList({}).pipe(untilDestroyed(this))
-      .subscribe((response) => {
+      .querySYS3100_DropDownList({}).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
         this.orgOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
@@ -374,7 +373,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   //讀取明細檔
   async loadDetailData(pod_no: string): Promise<void> {
     console.log('要求pod_no資料:', pod_no);
-    this.tls29010Service.queryTLS29010_Detail({ "POD_No": pod_no }).subscribe((response) => {
+    this.tls29010Service.queryTLS29010_Detail({ "POD_No": pod_no }).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === '0000') {
         this.opendisc_Detail = response.Data.map((item: any) => ({
           ...item,

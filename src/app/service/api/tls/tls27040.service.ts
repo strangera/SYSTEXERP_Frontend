@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient,HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service';
 import { SortMeta } from 'primeng/api';
@@ -259,5 +259,45 @@ export class TLS27040Service {
    */
   updatePOS6119P(body: POS6119PUpdate): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6119P`, body);
+  }
+
+  /**
+   *  根據 Swagger 新增：實收信用卡 - 匯出 Excel
+   * POST /TLS0000/TLS2000/exportTLS27040Excel
+   * @param body 包含查詢條件、分頁和排序資訊的請求主體。
+   * @returns 包含 Excel 檔案的 Blob 物件 (HttpResponse<Blob>)
+   */
+  exportTLS27040Excel(
+    body: QueryTLS27040Request
+  ): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportTLS27040Excel`;
+    return this.http.post(
+      url,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob' // 預期回傳檔案的 Blob 格式
+      }
+    );
+  }
+
+  /**
+   *  根據 Swagger 新增：實收信用卡 - 匯出 PDF
+   * POST /TLS0000/TLS2000/exportTLS27040PDF
+   * @param body 包含查詢條件、分頁和排序資訊的請求主體。
+   * @returns 包含 PDF 檔案的 Blob 物件 (HttpResponse<Blob>)
+   */
+  exportTLS27040PDF(
+    body: QueryTLS27040Request
+  ): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportTLS27040PDF`;
+    return this.http.post(
+      url,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob' // 預期回傳檔案的 Blob 格式
+      }
+    );
   }
 }

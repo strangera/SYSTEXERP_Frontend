@@ -130,7 +130,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   /** 統一初始化效果器 */
   public readonly initEffect = effect(() => {
-    const engTypes = this.service.engTypeList();
+    const engTypes = this.service.engTypeOptions;
     const meterNos = this.service.engMeterNoData();
 
     if (!engTypes.length || !meterNos.length) return;
@@ -174,6 +174,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.tableData.set(data.find(v => v.ENG_MeterNo === meterNo)?.Details || []);
     this.logger.debug(`tableDataEffect:`, [data, meterNo]);
   }, { allowSignalWrites: !0 });
+
+  public readonly loadingEffect = effect(() => {
+    const loading = this.service.tableLoading()
+      || this.service.engMeterNoLoading()
+      || this.service.tltByFlagLoading();
+  });
 
   public readonly columns: EditColumn[] = [
     {
@@ -231,7 +237,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public ngOnInit(): void {
     this.initializePage('ASS21020', this.dataForm);
-    this.loading = !0;
 
     this.service.getEngMeterNos();
 
@@ -253,14 +258,11 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       this.logger.debug(`onSubmit:`, [payload]);
 
       this.service.updateASS21020(payload).pipe(
-        tap(({ Status }) => {
-          if (Status === '0000') {
-            this.messageService.successBubble('資料儲存成功');
-            this.onCancel();
-          }
-        }),
-        finalize(() => this.loading = !1),
-      ).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
+      });
     });
   }
 

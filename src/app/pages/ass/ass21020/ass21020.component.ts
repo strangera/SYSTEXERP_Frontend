@@ -16,9 +16,9 @@ import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { ASS2100ENGMeterType, EngType } from '../ass21010/ass21010.model';
-import { ASS21020Data, TLTByFlag } from './ass21020.model';
+import { ASS21020Data, ASS21020Query, TLTByFlag } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -55,69 +55,66 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
   public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
 
-  public filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
+  /* ENG_Type 改變時,篩選 MeterNo 選項 */
+  public filteredMeterNo = computed<ASS2100ENGMeterType[]>(() => {
+    const selectedTypes = this.qf().ENG_Type.value;
+    if (!selectedTypes?.length) return this.service.engMeterNoData();
+    return this.service.engMeterNoData().filter(item =>
+      selectedTypes.some(v => v === item.ENG_Type));
+  });
 
-  /** ENG_Type 改變時，帶出可用的meterNo */
-  public readonly engTypeEffect = effect(() => {
-    const engType = this.engTypeSignal();
-    this.logger.debug(`engTypeEffect:`, [engType, this.queryForm.getRawValue()]);
-    this.filteredMeterNo.set(this.service.engMeterNoData().filter(item => {
-      if (!engType?.length) return !0;
-      return this.service.engTypeList().some(t => t.label === item.ENG_Type
-        && this.qf().ENG_Type.value?.some(v => v === t.value));
-    }));
-    this.logger.debug(`engType Effect:`, [this.filteredMeterNo]);
-  }, { allowSignalWrites: !0 });
-
-  /* meterNo改變時，帶出Location_No、ENG_Type */
+  /* MeterNo 改變時,帶出 Location_No、ENG_Type */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    this.service.tltNoData.set([]);
-    this.logger.debug(`meterNoEffect:`, [meterNo, this.queryForm.getRawValue()]);
-    if (!meterNo) return void this.queryForm.patchValue({
-      TLT_No: void 0,
-      TLT_Name: '',
-      Location_No: '',
-      NET_SPACE: void 0,
-      ENG_Rate: void 0,
-    }, { emitEvent: !1 });
-    this.service.getTltByFlags(meterNo, +this.user!.mid);
+
+    if (!meterNo) {
+      this.queryForm.patchValue({
+        Location_No: '',
+        TLT_No: void 0,
+        TLT_Name: '',
+        NET_SPACE: void 0,
+        ENG_Rate: void 0,
+      }, { emitEvent: !1 });
+      this.service.tltNoData.set([]);
+      return;
+    }
 
     const metro = this.service.engMeterNoMap().get(meterNo);
-    this.logger.debug(`metroNo metro:`, [metro]);
     if (!metro) return;
 
-    const current = this.service.engTypeList().find(t => t.label === metro.ENG_Type);
-    this.logger.debug(`metroNo current:`, [current]);
-    if (!current) return;
+    const ENG_Type: EngType = this.service.engTypeOptions.find(({ label }) => label === metro.ENG_Type)?.value;
+    if (!ENG_Type) return;
 
     this.queryForm.patchValue({
-      ENG_Type: this.qf().ENG_Type.value?.length ? this.qf().ENG_Type.value : [current.value as EngType],
       Location_No: metro.Location_No,
+      ENG_Type: this.qf().ENG_Type.value?.length ? this.qf().ENG_Type.value : [ENG_Type],
     }, { emitEvent: !1 });
-    this.logger.debug(`meterNo changes:`, [meterNo, current]);
+
+    this.service.getTltByFlags(meterNo, +this.user!.mid);
   }, { allowSignalWrites: !0 });
 
   /** TLT_No 改變時，帶出TLT_Name、NET_SPACE */
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal();
-    this.logger.debug(`tltNoEffect:`, [tltNo, this.queryForm.getRawValue()]);
     if (!tltNo?.length) return;
     const selected = this.service.tltByFlagMap().get(tltNo);
-    this.logger.debug(`tltNo selected:`, [selected]);
     if (!selected) return;
     this.queryForm.patchValue({
       TLT_Name: selected.TLT_Name,
       NET_SPACE: String(selected.NET_SPACE),
-    }, { emitEvent: !1 });
-    this.logger.debug(`tltNo changes:`, [tltNo, selected]);
+    });
   }, { allowSignalWrites: !0 });
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.engMeterNoLoading()
+      || this.service.tltByFlagLoading();
+  });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21020Data; })[] = [
     { field: 'ENG_Type', header: '能源類型' },
@@ -156,21 +153,26 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   }
 
   public ngOnInit(): void {
+    this.service.ASS21020Data.set([]);
     this.initializePage('ASS21020', '/ASS/ASS21020CRU', this.queryForm, this.onSubmit.bind(this));
-    const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.patchValue(store.value);
 
     this.service.getEngMeterNos();
-
-    this.logger.debug(`init:`, [this.service.engTypeList(), this.service.engMeterNoData()]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = {
-        ...this.queryForm.getRawValue(),
-        EngTypes: this.qf().ENG_Type.value?.join(),
-        SYS_StoreNo: this.user?.SYS_StoreNo!,
+      const { Location_No, NET_SPACE, ...rest } = this.queryForm.getRawValue();
+
+      const raw: ASS21020Query = {
+        EngTypes: (rest.ENG_Type || []).join(),
+        ENG_MeterNo: rest.ENG_MeterNo ?? void 0,
+        TLT_No: rest.TLT_No ?? void 0,
+        ENG_Rate: rest.ENG_Rate ?? void 0,
+        Mid: Number(this.user!.mid),
+        SYS_StoreNo: this.user!.SYS_StoreNo,
+        PageIndex: rest.pageIndex ?? void 0,
+        PageSize: rest.pageSize ?? void 0,
+        SortBy: rest.SortBy!,
       };
 
       const payload = Object.keys(raw).reduce((acc, key) => {
@@ -179,13 +181,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
         return acc;
       }, {} as any);
 
-      this.service.loadASS21020(payload).pipe(
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug('ASS21020 查詢結果:', [this.service.ASS21020Data()]);
-        }),
-      ).subscribe();
-
+      this.logger.debug(`onSubmit:`, [payload]);
+      this.service.loadASS21020(payload).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }
@@ -201,23 +198,12 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
       this.service.deleteASS21020({ ENG_Type: this.service.engTypeMap.get(item.ENG_Type)!, ENG_MeterNo: item.ENG_MeterNo }).pipe(
         tap(() => {
           deletedCount++;
-
-          if (deletedCount === totalItems) {
-            const formValues = this.queryForm.getRawValue();
-            this.service.loadASS21020({
-              EngTypes: formValues.ENG_Type!.join(),
-              ENG_Rate: formValues.ENG_Rate!,
-              ENG_MeterNo: formValues.ENG_MeterNo!,
-              Location_No: formValues.Location_No!,
-              Mid: Number(this.user?.mid)!,
-              SYS_StoreNo: this.user?.SYS_StoreNo!,
-            });
-          }
+          if (deletedCount === totalItems) this.onSubmit();
         }),
-        tap(({ Status }) => {
-          Status === '0000' && this.messageService.successBubble(`刪除錶號 ${item.ENG_MeterNo} 成功`);
-        }),
-      ).subscribe();
+      ).subscribe({
+        next: () => this.messageService.successBubble(`刪除錶號 ${item.ENG_MeterNo} 成功`),
+        error: () => this.messageService.errorBubble(`刪除錶號 ${item.ENG_MeterNo} 發生錯誤`),
+      });
     }
   }
 }

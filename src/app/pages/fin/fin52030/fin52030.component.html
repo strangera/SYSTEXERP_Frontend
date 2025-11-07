@@ -73,7 +73,7 @@
                [lazy]="true"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="loading"
+               [loading]="service.tableLoading()"
                [dataKey]="'id'"
                [tableKey]="'FIN52030'"></app-table>
   </div>

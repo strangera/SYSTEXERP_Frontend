@@ -45,7 +45,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() submitted = false; // 檢查欄位是否標準
   // PrimeNG 下拉選單屬性
   @Input() showClear = true; // 是否顯示清除按鈕
-  @Input() filterBy?:string; // 預設提示文字
+  @Input() filterBy?: string; // 預設提示文字
   @Input() filter = true; // 是否啟用過濾功能
   @Input() disabled = false; // 是否禁用
   @Input() loading = false;// 是否載入中
@@ -67,6 +67,49 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
     if (this.readonly) return;
     this.changeEvent.emit(event);
     this.valueChange.emit(event.value);  // 同時 emit 純值
+  }
+
+  onDropdownHide() {
+    if (this.readonly || !this.editable) {
+      return;
+    }
+
+    const currentValue = this.control.value;
+
+    // 如果目前值為 null, undefined, 或空字串，則視為已清空或未輸入，不需處理
+    if (currentValue === null || currentValue === undefined || currentValue === '') {
+      return;
+    }
+
+    // 只有在 editable 模式下，才需要驗證
+    // 檢查目前的值是否為 options 中的有效值
+    const isValidOption = this.options.some(option => {
+      // 1. 如果有 optionValue，則比對 options 中的 optionValue
+      if (this.optionValue) {
+        return option[this.optionValue] === currentValue;
+      }
+      // 2. 如果沒有 optionValue，PrimeNG 會將整個物件設為 value，
+      // 但在 editable 模式下，自訂輸入會是字串。我們假設有效值必須是 options 內的某個項目。
+      // 當 optionValue 未定義時，我們比對 optionLabel 或整個物件
+      // 然而，由於 editable=true 時，輸入自訂值會被視為字串，
+      // 最安全的做法是找到一個選項，它的 label 或 value (如果 value 沒定義就是整個物件) 跟 current value 相符
+
+      // 簡化：如果 optionValue 未定義，且 currentValue 是物件，則視為有效選項
+      if (typeof currentValue === 'object') {
+        return true;
+      }
+
+      // 如果 currentValue 是純量 (字串/數字)，則檢查它是否是任一個選項的 label (適用於 optionValue 未定義時的 fallback)
+      return option[this.optionLabel] === currentValue;
+    });
+
+    // 如果值是自訂輸入且不在選項中，則清除 control 的值
+    if (!isValidOption) {
+      // console.log(`值 "${currentValue}" 無效，已清空。`);
+      this.control.setValue(null);
+      this.valueChange.emit(null);
+      this.changeEvent.emit({ originalEvent: new Event('clear'), value: null });
+    }
   }
 
   get selectedOptionLabel(): string {

@@ -66,21 +66,28 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.accLoading()
+      || this.service.venLoading()
+      || this.service.usrLoading()
+      || this.service.orgNoLoading()
+      || this.service.sys1000Loading()
+      || this.service.voucherTypeLoading()
+      || this.service.refNameLoading()
+      || this.service.noteDescLoading()
+      || this.service.fin52030Loading()
+      || this.service.vocTempLoading();
+  });
+
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼' },
-    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions().find(vt => vt.value === d)?.label ?? d },
+    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
     { field: 'VouDate', header: '傳票日期', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
     { field: 'Remark', header: '傳票摘要', format: d => this.service.noteDescMap().get(d)?.label ?? d },
     { field: 'AccAmt', header: '傳票金額' },
     { field: 'DetailCount', header: '明細筆數' },
   ];
-
-  public readonly dropdownEffect = effect(() => {
-    const acc = this.service.accLoading();
-    const usr = this.service.usrLoading();
-    this.loading = acc || usr;
-    this.logger.debug(`dropdownEffect:`, { acc, usr, loading: this.loading });
-  });
 
   constructor(
     public readonly service: FIN53010Service,
@@ -92,9 +99,6 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
   public ngOnInit(): void {
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
-    const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.patchValue(store.value);
-    this.loading = !0;
 
     this.service.getVoucherTypeList();
     this.service.getAccNoList();
@@ -123,10 +127,6 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
       this.service.loadFIN53010(payload).pipe(
         tap(res => this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean))),
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug('FIN53010 查詢結果:', [this.service.FIN53010Data()]);
-        })
       ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });

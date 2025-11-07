@@ -143,6 +143,11 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         this.insertRow();
       }
     }
+    // 處理 defaultInsertData 改變的邏輯：更新現有的新增候選行
+    if (changes['defaultInsertData']) {
+      // 確保在資料載入和初始化之後執行
+      this.updateCandidateRowDefaults();
+    }
   }
   // 輔助方法：計算單一列的欄位值
   private calculateRow(rowData: any): void {
@@ -162,6 +167,29 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
     });
     this.dataChange.emit(this.data);
+  }
+  /**
+   * 當 defaultInsertData 改變時，更新現有的「自動新增候選行」的預設值。
+   */
+  private updateCandidateRowDefaults(): void {
+    const candidateRow = this.data.find(item => item['_isAutoInsertCandidate'] === true);
+
+    if (candidateRow && this.defaultInsertData) {
+      const newDefaults = this.defaultInsertData;
+
+      // 遍歷新的 defaultInsertData，將其值覆蓋到候選行中
+      for (const key in newDefaults) {
+        if (Object.prototype.hasOwnProperty.call(newDefaults, key)) {
+          // 避免覆蓋內部關鍵狀態欄位，例如：
+          // dataKey, dataStatusField, _isAutoInsertCandidate
+          if (key !== this.dataKey && key !== this.dataStatusField && key !== '_isAutoInsertCandidate') {
+            candidateRow[key] = newDefaults[key];
+          }
+        }
+      }
+      // 由於是直接修改 this.data 裡的物件，需要手動觸發變更偵測
+      this.cdr.detectChanges();
+    }
   }
   ngAfterContentInit(): void {
     // setTimeout(() => {
@@ -188,30 +216,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
-  }
-  // Delete 按鈕
-  deleteRow(selectedItems: any) {
-    if (this.disabled) { return; }
-    const itemsToDelete = new Set(selectedItems.map((item: any) => item[this.dataKey])); // 取得所有要刪除的 ID
-    const updatedData = this.data.map(item => {
-      if (itemsToDelete.has(item[this.dataKey])) {
-        // 刪除時資料若為Original要將資料狀態改為Deleted
-        if (item[this.dataStatusField] === this.dataStatusValue.Original) {
-          return { ...item, [this.dataStatusField]: this.dataStatusValue.Deleted };
-        }
-        return null; // 刪除時資料若為New 直接刪除
-      }
-      return item;
-    }).filter(item => item !== null);
-    // data不包含狀態為已刪除資料
-    this.data = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
-    this.delete.emit(updatedData);
-    this.dataChange.emit(this.data);
-    this.selectedItems = [];
-    // 如果表格資料為空，自動插入一筆新資料
-    if (this.data.length === 0 && this.canInsert) {
-      this.insertRow();
-    }
+
   }
   // 處理 ngModelChange 事件，並發送給父元件
   onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
@@ -265,6 +270,54 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     // 由於數據綁定和驗證已經更新了 `this.data`，再次發送 `dataChange`
     this.dataChange.emit(this.data);
+  }
+  onDropdownHide(rowData: any, col: any) {
+    const currentValue = rowData[col.field];
+    if (col.type === 'dropdown') {
+      const options = this.getOptions(rowData, col) || [];
+      let isValidOption = false;
+      if (currentValue === null || currentValue === undefined) {
+        isValidOption = true;
+      } else {
+        const valueKey = col.optionValue || col.optionLabel; // 如果沒有 optionValue，可能 PrimeNG 會用 Label 來綁定
+        isValidOption = options.some((option: any) => {
+          if (valueKey && option[valueKey] === currentValue) {
+            return true;
+          }
+          if (!col.optionValue && typeof currentValue === 'object' && option === currentValue) {
+            return true;
+          }
+          return false;
+        });
+      }
+      if (!isValidOption) {
+        rowData[col.field] = null;
+      }
+    }
+  }
+  // Delete 按鈕
+  deleteRow(selectedItems: any) {
+    if (this.disabled) { return; }
+    const itemsToDelete = new Set(selectedItems.map((item: any) => item[this.dataKey])); // 取得所有要刪除的 ID
+    const updatedData = this.data.map(item => {
+      if (itemsToDelete.has(item[this.dataKey])) {
+        // 刪除時資料若為Original要將資料狀態改為Deleted
+        if (item[this.dataStatusField] === this.dataStatusValue.Original) {
+          return { ...item, [this.dataStatusField]: this.dataStatusValue.Deleted };
+        }
+        return null; // 刪除時資料若為New 直接刪除
+      }
+      return item;
+    }).filter(item => item !== null);
+    // data不包含狀態為已刪除資料
+    this.data = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
+    this.delete.emit(updatedData);
+    this.dataChange.emit(this.data);
+    this.selectedItems = [];
+    // 如果表格資料為空，自動插入一筆新資料
+    if (this.data.length === 0 && this.canInsert) {
+      this.insertRow();
+    }
   }
 
   validateAllRows(): boolean {

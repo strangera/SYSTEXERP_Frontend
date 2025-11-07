@@ -9,10 +9,9 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { ASS21010Data, ASS21010Payload, EngType } from '../ass21010/ass21010.model';
 
 @Component({
@@ -59,6 +58,12 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
     this.logger.debug(`Location changes:`, [locations]);
   });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.engMeterNoLoading()
+      || this.service.locationLoading();
+  });
+
   constructor(
     public readonly service: ASS21010Service,
     private readonly logger: NGXLogger,
@@ -73,9 +78,8 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
 
     this.logger.debug(`init:`, [this.user, this.rowdata, this.crudstatus]);
 
-    if (this.isFormCreateable && this.rowdata) {
+    if (this.isFormCreateable && this.rowdata)
       Reflect.has(this.rowdata, 'Location_No') && this.df().Location_No.setValue(this.rowdata.Location_No);
-    }
   }
 
   public onSubmit(): void {
@@ -92,14 +96,11 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
       };
 
       this.service.updateASS21010(payload).pipe(
-        tap(() => this.isFormCreateable ? this.dataForm.reset() : this.onCancel()),
-        tap(({ Status }) => {
-          if (Status === '0000') this.messageService.successBubble('儲存成功');
-        }),
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug(`onSubmit:`, [d, payload]);
-        })).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
+      });
     });
   }
 }

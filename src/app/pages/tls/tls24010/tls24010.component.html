@@ -27,8 +27,8 @@
           <app-dropdown class="col-12 md:col-6" label="專櫃編號" [control]="queryForm.controls.TLT_No"
             [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label" optionValue="No" />
           <!-- 交易序號 → POS5006.TXN_No -->
-          <app-input-number class="col-12 md:col-6" label="交易序號" [control]="queryForm.controls.TXN_No"
-            [submitted]="submitted" [max]="99999999" [useGrouping]="false"></app-input-number>
+          <app-input-text class="col-12 md:col-6" label="交易序號" [control]="queryForm.controls.TXN_No"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>

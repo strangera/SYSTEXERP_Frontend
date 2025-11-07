@@ -8,7 +8,7 @@ export const columns: ReportColumn[] = [
   { field: 'TXN_No', header: '交易流水號' }, // 對應 TXN_No
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 TLT_No
   { field: 'PayCrdType', header: '卡別', format: (value) => getSYS1000('NCML_PayCrdType', value) }, // 對應 PayCrdType
-  { field: 'TxnAmt', header: '金額', format: formatAmount , isTotal: true}, // 對應 TxnAmt (number)
+  { field: 'TxnAmt', header: '金額', format: formatAmount, isTotal: true }, // 對應 TxnAmt (number)
   { field: 'TxnDate', header: '銷售日期', format: formatDate }, // 對應 TxnDate (DATE)
   { field: 'TxnTime', header: '銷售時間', format: formatDateTimeToHHMMSS }, // 對應 TxnTime (string/time), 使用新函式只顯示時間
   { field: 'ReqDate', header: '請款日期', format: formatDate }, // 對應 ReqDate (DATE)
@@ -17,7 +17,7 @@ export const columns: ReportColumn[] = [
   { field: 'ApprovalCode', header: '授權碼' }, // 對應 ApprovalCode
   { field: 'TxnType', header: '銷售狀況', format: (value) => TxnTypeOptions.find(item => item.value === value)?.label || value }, // 對應 TxnType
   { field: 'CrdTxnFg', header: '交易類別', format: (value) => CrdTxnFgOptions.find(item => item.value === value)?.label || value }, // 對應 CrdTxnFg
-  { field: 'CheckStatus', header: '比對備註', format: (value) => getSYS1000('CTBC_Check', value) }, // 對應 CheckStatus
+  // { field: 'CheckStatus', header: '比對備註', format: (value) => getSYS1000('CTBC_Check', value) }, // 對應 CheckStatus
   { field: 'EntryFg', header: '輸入狀態', format: (value) => getSYS1000('EntryFg', value) }, // 對應 CheckStatus
   { field: 'TermNo', header: '分期期數', format: (value) => getSYS1000('T109', value), exportFormat: transformOptionsForExport(getSYS1000Options('T109')) }, // 對應 TermNo
   { field: 'acquiring_Bank', header: '收單行' }, // 變更標題為 '收單行'

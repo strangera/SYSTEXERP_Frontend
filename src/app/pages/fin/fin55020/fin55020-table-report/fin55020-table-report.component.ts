@@ -52,6 +52,7 @@ export class Fin55020TableReportComponent extends BasicPrintDataComponent implem
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
     if (changes['data'] && this.data !== undefined) {
+      this.data = this.processGroupIndex(this.data);
       if (this.data.length > 0) {
         if (this.data.length >= 30) {
           this.virtualData = Array(this.data.length).fill(null);
@@ -159,5 +160,20 @@ export class Fin55020TableReportComponent extends BasicPrintDataComponent implem
   // 判斷欄位是否可見
   isColumnVisible(col: ReportColumn): boolean {
     return col.visible !== false;
+  }
+  private processGroupIndex(data: any[]): any[] {
+    if (!data || data.length === 0) return [];
+
+    let currentVouNo = null;
+    let groupIndex = 0;
+
+    for (const item of data) {
+      if (item['VouNo'] !== currentVouNo) {
+        groupIndex++; // 遇到新的 VouNo，群組序號遞增
+        currentVouNo = item['VouNo'];
+      }
+      item['GroupIndex'] = groupIndex; // 將群組序號賦予給資料行
+    }
+    return data;
   }
 }

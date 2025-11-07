@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
+import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
 import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
 import { TableReportUtilityService } from './table-report-utility.service';
@@ -39,14 +39,14 @@ import { trigger, style, transition, animate } from '@angular/animations'; // 1.
   ]
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
-  @ViewChild('dt') private dt!: Table;
-  @Input({ required: true }) lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
-  @Input({ required: true }) totalRecords = 0;                               // 用來儲存總筆數
-  @Input({ required: true }) data: any[] = [];                               // 用來儲存查詢結果
+  @ViewChild('dt') public dt!: Table;
+  @Input({ required: true }) lastQueryBody?: any;              // 用來儲存上一次的查詢條件
+  @Input({ required: true }) totalRecords = 0;                // 用來儲存總筆數
+  @Input({ required: true }) data: any[] = [];                // 用來儲存查詢結果
   virtualData: any = [];
-  @Input() dataKey: string | undefined;                                 // 用來儲存查詢結果
-  @Input({ required: true }) columns: ReportColumn[] = [];                              // 用來儲存查詢結果
-  selectedColumns: ReportColumn[] = [];                  // 用來儲存查詢結果
+  @Input() dataKey: string | undefined;                 // 用來儲存查詢結果
+  @Input({ required: true }) columns: ReportColumn[] = [];               // 用來儲存查詢結果
+  selectedColumns: ReportColumn[] = [];         // 用來儲存查詢結果
   @Input({ required: true }) queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
@@ -57,50 +57,51 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showCheckBox = false;
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
+  @Output() selectAllChange = new EventEmitter<boolean>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => {
     if (data) { return this.isRowSelectable(data); }
     return false; //
   };
-  isAllSelected = false;                                                        // 是否全選
-  @Output() dataChange = new EventEmitter<any[]>();                              // 用來儲存查詢結果
+  @Input() isAllSelected = false;                            // 是否全選
+  @Output() dataChange = new EventEmitter<any[]>();               // 用來儲存查詢結果
   // Header 相關
-  @Input() showCaption = true;                                                  // 是否顯示 Caption
-  @Input() showSort = true;                                                     // 是否顯示 排序
+  @Input() showCaption = true;                         // 是否顯示 Caption
+  @Input() showSort = true;                           // 是否顯示 排序
   // Header(左) 相關
-  @Input() showFilter = true;                 // 是否顯示 Filter
-  @Input() showReportMode = true;             // 是否顯示 匯出按鈕
-  @Input() customReport = false;               // 是否自訂報表
-  @Input() pageOrientation: string | null = 'Landscape';  // PDF橫式
-  @Input() pageSizeSetting: string | null = 'A4';  // PDF A4
+  @Input() showFilter = true;         // 是否顯示 Filter
+  @Input() showReportMode = true;       // 是否顯示 匯出按鈕
+  @Input() customReport = false;        // 是否自訂報表
+  @Input() pageOrientation: string | null = 'Landscape'; // PDF橫式
+  @Input() pageSizeSetting: string | null = 'A4'; // PDF A4
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Output() delete = new EventEmitter<any>(); // 刪除事件
-  @Input() showDelete = true;                    // 是否顯示刪除按鈕
+  @Input() showDelete = true;          // 是否顯示刪除按鈕
   // Header(右) 相關
-  @Input() showExcel = false;                      // 是否顯示 匯出Excel
-  @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
-  @Input() showExcelImport = true;                 // 是否顯示 匯入Excel按鈕
-  @Input() showCustomExcelImport = false;         // 是否顯示 自訂匯入Excel按鈕
+  @Input() showExcel = false;           // 是否顯示 匯出Excel
+  @Input() showExcelExport = true;         // 是否顯示 匯出Excel按鈕
+  @Input() showExcelImport = true;         // 是否顯示 匯入Excel按鈕
+  @Input() showCustomExcelImport = false;     // 是否顯示 自訂匯入Excel按鈕
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
-  @Input() exportExcelLoading = false;             // 匯出 Excel loading
+  @Input() exportExcelLoading = false;       // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
   // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
+  @Input() columnGroup?: ColumnGroup[];                     // table 群組欄位
   // 管理 欄位
-  @Input() showManage = true;                // 是否顯示 管理欄位
-  @Input() showDetail = true;                // 是否顯示 管理欄位(明細按鈕)
+  @Input() showManage = true;        // 是否顯示 管理欄位
+  @Input() showDetail = true;        // 是否顯示 管理欄位(明細按鈕)
   @Output() detail = new EventEmitter<any>();// 明細事件
-  @Input() showEdit = true;                  // 是否顯示 管理欄位(編輯按鈕)
+  @Input() showEdit = true;         // 是否顯示 管理欄位(編輯按鈕)
   @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Output() edit = new EventEmitter<any>();  // 編輯事件
-  @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
-  @Input() buttonsLoading = false;           // 按鈕們 loading
-  @Input() footerData: any;                  // (總計)頁尾資料
-  @Input() footerPercentData: any;                  // (百分比)頁尾資料
-  @Input() groupRowsBy?: string;              // (小計)群組欄位
+  @Output() edit = new EventEmitter<any>(); // 編輯事件
+  @Input() addButton: AddButton[] = [];   // 自定義 管理按鈕
+  @Input() buttonsLoading = false;      // 按鈕們 loading
+  @Input() footerData: any;         // (總計)頁尾資料
+  @Input() footerPercentData: any;         // (百分比)頁尾資料
+  @Input() groupRowsBy?: string;       // (小計)群組欄位
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
-  @Input() subTotalData: any;               // (小計)頁尾資料
-  @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
+  @Input() subTotalData: any;        // (小計)頁尾資料
+  @Output() selectButton = new EventEmitter<any>();       // 選擇 按鈕事件
   // expansion 收合展開
   @Input() expansionColumns: ReportColumn[] = [];
   @Input() expansionDataKey = 'details';
@@ -118,19 +119,25 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   }
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
+      this.isAllSelected = false;
+      // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
+      const pageSize = this.lastQueryBody?.pageSize || 30;
+
       if (this.data.length !== 0) {
         this.virtualData = [];
         if (this.dt) {
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = 'flex';
+          this.dt.scrollHeight = '450px';
         }
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
         this.cdr.detectChanges();
-        if (this.data.length < 30) {
+
+        // 判斷是否開啟虛擬滾動：將 30 改為 pageSize
+        if (this.data.length < pageSize) {
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = 'flex';
+          this.dt.scrollHeight = '450px';
         } else {
           this.dt.virtualScroll = true;
           this.dt.scrollHeight = '450px';
@@ -150,10 +157,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
+    // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
+    const pageSize = this.lastQueryBody?.pageSize || 30;
+
     const body = {
       ...this.lastQueryBody,
-      pageIndex: Math.floor(this.data.length / 30) + 1,
-      pageSize: 30,
+      // pageIndex 計算：將 30 改為 pageSize
+      pageIndex: Math.floor(this.data.length / pageSize) + 1,
+      pageSize: pageSize, // 使用 pageSize 變數
     };
     this.loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
@@ -176,29 +187,35 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
     }
-    if (!this.queryFunction || !this.lastQueryBody || this.data.length < 30) {
+    // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
+    const pageSize = this.lastQueryBody?.pageSize || 30;
+
+    // 判斷是否需要重新查詢：將 30 改為 pageSize
+    if (!this.queryFunction || !this.lastQueryBody || this.data.length < pageSize) {
       return;
     }
     const body = {
       ...this.lastQueryBody,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
-      pageSize: 30,
+      pageSize: pageSize, // 使用 pageSize 變數
       SortBy: this.dt.multiSortMeta // 這裡現在只包含最新的單一排序
     };
     this.queryFunction(body).pipe(untilDestroyed(this)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;
-        this.dt.scrollHeight = 'flex';
+        this.dt.scrollHeight = '450px';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
         this.cdr.detectChanges();
-        if (res.Data.length < 30) {
+
+        // 判斷是否開啟虛擬滾動：將 30 改為 pageSize
+        if (res.Data.length < pageSize) {
           this.data = res.Data;
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = 'flex';
+          this.dt.scrollHeight = '450px';
         } else {
           this.dt.virtualScroll = true;
           this.dt.scrollHeight = '450px';
@@ -215,9 +232,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.isAllSelected) {
       this.selectedItems = [...this.data];
       this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(true);
     } else {
       this.selectedItems = [...this.selectedItems];
       this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(true);
     }
   }
   onScroll(event: any) {
@@ -236,6 +255,18 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     }
     this.cdr.detectChanges();
+  }
+  onSelectAllChange(event: TableSelectAllChangeEvent) {
+    this.isAllSelected = event.checked;
+    if (this.isAllSelected) {
+      this.selectedItems = [...this.data];
+      this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(true);
+    } else {
+      this.selectedItems = [];
+      this.selectionChange.emit(this.selectedItems);
+      this.selectAllChange.emit(false);
+    }
   }
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;

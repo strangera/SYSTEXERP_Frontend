@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnDestroy } from '@angular/core';
 import {
   FormGroup,
@@ -31,7 +32,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { HttpResponse } from '@angular/common/http';
 
 type FilterMode = 'location' | 'busType' | 'org' | 'counter';
@@ -110,7 +110,7 @@ export class TLS23120Component
     ShowBusType: true,
     tlt_building: [],              // 館別
     area_no: [[] as string[]],     // 區域（多選）
-    tlt_floor: [[] as string[]],   // 樓層（多選）
+    tlt_floor: [[] as string[]],   // 楼層（多選）
     org_id: [],                    // 組織
   });
 
@@ -307,26 +307,40 @@ export class TLS23120Component
       })
     );
 
-  // ===== 將回傳格式攤平成明細列 =====
+  // ===== 將回傳格式攤平成明細列（新版 API）=====
   private extractDetails(res: any): any[] {
     const out: any[] = [];
     const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
 
     for (const item of dataArr) {
-      const totalsArr = item?.Totals ?? item?.totals ?? [];
-      if (!Array.isArray(totalsArr)) continue;
+      const subTotalsArr = Array.isArray(item?.SubTotals) ? item.SubTotals : [];
+      for (const sub of subTotalsArr) {
+        const list =
+          sub?.tLS23120Details ??
+          sub?.TLS23120Details ??
+          sub?.tls23120Details ??
+          [];
+        if (!Array.isArray(list)) continue;
 
-      for (const tot of totalsArr) {
-        const subs = tot?.SubTotals ?? tot?.subTotals ?? tot?.subtotals ?? [];
-        if (!Array.isArray(subs)) continue;
+        for (const d of list) {
+          // 將父層/小計層欄位灌入明細行，讓列表/群組/匯出可使用
+          out.push({
+            ...d,
+            // 由小計層
+            TLT_ID: sub?.TLT_ID ?? d?.TLT_ID ?? null,
+            // 由父層（每筆 Data 的共同欄位）
+            bus_type: item?.bus_type ?? d?.bus_type ?? null,
+            bus_type_name: item?.bus_type_name ?? d?.bus_type_name ?? null,
+            sad_date: item?.sad_date ?? d?.sad_date ?? null,   // 供 TXN_DATE 正規化
+            TLT_NO: item?.TLT_NO ?? d?.TLT_NO ?? null,
+            tlt_name: item?.tlt_name ?? d?.tlt_name ?? null,
+            floor_desc: item?.floor_desc ?? d?.floor_desc ?? null,
+            area_no: item?.area_no ?? d?.area_no ?? null,
 
-        for (const sub of subs) {
-          const list =
-            sub?.tLS23120Details ??
-            sub?.TLS23120Details ??
-            sub?.tls23120Details ??
-            [];
-          if (Array.isArray(list)) out.push(...list);
+            total_count: item?.total_count ?? d?.total_count ?? 0,
+            return_qty: item?.return_qty ?? d?.return_qty ?? 0,
+            return_amt: item?.return_amt ?? d?.return_amt ?? 0,
+          });
         }
       }
     }
@@ -339,6 +353,7 @@ export class TLS23120Component
       ...r,
       FLOOR_NO: r?.FLOOR_NO ?? r?.floor_desc ?? null,
       AREA_NO : r?.AREA_NO  ?? r?.area_no    ?? null,
+      TXN_DATE: r?.TXN_DATE ?? r?.sad_date   ?? null, // 新增：把 sad_date 映射成 TXN_DATE
     };
   }
 

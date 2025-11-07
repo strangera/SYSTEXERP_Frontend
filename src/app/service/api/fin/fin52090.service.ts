@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 import { AccNoDropdown, FIN52090Data, FIN52090Insert, FIN52090Query } from '@pages/fin/fin52090/fin52090.model';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
@@ -18,8 +18,6 @@ export class FIN52090Service {
 
   public accNoMap: Map<string, string> = new Map<string, string>();
 
-  private readonly tableCancel$ = new Subject<void>();
-  private readonly accNoCancel$ = new Subject<void>();
 
   public tableLoading = signal<boolean>(!1);
   public accNoLoading = signal<boolean>(!1);
@@ -30,11 +28,9 @@ export class FIN52090Service {
   ) { }
 
   public loadFIN52090(payload: FIN52090Query): Observable<BaseQueryResponse<FIN52090Data>> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52090Data>>(`${apiUrl}/queryFIN52090`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
       tap(res => this.FIN52090Data.set(res.Data)),
       tap(() => this.logger.debug('查詢FIN52090結果:', [this.FIN52090Data()])),
       finalize(() => this.tableLoading.set(!1))
@@ -42,18 +38,18 @@ export class FIN52090Service {
   };
 
   public saveFIN52090Data(payload: FIN52090Insert): Observable<BaseQueryResponse<FIN52090Data>> {
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52090Data>>(`${apiUrl}/insertFIN52090`, payload).pipe(
       take(1),
+      finalize(() => this.tableLoading.set(!1)),
       tap(res => this.logger.debug('更新FIN52090結果:', [res])),
     );
   };
 
   public getAccNo(): void {
-    this.accNoCancel$.next();
     this.accNoLoading.set(!0);
     this.http.post<BaseQueryResponse<AccNoDropdown>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
-      takeUntil(this.accNoCancel$),
       tap(res => this.accNo.set(res.Data)),
       tap(() => this.accNoMap = new Map(this.accNo().map(item => [item.AccNo, item.AccCName]))),
       tap(() => this.logger.debug('查詢AccNo結果:', [this.accNo()])),

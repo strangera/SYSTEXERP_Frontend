@@ -43,14 +43,19 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
   public canSave = signal(!1);
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.gls1005Loading()
+      || this.service.pos2013Loading()
+      || this.service.orgIdLoading();
+  });
+
   /** entryType 改變時，取得table 資料 */
   public readonly entryTypeEffect = effect(() => {
     const ENTRY_TYPE = this.entryTypeSignal();
     if (!ENTRY_TYPE) return;
 
-    this.service.queryTLS21020({ ENTRY_TYPE }).pipe(
-      finalize(() => this.loading = !1),
-    ).subscribe();
+    this.service.queryTLS21020({ ENTRY_TYPE }).subscribe();
     this.logger.debug(`entryType changed:`, [ENTRY_TYPE]);
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
   }, { allowSignalWrites: !0 });
@@ -175,8 +180,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public ngOnInit(): void {
     this.initializePage('TLS21020', '/TLS/TLS21020CRU', this.queryForm, this.onSubmit.bind(this));
-    const store = this.queryStateService.getQueryState('TLS21020');
-    if (store?.value) this.queryForm.patchValue(store.value);
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
@@ -211,10 +214,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
     // ABAT_YN 為 Y 時，VEN_No 與 PAY_days 必填
     if (rowData.ABAT_YN !== 'N') {
-      const venNoValid = !String(rowData.VEN_No ?? '').trim();
-      const payDaysValid = !String(rowData.PAY_days ?? '').trim();
-      if (!venNoValid) return result('應收廠商必須填寫');
-      if (!payDaysValid) return result('付款天數必須填寫');
+      if (!String(rowData.VEN_No ?? '').trim()) return result('應收廠商必須填寫');
+      if (!String(rowData.PAY_days ?? '').trim()) return result('付款天數必須填寫');
     }
 
     // 可選欄位檢查
@@ -265,8 +266,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       this.logger.debug(`onSubmit:`, [payload]);
       this.service.updateTLS21020(payload).pipe(
         mergeMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
-        finalize(() => this.loading = !1),
-      ).subscribe();
+      ).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
+      });
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }

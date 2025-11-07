@@ -2,7 +2,8 @@
   scrollHeight="flex" [(selection)]="selectedItems" sortMode="multiple" (onSort)="onSort($event)"
   [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="selectionChange.emit($event)"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [selectAll]="isAllSelected"
+  (selectAllChange)="onSelectAllChange($event)" (selectionChange)="selectionChange.emit($event)"
   [rowSelectable]="rowSelectableWrapper" [lazy]="true" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
@@ -28,7 +29,7 @@
       <tr>
         <th class="w-1rem text-center" rowspan="2" pFrozenColumn>序號</th>
         <th class="w-1rem group-header text-center" rowspan="2" *ngIf="showCheckBox">
-          <p-tableHeaderCheckbox (click)="isAllSelected = !isAllSelected" />
+          <p-tableHeaderCheckbox />
         </th>
         <th class="w-1rem group-header" rowspan="2" *ngIf="expansionColumns.length">
           收合/展開
@@ -75,7 +76,7 @@
       <tr>
         <th class="w-1rem text-center" pFrozenColumn>序號</th>
         <th class="w-1rem text-center" *ngIf="showCheckBox">
-          <p-tableHeaderCheckbox (click)="isAllSelected = !isAllSelected" />
+          <p-tableHeaderCheckbox />
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn

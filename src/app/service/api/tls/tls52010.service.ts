@@ -211,7 +211,6 @@ export interface IPOS2017Data {
   POD_BuyAmt: number,
   PLU_TaxType: string,
   POD_SalePrc: number,
-  POD_SaleTax: number,
   POD_SaleAmt: number,
   POD_Remark: string,
   UNIT_NAME: string,

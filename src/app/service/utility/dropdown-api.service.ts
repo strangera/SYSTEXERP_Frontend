@@ -124,6 +124,34 @@ export class DropdownApiService {
   }
 
   /**
+   * 泛型底層方法：處理所有【帶參數】且【需要轉換為 Option[]】的下拉選單查詢
+   * @param endpoint API 路徑
+   * @param noKey 代表「值」的屬性名稱 (e.g., 'No', 'user_No')
+   * @param nameKey 代表「顯示名稱」的屬性名稱 (e.g., 'Name', 'user_Name')
+   * @param body 請求 body (必填)
+   * @returns Observable，包含標準的 Option[] 陣列或 null
+   */
+  private queryAndMapDropdownWithParams<T, U>(endpoint: string, noKey: keyof T, nameKey: keyof T, body: U): Observable<Option[] | null> {
+    return this.http.post<ApiResponse<T[]>>(`${this.apiUrl}${endpoint}`, body).pipe(
+      map(response => {
+        const data = response?.Data;
+        if (!data) {
+          return null;
+        }
+        return data.map(item => ({
+          ...item,
+          value: item[noKey] as string | number,
+          label: `${item[noKey]} - ${item[nameKey]}`,
+        }));
+      }),
+      catchError(err => {
+        console.error(`API ${endpoint} 呼叫失敗:`, err);
+        return of(null);
+      })
+    );
+  }
+
+  /**
   * 專門處理回傳格式為 { "Data": [{ "Data": [...] }] } 的 API
   * @param endpoint API 路徑
   * @returns Observable，包含下拉選單資料或 null
@@ -253,12 +281,18 @@ export class DropdownApiService {
   }
 
   /** 查詢扣款代碼檔(APS1003) */
-  queryAps1003(body: Aps1003Query): Observable<IDropdownItem[] | null> {
-    return this.queryDropdownWithParams<IDropdownItem, Aps1003Query>('/queryAPS1003_DropDownList', body).pipe(
+  queryAps1003(body: Aps1003Query): Observable<Option[] | null> {
+    // 使用新的泛型底層方法 queryAndMapDropdownWithParams
+    // T = IDropdownItem, U = Aps1003Query
+    return this.queryAndMapDropdownWithParams<IDropdownItem, Aps1003Query>(
+      '/queryAPS1003_DropDownList', // API 路徑
+      'No',                       // 代號欄位 (noKey)
+      'Name',                     // 名稱欄位 (nameKey)
+      body                        // 查詢參數 (body)
+    ).pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
-
   // --- POS 相關 ---
 
   /** 查詢後台主機IP(POS10015) */

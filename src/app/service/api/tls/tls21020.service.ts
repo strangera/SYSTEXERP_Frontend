@@ -5,7 +5,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Sysb400Service } from '../sys/sysb400.service';
 
@@ -30,10 +30,6 @@ export class TLS21020Service {
     ['PT', '進貨請款'],
   ]);
 
-  private readonly tableCancel$ = new Subject<void>();
-  private readonly gls1005Cancel$ = new Subject<void>();
-  private readonly pos2013Cancel$ = new Subject<void>();
-  private readonly orgIdCancel$ = new Subject<void>();
 
   public readonly tableLoading = signal<boolean>(!1);
   public readonly gls1005Loading = signal<boolean>(!1);
@@ -67,12 +63,10 @@ export class TLS21020Service {
   }
 
   public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
-    this.tableCancel$.next();
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, query)
       .pipe(
         take(1),
-        takeUntil(this.tableCancel$),
         map(res => {
           res.Data = res.Data?.map(item => ({
             ...item,
@@ -86,12 +80,10 @@ export class TLS21020Service {
   }
 
   public queryTLS21020_GLS1005(query: TLS21020GLS1005Query): void {
-    this.gls1005Cancel$.next();
     this.gls1005Loading.set(!0);
     this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(`${apiUrl}/queryTLS21020_GLS1005`, query)
       .pipe(
         take(1),
-        takeUntil(this.gls1005Cancel$),
         tap(res => this.TLS21020GLS1005Data.set(res.Data ?? [])),
         finalize(() => {
           this.gls1005Loading.set(!1);
@@ -101,21 +93,23 @@ export class TLS21020Service {
   }
 
   public updateTLS21020(query: TLS21020UpdateQuery[]): Observable<BaseQueryResponse<unknown>> {
+    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/updateTLS21020`, { GLS1020Datas: query })
       .pipe(
         take(1),
         tap(res => { }),
-        finalize(() => this.logger.debug(`updateTLS21020`, [])),
+        finalize(() => {
+          this.logger.debug(`updateTLS21020`, []);
+          this.tableLoading.set(!1);
+        }),
       );
   }
 
   public getOrgIDs(): void {
-    this.orgIdCancel$.next();
     this.orgIdLoading.set(!0);
     this.sysb400.querySYS3100_DropDownList()
       .pipe(
         take(1),
-        takeUntil(this.orgIdCancel$),
         map(res => res.Data?.map(item => ({ label: `${item.No} - ${item.Name || ''}`, value: item.No })) ?? []),
         tap(res => this.SYS3100Data.set(res)),
         finalize(() => {
@@ -126,7 +120,6 @@ export class TLS21020Service {
   }
 
   public getGLS1005s(): void {
-    this.gls1005Cancel$.next();
     this.gls1005Loading.set(!0);
     this.dropdownApi.queryGls1005()
       .pipe(
@@ -141,12 +134,10 @@ export class TLS21020Service {
 
   // VEN_Flag = 廠商別：1 廠商統一編號 2 身分證字號 3 自編編號
   public getPOS2013s(VEN_Flag: '1' | '2' | '3'): void {
-    this.pos2013Cancel$.next();
     this.pos2013Loading.set(!0);
     this.dropdownApi.queryPos2013({ VEN_Flag })
       .pipe(
         take(1),
-        takeUntil(this.pos2013Cancel$),
         tap(res => res && this.POS2013Data.set(res)),
         finalize(() => {
           this.pos2013Loading.set(!1);

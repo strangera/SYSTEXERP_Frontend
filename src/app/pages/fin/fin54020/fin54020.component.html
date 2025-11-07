@@ -1,175 +1,52 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="過帳方式"
-              controlName="Postingmethod"
-              [options]="Postingmethod"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Postingmethod"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-calendar-range calendarType="dateRange" label="傳票日期" controlName="accountsummary"
+              [startControl]="queryForm.controls.VouDateFrom" [endControl]="queryForm.controls.VouDateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateMonthOne"
-              label="過帳年月"
-              controlName="yearmm"
-              [control]="queryForm.controls.yearmm"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-input-number-range [useGrouping]="false" label="傳票編號" [startControl]="queryForm.controls.VouNoFrom"
+              [endControl]="queryForm.controls.VouNoTo" [submitted]="submitted"></app-input-number-range>
           </div>
-          <div class="col-12 md:col-6 lg:col-4"></div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="傳票型態" controlName="VoucherType" [options]="Subpoenastatus" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.VoucherType" [submitted]="submitted"></app-dropdown>
+          </div>
+
         </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-1">
-            <app-button
-              btnType="create"
-              (onClick)="onSubmitQuery(queryForm)"
-              label="計算張數"
-              class="col"
-            ></app-button>
-          </div>
-          <div class="col-12 md:col-6 lg:col-11"></div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="建立狀態傳票張數"
-              controlName="buildnumber"
-              [control]="queryForm.controls.buildnumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="確認狀態傳票張數"
-              controlName="Subpoenasummary"
-              [control]="queryForm.controls.Subpoenasummary"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="過帳狀態傳票張數"
-              controlName="Subpoenasummary"
-              [control]="queryForm.controls.Subpoenasummary"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-        </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳票號碼"
-              [startControl]="queryForm.controls.startserialticket"
-              [endControl]="queryForm.controls.endserialticket"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票種類"
-              controlName="Subpoenatype"
-              [options]="Subpoenatype"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenatype"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="傳票日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate"
-              [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票狀態"
-              controlName="Subpoenatype2"
-              [options]="Subpoenatype2"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenatype2"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="傳票摘要"
-              controlName="Subpoenasummary"
-              [control]="queryForm.controls.Subpoenasummary"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票型態"
-              controlName="Subpoenastatus"
-              [options]="Subpoenastatus"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenastatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="建立者"
-              controlName="builder"
-              [options]="usercode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.builder"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-    <div class="col-12">
-      <app-table
-        [data]="data"
-        [columns]="columns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      ></app-table>
-    </div>
-  </div> -->
+<div class="card">
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false" (detail)="onDetail($event)"
+    [showReportMode]="false"[showManage]="false"dataKey="SeqNo" [multiSortMeta]="[{ field: 'VouNo', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false"
+    >
+    <header>
+      <div class="flex align-items-center mb-5">
+        <p-button label="過帳" severity="success" (click)="onReview(selectedItems)" [disabled]="selectedCount === 0"
+          [ngStyle]="{
+            height: '16px',
+            fontSize: '16px',
+            padding: '0 2px',
+            marginRight: '7px',
+          }"></p-button>
+      </div>
+    </header>
+  </app-table>
+</div>
