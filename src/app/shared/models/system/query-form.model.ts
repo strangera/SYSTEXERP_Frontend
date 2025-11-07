@@ -99,3 +99,9 @@ export const toHHmm = (date: Date | null | undefined): string => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
   return date.toTimeString().slice(0, 5); // "14:32"
 };
+
+/** 將數值或字串轉換為 6 位數的交易編號字串，前面補零 */
+export const formatTxnNo = (val: number | string | null | undefined): string => {
+  if (val == null) return '';
+  return String(val).padStart(6, '0');
+};
