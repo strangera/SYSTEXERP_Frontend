@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
@@ -105,6 +105,7 @@ export class TLS23010Service {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010`;
     return this.http.post<any>(url, body).pipe(
       tap(response => console.log(`🎯 TLS23010 ${displayMode} 查詢結果:`, response)),
+      catchError(err => this.errorHandler.handleError(err))
     );
   }
 
@@ -119,6 +120,7 @@ export class TLS23010Service {
     return this.http.post<BaseQueryResponse<any>>(url, body).pipe(
       map(r => r?.Data ?? []),
       tap(list => console.log('📦 Detail count:', list?.length ?? 0)),
+      catchError(err => this.errorHandler.handleError(err))
     );
   }
 
@@ -127,6 +129,7 @@ export class TLS23010Service {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Summary`;
     return this.http.post<any>(url, body).pipe(
       tap(r => console.log('🎯 TLS23010 Summary 查詢結果:', r)),
+      catchError(err => this.errorHandler.handleError(err))
     );
   }
 
@@ -174,30 +177,42 @@ export class TLS23010Service {
 
   // ================= 其他(新) =================
 
+  /** 供元件在「阻擋多次點擊」時回傳空明細用 */
+  emptyDetail(): Observable<any[]> {
+    return of([]);
+  }
 
   /**
    * 工具：移除分頁相關欄位（匯出不需要）
-   * 保留 SortBy（讓後端可依前端排序）
+   * - 同時移除大小寫鍵：pageSize/pageIndex/orderBy/offset 與 PageSize/PageIndex/OrderBy/Offset
+   * - 保留 SortBy（讓後端可依前端排序）
    */
-  private stripPaging<T extends Record<string, any>>(input: T): Omit<T, 'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset'> {
+  private stripPaging<T extends Record<string, any>>(input: T): Omit<T,
+    'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' |
+    'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
+  > {
     if (!input) return input as any;
-    const { PageSize, PageIndex, OrderBy, Offset, ...rest } = input;
+    const {
+      PageSize, PageIndex, OrderBy, Offset,
+      pageSize, pageIndex, orderBy, offset,
+      ...rest
+    } = input as any;
     return rest as any;
   }
-// ✅ 正規化：不管後端給 Data 是物件或陣列，統一轉成「單一物件或 null」
-queryOtherData(body: TLS23010QueryRequest): Observable<TLS23010OtherData | null> {
-  const url = `${this.apiUrl}/TLS0000/TLS2000/queryOtherData`;
-  return this.http.post<any>(url, body).pipe(
-    tap(r => console.log('🧮 queryOtherData 原始回應:', r)),
-    map((r: any) => {
-      const data = r?.Data ?? null;
-      if (!data) return null;
-      // Data 可能是物件或陣列，統一取第一筆
-      const head = Array.isArray(data) ? (data[0] ?? null) : data;
-      // 不是物件就回 null
-      if (!head || typeof head !== 'object') return null;
-      return head as TLS23010OtherData;
-    }),
-  );
-}
+
+  // ✅ 正規化：不管後端給 Data 是物件或陣列，統一轉成「單一物件或 null」
+  queryOtherData(body: TLS23010QueryRequest): Observable<TLS23010OtherData | null> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/queryOtherData`;
+    return this.http.post<any>(url, body).pipe(
+      tap(r => console.log('🧮 queryOtherData 原始回應:', r)),
+      map((r: any) => {
+        const data = r?.Data ?? null;
+        if (!data) return null;
+        const head = Array.isArray(data) ? (data[0] ?? null) : data;
+        if (!head || typeof head !== 'object') return null;
+        return head as TLS23010OtherData;
+      }),
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
 }
