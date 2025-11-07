@@ -56,10 +56,12 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
 
   // 查詢表單：鍵名與後端一模一樣
   queryForm = this.formBuilder.group({
-    // 分頁/排序
+    // 分頁/排序（pageIndex 從 1 開始；預設依 INV_GUINumber 升冪）
     pageSize: [20],
-    pageIndex: [0],
-    SortBy: this.formBuilder.control<Array<{ field: string; order: number }>>([]),
+    pageIndex: [1],
+    SortBy: this.formBuilder.control<Array<{ field: string; order: number }>>([
+      { field: 'INV_GUINumber', order: 1 },
+    ]),
 
     // 條件
     INV_GUIType: this.formBuilder.control<string[] | null>(null),
@@ -230,7 +232,8 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     const sortForApi = (sortBy.length > 0) ? sortBy : null;
 
     const pageSize = (typeof v.pageSize === 'number' && v.pageSize > 0) ? v.pageSize : 20;
-    const pageIndex = (typeof v.pageIndex === 'number' && v.pageIndex >= 0) ? v.pageIndex : 0;
+    // ✅ pageIndex 1-based（若異常則回 1）
+    const pageIndex = (typeof v.pageIndex === 'number' && v.pageIndex >= 1) ? v.pageIndex : 1;
 
     const payload: any = {
       pageSize,
@@ -330,8 +333,8 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
       this.messageService.warnBubble('請完整填寫查詢條件');
       return;
     }
-    // 重新查詢從第 0 頁
-    form.patchValue({ pageIndex: 0 });
+    // ✅ 重新查詢從第 1 頁
+    form.patchValue({ pageIndex: 1 });
 
     // 先把 UI 狀態存起來（保留 Date 物件）
     this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -347,19 +350,39 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     const currPageSize = (this.lastQueryPayload.pageSize && this.lastQueryPayload.pageSize > 0)
       ? this.lastQueryPayload.pageSize : 20;
 
-    const pageSize = event?.rows ?? currPageSize;
-    const pageIndex = Math.floor((event?.first ?? 0) / pageSize);
-    const sortBy = Array.isArray(event?.multiSortMeta) ? event.multiSortMeta : (this.lastQueryPayload.SortBy ?? []);
+    const pageSize = event?.rows ?? event?.pageSize ?? currPageSize;
+
+    // ✅ 支援兩種事件：
+    // 1) TableComponent.emit: { pageIndex(1-based), pageSize, SortBy }
+    // 2) PrimeNG TableLazyLoadEvent: { first(0-based), rows, multiSortMeta }
+    const pageIndex =
+      Number.isFinite(event?.pageIndex)
+        ? Number(event.pageIndex) // 已是 1-based
+        : Math.floor((event?.first ?? 0) / pageSize) + 1; // 轉為 1-based
+
+    const sortByFromEvent =
+      Array.isArray(event?.SortBy) ? event.SortBy :
+      Array.isArray(event?.multiSortMeta) ? event.multiSortMeta :
+      (this.lastQueryPayload.SortBy ?? []);
 
     const nextPayload = {
       ...this.lastQueryPayload,
       pageSize,
       pageIndex,
-      SortBy: (Array.isArray(sortBy) && sortBy.length > 0) ? sortBy : null,
+      SortBy: (Array.isArray(sortByFromEvent) && sortByFromEvent.length > 0)
+        ? sortByFromEvent
+        : [{ field: 'INV_GUINumber', order: 1 }], // 保底預設
     };
 
     // 同步 UI
-    form.patchValue({ pageSize, pageIndex, SortBy: nextPayload.SortBy }, { emitEvent: false });
+    form.patchValue(
+      {
+        pageSize,
+        pageIndex,
+        SortBy: nextPayload.SortBy,
+      },
+      { emitEvent: false }
+    );
 
     // 存 UI 狀態（依然保留 Date）
     this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -397,11 +420,11 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
   onClear(): void {
     this.submitted = false;
 
-    // reset 表單到初始（保留分頁預設值）
+    // reset 表單到初始（保留分頁預設值 & 預設排序）
     this.queryForm.reset({
       pageSize: 20,
-      pageIndex: 0,
-      SortBy: [],
+      pageIndex: 1,
+      SortBy: [{ field: 'INV_GUINumber', order: 1 }],
       INV_GUIType: null,
       INV_GUITrack: null,
       INV_GUINumber: null,
@@ -484,5 +507,4 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     }
     return null;
   }
-  
 }
