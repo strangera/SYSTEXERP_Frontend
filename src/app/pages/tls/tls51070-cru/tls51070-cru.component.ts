@@ -92,6 +92,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   //目前標籤列
   buttonID = 1; //預設在 基本資料標籤
 
+  private initializing = false; //重製鎖
+
   //2004廠商編號選擇後自動帶入預設到2020
 
   // 新增 欄位PLU_PrnName 和  預設商品中文名稱 一樣 --ok
@@ -112,6 +114,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 國際條碼 比照廠商編號自動帶下來 (等SA確認如何調整)
   // 廠商編號第二家以後就不開放上方的下拉選擇
   // ----------------------------------------------------------------
+  orgdataForm: any;
   dataForm = this.formBuilder.group({
     id: [{ value: 0, disabled: true }], // 主鍵ID;
     // POS2004 商品主檔
@@ -146,8 +149,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Weight: [0, [Validators.maxLength(10), Validators.min(0), Validators.max(99999999)]], //重量(g)
     PLU_Height: [0, [Validators.maxLength(10), Validators.min(0), Validators.max(99999999)]], //高度(cm)
     PLU_Volume: [0, [Validators.maxLength(10), Validators.min(0), Validators.max(99999999)]], //容量(ml)
-    PLU_Width: [0, [Validators.maxLength(10), Validators.min(0), Validators.max(99999999)]], //寬度(cm)
-    
+    PLU_Width:  [0, [Validators.maxLength(10), Validators.min(0), Validators.max(99999999)]], //寬度(cm)
+
     // 商品規格(二) 顯示畫面
     PLU_Reserve2: ['', [Validators.maxLength(400)]], // 規格說明
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
@@ -215,6 +218,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   cachedBrand: any = null;
   // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
   // #region POS2005定義
+  orgPOS2005Data: POS2005Detail[] = [];
   // 國際條碼編號	下拉
   POS2005Data: POS2005Detail[] = [];
   selectedPOS2005Items: POS2005Detail[] = [];
@@ -224,6 +228,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   ];
   // ---------採購廠商 (POS2020) 編輯表格 至少要一筆-------------------------------------------------------
   // #region POS2020定義
+  orgPOS2020Data: POS2020Detail[] = [];
   // 廠商編號	下拉
   POS2020Data: POS2020Detail[] = [];
   selectedPOS2020Items: POS2020Detail[] = [];
@@ -273,6 +278,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // POS2004, pluMagno, '' 圖片不可以中文
   // ------
   files: File[] = [];        // 上傳的檔案
+  orgimg1001Data: IMG1001Detail[] = []; // 圖片List editable, readable
   img1001Data: IMG1001Detail[] = []; // 圖片List editable, readable
   confirmDeleteImages: string[] = []; // 確定刪除的圖片
 
@@ -287,7 +293,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   ngOnInit(): void {
     this.initializePage('TLS51070', this.dataForm);
-    // console.log('大大大表單', this.dataForm.value);
 
     // 進價類的都不可編輯
     if (this.crudstatus == CRUDStatus.Create) {
@@ -315,7 +320,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     // 觀察 大分類 是否為''
     this.dataForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
-      // console.log('大分類變更為:', newValue);
+      if (this.initializing) return; // 安全鎖
       if (!newValue) {
         // 讀取整份 大分類、中分類、小分類 dropDown
         this.loadCATOptions();
@@ -328,6 +333,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //觀察表單 中分類變化
     this.dataForm.get('CAT_LNo')?.valueChanges.subscribe((lno) => {
+      if (this.initializing) return; // 安全鎖
       if (lno) {
         console.log('觀察中分類變化', lno);
         this.tls51070Service
@@ -338,19 +344,32 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
               Name: item.Name,
               Label: item.No + '-' + item.Name,
             }));
-            this.dataForm.get('CAT_MNo')?.setValue('');
-            this.dataForm.get('CAT_SNo')?.setValue('');
+
+            if(this.initializing){
+              this.dataForm.get('CAT_MNo')?.setValue(this.orgdataForm.get('CAT_MNo').value);
+              this.dataForm.get('CAT_SNo')?.setValue(this.orgdataForm.get('CAT_SNo').value);
+            }else{
+              this.dataForm.get('CAT_MNo')?.setValue('');
+              this.dataForm.get('CAT_SNo')?.setValue('');
+            }
+            
             this.smallOption = [];
           });
       } else {
         this.middleOption = [];
         this.smallOption = [];
-        this.dataForm.get('CAT_MNo')?.setValue('');
-        this.dataForm.get('CAT_SNo')?.setValue('');
+        if(this.initializing){
+          this.dataForm.get('CAT_MNo')?.setValue(this.orgdataForm.get('CAT_MNo').value);
+          this.dataForm.get('CAT_SNo')?.setValue(this.orgdataForm.get('CAT_SNo').value);
+        }else{
+          this.dataForm.get('CAT_MNo')?.setValue('');
+          this.dataForm.get('CAT_SNo')?.setValue('');
+        }
       }
     });
     //觀察表單 小分類變化
     this.dataForm.get('CAT_MNo')?.valueChanges.subscribe((mno) => {
+      if (this.initializing) return; // 安全鎖
       const lno = this.dataForm.get('CAT_LNo')?.value;
       //新版api改成list傳送
       const requestPayload = {
@@ -370,17 +389,33 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
               Name: item.Name,
               Label: item.No + '-' + item.Name,
             }));
-            this.dataForm.get('CAT_SNo')?.setValue('');
+            if(this.initializing){
+               console.log('我那裡喔')
+              this.dataForm.get('CAT_MNo')?.setValue(this.orgdataForm.get('CAT_MNo').value);
+            }else{
+               console.log('我那裡喔')
+              // this.dataForm.get('CAT_SNo')?.setValue('');
+              // this.dataForm.get('CAT_SNo')?.setValue('', { emitEvent: false });
+
+            }
           });
       } else {
         this.smallOption = [];
-        this.dataForm.get('CAT_SNo')?.setValue('');
+        if(this.initializing){
+          console.log('那裡喔')
+          this.dataForm.get('CAT_SNo')?.setValue('');
+        }else{
+          console.log('這裡')
+          // this.dataForm.get('CAT_SNo')?.setValue('');
+          this.dataForm.reset(this.orgdataForm?.value || {}, { emitEvent: false });
+
+        }
       }
     });
 
     // 觀察 品牌代碼 是否為變更(更新 進價折數、 標準進價)
     this.dataForm.get('LOGO_No')!.valueChanges.subscribe((newValue) => {
-
+      if (this.initializing) return; // 安全鎖
       if (newValue) {
         // 找到符合的品牌資料 (依照newValue 找到pluLogoOption對應的No)
         const matched = this.pluLogoOption.find(item => item.No === newValue);
@@ -410,6 +445,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     // 觀察 商品名稱(PLU_Name)發生變化時自動寫入給 PLU_Lable、PLU_PrnName
     this.dataForm.get('PLU_Name')?.valueChanges.subscribe(value => {
+      if (this.initializing) return; // 安全鎖
       const currentLabel = this.dataForm.get('PLU_Lable')?.value;
       if (value && value !== currentLabel) {
         this.dataForm.get('PLU_Lable')?.setValue(value);
@@ -419,18 +455,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     // 觀察 廠商編號(VEN_No)發生變化時確認 是否要寫入POS2020
     this.dataForm.get('VEN_No')?.valueChanges.subscribe(value => {
+      if (this.initializing) return; // 安全鎖
       if (value) {
-        // if (!this.POS2020Data.some(item => item.VEN_No === value)) {
-          // [POS2020不存在] && [廠商編號在vendorOptions] 時才將POS2004 [廠商編號]自動寫入 POS2020Data
-          // if (this.POS2020Data.length === 0 && this.vendorOptions.some(item => item.value === value)) {
-          //   //如果表單還沒對應的POS2020就跳出提示
-          //   this.messageService.infoBubble('POS2020表單無對應的廠商編號，已經自動新增一筆');
-          //   const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
-          //   const plu_OrderPrc = this.dataForm.get('PLU_OrderPrc')?.value || 0;
-          //   this.createDefaultNew2020(pluMagno, plu_OrderPrc, value);
-          // }
-        // }
-
         // [POS2020不存在] && [廠商編號在vendorOptions] 時才將POS2004 [廠商編號]自動寫入 POS2020Data
         const exists = this.POS2020Data.some(item => item.VEN_No === value);
         const isValidVendor = this.vendorOptions.some(item => item.value === value);
@@ -484,6 +510,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 觀察 國際條碼(PLU_No) 變化 ----20251013 新增
     // POS2004 國際條碼 同步給 POS2005 國際條碼
     this.dataForm.get('PLU_No')?.valueChanges.subscribe(value => {
+      if (this.initializing) return; // 安全鎖
       // 若 POS2005Data 尚未存在，就初始化一筆空的
       if (this.POS2005Data.length == 0) {
         this.POS2005Data = [{
@@ -504,6 +531,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //依照廠商暫存重新計算[標準進價]
     this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
+      if (this.initializing) return; // 安全鎖
       if (this.crudstatus == CRUDStatus.Create && this.cachedBrand) {
         const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
         const PLU_OrderPrcRate = this.cachedBrand.PLU_OrderPrcRate;
@@ -518,6 +546,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //編輯模式時如果 [標準進價] 發生變動就更新 更新 商品採購廠商的 [目前進價] 模板就好
     // if(this.crudstatus == CRUDStatus.Create){
     this.dataForm.get('PLU_OrderPrc')!.valueChanges.subscribe((newOrderPrc) => {
+      if (this.initializing) return; // 安全鎖
       const pluMagno = this.dataForm.get('PLU_MagNo')?.value || ''
       // 更新 2020 模板
       this.createDefaultNew2020(pluMagno, newOrderPrc ?? 0);
@@ -538,6 +567,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.dataForm.get('PLU_No')?.setValidators(Validators.required);
     }
   }
+
+  // #region 重製表單
+  reset51070(){
+    // 初始化/重置表單
+    this.initializing = true;
+    this.dataForm.reset(this.orgdataForm, { emitEvent: false }); // 或 patchValue
+    this.initializing = false;
+  }
+
 
   // #region onSubmit
   onSubmit(frm: FormGroup) {
@@ -567,6 +605,30 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         );
       }
       return;
+    }
+
+    // 驗證 POS2005 明細
+    // --------------------------
+    for (let i = 0; i < this.POS2005Data.length; i++) {
+        const row = this.POS2005Data[i];
+        const result = this.validate2005Row(row);
+        if (!result.isValid) {
+            this.messageService.unblockUi();
+            this.messageService.errorBubble(`POS2005 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
+            return;
+        }
+    }
+
+    // 驗證 POS2005 明細
+    // --------------------------
+    for (let i = 0; i < this.POS2020Data.length; i++) {
+        const row = this.POS2020Data[i];
+        const result = this.validate2020Row(row);
+        if (!result.isValid) {
+            this.messageService.unblockUi();
+            this.messageService.errorBubble(`POS2020 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
+            return;
+        }
     }
 
     // POS2004 國際條碼 和 POS2005國際條碼必須對應，且POS2004要在第一筆
