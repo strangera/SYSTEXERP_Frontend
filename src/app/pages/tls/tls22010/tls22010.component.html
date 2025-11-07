@@ -89,18 +89,18 @@
   </app-table-report>
 </div>
 <div class="legend-summary">
-  <p class="mb-3 h3 flex align-items-center gap-2">
-    <i class="pi pi-hashtag text-red-500"></i>
+  <p class="legend-line">
+    <span class="symbol">#</span>
     符號表示 L 檔有資料但 Z 報金額為 0。
   </p>
 
-  <p class="mb-3 h3 flex align-items-center gap-2">
-    <i class="pi pi-at text-red-500"></i>
+  <p class="legend-line">
+    <span class="symbol">&#64;</span>
     符號表示 Z 報與 L 檔不平。
   </p>
 
-  <p class="mb-3 h3 flex align-items-center gap-2">
-    <i class="pi pi-exclamation-triangle text-red-500"></i>
+  <p class="legend-line">
+    <span class="symbol">!</span>
     開機無交易機台。
   </p>
 
@@ -149,6 +149,6 @@
   <app-table-report tableKey="TLS22010CRU" [data]="dialogData" [columns]="columnscru" [showCheckBox]="false"
     dataKey="TXN_No" [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" [showManage]="false"
     [showDelete]="false" [lastQueryBody]="dialogHistoryRequestBody" [footerData]="dialogFooterData"
-    [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)" apiUrl="queryTLS22010_Detail"
-    [customReport]="true" (exportEvent)="onExport($event)"></app-table-report>
+    [showReportMode]="false" [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)"
+    apiUrl="queryTLS22010_Detail" [customReport]="true" (exportEvent)="onExport($event)"></app-table-report>
 </app-dialog>

@@ -373,7 +373,10 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
             this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
             // ✅ 專櫃卡別總計
-            this.grandTotal = this.computeCounterGrandTotal(res);
+           const summary = res?.Data?.Summary ?? null;
+this.grandTotal = summary
+  ? this.summaryToCounterGrandTotal(summary)
+  : this.computeCounterGrandTotal(res); // 後備：維持向下相容（舊 API 的 Totals / 扁平 TOTAL_*）
 
           } else {
             // ====== 信用卡明細：rows ======
@@ -495,13 +498,19 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
           const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
           // GrandTotal 取 Data[0] 上的 Totals/Summary/平放欄位
-          const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
-          const grand: Record<string, number> = {};
-          Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
-            grand[field] = Number(
-              carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
-            );
-          });
+   let grand: Record<string, number> = {};
+const summary = res?.Data?.Summary ?? null;
+
+if (summary) {
+  grand = this.summaryToCounterGrandTotal(summary);
+} else {
+  const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
+  Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
+    grand[field] = Number(
+      carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
+    );
+  });
+}
 
           const isFirstPage = (!body?.pageIndex && !body?.PageIndex) || Number(body?.pageIndex ?? body?.PageIndex) === 1;
           if (isFirstPage) {
@@ -669,6 +678,48 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     });
     return grand;
   }
+  /** 專櫃卡別分析：把 Data.Summary 映射成 footer 需要的 GrandTotal */
+private summaryToCounterGrandTotal(summary: any): Record<string, number> {
+  if (!summary || typeof summary !== 'object') return {};
+
+  const pick = (brand: string, key: 'Count' | 'Amount') =>
+    Number(summary?.[brand]?.[key] ?? 0);
+
+  return {
+    // AE
+    AE_Count: pick('AE', 'Count'),
+    AE_Amount: pick('AE', 'Amount'),
+
+    // DA
+    DA_Count: pick('DA', 'Count'),
+    DA_Amount: pick('DA', 'Amount'),
+
+    // MASTER
+    MASTER_Count: pick('MASTER', 'Count'),
+    MASTER_Amount: pick('MASTER', 'Amount'),
+
+    // VISA
+    VISA_Count: pick('VISA', 'Count'),
+    VISA_Amount: pick('VISA', 'Amount'),
+
+    // JCB
+    JCB_Count: pick('JCB', 'Count'),
+    JCB_Amount: pick('JCB', 'Amount'),
+
+    // UnionPay
+    UnionPay_Count: pick('UnionPay', 'Count'),
+    UnionPay_Amount: pick('UnionPay', 'Amount'),
+
+    // Others
+    Others_Count: pick('Others', 'Count'),
+    Others_Amount: pick('Others', 'Amount'),
+
+    // Total
+    Total_Count: pick('Total', 'Count'),
+    Total_Amount: pick('Total', 'Amount'),
+  };
+}
+
 
   // yyyy-MM-dd（date-only）
   private toDateOnly(x: any): string | undefined {

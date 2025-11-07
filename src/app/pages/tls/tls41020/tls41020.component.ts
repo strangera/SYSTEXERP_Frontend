@@ -92,7 +92,7 @@ export class TLS41020Component
     },
     { field: 'EDC_Status1Name', header: '中信刷卡機狀態', visible: true },
     { field: 'EDC_Status2Name', header: '聯合刷卡機狀態', visible: true },
-    { field: 'ECR_TLT_No', header: '專櫃名稱', visible: true },
+    { field: 'ECR_TLT_No', header: '專櫃編號', visible: true },
     { field: 'ECR_TLT_Name', header: '櫃位名稱', visible: true },
     { field: 'ECR_LocNo', header: '地點代號', visible: true },
     { field: 'LOCATION_Name', header: '地點名稱', visible: true },
