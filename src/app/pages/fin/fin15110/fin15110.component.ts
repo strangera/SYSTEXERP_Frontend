@@ -32,7 +32,6 @@ import {
   DropDownListService,
   IDropdownItem,
 } from './../../../service/utility/dropDownList.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 @Component({
@@ -87,7 +86,7 @@ export class FIN15110Component
   DATE_TYPEOptions = [
     { label: '開立', value: '1' },
     { label: '作廢', value: '2' },
-    { label: '加總', value: '3' },
+    { label: '全部', value: '3' },
   ];
 
   /** 表格欄位設定 */
@@ -160,9 +159,7 @@ export class FIN15110Component
       .queryPOS1002_DropDownList()
       .subscribe((data) => (this.ECRNoOptions = data.Data));
 
-    // 預設全選 DataType
-    const allValues = this.DATE_TYPEOptions.map((opt) => opt.value);
-    this.queryForm.get('DataType')?.setValue(allValues);
+    this.queryForm.get('DataType')?.setValue(['3']);
   }
 
   /** 查詢 */
@@ -172,7 +169,14 @@ export class FIN15110Component
     this.handleSubmit(frm, () => {
       this.loading = true;
       const v = frm.value;
+      const selected = v.DataType || [];
 
+      // 對應後端邏輯
+      let mappedValues: string[] = [];
+
+      if (selected.includes('1')) mappedValues.push('1', '3'); // 開立 = 1+3
+      if (selected.includes('2')) mappedValues.push('2', '3'); // 作廢 = 2+3
+      if (selected.includes('3') || selected.length === 0) mappedValues = ['1', '2', '3']; // 全部
       const payload = {
         PageSize: v.pageSize || 20,
         PageIndex: v.pageIndex ?? 1,
@@ -181,7 +185,7 @@ export class FIN15110Component
         SortBy: v.SortBy ?? [],
         TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
         TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-        DataType: v.DataType || [],
+        DataType: (v.DataType || []).flat(),
         ECR_No_S: v.ECR_No_S || '',
         ECR_No_E: v.ECR_No_E || '',
       };
