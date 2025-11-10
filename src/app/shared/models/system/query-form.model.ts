@@ -111,6 +111,7 @@ export const toHHmm = (date: Date | null | undefined): string => {
   return date.toTimeString().slice(0, 5);
 };
 
+//!!! 參考Hannah的做法，很好用
 /** 將數值或字串轉換為 6 位數的交易編號字串，前面補零 */
 export const formatTxnNo = (val: number | string | null | undefined): string => {
   if (val == null) return '';

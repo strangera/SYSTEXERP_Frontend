@@ -529,9 +529,27 @@ export class ContractFlowService {
 
   /**
    * 新增：初始化編輯模式工作流程
+   * 🔥 修改：只存儲最少的識別資訊，不存儲完整的查詢結果
    */
   private initializeEditContractWorkflow(queryRowData: any): void {
-    const contractId = queryRowData.talent_id || queryRowData.apply_no || Date.now().toString();
+    // 🔥 只提取必要的識別欄位，轉換為字串
+    const talent_id = queryRowData.talent_id ? String(queryRowData.talent_id) : '';
+    const apply_no = queryRowData.apply_no ? String(queryRowData.apply_no) : '';
+    const contractId = talent_id || apply_no || Date.now().toString();
+
+    // 🔥 只存儲最少的必要資訊，不要存整個查詢結果
+    const minimalQueryRowData = {
+      talent_id: talent_id,
+      apply_no: apply_no,
+      tlt_term_type: queryRowData.tlt_term_type,
+      _isNewContract: false
+    };
+
+    console.log('🔄 編輯模式初始化，只存儲識別資訊:', {
+      talent_id: talent_id,
+      talent_id_type: typeof talent_id,
+      apply_no: apply_no
+    });
 
     if (this.contractData.contractId === contractId) {
       console.log('📦 發現現有暫存資料，從暫存重新開始編輯:', contractId);
@@ -547,7 +565,7 @@ export class ContractFlowService {
       console.log('📝 開始新的編輯工作流程:', contractId);
       this.contractData = {
         contractId: contractId,
-        queryRowData: queryRowData,
+        queryRowData: minimalQueryRowData, // 🔥 只存儲識別資訊
         step1: null,
         step2: [],
         step3: [],
@@ -576,9 +594,10 @@ export class ContractFlowService {
       this.workflowStatusSubject.next(newStatus);
     }
 
-    console.log('✅ 編輯模式工作流程初始化完成:', {
+    console.log('✅ 編輯模式工作流程初始化完成 (只存 talent_id):', {
       contractId: contractId,
-      talentId: queryRowData.talent_id
+      talentId: talent_id,
+      talentIdType: typeof talent_id
     });
   }
 
@@ -714,17 +733,27 @@ export class ContractFlowService {
     const contractId = contractData.talent_id || contractData.apply_no;
     const isViewMode = mode === 'view';
 
-    // 標記資料來源
-    const enhancedContractData = {
+    // 🔥 關鍵修正：將數字欄位轉換為字串
+    const normalizedContractData = {
       ...contractData,
+      talent_id: contractData.talent_id ? String(contractData.talent_id) : '',
+      apply_no: contractData.apply_no ? String(contractData.apply_no) : '',
+      rental_count: contractData.rental_count ? String(contractData.rental_count) : '',
       _isNewContract: false,
       _isViewMode: isViewMode,
       _loadedFromAPI: true
     };
 
+    console.log('🔄 contractData 正規化:', {
+      原始talent_id: contractData.talent_id,
+      原始類型: typeof contractData.talent_id,
+      轉換後talent_id: normalizedContractData.talent_id,
+      轉換後類型: typeof normalizedContractData.talent_id
+    });
+
     this.contractData = {
       contractId: contractId,
-      queryRowData: enhancedContractData,
+      queryRowData: normalizedContractData, // 🔥 使用轉換後的資料
       step1: null, // 會從 queryRowData 建立
       step2: [],
       step3: [],
@@ -769,7 +798,9 @@ export class ContractFlowService {
 
     if (modeInfo.isNewMode) {
       formData.talent_id = '';
-      if (!this.contractData.contractId || !this.contractData.contractId.startsWith('new_contract_')) {
+      // 🔥 修正：確保 contractId 轉換為字串再使用 startsWith
+      const contractIdStr = String(this.contractData.contractId || '');
+      if (!this.contractData.contractId || !contractIdStr.startsWith('new_contract_')) {
         this.contractData.contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       }
     } else {
@@ -1485,8 +1516,12 @@ export class ContractFlowService {
       return true;
     }
 
-    if (currentData.contractId?.startsWith('new_contract_')) {
-      return true;
+    // 🔥 修正：確保 contractId 轉換為字串再使用 startsWith
+    if (currentData.contractId) {
+      const contractIdStr = String(currentData.contractId);
+      if (contractIdStr.startsWith('new_contract_')) {
+        return true;
+      }
     }
 
     if (!currentData.contractId) {
@@ -1520,8 +1555,12 @@ export class ContractFlowService {
         warnings.push('新增模式標記不明確');
       }
 
-      if (this.contractData.contractId && !this.contractData.contractId.startsWith('new_contract_')) {
-        warnings.push('新增模式 contractId 格式異常');
+      // 🔥 修正：確保 contractId 轉換為字串再使用 startsWith
+      if (this.contractData.contractId) {
+        const contractIdStr = String(this.contractData.contractId);
+        if (!contractIdStr.startsWith('new_contract_')) {
+          warnings.push('新增模式 contractId 格式異常');
+        }
       }
     }
 

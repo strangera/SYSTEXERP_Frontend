@@ -42,6 +42,11 @@ import { CommissionTypeChangeService } from './services/commission-type-change.s
 import { FormStateService } from './services/form-state.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { SystemDataService } from '@service/system/system-data.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+
+interface CategoryItem {
+  id: number;
+}
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -70,18 +75,9 @@ import { SystemDataService } from '@service/system/system-data.service';
   ],
 
 })
-export class TLS13010CRUComponent implements OnInit, OnDestroy {
+export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   // ========== 核心屬性（取代繼承的部分） ==========
   isFormReadonly = false;
-  ProgNo = 'TLS13010';
-  formTitle = '';
-  submitted = false;
-  loading = false;
-  crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
-
-  // 用戶和權限
-  user: any;
-  funInfo: any;
 
   // ========== 檢視模式管理 ==========
   isViewMode = false;
@@ -245,6 +241,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     money_type: ['', [Validators.maxLength(2)]],
     store_way: [''],
     check_typeList: [[] as string[]],
+    check_type: [''],
     paytype: [''],
     vip_yn: [''],
     credit_card: [''],
@@ -344,13 +341,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     private commissionTypeChangeService: CommissionTypeChangeService,
 
     private formStateService: FormStateService,
-
-    public router: Router,
     private route: ActivatedRoute,
-    private formBuilder: FormBuilder, // ← 新增這行
-    private authService: AuthService,
-    private messageService: NotificationService,
-    private currentPageService: CurrentPageService,
     private contractFlowService: ContractFlowService,
     public tls13010DropdownService: TLS13010DropdownService,
     private bankService: BankOptionsService,
@@ -362,11 +353,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     private validationService: TLS13010ValidationService,
     private dateValidationService: DateValidationService,
     private emailValidationService: EmailValidationService,
-    private systemDataService: SystemDataService
-  ) { }
+    // private systemDataService: SystemDataService
+  ) { super(); }
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
+    this.initializePage('TLS13010', this.dataForm, { useReadonly: true });
     window.scrollTo({ top: 0 });
     this.initializeBasics();
     this.initializeViewMode();
@@ -386,6 +378,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // ✅ 清理 FormStateService
     this.formStateService.cleanup();
   }
+
+
 
 
   private initializeBasics(): void {
@@ -452,15 +446,20 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 使用 service 載入所有下拉選單
     this.dataLoaderService.loadAllInitialDropdownOptions(this).subscribe({
       next: () => {
-        console.log(' 所有初始資料載入完成');
-        // === 新增這一行：自動設定洽談者預設值 ===
+        console.log('✅ 所有初始資料載入完成');
+
+        // === 自動設定洽談者預設值 ===
         if (this.contractFlowService.isNewContractMode()) {
           // 呼叫 Service 處理預設值設定
           this.formInitService.setCurrentUserAsNegotiator(this.dataForm);
 
           // 如果有自動設定，接著進行自動儲存
           this.saveToWorkflow();
+        } else {
+          // 🔥 編輯/檢視模式：檢查是否需要載入詳細資料
+          this.checkAndLoadDetailData();
         }
+
         setTimeout(() => {
           this.validateWorkflowData();
           this.updateDisplayLocationData();
@@ -483,6 +482,206 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         this.messageService.errorBubble('載入資料失敗,請重新整理頁面');
       }
     });
+  }
+
+  /**
+   * 檢查並載入詳細資料
+   * 🔥 在編輯/檢視模式下，一定要呼叫 Detail API 來獲取完整資料
+   */
+  private checkAndLoadDetailData(): void {
+    // 從 workflow 取得 queryRowData
+    const queryRowData = this.contractFlowService.getCurrentData()?.queryRowData;
+
+    if (!queryRowData) {
+      console.log('📭 沒有 queryRowData，不載入詳細資料');
+      return;
+    }
+
+    const talentId = queryRowData.talent_id;
+
+    if (!talentId) {
+      console.log('📭 沒有 talent_id，不載入詳細資料');
+      return;
+    }
+
+    console.log('📥 準備載入詳細資料，talent_id:', talentId, 'type:', typeof talentId);
+
+    // 🔥 一定要呼叫 Detail API，不使用查詢結果
+    // 強制轉換為字串再傳遞
+    this.loadContractDetail(String(talentId));
+  }
+
+  /**
+  * 載入合約詳細資料
+  */
+  loadContractDetail(talentId: string | number): void {
+    console.log('🔍 開始載入合約詳細資料，talent_id:', talentId);
+
+    if (!talentId) {
+      console.warn('⚠️ 沒有提供 talent_id，無法載入詳細資料');
+      return;
+    }
+
+    this.loading = true;
+
+    // 確保 talentId 是字串格式
+    const talentIdParam = typeof talentId === 'string' ? talentId : String(talentId);
+
+    this.tls13010Service.queryTLS13010Detail(talentIdParam).subscribe({
+      next: (response: any) => {
+        console.log('📦 API 回應:', response);
+
+        // 🔥 Data 是物件，不是陣列
+        if (response.Status === '0000' && response.Data && typeof response.Data === 'object') {
+          const detailData = response.Data;
+          console.log('✅ 詳細資料載入成功:', detailData);
+
+          // 將 detail 資料填充到表單中
+          this.patchFormWithDetailData(detailData);
+        } else {
+          console.warn('⚠️ 查無詳細資料');
+          this.messageService.warnBubble('查無詳細資料');
+        }
+      },
+      error: (err: any) => {
+        console.error('❌ 載入詳細資料失敗:', err);
+        this.messageService.errorBubble('載入詳細資料失敗');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  /**
+ * 將 detail 資料填充到表單
+ */
+  /**
+ * 將 detail 資料填充到表單
+ */
+  private patchFormWithDetailData(detailData: any): void {
+    console.log('📝 開始填充表單資料');
+
+    if (detailData.check_type && (!detailData.check_typeList || detailData.check_typeList.length === 0)) {
+
+      detailData.check_typeList = detailData.check_type.split(',').filter((x: string) => x);
+      console.log('check_type 轉換為 check_typeList:', detailData.check_typeList);
+    } else if (!detailData.check_type && Array.isArray(detailData.check_typeList) && detailData.check_typeList.length > 0) {
+      detailData.check_type = detailData.check_typeList.join(','); // 儲存邏輯也應統一為逗號
+    }
+
+    // 🔥 將日期字串轉換為符合表單格式的字串 (yy/mm/dd)
+    const formatDate = (dateStr: string | null | undefined): string => {
+      if (!dateStr) return '';
+
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+
+        // 轉換為 yy/mm/dd 格式的字串
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        return `${year}/${month}/${day}`;
+      } catch {
+        return '';
+      }
+    };
+
+    // 將 API 回傳的資料對應到表單
+    this.dataForm.patchValue({
+      talent_id: detailData.talent_id || '',
+      apply_no: detailData.apply_no || '',
+      tlt_no: detailData.tlt_no || '',
+      tlt_name: detailData.tlt_name || '',
+      vendor_ven_no: detailData.ven_no || '',
+      ven_uniform: detailData.ven_uniform || '',
+      ven_no: detailData.ven_no || '',
+      VEN_Name: detailData.VEN_Name || '',
+      paper_type: detailData.paper_type || '',
+      contract_subno: detailData.contract_subno || '',
+
+      // 🔥 日期欄位轉換為 yy/mm/dd 格式字串
+      feedback_date: formatDate(detailData.feedback_date),
+      due_date: formatDate(detailData.due_date),
+      tlt_bdate: formatDate(detailData.tlt_bdate),
+      tlt_edate: formatDate(detailData.tlt_edate),
+      contact_Date: formatDate(detailData.contact_Date),
+      tlt_contract_bdate: formatDate(detailData.tlt_contract_bdate),
+      tlt_contract_edate: formatDate(detailData.tlt_contract_edate),
+      cap_saletype1: detailData.cap_saletype1 || '',
+      cap_saletype2: detailData.cap_saletype2 || '',
+      cap_saletype3: detailData.cap_saletype3 || '',
+      cap_saletype4: detailData.cap_saletype4 || '',
+      cap_saletype5: detailData.cap_saletype5 || '',
+      bus_type: detailData.bus_type || '',
+      bus_class: detailData.bus_class || '',
+      bus_sclass: detailData.bus_sclass || '',
+      deco_type: detailData.deco_type || '',
+      money_type: detailData.money_type || '',
+      check_typeList: detailData.check_typeList || [],
+      check_type: detailData.check_type || '',
+      tlt_term_type: detailData.tlt_term_type?.trim() || '',
+      comm_comp_type: detailData.comm_comp_type || '',
+      comm_yn: detailData.comm_yn || '',
+      store_way: detailData.store_way || '',
+      rece_yn: detailData.rece_yn || '',
+      pos_yn: detailData.pos_yn || '',
+      cash_yn: detailData.cash_yn || '',
+      tlt_openflag: detailData.tlt_openflag || '',
+      org_id: detailData.org_id || '',
+      rent_ahead: detailData.rent_ahead || '',
+      rent_period: detailData.rent_period || '',
+      base_rent: detailData.base_rent || '',
+      deposit: detailData.deposit || '',
+      total_amt: detailData.total_amt || '',
+      total_amt_vendor: detailData.total_amt_vendor || '',
+      open_deposit: detailData.open_deposit || '',
+      open_fees: detailData.open_fees || '',
+      construct_deposit: detailData.construct_deposit || '',
+      construct_fees: detailData.construct_fees || '',
+      expiration_deposit: detailData.expiration_deposit || '',
+      expiration_fees: detailData.expiration_fees || '',
+      check_day: detailData.check_day || '',
+      tlt_kind: detailData.tlt_kind || '',
+      edc_yn: detailData.edc_yn || '',
+      tlt_ctype_mtotal: detailData.tlt_ctype_mtotal || '',
+      overall_status: detailData.overall_status || '',
+      paytype: detailData.paytype || '',
+      vip_yn: detailData.vip_yn || '',
+      credit_card: detailData.credit_card || '',
+      invoice_type: detailData.invoice_type || '',
+      water_flag: detailData.water_flag || '',
+      electric_flag: detailData.electric_flag || '',
+      gas_flag: detailData.gas_flag || '',
+      email: detailData.email || '',
+      invoice_email: detailData.invoice_email || '',
+      CHECK_TITLE: detailData.CHECK_TITLE || '',
+      store_tel: detailData.store_tel || '',
+      bank_id: detailData.bank_id || '',
+      vendor_acct_name: detailData.vendor_acct_name || '',
+      vendor_acct_no: detailData.vendor_acct_no || '',
+      contact_tel: detailData.contact_tel || '',
+      contact_fax: detailData.contact_fax || '',
+      contact_addr: detailData.contact_addr || '',
+      tlt_remark: detailData.tlt_remark || '',
+      ticket_remarks: detailData.ticket_remarks || '',
+      contact_USR_No: detailData.contact_USR_No || '',
+      contact_USR_Name: detailData.contact_USR_Name || '',
+      total_amt_unit: detailData.total_amt_unit || '',
+      total_amt_vendor_unit: detailData.total_amt_vendor_unit || '',
+      VEN_Address: detailData.VEN_Address || '',
+      approve_status: detailData.approve_status || '',
+    }, { emitEvent: false });
+
+    console.log('✅ 表單資料填充完成');
+
+    // 填充完資料後，更新到 workflow
+    setTimeout(() => {
+      this.saveToWorkflow();
+    }, 100);
   }
 
   private setupListeners(): void {
@@ -659,6 +858,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   private saveToWorkflow(): void {
     const currentTotalSpace = this.getTotaltlt_space();
     const formData = this.dataForm.getRawValue();
+
+    const checkTypeList = formData.check_typeList || [];
+    const checkTypeString = Array.isArray(checkTypeList) ? checkTypeList.join(';') : '';
     // 型別轉換輔助函數
     const convertToString = (value: any): string | undefined => {
       if (value === null || value === undefined) return undefined;
@@ -763,6 +965,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       total_amt_vendor_unit: formData.total_amt_vendor_unit || '',
       paymentMethods: formData.paymentMethods || [],
       check_typeList: formData.check_typeList || [],
+      check_type: checkTypeString,
       //特殊欄位
       totalLocationSpace: currentTotalSpace, // 計算總營業坪數
       locationInfo: this.prepareLocationDataForSubmit(), // 新增總營業坪數
@@ -855,7 +1058,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // this.messageService.successBubble('Step 1 完成，進入下一步');
   }
 
-  onCancel(): void {
+  override onCancel(): void {
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
