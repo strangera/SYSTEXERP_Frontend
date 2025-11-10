@@ -122,7 +122,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.loadDropdownOptions();
     if (!this.isFormCreateable) {
       this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this)).subscribe(response => {
-        this.data = response.Data.map(item => ({ ...item, PLU_SalePrc_UNI: item.POD_BuyPrc, PLU_SalePrc: item.POD_SalePrc }));
+        this.data = response.Data.map(item => ({
+          ...item,
+          PLU_SalePrc_UNI: item.POD_BuyPrc,
+          PLU_SalePrc: item.POD_SalePrc
+        }));
       });
       this.vendorOptions.subscribe(options => {
         this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '');

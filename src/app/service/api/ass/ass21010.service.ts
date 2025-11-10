@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus, EngType } from '@pages/ass/ass21010/ass21010.model';
 import { Option } from '@service/utility/dropdown-api.model';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import saveAs from 'file-saver';
 import { NGXLogger } from 'ngx-logger';
-import { Observable, finalize, take, tap } from 'rxjs';
+import { finalize, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -25,8 +26,22 @@ export class ASS21010Service {
     { value: EngType.電, label: '電錶' },
     { value: EngType.瓦斯, label: '瓦斯錶' },
   ];
-  public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
-  public readonly locationSignal = signal<DropdownOption[]>([]);
+  public readonly engMeterNoOptions = signal<ASS2100ENGMeterType[]>([]);
+  public readonly locationOptions = signal<DropdownOption[]>([]);
+
+  /** 能源類型對應表 */
+  public readonly engTypeMap = new Map<string, EngType>([
+    ['水錶', EngType.水],
+    ['電錶', EngType.電],
+    ['瓦斯錶', EngType.瓦斯],
+    ['G01', EngType.水],
+    ['G02', EngType.電],
+    ['G03', EngType.瓦斯],
+  ]);
+  /** 錶號應表 */
+  public readonly engMeterNoMap = computed(() =>
+    new Map(this.engMeterNoOptions().map(item => [item.ENG_MeterNo, item]))
+  );
 
   public engMeterNoLoading = signal<boolean>(!1);
   public locationLoading = signal<boolean>(!1);
@@ -35,7 +50,7 @@ export class ASS21010Service {
 
   constructor(
     private readonly http: HttpClient,
-    // private readonly messageService: NotificationService,
+    private readonly notification: NotificationService,
     private readonly logger: NGXLogger,
   ) { }
 
@@ -43,11 +58,11 @@ export class ASS21010Service {
     this.engMeterNoLoading.set(!0);
     this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
       take(1),
-      tap(response => this.engMeterNoSignal.set(response.Data)),
-      finalize(() => {
-        this.engMeterNoLoading.set(!1);
-        this.logger.debug('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
-      })
+      tap(res => {
+        this.engMeterNoOptions.set(res.Data);
+        this.logger.debug('查詢EngMeterNo結果:', [res]);
+      }),
+      finalize(() => this.engMeterNoLoading.set(!1))
     ).subscribe();
   };
 
@@ -55,11 +70,11 @@ export class ASS21010Service {
     this.locationLoading.set(!0);
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
-      tap(response => this.locationSignal.set(response.Data)),
-      finalize(() => {
-        this.locationLoading.set(!1);
-        this.logger.debug('查詢Location結果:', [this.locationSignal()]);
-      })
+      tap(res => {
+        this.locationOptions.set(res.Data);
+        this.logger.debug('查詢Location結果:', [this.locationOptions()]);
+      }),
+      finalize(() => this.locationLoading.set(!1))
     ).subscribe();
   };
 
@@ -67,8 +82,11 @@ export class ASS21010Service {
     this.tableLoading.set(!0);
     this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
-      tap(response => this.totalRecords.set(response.Data.TotalCount || 0)),
-      tap(response => this.ASS21010Data.set(response.Data.Data)),
+      tap(response => {
+        this.totalRecords.set(response.Data.TotalCount || 0);
+        this.ASS21010Data.set(response.Data.Data);
+        this.logger.debug('查詢ASS21010結果:', [response]);
+      }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe();
   }
@@ -77,6 +95,10 @@ export class ASS21010Service {
     this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
+      tap(res => {
+        if (res.Status === '0000') this.notification.successBubble('更新成功');
+        this.logger.debug('更新ASS21010結果:', [res]);
+      }),
       finalize(() => this.tableLoading.set(!1)),
     );
   }
@@ -85,6 +107,10 @@ export class ASS21010Service {
     this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
+      tap(res => {
+        if (res.Status === '0000') this.notification.successBubble('刪除成功');
+        this.logger.debug('刪除ASS21010結果:', [res]);
+      }),
       finalize(() => this.tableLoading.set(!1)),
     );
   }
@@ -103,10 +129,10 @@ export class ASS21010Service {
 
     this.http.post(`${apiUrl}/${endpoint}`, payload, httpOptions).pipe(
       take(1),
-      tap(response => {
-        this.logger.debug(`onExport ${type} response:`, [response]);
-        if (response.body && response.body.size > 0) {
-          const contentDisposition = response.headers.get('content-disposition');
+      tap(res => {
+        this.logger.debug(`onExport ${type} response:`, [res]);
+        if (res.body && res.body.size > 0) {
+          const contentDisposition = res.headers.get('content-disposition');
           let filename = `${payload.file_name}.${fileExtension}`;
 
           if (contentDisposition) {
@@ -121,11 +147,11 @@ export class ASS21010Service {
             }
           }
 
-          const blob = new Blob([response.body], { type: contentType });
+          const blob = new Blob([res.body], { type: contentType });
           saveAs(blob, filename);
-          // this.messageService.successBubble(`${type} Export successful`);
+          this.notification.successBubble(type, '檔案下載完成');
         } else {
-          // this.messageService.errorBubble(`Response body is empty!`, `${type} Export Fail`);
+          this.notification.errorBubble(type, '檔案下載失敗，無資料');
         }
       }),
       finalize(() => this.exportLoading.set(!1))

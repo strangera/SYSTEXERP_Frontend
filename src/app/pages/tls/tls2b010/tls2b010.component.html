@@ -1,11 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button> -->
   </div>
 
   <p-accordion>
@@ -15,11 +10,7 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -42,6 +33,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               calendarType="dateOne"
@@ -50,6 +42,7 @@
               [submitted]="submitted"
             ></app-calendar>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
@@ -61,6 +54,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
@@ -84,6 +78,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 顯示欄位（多選：系統帳/實收帳） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="顯示欄位"
@@ -95,30 +91,49 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
+          <!-- 顯示方式（單選：使用 PrimeNG p-radioButton） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="顯示方式"
-              groupname="systemtyperadio"
-              [control]="queryForm.controls.cashShowUp"
-              [options]="CashShowupByOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <label class="block mb-2">顯示方式</label>
+            <div class="flex flex-wrap gap-3">
+              <ng-container *ngFor="let opt of CashShowupByOptions">
+                <p-radioButton
+                  name="systemtyperadio"
+                  [inputId]="'systemtyperadio-' + opt.value"
+                  [value]="opt.value"
+                  [formControl]="queryForm.controls.cashShowUp"
+                  [disabled]="opt.disabled"
+                ></p-radioButton>
+                <label class="mr-3" [for]="'systemtyperadio-' + opt.value">
+                  {{ opt.label }}
+                </label>
+              </ng-container>
+            </div>
           </div>
+
+          <!-- 報表格式（單選：使用 PrimeNG p-radioButton） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="報表格式"
-              groupname="reportradio"
-              [control]="queryForm.controls.reporttype"
-              [options]="reporttypeOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <label class="block mb-2">報表格式</label>
+            <div class="flex flex-wrap gap-3">
+              <ng-container *ngFor="let opt of reporttypeOptions">
+                <p-radioButton
+                  name="reportradio"
+                  [inputId]="'reportradio-' + opt.value"
+                  [value]="opt.value"
+                  [formControl]="queryForm.controls.reporttype"
+                  [disabled]="opt.disabled"
+                ></p-radioButton>
+                <label class="mr-3" [for]="'reportradio-' + opt.value">
+                  {{ opt.label }}
+                </label>
+              </ng-container>
+            </div>
           </div>
         </div>
+
         <h6>最近關帳日期：{{ closeDate }}</h6>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -126,105 +141,107 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <div class="mb-2 text-sm">
     銷售日期：
     {{
       queryForm.controls.TXN_Date.value
-        ? (queryForm.controls.TXN_Date.value | date: "yyyy/MM/dd")
-        : "未選擇"
+        ? (queryForm.controls.TXN_Date.value | date: 'yyyy/MM/dd')
+        : '未選擇'
     }}
   </div>
+
+  <!-- 明細表 -->
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 1">
-   <app-tls2b010table
-  tableKey="TLS2B010"
-  [data]="data"
-  [columns]="columns"
-  dataKey="ID"
-  [showReportMode]="false"
-  [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
-  [totalRecords]="totalRecords"
-  [lazy]="true"
-  [rows]="data.length || 20"
-  [loading]="loading"
-  [groupPageSize]="queryForm.get('pageSize')?.value || 20"
-  (edit)="onEdit($event)"
-  [showManage]="false"
-  [groupRowsBy]="'ECR_No'"
-  [mergedColumns]="['building_desc','floor_desc','ECR_No','TLT_NO','TLT_Name']"
-  [showDelete]="false"
-  [showCheckBox]="false"
-  (lazyLoadData)="handleLazyLoad($event, queryForm)"
-  [showFooter]="true"          
-    [showTotal]="true"
-  [totals]="detailTotals"  
->
-  <header>
-    <div class="flex justify-content-end gap-2">
-      <p-button
-        styleClass="p-2"
-        label="匯出收銀員溢欠表(日)明細表 PDF"
-        icon="pi pi-file"
-        [loading]="btnLoading"
-        (click)="downloadTLS2B010PDF()"
-        [disabled]="data.length === 0"
-      ></p-button>
+    <app-tls2b010table
+      tableKey="TLS2B010"
+      [data]="data"
+      [columns]="columns"
+      dataKey="ID"
+      [showReportMode]="false"
+      [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      [rows]="data.length || 20"
+      [loading]="loading"
+      [groupPageSize]="queryForm.get('pageSize')?.value || 20"
+      (edit)="onEdit($event)"
+      [showManage]="false"
+      [groupRowsBy]="'ECR_No'"
+      [mergedColumns]="['building_desc','floor_desc','ECR_No','TLT_NO','TLT_Name']"
+      [showDelete]="false"
+      [showCheckBox]="false"
+      (lazyLoadData)="handleLazyLoad($event, queryForm)"
+      [showFooter]="true"
+      [showTotal]="true"
+      [totals]="detailTotals"
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            styleClass="p-2"
+            label="匯出收銀員溢欠表(日)明細表 PDF"
+            icon="pi pi-file"
+            [loading]="btnLoading"
+            (click)="downloadTLS2B010PDF()"
+            [disabled]="data.length === 0"
+          ></p-button>
 
-      <p-button
-        styleClass="p-2"
-        label="匯出收銀員溢欠表(日)明細表 Excel"
-        icon="pi pi-file-excel"
-        [loading]="btnLoading"
-        (click)="downloadTLS2B010Excel()"
-        [disabled]="data.length === 0"
-      ></p-button>
-    </div>
-  </header>
-</app-tls2b010table>
+          <p-button
+            styleClass="p-2"
+            label="匯出收銀員溢欠表(日)明細表 Excel"
+            icon="pi pi-file-excel"
+            [loading]="btnLoading"
+            (click)="downloadTLS2B010Excel()"
+            [disabled]="data.length === 0"
+          ></p-button>
+        </div>
+      </header>
+    </app-tls2b010table>
   </div>
-<div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
-  <app-table
-    [columns]="simplecolumns"
-    [data]="simpleData"
-    tableKey="TLS2B010simple"
-    dataKey="ID"
-    [lazy]="true"
-    [loading]="loading"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    [showManage]="false"
-    [showReportMode]="false"
 
+  <!-- 簡表 -->
+  <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
+    <app-table
+      [columns]="simplecolumns"
+      [data]="simpleData"
+      tableKey="TLS2B010simple"
+      dataKey="ID"
+      [lazy]="true"
+      [loading]="loading"
+      [showDelete]="false"
+      [showCheckBox]="false"
+      [showManage]="false"
+      [showReportMode]="false"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="handleLazyLoad($event, queryForm)"
+      [multiSortMeta]="[
+        { field: 'TXN_Date', order: 1 },
+        { field: 'ECR_No', order: 1 }
+      ]"
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            styleClass="p-2"
+            label="匯出收銀員溢欠表(日)簡表 PDF"
+            icon="pi pi-file"
+            [loading]="btnLoading"
+            (click)="downloadTLS2B010PDF()"
+            [disabled]="data.length === 0"
+          ></p-button>
 
-    [totalRecords]="totalRecords"
-
-   
-    (lazyLoadData)="handleLazyLoad($event, queryForm)"
-
-
-    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }, { field: 'ECR_No', order: 1 }]"
-  >
- <header>
-    <div class="flex justify-content-end gap-2">
-      <p-button
-        styleClass="p-2"
-        label="匯出收銀員溢欠表(日)簡表 PDF"
-        icon="pi pi-file"
-        [loading]="btnLoading"
-        (click)="downloadTLS2B010PDF()"
-        [disabled]="data.length === 0"
-      ></p-button>
-
-      <p-button
-        styleClass="p-2"
-        label="匯出收銀員溢欠表(日)簡表 Excel"
-        icon="pi pi-file-excel"
-        [loading]="btnLoading"
-        (click)="downloadTLS2B010Excel()"
-        [disabled]="data.length === 0"
-      ></p-button>
-    </div>
-  </header>
-</app-table>
-</div>
+          <p-button
+            styleClass="p-2"
+            label="匯出收銀員溢欠表(日)簡表 Excel"
+            icon="pi pi-file-excel"
+            [loading]="btnLoading"
+            (click)="downloadTLS2B010Excel()"
+            [disabled]="data.length === 0"
+          ></p-button>
+        </div>
+      </header>
+    </app-table>
+  </div>
 </div>

@@ -58,7 +58,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    MAM_No: [{ value: '系統自動產生', disabled: true }],  // 變價單號
+    MAM_No: [{ value: '系統自動產生', disabled: true }], // 變價單號
     VEN_No: [null, [Validators.required]], // 廠商代號
     LOGO_No: [null, [Validators.required]], // 品牌代碼
     MAM_Method: ['H'], // 是否為永久變價
@@ -85,8 +85,8 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     salePriceDiscount: [0, [Validators.min(0), Validators.max(99)]], // 售價折扣%
     salePriceAmount: [0], // 售價金額調整
   },);
-  brandOptions = this.dropdown.queryPluLogo();   // 品牌
-  vendorOptions?: Observable<Option[] | null> = of([]);  // 廠商編號
+  brandOptions = this.dropdown.queryPluLogo(); // 品牌
+  vendorOptions?: Observable<Option[] | null> = of([]); // 廠商編號
   data: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   editColumns = columns;
@@ -187,6 +187,9 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
           row[discountControl === 'costPriceDiscount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = 0;
         }
       });
+      // *** 修正：強制更新 data 陣列參考以觸發 Angular 變更偵測 ***
+      this.data = [...this.data];
+      // ************************************************************
     });
   }
   private setupDialogLogic(): void {
@@ -326,7 +329,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       PLU_OrderPrc: Number(item.PLU_OrderPrc),
       MAM_OrderPrc: Number(item.PLU_OrderPrc),
       PLU_SalePrc: Number(item.PLU_SalePrc),
-      MAM_UnitPrc: 0,
+      MAM_UnitPrc: Number(item.PLU_SalePrc), // *** 已修改：預設為調整前售價 ***
       MAD_Remark: ''
     }))];
     this.selectedItemsDialog = [];

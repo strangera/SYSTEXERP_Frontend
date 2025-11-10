@@ -60,7 +60,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     HOS_NoList: [null], // 倉庫代碼
     VEN_No: [''], // 廠商代號
     queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    ODM_StatusList: [null, [Validators.required]], // 驗收狀態
+    ODM_StatusList: [null], // 驗收狀態
     ODM_USR: [''], // 申請人員
     ODM_Date_Start: [''], // 申請日期起
     ODM_Date_End: [''], // 申請日期迄

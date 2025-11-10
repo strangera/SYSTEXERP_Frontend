@@ -32,12 +32,13 @@ import { RegionService } from '../../../service/basic/region-code.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-
+import { ButtonModule } from 'primeng/button';
 // Models
 import { PayTypeItem, TLS2B030Row } from './tls2b030.model';
 
 // until-destroy
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { HttpResponse } from '@angular/common/http';
 
 type SortItem = { field: string; order: 1 | -1 };
 
@@ -60,6 +61,7 @@ type SortItem = { field: string; order: 1 | -1 };
     ButtonComponent,
     TranslateModule,
     TableReportComponent,
+    ButtonModule
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
@@ -71,15 +73,15 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   lastQueryBody: any = null;
   footerData: any = undefined;
 
-  // 欄位只建一次 → 快取鍵（若後端結構有變，請手動改版本字尾）
+  // 欄位只建一次 → 快取鍵
   private readonly COL_CACHE_KEY = 'TLS2B030_COLS_V1';
 
   // 欄位/付款清單
   columns: ReportColumn[] = [];
   payTypes: PayTypeItem[] = [];
 
-  viewTotalRecords = 0;  // 首屏用，先用本頁筆數撐表，高度穩定後再切回 totalRecords
-  tableVer = 0;          // 強制重建 table 的 key（欄位動態/重新查詢時 ++）
+  viewTotalRecords = 0;
+  tableVer = 0;
 
   // 下拉資料
   floorOptions: any[] = [];
@@ -96,10 +98,12 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  // ========= 金額格式（更穩定）=========
+  // 匯出 loading 狀態
+  btnExportLoading = false;
+
   private readonly moneyNF = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 4, // 若要固定兩位 => 2/2
+    maximumFractionDigits: 4,
   });
 
   moneyFormat = (value: unknown): string => {
@@ -108,7 +112,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return Number.isFinite(num) ? this.moneyNF.format(num) : '0';
   };
 
-  /** 把一列中所有 Pay_Dif_* 與 PPay_Dif_sum 改成帶千分位的字串（顯示用） */
   private formatMoneyFieldsInRow(flat: any): void {
     Object.keys(flat).forEach((k) => {
       if (k === 'PPay_Dif_sum' || k.startsWith('Pay_Dif_')) {
@@ -117,7 +120,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** 把 footer 的金額欄位也一併轉成字串（顯示用） */
   private formatMoneyFieldsInFooter(footer: any): any {
     const out: any = {};
     Object.keys(footer || {}).forEach((k) => {
@@ -130,7 +132,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return out;
   }
 
-  /** 寬鬆轉數字（吃 number/string/含逗點/null/undefined） */
   private toNumberLoose(v: unknown): number {
     if (v == null || v === '') return 0;
     if (typeof v === 'string') {
@@ -140,9 +141,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
   }
-  // ====================================
 
-  // 預設排序
   readonly defaultSort: SortItem[] = [{ field: 'TLT_Name', order: 1 }];
 
   /* ----------------- 表單 ----------------- */
@@ -185,7 +184,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
   private getMonthRange(d: Date) {
     const year = d.getFullYear();
-    const month = d.getMonth(); // 0-based
+    const month = d.getMonth();
     const start = new Date(year, month, 1, 0, 0, 0);
     const end = new Date(year, month + 1, 0, 23, 59, 59);
     return { start, end };
@@ -250,7 +249,15 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return payload;
   }
 
-  /** 付款清單 → 欄位（只建一次） */
+  /** ✅ 匯出專用：沿用查詢條件，但移除 pageIndex/pageSize */
+  private buildExportPayload(): any {
+    const base = this.queryForm.getRawValue();
+    const payload = this.buildPayload(base);
+    delete payload.pageIndex;
+    delete payload.pageSize;
+    return payload;
+  }
+
   private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
     const baseCols: ReportColumn[] = [
       { field: 'ECR_No',  header: '收銀機號' },
@@ -262,7 +269,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       field: `Pay_Dif_${pt.No}`,
       header: pt.Name,
       style: 'text-right',
-      format: this.moneyFormat, // 若 TableReport 有用到 format，這裡也會生效
+      format: this.moneyFormat,
       isTotal: true,
     }));
 
@@ -273,7 +280,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     this.columns = [...baseCols, ...payCols, ...totalCol];
   }
 
-  /** ⛳️ 欄位只建一次：先讀快取 → 沒有才打 API → 建欄 → 寫回快取 */
   private initColumnsOnce(): void {
     try {
       const cached = sessionStorage.getItem(this.COL_CACHE_KEY);
@@ -283,12 +289,11 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         this.columns  = Array.isArray(parsed?.columns)  ? parsed.columns  : [];
         if (this.columns.length) {
           this.columnsReady = true;
-          return; // 用快取即結束
+          return;
         }
       }
-    } catch { /* ignore bad cache */ }
+    } catch { /* ignore */ }
 
-    // 沒快取 → 打 API 建一次欄位
     this.tls2b030Service.getPayTypes()
       .pipe(untilDestroyed(this))
       .subscribe({
@@ -302,7 +307,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
               this.COL_CACHE_KEY,
               JSON.stringify({ payTypes: this.payTypes, columns: this.columns })
             );
-          } catch { /* storage full or disallowed */ }
+          } catch { /* ignore */ }
         },
         error: () => {
           this.payTypes = [];
@@ -326,7 +331,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
           const flat: any = { ...r };
 
-          // 攤平巢狀 -> 先轉 number，再格式化成字串（顯示）
           if (r?.PayDiffs) {
             Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
               flat[k] = this.toNumberLoose(v);
@@ -336,7 +340,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
             flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
           }
 
-          // 轉顯示用字串（含千分位）
           this.formatMoneyFieldsInRow(flat);
 
           flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
@@ -346,7 +349,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         const totalCount =
           Number(res?.TotalCount ?? dataAny?.TotalCount ?? rows.length) || rows.length;
 
-        // 只在第 1 頁同步「總計列」
         const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
         if (isFirstPage) {
           const sumRaw = dataAny?.SumPayDiffs ?? null;
@@ -360,8 +362,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
               if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
               if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
             });
-
-            // footer 轉顯示用字串（含千分位）
             this.footerData = this.formatMoneyFieldsInFooter(footer);
           } else {
             this.footerData = undefined;
@@ -376,10 +376,8 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS2B030', 'tls/tls2B030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // ⛳️ 欄位初始化（只做一次，後續都用快取）
     this.initColumnsOnce();
 
-    // 月份變更 -> 同步日期（不 emit）
     this.queryForm.controls.TXN_Month.valueChanges
       .pipe(
         startWith(this.queryForm.controls.TXN_Month.value),
@@ -395,7 +393,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         );
       });
 
-    // 日期變更 -> 若不是完整整月，清空 TXN_Month
     this.queryForm.controls.TXN_DateStart.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => this.clearMonthIfNotExactRange());
@@ -403,7 +400,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe(() => this.clearMonthIfNotExactRange());
 
-    // 下拉資料載入
     this.ecrNoService.getECRNo().pipe(untilDestroyed(this)).subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x: any) => ({
@@ -426,31 +422,28 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     this.tls11010Service.getBuildingOptions().pipe(untilDestroyed(this)).subscribe((data) => (this.BUILDING_NO_Options = data));
   }
 
-  /* ----------------- Submit（固定 pageSize=30；等欄位就緒） ----------------- */
+  /* ----------------- Submit ----------------- */
   onSubmit(frm: FormGroup) {
     this.submitted = true;
 
-    // 驗證
     if (this.queryForm.invalid) {
       this.queryForm.markAllAsTouched();
       this.messageService?.errorBubble?.('請把日期或月份條件填寫完整', '條件錯誤');
       return;
     }
 
-    // 組 payload（首次固定 30 筆）
     const raw = this.queryForm.getRawValue();
     const payload = this.buildPayload(raw);
     payload.pageIndex = 1;
     payload.pageSize  = 30;
 
-    // 重置畫面狀態
     this.loading = true;
     this.data = [];
     this.selectedItems = [];
     this.footerData = undefined;
-    this.totalRecords = 0;        // 清乾淨，避免殘留
-    this.viewTotalRecords = 0;    // 首屏先 0，等資料回來後用本頁筆數撐
-    this.tableVer++;              // ↩️ 讓 <app-table-report> 強制重建（欄位/狀態都乾淨）
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.tableVer++;
 
     this.tls2b030Service
       .queryTLS2B030(payload)
@@ -464,18 +457,15 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
           const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
             const flat: any = { ...r };
 
-            // 攤平 PayDiffs -> 先數字化
             if (r?.PayDiffs) {
               Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
                 flat[k] = this.toNumberLoose(v);
               });
             }
-            // 總金額也數字化
             if (flat.PPay_Dif_sum != null) {
               flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
             }
 
-            // 轉顯示用字串（含千分位）
             this.formatMoneyFieldsInRow(flat);
 
             flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
@@ -483,14 +473,9 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
           });
 
           this.data = rows;
-
-          // 先用「本頁筆數」撐出高度，避免臨界筆數撐破
           this.viewTotalRecords = this.data.length;
-
-          // 立刻跑一次變更偵測，讓 DOM 先以本頁筆數成形
           this.cdr.detectChanges();
 
-          // 下一個 tick 再切回真正總筆數，啟用虛擬捲動/續載
           const realTotal = Number(response?.TotalCount ?? rows.length) || rows.length;
           setTimeout(() => {
             this.totalRecords = realTotal;
@@ -498,7 +483,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
             this.lastQueryBody = { ...payload };
           });
 
-          // footer（總計列）
           if (sumRaw) {
             const footer: any = {};
             Object.keys(sumRaw).forEach((k) => {
@@ -510,7 +494,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
               if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
             });
 
-            // footer 轉顯示用字串（含千分位）
             this.footerData = this.formatMoneyFieldsInFooter(footer);
           } else {
             this.footerData = undefined;
@@ -549,5 +532,51 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     this.data = [];
     this.totalRecords = 0;
     this.footerData = undefined;
+  }
+
+  /* ----------------- 匯出：Excel ----------------- */
+  private getFilenameFromResponse(res: HttpResponse<Blob>, fallback: string): string {
+    const cd = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+    if (!cd) return fallback;
+    const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd);
+    if (!match || !match[1]) return fallback;
+    return decodeURIComponent(match[1].replace(/['"]/g, ''));
+  }
+
+  private saveBlob(res: HttpResponse<Blob>, defaultName: string) {
+    const blob = new Blob([res.body as Blob], { type: res.body?.type || 'application/octet-stream' });
+    const fileName = this.getFilenameFromResponse(res, defaultName);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  downloadTLS2B030Excel(): void {
+    // 用與查詢相同的條件，但移除分頁
+    const payload = this.buildExportPayload();
+
+    // 預設檔名（你也可以補上日期區間）
+    const defaultName = 'TLS2B030_專櫃機台溢欠表.xlsx';
+
+    this.btnExportLoading = true;
+
+    this.tls2b030Service.exportTLS2B030Excel(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.saveBlob(res, defaultName);
+          this.messageService?.successBubble?.('Excel 產檔完成');
+        },
+        error: (err) => {
+          console.error(err);
+          this.messageService?.errorBubble?.('Excel 匯出失敗');
+        }
+      })
+      .add(() => {
+        this.btnExportLoading = false;
+      });
   }
 }

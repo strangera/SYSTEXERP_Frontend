@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,7 +14,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { tap } from 'rxjs';
-import { ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
+import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -45,18 +45,52 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  /* ENG_Type 改變時,篩選 MeterNo 選項 */
-  public readonly filteredMeterNo = computed(() => {
-    const selectedTypes = this.qf().ENG_Type.value;
-    if (!selectedTypes?.length) return this.service.engMeterNoSignal();
-    return this.service.engMeterNoSignal().filter(item =>
-      selectedTypes.some(v => v === item.ENG_Type));
-  });
+  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
+  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
+
+  public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
+
+  private suppressEngTypeEffect = !1;
 
   public readonly usrData = computed(() => ({
     SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
     Mid: Number(this.authService.currentUserValue!.mid),
   }));
+
+  /** ENG_Type 改變時,篩選 MeterNo 選項 */
+  public engTypeEffect = effect(() => {
+    const engTypes = this.engTypeSignal() ?? void 0;
+    const MeterNos = this.service.engMeterNoOptions();
+    this.logger.debug(`filteredMeterNo:`, [engTypes, MeterNos]);
+
+    if (!this.suppressEngTypeEffect) this.queryForm.patchValue({
+      ENG_MeterNo: void 0,
+      Location_No: void 0,
+    });
+
+    if (!engTypes?.length || engTypes.length === 3) return this.filteredMeterNo.set(MeterNos);
+
+    this.filteredMeterNo.set(MeterNos.filter(m => m.ENG_Type
+      && this.service.engTypeMap.get(m.ENG_Type)
+      && engTypes.includes(this.service.engTypeMap.get(m.ENG_Type)!)));
+  }, { allowSignalWrites: !0 });
+
+  /** MeterNo 改變時,帶出 Location_No 並清除 ENG_Type */
+  public readonly meterNoEffect = effect(() => {
+    const meterNo = this.meterNoSignal() ?? void 0;
+    const typeString = meterNo && this.service.engMeterNoMap().get(meterNo)?.ENG_Type || void 0;
+    const engType = typeString && this.service.engTypeMap.get(typeString);
+    if (!meterNo || !typeString || !engType) return;
+
+    const Location_No = this.service.engMeterNoMap().get(meterNo)?.Location_No;
+    Location_No && this.qf().Location_No.setValue(Location_No);
+
+    // 利用microtask避免與 ENG_Type effect 互相觸發
+    this.suppressEngTypeEffect = !0;
+    queueMicrotask(() => this.suppressEngTypeEffect = !1);
+
+    this.logger.debug(`meterNoEffect:`, [meterNo, typeString, engType, Location_No]);
+  }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.tableLoading()
@@ -96,13 +130,19 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = <ASS21010Payload>{
+      const raw = {
         ...this.queryForm.getRawValue(),
         ...this.usrData(),
       };
-      this.service.loadASS21010(payload);
 
-      this.logger.debug(`onSubmit:`, [payload]);
+      const payload = (Object.keys(raw) as (keyof typeof raw)[]).reduce<Record<string, unknown>>((acc, key) => {
+        const v = raw[key];
+        if (v !== null && v !== void 0 && v !== '' && !(Array.isArray(v) && !v.length)) acc[key] = v;
+        return acc;
+      }, {}) as unknown as ASS21010Payload;
+
+      this.logger.debug(`onSubmit:`, [raw]);
+      this.service.loadASS21010(payload);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }

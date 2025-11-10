@@ -57,7 +57,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     HOS_NoList: [null], // 倉庫代碼
     VEN_No: [''], // 廠商代號
     queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    RJM_StatusList: [null, [Validators.required]], // 驗收狀態
+    RJM_StatusList: [null], // 驗收狀態
     APPLY_USR: [''], // 申請人員
     APPLY_Date_Start: [''], // 申請日期起
     APPLY_Date_End: [''], // 申請日期迄
