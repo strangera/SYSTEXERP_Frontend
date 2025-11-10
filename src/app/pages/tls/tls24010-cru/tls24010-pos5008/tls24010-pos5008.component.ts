@@ -184,7 +184,6 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     // 獲取所有相關控制項
     const txnPayAmtControl = formGroup.get('TXN_PayAmt');
     const crdTypeControl = formGroup.get('CRD_Type');
-    const termNoControl = formGroup.get('TERM_No');
     const crdNoControl = formGroup.get('CRD_No');
     const txnPayDescControl = formGroup.get('TXN_PayDesc');
     const txnCouponNoControl = formGroup.get('TXN_CouponNo');
@@ -196,7 +195,6 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
       // 信用卡
       crdNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
       crdTypeControl?.setValidators([Validators.required]);
-      termNoControl?.setValidators([Validators.required]);
     } else if (rowData.PAY_Type === 'A') {
       // 應收付款對象
       txnPayDescControl?.setValidators([Validators.required, Validators.maxLength(100)]);
@@ -208,7 +206,6 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     // 在設置了 required 驗證器後，必須呼叫 updateValueAndValidity 讓控制項立即驗證當前的 null 值
     txnPayAmtControl?.updateValueAndValidity();
     crdTypeControl?.updateValueAndValidity();
-    termNoControl?.updateValueAndValidity();
     crdNoControl?.updateValueAndValidity();
     txnPayDescControl?.updateValueAndValidity();
     txnCouponNoControl?.updateValueAndValidity();

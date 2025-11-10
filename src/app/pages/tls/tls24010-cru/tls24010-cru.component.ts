@@ -98,7 +98,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
     TXN_GUI_CarrId: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
     TXN_GUIRemark: ['', [Validators.maxLength(4), this.validationService.alphanumericValidator]], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
-    TXN_PrintTimes: ['0'], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
+    TXN_PrintTimes: [0], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
     TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
     TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
   });
@@ -378,6 +378,33 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           TXN_Remark: this.dataForm.getRawValue().TXN_Remark,
         }
         if (this.type === FIX_TYPE.專櫃編號修正) {
+          const updatePOS5007List = this.tltnoComp?.tltIdData.map(item => {
+            const pluMagNo = item.PLU_MagNo as POS2004Item;
+            return {
+              POS5007_ID: item.ID,
+              TLT_No: item.TLT_No || '',
+              PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : pluMagNo.PLU_MagNo as string || '',
+              PLU_No: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : item.PLU_No as string || '',
+              Talent_ID: item.Talent_ID || this.talent_id || 0,
+              tlt_id: this.store_way === STORE_WAY.專櫃 ? pluMagNo.tlt_id as string : item.tlt_id as string || '',
+              PLU_TaxType: this.store_way === STORE_WAY.專櫃 ? item.PLU_TaxType : undefined,
+              TXN_DiscCode: this.store_way === STORE_WAY.專櫃 ? pluMagNo.cag_barcode as string : item.TXN_DiscCode as string || '',
+              Contract_No: this.store_way === STORE_WAY.專櫃 ? pluMagNo.Contract_No as string : item.Contract_No as string || '',
+              Contract_SubNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.Contract_SubNo as string : item.Contract_SubNo as string || ''
+            }
+          }) || [];
+          const invalidItem = updatePOS5007List.find(item => {
+            return !item.PLU_No || !item.TLT_No || !item.PLU_MagNo || !item.Contract_No || !item.Contract_SubNo;
+          });
+
+          if (invalidItem) {
+            this.messageService.errorBubble(
+              '無效的「商品編號/專過編號」或 資料尚未異動',
+              '無法修正' // Header 訊息
+            );
+            this.loading = false; // 確保 loading 狀態被關閉
+            return; // 阻止執行後續的 API 呼叫
+          }
           const data = {
             ...body,
             EditType: TLS24010_EDIT_TYPE.專櫃編號修正,
@@ -386,20 +413,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               Talent_ID: this.TLT_NoOptions.find(item => item.No === this.dataForm.getRawValue().TLT_No)?.talent_id || this.talent_id || 0,
               Contract_No: this.tltnoComp?.tltIdData[0].Contract_No || '',
               Contract_SubNo: this.tltnoComp?.tltIdData[0].Contract_SubNo || '',
-              updatePOS5007List: this.tltnoComp?.tltIdData.map(item => {
-                return {
-                  POS5007_ID: item.ID,
-                  TLT_No: item.TLT_No || '',
-                  PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : (item.PLU_MagNo as POS2004Item).PLU_MagNo as string || '',
-                  PLU_No: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : item.PLU_No as string || '',
-                  Talent_ID: item.Talent_ID || this.talent_id || 0,
-                  tlt_id: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).tlt_id as string : item.tlt_id as string || '',
-                  PLU_TaxType: this.store_way === STORE_WAY.專櫃 ? item.PLU_TaxType : undefined,
-                  TXN_DiscCode: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).cag_barcode as string : item.TXN_DiscCode as string || '',
-                  Contract_No: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).Contract_No as string : item.Contract_No as string || '',
-                  Contract_SubNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).Contract_SubNo as string : item.Contract_SubNo as string || ''
-                }
-              }) || []
+              updatePOS5007List: updatePOS5007List // 使用已檢查通過的列表
             }
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {

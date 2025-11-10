@@ -6,7 +6,7 @@ import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { STORE_WAY } from '../tls24010-cru.model';
 import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { TLS24010CRUComponent } from '../tls24010-cru.component';
-import { IDropdownItem, POS2004Item } from '@service/utility/dropDownList.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 
 @UntilDestroy()
 @Component({
