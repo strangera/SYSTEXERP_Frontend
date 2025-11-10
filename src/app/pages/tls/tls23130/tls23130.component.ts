@@ -80,10 +80,7 @@ groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd:   [this.yesterday, [Validators.required]],
     // 單選：string（必填）
-    BNK_No: this.formBuilder.control<string>('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
+    BNK_No: [],
     tlt_building: [],
     tlt_floor:    [],
     org_id:       [],
@@ -162,11 +159,6 @@ groupSubtotals: Record<string, Record<string, number>> = {};  // ⬅️ 新增
       )
       .subscribe(opts => {
         this.cardTypeOptions = opts;
-        if (opts.length > 0) {
-          const ctrl = this.queryForm.get('BNK_No') as FormControl<string>;
-          ctrl.setValue(opts[0].value);
-          ctrl.updateValueAndValidity({ onlySelf: true });
-        }
       });
   }
 
@@ -473,4 +465,5 @@ private toDateOnly(x: any): string | undefined {
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
 }
+
 }
