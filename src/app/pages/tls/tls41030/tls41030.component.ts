@@ -93,7 +93,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
     { field: 'USR_No', header: '收銀員編號', visible: true },
     { field: 'USR_Name', header: '收銀員姓名', visible: true },
     { field: 'USR_Passwd', header: '密碼', visible: true },
-    { field: 'USR_Level', header: '收銀鍵盤等級', visible: true },
+    // { field: 'USR_Level', header: '收銀鍵盤等級', visible: true },
     { field: 'USR_Auth', header: '收銀員授權等級', visible: true },
     {
       field: 'USR_JobStatus', header: '收銀員在職狀態', visible: true,
@@ -107,8 +107,8 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
       field: 'USR_RegType', header: '收銀員區分', visible: true,
       format: (value: string) => this.regTypeOption.find((option) => option.value === value)?.label || value
     },
-    { field: 'USR_TLT_No', header: '所屬專櫃編號', visible: true },
-    { field: 'USR_TLT_Name', header: '所屬專櫃名稱', visible: true },
+    { field: 'USR_TLT_No', header: '專櫃編號', visible: true },
+    { field: 'USR_TLT_Name', header: '櫃位名稱', visible: true },
     { field: 'USR_OnJobDate', header: '到職日', visible: true, format: formatDate },
     { field: 'USR_QuitDate', header: '離職日', visible: true, format: formatDate },
 
@@ -269,7 +269,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
             Name: item.Name,
             Label: item.No + '-' + item.Name,
           }));
-  
+
           console.log('專櫃主檔:', this.TLTOption);
         });
     }
