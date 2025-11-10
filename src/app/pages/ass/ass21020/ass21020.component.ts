@@ -98,6 +98,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const Location_No = this.service.engMeterNoMap().get(meterNo)?.Location_No;
     Location_No && this.qf().Location_No.setValue(Location_No);
 
+    // 利用microtask避免與 ENG_Type effect 互相觸發
     this.suppressEngTypeEffect = !0;
     queueMicrotask(() => this.suppressEngTypeEffect = !1);
 
