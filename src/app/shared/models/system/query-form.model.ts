@@ -84,11 +84,22 @@ export const getCurrentPeriodCode = (() => {
   return periodCode;
 })();
 
-// 自動當天00:00:00
-export const todayStart = (() => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+/**
+ * 通用函式：取得指定日期的「自訂時間」Date 物件
+ * 預設為「當日開始」00:00:00.000
+ */
+export const getDateTime = (() => {
+  return (
+    date = new Date(),
+    hours = 0,
+    minutes = 0,
+    seconds = 0,
+    milliseconds = 0
+  ): Date => {
+    const d = new Date(date);
+    d.setHours(hours, minutes, seconds, milliseconds);
+    return d;
+  };
 })();
 
 /**
@@ -97,7 +108,7 @@ export const todayStart = (() => {
 */
 export const toHHmm = (date: Date | null | undefined): string => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
-  return date.toTimeString().slice(0, 5); // "14:32"
+  return date.toTimeString().slice(0, 5);
 };
 
 /** 將數值或字串轉換為 6 位數的交易編號字串，前面補零 */
