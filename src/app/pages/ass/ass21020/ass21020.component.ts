@@ -44,7 +44,7 @@ import { ASS21020Data, ASS21020Query, TLTByFlag } from './ass21020.model';
 export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    ENG_Type: new FormControl<EngType[]>([]),
+    ENG_Type: new FormControl<EngType[] | void>(void 0),
     ENG_MeterNo: new FormControl<string | void>(void 0),
     TLT_No: new FormControl<string | void>(void 0),
     Location_No: new FormControl<string>(''),
@@ -55,59 +55,68 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
+  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
   public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
 
-  /* ENG_Type 改變時,篩選 MeterNo 選項 */
-  public filteredMeterNo = computed<ASS2100ENGMeterType[]>(() => {
-    const selectedTypes = this.qf().ENG_Type.value;
-    if (!selectedTypes?.length) return this.service.engMeterNoData();
-    return this.service.engMeterNoData().filter(item =>
-      selectedTypes.some(v => v === item.ENG_Type));
-  });
+  private suppressEngTypeEffect = !1;
 
-  /* MeterNo 改變時,帶出 Location_No、ENG_Type */
+  public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
+
+  private readonly usrData = computed(() => ({
+    SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+    Mid: Number(this.authService.currentUserValue!.mid),
+  }));
+
+  /** ENG_Type 改變時,篩選 MeterNo 選項 */
+  public engTypeEffect = effect(() => {
+    const engTypes = this.engTypeSignal() ?? void 0;
+    const MeterNos = this.service.engMeterNoOptions();
+    this.logger.debug(`filteredMeterNo:`, [engTypes, MeterNos]);
+
+    if (!this.suppressEngTypeEffect) this.queryForm.patchValue({
+      ENG_MeterNo: void 0,
+      Location_No: void 0,
+    });
+
+    if (!engTypes?.length || engTypes.length === 3) return this.filteredMeterNo.set(MeterNos);
+
+    this.filteredMeterNo.set(MeterNos.filter(m => m.ENG_Type
+      && this.service.engTypeMap.get(m.ENG_Type)
+      && engTypes.includes(this.service.engTypeMap.get(m.ENG_Type)!)));
+  }, { allowSignalWrites: !0 });
+
+  /** MeterNo 改變時,帶出 Location_No 並清除 ENG_Type */
   public readonly meterNoEffect = effect(() => {
-    const meterNo = this.meterNoSignal();
+    const meterNo = this.meterNoSignal() ?? void 0;
+    const typeString = meterNo && this.service.engMeterNoMap().get(meterNo)?.ENG_Type || void 0;
+    const engType = typeString && this.service.engTypeMap.get(typeString);
+    if (!meterNo || !typeString || !engType) return;
 
-    if (!meterNo) {
-      this.queryForm.patchValue({
-        Location_No: '',
-        TLT_No: void 0,
-        TLT_Name: '',
-        NET_SPACE: void 0,
-        ENG_Rate: void 0,
-      }, { emitEvent: !1 });
-      this.service.tltNoData.set([]);
-      return;
-    }
+    const Location_No = this.service.engMeterNoMap().get(meterNo)?.Location_No;
+    Location_No && this.qf().Location_No.setValue(Location_No);
 
-    const metro = this.service.engMeterNoMap().get(meterNo);
-    if (!metro) return;
+    this.suppressEngTypeEffect = !0;
+    this.qf().ENG_Type.setValue(void 0);
+    queueMicrotask(() => this.suppressEngTypeEffect = !1);
 
-    const ENG_Type: EngType = this.service.engTypeOptions.find(({ label }) => label === metro.ENG_Type)?.value;
-    if (!ENG_Type) return;
-
-    this.queryForm.patchValue({
-      Location_No: metro.Location_No,
-      ENG_Type: this.qf().ENG_Type.value?.length ? this.qf().ENG_Type.value : [ENG_Type],
-    }, { emitEvent: !1 });
-
-    this.service.getTltByFlags(meterNo, +this.user!.mid);
+    this.logger.debug(`meterNoEffect:`, [meterNo, typeString, engType, Location_No]);
   }, { allowSignalWrites: !0 });
 
   /** TLT_No 改變時，帶出TLT_Name、NET_SPACE */
   public readonly tltNoEffect = effect(() => {
-    const tltNo = this.tltNoSignal();
-    if (!tltNo?.length) return;
-    const selected = this.service.tltByFlagMap().get(tltNo);
-    if (!selected) return;
+    const tltNo = this.tltNoSignal() ?? void 0;
+    const tltByFlag = tltNo?.length && this.service.tltByFlagMap().get(tltNo) || void 0;
+    this.logger.debug(`tltNoEffect:`, [tltNo, tltByFlag]);
+    if (!tltByFlag) return;
+
     this.queryForm.patchValue({
-      TLT_Name: selected.TLT_Name,
-      NET_SPACE: String(selected.NET_SPACE),
-    });
+      TLT_No: tltByFlag.TLT_No,
+      TLT_Name: tltByFlag.TLT_Name,
+      NET_SPACE: tltByFlag.NET_SPACE ? String(tltByFlag.NET_SPACE) : void 0
+    }, { emitEvent: !1 });
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
@@ -162,24 +171,16 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const { Location_No, NET_SPACE, ...rest } = this.queryForm.getRawValue();
-
-      const raw: ASS21020Query = {
-        EngTypes: (rest.ENG_Type || []).join(),
-        ENG_MeterNo: rest.ENG_MeterNo ?? void 0,
-        TLT_No: rest.TLT_No ?? void 0,
-        ENG_Rate: rest.ENG_Rate ?? void 0,
-        Mid: Number(this.user!.mid),
-        SYS_StoreNo: this.user!.SYS_StoreNo,
-        PageIndex: rest.pageIndex ?? void 0,
-        PageSize: rest.pageSize ?? void 0,
-        SortBy: rest.SortBy!,
+      const raw = {
+        ...rest,
+        ...this.usrData(),
       };
 
-      const payload = Object.keys(raw).reduce((acc, key) => {
-        const v = raw[key as keyof typeof raw];
-        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
+      const payload = (Object.keys(raw) as (keyof typeof raw)[]).reduce<Record<string, unknown>>((acc, key) => {
+        const v = raw[key];
+        if (v !== null && v !== void 0 && v !== '' && !(Array.isArray(v) && !v.length)) acc[key] = v;
         return acc;
-      }, {} as any);
+      }, {}) as ASS21020Query;
 
       this.logger.debug(`onSubmit:`, [payload]);
       this.service.loadASS21020(payload).subscribe();

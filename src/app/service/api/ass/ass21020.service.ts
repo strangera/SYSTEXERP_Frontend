@@ -14,8 +14,6 @@ const apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2000';
 export class ASS21020Service {
 
   public readonly ASS21020Data = signal<ASS21020Data[]>([]);
-  public readonly engMeterNoData = signal<ASS2100ENGMeterType[]>([]);
-  public readonly tltNoData = signal<TLTByFlag[]>([]);
 
   /** 能源類型下拉選單 */
   public readonly engTypeOptions: Option[] = [
@@ -23,6 +21,8 @@ export class ASS21020Service {
     { value: EngType.電, label: '電錶' },
     { value: EngType.瓦斯, label: '瓦斯錶' },
   ];
+  public readonly engMeterNoOptions = signal<ASS2100ENGMeterType[]>([]);
+  public readonly tltNoOptions = signal<TLTByFlag[]>([]);
 
   /** 能源類型對應表 */
   public readonly engTypeMap = new Map<string, EngType>([
@@ -35,11 +35,11 @@ export class ASS21020Service {
   ]);
   /** 錶號應表 */
   public readonly engMeterNoMap = computed(() =>
-    new Map(this.engMeterNoData().map(item => [item.ENG_MeterNo, item]))
+    new Map(this.engMeterNoOptions().map(item => [item.ENG_MeterNo, item]))
   );
   /** 專櫃編號應表 */
   public readonly tltByFlagMap = computed(() =>
-    new Map(this.tltNoData().map(item => [item.TLT_No, item]))
+    new Map(this.tltNoOptions().map(item => [item.TLT_No, item]))
   );
 
   public readonly tableLoading = signal<boolean>(!1);
@@ -87,7 +87,7 @@ export class ASS21020Service {
     this.engMeterNoLoading.set(!0);
     this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${environment.ApiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, {}).pipe(
       take(1),
-      tap(res => this.engMeterNoData.set(res.Data)),
+      tap(res => this.engMeterNoOptions.set(res.Data)),
       tap(res => this.logger.debug(`查詢EngMeterNo結果:`, [res])),
       finalize(() => this.engMeterNoLoading.set(!1))
     ).subscribe();
@@ -97,7 +97,7 @@ export class ASS21020Service {
     this.tltByFlagLoading.set(!0);
     this.http.post<BaseQueryResponse<TLTByFlag>>(`${environment.ApiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID, ENG_MeterNo }).pipe(
       take(1),
-      tap(res => this.tltNoData.set(res.Data)),
+      tap(res => this.tltNoOptions.set(res.Data)),
       tap(res => this.logger.debug(`查詢TltByFlag參數:`, [res])),
       finalize(() => this.tltByFlagLoading.set(!1))
     ).subscribe();

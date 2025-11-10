@@ -28,38 +28,38 @@ export class SystemDataService {
   public readonly sys1000 = this._sys1000.asObservable(); // 使用 public readonly
 
   constructor(private readonly http: HttpClient) {
-    // 初始化時從 sessionStorage 載入資料
+    // 初始化時從 localStorage 載入資料
     this.initializeFromSessionStorage();
   }
 
   /**
-   * 初始化：從 sessionStorage 載入資料以在服務啟動時同步還原狀態。
+   * 初始化：從 localStorage 載入資料以在服務啟動時同步還原狀態。
    */
   private initializeFromSessionStorage(): void {
-    const storedFunRightsInfo = sessionStorage.getItem('FunRightsInfo');
+    const storedFunRightsInfo = localStorage.getItem('FunRightsInfo');
     if (storedFunRightsInfo) {
       // 避免在運行時解析失敗導致應用程式崩潰，使用 try-catch 包裹 JSON.parse
       try {
         this._menuUpdated.next(JSON.parse(storedFunRightsInfo) as FunsrightInfo[]);
       } catch (e) {
-        console.error('Error parsing FunRightsInfo from sessionStorage during initialization', e);
-        sessionStorage.removeItem('FunRightsInfo'); // 清除無效數據
+        console.error('Error parsing FunRightsInfo from localStorage during initialization', e);
+        localStorage.removeItem('FunRightsInfo'); // 清除無效數據
       }
     }
-    const storedSys1000 = sessionStorage.getItem('SYS1000');
+    const storedSys1000 = localStorage.getItem('SYS1000');
     if (storedSys1000) {
       try {
         this._sys1000.next(JSON.parse(storedSys1000) as unknown[]);
       } catch (e) {
-        console.error('Error parsing SYS1000 from sessionStorage during initialization', e);
-        sessionStorage.removeItem('SYS1000'); // 清除無效數據
+        console.error('Error parsing SYS1000 from localStorage during initialization', e);
+        localStorage.removeItem('SYS1000'); // 清除無效數據
       }
     }
   }
 
   /**
    * 獲取使用者權限/選單資料
-   * 最佳實踐：使用 tap 處理副作用 (sessionStorage 儲存)。
+   * 最佳實踐：使用 tap 處理副作用 (localStorage 儲存)。
    * 最佳實踐：考慮使用 shareReplay(1) 避免重複呼叫 API。
    * @returns 包含權限資訊的 API 響應 Observable
    */
@@ -67,8 +67,8 @@ export class SystemDataService {
     return this.http.post<ApiResponse<string>>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
       tap((response: ApiResponse<any>) => {
         if (response.Status === '0000' && response.Data?.funright_info) {
-          // 1. 將資料儲存到 sessionStorage
-          sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
+          // 1. 將資料儲存到 localStorage
+          localStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
           // 2. 更新 BehaviorSubject
           this._menuUpdated.next(response.Data.funright_info);
         }
@@ -92,8 +92,8 @@ export class SystemDataService {
     return this.http.post<ApiResponse<unknown[]>>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
       tap((response: ApiResponse<unknown[]>) => {
         if (response.Status === '0000' && response.Data) {
-          // 1. 將資料儲存到 sessionStorage
-          sessionStorage.setItem('SYS1000', JSON.stringify(response.Data));
+          // 1. 將資料儲存到 localStorage
+          localStorage.setItem('SYS1000', JSON.stringify(response.Data));
           // 2. 更新 BehaviorSubject
           this._sys1000.next(response.Data);
         }
