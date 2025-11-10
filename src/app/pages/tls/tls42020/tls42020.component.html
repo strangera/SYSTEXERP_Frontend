@@ -16,14 +16,10 @@
           <app-multi-select class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="tltNo"
             [options]="tltNoOptions" [control]="queryForm.controls.tltNo" [submitted]="submitted" optionLabel="label"
             optionValue="value"></app-multi-select>
-          <!-- 有效起始日期 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.SBM_BegDate_s" [endControl]="queryForm.controls.SBM_BegDate_e"
-            [submitted]="submitted"></app-calendar-range>
-          <!-- 有效結束日期 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.SBM_EndDate_s" [endControl]="queryForm.controls.SBM_EndDate_e"
-            [submitted]="submitted"></app-calendar-range>
+          <app-calendar class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateOne"
+            [control]="queryForm.controls.SBM_BegDate" [submitted]="submitted"></app-calendar>
+          <app-calendar class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateOne"
+            [control]="queryForm.controls.SBM_EndDate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>

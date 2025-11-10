@@ -10,7 +10,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
@@ -18,6 +17,7 @@ import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls42020',
@@ -31,22 +31,20 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
     FormsModule,
     ReactiveFormsModule,
     MultiSelectComponent,
-    CalendarRangeComponent,
     TableComponent,
     TranslateModule,
     DialogComponent,
     FileUploadComponent,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    CalendarComponent
   ]
 })
 export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> implements OnInit {
   queryForm = this.fb.group({
     menuType: [null],                               // 菜單類別(多選)
     tltNo: [null],                                  // 專櫃編號(多選)
-    SBM_BegDate_s: [null, Validators.required],  // 開始日期(起)
-    SBM_BegDate_e: [null, Validators.required],  // 開始日期(迄)
-    SBM_EndDate_s: [null, Validators.required],  // 結束日期(起)
-    SBM_EndDate_e: [null, Validators.required],  // 結束日期(迄)
+    SBM_BegDate: [null, Validators.required],  // 開始日期(起)
+    SBM_EndDate: [null, Validators.required],  // 結束日期(起)
     ...createPaginationConfig([{ field: "TLT_No", order: 0 }])
   });
 
