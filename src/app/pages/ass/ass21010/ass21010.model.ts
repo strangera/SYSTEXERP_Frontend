@@ -48,7 +48,7 @@ export interface ASS2100ENGMeterType {
   AREA_DESC: string;
   Draw_X: string;
   Draw_Y: string;
-  ENG_Type: EngType;
+  ENG_Type: keyof typeof EngType;
 }
 
 export enum EngType {

@@ -21,6 +21,7 @@
                             [options]="service.engTypeOptions"
                             optionLabel="label"
                             optionValue="value"
+                            [loading]="service.engMeterNoLoading()"
                             [control]="qf().ENG_Type"
                             [submitted]="submitted"></app-multi-select>
           <app-dropdown class="col-12 md:col-6 lg:col-4"
@@ -35,7 +36,7 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="設備位置編號"
                         controlName="Location_No"
-                        [options]="service.locationSignal()"
+                        [options]="service.locationOptions()"
                         optionLabel="Name"
                         optionValue="No"
                         [control]="qf().Location_No"
