@@ -1,16 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { TLS41010Item } from './tls41010.model';
-import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, TLS41010Data, typeOptions } from './tls41010.model';
+import { columns, TLS41010Data } from './tls41010.model';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { HttpClient } from '@angular/common/http';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
@@ -21,7 +17,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { QueryTLS41010Request } from '../../../service/api/tls/tls41010.service';
@@ -30,6 +25,7 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
 import { Tls46010Service } from '@service/api/tls/tls46010.service';
 import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-tls41010',
@@ -44,7 +40,6 @@ import { apiOption } from '../../../shared/models/sys/sysb000.model';
     InputTextComponent,
     CalendarRangeComponent,
     DropdownComponent,
-    MultiSelectComponent,
     TranslateModule,
     DialogComponent,
     NgIf,
@@ -79,11 +74,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
-  statusOptions = statusOptions;
-  typeOptions = typeOptions;
-  guiTypeOptions = guiTypeOptions;
-  salTypeOptions = salTypeOptions;
-  sernoTypeOptions = sernoTypeOptions;
+  statusOptions = getSYS1000Options('ECR_Status');
+  typeOptions = getSYS1000Options('ECR_Type');
+  guiTypeOptions = getSYS1000Options('ECR_GUI_Type');
+  salTypeOptions = getSYS1000Options('ECR_SAL_Type');
   data: TLS41010Data[] = [];
   selectedItems: TLS41010Data[] = [];
   totalRecords = 0;
@@ -118,14 +112,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   constructor(
     public tls41010Service: TLS41010Service,
-    private locationOptionsService: LocationOptionsService,
-    private tls46020Service: TLS46020Service,
     private tls46010Service: Tls46010Service,
     private tls11010Service: Tls11010Service,
     private dropDownListService: DropDownListService,
     private counterNameService: CounterNameService,
-    private Router: Router,
-    private http: HttpClient,
     private tls14030Service: Tls14030Service,
   ) {
     super();
