@@ -1,5 +1,6 @@
 import { FareItem } from './../../tls13010/tls13010.model';
 import { Injectable } from '@angular/core';
+import { FareDefaultsService } from './fare-defaults.service';
 
 /**
  * 扣款資料管理服務
@@ -10,14 +11,25 @@ import { Injectable } from '@angular/core';
 })
 export class FareDataService {
 
+  constructor(private fareDefaultsService: FareDefaultsService) { }
+
   /**
-   * 處理 API 資料，設定正確的初始狀態
+   * 處理 API 資料，設定正確的初始狀態並套用預設值
+   * @param faresByType API 回傳的扣款資料
+   * @param isNewContract 是否為新增合約模式
+   * @param contractInfo 合約資訊(用於預設值)
+   * @param totalLocationSpace 總坪數(用於預設值)
    */
-  processAPIData(faresByType: any, isNewContract: boolean = false): Record<string, FareItem[]> {
+  processAPIData(
+    faresByType: any,
+    isNewContract: boolean = false,
+    contractInfo?: any,
+    totalLocationSpace?: number
+  ): Record<string, FareItem[]> {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('📄 處理 API 資料，設定正確的初始狀態...');
+    console.log('📄 處理 API 資料，設定正確的初始狀態並套用預設值...');
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {
@@ -59,6 +71,13 @@ export class FareDataService {
             _originalData: { ...item }
           };
 
+          // 🔥 新增：在 API 資料處理時就套用預設值
+          // 只對非合約原有項目或未選擇的項目套用預設值
+          if (this.fareDefaultsService.needsDefaults(processedItem)) {
+            this.fareDefaultsService.applyDefaults(processedItem, contractInfo, totalLocationSpace);
+            console.log(`✨ ${processedItem.cap_item} 套用預設值`);
+          }
+
           return processedItem;
         });
 
@@ -71,12 +90,19 @@ export class FareDataService {
 
   /**
    * 處理新增模式的 API 資料
+   * @param faresByType API 回傳的扣款資料
+   * @param contractInfo 合約資訊
+   * @param totalLocationSpace 總坪數
    */
-  processNewContractAPIData(faresByType: any): Record<string, FareItem[]> {
+  processNewContractAPIData(
+    faresByType: any,
+    contractInfo?: any,
+    totalLocationSpace?: number
+  ): Record<string, FareItem[]> {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log(' 處理新增模式 API 資料...');
+    console.log('📝 處理新增模式 API 資料...');
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {
@@ -92,6 +118,9 @@ export class FareDataService {
             _originalData: { ...item }
           } as FareItem;
 
+          // 🔥 新增：套用預設值
+          this.fareDefaultsService.applyDefaults(processedItem, contractInfo, totalLocationSpace);
+
           return processedItem;
         });
       }
@@ -102,8 +131,15 @@ export class FareDataService {
 
   /**
    * 驗證和修復暫存資料
+   * @param data 暫存資料
+   * @param contractInfo 合約資訊
+   * @param totalLocationSpace 總坪數
    */
-  validateAndFixData(data: any): Record<string, FareItem[]> {
+  validateAndFixData(
+    data: any,
+    contractInfo?: any,
+    totalLocationSpace?: number
+  ): Record<string, FareItem[]> {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const validatedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
@@ -133,6 +169,12 @@ export class FareDataService {
             _originalSelected: item._originalSelected,
             _originalData: item._originalData || { ...item }
           };
+
+          // 🔥 新增：補充缺少的預設值
+          if (this.fareDefaultsService.needsDefaults(validatedItem)) {
+            this.fareDefaultsService.applyDefaults(validatedItem, contractInfo, totalLocationSpace);
+            console.log(`✨ 暫存資料 ${validatedItem.cap_item} 補充預設值`);
+          }
 
           validatedData[item.cap_type].push(validatedItem);
         }
@@ -302,9 +344,46 @@ export class FareDataService {
   }
 
   /**
+  * 根據每個類型獨立的顯示模式過濾資料（支援每個群組獨立模式）
+  * @param originalData 原始資料
+  * @param showModeByType 每個類型的顯示模式 { 'A': 'common', 'B': 'all', ... }
+  */
+  filterDataByModePerType(
+    originalData: Record<string, FareItem[]>,
+    showModeByType: Record<string, 'common' | 'all'>
+  ): Record<string, FareItem[]> {
+    const filteredData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
+
+    Object.keys(originalData).forEach(capType => {
+      if (!Array.isArray(originalData[capType])) {
+        originalData[capType] = [];
+      }
+
+      let filteredItems = [...originalData[capType]];
+      const mode = showModeByType[capType] || 'common'; // 預設為 common
+
+      if (mode === 'common') {
+        // 常用模式：合約項目 + 常用項目 + 已勾選項目
+        filteredItems = filteredItems.filter(item =>
+          item.data_source === 'CONTRACT_EXISTING' ||
+          item.is_commonly_used === 'Y' ||
+          item.is_selected === true
+        );
+      }
+      // 全部模式：顯示所有項目
+
+      filteredData[capType] = filteredItems;
+    });
+
+    return filteredData;
+  }
+
+  /**
+   * @deprecated 此方法已棄用，請改用 FareDefaultsService.applyDefaults()
    * 套用動態預設值
    */
   applyDynamicDefaults(item: any, contractInfoData: any[]): void {
+    console.warn('⚠️ applyDynamicDefaults 已棄用，請改用 FareDefaultsService');
     const contractInfo = contractInfoData[0];
 
     if (!item.tpy_bdate && contractInfo?.tlt_contract_bdate) {
