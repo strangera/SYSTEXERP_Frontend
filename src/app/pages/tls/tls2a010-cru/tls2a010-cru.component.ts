@@ -11,7 +11,9 @@ import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate, formatDateTime, formatDateToYYYY_MM_DD, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 @Component({
   selector: 'app-tls2a010-cru',
   templateUrl: './tls2a010-cru.component.html',
@@ -30,6 +32,8 @@ import { formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table
 })
 export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   @ViewChild(TableEditComponent) tableEdit!: TableEditComponent;
+  paymentToolOptions: any[] = []; // 全部付款方式下拉清單
+  payNoMap: Record<string, string> = {}; // 對照表: No -> Name
 
   dataForm = this.formBuilder.nonNullable.group({
     ID: [''],
@@ -80,13 +84,18 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       field: 'TXN_Date',
       header: '日期',
       textAlign: 'center',
-      format: formatDateToYYYY_MM_DD
+      format: formatDate
     },
     { field: 'ECR_No', header: '收銀機代號', textAlign: 'center', type: undefined },
     { field: 'TXN_No', header: '交易序號', textAlign: 'center', type: undefined },
     { field: 'TLT_No', header: '專櫃編號', textAlign: 'center', type: undefined },
     { field: 'tlt_name', header: '櫃位名稱', textAlign: 'center', type: undefined },
-    { field: 'PAY_NO', header: '付款方式', textAlign: 'center', type: undefined },
+    {
+      field: 'PAY_NO',
+      header: '付款方式',
+      textAlign: 'center',
+      format: (_: any, __?: number, row?: any) => this.payNoMap[row?.PAY_NO] || row?.PAY_NO || '',
+    },
     { field: 'CRD_No', header: '付款卡號', textAlign: 'center', type: undefined },
     { field: 'TXN_PayAmt', header: '付款金額', textAlign: 'right', type: undefined, format: formatAmount },
     {
@@ -124,6 +133,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private tls2a010Service: Tls2a010Service,
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -131,16 +141,48 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS2A010', this.dataForm);
 
-    const nav = history.state as any;
-    if (nav?.rowdata) {
-      const row = nav.rowdata;
-      this.PAY_Type = row.PAY_Type || '';
-      this.ID = row.ID || '';
-      this.loadAllData();
+    // 載入付款方式清單
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'FIN_PAY_Type' })
+      .pipe(untilDestroyed(this))
+      .subscribe(sysRes => {
+        const sysOptions = sysRes.Data.map(item => ({
+          label: `${item.No ?? ''}-${item.Name ?? ''}`,
+          value: item.No,
+          Name: item.Name,
+          No: item.No
+        }));
 
-    }
+        this.dropDownListService.queryPOS1006_DropDownList()
+          .pipe(untilDestroyed(this))
+          .subscribe(posRes => {
+            const payNoToTypeMap = new Map<string, string>();
+            posRes.Data.forEach(x => {
+              payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
+            });
+
+            this.paymentToolOptions = sysOptions.map(opt => ({
+              ...opt,
+              PAY_Type: payNoToTypeMap.get(opt.No) ?? ''
+            }));
+
+            this.payNoMap = this.paymentToolOptions.reduce((acc, cur) => {
+              acc[cur.No] = cur.Name;
+              return acc;
+            }, {} as Record<string, string>);
+
+            const nav = history.state as any;
+            if (nav?.rowdata) {
+              const row = nav.rowdata;
+              this.PAY_Type = row.PAY_Type || '';
+              this.ID = row.ID || '';
+              this.loadAllData();
+            }
+          });
+      });
+
     this.crudstatus = CRUDStatus.Edit;
   }
+
 
   /** 載入資料 */
   loadAllData(): void {
