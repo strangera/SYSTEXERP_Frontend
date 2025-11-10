@@ -7,7 +7,6 @@ import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { statusOptions, statusOptionsForCRU, } from './tls41010-cru.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -168,11 +167,6 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   CashierOptions: IDropdownItem[] = [];
   LocOptions: IDropdownItem[] = [];
   tmplDetailList: any[] = [];
-
-  // 根據表單狀態動態返回狀態選項
-  get currentStatusOptions() {
-    return (this.isFormCreateable || this.isFormEditable) ? statusOptionsForCRU : statusOptions;
-  }
 
   constructor(
     public override formBuilder: FormBuilder,
