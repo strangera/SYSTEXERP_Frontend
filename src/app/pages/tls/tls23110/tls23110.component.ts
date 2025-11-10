@@ -264,7 +264,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     for (const key of this.DISCOUNT_KEYS) {
       const label = this.labelMap[key] ?? key;
       cols.push(
-        { field: `${key}_TXN_Net`, header: `${label}-未稅`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+        { field: `${key}_TXN_Net`, header: `${label}-免稅`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
         { field: `${key}_TXN_Tax`, header: `${label}-稅額`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
         { field: `${key}_Total`, header: `${label}-合計`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       );
