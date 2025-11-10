@@ -288,8 +288,8 @@ export interface CleanMetadata {
 // ========== 3. 保留原有的前端邏輯介面（基本不變） ==========
 
 export interface ContractDataStructure {
-  contractId: string | null;
-  queryRowData: ContractInfo | null;
+  contractId: string | number | null;
+  queryRowData: ContractRequest | null;
   step1: ContractInfo | null;
   step2: FareItem[];
   step3: CommissionItem[];
@@ -306,6 +306,16 @@ export interface ContractDataStructure {
     _loadedFromAPI: boolean;
   };
 }
+
+export interface ContractRequest {
+  talent_id: string;
+
+  apply_no: string;
+
+  tlt_term_type: string;
+  _isNewContract?: boolean;
+}
+
 
 export interface ContractInfo {
   [key: string]: any;
@@ -430,7 +440,7 @@ export interface LocationItem {
 export interface FareItem {
   id?: string | number;
   serialNumber?: number;
-  talent_id: number;
+  talent_id: string;
   cap_type: string;
   cap_item: string;
   cap_name: string;
@@ -1408,7 +1418,7 @@ export interface TalentChargeApiData {
 
 export interface ChargeSettingApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string;
@@ -1427,7 +1437,7 @@ export interface ChargeSettingApiItem {
 
 export interface ChargeDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_barcode: string;
   tlt_bdate: string;
@@ -1438,7 +1448,7 @@ export interface ChargeDetailApiItem {
 
 export interface YearChargeDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_bdate: string;
   tlt_edate: string;
@@ -1449,7 +1459,7 @@ export interface YearChargeDetailApiItem {
 export interface LevelChargeDetailApiItem {
   id: number;
   charged_id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   seq_no: number;
   cag_barcode: string;
@@ -1470,7 +1480,7 @@ export interface RentSettingApiData {
 
 export interface CommissionMasterApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string;
@@ -1486,7 +1496,7 @@ export interface CommissionMasterApiItem {
 
 export interface RentDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1495,7 +1505,7 @@ export interface RentDetailApiItem {
 
 export interface LimitDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1505,7 +1515,7 @@ export interface LimitDetailApiItem {
 
 export interface LevelDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;
@@ -1517,7 +1527,7 @@ export interface LevelDetailApiItem {
 
 export interface BottomTierDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;
@@ -1538,7 +1548,7 @@ export interface CommissionDataStructure {
 
 export interface CommissionMaster {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string;
@@ -1554,7 +1564,7 @@ export interface CommissionMaster {
 
 export interface ChargedDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_barcode: string;
   tlt_bdate: string;
@@ -1564,7 +1574,7 @@ export interface ChargedDetail {
 
 export interface RentDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1573,7 +1583,7 @@ export interface RentDetail {
 
 export interface LimitDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1583,7 +1593,7 @@ export interface LimitDetail {
 
 export interface LevelDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;
