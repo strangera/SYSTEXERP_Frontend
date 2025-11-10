@@ -1,6 +1,7 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
-import { Subject, takeUntil, timer } from 'rxjs';
+import { Subject, combineLatest, timer } from 'rxjs';
+import { takeUntil, filter } from 'rxjs/operators';
 import { FormGroup } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -75,14 +76,20 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.severity === undefined) this.severity = config.severity as 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null | undefined;
     this.type = config.type as 'button' | 'submit' | 'reset';
 
-    this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
-      if (config.permissionCode && progNo) {
-        const funInfo = this.systemDataService.getUserPermissions(progNo);
-        const hasPermission = funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === config.permissionCode);
-        this.disabled = !hasPermission; // 如果沒有權限，則禁用按鈕
-      } else {
-        if (this.disabled === undefined) this.disabled = config.disabled; // 如果沒有權限代碼或程式編號，則使用預設的禁用狀態
+    combineLatest([
+      this.systemDataService.menuUpdated.pipe(filter(menu => menu && menu.length > 0)),
+      this.currentPageService.currentPageProgNo$.pipe(filter(progNo => !!progNo))
+    ])
+    .pipe(takeUntil(this.ngUnsubscribe))
+    .subscribe(([menu, progNo]) => {
+      if (config.permissionCode) {
+        const funInfo = this.systemDataService.getUserPermissions(progNo!);
+        const hasPermission = funInfo?.PrivilegeBehavior?.some(b => b.function_code === config.permissionCode);
+        this.disabled = !hasPermission;
+      } else if (this.disabled === undefined) {
+        this.disabled = config.disabled;
       }
+      this.cdr.detectChanges(); // 確保 OnPush 變更檢測更新
     });
   }
 

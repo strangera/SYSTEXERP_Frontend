@@ -883,7 +883,7 @@ public queryTLS23020SummaryForReport = (body: any) =>
       isTotal: true,
       isSubTotal: true,
     },
-
+ { field: 'tlt_id', header: '抽成別代號', visible: true },
     { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
     { field: 'PRM_TXN_DiscName', header: '原折扣', visible: true },
     { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },

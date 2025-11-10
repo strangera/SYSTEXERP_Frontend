@@ -236,9 +236,7 @@
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -249,14 +247,14 @@
 
 <div class="card">
   <div class="col-12">
-    <!-- ✅ 明細（app-table-report + 展開） -->
+    <!-- ✅ 明細：以 TXN_No 作為唯一鍵 -->
     <app-table-report
       *ngIf="!queryForm.get('showSummary')?.value"
       tableKey="TLS23010"
       [lastQueryBody]="historyRequestBody"
       [data]="data"
       [columns]="columns"
-      [dataKey]="'id'"
+      [dataKey]="'TXN_No'"
       [totalRecords]="totalRecords"
       [showDelete]="false"
       [showManage]="false"
@@ -268,7 +266,6 @@
       groupRowsBy="tlt_no"
     >
       <header>
-        <!-- 跟 TLS23020 一致：左勾選、右匯出 -->
         <div class="flex justify-content-between align-items-center w-full">
           <div class="flex align-items-center">
             <p-checkbox
@@ -302,7 +299,7 @@
       </header>
     </app-table-report>
 
-    <!-- ✅ 彙總（app-table-report；以 30 筆分頁切片） -->
+    <!-- ✅ 彙總 -->
     <app-table-report
       *ngIf="queryForm.get('showSummary')?.value"
       tableKey="TLS23010summary"
@@ -353,7 +350,7 @@
 </div>
 
 <div
-  *ngIf="pdfSummary?.length"
+  *ngIf="pdfSummary.length"
   class="mt-4 border-t pt-3 text-sm text-red-700 font-medium"
 >
   <div *ngFor="let line of pdfSummary">{{ line }}</div>

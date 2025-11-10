@@ -52,7 +52,8 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   lastQueryBody: any = {};
   queryFunction: (body: any) => Observable<any>;
-
+  btnLoading1 = false;
+  btnLoading2 = false;
   constructor(
     private dropdown: DropdownApiService,
     private dropDownListService: DropDownListService,
@@ -135,4 +136,46 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
         });
     });
   }
+  /** 匯出 PDF */
+  onExportPDF(): void {
+    if (!this.lastQueryBody) return;
+    this.btnLoading1 = true;
+
+    this.fin55110Service
+      .exportFIN55110PDF({ ...this.lastQueryBody, IsPDF: true })
+      .pipe(finalize(() => (this.btnLoading1 = false)))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = '日記帳表.pdf';
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+
+      });
+  }
+
+  /** 匯出 XLSX */
+  onExportXLSX(): void {
+    if (!this.lastQueryBody) return;
+    this.btnLoading2 = true;
+
+    this.fin55110Service
+      .exportFIN55110({ ...this.lastQueryBody, IsExcel: true })
+      .pipe(finalize(() => (this.btnLoading2 = false)))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = '日記帳表.xlsx';
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+
+      });
+  }
+
 }

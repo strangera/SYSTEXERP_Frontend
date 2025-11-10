@@ -1,43 +1,6 @@
 // import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
-import { SystemOptionsService } from '../../../service/system/sys1000.service';
+import { getSYS1000, SystemOptionsService } from '../../../service/system/sys1000.service';
 import { Column, formatDate, formatTimeHHMM, formatDateTime, formatYN } from "../../../shared/componentkit/table/table.model";
-
-export const statusOptions = [
-  { label: '啟用', value: 'A' },
-  { label: '停用', value: 'C' },
-  { label: '強制停用', value: 'S' },
-  { label: '訓練', value: 'T' },
-];
-export const settleDDOptions = [
-  { label: '當天', value: 'T' },
-  { label: '隔天', value: 'N' },
-];
-
-export const typeOptions = [
-  { label: '集中機台(統收)', value: '1' },
-  { label: '專櫃機台(自收)', value: '2' },
-  { label: '離線機台', value: '5' },
-  { label: '它社機台', value: '7' },
-];
-
-export const guiTypeOptions = [
-  { label: '不開發票', value: '00' },
-  { label: '二聯式收銀機發票', value: '03' },
-  { label: '電子發票', value: '07' },
-];
-
-export const salTypeOptions = [
-  { label: '商場收銀機台', value: '' },
-  { label: '停車場機台', value: 'PKNG' },
-  { label: '會員APP', value: 'APP' },
-  { label: '環友票券系統', value: 'CPN' },
-];
-
-export const sernoTypeOptions = [
-  { label: '循環使用', value: '1' },
-  { label: '每日重計', value: '2' },
-  { label: '每月重計', value: '3' },
-];
 
 export interface TLS41010QueryParams {
   id: number;
@@ -287,7 +250,7 @@ export const columns: Column[] = [
     field: 'ECR_Status',
     header: '機台狀態',
     visible: true,
-    format: (value) => statusOptions.find(option => option.value === value)?.label || value
+    format: (value) => getSYS1000('ECR_Status', value)
   },
   { field: 'ECR_Group', header: '群組', visible: true },
   { field: 'ECR_SubGroup', header: '次樓別', visible: true },
@@ -306,7 +269,7 @@ export const columns: Column[] = [
     field: 'ECR_SernoType',
     header: '交易序號模式',
     visible: true,
-    format: (value) => sernoTypeOptions.find(option => option.value === value)?.label || value
+    format: (value) => getSYS1000('ECR_SernoType', value)
   },
 
   {
@@ -357,7 +320,7 @@ export const columns: Column[] = [
     field: 'ECR_SettleDD',
     header: '清機提示日期',
     visible: true,
-    format: (value) => settleDDOptions.find(opt => opt.value === value)?.label || value
+    format: (value) => getSYS1000('ECR_SettleDD', value)
   },
   { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: true, format: formatTimeHHMM },
   { field: 'ECR_KBLevel', header: '機台鍵盤等級', visible: true },

@@ -1,25 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-
-import {
-  salTypeOptions,
-  sernoTypeOptions,
-  settleDDOptions,
-  statusOptions,
-  statusOptionsForCRU,
-  typeOptions,
-  yesNoOptions,
-  ECR_GUI_Type_Option,
-} from './tls41010-cru.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -30,7 +17,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-tls41010-cru',
@@ -167,13 +154,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_RestoreVoid: ['N', [Validators.required, Validators.maxLength(1)]],
   });
 
-  typeOptions = typeOptions;
-  statusOptions = statusOptions;
-  salTypeOptions = salTypeOptions;
-  sernoTypeOptions = sernoTypeOptions;
-  settleDDOptions = settleDDOptions;
-  yesNoOptions = yesNoOptions;
-  ECR_GUI_Type_Option = ECR_GUI_Type_Option;
+  typeOptions = getSYS1000Options('ECR_Type');
+  statusOptions = getSYS1000Options('ECR_Status').filter(item => item.value === 'A' || item.value === 'C');
+  salTypeOptions = getSYS1000Options('ECR_SAL_Type');
+  sernoTypeOptions = getSYS1000Options('ECR_SernoType');
+  settleDDOptions = getSYS1000Options('ECR_SettleDD');
+  yesNoOptions = getSYS1000Options('YES_NO');
+  ECR_GUI_Type_Option = getSYS1000Options('ECR_GUI_Type');
   ECR_TmplNo_Option: IDropdownItem[] = [];
   ECR_SrvIP_Option: IDropdownItem[] = [];
   CounterOptions: any[] = [];
@@ -181,20 +168,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   LocOptions: IDropdownItem[] = [];
   tmplDetailList: any[] = [];
 
-  // 根據表單狀態動態返回狀態選項
-  get currentStatusOptions() {
-    return (this.isFormCreateable || this.isFormEditable) ? statusOptionsForCRU : statusOptions;
-  }
-
   constructor(
     public override formBuilder: FormBuilder,
-    private tls46110Service: Tls46010Service,
-    private tls46020Service: TLS46020Service,
     private dropDownListService: DropDownListService,
     private tls41010Service: TLS41010Service,
     private counterNameService: CounterNameService,
-
-    private route: ActivatedRoute
   ) {
     super();
   }

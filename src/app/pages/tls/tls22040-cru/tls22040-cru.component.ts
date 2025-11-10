@@ -78,23 +78,6 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     this.loading = true;
-    // 貓貓版本
-    // const uniqueRows = rows.filter(
-    //   (item, index, self) =>
-    //     index === self.findIndex(
-    //       t => t.TXN_No === item.TXN_No && t.MIG_Type === item.MIG_Type
-    //     )
-    // );
-
-    // const payload = {
-    //   crtMigs: uniqueRows.map(item => ({
-    //     STO_No: this.authService.currentUserValue?.SYS_StoreNo ?? '',
-    //     ECR_No: item.ECR_No ?? '',
-    //     TXN_Date: item.TXN_Date ? item.TXN_Date.replace(/-/g, '/') : '',
-    //     TXN_No: item.TXN_No ?? '',
-    //     MIG_Type: item.MIG_Type ?? ''
-    //   }))
-    // };
     const payload = {
       crtMigs: rows.map(item => ({
         STO_No: this.authService.currentUserValue?.SYS_StoreNo ?? '',

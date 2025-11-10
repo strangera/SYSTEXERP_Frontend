@@ -140,6 +140,17 @@
               [style]="{'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [inputStyle]="{'width': col.width}" [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
+            <div *ngSwitchCase="'percent'" class="flex align-items-center gap-1">
+              <input pInputText class="min-w-max" [placeholder]="'請輸入' + col.header"
+                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+                [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+                (ngModelChange)="onValueChange(rowData,$event, col, index)" [maxlength]="3 + (col.maxFractionDigits ?? 0)"
+                [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available' }"
+                [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'" [pKeyFilter]="percentKeyFilter"
+                (blur)="onValueChange(rowData,rowData[col.field], col, index)"
+                [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
+                <span class="d-block">%</span>
+            </div>
             <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" appendTo="body"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
               [placeholder]="'請輸入' + col.header" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"

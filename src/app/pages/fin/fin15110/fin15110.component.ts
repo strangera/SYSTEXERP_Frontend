@@ -32,7 +32,6 @@ import {
   DropDownListService,
   IDropdownItem,
 } from './../../../service/utility/dropDownList.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 @Component({
@@ -69,7 +68,7 @@ export class FIN15110Component
     TXN_DT_E: [new Date(), [Validators.required]],
     ECR_No_S: [''],
     ECR_No_E: [''],
-    DataType: [[] as string[]],
+    DataType: [['1', '2'] as string[]],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
   });
 
@@ -87,7 +86,6 @@ export class FIN15110Component
   DATE_TYPEOptions = [
     { label: '開立', value: '1' },
     { label: '作廢', value: '2' },
-    { label: '加總', value: '3' },
   ];
 
   /** 表格欄位設定 */
@@ -160,9 +158,6 @@ export class FIN15110Component
       .queryPOS1002_DropDownList()
       .subscribe((data) => (this.ECRNoOptions = data.Data));
 
-    // 預設全選 DataType
-    const allValues = this.DATE_TYPEOptions.map((opt) => opt.value);
-    this.queryForm.get('DataType')?.setValue(allValues);
   }
 
   /** 查詢 */
@@ -172,7 +167,6 @@ export class FIN15110Component
     this.handleSubmit(frm, () => {
       this.loading = true;
       const v = frm.value;
-
       const payload = {
         PageSize: v.pageSize || 20,
         PageIndex: v.pageIndex ?? 1,

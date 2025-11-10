@@ -12,5 +12,10 @@ export class FIN55110Service {
   queryFIN55110(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryFIN55110`, data);
   }
-
+  exportFIN55110(data: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportFIN55110`, data, { responseType: 'blob' });
+  }
+  exportFIN55110PDF(data: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportFIN55110PDF`, data, { responseType: 'blob' });
+  }
 }
