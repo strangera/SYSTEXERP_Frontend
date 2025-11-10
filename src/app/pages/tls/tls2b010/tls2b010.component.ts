@@ -9,12 +9,14 @@ import { CashShowupByService } from '../../../service/basic/cash-showup-by.servi
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
 // UI Imports
-import { DatePipe, NgIf } from '@angular/common';
+import { DatePipe, NgIf, NgFor /* 或改用 CommonModule */ } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { finalize } from 'rxjs';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
@@ -26,10 +28,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-table/tls2b010table.component';
-
 
 @Component({
   selector: 'app-tls2b010',
@@ -44,7 +44,6 @@ import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-t
     CalendarComponent,
     DropdownComponent,
     MultiSelectComponent,
-    RadiobuttonComponent,
     ButtonComponent,
     TableComponent,
     TableModule,
@@ -52,7 +51,9 @@ import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-t
     TranslateModule,
     DatePipe,
     NgIf,
+    NgFor,
     tls2b010tableComponent,
+    RadioButtonModule, // ← 使用 PrimeNG 原生 radio
   ],
   providers: [CashShowupByService],
 })
@@ -107,9 +108,9 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     tlt_floor: [[]],
     area_no: [null],
     ECR_Type: [null],
-    cashShowUp: [1],
+    cashShowUp: [1],                    // ← 單一值，搭配 radio
     reimbursementType: [[1], Validators.nullValidator],
-    reporttype: [1],
+    reporttype: [1],                    // ← 單一值，搭配 radio
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
@@ -197,134 +198,156 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     }));
   }
 
-onSubmit(form: FormGroup): void {
-  this.submitted = true;
+  onSubmit(form: FormGroup): void {
+    this.submitted = true;
 
-  if (form.invalid) {
-    this.messageService.warnBubble('請完整填寫查詢條件');
-    return;
-  }
-
-  // 組 payload（含 TXN_Date -> yyyy-MM-dd）
-  const payload: any = { ...form.value };
-  payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
-
-  // 帶入店號
-  const userInfo = localStorage.getItem('UserInfo');
-  if (userInfo) {
-    try {
-      const parsed = JSON.parse(userInfo);
-      if (parsed.SYS_StoreNo) payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
-    } catch { /* ignore */ }
-  }
-
-  // 清除空值
-  Object.keys(payload).forEach((key) => {
-    const value = payload[key];
-    if (typeof value === 'string') {
-      payload[key] = value.trim();
-      if (payload[key] === '') delete payload[key];
+    if (form.invalid) {
+      this.messageService.warnBubble('請完整填寫查詢條件');
+      return;
     }
-    if (Array.isArray(value) && value.length === 0) delete payload[key];
-    if (value === null || value === undefined) delete payload[key];
-  });
 
-  // 排除前端控制欄位
-  delete payload['reimbursementType'];
+    // 組 payload（含 TXN_Date -> yyyy-MM-dd）
+    const payload: any = { ...form.value };
+    payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
 
-  this.loading = true;
-  this.messageService.blockUi();
+    // 帶入店號
+    const userInfo = localStorage.getItem('UserInfo');
+    if (userInfo) {
+      try {
+        const parsed = JSON.parse(userInfo);
+        if (parsed.SYS_StoreNo) payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
+      } catch { /* ignore */ }
+    }
 
-  // 查詢前清空總計，避免殘留
-  this.detailTotals = { BOOK_PayAmt: 0, ACT_PayAmt: 0, OVER_PayAmt: 0 };
-
-  const reporttype = form.controls['reporttype'].value; // 1=明細, 2=簡表
-  const apiCall =
-    reporttype === 2
-      ? this.tls2B010Service.simpleTLS2B010(payload)
-      : this.tls2B010Service.queryTLS2B010(payload);
-
-  apiCall
-    .pipe(
-      finalize(() => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.refreshCloseDate();
-      })
-    )
-    .subscribe({
-      next: (res) => {
-        if (res?.Status !== '0000') {
-          this.messageService.errorBubble(res?.Message || '查詢失敗');
-          return;
-        }
-
-        // 成功
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-        if (reporttype === 2) {
-          // ===== 溢欠簡表 =====
-          const dataObj = res.Data || {};
-          const rawData: any[] = dataObj.QueryData || [];
-
-          // 產穩定 ID，避免 dataKey 抓不到
-          this.simpleData = rawData.map((row: any, idx: number) => ({
-            ID: `${row.ECR_No || 'NA'}_${row.TXN_Date || ''}_${idx}`,
-            ...row,
-          }));
-
-          // 綁到通用資料來源 + 切換欄位組
-          this.data = this.simpleData;
-          this.columns = this.simplecolumns;
-
-          // 總筆數
-          this.totalRecords =
-            (typeof dataObj.TotalCount === 'number' ? dataObj.TotalCount : null) ??
-            (typeof res.TotalCount === 'number' ? res.TotalCount : 0) ??
-            this.data.length;
-
-          // 簡表不做動態欄位可見性（避免被 reimbursementType 影響）
-        } else {
-          // ===== 支付別溢欠明細表 =====
-          const responseData = res.Data || {};
-          this.data = responseData.QueryData || [];
-          this.columns = this.columns; // 保持明細欄位組
-          this.totalRecords =
-            (typeof responseData.TotalCount === 'number' ? responseData.TotalCount : null) ??
-            (typeof res.TotalCount === 'number' ? res.TotalCount : 0) ??
-            this.data.length;
-
-          // 後端總計（供頁尾顯示）
-          const t = responseData.Totals || {};
-          this.detailTotals = {
-            BOOK_PayAmt: Number(t.SumBOOK_PayAmt ?? 0),
-            ACT_PayAmt:  Number(t.SumACT_PayAmt  ?? 0),
-            OVER_PayAmt: Number(t.SumOVER_PayAmt ?? 0),
-          };
-
-          // 依勾選（系統帳/實收帳）調整欄位顯示
-          this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value || []);
-        }
-      },
-      error: (err) => {
-        console.error(err);
-        this.messageService.errorBubble('查詢發生錯誤');
-      },
+    // 清除空值
+    Object.keys(payload).forEach((key) => {
+      const value = payload[key];
+      if (typeof value === 'string') {
+        payload[key] = value.trim();
+        if (payload[key] === '') delete payload[key];
+      }
+      if (Array.isArray(value) && value.length === 0) delete payload[key];
+      if (value === null || value === undefined) delete payload[key];
     });
+
+    // 排除前端控制欄位
+    delete payload['reimbursementType'];
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    // 查詢前清空總計，避免殘留
+    this.detailTotals = { BOOK_PayAmt: 0, ACT_PayAmt: 0, OVER_PayAmt: 0 };
+
+    const reporttype = form.controls['reporttype'].value; // 1=明細, 2=簡表
+    payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
+    // 🔧 簡表：移除/改寫 SortBy，避免 TXN_Date 觸發 sql_variant -> datetime 轉型
+if (reporttype === 2) {
+  const safeSort: any[] = [
+    { field: 'ECR_No', order: 1 },
+    { field: 'TLT_NO', order: 1 },
+  ];
+  payload.SortBy = safeSort; // 直接覆蓋；或乾脆不送 SortBy
 }
 
+    const apiCall =
+      reporttype === 2
+        ? this.tls2B010Service.simpleTLS2B010(payload)
+        : this.tls2B010Service.queryTLS2B010(payload);
 
-  handleLazyLoad(
-    e: { pageIndex: number; pageSize: number; SortBy: any[] },
-    form: FormGroup
-  ) {
-    const groupSize = this.queryForm.get('pageSize')?.value ?? 20;
-    form.patchValue(
-      { pageIndex: e.pageIndex, pageSize: groupSize, SortBy: e.SortBy },
-      { emitEvent: false }
-    );
-    this.onSubmit(form);
+    apiCall
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.refreshCloseDate();
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          if (res?.Status !== '0000') {
+            this.messageService.errorBubble(res?.Message || '查詢失敗');
+            return;
+          }
+
+          // 成功
+          this.queryStateService.setQueryState(this.ProgNo, payload);
+
+          if (reporttype === 2) {
+            // ===== 溢欠簡表 =====
+            const dataObj = res.Data || {};
+            const rawData: any[] = dataObj.QueryData || [];
+
+            // 產穩定 ID，避免 dataKey 抓不到
+            this.simpleData = rawData.map((row: any, idx: number) => ({
+              ID: `${row.ECR_No || 'NA'}_${row.TXN_Date || ''}_${idx}`,
+              ...row,
+            }));
+
+            // 綁到通用資料來源 + 切換欄位組
+            this.data = this.simpleData;
+            this.columns = this.simplecolumns;
+
+            // 總筆數
+            this.totalRecords =
+              (typeof dataObj.TotalCount === 'number' ? dataObj.TotalCount : null) ??
+              (typeof res.TotalCount === 'number' ? res.TotalCount : 0) ??
+              this.data.length;
+
+            // 簡表不做動態欄位可見性（避免被 reimbursementType 影響）
+          } else {
+            // ===== 支付別溢欠明細表 =====
+            const responseData = res.Data || {};
+            this.data = responseData.QueryData || [];
+            this.columns = this.columns; // 保持明細欄位組
+            this.totalRecords =
+              (typeof responseData.TotalCount === 'number' ? responseData.TotalCount : null) ??
+              (typeof res.TotalCount === 'number' ? res.TotalCount : 0) ??
+              this.data.length;
+
+            // 後端總計（供頁尾顯示）
+            const t = responseData.Totals || {};
+            this.detailTotals = {
+              BOOK_PayAmt: Number(t.SumBOOK_PayAmt ?? 0),
+              ACT_PayAmt:  Number(t.SumACT_PayAmt  ?? 0),
+              OVER_PayAmt: Number(t.SumOVER_PayAmt ?? 0),
+            };
+
+            // 依勾選（系統帳/實收帳）調整欄位顯示
+            this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value || []);
+          }
+        },
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('查詢發生錯誤');
+        },
+      });
   }
+handleLazyLoad(
+  e: { pageIndex: number; pageSize: number; SortBy: any[] },
+  form: FormGroup
+) {
+  const groupSize = this.queryForm.get('pageSize')?.value ?? 20;
+  const reporttype = this.queryForm.controls.reporttype.value;
+
+  let sortBy = e.SortBy || [];
+  if (reporttype === 2) {
+    // 🔧 簡表：過濾或改寫排序，避免 TXN_Date
+    sortBy = sortBy.filter(s => s?.field && s.field !== 'TXN_Date');
+    if (sortBy.length === 0) {
+      sortBy = [
+        { field: 'ECR_No', order: 1 },
+        { field: 'TLT_NO', order: 1 },
+      ];
+    }
+  }
+
+  form.patchValue(
+    { pageIndex: e.pageIndex, pageSize: groupSize, SortBy: sortBy },
+    { emitEvent: false }
+  );
+  this.onSubmit(form);
+}
 
   get formattedTXNDate(): string {
     const date = this.queryForm?.controls?.TXN_Date?.value;
@@ -390,130 +413,131 @@ onSubmit(form: FormGroup): void {
       error: () => (this.closeDate = '-'),
     });
   }
-// 產 payload（查詢/匯出共用）
-private buildPayload(): any {
-  const form = this.queryForm;
-  const payload: any = { ...form.value };
 
-  // ✅ 轉日期成 yyyy-MM-dd
-  payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
+  // 產 payload（查詢/匯出共用）
+  private buildPayload(): any {
+    const form = this.queryForm;
+    const payload: any = { ...form.value };
 
-  // 店號（從 localStorage）
-  const userInfo = localStorage.getItem('UserInfo');
-  if (userInfo) {
-    try {
-      const parsed = JSON.parse(userInfo);
-      if (parsed.SYS_StoreNo) payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
-    } catch { /* ignore */ }
+    // ✅ 轉日期成 yyyy-MM-dd
+    payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
+
+    // 店號（從 localStorage）
+    const userInfo = localStorage.getItem('UserInfo');
+    if (userInfo) {
+      try {
+        const parsed = JSON.parse(userInfo);
+        if (parsed.SYS_StoreNo) payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
+      } catch { /* ignore */ }
+    }
+
+    // 清除空值
+    Object.keys(payload).forEach((key) => {
+      const value = payload[key];
+      if (typeof value === 'string') {
+        payload[key] = value.trim();
+        if (payload[key] === '') delete payload[key];
+      }
+      if (Array.isArray(value) && value.length === 0) delete payload[key];
+      if (value === null || value === undefined) delete payload[key];
+    });
+
+    // 排除前端控制欄位
+    delete payload['reimbursementType'];
+
+    return payload;
   }
 
-  // 清除空值
-  Object.keys(payload).forEach((key) => {
-    const value = payload[key];
-    if (typeof value === 'string') {
-      payload[key] = value.trim();
-      if (payload[key] === '') delete payload[key];
-    }
-    if (Array.isArray(value) && value.length === 0) delete payload[key];
-    if (value === null || value === undefined) delete payload[key];
-  });
+  // 從 Content-Disposition 取檔名
+  private getFilenameFromResponse(res: any, fallback: string): string {
+    const cd = res.headers?.get?.('Content-Disposition') || res.headers?.get?.('content-disposition');
+    if (!cd) return fallback;
+    const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd);
+    if (!match || !match[1]) return fallback;
+    return decodeURIComponent(match[1].replace(/['"]/g, ''));
+  }
 
-  // 排除前端控制欄位
-  delete payload['reimbursementType'];
+  // 下載 blob
+  private saveBlob(res: any, defaultName: string) {
+    const blob = new Blob([res.body], { type: res.body?.type || 'application/octet-stream' });
+    const fileName = this.getFilenameFromResponse(res, defaultName);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
 
-  return payload;
-}
+  // === 匯出：Excel ===
+  btnLoading = false;
 
+  downloadTLS2B010Excel(): void {
+    const reporttype = this.queryForm.controls['reporttype'].value; // 1=明細, 2=簡表
+    const payload = this.buildPayload();
 
-// 從 Content-Disposition 取檔名
-private getFilenameFromResponse(res: any, fallback: string): string {
-  const cd = res.headers?.get?.('Content-Disposition') || res.headers?.get?.('content-disposition');
-  if (!cd) return fallback;
-  const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd);
-  if (!match || !match[1]) return fallback;
-  return decodeURIComponent(match[1].replace(/['"]/g, ''));
-}
+    this.btnLoading = true;
+    this.messageService.blockUi();
 
-// 下載 blob
-private saveBlob(res: any, defaultName: string) {
-  const blob = new Blob([res.body], { type: res.body?.type || 'application/octet-stream' });
-  const fileName = this.getFilenameFromResponse(res, defaultName);
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  window.URL.revokeObjectURL(url);
-}
+    const obs = reporttype === 2
+      ? this.tls2B010Service.exportTLS2B010SimpleExcel(payload) // 若後端未開此路由，可改成 exportTLS2B010Excel
+      : this.tls2B010Service.exportTLS2B010Excel(payload);
 
-// === 匯出：Excel ===
-btnLoading = false;
+    obs.subscribe({
+      next: (res) => {
+        this.saveBlob(res, reporttype === 2
+          ? `TLS2B010_溢欠簡表_${this.formattedTXNDate}.xlsx`
+          : `TLS2B010_支付別溢欠明細_${this.formattedTXNDate}.xlsx`);
+        this.messageService.successBubble('Excel 產檔完成');
+      },
+      error: (err) => {
+        console.error(err);
+        this.messageService.errorBubble('Excel 匯出失敗');
+      }
+    }).add(() => {
+      this.btnLoading = false;
+      this.messageService.unblockUi();
+    });
+  }
 
-downloadTLS2B010Excel(): void {
-  const reporttype = this.queryForm.controls['reporttype'].value; // 1=明細, 2=簡表
-  const payload = this.buildPayload();
+  // === 匯出：PDF ===
+  downloadTLS2B010PDF(): void {
+    const reporttype = this.queryForm.controls['reporttype'].value; // 1=明細, 2=簡表
+    const payload = this.buildPayload();
 
-  this.btnLoading = true;
-  this.messageService.blockUi();
+    this.btnLoading = true;
+    this.messageService.blockUi();
 
-  const obs = reporttype === 2
-    ? this.tls2B010Service.exportTLS2B010SimpleExcel(payload) // 若後端未開此路由，可改成 exportTLS2B010Excel
-    : this.tls2B010Service.exportTLS2B010Excel(payload);
+    const obs = reporttype === 2
+      ? this.tls2B010Service.exportTLS2B010SimplePDF(payload) // 若後端未開此路由，可改成 exportTLS2B010PDF
+      : this.tls2B010Service.exportTLS2B010PDF(payload);
 
-  obs.subscribe({
-    next: (res) => {
-      this.saveBlob(res, reporttype === 2
-        ? `TLS2B010_溢欠簡表_${this.formattedTXNDate}.xlsx`
-        : `TLS2B010_支付別溢欠明細_${this.formattedTXNDate}.xlsx`);
-      this.messageService.successBubble('Excel 產檔完成');
-    },
-    error: (err) => {
-      console.error(err);
-      this.messageService.errorBubble('Excel 匯出失敗');
-    }
-  }).add(() => {
-    this.btnLoading = false;
-    this.messageService.unblockUi();
-  });
-}
+    obs.subscribe({
+      next: (res) => {
+        this.saveBlob(res, reporttype === 2
+          ? `TLS2B010_溢欠簡表_${this.formattedTXNDate}.pdf`
+          : `TLS2B010_支付別溢欠明細_${this.formattedTXNDate}.pdf`);
+        this.messageService.successBubble('PDF 產檔完成');
+      },
+      error: (err) => {
+        console.error(err);
+        this.messageService.errorBubble('PDF 匯出失敗');
+      }
+    }).add(() => {
+      this.btnLoading = false;
+      this.messageService.unblockUi();
+    });
+  }
 
-// === 匯出：PDF ===
-downloadTLS2B010PDF(): void {
-  const reporttype = this.queryForm.controls['reporttype'].value; // 1=明細, 2=簡表
-  const payload = this.buildPayload();
-
-  this.btnLoading = true;
-  this.messageService.blockUi();
-
-  const obs = reporttype === 2
-    ? this.tls2B010Service.exportTLS2B010SimplePDF(payload) // 若後端未開此路由，可改成 exportTLS2B010PDF
-    : this.tls2B010Service.exportTLS2B010PDF(payload);
-
-  obs.subscribe({
-    next: (res) => {
-      this.saveBlob(res, reporttype === 2
-        ? `TLS2B010_溢欠簡表_${this.formattedTXNDate}.pdf`
-        : `TLS2B010_支付別溢欠明細_${this.formattedTXNDate}.pdf`);
-      this.messageService.successBubble('PDF 產檔完成');
-    },
-    error: (err) => {
-      console.error(err);
-      this.messageService.errorBubble('PDF 匯出失敗');
-    }
-  }).add(() => {
-    this.btnLoading = false;
-    this.messageService.unblockUi();
-  });
-}
-// 1) 新增這個工具函式（放在 component 裡即可）
-private toDateOnly(x: any): string | undefined {
-  if (!x) return undefined;
-  const d = typeof x === 'string' ? new Date(x) : (x as Date);
-  if (isNaN(d.getTime())) return undefined;
-  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+  // 1) 新增這個工具函式（放在 component 裡即可）
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 }
