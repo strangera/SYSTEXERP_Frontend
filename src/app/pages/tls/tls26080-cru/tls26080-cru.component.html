@@ -25,7 +25,7 @@
                       optionLabel="CampaignName"
                       optionValue="CampaignId"
                       [control]="df().pod_desc"
-                      [loading]="service.campaignLoading()"
+                      [loading]="loading"
                       [submitted]="submitted"></app-dropdown>
       </div>
 
@@ -33,11 +33,12 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="活動類型"
                       controlName="pod_type"
-                      [options]="service.podTypeItems()"
-                      optionLabel="Name"
-                      optionValue="No"
+                      [options]="service.podTypeItems"
+                      optionLabel="label"
+                      optionValue="value"
                       [disabled]="true"
                       [control]="df().pod_type"
+                      [loading]="loading"
                       [submitted]="submitted"></app-dropdown>
         <app-calendar-range class="col-12 md:col-6 lg:col-4"
                             calendarType="dateRange"
@@ -53,8 +54,8 @@
                       [disabled]="false"
                       [submitted]="submitted"></app-calendar>
       </div>
-      <div *ngIf="!isFormReadable"
-           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      @if(!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <p-fileUpload #fileUpload
@@ -72,6 +73,7 @@
                     label="存檔"
                     [loading]="loading"></app-button>
       </div>
+      }
     </form>
   </p-panel>
 </div>
@@ -82,20 +84,14 @@
     <div class="col-12">
       <p-panel header="專櫃資料"
                class="line-height-3 m-0 mb-3">
-        <app-table [showCheckBox]="true"
-                   [showRowEdit]="true"
-                   [showInsert]="true"
-                   [insertRowData]="true"
-                   [data]="service.TLS26080Detail()"
-                   [dataKey]="'tlt_no'"
-                   [tableKey]="'TLS26080_Counter'"
-                   [columns]="counterColumns"
-                   [columnGroup]="counterColumnsGroup"
-                   [totalRecords]="service.detailTotalRecords()"
-                   (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
-                   [lazy]="true"
-                   [loading]="service.dataLoading()"
-                   (rowEditSave)="onInsert($event)"></app-table>
+        <app-table-edit [data]="service.TLS26080Detail()"
+                        [tableKey]="'TLS26080_Counter'"
+                        [columns]="counterColumns()"
+                        [columnGroup]="counterColumnsGroup"
+                        [insertDisabled]="isFormReadable"
+                        [defaultInsertData]="defaultInsertData"
+                        (fieldChange)="onFieldChange($event)"
+                        [loading]="service.dataLoading()"></app-table-edit>
       </p-panel>
     </div>
   </div>

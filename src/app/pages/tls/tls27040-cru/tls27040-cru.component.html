@@ -18,7 +18,7 @@
           optionValue="value" [submitted]="initialQuerySubmitted" />
         <!-- 交易流水號 -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="交易流水號" controlName="TXN_No"
-          [control]="initialQueryForm.controls.TXN_No" [submitted]="initialQuerySubmitted" />
+          [control]="initialQueryForm.controls.TXN_No" [submitted]="initialQuerySubmitted" [autoPadZero]="true" [padLength]="6"/>
         <!-- 銷售日期 -->
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售日期" controlName="TXN_Date"
           [control]="initialQueryForm.controls.TXN_Date" [submitted]="initialQuerySubmitted" />
@@ -55,7 +55,7 @@
         </app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="NCML_Date"
           [control]="POS6118dataForm.controls.NCML_Date" [submitted]="submitted" />
-        <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="卡別" controlName="NCML_PayCrdType"
+        <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="支付卡別簡碼" controlName="NCML_PayCrdType"
           [options]="PayCrdTypeOptions" optionLabel="label" optionValue="value"
           [control]="POS6118dataForm.controls.NCML_PayCrdType" [submitted]="submitted" />
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="銷售狀況" controlName="NCML_TxnType"
@@ -63,6 +63,9 @@
           [control]="POS6118dataForm.controls.NCML_TxnType" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="交易金額" controlName="NCML_TxnAmt"
           [control]="POS6118dataForm.controls.NCML_TxnAmt" [submitted]="submitted" />
+        <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="卡別" controlName="CRD_Type"
+          [options]="CRDTypeOptions" optionLabel="label" optionValue="value"
+          [control]="POS6118dataForm.controls.CRD_Type" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="卡號" controlName="NCML_CrdNo"
           [control]="POS6118dataForm.controls.NCML_CrdNo" [submitted]="submitted">
         </app-input-text>
@@ -81,8 +84,8 @@
           [options]="pos6118TxnFgOptions" [control]="POS6118dataForm.controls.NCML_CrdTxnFg" [submitted]="submitted"
           optionLabel="label" optionValue="value" />
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="NCML_TermNo"
-          [options]="TermNoOptions" optionLabel="label" optionValue="value"
-          [control]="POS6118dataForm.controls.NCML_TermNo" [submitted]="submitted" />
+          [options]="TermNoOptions" [control]="POS6118dataForm.controls.NCML_TermNo" [submitted]="submitted"
+          optionLabel="label" optionValue="value" />
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="timeOne" label="銷售時間" controlName="NCML_TxnTime"
           [control]="POS6118dataForm.controls.NCML_TxnTime" [submitted]="submitted" />
       </div>
@@ -98,7 +101,7 @@
       <div class="grid p-fluid">
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="收單行" controlName="tableName"
           [control]="POS6119dataForm.controls.tableName" [options]="POS611XOptions" optionLabel="label"
-          optionValue="table" [filter]="true" />
+          optionValue="value" [filter]="true" />
       </div>
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
@@ -118,6 +121,9 @@
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="資料型態" controlName="CTBC_DataType"
           [options]="pos6119TxnFgOptions" optionLabel="label" optionValue="value"
           [control]="POS6119dataForm.controls.CTBC_DataType" [submitted]="submitted" />
+        <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="卡別" controlName="CRD_Type"
+          [options]="CRDTypeOptions" optionLabel="label" optionValue="value"
+          [control]="POS6119dataForm.controls.CRD_Type" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="卡號" controlName="CTBC_CrdNo"
           [control]="POS6119dataForm.controls.CTBC_CrdNo" [submitted]="submitted">
         </app-input-text>
@@ -153,7 +159,7 @@
       <div class="grid p-fluid">
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="收單行" controlName="tableName"
           [control]="POS6119PdataForm.controls.tableName" [options]="POS611XOptions" optionLabel="label"
-          optionValue="table" [filter]="true" />
+          optionValue="value" [filter]="true" />
       </div>
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
@@ -170,6 +176,9 @@
         </app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="CTBC_Date"
           [control]="POS6119PdataForm.controls.CTBC_Date" [submitted]="submitted" />
+        <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="卡別" controlName="CRD_Type"
+          [options]="CRDTypeOptions" optionLabel="label" optionValue="value"
+          [control]="POS6119PdataForm.controls.CRD_Type" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="卡號" controlName="CTBC_CrdNo"
           [control]="POS6119PdataForm.controls.CTBC_CrdNo" [submitted]="submitted">
         </app-input-text>

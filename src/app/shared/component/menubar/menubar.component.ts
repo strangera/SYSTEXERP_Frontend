@@ -1,5 +1,5 @@
 import { SystemDataService } from './../../../service/system/system-data.service';
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject, computed,ChangeDetectorRef } from '@angular/core';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NotificationService } from '../notification-message/notification.service';
@@ -53,12 +53,14 @@ export class MenubarComponent implements OnInit {
 
   noProgNo = false;
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   ngOnInit(): void {
     if (this.customBreadcrumbItems.length > 0) { return; }
     this.breadcrumbItems = [];
-
     // 訂閱菜單更新，建立麵包屑
     this.systemDataService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
+    
       this.funRightsInfo = [...newData];
       this.menu = [];
       this.breadcrumbItems = [];
@@ -74,6 +76,7 @@ export class MenubarComponent implements OnInit {
             isLast: i === 0 // 標記是否為最後一個
           });
           this.breadcrumbItems = [...this.breadcrumbItems];
+          this.cdr.detectChanges();
         }
       }
     });

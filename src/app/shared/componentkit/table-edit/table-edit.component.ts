@@ -15,6 +15,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { KeyFilterModule } from 'primeng/keyfilter';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -31,24 +32,25 @@ import { validateRequired } from './validate-field.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
+    AutoCompleteModule,
+    BreadcrumbModule,
+    ButtonModule,
+    CalendarModule,
     CommonModule,
     DividerModule,
-    TableModule,
-    MultiSelectModule,
-    TooltipModule,
-    FormsModule,
-    ButtonModule,
     DropdownModule,
-    InputTextModule,
-    InputNumberModule,
-    AutoCompleteModule,
+    FileUploadModule,
+    FormsModule,
     IconFieldModule,
     InputIconModule,
-    BreadcrumbModule,
-    SkeletonModule,
-    FileUploadModule,
-    CalendarModule,
+    InputNumberModule,
+    InputTextModule,
+    KeyFilterModule,
+    MultiSelectModule,
     OverlayPanelModule,
+    SkeletonModule,
+    TableModule,
+    TooltipModule,
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
@@ -113,6 +115,8 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() errorMessage = '至少輸入一筆資料'; // 錯誤訊息
   // 總計
   @Input() footerData: any;                  // (總計)頁尾資料
+
+  public readonly percentKeyFilter = /^(100(\.0{1,2})?|(\d{1,2})(\.\d*)?)$/; // 驗證百分比
 
   constructor(
     private readonly tableUtilityService: TableUtilityService,

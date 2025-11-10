@@ -75,10 +75,23 @@
 </div>
 
 <div class="card">
-  <app-table-report [tableKey]="'tls2b030_' + tableVer" [dataKey]="'_rowKey'" [columns]="columns" [data]="data"
-    [totalRecords]="viewTotalRecords" [loading]="loading" [showManage]="false" [showFilter]="true" [showExcel]="false"
-    [footerData]="footerData" [queryFunction]="queryTLS2B030ForReport" [lastQueryBody]="lastQueryBody"
-    [showDelete]="false" [showReportMode]="false" [showCheckBox]="false" [selectedItems]="selectedItems"
+  <app-table-report
+    [tableKey]="'tls2b030_' + tableVer"
+    [dataKey]="'_rowKey'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="viewTotalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showFilter]="true"
+    [showExcel]="false"
+    [footerData]="footerData"
+    [queryFunction]="queryTLS2B030ForReport"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="false"
+    [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event">
   </app-table-report>
 </div>

@@ -18,13 +18,21 @@ import { CalendarModule } from 'primeng/calendar';
 import { ButtonModule } from 'primeng/button';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { createPaginationConfig, Column, formatAmount } from '@shared/componentkit/table/table.model';
+import {
+  createPaginationConfig,
+  Column,
+  formatAmount,
+} from '@shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { environment } from 'src/environments/environment';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
+import {
+  DropDownListService,
+  IDropdownItem,
+} from './../../../service/utility/dropDownList.service';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 @Component({
   selector: 'app-fin15110',
@@ -48,42 +56,88 @@ import { DropDownListService, IDropdownItem } from './../../../service/utility/d
     CustomFooterTableComponent,
     DatePipe,
     MultiSelectComponent,
+    DropdownRangeComponent
   ],
 })
-export class FIN15110Component extends BasicQueryPageComponent<any> implements OnInit {
-
+export class FIN15110Component
+  extends BasicQueryPageComponent<any>
+  implements OnInit {
+  /** 查詢條件表單 */
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DT_S: [new Date(), [Validators.required]],
     TXN_DT_E: [new Date(), [Validators.required]],
-    ECR_No: [[]],
-    DATE_TYPE: [[] as string[]],
-    ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }, { field: 'TXN_Date', order: 1 }, { field: 'TXN_GUINo', order: 1 }]),
+    ECR_No_S: [''],
+    ECR_No_E: [''],
+    DataType: [['1', '2'] as string[]],
+    ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
   });
 
+  /** 表格資料 */
   data: any[] = [];
   totalRecords = 0;
   footerData: any[] = [];
+
+  /** 匯出按鈕 Loading 狀態 */
   btnLoading = false;
   btnLoading2 = false;
-  ECRNoOptions: IDropdownItem[] = [];
 
+  /** 下拉選項 */
+  ECRNoOptions: IDropdownItem[] = [];
+  DATE_TYPEOptions = [
+    { label: '開立', value: '1' },
+    { label: '作廢', value: '2' },
+  ];
+
+  /** 表格欄位設定 */
   columns: Column[] = [
     { field: 'Ecr_No', header: '收銀機號', visible: true, showSort: true },
     { field: 'TXN_Date', header: '發票日期', visible: true, showSort: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true, showSort: true },
     { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
-    { field: 'TXN_SaleAmt', header: '銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_SaleTax', header: '應稅銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_SaleNoTax', header: '免稅銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_Net', header: '未稅銷售金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_Tax', header: '稅額', visible: true, showSort: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_VoidDT', header: '發票作廢日', visible: true, showSort: true },
+    {
+      field: 'TXN_SaleAmt',
+      header: '銷售金額',
+      visible: true,
+      showSort: true,
+      format: formatAmount,
+      isTotal: true,
+    },
+    {
+      field: 'TXN_SaleTax',
+      header: '應稅銷售金額',
+      visible: true,
+      showSort: true,
+      format: formatAmount,
+      isTotal: true,
+    },
+    {
+      field: 'TXN_SaleNoTax',
+      header: '免稅銷售金額',
+      visible: true,
+      showSort: true,
+      format: formatAmount,
+      isTotal: true,
+    },
+    {
+      field: 'TXN_Net',
+      header: '未稅銷售金額',
+      visible: true,
+      showSort: true,
+      format: formatAmount,
+      isTotal: true,
+    },
+    {
+      field: 'TXN_Tax',
+      header: '稅額',
+      visible: true,
+      showSort: true,
+      format: formatAmount,
+      isTotal: true,
+    },
+    { field: 'TXN_VoidDT', header: '發票作廢日期', visible: true, showSort: true },
   ];
-  DATE_TYPEOptions = [
-    { label: '開立', value: '1' },
-    { label: '作廢', value: '2' },
-    { label: '加總', value: '3' },
-  ];
+
+
   constructor(
     private readonly fin15110Service: FIN15110Service,
     private readonly dropDownListService: DropDownListService,
@@ -93,19 +147,25 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN15110', '/FIN/FIN15110CRU', this.queryForm, (frm) => this.onSubmit(frm));
-    this.dropDownListService.queryPOS1002_DropDownList().subscribe((data) => {
-      this.ECRNoOptions = data.Data;
-    });
-    const allValues = this.DATE_TYPEOptions.map(opt => opt.value);
-    this.queryForm.get('DATE_TYPE')?.setValue(allValues);
+    this.initializePage(
+      'FIN15110',
+      '/FIN/FIN15110CRU',
+      this.queryForm,
+      (frm) => this.onSubmit(frm)
+    );
+
+    this.dropDownListService
+      .queryPOS1002_DropDownList()
+      .subscribe((data) => (this.ECRNoOptions = data.Data));
+
   }
 
+  /** 查詢 */
   onSubmit(frm: FormGroup): void {
     if (this.loading) return;
+
     this.handleSubmit(frm, () => {
       this.loading = true;
-
       const v = frm.value;
       const payload = {
         PageSize: v.pageSize || 20,
@@ -113,20 +173,22 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
         OrderBy: '',
         Offset: 0,
         SortBy: v.SortBy ?? [],
-        MID: '0',
-        STO_No: '10',
         TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
         TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-
+        DataType: v.DataType || [],
+        ECR_No_S: v.ECR_No_S || '',
+        ECR_No_E: v.ECR_No_E || '',
       };
 
-
-      this.fin15110Service.QueryFIN15110(payload)
-        .pipe(finalize(() => this.loading = false))
+      this.fin15110Service
+        .QueryFIN15110(payload)
+        .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (res) => {
             if (res?.Data) {
-              const d = res.Data;
+              // 兼容 Data 是物件 或 陣列的情況
+              const d = Array.isArray(res.Data) ? res.Data[0] : res.Data;
+
               this.data = d.FIN15110s ?? [];
               this.totalRecords = d.TotalCount ?? this.data.length;
               this.footerData = [
@@ -144,10 +206,12 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
               this.totalRecords = 0;
             }
           },
+
         });
     });
   }
 
+  /** 分頁／懶加載 */
   override onLazyLoadData(event: any): void {
     if (this.loading) return;
 
@@ -160,14 +224,17 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
     this.onSubmit(this.queryForm);
   }
 
+  /** 匯出 PDF */
   onExportPDF(): void {
     this.exportReport(false);
   }
 
+  /** 匯出 Excel */
   onExportExcel(): void {
     this.exportReport(true);
   }
-  lastExportUrl: string | null = null;
+
+  /** 匯出共用邏輯 */
   private exportReport(isExcel: boolean): void {
     if (isExcel) this.btnLoading2 = true;
     else this.btnLoading = true;
@@ -179,21 +246,24 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
       OrderBy: '',
       Offset: 0,
       SortBy: [],
-      MID: '0',
-      STO_No: '10',
       TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
       TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-      IsMerge: true,
+      DataType: v.DataType || [],
+      ECR_No_S: v.ECR_No_S || '',
+      ECR_No_E: v.ECR_No_E || '',
       IsExcel: isExcel,
     };
 
-    console.log(' 匯出 payload:', payload);
+    console.log('匯出 payload:', payload);
 
-    this.fin15110Service.printFIN15110(payload)
-      .pipe(finalize(() => {
-        if (isExcel) this.btnLoading2 = false;
-        else this.btnLoading = false;
-      }))
+    this.fin15110Service
+      .printFIN15110(payload)
+      .pipe(
+        finalize(() => {
+          if (isExcel) this.btnLoading2 = false;
+          else this.btnLoading = false;
+        })
+      )
       .subscribe({
         next: (res) => {
           if (!res || res.Status !== '0000') {
@@ -210,17 +280,22 @@ export class FIN15110Component extends BasicQueryPageComponent<any> implements O
           const fileUrl = `${environment.ApiUrl.replace(/\/$/, '')}${url}`;
           const a = document.createElement('a');
           a.href = fileUrl;
-          a.setAttribute('download', decodeURIComponent(
-            url.split('/').pop() ?? (isExcel ? '二電發票表.xlsx' : '二電發票表.pdf')
-          ));
+          a.setAttribute(
+            'download',
+            decodeURIComponent(
+              url.split('/').pop() ??
+              (isExcel ? '二電發票表.xlsx' : '二電發票表.pdf')
+            )
+          );
           a.style.display = 'none';
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
 
-          this.messageService.successBubble(`匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`);
+          this.messageService.successBubble(
+            `匯出 ${isExcel ? 'Excel' : 'PDF'} 成功`
+          );
         },
-
       });
   }
 }

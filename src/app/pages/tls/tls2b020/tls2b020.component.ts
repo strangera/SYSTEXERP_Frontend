@@ -328,4 +328,16 @@ calculateColumnTotals(): void {
   onClearForm(): void {
     this.queryForm.reset();
   }
+  // TLS2B020Component.ts
+  override onLazyLoadData(ev: { pageIndex: number; pageSize: number; SortBy: any[] }) {
+  // 把 event 寫回 form（或直接合併進 payload）
+  this.queryForm.patchValue({
+    pageIndex: ev.pageIndex,
+    pageSize: ev.pageSize,
+    SortBy: ev.SortBy,
+  } as any, { emitEvent: false });
+
+  this.onSubmit(this.queryForm); // 這次 onSubmit 會帶正確的 pageIndex/pageSize/SortBy
+}
+
 }

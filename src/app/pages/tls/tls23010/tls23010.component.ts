@@ -40,9 +40,8 @@ import { HttpResponse } from '@angular/common/http';
 import { CheckboxModule } from 'primeng/checkbox';
 import { CommonModule } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-// 1) imports 補上 shareReplay
 import { forkJoin } from 'rxjs';
-import { map, finalize, shareReplay } from 'rxjs/operators'; // <= 若你是 RxJS7，也可以從 'rxjs' 直接匯入 shareReplay
+import { map, finalize, shareReplay } from 'rxjs/operators';
 import { untilDestroyed } from '@ngneat/until-destroy';
 
 @UntilDestroy()
@@ -70,25 +69,22 @@ import { untilDestroyed } from '@ngneat/until-destroy';
     TranslateModule,
     ButtonModule,
     CheckboxModule,
-    TableReportComponent, // ✅ 使用報表 table
+    TableReportComponent,
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> implements OnInit {
   private _obsCache = new Map<string, any>();
-
-  /** 在元件生命週期內，同一 key 的 observable 只建立一次並重放最後值 */
   private once<T>(key: string, factory: () => import('rxjs').Observable<T>) {
     if (!this._obsCache.has(key)) {
-      const obs$ = factory().pipe(
-        shareReplay({ bufferSize: 1, refCount: false })
-      );
+      const obs$ = factory().pipe(shareReplay({ bufferSize: 1, refCount: false }));
       this._obsCache.set(key, obs$);
     }
     return this._obsCache.get(key) as import('rxjs').Observable<T>;
   }
+
   // ===== state =====
   pdfSummary: string[] = [];
-  data: any[] = [];
+  data: TLS23010Data[] = [];
   summaryData: any[] = [];
   totalRecords = 0;
 
@@ -96,13 +92,13 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   btnLoading = false;
   historyRequestBody: any | null = null;
 
-  // ===== 排序（重點）=====
+  // ===== 排序 =====
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
     { field: 'TXN_Date', order: 1 },
-    { field: 'tlt_no', order: 1 },  // 以專櫃編號群組
+    { field: 'tlt_no', order: 1 },
     { field: 'ECR_No', order: 1 },
-    { field: 'TXN_No', order: 1 },
+    { field: 'TXN_No', order: 1 }, // 唯一鍵也排序
   ];
 
   readonly yesterday: Date = (() => {
@@ -140,14 +136,13 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     TXN_Subtype: [''],
     showSummary: [false],
 
-    // ✅ 預設排序（與 defaultSort 一致）
     ...createPaginationConfig([
       { field: 'TXN_Date', order: 1 },
-      { field: 'tlt_no', order: 1 }, // ✅ 同步
+      { field: 'tlt_no', order: 1 },
       { field: 'ECR_No', order: 1 },
       { field: 'TXN_No', order: 1 },
     ]),
-    pageSize: [30],  // ✅ 一律 30
+    pageSize: [30],
   });
 
   // 下拉選單
@@ -188,7 +183,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta, pageSize: 30 }, { emitEvent: false });
 
-    // === 只建立一次 ===
     if (!this.dropdownInit$) {
       this.dropdownInit$ = forkJoin({
         floors: this.floorService.getFloors(),
@@ -204,7 +198,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
     }
 
-    // 不論 ngOnInit 被叫幾次，這裡都只用同一份結果
     this.dropdownInit$.pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.floorOptions = res.floors || [];
@@ -229,128 +222,107 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       });
   }
 
-
-
-
-  // ========= 查詢（明細 / 彙總） =========
- // ========= 查詢（明細 / 彙總） =========
-// ========= 查詢（明細 / 彙總） =========
-onSubmit(frm: FormGroup) {
-  this.handleSubmit(frm, () => {
-    const val = this.queryForm.getRawValue() as any;
-    const isSummary = !!this.queryForm.get('showSummary')?.value;
-
-    // 固定 pageSize/SortBy
-    const pageSize = 30;
-    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-    const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-      ? val.SortBy
-      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-    ).map((s: any) => ({ ...s }));
-
-    // ✅ 關鍵：日期改成 DateOnly（yyyy-MM-dd）
-    const payload: any = {
-      ...val,
-      TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
-    };
-
-    // 後端不需要
-    delete payload.showSummary;
-
-    if (!isSummary) {
-      Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
-    } else {
-      Object.assign(payload, { SortBy: sortByArr });
-      delete payload.pageIndex;
-      delete payload.pageSize;
-    }
-
-    // 清空空值（保留 0/false）
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-      if (typeof v === 'string' && v.trim() === '') delete payload[k];
-    });
-
-    // 匯出沿用同一包參數（此時已是 DateOnly）
-    this.historyRequestBody = { ...payload };
-
-    this.loading = true;
-
-    if (isSummary) {
-      // ======= 彙總 =======
-      this.tls23010Service
-        .queryTLS23010Summary(payload)
-        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (resp) => {
-            const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-            const head = dataArr[0] ?? {};
-            const details =
-              Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-              Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-              [];
-
-            // 寫回 Table（彙總）
-            this.summaryData = details.map((row: any) => ({ ...row }));
-            this.data = [];
-            this.totalRecords = this.summaryData.length;
-
-            // 明細總計清空，更新 PDF 摘要，保存查詢狀態
-            this.detailTotals = {};
-            this.updatePdfSummary?.();
-            this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-          },
-          error: () => {
-            this.summaryData = [];
-            this.totalRecords = 0;
-          },
-        });
-    } else {
-      // ======= 明細 =======
-      this.tls23010Service
-        .queryTLS23010(payload)
-        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (resp) => {
-            const queryData = Array.isArray(resp?.Data?.QueryData)
-              ? resp.Data.QueryData
-              : Array.isArray(resp?.Data)
-                ? resp.Data
-                : [];
-
-            // 寫回 Table（明細）
-            this.data = queryData.map((row: any) => ({
-              ...row,
-              id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
-            }));
-
-            // 總計/筆數
-            this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
-            this.summaryData = [];
-            this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
-
-            // PDF 摘要 + 儲存查詢狀態
-            this.updatePdfSummary?.();
-            this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-          },
-          error: () => {
-            this.data = [];
-            this.totalRecords = 0;
-            this.pdfSummary = [];
-          },
-        });
-    }
-  });
-}
-
   private dropdownInit$?: import('rxjs').Observable<{
     floors: any[]; flags: any[]; whether: any[]; subtype: any[];
     carriers: any[]; buildings: any[]; orgs: any[]; counters: any[];
     ecrs: any[]; cashiers: any[];
   }>;
+
+  // ========= 查詢（明細 / 彙總） =========
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const val = this.queryForm.getRawValue() as any;
+      const isSummary = !!this.queryForm.get('showSummary')?.value;
+
+      const pageSize = 30;
+      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy
+        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+      ).map((s: any) => ({ ...s }));
+
+      const payload: any = {
+        ...val,
+        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
+      };
+      delete payload.showSummary;
+
+      if (!isSummary) {
+        Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
+      } else {
+        Object.assign(payload, { SortBy: sortByArr });
+        delete payload.pageIndex;
+        delete payload.pageSize;
+      }
+
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === null || v === undefined) delete payload[k];
+        if (Array.isArray(v) && v.length === 0) delete payload[k];
+        if (typeof v === 'string' && v.trim() === '') delete payload[k];
+      });
+
+      this.historyRequestBody = { ...payload };
+      this.loading = true;
+
+      if (isSummary) {
+        this.tls23010Service
+          .queryTLS23010Summary(payload)
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (resp) => {
+              const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+              const head = dataArr[0] ?? {};
+              const details =
+                Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+                Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+                [];
+
+              this.summaryData = details.map((row: any) => ({ ...row }));
+              this.data = [];
+              this.totalRecords = this.summaryData.length;
+
+              this.detailTotals = {};
+              this.updatePdfSummary?.();
+              this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+            },
+            error: () => {
+              this.summaryData = [];
+              this.totalRecords = 0;
+            },
+          });
+      } else {
+        this.tls23010Service
+          .queryTLS23010(payload)
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (resp) => {
+              const queryData = Array.isArray(resp?.Data?.QueryData)
+                ? resp.Data.QueryData
+                : Array.isArray(resp?.Data)
+                  ? resp.Data
+                  : [];
+
+              // 以 TXN_No 作為唯一鍵，這裡不再產生自訂 id
+              this.data = queryData as TLS23010Data[];
+
+              this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
+              this.summaryData = [];
+              this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+              this.updatePdfSummary?.();
+              this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+            },
+            error: () => {
+              this.data = [];
+              this.totalRecords = 0;
+              this.pdfSummary = [];
+            },
+          });
+      }
+    });
+  }
 
   onToggleSummary() {
     this.queryForm.patchValue({ pageIndex: 1, pageSize: 30 }, { emitEvent: false });
@@ -358,12 +330,12 @@ onSubmit(frm: FormGroup) {
   }
 
   // ========= 提供給 <app-table-report> 的查詢封裝（明細） =========
-public queryTLS23010ForReport = (body: any) =>
-  this.tls23010Service.queryTLS23010({
-    ...body,
-    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-  }).pipe(
+  public queryTLS23010ForReport = (body: any) =>
+    this.tls23010Service.queryTLS23010({
+      ...body,
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+    }).pipe(
       map((res: any) => ({
         Data: Array.isArray(res?.Data?.QueryData)
           ? res.Data.QueryData
@@ -374,19 +346,19 @@ public queryTLS23010ForReport = (body: any) =>
     );
 
   // ========= 提供給 <app-table-report> 的查詢封裝（彙總，切 30 筆分頁） =========
-public queryTLS23010SummaryForReport = (body: any) =>
-  this.tls23010Service.queryTLS23010Summary({
-    ...body,
-    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-  }).pipe(
+  public queryTLS23010SummaryForReport = (body: any) =>
+    this.tls23010Service.queryTLS23010Summary({
+      ...body,
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+    }).pipe(
       map((resp: any) => {
         const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
         const head = dataArr[0] ?? {};
         const all =
           Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-            Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-              [];
+          Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+          [];
         const pageIndex = Number(body?.pageIndex ?? 1);
         const pageSize = Number(body?.pageSize ?? 30);
         const slice = all.slice((pageIndex - 1) * pageSize, pageIndex * pageSize);
@@ -400,7 +372,7 @@ public queryTLS23010SummaryForReport = (body: any) =>
       SYS_StoreNo: row.SYS_StoreNo,
       TXN_Date: row.TXN_Date,
       ECR_No: row.ECR_No,
-      TXN_No: row.TXN_No,
+      TXN_No: row.TXN_No, // 唯一鍵
     };
     return this.tls23010Service.queryTLS23010Detail(body).pipe(
       map((list: any[]) => ({ Data: list ?? [] }))
@@ -413,7 +385,6 @@ public queryTLS23010SummaryForReport = (body: any) =>
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
-
     const exportBody = { ...this.historyRequestBody };
     delete exportBody.pageIndex;
     delete exportBody.pageSize;
@@ -430,14 +401,8 @@ public queryTLS23010SummaryForReport = (body: any) =>
       : this.tls23010Service.exportTLS23010PDF(exportBody);
 
     obs
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.btnLoading = false))
-      )
-      .subscribe({
-        next: (resp) => this.handleFileExport(resp, '.pdf'),
-
-      });
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({ next: (resp) => this.handleFileExport(resp, '.pdf') });
   }
 
   onExportXLSX() {
@@ -445,7 +410,6 @@ public queryTLS23010SummaryForReport = (body: any) =>
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
-
     const exportBody = { ...this.historyRequestBody };
     delete exportBody.pageIndex;
     delete exportBody.pageSize;
@@ -462,16 +426,9 @@ public queryTLS23010SummaryForReport = (body: any) =>
       : this.tls23010Service.exportTLS23010Excel(exportBody);
 
     obs
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.btnLoading = false))
-      )
-      .subscribe({
-        next: (resp) => this.handleFileExport(resp, '.xlsx'),
-
-      });
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({ next: (resp) => this.handleFileExport(resp, '.xlsx') });
   }
-
 
   private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
     const contentDisposition = response.headers.get('Content-Disposition');
@@ -517,7 +474,6 @@ public queryTLS23010SummaryForReport = (body: any) =>
 
     return `download${defaultExtension}`;
   }
-
 
   // ========= 小工具 =========
   private coerceTotals(src: any): Record<string, number> {
@@ -591,7 +547,6 @@ public queryTLS23010SummaryForReport = (body: any) =>
     return '';
   };
 
-  // footer/空白 顯示處理
   pToYesNoSafe = (val: unknown): string => {
     const v = String(val ?? '').trim().toUpperCase();
     if (!v) return '';
@@ -607,20 +562,16 @@ public queryTLS23010SummaryForReport = (body: any) =>
   };
 
   private getSum(field: string): number {
-    const isSummary = !!this.queryForm?.get('showSummary')?.value; // ✅ 改用表單欄位
-
+    const isSummary = !!this.queryForm?.get('showSummary')?.value;
     if (!isSummary) {
       const mapped = this.detailTotalFieldMap?.[field];
       if (mapped != null && typeof this.detailTotals?.[mapped] === 'number') {
         return this.detailTotals[mapped] ?? 0;
       }
-      return (this.data ?? []).reduce((s, r) => s + (Number(r?.[field]) || 0), 0);
+      return (this.data ?? []).reduce((s, r: any) => s + (Number(r?.[field]) || 0), 0);
     }
-
-    // 彙總模式：直接從 summaryData 累加（若未來有 summary 的 total map，再在這裡優先取用）
     return (this.summaryData ?? []).reduce((s, r) => s + (Number(r?.[field]) || 0), 0);
   }
-
 
   private buildSummaryFromLocal(): void {
     const A = this.getSum('TXN_TotGUI');
@@ -651,7 +602,7 @@ public queryTLS23010SummaryForReport = (body: any) =>
   }
 
   private updatePdfSummary(): void {
-    const isSummary = !!this.queryForm.get('showSummary')?.value; // ✅
+    const isSummary = !!this.queryForm.get('showSummary')?.value;
 
     if (isSummary) {
       const totalAmt = this.getSum('TXN_TotSaleAmt');
@@ -726,11 +677,11 @@ public queryTLS23010SummaryForReport = (body: any) =>
       TXN_PayAmt: this.detailTotals['Total_TXN_PayAmt'] ?? 0,
     };
   }
+
   private padTxnNo(v: any): string {
     const s = String(v ?? '').trim();
     return s ? s.padStart(6, '0') : '';
   }
-
 
   // ========= 欄位 =========
   columns = [
@@ -738,7 +689,7 @@ public queryTLS23010SummaryForReport = (body: any) =>
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right', format: (v: any) => this.padTxnNo(v) },
 
-    { field: 'tlt_no', header: '專櫃編號', visible: true },        // ✅ 群組鍵(不需 isSubTotal)
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
 
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
@@ -746,7 +697,6 @@ public queryTLS23010SummaryForReport = (body: any) =>
     { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
 
-    // ✅ 金額欄位：同時支援小計與總計
     { field: 'TXN_TotGUI', header: '發票金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
     { field: 'TXN_TotSaleAmt', header: '銷售金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
     { field: 'TXN_TotOver', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
@@ -785,10 +735,8 @@ public queryTLS23010SummaryForReport = (body: any) =>
     { field: 'CRD_No', header: '號碼', visible: true },
     { field: 'TERM_No', header: '分期期數', visible: true, style: 'text-right' },
 
-    // ✅ 支付金額也做小計+總計
     { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
   ];
-
 
   detailcolumns = [
     { field: 'TXN_Date', header: '銷售日期', format: this.formatDateTimeYMDHM.bind(this) },
@@ -803,7 +751,7 @@ public queryTLS23010SummaryForReport = (body: any) =>
     { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
 
-  // ===== API 總計對映 =====
+  // API 總計對映
   detailTotals: Record<string, number> = {};
   detailTotalFieldMap: Record<string, string> = {
     TXN_TotGUI: 'Total_TXN_TotGUI',
@@ -812,6 +760,7 @@ public queryTLS23010SummaryForReport = (body: any) =>
     TXN_TotDisc: 'Total_TXN_TotDisc',
     TXN_PayAmt: 'Total_TXN_PayAmt',
   };
+
   summaryColumns = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
@@ -819,15 +768,18 @@ public queryTLS23010SummaryForReport = (body: any) =>
     { field: 'TXN_DateEnd', header: '銷售日期(迄)', visible: true, format: this.formatYMD },
     { field: 'TXN_TotGUI', header: '發票金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
-  // 1) 新增這個工具函式（放在 component 裡即可）
-private toDateOnly(x: any): string | undefined {
-  if (!x) return undefined;
-  const d = typeof x === 'string' ? new Date(x) : (x as Date);
-  if (isNaN(d.getTime())) return undefined;
-  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+
+  // 工具：輸出 yyyy-MM-dd
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // 若 app-table-report 支援 trackBy，可使用
+  trackByTxn = (_: number, r: TLS23010Data) => r?.TXN_No;
 }

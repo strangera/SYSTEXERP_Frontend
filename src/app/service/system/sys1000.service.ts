@@ -27,7 +27,7 @@ export class SystemOptionsService {
   private static optionsCache: Record<string, SystemOption[]> = {};
 
   static loadOptionsFromSession() {
-    const systemSetting = sessionStorage.getItem('SYS1000');
+    const systemSetting = localStorage.getItem('SYS1000');
     if (!systemSetting) return;
 
     const parsedData = JSON.parse(systemSetting) as Sys1000Children[];

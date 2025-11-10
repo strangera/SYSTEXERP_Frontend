@@ -39,6 +39,7 @@ export interface TLS27040Data {
   ECR_No: string;
   TXN_No: string; // 原本有 number, 現在 Swagger 範例是 string
   TLT_No: string;
+  CRD_Type: string;
   PayCrdType: string;
   TxnAmt: number;
   TxnDate: Date;
@@ -50,6 +51,7 @@ export interface TLS27040Data {
   ApprovalCode: string;
   TxnType: string;
   CrdTxnFg: string;
+  EntryFg: string;
   CheckStatus: string; // 可能是 Check 的別名
   TermNo: string; // 原本有 number | string, 現在 Swagger 範例是 string
   acquiring_Bank: string;

@@ -14,7 +14,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -42,6 +41,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
     pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
     org_id: new FormControl<string | undefined>(undefined), // 部門
+    pod_date: new FormControl<{ start: Date | null; end: Date | null; }>({ start: this.service.dateS, end: this.service.dateE }), // 活動起始日期
     pod_sdate: new FormControl<Date>(this.service.dateS), // 起始日期(起)
     pod_edate: new FormControl<Date>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期

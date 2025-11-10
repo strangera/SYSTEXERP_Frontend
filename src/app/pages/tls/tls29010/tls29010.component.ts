@@ -52,12 +52,12 @@ export interface TALPORDERM {
   approved_usr_name?: string | null; // 核准人員姓名
   approved_date?: Date | null; // 核准日期
 
-  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
-  CRT_USR_No: string; // 建立人員代碼
-  CRT_USR_Name: string; // 建立人員姓名
-  UPD_Date: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
-  UPD_USR_No: string; // 變更人員代碼
-  UPD_USR_Name: string; // 變更人員姓名
+  crt_date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
+  crt_usr_no: string; // 建立人員代碼
+  crt_usr_name: string; // 建立人員姓名
+  upd_date: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
+  upd_usr_no: string; // 變更人員代碼
+  upd_usr_name: string; // 變更人員姓名
 }
 
 @Component({
@@ -166,8 +166,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     { field: 'pod_sdate', header: '活動起始日', visible: true, format: formatDate },
     { field: 'pod_edate', header: '活動結束日', visible: true, format: formatDate },
     // { field: 'pod_busdate', header: '活動正檔日', visible: true, format: formatDate },  // 券類才會用到
-    { field: 'pod_back_sdate', header: '活動兌回起始日期', visible: true, format: formatDate },
-    { field: 'pod_back_edate', header: '活動兌回終止日期', visible: true, format: formatDate },
+    // { field: 'pod_back_sdate', header: '活動兌回起始日期', visible: true, format: formatDate },
+    // { field: 'pod_back_edate', header: '活動兌回終止日期', visible: true, format: formatDate },
     {
       field: 'pod_status',
       header: '活動狀態',
@@ -183,12 +183,12 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     { field: 'approved_usr_name', header: '核准人員姓名', visible: false },
     { field: 'approved_date', header: '核准日期', visible: false, format: formatDate },
 
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+    { field: 'crt_date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'crt_usr_no', header: '建立人員代碼', visible: false },
+    { field: 'crt_usr_name', header: '建立人員姓名', visible: false },
+    { field: 'upd_date', header: '變更日期', visible: false, format: formatDate },
+    { field: 'upd_usr_no', header: '變更人員代碼', visible: false },
+    { field: 'upd_usr_name', header: '變更人員姓名', visible: false },
   ];
 
   selectedItems: TALPORDERM[] = [];// 多選項目
@@ -216,7 +216,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            console.log('Result', this.data);
+            console.log('Result', response.Data);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

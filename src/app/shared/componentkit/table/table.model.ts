@@ -337,6 +337,7 @@ export const convertDateToYYYY = (date: Date): string => {
 export type TableTypes =
   'input' |
   'inputNumber' |
+  'percent' |
   'dropdown' |
   'button' |
   'html' |

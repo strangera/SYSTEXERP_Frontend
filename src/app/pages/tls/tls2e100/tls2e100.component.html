@@ -43,12 +43,8 @@
   <div class="col-12">
     <app-table-report tableKey="TLS2e100" [data]="data" [footerData]="footerData" [columns]="columns"
       [totalRecords]="totalRecords" [queryFunction]="tls2e100Service.queryTLS2E100.bind(tls2e100Service)"
-      [lastQueryBody]="lastQueryBody" [loading]="loading" [showManage]="true" [showDetail]="true"
-      (detail)="onDetail($event)" [showEdit]="false" [showDelete]="true" [showExcelExport]="true" dataKey="apply_no"
-      [exportExcelLoading]="excelBtnLoading" (exportExcel)="onExportExcel()" [showManage]="false"
-      [groupRowsBy]="groupRowsBy">
-
-
+      [lastQueryBody]="lastQueryBody" [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"
+      dataKey="apply_no" [groupRowsBy]="groupRowsBy">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
           <p-button styleClass="p-2" label="年度對帳單.PDF" icon="pi pi-file" (click)="onExportPDF()"
