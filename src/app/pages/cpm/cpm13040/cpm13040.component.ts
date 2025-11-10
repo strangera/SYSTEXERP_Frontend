@@ -1,3 +1,4 @@
+import { formatDate } from './../../../shared/componentkit/table-report/table-report.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -7,7 +8,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatAmount, LazyLoadEvent} from '@shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ButtonModule } from 'primeng/button';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -68,14 +69,14 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
 
   // 第二張表格：卡別明細
   columns: Column[] = [
-    { field: 'TXN_Date', header: '日期', visible: true },
+    { field: 'TXN_Date', header: '日期', visible: true ,format: formatDate},
     { field: 'CardType', header: '卡別', visible: true },
     { field: 'TXN_PayDesc', header: '聯名卡號', visible: true },
     { field: 'Org_ID', header: '組織名稱', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    { field: 'TXN_PayAmt', header: '刷卡總金額', visible: true, format: formatAmount },
+    { field: 'TXN_PayAmt', header: '刷卡總金額', visible: true, format: formatAmount, isTotal: true },
   ];
 
   constructor(
@@ -147,8 +148,8 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
 
     // 第二個 API: 卡別明細表（columns）- 初始載入第一頁
     const detailPayload = {
-      pageSize: v.pageSize || 20, // 預設每頁 20 筆
-      pageIndex: 1, // 重新查詢時從第一頁開始
+      pageSize: v.pageSize || 20,
+      pageIndex: v.pageIndex || 1,
       ...payload
     };
 
@@ -159,19 +160,56 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       }))
       .subscribe({
         next: (res) => {
+          console.log('完整 API 回應:', res);
+
+          // 處理不同的 API 響應結構
           if (res?.Data) {
-            this.data = res.Data.Datas || res.Data || [];
-            this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            console.log('Detail 資料:', this.data);
-            console.log('Total Records:', this.totalRecords);
-          } else {
+            // 情況1: res.Data 直接包含 QueryData 和 TotalData
+            if (res.Data.QueryData) {
+              this.data = res.Data.QueryData;
+              if (res.Data.TotalData) {
+                this.footerData = [{
+                  group_name: '總計',
+                  TXN_PayAmt: res.Data.TotalData.Total_TXN_PayAmt
+                }];
+              }
+            }
+            // 情況2: res.Data 就是陣列資料
+            else if (Array.isArray(res.Data)) {
+              this.data = res.Data;
+              this.footerData = [];
+            }
+            // 情況3: 其他結構
+            else {
+              this.data = res.Data || [];
+              this.footerData = [];
+            }
+          }
+          // 直接在根層級有 QueryData
+          else if (res?.QueryData) {
+            this.data = res.QueryData;
+            if (res.TotalData) {
+              this.footerData = [{
+                group_name: '總計',
+                TXN_PayAmt: res.TotalData.Total_TXN_PayAmt
+              }];
+            }
+          }
+          else {
             this.data = [];
             this.footerData = [];
-            this.totalRecords = 0;
           }
+
+          // 設定總筆數，優先使用 TotalCount，其次使用 data 長度
+          this.totalRecords = res?.TotalCount || res?.Data?.TotalCount || this.data.length || 0;
+
+          console.log('處理後 Detail 資料:', this.data, '長度:', this.data.length);
+          console.log('處理後 Footer 資料:', this.footerData);
+          console.log('處理後總筆數:', this.totalRecords);
+
+          // 儲存查詢狀態，以便後續操作能恢復
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         },
-        error: (err) => console.error('Detail 查詢失敗:', err)
       });
   }
 
@@ -203,16 +241,47 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       }))
       .subscribe({
         next: (res) => {
+          console.log('分頁載入完整 API 回應:', res);
+
+          // 處理不同的 API 響應結構（與上面相同邏輯）
           if (res?.Data) {
-            this.data = res.Data.Datas || res.Data || [];
-            this.footerData = res.Data.TotalDatas ? [res.Data.TotalDatas] : [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            console.log('分頁載入後的資料:', this.data);
-          } else {
+            if (res.Data.QueryData) {
+              this.data = res.Data.QueryData;
+              if (res.Data.TotalData) {
+                this.footerData = [{
+                  group_name: '總計',
+                  TXN_PayAmt: res.Data.TotalData.Total_TXN_PayAmt
+                }];
+              }
+            }
+            else if (Array.isArray(res.Data)) {
+              this.data = res.Data;
+              this.footerData = [];
+            }
+            else {
+              this.data = res.Data || [];
+              this.footerData = [];
+            }
+          }
+          else if (res?.QueryData) {
+            this.data = res.QueryData;
+            if (res.TotalData) {
+              this.footerData = [{
+                group_name: '總計',
+                TXN_PayAmt: res.TotalData.Total_TXN_PayAmt
+              }];
+            }
+          }
+          else {
             this.data = [];
             this.footerData = [];
-            this.totalRecords = 0;
           }
+
+          this.totalRecords = res?.TotalCount || res?.Data?.TotalCount || this.data.length || 0;
+
+          console.log('分頁處理後 Detail 資料:', this.data, '長度:', this.data.length);
+          console.log('分頁處理後 Footer 資料:', this.footerData);
+          console.log('分頁處理後總筆數:', this.totalRecords);
         },
       });
   }
