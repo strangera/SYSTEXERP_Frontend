@@ -12,7 +12,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { QueryTLS27040Request, TLS27040Data, TLS27040Service, TotalData } from '@service/api/tls/tls27040.service';
 import { finalize } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
-import { todayStart, toHHmm } from '@shared/models/system/query-form.model';
+import { getDateTime, toHHmm } from '@shared/models/system/query-form.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -60,8 +60,8 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     TxnAmt_End: [null, [Validators.max(9999999999)]],      // 交易金額迄 decimal 12, 2
     TxnDate_Start: [null],    // 交易日期起
     TxnDate_End: [null],    // 交易日期迄
-    TxnTime_Start: [todayStart],  // 交易時間起
-    TxnTime_End: [todayStart],  // 交易時間迄
+    TxnTime_Start: [getDateTime()],  // 交易時間起
+    TxnTime_End: [getDateTime(undefined, 23, 59, 59, 999)],  // 交易時間迄
     CrdNo: [null, [Validators.maxLength(32)]],       // 卡號
     TmID: [null, [Validators.maxLength(8)]],      //EDC號碼
     BatCloseDate_Start: [null], // 請款日期起
