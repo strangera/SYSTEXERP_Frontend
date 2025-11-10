@@ -75,7 +75,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   /** 根據能源類型篩選的錶號清單 */
   public readonly filteredMeterNo = computed<ASS2100ENGMeterType[]>(() => {
     const engType = this.engTypeSignal() ? this.service.engTypeMap.get(this.engTypeSignal()!) : EngType.水;
-    const MeterNos = this.service.engMeterNoData();
+    const MeterNos = this.service.engMeterNoOptions();
     this.logger.debug(`filteredMeterNo:`, [engType, MeterNos]);
 
     if (!engType || !MeterNos.length) return [];
@@ -131,7 +131,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   /** 統一初始化效果器 */
   public readonly initEffect = effect(() => {
     const engTypes = this.service.engTypeOptions;
-    const meterNos = this.service.engMeterNoData();
+    const meterNos = this.service.engMeterNoOptions();
 
     if (!engTypes.length || !meterNos.length) return;
     const rowData = this.rowdata;
@@ -187,7 +187,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       header: '專櫃編號/名稱',
       type: 'dropdown',
       showClear: !1,
-      options: () => this.service.tltNoData().map(({ TLT_No, TLT_Name }) => ({
+      options: () => this.service.tltNoOptions().map(({ TLT_No, TLT_Name }) => ({
         No: TLT_No,
         Name: `${TLT_No} - ${TLT_Name}`
       })),

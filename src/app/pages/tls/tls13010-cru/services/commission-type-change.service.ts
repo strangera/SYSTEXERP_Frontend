@@ -214,12 +214,12 @@ export class CommissionTypeChangeService {
 
     const hasChanged = originalCommissionType !== currentCommissionType;
 
-    if (hasChanged) {
-      console.log('🔍 抽成別已變更:', {
-        原始: originalCommissionType,
-        目前: currentCommissionType
-      });
-    }
+    // if (hasChanged) {
+    //   console.log('🔍 抽成別已變更:', {
+    //     原始: originalCommissionType,
+    //     目前: currentCommissionType
+    //   });
+    // }
 
     return hasChanged;
   }

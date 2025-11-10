@@ -18,7 +18,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { ButtonModule } from 'primeng/button';
 import { NgStyle } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
-
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, SystemOptionsService } from '../../../service/system/sys1000.service';
 export interface POS1002 {
   ID: number; // decimal(19,0)
 
@@ -84,7 +85,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     ECR_Type: [''],              // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
     ECR_TLT_NoList: [[]],            // 專櫃編號
     ECR_TLT_Name: [''],          // 專櫃名稱
-    ECR_Status: [''],            // 收銀機狀態（A=啟用、C=停用...）
+    ECR_Status: ['A'],            // 收銀機狀態（A=啟用、C=停用...）
     ECR_GUI_PeriodQty: [null],   // 每期電子發票預設配號數量
     ECR_GUI_MinQty: [null],      // 電子發票最小安全存量
 
@@ -95,25 +96,9 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  ECR_Type_Option: option[] = [ // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
-    { value: '1', label: '集中機台(統收)' },
-    { value: '2', label: '專櫃機台(自收)' },
-    { value: '5', label: '離線機台(不開立業主發票、不使用業主機台)' },
-    { value: '7', label: '它社機台(開立業主發票、不使用業主機台)' }
-  ];
-
-  ECR_Status_Option: option[] = [ // 收銀機狀態 A=啟用(預設值)、C=停用、S=強制停用、T=訓練
-    { value: 'A', label: '啟用' },
-    { value: 'C', label: '停用' },
-    { value: 'S', label: '強制停用' },
-    { value: 'T', label: '訓練' }
-  ]
-
-  ECR_GUI_Type_Option: option[] = [ // 發票使用類別，00=不開發票、03=二聯式收銀機發票、07=電子發票(預設值)
-    { value: '00', label: '不開發票' },
-    { value: '03', label: '二聯式收銀機發票' },
-    { value: '07', label: '電子發票' }
-  ]
+  typeOptions = getSYS1000Options('ECR_Type');
+  statusOptions = getSYS1000Options('ECR_Status');
+  guiTypeOptions = getSYS1000Options('ECR_GUI_Type');
 
   POS1002_Option: apiOption[] = []; //收銀機號
   TLTTALENT_Option: apiOption[] = []; //專櫃編號
@@ -124,30 +109,27 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
     {
-      field: 'ECR_Type', header: '機台類型', visible: true
-      , format: (value: string) =>
-        this.ECR_Type_Option.find((option) => option.value === value)?.label ||
-        value,
+      field: 'ECR_Type', header: '機台類型', visible: true,
+      format: (value) => SystemOptionsService.getOptions('ECR_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
     },
     { field: 'ECR_TLT_No', header: '專櫃編號', visible: true },
-    { field: 'ECR_TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'ECR_TLT_Name', header: '櫃位名稱', visible: true },
     { field: 'ECR_USR_No', header: '收銀員', visible: true },
     { field: 'ECR_USR_Name', header: '收銀員姓名', visible: true },
     { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDate },
     { field: 'ECR_ExpireDate', header: '到期日期', visible: true, format: formatDate },
     { field: 'ECR_CloseDate', header: '停用日期', visible: true, format: formatDate },
+
     {
-      field: 'ECR_Status', header: '收銀機狀態', visible: true
-      , format: (value: string) =>
-        this.ECR_Status_Option.find((option) => option.value === value)?.label ||
-        value,
+      field: 'ECR_Status',
+      header: '收銀機狀態',
+      visible: true,
+      format: (value) => getSYS1000('ECR_Status', value)
     },
-    {
-      field: 'ECR_GUI_Type', header: '發票類別', visible: true
-      , format: (value: string) =>
-        this.ECR_GUI_Type_Option.find((option) => option.value === value)?.label ||
-        value,
-    },
+     {
+    field: 'ECR_GUI_Type', header: '發票類別', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_GUI_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+  },
     { field: 'ECR_GUI_PeriodQty', header: '發票預設配號數量', visible: true },
     { field: 'ECR_GUI_MinQty', header: '發票安全存量', visible: true },
   ];

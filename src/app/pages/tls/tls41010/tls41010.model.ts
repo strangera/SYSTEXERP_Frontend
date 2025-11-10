@@ -240,7 +240,7 @@ export const columns: Column[] = [
     format: (value) => SystemOptionsService.getOptions('ECR_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
   },
   { field: 'ECR_TLT_No', header: '專櫃編號' },
-  { field: 'ECR_TLT_Name', header: '專櫃名稱' },
+  { field: 'ECR_TLT_Name', header: '櫃位名稱' },
   { field: 'ECR_USR_No', header: '收銀員', visible: true },
   { field: 'ECR_USR_Name', header: '姓名', visible: true },
   { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDate },

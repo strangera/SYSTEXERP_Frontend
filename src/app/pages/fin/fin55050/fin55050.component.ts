@@ -82,7 +82,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   queryForm = this.formBuilder.group({
     DateFrom: [this.yesterday, Validators.required],
     DateTo: [this.yesterday, Validators.required],
-    //     DateFrom: [new Date(2024, 9, 1), Validators.required],
+    // DateFrom: [new Date(2024, 9, 1), Validators.required],
     // DateTo: [new Date(2024, 9, 1), Validators.required],
     OrgIdList: [null],
     AccNoList: [null],
@@ -132,7 +132,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   ngOnInit(): void {
     this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
     // ✅ 預先把 ProgNo 寫入一次，避免你從其它地方直開 CRU
-    try { localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); } catch {}
+    try { localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); } catch { }
 
     this.loadOptions();
 
@@ -300,7 +300,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     const raw = this.lastQueryBody ?? this.queryForm.getRawValue();
 
     const from = this.toDateOnly(raw?.DateFrom);
-    const to   = this.toDateOnly(raw?.DateTo);
+    const to = this.toDateOnly(raw?.DateTo);
     if (!from || !to) {
       this.messageService?.warnBubble?.('請先選擇「日期起、日期迄」再匯出。');
       return null;

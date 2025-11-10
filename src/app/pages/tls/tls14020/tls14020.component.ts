@@ -392,7 +392,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       talent_id: data.talent_id.toString(),
       SortBy: [{ field: 'apply_no', order: 1 }],
     };
-    this.apiService.queryTLS13010(item).subscribe(response => {
+    this.apiService.queryTLS13010Detail(item).subscribe(response => {
       const rowData = response.Data || [];
       if (rowData.length !== 0) {
         this.navigateWithState(CRUDStatus.Read, rowData[0]);

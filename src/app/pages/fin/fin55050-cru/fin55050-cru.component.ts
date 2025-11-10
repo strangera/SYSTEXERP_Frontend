@@ -6,7 +6,6 @@ import { NgIf } from '@angular/common';
 import { MenuItem } from 'primeng/api';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -37,7 +36,7 @@ type VoucherMeta = {
 @Component({
   selector: 'app-fin55050-cru',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, TableComponent, TranslateModule, NgIf],
+  imports: [MenubarComponent, TableComponent, TranslateModule, NgIf],
   templateUrl: './fin55050-cru.component.html'
 })
 export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -63,7 +62,7 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'NoteDesc', header: '摘要', visible: true },
     { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount },
     { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount },
-    { field: 'Remark',   header: '備註',     visible: true },
+    { field: 'Remark', header: '備註', visible: true },
   ];
 
   constructor(private fin55050Service: FIN55050Service) {
@@ -78,7 +77,7 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
       if (!savedProg) localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo);
     } catch {
       this.ProgNo = 'FIN55050';
-      try { localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo); } catch {}
+      try { localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo); } catch { }
     }
 
     // 2) 初始化頁面（註冊 Menubar 權限路徑）
@@ -120,7 +119,7 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (resp: any) => {
-          const list: DetailRow[] = resp?.Data ?? [];
+          const list: DetailRow[] = resp?.Data._VoucherDetails ?? [];
           if (!list.length) {
             this.rows = [];
             this.meta = null;
@@ -146,8 +145,8 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
-back(): void {
-  this.router.navigate(['/account/fin/fin55050']);
-  // 或：this.router.navigateByUrl('/account/fin/fin55050');
-}
+  back(): void {
+    this.router.navigate(['/account/fin/fin55050']);
+    // 或：this.router.navigateByUrl('/account/fin/fin55050');
+  }
 }

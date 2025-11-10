@@ -8,11 +8,9 @@ import { Observable, of } from 'rxjs';
 export interface TLS42020QueryRequest extends BaseQueryRequest {
   menuType: string[];              // 菜單類別
   tltNo: string[];                 // 專櫃編號
-  tltName?: string[];              // 專櫃名稱 - 新增此欄位
-  SBM_BegDate_s: string;           // 開始日期(起)
-  SBM_BegDate_e: string;           // 開始日期(迄)
-  SBM_EndDate_s: string;           // 結束日期(起)
-  SBM_EndDate_e: string;           // 結束日期(迄)
+  tltName?: string[];              // 專櫃名稱
+  SBM_BegDate: string;             // 開始日期
+  SBM_EndDate: string;             // 結束日期
 }
 
 // Data result interface for TLS42020 (POS1027M資料表)
