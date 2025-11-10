@@ -99,7 +99,6 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     Location_No && this.qf().Location_No.setValue(Location_No);
 
     this.suppressEngTypeEffect = !0;
-    this.qf().ENG_Type.setValue(void 0);
     queueMicrotask(() => this.suppressEngTypeEffect = !1);
 
     this.logger.debug(`meterNoEffect:`, [meterNo, typeString, engType, Location_No]);
