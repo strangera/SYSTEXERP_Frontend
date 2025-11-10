@@ -83,6 +83,8 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52050Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
   ];
 
+  editDisabled = (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) < (new Date().setHours(0, 0, 0, 0));
+
   constructor(
     private tls52050Service: Tls52050Service,
     private exportLabelService: ExportLabelService,
