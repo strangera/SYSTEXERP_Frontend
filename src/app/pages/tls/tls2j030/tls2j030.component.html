@@ -1,87 +1,51 @@
-<div class="grid">
-    <div class="col-12">
-        <div class="card">
-            <div class="grid align-items-center">
-                <div class="col" style="flex: 1;">
-                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
-                </div>
-            </div>
-            <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
-                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
-                    <form [formGroup]="cruForm" id="cruForm" (ngSubmit)="onSubmit(cruForm)">
-                        <ng-container formArrayName="items">
-                            <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                                <div class="grid p-fluid">
-                                    <div class="col-6 md:col-4 lg:col-4">
-                                        <app-dropdown label="收銀機型態" controlName="CashRegisterType"
-                                            [options]="CashRegisterTypeItems" optionLabel="label" optionValue="value"
-                                            [control]="getFormControl(i, 'CashRegisterType')" [submitted]="submitted">
-                                        </app-dropdown>
-                                    </div>
-                                    <div class="col-12 md:col-6 lg:col-4">
-                                        <app-calendar calendarType="dateOne" label="銷售日期"
-                                            [control]="getFormControl(i, 'onedatedd')" [submitted]="submitted">
-                                        </app-calendar>
-                                    </div>
-                                    <div class="col-12 md:col-6 lg:col-4">
-                                        <app-input-number [useGrouping]="false" label="收銀機號" controlName="registerID"
-                                            [control]="getFormControl(i, 'registerID')" [submitted]="submitted">
-                                        </app-input-number>
-                                    </div>
-                                </div>
-                                <div class="grid p-fluid">
-                                    <div class="col-12 md:col-6 lg:col-4">
-                                        <app-input-number [useGrouping]="false" label="交易流水號"
-                                            controlName="transactionID" [control]="getFormControl(i, 'transactionID')"
-                                            [submitted]="submitted">
-                                        </app-input-number>
-                                    </div>
-                                    <div class="col-12 md:col-6 lg:col-4">
-                                        <app-input-number [useGrouping]="false" label="專櫃編號" controlName="counterID"
-                                            [control]="getFormControl(i, 'counterID')" [submitted]="submitted">
-                                        </app-input-number>
-                                    </div>
-                                    <div class="col-12 md:col-6 lg:col-4">
-                                        <app-input-number-range [useGrouping]="false" label="二聯發票號碼"
-                                            [startControl]="getFormControl(i, 'twoInvoiceStart')"
-                                            [endControl]="getFormControl(i, 'twoInvoiceEnd')" [submitted]="submitted">
-                                        </app-input-number-range>
-                                    </div>
-                                </div>
-                                <div class="grid p-fluid">
-                                    <div class="col-12 md:col-6 lg:col-4">
-                                        <app-input-number label="應稅金額" controlName="taxMoney"
-                                            [control]="getFormControl(i, 'taxMoney')" [submitted]="submitted">
-                                        </app-input-number>
-                                    </div>
-                                    <div class="col-12 md:col-6 lg:col-4">
-                                        <app-input-number label="免稅金額" controlName="noTaxMoney"
-                                            [control]="getFormControl(i, 'noTaxMoney')" [submitted]="submitted">
-                                        </app-input-number>
-                                    </div>
-                                </div>
-                                <div class="grid pt-3" style="justify-content: flex-end;">
-                                    <div style="margin-right: 5px;padding: 3px;">
-                                        <p-button (click)="onRemoveItem(i)" label="删除" icon="pi pi-trash"
-                                            severity="danger"></p-button>
-                                    </div>
-                                </div>
-                                <hr>
-                            </ng-container>
-                        </ng-container>
-                        <div class="pt-1">
+<!-- //*ngIf="isNotECR" -->
 
-                        </div>
-                        <div class="grid pt-3" style="justify-content: flex-end;">
-                            <div style="margin-right: 5px;padding: 3px;">
-                                <p-button (click)="submitForm(cruForm)" label="確認" icon="pi pi-check"
-                                    severity="info"></p-button>
-                            </div>
-                        </div>
-                    </form>
-                </p-accordionTab>
-            </p-accordion>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4"> <app-input-text label="換開編號" controlName="CHG_No"
+              [control]="queryForm.controls.CHG_No" [submitted]="submitted"></app-input-text> </div>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="換開日期" calendarType="dateRange"
+            [startControl]="queryForm.controls.GUI_INPUTDATE_Start" [endControl]="queryForm.controls.GUI_INPUTDATE_End"
+            [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="來源發票日期" calendarType="dateRange"
+            [startControl]="queryForm.controls.TXN_Date_Start" [endControl]="queryForm.controls.TXN_Date_End"
+            [submitted]="submitted"></app-calendar-range>
+          <div class="col-12 md:col-6 lg:col-4"> <app-input-text label="來源發票號碼" controlName="TXN_GUIBegNo"
+              [control]="queryForm.controls.TXN_GUIBegNo" [submitted]="submitted"></app-input-text> </div>
+          <div class="col-12 md:col-6 lg:col-4"> <app-dropdown label="換開狀態" [options]="GUI_STATS_Options"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_STATS"
+              [submitted]="submitted"></app-dropdown> </div>
         </div>
-    </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>
+<!-- isNotECR -->
+<div class="card">
+  <app-table #tableComponent tableKey="TLS26020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" dataKey="tlt_no" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [lazy]="true" [loading]="loading" [showManage]="false"
+    [showDelete]="false" [expansionShowPaginator]="true">
+  </app-table>
+</div>
+
+<!--
+<div class="card flex justify-content-center align-items-center h-20rem"> //*ngIf="isNotECR"
+  <span class="text-red-500 font-bold text-lg">
+    本機台未設定為發票換開機台，無法執行換開作業。
+  </span>
+</div> -->

@@ -18,7 +18,7 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
+          <app-dropdown label="專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
             [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
             [submitted]="submitted"></app-dropdown>
         </div>
@@ -49,12 +49,12 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="機台所屬收銀員" controlName="ECR_USR_No" [control]="dataForm.controls.ECR_USR_No"
+          <app-dropdown label="收銀員" controlName="ECR_USR_No" [control]="dataForm.controls.ECR_USR_No"
             [options]="CashierOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="機台所屬收銀員姓名" controlName="ECR_USR_Name" [control]="dataForm.controls.ECR_USR_Name"
+          <app-input-text label="收銀員姓名" controlName="ECR_USR_Name" [control]="dataForm.controls.ECR_USR_Name"
             [submitted]="submitted"></app-input-text>
         </div>
 

@@ -1,17 +1,19 @@
-import { Component } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { NgFor } from '@angular/common';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { Button } from 'primeng/button';
-
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { NgIf } from '@angular/common';
+// import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
+
 
 
 // 2.2.18.3 後台發票換開補登作業
@@ -20,79 +22,82 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './tls2j030.component.html',
   styleUrl: './tls2j030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, NgFor, DropdownComponent, CalendarComponent, InputNumberComponent, InputNumberRangeComponent, Button, TranslateModule]
+  imports: [NgIf,TableComponent, ButtonComponent, DropdownComponent, CalendarRangeComponent, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule]
 })
-export class TLS2J030Component {
-  ProgNo: string = '220092';
-  submitted = false;
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
+export class TLS2J030Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.group({
+    CHG_No: ['', [Validators.maxLength(12)]],
+    TXN_Date_Start: [''],
+    TXN_Date_End: [''],
+    GUI_INPUTDATE_Start: [new Date(), Validators.required],//換開日期起,必填
+    GUI_INPUTDATE_End: [new Date(), Validators.required],//換開日期迄,必填
+    TXN_GUIBegNo: ['', [Validators.maxLength(10)]],
+    GUI_STATS: ['0'],
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
+  });
+  totalRecords = 0;
+  data: any[] = [];
+  selectedItems: any[] = [];
+  isNotECR = false;
+
+
+  GUI_STATS_Options = [
+    { label: '正常', value: '0' },
+    { label: '刪除', value: '1' }
+  ];
+  columns: Column[] = [
+    { field: 'tlt_no', header: '換開編號', visible: true },
+    { field: 'tlt_name', header: '換開日期', visible: true },
+    { field: 'txn_TotGUI', header: '來源發票日期', visible: true },
+    { field: 'txn_TotSaleAmt', header: '收銀機號', visible: true },
+    { field: 'tlt_no', header: '交易序號', visible: true },
+    { field: 'tlt_name', header: '來源發票號碼', visible: true },
+    { field: 'tlt_no', header: '換開狀態', visible: true },
+    { field: 'tlt_name', header: '刪除日期', visible: true },
+    { field: 'tlt_no', header: '建立日期', visible: true },
+    { field: 'tlt_name', header: '建立人員編號', visible: true },
+    { field: 'tlt_no', header: '建立人員姓名', visible: true },
+    { field: 'tlt_name', header: '變更日期', visible: true },
+    { field: 'tlt_no', header: '變更人員編號', visible: true },
+    { field: 'tlt_name', header: '變更人員姓名', visible: true },
   ];
 
-  cruForm: FormGroup = this.formBuilder.group({
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
-  });
-
   constructor(
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private validationService: ValidationService,) {
+    private dropDownListService: DropDownListService,
+    // private tls2j030Service: TLS2j030Service,
+  ) {
+    super();
   }
 
   ngOnInit(): void {
-  }
-  //
-  get items(): FormArray {
-    return this.cruForm.get('items') as FormArray;
-  }
+    this.initializePage('TLS2J030', 'TLS/TLS2J030cru', this.queryForm, (form) => this.onSubmit(form));
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
+    // this.checkECRMachine();
 
-  //
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      CashRegisterType: ['1', Validators.required], // 收銀機型態
-      onedatedd: [, [Validators.required]], // 銷售日期
-      registerID: [, [Validators.required, this.validationService.exactLengthValidator(6),]], // 收銀機號
-      transactionID: [, [Validators.required, this.validationService.exactLengthValidator(6),]], // 交易流水號
-      counterID: [, [Validators.required, this.validationService.exactLengthValidator(6),]], // 專櫃編號
-      twoInvoiceStart: [, [Validators.required, this.validationService.numberValidator]], // 二聯發票號碼
-      twoInvoiceEnd: [, [Validators.required, this.validationService.numberValidator]], // 二聯發票號碼
-      taxMoney: [, [Validators.required, this.validationService.numberValidator]], // 應稅金額
-      noTaxMoney: [0, [Validators.required, this.validationService.numberValidator]], // 免稅金額
-    });
   }
+  // private checkECRMachine() {
+  //   const ip = this.authService.currentUserValue?.client_ip;
+  //   if (!ip) {
+  //     this.isNotECR = true;
+  //     return;
+  //   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
+  //   this.tls2j030Service.checkECR(ip).subscribe({
+  //     next: (res) => {
+  //       this.isNotECR = !res.isValid;
+  //     },
+  //     error: () => {
+  //       this.isNotECR = true;
+  //     },
+  //   });
+  // }
 
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
+
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+    if (this.isNotECR) return;
+    this.handleSubmit(frm, () => {
 
-    console.log(frm.value); // 取得表frm的值
-
-    if (this.cruForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+    });
   }
 }

@@ -25,13 +25,13 @@
     <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
       <div class="flex align-items-center gap-2">
         <app-button
-          [label]="getCommonModeText()"
-          icon="pi pi-filter"
-          (click)="toggleCommonMode()"
-          [outlined]="showMode !== 'common'"
+          [label]="getAllCommonModeText()"
+          icon="pi pi-arrows-v"
+          (click)="toggleAllCommonMode()"
+          styleClass="p-button-info"
         ></app-button>
         <span class="text-sm text-gray-600 ml-2">
-          目前模式: {{ getCurrentDisplayMode() }}
+          {{ getAllDisplayMode() }}
         </span>
       </div>
     </div>
@@ -82,7 +82,23 @@
       <div *ngFor="let capType of capTypes" [hidden]="!hasDataForType(capType)">
         <p-accordion>
           <p-accordionTab [header]="getCapTypeName(capType)" [selected]="true">
+            <!-- 每個群組獨立的模式控制按鈕 -->
+            <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
+              <div class="flex align-items-center gap-2">
+                <app-button
+                  [label]="getCommonModeTextByType(capType)"
+                  icon="pi pi-filter"
+                  (click)="toggleCommonModeByType(capType)"
+                  [outlined]="isOutlinedMode(capType)"
+                ></app-button>
+                <span class="text-sm text-gray-600 ml-2">
+                  目前模式: {{ getCurrentDisplayModeByType(capType) }}
+                </span>
+              </div>
+            </div>
+
             <!-- 無資料顯示 -->
+
             <div
               *ngIf="!hasDataForType(capType)"
               class="text-center p-4 bg-gray-50 border-round"

@@ -29,7 +29,7 @@
 </div>
 <div class=" card">
   @if (!isConfirmDate) {
-  <app-table dataKey="master_key" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-table dataKey="value" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details" [showPaginator]="false"
     [showManage]="false" [showCaption]="false" [showSort]="false"></app-table>
   } @else {
