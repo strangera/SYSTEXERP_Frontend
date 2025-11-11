@@ -34,6 +34,7 @@ import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CounterNameService } from '@service/basic/counter-name.service';
 import { CashierService } from '@service/basic/cashier.service';
+import { tls2b010tableComponent } from '@shared/componentkit/tls2-b010-table/tls2b010table.component';
 
 const TOTAL_FIELD_MAP = { TXN_SaleAmt: 'Total_TXN_SaleAmt' } as const;
 type TotalFieldMap = typeof TOTAL_FIELD_MAP;
@@ -57,22 +58,23 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     InputTextComponent,
     DropdownComponent,
     ButtonComponent,
-    Table2Component,
+    // Table2Component,
     CheckboxModule,
     ButtonModule,
     MultiSelectComponent,
+    tls2b010tableComponent
   ],
 })
 export class TLS55070Component extends BasicQueryPageComponent<any> {
   readonly groupByField = '_grp';
   enableCrossPageSubtotalPeek = false;
 
-  readonly defaultSort: any[] = [
-    { field: this.groupByField, order: 1 },
-    { field: 'TXN_Date', order: 1 },
-    { field: 'ECR_No', order: 1 },
-    { field: 'TXN_SaleNoteNo', order: 1 },
-  ];
+readonly defaultSort: any[] = [
+  { field: this.groupByField, order: 1 },  // 代表 TXN_SaleNoteNo
+  { field: 'TXN_SaleNoteNo', order: 1 },   // 明確加在前面，確保同單號連在一起
+  { field: 'TXN_Date', order: 1 },
+  { field: 'ECR_No', order: 1 },
+];
   sortMeta: any[] = [];
 
   // 匯出 loading 分離
@@ -85,7 +87,6 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
   detailTotals: Record<string, number> = {};
   visibleSubtotals: Record<string, Record<string, number>> = {};
   private allSubtotals: Record<string, Record<string, number>> = {};
-
   detailTotalFieldMap: TotalFieldMap = TOTAL_FIELD_MAP;
   detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
 
@@ -118,6 +119,8 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
   });
 
   columns: any[] = [
+      { field: 'TXN_SaleNoteNo', header: '銷售單號', visible: true, style: 'text-center' }, // ★置中
+  { field: this.groupByField, header: 'grp', visible: false, hidden: true },
     { field: this.groupByField, header: 'grp', visible: false, hidden: true },
     {
       field: 'TXN_Date',
@@ -125,7 +128,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (v: string) => this.formatDate(v),
     },
-    { field: 'TXN_SaleNoteNo', header: '銷售單號', visible: true },
+    
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'HOS_NO', header: '倉別', visible: true },
@@ -215,6 +218,7 @@ percent(val: any): string {
 }
 
   ngOnInit(): void {
+   
     this.initializePage('TLS55070', 'tls/tls55070', this.queryForm, (f) =>
       this.onSubmit(f),
     );
@@ -248,6 +252,7 @@ percent(val: any): string {
           value: x.value,
         })) || [];
     });
+     this.loading = false; // ★ 關閉初始 loading，避免表格吃到 true
   }
 
  fetchTLS55070 = (evt: LazyLoadEvent) => {
@@ -318,6 +323,7 @@ percent(val: any): string {
       }),
     ),
   );
+  
 };
 
 
@@ -516,24 +522,30 @@ onSubmit(form: FormGroup): void {
     return [{ field: g, order }, ...rest];
   }
 
-  private toApiSort(
-    uiSort: Array<{ field: string; order: 1 | -1 }>,
-  ): Array<{ field: string; order: 1 | -1 }> {
-    const out: Array<{ field: string; order: 1 | -1 }> = [];
-    for (const s of uiSort ?? []) {
-      if (s.field === this.groupByField) {
-        out.push({ field: 'TXN_Date', order: s.order });
-        out.push({ field: 'ECR_No', order: s.order });
-        out.push({ field: 'TXN_SaleNoteNo', order: s.order });
-      } else {
-        out.push(s);
-      }
+private toApiSort(
+  uiSort: Array<{ field: string; order: 1 | -1 }>
+): Array<{ field: string; order: 1 | -1 }> {
+  const out: Array<{ field: string; order: 1 | -1 }> = [];
+  let injectedSaleNo = false;
+
+  for (const s of uiSort ?? []) {
+    if (s.field === this.groupByField) {
+      // ✅ 群組鍵只映到「銷售單號」，不要再展開成日期/ECR，避免拆散群組
+      out.push({ field: 'TXN_SaleNoteNo', order: s.order });
+      injectedSaleNo = true;
+    } else {
+      out.push(s);
     }
-    const seen = new Set<string>();
-    return out.filter((s) =>
-      seen.has(s.field) ? false : (seen.add(s.field), true),
-    );
   }
+
+  // 保險：如果沒帶到，強制把銷售單號放第一順位
+  if (!injectedSaleNo) out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
+
+  // 去重
+  const seen = new Set<string>();
+  return out.filter(s => seen.has(s.field) ? false : (seen.add(s.field), true));
+}
+
 
   private emptyToNull(v: any) {
     return v === '' ? null : v;
@@ -579,4 +591,22 @@ onSubmit(form: FormGroup): void {
     }
     return def;
   }
+  // 放在 TLS55070Component 內（和 onSubmit 同一層）
+  override onLazyLoadData = (evt: LazyLoadEvent, _form: FormGroup) => {
+  this.fetchTLS55070(evt).subscribe({
+    next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
+      this.data = rows;
+      this.totalRecords = totalRecords;
+      this.detailTotals = externalTotals;
+      this.visibleSubtotals = externalSubtotals;
+    },
+    error: _ => {
+      this.data = [];
+      this.totalRecords = 0;
+      this.detailTotals = {};
+      this.visibleSubtotals = {};
+    }
+  });
+};
+
 }
