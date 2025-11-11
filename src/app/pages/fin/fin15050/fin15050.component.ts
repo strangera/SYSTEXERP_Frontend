@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -26,7 +26,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextComponent, InputTextRangeComponent, DropdownComponent, TranslateModule,
-    CalendarComponent
+    CalendarComponent, CommonModule
   ]
 })
 export class FIN15050Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -61,6 +61,7 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
       STO_No: '10',
       REP_GUIYM: this.datePipe.transform(frm.get('REP_GUIYM')?.value, 'yyyyMM') || '',
     }
+
     this.handleSubmit(frm, () => {
       this.fin15050Service.printFIN15050(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
