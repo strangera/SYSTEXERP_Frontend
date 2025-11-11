@@ -237,6 +237,11 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
 
     return `download${defaultExtension}`;
   }
+
+  editDisabled(rowdata: TLS27040Data) {
+    // 已關帳的資料不可編輯
+    return rowdata.isClose === "Y";
+  }
 }
 function processSelectedCodes(selectedValues: string[][]) {
   if (selectedValues) {
