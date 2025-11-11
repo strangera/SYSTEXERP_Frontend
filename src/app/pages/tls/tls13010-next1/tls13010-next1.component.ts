@@ -1187,8 +1187,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 導航相關 ==========
   onSubmitNext(): void {
+    // 取得合約類型
+    const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+
     if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010next2']);
+      // 檢視模式：根據合約類型決定導航目標
+      if (contractTermType === '1') {
+        console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next3');
+        this.router.navigate(['account/tls/tls13010next3']);
+      } else {
+        console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
+        this.router.navigate(['account/tls/tls13010next2']);
+      }
       return;
     }
 
@@ -1206,8 +1216,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    console.log('✅ 驗證通過，跳轉到下一步');
-    this.router.navigate(['account/tls/tls13010next2']);
+    console.log('✅ 驗證通過，準備跳轉到下一步');
+
+    // 根據合約類型決定導航目標
+    if (contractTermType === '1') {
+      console.log('🔍 合約類型為1，直接跳轉到 next3');
+      this.router.navigate(['account/tls/tls13010next3']);
+    } else {
+      console.log('🔍 合約類型非1，跳轉到 next2');
+      this.router.navigate(['account/tls/tls13010next2']);
+    }
   }
 
   override onCancel(): void {
