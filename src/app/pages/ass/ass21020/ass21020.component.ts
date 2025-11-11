@@ -47,8 +47,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     ENG_Type: new FormControl<EngType[] | void>(void 0),
     ENG_MeterNo: new FormControl<string | void>(void 0),
     TLT_No: new FormControl<string | void>(void 0),
-    Location_No: new FormControl<string>(''),
-    TLT_Name: new FormControl<string>(''),
+    Location_No: new FormControl<string | void>(void 0),
+    TLT_Name: new FormControl<string | void>(void 0),
     NET_SPACE: new FormControl<string | void>(void 0),
     ENG_Rate: new FormControl<number | void>(void 0),
     ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
@@ -83,7 +83,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal() ?? void 0;
     untracked(() => this.qf().TLT_No.setValue(void 0));
-    if (!meterNo) return this.qf().Location_No.setValue('');
+    if (!meterNo) return untracked(() => this.qf().Location_No.setValue(void 0));
     this.service.getTltByFlags(meterNo, this.usrData().Mid);
   }, { allowSignalWrites: !0 });
 
@@ -92,13 +92,12 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const tltNo = this.tltNoSignal() ?? void 0;
     const tltByFlag = tltNo?.length && this.service.tltByFlagMap().get(tltNo) || void 0;
     this.logger.debug(`tltNoEffect:`, [tltNo, tltByFlag]);
-    if (!tltByFlag) return;
 
     this.queryForm.patchValue({
-      TLT_No: tltByFlag.TLT_No,
-      TLT_Name: tltByFlag.TLT_Name,
-      Location_No: tltByFlag.Location_No,
-      NET_SPACE: String(tltByFlag.NET_SPACE),
+      TLT_No: tltByFlag ? tltByFlag.TLT_No : void 0,
+      TLT_Name: tltByFlag ? tltByFlag.TLT_Name : void 0,
+      Location_No: tltByFlag ? tltByFlag.Location_No : void 0,
+      NET_SPACE: tltByFlag ? String(tltByFlag.NET_SPACE) : void 0,
     });
   }, { allowSignalWrites: !0 });
 
