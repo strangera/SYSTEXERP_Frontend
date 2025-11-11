@@ -125,17 +125,20 @@ export class Tls31080Service {
   constructor(private http: HttpClient) { }
           
   // 查詢各時段之營業報表
+  // queryTLS31080(body: TLS31080Request): Observable<any> {
+  //   return this.http.post<any>(`${this.apiUrl}/queryTLS31080`, body).pipe(
+  //         map(res => {
+  //           return {
+  //             Data: res.Data?.Data,
+  //             TotalCount: res.TotalCount,
+  //             Message: res.Message,
+  //             TotalData: res.Data?.TotalData 
+  //           };
+  //         })
+  //       );
+  // }
   queryTLS31080(body: TLS31080Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS31080`, body).pipe(
-          map(res => {
-            return {
-              Data: res.Data?.Data,
-              TotalCount: res.TotalCount,
-              Message: res.Message,
-              TotalData: res.Data?.TotalData 
-            };
-          })
-        );
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31080`, body);
   }
       
   // 查詢各時段展開之營業報表
