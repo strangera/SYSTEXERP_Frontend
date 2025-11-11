@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, ViewChild } from '@angular/core';
 import {
   FormGroup,
   Validators,
@@ -12,10 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { finalize, map, catchError, of, timeout } from 'rxjs';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import {
-  createPaginationConfig,
-  LazyLoadEvent,
-} from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -24,12 +21,10 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 
 import { TLS55070Service } from '../../../service/api/tls/tls55070.service';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CounterNameService } from '@service/basic/counter-name.service';
@@ -39,7 +34,6 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
 
 const TOTAL_FIELD_MAP = { TXN_SaleAmt: 'Total_TXN_SaleAmt' } as const;
 type TotalFieldMap = typeof TOTAL_FIELD_MAP;
-
 const SUBTOTAL_FIELD_MAP = { TXN_SaleAmt: 'SubTotal_TXN_SaleAmt' } as const;
 type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
 
@@ -59,24 +53,26 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     InputTextComponent,
     DropdownComponent,
     ButtonComponent,
-    // Table2Component,
     CheckboxModule,
     ButtonModule,
-    // MultiSelectComponent,
     InputTextRangeComponent,
-    tls2b010tableComponent
+    tls2b010tableComponent,
   ],
 })
-export class TLS55070Component extends BasicQueryPageComponent<any> {
-  readonly groupByField = '_grp';
+export class TLS55070Component extends BasicQueryPageComponent<any> implements AfterViewInit {
+  /** 用銷售單號當群組鍵（也當排序的群組欄） */
+  readonly groupByField = '_grp'; // 內部群組鍵
+  /** 讓 rowspan 依銷售單號合併（在 ngAfterViewInit 指定給子元件的 groupKey） */
+  @ViewChild('saleTable', { static: false }) saleTable?: tls2b010tableComponent;
+
   enableCrossPageSubtotalPeek = false;
 
-readonly defaultSort: any[] = [
-  { field: this.groupByField, order: 1 },  // 代表 TXN_SaleNoteNo
-  { field: 'TXN_SaleNoteNo', order: 1 },   // 明確加在前面，確保同單號連在一起
-  { field: 'TXN_Date', order: 1 },
-  { field: 'ECR_No', order: 1 },
-];
+  readonly defaultSort: any[] = [
+    { field: this.groupByField, order: 1 },     // 代表 TXN_SaleNoteNo
+    { field: 'TXN_SaleNoteNo', order: 1 },      // 明確放前面，確保同單號連在一起
+    { field: 'TXN_Date', order: 1 },
+    { field: 'ECR_No', order: 1 },
+  ];
   sortMeta: any[] = [];
 
   // 匯出 loading 分離
@@ -85,7 +81,7 @@ readonly defaultSort: any[] = [
 
   data: any[] = [];
   totalRecords = 0;
-
+ activated = false; // 尚未按查詢前，不處理任何 lazy 事件
   detailTotals: Record<string, number> = {};
   visibleSubtotals: Record<string, Record<string, number>> = {};
   private allSubtotals: Record<string, Record<string, number>> = {};
@@ -120,49 +116,33 @@ readonly defaultSort: any[] = [
     ...createPaginationConfig(this.defaultSort),
   });
 
+  /** 欄位設定：把「銷售單號」設為置中，並做為 merged column */
   columns: any[] = [
-      { field: 'TXN_SaleNoteNo', header: '銷售單號', visible: true, style: 'text-center' }, // ★置中
-  { field: this.groupByField, header: 'grp', visible: false, hidden: true },
-    { field: this.groupByField, header: 'grp', visible: false, hidden: true },
+    { field: 'TXN_SaleNoteNo', header: '銷售單號', visible: true, style: 'text-center' },
+    { field: this.groupByField, header: 'grp', visible: false, hidden: true }, // 群組鍵
     {
       field: 'TXN_Date',
       header: '銷售日期',
       visible: true,
       format: (v: string) => this.formatDate(v),
     },
-    
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'HOS_NO', header: '倉別', visible: true },
-    {
-      field: 'HOS_NAME',
-      header: '倉別名稱',
-      visible: true,
-      style: 'text-left',
-    },
+    { field: 'HOS_NAME', header: '倉別名稱', visible: true, style: 'text-left' },
     { field: 'TXN_TaxType', header: '稅別', visible: true },
     { field: 'GUINO', header: '發票號碼', visible: true },
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    {
-      field: 'PLU_Name',
-      header: '商品名稱',
-      visible: true,
-      style: 'text-left',
-    },
+    { field: 'PLU_Name', header: '商品名稱', visible: true, style: 'text-left' },
     { field: 'TXN_Qty', header: '數量', visible: true, style: 'text-right' },
+    { field: 'TXN_Disc', header: '折讓金額', visible: true, style: 'text-right' },
     {
-      field: 'TXN_Disc',
-      header: '折讓金額',
+      field: 'DiscRate',
+      header: '折扣率',
       visible: true,
       style: 'text-right',
+      format: (v: number | string) => this.percent(v),
     },
-    {
-  field: 'DiscRate',
-  header: '折扣率',
-  visible: true,
-  style: 'text-right',
-  format: (v: number | string) => this.percent(v),
-},
     {
       field: 'TXN_SaleAmt',
       header: '單項小計',
@@ -186,8 +166,8 @@ readonly defaultSort: any[] = [
   ];
 
   // LOGO/HOS_No / 專櫃 / 銷售人員
-  logoOptions: Array<{label: string; value: string}> = [];
-  hosOptions:  Array<{label: string; value: string}> = [];
+  logoOptions: Array<{ label: string; value: string }> = [];
+  hosOptions: Array<{ label: string; value: string }> = [];
   CounterOptions: any[] = [];
   cashierOptions: any[] = [];
 
@@ -199,43 +179,27 @@ readonly defaultSort: any[] = [
   ) {
     super();
   }
-private parsePercent(v: any): number {
-  if (v === null || v === undefined || v === '') return 0;
-  if (typeof v === 'number') return v;                // 已是數字就用
-  const s = String(v).trim();
-  if (s.endsWith('%')) {
-    const n = Number(s.slice(0, -1));                 // "100%" -> 100
-    return isNaN(n) ? 0 : n;
-  }
-  const n = Number(s);                                // "100" -> 100, "1.5" -> 1.5
-  return isNaN(n) ? 0 : n;
-}
 
-percent(val: any): string {
-  const n = this.parsePercent(val);                   // 100
-  return (n / 100).toLocaleString('en-US', {          // 顯示成 100%
-    style: 'percent',
-    maximumFractionDigits: 2,
-  });
-}
+  ngAfterViewInit(): void {
+    // 直接把子元件的 groupKey 改成我們的群組欄位（銷售單號 _grp）
+    // 這樣 mergedColumns 的 rowspan 就會以銷售單號群組計算
+    queueMicrotask(() => {
+      if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+    });
+  }
 
   ngOnInit(): void {
-   
-    this.initializePage('TLS55070', 'tls/tls55070', this.queryForm, (f) =>
-      this.onSubmit(f),
-    );
+    this.loading = false;
+    this.initializePage('TLS55070', 'tls/tls55070', this.queryForm, (f) => this.onSubmit(f));
     this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
 
-    this.ECRNoService.getECRNo().subscribe(
-      (data) => (this.ECRNoOptions = data),
-    );
+    this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
 
-    this.tls55070Service.getLogoHosOptions()
-      .subscribe(({ logoOptions, hosOptions }) => {
-        this.logoOptions = logoOptions;
-        this.hosOptions  = hosOptions;
-      });
+    this.tls55070Service.getLogoHosOptions().subscribe(({ logoOptions, hosOptions }) => {
+      this.logoOptions = logoOptions;
+      this.hosOptions = hosOptions;
+    });
 
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
@@ -254,142 +218,173 @@ percent(val: any): string {
           value: x.value,
         })) || [];
     });
-     this.loading = false; // ★ 關閉初始 loading，避免表格吃到 true
+
+    this.loading = false; // 關閉初始 loading
   }
 
- fetchTLS55070 = (evt: LazyLoadEvent) => {
-  const raw: any = this.queryForm.getRawValue();
-  const pageSize = Number.isFinite(evt?.pageSize)
-    ? Number(evt.pageSize)
-    : Number(raw?.pageSize) || 20;
-  const pageIndex = Number.isFinite(evt?.pageIndex)
-    ? Number(evt?.pageIndex)
-    : Number(raw?.pageIndex) || 1;
+  private parsePercent(v: any): number {
+    if (v === null || v === undefined || v === '') return 0;
+    if (typeof v === 'number') return v;
+    const s = String(v).trim();
+    if (s.endsWith('%')) {
+      const n = Number(s.slice(0, -1));
+      return isNaN(n) ? 0 : n;
+    }
+    const n = Number(s);
+    return isNaN(n) ? 0 : n;
+  }
 
-  const uiSort = this.ensureGroupFirst(
-    Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
-      ? (evt as any).SortBy
-      : Array.isArray(raw?.SortBy) && raw.SortBy.length
+  percent(val: any): string {
+    const n = this.parsePercent(val);
+    return (n / 100).toLocaleString('en-US', {
+      style: 'percent',
+      maximumFractionDigits: 2,
+    });
+  }
+
+  /** Lazy 取數（提供給子元件） */
+  fetchTLS55070 = (evt: LazyLoadEvent) => {
+    const raw: any = this.queryForm.getRawValue();
+    const pageSize = Number.isFinite(evt?.pageSize) ? Number(evt.pageSize) : Number(raw?.pageSize) || 20;
+    const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt.pageIndex) : Number(raw?.pageIndex) || 1;
+
+    const uiSort = this.ensureGroupFirst(
+      Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+        ? (evt as any).SortBy
+        : Array.isArray(raw?.SortBy) && raw.SortBy.length
         ? raw.SortBy
         : this.defaultSort,
-  );
-  const apiSort = this.toApiSort(uiSort);
+    );
+    const apiSort = this.toApiSort(uiSort);
 
-  const payload = this.buildPayload({
-    ...raw,
-    pageSize,
-    pageIndex,
-    SortBy: apiSort,
-  });
-
-  return this.tls55070Service.queryTLS55070(payload).pipe(
-    map((res: any) => {
-      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
-      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
-        this.unpackResponse(wrappers);
-
-      // ✅ 優先採用後端回傳的 TotalCount，用於切分頁
-      const apiTotal = Number(res?.TotalCount);
-      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
-
-      const ended = new Set<string>();
-      for (let i = 0; i < rows.length - 1; i++) {
-        const g1 = rows[i][this.groupByField];
-        const g2 = rows[i + 1][this.groupByField];
-        if (g1 !== g2) ended.add(g1);
-      }
-      const last = rows[rows.length - 1];
-      const lastKey = last?.[this.groupByField];
-      const totalPage =
-        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
-      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
-      if (!hasNext && lastKey) ended.add(lastKey);
-
-      const externalSubtotals: Record<string, Record<string, number>> = {};
-      ended.forEach((k) => {
-        if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
-      });
-
-      this.allSubtotals = allSubtotals;
-      this.visibleSubtotals = externalSubtotals;
-      this.detailTotals = externalTotals;
-
-      return { rows, totalRecords, externalTotals, externalSubtotals };
-    }),
-    catchError(() =>
-      of({
-        rows: [],
-        totalRecords: 0,
-        externalTotals: {},
-        externalSubtotals: {},
-      }),
-    ),
-  );
-  
-};
-
-
-onSubmit(form: FormGroup): void {
-  this.loading = true;
-  const raw: any = { ...form.getRawValue() };
-  const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
-  const pageIndex = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
-
-  const uiSortBy: any[] = this.ensureGroupFirst(
-    Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy
-      : this.sortMeta?.length ? this.sortMeta
-      : this.defaultSort,
-  ).map((s) => ({ ...s }));
-
-  const payload = this.buildPayload({
-    ...raw,
-    pageSize,
-    pageIndex,
-    SortBy: this.toApiSort(uiSortBy),
-  });
-  this.historyRequestBody = { ...payload };
-
-  this.tls55070Service
-    .queryTLS55070(payload)
-    .pipe(
-      timeout(60_000),
-      finalize(() => (this.loading = false)),
-      catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
-    )
-    .subscribe((res: any) => {
-      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
-      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
-        this.unpackResponse(wrappers);
-
-      // ✅ 優先採用後端回傳的 TotalCount
-      const apiTotal = Number(res?.TotalCount);
-      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
-
-      const ended = new Set<string>();
-      for (let i = 0; i < rows.length - 1; i++) {
-        const g1 = rows[i][this.groupByField];
-        const g2 = rows[i + 1][this.groupByField];
-        if (g1 !== g2) ended.add(g1);
-      }
-
-      const totalPage =
-        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
-      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
-      const lastKey = rows[rows.length - 1]?.[this.groupByField];
-      if (!hasNext && lastKey) ended.add(lastKey);
-
-      const vis: Record<string, Record<string, number>> = {};
-      ended.forEach((k) => {
-        if (allSubtotals[k]) vis[k] = allSubtotals[k];
-      });
-
-      this.data = rows;
-      this.totalRecords = totalRecords;          // ← 這行會讓 Table2 依 TotalCount 切分頁
-      this.allSubtotals = allSubtotals;
-      this.visibleSubtotals = vis;
-      this.detailTotals = externalTotals;
+    const payload = this.buildPayload({
+      ...raw,
+      pageSize,
+      pageIndex,
+      SortBy: apiSort,
     });
-}
+
+    return this.tls55070Service.queryTLS55070(payload).pipe(
+      map((res: any) => {
+        const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+        const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+          this.unpackResponse(wrappers);
+
+        const apiTotal = Number(res?.TotalCount);
+        const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+
+        const ended = new Set<string>();
+        for (let i = 0; i < rows.length - 1; i++) {
+          const g1 = rows[i][this.groupByField];
+          const g2 = rows[i + 1][this.groupByField];
+          if (g1 !== g2) ended.add(g1);
+        }
+        const last = rows[rows.length - 1];
+        const lastKey = last?.[this.groupByField];
+        const totalPage =
+          Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+        const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+        if (!hasNext && lastKey) ended.add(lastKey);
+
+        const externalSubtotals: Record<string, Record<string, number>> = {};
+        ended.forEach((k) => {
+          if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
+        });
+
+        this.allSubtotals = allSubtotals;
+        this.visibleSubtotals = externalSubtotals;
+        this.detailTotals = externalTotals;
+
+        return { rows, totalRecords, externalTotals, externalSubtotals };
+      }),
+      catchError(() =>
+        of({
+          rows: [],
+          totalRecords: 0,
+          externalTotals: {},
+          externalSubtotals: {},
+        }),
+      ),
+    );
+  };
+
+  onSubmit(form: FormGroup): void {
+    this.loading = true;
+    const raw: any = { ...form.getRawValue() };
+    const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
+    const pageIndex = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+
+    const uiSortBy: any[] = this.ensureGroupFirst(
+      Array.isArray(raw?.SortBy) && raw.SortBy.length
+        ? raw.SortBy
+        : this.sortMeta?.length
+        ? this.sortMeta
+        : this.defaultSort,
+    ).map((s) => ({ ...s }));
+
+    const payload = this.buildPayload({
+      ...raw,
+      pageSize,
+      pageIndex,
+      SortBy: this.toApiSort(uiSortBy),
+    });
+    this.historyRequestBody = { ...payload };
+
+    this.tls55070Service
+      .queryTLS55070(payload)
+      .pipe(
+        timeout(60_000),
+        finalize(() => (this.loading = false)),
+        catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
+      )
+      .subscribe((res: any) => {
+        const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+        const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+          this.unpackResponse(wrappers);
+
+        const apiTotal = Number(res?.TotalCount);
+        const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+
+        const ended = new Set<string>();
+        for (let i = 0; i < rows.length - 1; i++) {
+          const g1 = rows[i][this.groupByField];
+          const g2 = rows[i + 1][this.groupByField];
+          if (g1 !== g2) ended.add(g1);
+        }
+
+        const totalPage =
+          Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+        const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+        const lastKey = rows[rows.length - 1]?.[this.groupByField];
+        if (!hasNext && lastKey) ended.add(lastKey);
+
+        const vis: Record<string, Record<string, number>> = {};
+        ended.forEach((k) => {
+          if (allSubtotals[k]) vis[k] = allSubtotals[k];
+        });
+
+        this.data = rows;
+        this.totalRecords = totalRecords;
+        this.allSubtotals = allSubtotals;
+        this.visibleSubtotals = vis;
+        this.detailTotals = externalTotals;
+
+        // 確保子表格的 groupKey 在初次查詢完也有設定
+        queueMicrotask(() => {
+          if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+        });
+      });
+        queueMicrotask(() => {
+      const raw: any = this.queryForm.getRawValue();
+      const pageSize = Number(raw?.pageSize) || 20;
+      const pageIndex = Number(raw?.pageIndex) || 1;
+      const SortBy =
+        Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : this.defaultSort;
+
+      this.onLazyLoadData({ pageIndex, pageSize, SortBy } as any, this.queryForm);
+      this.loading = false; // 外層自己關 loading（真正資料載入時，子流程會再設定）
+    });
+  }
 
   // === 匯出 Excel ===
   onExportExcel() {
@@ -399,7 +394,7 @@ onSubmit(form: FormGroup): void {
     }
     this.btnLoadingExcel = true;
     this.tls55070Service
-      .exportTLS55070Excel(this.historyRequestBody) // <- 直接送清理後的查詢條件
+      .exportTLS55070Excel(this.historyRequestBody)
       .pipe(finalize(() => (this.btnLoadingExcel = false)))
       .subscribe({
         next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.xlsx'),
@@ -414,13 +409,12 @@ onSubmit(form: FormGroup): void {
     }
     this.btnLoadingPDF = true;
     this.tls55070Service
-      .exportTLS55070PDF(this.historyRequestBody) // <- 直接送清理後的查詢條件
+      .exportTLS55070PDF(this.historyRequestBody)
       .pipe(finalize(() => (this.btnLoadingPDF = false)))
       .subscribe({
         next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.pdf'),
       });
   }
-
 
   // ==== helpers ====
   private buildPayload(raw: any) {
@@ -449,15 +443,9 @@ onSubmit(form: FormGroup): void {
     };
 
     if (this.includePagingAndSorting) {
-      payload['pageSize'] = Number.isFinite(raw?.pageSize)
-        ? Number(raw.pageSize)
-        : 20;
-      payload['pageIndex'] = Number.isFinite(raw?.pageIndex)
-        ? Number(raw.pageIndex)
-        : 1;
-      payload['SortBy'] = Array.isArray(raw?.SortBy)
-        ? raw.SortBy
-        : this.toApiSort(this.defaultSort);
+      payload['pageSize'] = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
+      payload['pageIndex'] = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+      payload['SortBy'] = Array.isArray(raw?.SortBy) ? raw.SortBy : this.toApiSort(this.defaultSort);
     }
 
     Object.keys(payload).forEach((k) => {
@@ -469,71 +457,67 @@ onSubmit(form: FormGroup): void {
     return payload;
   }
 
-private unpackResponse(wrappers: any[]) {
-  const rows: any[] = [];
-  const allSubtotals: Record<string, Record<string, number>> = {};
-  let totalRecords = 0;
+  private unpackResponse(wrappers: any[]) {
+    const rows: any[] = [];
+    const allSubtotals: Record<string, Record<string, number>> = {};
+    let totalRecords = 0;
 
-  for (const w of wrappers || []) {
-    const list = Array.isArray(w?._DetailList) ? w._DetailList : [];
+    for (const w of wrappers || []) {
+      const list = Array.isArray(w?._DetailList) ? w._DetailList : [];
 
-    const grpKey =
-      String(w?.TXN_SaleNoteNo ?? '').trim() ||
-      `${w?.TXN_Date ?? ''}|${w?.ECR_No ?? ''}|${rows.length}`;
+      // 以銷售單號做群組鍵
+      const saleNo = String(w?.TXN_SaleNoteNo ?? '').trim();
+      const grpKey = saleNo || `${w?.TXN_Date ?? ''}|${w?.ECR_No ?? ''}|${rows.length}`;
 
-    // 收集小計（保留你原本的 visibleSubtotals 用）
-    allSubtotals[grpKey] = {
-      [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(w?.SumTXN_SaleAmt ?? 0),
-    };
+      // 收集小計
+      allSubtotals[grpKey] = {
+        [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(w?.SumTXN_SaleAmt ?? 0),
+      };
 
-    // 明細列
-    list.forEach((d: any, i: number) => {
-      rows.push({
-        ...w,
-        ...d,
-        _rowKey: `${grpKey}|${i}`,
-        [this.groupByField]: grpKey,                 // ← 關鍵：群組鍵
-        TXN_SaleAmt: Number(d?.TXN_SaleAmt ?? 0),
-        TXN_Qty: Number(d?.TXN_Qty ?? 0),
-        TXN_Disc: Number(d?.TXN_Disc ?? 0),
-        DiscRate: this.parsePercent(d?.DiscRate),
+      // 明細列
+      list.forEach((d: any, i: number) => {
+        rows.push({
+          ...w,
+          ...d,
+          _rowKey: `${grpKey}|${i}`,
+          [this.groupByField]: grpKey, // 群組鍵
+          TXN_SaleNoteNo: saleNo,      // 讓合併欄有值
+          TXN_SaleAmt: Number(d?.TXN_SaleAmt ?? 0),
+          TXN_Qty: Number(d?.TXN_Qty ?? 0),
+          TXN_Disc: Number(d?.TXN_Disc ?? 0),
+          DiscRate: this.parsePercent(d?.DiscRate),
+        });
       });
-    });
 
-    // === ★ 新增：小計列（顯示「銷售金額」與 SumTXN_SaleAmt） ===
-    rows.push({
-      _rowKey: `${grpKey}|__SUBTOTAL__`,
-      [this.groupByField]: grpKey,                   // ← 放進同一組底下
-      TXN_SaleNoteNo: w?.TXN_SaleNoteNo ?? '',
-      TXN_Date: w?.TXN_Date ?? '',
-      ECR_No: w?.ECR_No ?? '',
-      TLT_No: w?.TLT_No ?? '',
-      HOS_NO: w?.HOS_NO ?? '',
-      HOS_NAME: w?.HOS_NAME ?? '',
-      TXN_TaxType: w?.TXN_TaxType ?? '',
-      GUINO: w?.GUINO ?? '',
-      // 用商品名稱欄位放「銷售金額」標籤
-      PLU_Name: '銷售金額',
-      // 小計金額
-      TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
-      // 打上旗標，方便樣式與計算時辨識
-      __isSubRow: true,
-    });
-    // ===============================================================
+      // 小計列（放在每組最後一筆，PLU_Name 顯示「銷售金額」）
+      rows.push({
+        _rowKey: `${grpKey}|__SUBTOTAL__`,
+        [this.groupByField]: grpKey,
+        TXN_SaleNoteNo: saleNo,
+        TXN_Date: w?.TXN_Date ?? '',
+        ECR_No: w?.ECR_No ?? '',
+        TLT_No: w?.TLT_No ?? '',
+        HOS_NO: w?.HOS_NO ?? '',
+        HOS_NAME: w?.HOS_NAME ?? '',
+        TXN_TaxType: w?.TXN_TaxType ?? '',
+        GUINO: w?.GUINO ?? '',
+        PLU_Name: '銷售金額',
+        TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
+        __isSubRow: true,
+      });
 
-    totalRecords += list.length || 0;
+      totalRecords += list.length || 0;
+    }
+
+    const externalTotals = wrappers.reduce((agg, w) => {
+      const a = Number(w?.SumTXN_SaleAmt ?? 0);
+      const keyA = this.detailTotalFieldMap.TXN_SaleAmt;
+      agg[keyA] = Number(agg[keyA] ?? 0) + a;
+      return agg;
+    }, {} as Record<string, number>);
+
+    return { rows, allSubtotals, externalTotals, totalRecords };
   }
-
-  const externalTotals = wrappers.reduce((agg, w) => {
-    const a = Number(w?.SumTXN_SaleAmt ?? 0);
-    const keyA = this.detailTotalFieldMap.TXN_SaleAmt;
-    agg[keyA] = Number(agg[keyA] ?? 0) + a;
-    return agg;
-  }, {} as Record<string, number>);
-
-  return { rows, allSubtotals, externalTotals, totalRecords };
-}
-
 
   private ensureGroupFirst(sortBy: any[] | undefined): any[] {
     const g = this.groupByField;
@@ -544,30 +528,26 @@ private unpackResponse(wrappers: any[]) {
     return [{ field: g, order }, ...rest];
   }
 
-private toApiSort(
-  uiSort: Array<{ field: string; order: 1 | -1 }>
-): Array<{ field: string; order: 1 | -1 }> {
-  const out: Array<{ field: string; order: 1 | -1 }> = [];
-  let injectedSaleNo = false;
+  /** UI sort 轉 API sort：把 _grp 映成 TXN_SaleNoteNo，避免打散群組 */
+  private toApiSort(
+    uiSort: Array<{ field: string; order: 1 | -1 }>
+  ): Array<{ field: string; order: 1 | -1 }> {
+    const out: Array<{ field: string; order: 1 | -1 }> = [];
+    let injectedSaleNo = false;
 
-  for (const s of uiSort ?? []) {
-    if (s.field === this.groupByField) {
-      // ✅ 群組鍵只映到「銷售單號」，不要再展開成日期/ECR，避免拆散群組
-      out.push({ field: 'TXN_SaleNoteNo', order: s.order });
-      injectedSaleNo = true;
-    } else {
-      out.push(s);
+    for (const s of uiSort ?? []) {
+      if (s.field === this.groupByField) {
+        out.push({ field: 'TXN_SaleNoteNo', order: s.order });
+        injectedSaleNo = true;
+      } else {
+        out.push(s);
+      }
     }
+    if (!injectedSaleNo) out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
+
+    const seen = new Set<string>();
+    return out.filter(s => (seen.has(s.field) ? false : (seen.add(s.field), true)));
   }
-
-  // 保險：如果沒帶到，強制把銷售單號放第一順位
-  if (!injectedSaleNo) out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
-
-  // 去重
-  const seen = new Set<string>();
-  return out.filter(s => seen.has(s.field) ? false : (seen.add(s.field), true));
-}
-
 
   private emptyToNull(v: any) {
     return v === '' ? null : v;
@@ -613,22 +593,28 @@ private toApiSort(
     }
     return def;
   }
-  // 放在 TLS55070Component 內（和 onSubmit 同一層）
-  override onLazyLoadData = (evt: LazyLoadEvent, _form: FormGroup) => {
-  this.fetchTLS55070(evt).subscribe({
-    next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
-      this.data = rows;
-      this.totalRecords = totalRecords;
-      this.detailTotals = externalTotals;
-      this.visibleSubtotals = externalSubtotals;
-    },
-    error: _ => {
-      this.data = [];
-      this.totalRecords = 0;
-      this.detailTotals = {};
-      this.visibleSubtotals = {};
-    }
-  });
-};
+
+  /** 提供給外層 lazy slot（TLS2B010 用法） */
+// 原本：override onLazyLoadData = (evt: LazyLoadEvent, _form: FormGroup) => {
+  override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
+    if (!this.activated) return; // 未按查詢前，不要自動打 API
+
+    const e = evt as any as LazyLoadEvent;
+    this.fetchTLS55070(e).subscribe({
+      next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
+        this.data = rows;
+        this.totalRecords = totalRecords;
+        this.detailTotals = externalTotals;
+        this.visibleSubtotals = externalSubtotals;
+      },
+      error: _ => {
+        this.data = [];
+        this.totalRecords = 0;
+        this.detailTotals = {};
+        this.visibleSubtotals = {};
+      }
+    });
+  };
+
 
 }
