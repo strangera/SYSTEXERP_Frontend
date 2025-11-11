@@ -55,6 +55,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
 
   public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
 
+  /** 改變engType 更新錶號選項 */
   public readonly engTypeEffect = effect(() => {
     const type = this.engTypeSignal() ?? void 0;
     const options = this.service.engMeterNoOptions();
@@ -65,6 +66,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
     return this.filteredMeterNo.set(options);
   }, { allowSignalWrites: !0 });
 
+  /** 改變錶號 更新設備位置編號 */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal() ?? void 0;
     if (!meterNo) return this.qf().Location_No.setValue('');
