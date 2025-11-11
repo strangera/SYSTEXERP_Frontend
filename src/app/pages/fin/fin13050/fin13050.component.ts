@@ -418,7 +418,7 @@ private uniform8Array(value: any): string[] | undefined {
   Source_Doc_No: v.Source_Doc_No,
   SYS_ORIGIN: this.arr(v.SYS_ORIGIN),  // 你模板已用 multi-select（系統別）
   SAL_Type: this.arr(v.SAL_Type),          // 你模板已用 multi-select（系統別）
-  PUR_Remark: this.arr(v.PUR_Remark),
+  PUR_Remark: v.PUR_Remark,
 
   Voucher_No:  v.Voucher_No ?? undefined,
   CRT_USR_Name:  v.CRT_USR_Name ?? undefined,
