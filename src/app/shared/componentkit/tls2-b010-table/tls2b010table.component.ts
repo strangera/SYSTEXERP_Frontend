@@ -59,7 +59,7 @@ export class tls2b010tableComponent
   /* ===== Utilities ===== */
   trackByCol = (_: number, col: any) => col.key ?? col.__uid ?? col.field;
   trackByRow = (_: number, item: any) => (item as any)?.[this.dataKey] ?? _;
-
+@Input() autoLoad = true;
   @ViewChild('dt', { static: false }) dt!: Table;
   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
@@ -212,6 +212,7 @@ export class tls2b010tableComponent
   @Input() showTotal = false;
   /** 後端回來的總計：{ 欄位名稱: 數值 }，例如 { BOOK_PayAmt: 123, ACT_PayAmt: 456, OVER_PayAmt: 789 } */
   @Input() totals: Record<string, number> = {};
+  
 
   /** 取得 footer 總計：優先吃 this.totals[col.field]；沒有就用前端加總（排除 __isTotal 資料列） */
   getFooterTotal(field: string): number {
@@ -352,22 +353,30 @@ export class tls2b010tableComponent
     if (!this.lazy) this.rebuildPageGroupMeta();
   }
 
-  onPageChange(event: TablePageEvent) {
-    this.first = event.first;
-    this.rows = event.rows;
-    this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
-    this.selectedPage = Math.ceil(event.first / event.rows + 1);
+ onPageChange(event: TablePageEvent) {
+  this.first = event.first;
+  this.rows = event.rows;
+  this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
+  this.selectedPage = Math.ceil(event.first / event.rows + 1);
 
-    if (!this.lazy) {
-      this.rebuildPageGroupMeta();
-      this.calculateTotalPages();
-    }
+  if (!this.lazy) {
+    this.rebuildPageGroupMeta();
+    this.calculateTotalPages();
   }
 
-  loadDataLazy(event: TableLazyLoadEvent, force = false) {
-    // 第一次 primeNG 會自動丟 event；避免重複打
-    if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
-    if (force) { this._skipFirstLazy = false; }
+  // ★ 關鍵：禁止自動載入時，不要往外丟 lazy
+  if (!this.autoLoad) return;
+
+  this.emitFromPaginator(event);
+}
+
+
+loadDataLazy(event: TableLazyLoadEvent, force = false) {
+  // ★ 禁止自動載入：除非 force，否則不處理 PrimeNG 的 onLazyLoad
+  if (!this.autoLoad && !force) return;
+
+  if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
+  if (force) { this._skipFirstLazy = false; }
 
     // 計算頁碼與每頁筆數
     const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
@@ -789,4 +798,42 @@ export class tls2b010tableComponent
     const local = this.toPageIndex(rowIndexGlobal);
     return this.pageGroupOrder[key] ?? (local + 1);
   }
+get effectiveLoading(): boolean {
+  // 只在允許自動載入時才顯示 loading；且資料為空才顯示骨架
+  return this.autoLoad && (this.loading || this.internalLoading) && (this.data?.length ?? 0) === 0;
+}
+ngAfterViewInit(): void {
+  if (this.lazy && this.autoLoad) {
+    queueMicrotask(() => this.emitLazyNow());
+  }
+}
+private emitLazyNow() {
+  const evt: LazyLoadEvent = {
+    pageIndex: Math.floor((this.first ?? 0) / (this.rows || 1)) + 1,
+    pageSize: this.rows || 20,
+    SortBy: this.multiSortMeta || []
+  };
+  this.lazyLoadData.emit(evt);
+}
+
+private emitFromPaginator(e: any) {
+  const pageIndex = (e?.first ?? 0) / (e?.rows || this.rows || 1) + 1;
+  const pageSize  = e?.rows || this.rows || 20;
+  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: this.multiSortMeta || [] });
+}
+
+private emitFromSort(e: any) {
+  const SortBy    = Array.isArray(e?.multiSortMeta) ? e.multiSortMeta : (this.multiSortMeta || []);
+  const pageIndex = Math.floor((this.first ?? 0) / (this.rows || 1)) + 1;
+  const pageSize  = this.rows || 20;
+  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
+}
+
+private emitFromPrime(e: any) {
+  const pageIndex = (e?.first ?? 0) / (e?.rows || this.rows || 1) + 1;
+  const pageSize  = e?.rows || this.rows || 20;
+  const SortBy    = Array.isArray(e?.multiSortMeta) ? e.multiSortMeta : (this.multiSortMeta || []);
+  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
+}
+
 }
