@@ -87,7 +87,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     this.service.getTltByFlags(meterNo, this.usrData().Mid);
   }, { allowSignalWrites: !0 });
 
-  /** 改變專櫃編號 更新專櫃名稱與面積坪數 */
+  /** 改變專櫃編號 更新相關欄位 */
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal() ?? void 0;
     const tltByFlag = tltNo?.length && this.service.tltByFlagMap().get(tltNo) || void 0;
