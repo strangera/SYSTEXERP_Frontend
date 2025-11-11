@@ -44,20 +44,20 @@
 
           <!-- 發票號碼區間 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
+            <app-input-text-range
               label="發票號碼"
               [startControl]="queryForm.controls.TXN_GUIBegNoStart"
               [endControl]="queryForm.controls.TXN_GUIBegNoEnd">
-            </app-input-number-range>
+            </app-input-text-range>
           </div>
 
           <!-- 交易序號區間 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-number-range
               label="交易序號"
               [startControl]="queryForm.controls.TXN_NoStart"
               [endControl]="queryForm.controls.TXN_NoEnd">
-            </app-input-text-range>
+            </app-input-number-range>
           </div>
 
           <!-- LOGO_No / TLT_No / HOS_NO / USR_No -->
