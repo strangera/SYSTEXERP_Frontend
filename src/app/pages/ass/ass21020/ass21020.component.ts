@@ -82,8 +82,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   /** 改變錶號 更新設備位置編號 */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal() ?? void 0;
-    if (!meterNo) return this.qf().Location_No.setValue('');
     untracked(() => this.qf().TLT_No.setValue(void 0));
+    if (!meterNo) return this.qf().Location_No.setValue('');
     this.service.getTltByFlags(meterNo, this.usrData().Mid);
   }, { allowSignalWrites: !0 });
 
@@ -97,8 +97,9 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     this.queryForm.patchValue({
       TLT_No: tltByFlag.TLT_No,
       TLT_Name: tltByFlag.TLT_Name,
-      NET_SPACE: tltByFlag.NET_SPACE ? String(tltByFlag.NET_SPACE) : void 0
-    }, { emitEvent: !1 });
+      Location_No: tltByFlag.Location_No,
+      NET_SPACE: String(tltByFlag.NET_SPACE),
+    });
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
