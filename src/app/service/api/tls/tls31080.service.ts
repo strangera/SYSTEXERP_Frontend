@@ -6,19 +6,36 @@ import { ApiResponse } from '@service/system/auth.service';
 import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31080Request {
-  TXN_DateS: string | Date;
-  TXN_DateE: string | Date;
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  // TXN_DateS: string | Date;
+  // TXN_DateE: string | Date;
+  // tlt_building: string[]
+  // tlt_floor: string[]
+  // area_no: string[]
+  // bus_type: string[]
+  // bus_class: string[][]
+  // bus_sclass: string[][]
+  // tlt_kind: string[]
+  // tlt_term_type: string[]
+  // org_id: string[]
+  // TaxType: string
+  // IsRece_Yn: string
+
+  TxnDate: string | Date;
+  TimeMode: string;
+  TimeFromHH: number;
+  TimeToHH: number;
+  StoreNos: string[];
+  Floors: string[];
+  Areas: string[];
+  CatLNos: string[];
+  CatMNos: string[];
+  CabinetKinds: string[];
+  OrgIds: string[];
+  CounterNos: string[];
+  ChargeTypes: string[];
+  Buildings: string[];
+  IncludeTax: string;
+  BizInvFlag: string;
 }
 
 export interface TLS31080PrintRequest extends TLS31080Request {
@@ -108,17 +125,20 @@ export class Tls31080Service {
   constructor(private http: HttpClient) { }
           
   // 查詢各時段之營業報表
+  // queryTLS31080(body: TLS31080Request): Observable<any> {
+  //   return this.http.post<any>(`${this.apiUrl}/queryTLS31080`, body).pipe(
+  //         map(res => {
+  //           return {
+  //             Data: res.Data?.Data,
+  //             TotalCount: res.TotalCount,
+  //             Message: res.Message,
+  //             TotalData: res.Data?.TotalData 
+  //           };
+  //         })
+  //       );
+  // }
   queryTLS31080(body: TLS31080Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS31080`, body).pipe(
-          map(res => {
-            return {
-              Data: res.Data?.Data,
-              TotalCount: res.TotalCount,
-              Message: res.Message,
-              TotalData: res.Data?.TotalData 
-            };
-          })
-        );
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31080`, body);
   }
       
   // 查詢各時段展開之營業報表
