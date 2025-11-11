@@ -18,7 +18,7 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="發票數字"
+            label="發票號碼"
             [control]="dataForm.controls.INV_GUINumber"
             [submitted]="submitted"
           ></app-input-text>
@@ -89,7 +89,7 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="稅別"
+            label="課稅別"
             controlName="PLU_TaxType"
             [options]="taxTypeOptions"
             optionLabel="label"

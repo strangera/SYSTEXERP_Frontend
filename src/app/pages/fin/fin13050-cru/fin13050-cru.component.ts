@@ -29,7 +29,14 @@ import { CalenderoneComponent } from '@shared/componentkit/calenderone/calendero
 /* ---------------------------
  *  進階 Validators（中文化原因）
  * --------------------------- */
-
+/** 有填才驗證：英數且長度必須是 16 */
+const alnumMax16IfFilled: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
+  const v = (c.value ?? '').toString().trim();
+  if (!v) return null; // 空值：合法（非必填）
+  if (!/^[A-Za-z0-9]+$/.test(v)) return { alnum: { reason: '包含非英數字元' } };
+  if (v.length > 16) return { maxlength: { requiredLength: 16, actualLength: v.length } };
+  return null; // 1~16 碼 OK
+};
 /** 2 碼大寫英文字母（同時配合 min/maxLength(2)） */
 const twoUppercaseValidator: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
   const v = (c.value ?? '').toString();
@@ -242,10 +249,10 @@ PUR_RepYYYYMM: [null as any, [Validators.required, this.repYYYYMMEvenValidator]]
 
     // ===== 憑證/傳票/使用別/系統別/備註 =====
     // 憑證單號：16 碼英數（必填）
-    Source_Doc_No: [
-      '',
-      [ alnumOnly, Validators.minLength(16), Validators.maxLength(16)],
-    ],
+Source_Doc_No: [
+  '',
+  [ alnumMax16IfFilled ]  // 非必填；有填：英數且長度 ≤ 16
+],
     Voucher_No: [{ value: '', disabled: true }],                       // 傳票號碼（唯讀）
     SAL_Type: [''],                                                    // 使用別（SYS1000.T205）
     SYS_ORIGIN: [''],                                                  // 系統別（SYS1000.SYS_ORIGIN）
@@ -284,19 +291,23 @@ PUR_RepYYYYMM: [null as any, [Validators.required, this.repYYYYMMEvenValidator]]
     this.loadVendorUniformOptions();
     this.loadVendorNoOptions(); // ❶ 讀取「廠商編號」下拉
 
-    // 統編選取 -> 帶廠商編號/名稱
-    this.dataForm.get('PUR_VenUniform')?.valueChanges.subscribe((v) => {
-      const picked = this.PUR_VenUniformOptions.find((o) => o.value === v);
-      if (picked) {
-        this.dataForm.patchValue(
-          { PUR_VenNo: picked.venNo ?? '', PUR_VenName: picked.venName ?? '' },
-          { emitEvent: false },
-        );
-      } else {
-        // 清空（使用者清除）
-        this.dataForm.patchValue({ PUR_VenNo: '', PUR_VenName: '' }, { emitEvent: false });
-      }
-    });
+// 廠商編號選取 -> 只帶入【廠商名稱】，不動統編
+this.dataForm.get('PUR_VenNo')?.valueChanges.subscribe((venNo) => {
+  const picked = this.VendorNoOptions.find(o => o.value === venNo);
+  if (picked) {
+    this.dataForm.patchValue(
+      {
+        PUR_VenName: picked.venName ?? '',
+        // 不要同步統編：保持這行為註解
+        // PUR_VenUniform: picked.venUniform ?? this.dataForm.get('PUR_VenUniform')?.value
+      },
+      { emitEvent: false }
+    );
+  } else {
+    this.dataForm.patchValue({ PUR_VenName: '' }, { emitEvent: false });
+  }
+});
+
 
     // ❷ 廠商編號選取 -> 自動帶入【廠商名稱】（必要時也可一併帶統編）
     this.dataForm.get('PUR_VenNo')?.valueChanges.subscribe((venNo) => {
@@ -435,7 +446,7 @@ PUR_RepYYYYMM: [null as any, [Validators.required, this.repYYYYMMEvenValidator]]
         PUR_DiscNo: fv.PUR_DiscNo ?? '1',
         PUR_Type: fv.PUR_Type ?? null,
 
-        Source_Doc_No: fv.Source_Doc_No,
+        Source_Doc_No: (fv.Source_Doc_No ?? '').toString().trim() || null,
         Voucher_No: fv.Voucher_No ?? null,
         SAL_Type: fv.SAL_Type ?? null,
         SYS_ORIGIN: fv.SYS_ORIGIN ?? null,
@@ -545,6 +556,10 @@ PUR_RepYYYYMM: [null as any, [Validators.required, this.repYYYYMMEvenValidator]]
 
     // 一般 min 檢查
     if (e['min']?.min != null) return `「${label}」數值不可小於 ${e['min'].min}。`;
+    if (e['length']) {
+  return `「${label}」需為 ${e['length'].required} 碼，目前為 ${e['length'].actual} 碼。`;
+}
+
 
     return `「${label}」格式有誤，請檢查輸入資料。`;
   }
@@ -577,4 +592,5 @@ PUR_RepYYYYMM: [null as any, [Validators.required, this.repYYYYMMEvenValidator]]
     const s = String(input).replace(/\D/g, '');
     return s.length >= 6 ? s.slice(0, 6) : null;
   }
+
 }
