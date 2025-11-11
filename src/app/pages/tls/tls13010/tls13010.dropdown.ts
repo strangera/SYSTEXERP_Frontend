@@ -177,7 +177,7 @@ export class TLS13010DropdownService {
   }
 
 
-  private initBustypeOptionsWithRetry(): Observable<DropdownOption[]> {
+  public initBustypeOptionsWithRetry(): Observable<DropdownOption[]> {
     return this.sysb800Service.getSystemTypes().pipe(
       retry({ count: 3, delay: () => timer(1000) }),
       map(response => response.map(item => ({
@@ -306,7 +306,7 @@ export class TLS13010DropdownService {
   /**
    * 載入所有 Location 相關選項（T101）
    */
-  private initLocationOptionsWithRetry(): Observable<any> {
+  public initLocationOptionsWithRetry(): Observable<any> {
     console.log('🔄 開始載入 Location 選項');
 
     return forkJoin({

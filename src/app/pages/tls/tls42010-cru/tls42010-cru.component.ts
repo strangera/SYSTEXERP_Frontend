@@ -21,6 +21,8 @@ import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { CheckboxModule } from 'primeng/checkbox';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface KeyItem {
   code: string;
@@ -646,8 +648,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           TSB_Name: frm.value.TSB_Name,
           POS1004Disc: detailList, // 後端對應 insert
         };
-        this.tls42010Service.insertTLS42010M(payload).subscribe({
-          next: () => (this.loading = false),
+        this.tls42010Service
+        .insertTLS42010M(payload)
+        .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+        .subscribe({
+          next: (res) => {
+            this.messageService.successBubble(res.Message);
+            this.loading = false;
+          },
+          complete: () => {this.onCancel();},
           error: () => (this.loading = false),
         });
       } else {
@@ -659,10 +668,17 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           TSB_Name: frm.value.TSB_Name,
           POS1004: detailList,
         };
-        this.tls42010Service.updateTLS42010M(payload).subscribe({
-          next: () => (this.loading = false),
-          error: () => (this.loading = false),
-        });
+        this.tls42010Service
+          .updateTLS42010M(payload)
+          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.loading = false;
+            },
+            complete: () => {this.onCancel();},
+            error: () => (this.loading = false),
+          });
       }
     });
   }
