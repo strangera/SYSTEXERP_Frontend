@@ -12,6 +12,15 @@
 
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+                    <!-- 銷售單號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="銷售單號"
+              controlName="TXN_SaleNoteNo"
+              [control]="queryForm.controls.TXN_SaleNoteNo">
+            </app-input-text>
+          </div>
+
           <!-- 日期區間 -->
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
@@ -20,14 +29,6 @@
             [endControl]="queryForm.controls.TXN_DateEnd">
           </app-calendar-range-quick>
 
-          <!-- 銷售單號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="銷售單號"
-              controlName="TXN_SaleNoteNo"
-              [control]="queryForm.controls.TXN_SaleNoteNo">
-            </app-input-text>
-          </div>
 
           <!-- 收銀機號（多選） -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -143,27 +144,29 @@
 
 <!-- 明細表（群組小計：以銷售單號為一組，使用 SumTXN_SaleAmt） -->
 <div class="card">
-  <app-table2
+  <app-tls2b010table
     tableKey="TLS55070"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="_rowKey"
-    [multiSortMeta]="sortMeta"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
+    [dataKey]="'_rowKey'"
     [loading]="loading"
+    [lazy]="true"
+    [totalRecords]="totalRecords"
+    [multiSortMeta]="sortMeta"
     [showManage]="false"
     [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-    [showSubTotal]="true"
-    [showTotal]="true"
+
+
     [groupRowsBy]="groupByField"
-    [externalTotals]="detailTotals"
-    [externalTotalFieldMap]="detailTotalFieldMap"
-    [externalSubtotals]="visibleSubtotals"
-    [externalSubtotalFieldMap]="detailSubtotalFieldMap"
-    [serverFetch]="fetchTLS55070">
+
+  
+    [groupKey]="groupByField"
+
+
+    [mergedColumns]="['TXN_SaleNoteNo']"
+
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+  >
     <header>
       <div class="flex justify-content-end gap-2">
         <p-button
@@ -185,5 +188,5 @@
         </p-button>
       </div>
     </header>
-  </app-table2>
+  </app-tls2b010table>
 </div>

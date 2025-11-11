@@ -62,7 +62,7 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     Source_USR_Level: ['', Validators.required],
-    Target_USR_Level: ['', Validators.required],
+    Target_USR_Level: [[Validators.maxLength(6), Validators.required]],
   });
   dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
   dialogSelectItem: any | null = null;
@@ -153,15 +153,18 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
                   };
                 })
               };
-              this.tls42010Service.insertTLS42010M(body).subscribe({
-                next: (res) => {
-                  console.log(' 複製鍵盤成功', res);
-                  this.dialogVisible = false;
-                  this.onSubmit(this.queryForm);
-                },
+              this.tls42010Service
+                .insertTLS42010M(body)
+                .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+                .subscribe({
+                  next: (res) => {
+                    this.messageService.successBubble(res.Message);
+                    this.dialogVisible = false;
+                    this.onSubmit(this.queryForm);
+                  },
 
-                complete: () => (this.loading = false)
-              });
+                  complete: () => (this.loading = false)
+                });
             },
 
           });
@@ -185,12 +188,12 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
       const raw = frm.value;
       const body = {
         ...raw,
-        pageSize: 30, // ✅ 改小寫
-        pageIndex: 1, // ✅ 改小寫
+        pageSize: 30,
+        pageIndex: 1,
         SortBy: [{ field: 'USR_Level', order: 1 }],
       };
 
-      this.lastQueryForm = body; // ✅ 關鍵
+      this.lastQueryForm = body;
       this.loading = true;
 
       this.tls42010Service
@@ -218,16 +221,18 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
     this.lastQueryForm = queryBody;
     this.loading = true;
 
-    this.tls42010Service.queryTLS42010M(queryBody).subscribe({
-      next: (res) => {
-        if (res?.Data) {
-          this.data = [...this.data, ...res.Data];
-          this.totalRecords = res.TotalCount;
-        }
-        this.loading = false;
-      },
-      error: () => (this.loading = false),
-    });
+    this.tls42010Service
+      .queryTLS42010M(queryBody)
+      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          if (res?.Data) {
+            this.data = [...this.data, ...res.Data];
+            this.totalRecords = res.TotalCount;
+          }
+          this.loading = false;
+        },
+      });
   }
   // ---------------- 刪除 ----------------
   onDelete(selectedRows: any[]): void {

@@ -16,7 +16,7 @@
                 + ' table-font-md'" currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [loading]="(loading || internalLoading) && data.length === 0" paginatorDropdownAppendTo="body" editMode="row">
+  [loading]="internalLoading && data.length === 0" paginatorDropdownAppendTo="body" editMode="row">
 
   <!-- ===== Caption / 工具列 ===== -->
   <ng-template pTemplate="caption">
