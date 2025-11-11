@@ -6,7 +6,7 @@ import { IInsertTLS52050Detail, IQueryTLS52050DetailData, IQueryTLS52050DetailRe
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, distinctUntilChanged, finalize, merge, Observable, of, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, merge, of, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -23,7 +23,6 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { tomorrow } from '@shared/models/system/query-form.model';
-import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { columnGroup, columns } from './tls52050-cru.model';
 import { Tls52010Service } from '@service/api/tls/tls52010.service';
@@ -86,7 +85,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     salePriceAmount: [0], // 售價金額調整
   },);
   brandOptions = this.dropdown.queryPluLogo(); // 品牌
-  vendorOptions?: Observable<Option[] | null> = of([]); // 廠商編號
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   data: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   editColumns = columns;
@@ -104,7 +103,6 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   ngOnInit(): void {
     this.initializePage('TLS52050', this.dataForm);
     // 監聽 MAM_Method 是否為永久變價
-    this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       if (!this.isFormCreateable) {
         return;
@@ -121,16 +119,12 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       if (this.rowdata?.MAM_Status === '0') {
         this.dataForm.controls.VEN_No.disable();
         this.dataForm.controls.LOGO_No.disable();
-        this.dataForm.controls.MAM_Method.disable();
-        this.dataForm.controls.MAM_BegDate.disable();
-        this.dataForm.controls.MAM_EndDate.disable();
       }
       if (this.rowdata?.MAM_Method === '1') {
         this.dataForm.controls.MAM_EndDate.disable();
       }
-      const MAM_No = this.rowdata?.MAM_No;
-      if (MAM_No) {
-        this.tls52050Service.queryTLS52050UpdateDetail(MAM_No).pipe(untilDestroyed(this)).subscribe(response => {
+      if (this.rowdata?.MAM_No) {
+        this.tls52050Service.queryTLS52050UpdateDetail(this.rowdata?.MAM_No).pipe(untilDestroyed(this)).subscribe(response => {
           this.data = response.Data.map(item => ({ ...item, id: Number(item.id) }));
         });
       }
@@ -187,9 +181,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
           row[discountControl === 'costPriceDiscount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = 0;
         }
       });
-      // *** 修正：強制更新 data 陣列參考以觸發 Angular 變更偵測 ***
       this.data = [...this.data];
-      // ************************************************************
     });
   }
   private setupDialogLogic(): void {

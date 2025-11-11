@@ -69,7 +69,8 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   /** 改變錶號 更新設備位置編號 */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal() ?? void 0;
-    if (!meterNo) return this.qf().Location_No.setValue('');
+    this.logger.debug(`meterNoEffect:`, [meterNo]);
+    if (!meterNo) return untracked(() => this.qf().Location_No.setValue(void 0));
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
