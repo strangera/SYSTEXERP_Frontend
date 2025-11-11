@@ -107,8 +107,7 @@ export class tls2b010tableComponent
 
   // 直向合併
   /** 群組鍵（資料欄位名稱）預設 'ECR_No' */
-  @Input() groupKey: string = 'ECR_No';
- 
+  public groupKey: string = 'ECR_No';
   /** 需要直向合併的欄位 */
   @Input() mergedColumns: string[] = [];
   get hasRowSpan(): boolean {
