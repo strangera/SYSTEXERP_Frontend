@@ -18,9 +18,9 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="稅別" controlName="Item_TaxType" [options]="Item_TaxType_Option"
+            <app-multi-select label="稅別" controlName="Item_TaxType" [options]="Item_TaxType_Option"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.Item_TaxType"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
