@@ -80,13 +80,17 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   todayDisplay = '';
   systemTypeOptions: IDropdownItem[] = [];
   addButtons = [
-    {
-      label: '缺單審核',
-      icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onDetail(rowData),
-      disabled: (rowData: any) => rowData.PAY_NO === '10'  // ⬅ PAY_NO=10 禁用
-    }
-  ];
+  {
+    label: '缺單審核',
+    icon: 'pi pi-exclamation-triangle',
+    action: (rowData: any) => this.onDetail(rowData),
+    disabled: (rowData: any) =>
+      rowData.PAY_Type === 'C' ||
+      rowData.PAY_Type === 'A' ||
+      rowData.PAY_Type === '1'
+  }
+];
+
 
   isRowSelectable(row: any) {
     return row.check_status === 'N';

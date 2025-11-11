@@ -112,7 +112,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
       ...frm.value,
       ACT_PayAmt: frm.getRawValue().MOD_PayAmt,
       magneticCard: undefined, //! 磁卡編號 目前資料庫沒有
-      Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || '',
+      Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || null,
     }
   }
   updateTLS27020(frm: FormGroup): UpdateTLS27020 {
@@ -120,7 +120,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
       id: this.rowdata?.id ?? 0,
       ...frm.value,
       MOD_PayAmt: frm.getRawValue().MOD_PayAmt,
-      Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || '',
+      Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || null,
     };
   }
 }

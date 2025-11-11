@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -61,51 +61,33 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
 
   public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
 
-  private suppressEngTypeEffect = !1;
-
-  public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
-
   private readonly usrData = computed(() => ({
     SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
     Mid: Number(this.authService.currentUserValue!.mid),
   }));
 
-  /** ENG_Type 改變時,篩選 MeterNo 選項 */
-  public engTypeEffect = effect(() => {
-    const engTypes = this.engTypeSignal() ?? void 0;
-    const MeterNos = this.service.engMeterNoOptions();
-    this.logger.debug(`filteredMeterNo:`, [engTypes, MeterNos]);
+  public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
 
-    if (!this.suppressEngTypeEffect) this.queryForm.patchValue({
-      ENG_MeterNo: void 0,
-      Location_No: void 0,
-    });
+  /** 改變engType 更新錶號選項 */
+  public readonly engTypeEffect = effect(() => {
+    const type = this.engTypeSignal() ?? void 0;
+    const options = this.service.engMeterNoOptions();
+    untracked(() => this.qf().ENG_MeterNo.setValue(void 0));
 
-    if (!engTypes?.length || engTypes.length === 3) return this.filteredMeterNo.set(MeterNos);
-
-    this.filteredMeterNo.set(MeterNos.filter(m => m.ENG_Type
-      && this.service.engTypeMap.get(m.ENG_Type)
-      && engTypes.includes(this.service.engTypeMap.get(m.ENG_Type)!)));
+    if (type?.length && type.length !== 3) this.filteredMeterNo.set(options
+      .filter(o => this.service.engTypeMap.get(o.ENG_Type)));
+    return this.filteredMeterNo.set(options);
   }, { allowSignalWrites: !0 });
 
-  /** MeterNo 改變時,帶出 Location_No 並清除 ENG_Type */
+  /** 改變錶號 更新設備位置編號 */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal() ?? void 0;
-    const typeString = meterNo && this.service.engMeterNoMap().get(meterNo)?.ENG_Type || void 0;
-    const engType = typeString && this.service.engTypeMap.get(typeString);
-    if (!meterNo || !typeString || !engType) return;
-
-    const Location_No = this.service.engMeterNoMap().get(meterNo)?.Location_No;
-    Location_No && this.qf().Location_No.setValue(Location_No);
-
-    // 利用microtask避免與 ENG_Type effect 互相觸發
-    this.suppressEngTypeEffect = !0;
-    queueMicrotask(() => this.suppressEngTypeEffect = !1);
-
-    this.logger.debug(`meterNoEffect:`, [meterNo, typeString, engType, Location_No]);
+    untracked(() => this.qf().TLT_No.setValue(void 0));
+    if (!meterNo) return this.qf().Location_No.setValue('');
+    this.service.getTltByFlags(meterNo, this.usrData().Mid);
   }, { allowSignalWrites: !0 });
 
-  /** TLT_No 改變時，帶出TLT_Name、NET_SPACE */
+  /** 改變專櫃編號 更新專櫃名稱與面積坪數 */
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal() ?? void 0;
     const tltByFlag = tltNo?.length && this.service.tltByFlagMap().get(tltNo) || void 0;
@@ -115,8 +97,9 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     this.queryForm.patchValue({
       TLT_No: tltByFlag.TLT_No,
       TLT_Name: tltByFlag.TLT_Name,
-      NET_SPACE: tltByFlag.NET_SPACE ? String(tltByFlag.NET_SPACE) : void 0
-    }, { emitEvent: !1 });
+      Location_No: tltByFlag.Location_No,
+      NET_SPACE: String(tltByFlag.NET_SPACE),
+    });
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
