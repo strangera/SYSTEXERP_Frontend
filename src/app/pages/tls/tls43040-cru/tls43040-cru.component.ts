@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { forkJoin, map } from 'rxjs';
+import { finalize, forkJoin, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -208,23 +208,26 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
 
       if (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') {
         // 新增
-        this.tls43040Service.insertTLS43040(payload).subscribe({
-          next: (res) => {
-            console.log('新增成功:', res);
-            this.router.navigate(['/TLS/TLS43040']);
-            // this.onCancel(); // !!! 學習
-            this.messageService.successBubble(res.Message); // !!! 學習
-          },
-        });
+        this.tls43040Service
+          .insertTLS43040(payload)
+          .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.onCancel();
+            },
+          });
       } else {
         // 更新
-        this.tls43040Service.updateTLS43040(payload).subscribe({
-          next: (res) => {
-            console.log('更新成功:', res);
-            this.router.navigate(['/TLS/TLS43040']);
-            this.onCancel();
-          },
-        });
+        this.tls43040Service
+          .updateTLS43040(payload)
+          .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.onCancel();
+            },
+          });
       }
     } else {
       console.log('表單驗證未通過');
