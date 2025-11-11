@@ -327,16 +327,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     // 觀察 大分類 是否為''
     this.dataForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
-
-      console.log('大分類改變了' + newValue);
       this.dataForm.controls.CAT_MNo.setValue(null, { emitEvent: false });
       if (!newValue) {
         // 讀取整份 大分類、中分類、小分類 dropDown
-        // this.loadCATOptions();
         this.middleOption = [];
         this.smallOption = [];
-        // this.restoreOrClear('CAT_MNo');
-        // this.restoreOrClear('CAT_SNo');
       } else {
         this.tls51070Service
           .queryCAT_MNo_DropDownList({ CAT_LNo: [newValue] })
@@ -346,10 +341,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
               Name: item.Name,
               Label: item.No + '-' + item.Name,
             }));
-
-            // 改這裡
-            // this.restoreOrClear('CAT_MNo');
-            // this.restoreOrClear('CAT_SNo');
 
             this.smallOption = [];
           });
@@ -362,7 +353,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //觀察表單 中分類變化
     this.dataForm.get('CAT_MNo')?.valueChanges.subscribe((mno) => {
-      console.log('中分類改變了' + mno);
       this.dataForm.controls.CAT_SNo.setValue(null, { emitEvent: false });
 
       const lno = this.dataForm.get('CAT_LNo')?.value;
@@ -375,8 +365,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           }
         ]
       };
-      console.log('mno:' + mno);
-      console.log('lno:' + lno);
 
       if (lno && mno) {
         this.tls51070Service
@@ -387,11 +375,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
               Name: item.Name,
               Label: item.No + '-' + item.Name,
             }));
-            // this.restoreOrClear('CAT_SNo');
           });
       } else {
         this.smallOption = [];
-        // this.restoreOrClear('CAT_SNo');
       }
     });
 
@@ -936,7 +922,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   // #region 讀取明細檔案
   async loadDetail(pLU_MagNo: string, pLU_OrderPrc: number): Promise<void> {
-    console.log('接收pLU_MagNo'+ pLU_MagNo+ '接收pLU_OrderPrc' +pLU_OrderPrc)
+    // console.log('接收pLU_MagNo'+ pLU_MagNo+ '接收pLU_OrderPrc' +pLU_OrderPrc)
     if (pLU_MagNo == '') {
       console.log('讀取pLU_MagNo',this.dataForm.value)
       if (this.crudstatus !== CRUDStatus.Create){
@@ -1006,29 +992,20 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         this.loadDetail(magno || '', orderPrc ?? 0)
           .then(() => {
             console.log('編輯模式重製完成', this.dataForm.value);
+            // 完成後重新讀取選項
+            this.loadCATOptions();  
             this.isRefreshing = false;
           })
           .catch(() => {
             this.isRefreshing = false;
           });
+
+        
       }
     } else {
       console.log('查看模式無須重製');
     }
   }
-
-  // #region 回填明細
-  private restoreOrClear(controlName: string): void {
-    if (this.orgdataForm && this.isRefreshing) {
-      const originalValue = this.orgdataForm[controlName]; // <-- 直接取物件屬性
-      this.dataForm.get(controlName)?.setValue(originalValue, { emitEvent: false });
-      console.log('回寫原始表單', controlName, originalValue);
-    } else {
-      this.dataForm.get(controlName)?.setValue('', { emitEvent: false });
-      console.log('一般清空', controlName);
-    }
-  }
-
 
   //切換顯示Button
   switchButton(buttonNum: number) {
