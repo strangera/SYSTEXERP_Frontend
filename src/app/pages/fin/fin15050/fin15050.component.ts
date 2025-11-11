@@ -61,16 +61,21 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
       STO_No: '10',
       REP_GUIYM: this.datePipe.transform(frm.get('REP_GUIYM')?.value, 'yyyyMM') || '',
     }
+    
 
     this.handleSubmit(frm, () => {
       this.fin15050Service.printFIN15050(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           if (response.Status === '0000' && response.Data?.Print_URL) {
-            const rawUrl = response.Data.Print_URL.startsWith('http')
+            let rawUrl = response.Data.Print_URL.startsWith('http')
               ? response.Data.Print_URL
               : `${environment.BaseUrl}${response.Data.Print_URL}`;
             console.log('rawUrl', rawUrl);
+
+            // ✅ 解碼 URL，讓中文字恢復正常
+            rawUrl = decodeURIComponent(rawUrl);
+            
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
           }

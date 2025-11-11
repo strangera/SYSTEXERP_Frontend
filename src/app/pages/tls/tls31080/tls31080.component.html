@@ -92,50 +92,45 @@
         <hr>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="館別" controlName="tlt_building" [options]="tlt_building_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="館別" controlName="Buildings" [options]="tlt_building_Option" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.Buildings" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" controlName="tlt_floor" [options]="tlt_floor_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="樓層" controlName="Floors" [options]="tlt_floor_Option" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.Floors" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="區域" controlName="area_no" [options]="area_no_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.area_no" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="區域" controlName="Areas" [options]="area_no_Option" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.Areas" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類代碼/名稱" controlName="bus_type" [options]="bus_type_Option" optionLabel="label"
-              optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="大分類代碼/名稱" controlName="CatLNos" [options]="bus_type_Option" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.CatLNos" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類代碼/名稱" controlName="bus_class" [options]="bus_class_Option" optionLabel="label"
-              [control]="queryForm.controls.bus_class" [submitted]="submitted" [group]="true"
-              optionGroupLabel="CAT_LName" optionGroupChildren="items"></app-multi-select>
+            <app-multi-select label="中分類代碼/名稱" controlName="CatMNos" [options]="bus_class_Option" optionLabel="label"
+              [control]="queryForm.controls.CatMNos" [submitted]="submitted" [group]="true"
+              optionGroupLabel="CatLNos" optionGroupChildren="items"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="小分類代碼/名稱" controlName="bus_sclass" [options]="bus_sclass_Option"
-              optionLabel="label" [control]="queryForm.controls.bus_sclass" [submitted]="submitted"
-              optionGroupLabel="label" optionGroupChildren="items" [group]="true"></app-multi-select>
+            <app-multi-select label="櫃別" controlName="CabinetKinds" [options]="tlt_kind_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CabinetKinds" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="櫃別" controlName="tlt_kind" [options]="tlt_kind_Option" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_kind" [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="抽成別" controlName="tlt_term_type" [options]="tlt_term_type" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_term_type"
+            <app-multi-select label="抽成別" controlName="ChargeTypes" [options]="tlt_term_type" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ChargeTypes"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織" controlName="org_id" [options]="org_id_Option" optionLabel="label"
-              optionValue="No" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="組織" controlName="OrgIds" [options]="org_id_Option" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.OrgIds" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="銷售金額是否含稅" controlName="TaxType" [control]="queryForm.controls.TaxType" [options]="TaxType_Option"
+            <app-radiobutton label="銷售金額是否含稅" controlName="IncludeTax" [control]="queryForm.controls.IncludeTax" [options]="TaxType_Option"
               [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton-yn label="是否開立業主發票" controlName="IsRece_Yn" [control]="queryForm.controls.IsRece_Yn"
+            <app-radiobutton-yn label="是否開立業主發票" controlName="BizInvFlag" [control]="queryForm.controls.BizInvFlag"
               [submitted]="submitted" [showAll]="true"></app-radiobutton-yn>
           </div>
         </div>

@@ -13,7 +13,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { debounceTime, map, of, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -25,7 +25,6 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TLS31080Item, TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-tls31080',
@@ -57,21 +56,38 @@ import { environment } from 'src/environments/environment';
 // 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-      TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
-      TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
-      // 合約查詢條件
-      tlt_building: [[]],// 館別
-      tlt_floor: [[]],// 樓層
-      area_no: [[]],// 區域
-      bus_type: [[] as string[]],//大分類
-      bus_class: [[] as IDropdownItem[]],//中分類
-      bus_sclass: [[] as IDropdownItem[]],//小分類
-      tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-      tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
-      org_id: [[]],  // 組織
-      TaxType: ["1"],  // 銷售金額是否含稅(1:是 0:否 預設含稅)
-      IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
-  
+      // TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
+      // TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
+      // // 合約查詢條件
+      // tlt_building: [[]],// 館別
+      // tlt_floor: [[]],// 樓層
+      // area_no: [[]],// 區域
+      // bus_type: [[] as string[]],//大分類
+      // bus_class: [[] as IDropdownItem[]],//中分類
+      // bus_sclass: [[] as IDropdownItem[]],//小分類
+      // tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
+      // tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
+      // org_id: [[]],  // 組織
+      // TaxType: ["1"],  // 銷售金額是否含稅(1:是 0:否 預設含稅)
+      // IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
+
+      TxnDate: [yesterday, [Validators.required]],//交易日期_起
+      TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍
+      TimeFromHH: [0, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
+      TimeToHH: [0, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
+      StoreNos: [this.authService.getUserInfo()?.SYS_StoreNo], //門市代號，多選以逗號分隔 (例: "001,002,003")
+      Floors: [[]], //樓層代號，多選以逗號分隔
+      Areas: [[]], //區域代號，多選以逗號分隔
+      CatLNos: [[] as string[]], //大分類代號，多選以逗號分隔
+      CatMNos: [[] as IDropdownItem[]], //中分類代號，多選以逗號分隔
+      CabinetKinds: [[]], //櫃別類型，多選以逗號分隔 (TLTTALENT.tlt_kind)
+      OrgIds: [[]], //組織代號，多選以逗號分隔
+      CounterNos: [[]], //專櫃代號，多選以逗號分隔 (TLTTALENT.tlt_no)
+      ChargeTypes: [[]], //抽成別，多選以逗號分隔 (POS5007.TLT_ID)
+      Buildings: [[]], //館別代號，多選以逗號分隔 (TLTTALENT_LOCATION.tlt_building)
+      IncludeTax: ['1'], //是否含稅：1=含稅(預設)，0=未稅
+      BizInvFlag: ['A'], //是否開立業主發票：'A'=全部(預設)、'Y'=是、'N'=否
+
       // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
     });
   
@@ -180,9 +196,14 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       { value: "5", label: "層級抽成" },
       { value: "6", label: "包底加層級" },
     ]
-    TaxType_Option = [
+    TaxType_Option = [ // 銷售金額是否含稅
       { value: "1", label: "是" },
       { value: "0", label: "否" },
+    ]
+    BizInvFlag_Option = [ // 是否開立業主發票
+      { value: "A", label: "全部" },
+      { value: "Y", label: "是" },
+      { value: "N", label: "否" },
     ]
     tlt_building_Option: IDropdownItem[] = []; // 館別
     tlt_floor_Option: IDropdownItem[] = []; // 樓層
@@ -225,7 +246,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
         this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
       });
       // 監聽大分類變化
-      this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
+      this.queryForm.controls.CatLNos.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
         if (value && value.length > 0) {
           this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
             const groupedData = response.Data.reduce((accumulator, currentItem) => {
@@ -251,79 +272,8 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
         } else {
           this.bus_class_Option = [];
           this.bus_sclass_Option = [];
-          this.queryForm.controls.bus_sclass.setValue([]);
-          this.queryForm.controls.bus_class.setValue([]);
+          this.queryForm.controls.CatMNos.setValue([]);
         }
-      });
-      // 監聽中分類變化，獲取小分類並分組
-      this.queryForm.controls.bus_class.valueChanges.pipe(
-        debounceTime(300),
-        untilDestroyed(this),
-        map(selectedMValues => selectedMValues || []),
-  
-        // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
-        switchMap((selectedMValues: IDropdownItem[]) => {
-          if (selectedMValues.length === 0) {
-            this.bus_sclass_Option = [];
-            this.queryForm.controls.bus_sclass.setValue([]);
-            //  統一回傳型別，避免 TypeScript 推斷成 never[]
-            return of({ selectedMValues: [], data: [] });
-          }
-  
-          //  組成符合新 API 的請求格式
-          const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
-            .filter(v => v && v.bus_type) // 過濾 undefined
-            .map(v => ({
-              bus_type: v.bus_type!,   // 非空斷言
-              bus_class: v.No
-            }));
-  
-          //  呼叫新 API（一次呼整包）
-          return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
-            map(res => ({ selectedMValues, data: res.Data }))
-          );
-        }),
-  
-        tap(result => {
-          console.log('所有 API 呼叫結果：', result);
-        })
-      ).subscribe(result => {
-  
-        const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-        const groupKey = `${mValue.bus_type}_${mValue.No}`;
-        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
-  
-          //  過濾小分類資料對應到當前中分類
-          const items = result.data
-            .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
-            .map(item => ({
-              ...item,
-              label: `${item.No} - ${item.Name}`,
-              bus_type: mValue.bus_type,
-              bus_type_name: mValue.bus_type_name,
-              CAT_MNo: mValue.No,
-              CAT_MName: mValue.Name
-            }));
-  
-          //  去重
-          const uniqueItemsMap = new Map<string, typeof items[0]>();
-          items.forEach(item => {
-            if (!uniqueItemsMap.has(item.No)) {
-              uniqueItemsMap.set(item.No, item);
-            }
-          });
-  
-  
-          accumulator[groupKey] = {
-            label: groupLabel,
-            items: Array.from(uniqueItemsMap.values())
-          };
-  
-          return accumulator;
-        }, {} as Record<string, any>);
-  
-        this.bus_sclass_Option = Object.values(groupedData);
-        console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
       });
     }
     onSubmit(frm: FormGroup) {
@@ -380,8 +330,8 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
         // SortBy: undefined,
         // pageIndex: undefined,
         // pageSize: undefined,
-        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-      bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+        CatLNos: frm.getRawValue().CatLNos.map((item: IDropdownItem) => item.No),
+        CatMNos: frm.getRawValue().CatMNos.map((item: IDropdownItem) => item.No),
         TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31080PrintDetailRequest;
@@ -540,8 +490,8 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       }
   
       // 套用到 queryForm
-      if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
-      if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+      // if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
+      // if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
     }
   
     onDetail1(event: any) {
