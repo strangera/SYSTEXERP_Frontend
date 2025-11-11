@@ -15,6 +15,8 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { FIN15050PrintRequest, FIN15050Service } from '@service/api/fin/fin15050.service';
 import { environment } from 'src/environments/environment';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DomSanitizer } from '@angular/platform-browser';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin15050',
@@ -37,11 +39,13 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
   });
 
   usageTypeOptions = getSYS1000Options('T205');
+  pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
 
   constructor(
     private readonly fin15050Service: FIN15050Service,
     private readonly validationService: ValidationService,
     private readonly datePipe: DatePipe,
+    private sanitizer: DomSanitizer
   ) {
     super();
   }
@@ -59,9 +63,19 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
     }
     this.handleSubmit(frm, () => {
       this.fin15050Service.printFIN15050(payload)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.openDownloadWindow(response.Data.Print_URL);
+          if (response.Status === '0000' && response.Data?.Print_URL) {
+            const rawUrl = response.Data.Print_URL.startsWith('http')
+              ? response.Data.Print_URL
+              : `${environment.BaseUrl}${response.Data.Print_URL}`;
+            console.log('rawUrl', rawUrl);
+            // ⬇️ 用 sanitizer 包裝
+            this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+          }
+          else {
+            this.messageService.errorBubble(response.Message);
+          }
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
