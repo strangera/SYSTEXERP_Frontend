@@ -240,8 +240,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
-    console.log(this.selectedItemsDialog);
-
     this.data = [
       ...this.data,
       ...this.selectedItemsDialog.map(item => ({

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, input, OnInit, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, OnInit, output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
@@ -26,7 +26,7 @@ export class RadiobuttonComponent extends BasicKitComponent implements OnInit {
   public valueChange = output<any>(); // 用於發送所選的值
 
   ngOnInit(): void {
-    this.updateControlState(this.control());
+    this.initControl(this.control());
   }
 
   onSelectionChange(value: any): void {

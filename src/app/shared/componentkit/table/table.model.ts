@@ -1,4 +1,4 @@
-import { Signal, TemplateRef } from '@angular/core';
+import { TemplateRef } from '@angular/core';
 import { SortMeta } from 'primeng/api';
 export interface Column<T = Record<string, any>> {
   field: keyof T;     // 欄位名稱 (資料的欄位名稱)
