@@ -54,6 +54,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
+  private readonly rawValue = computed(() => this.dataForm.getRawValue());
+
   public readonly tableData = signal<ASS21020Detail[]>([]);
   private isInitializing = !0;
 
@@ -103,7 +105,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   /** 錶別改變時，清空錶號 */
   public readonly meterTypeEffect = effect(() => {
     const engType = this.engTypeSignal();
-    this.logger.debug(`meterTypeEffect:`, [engType, this.dataForm.getRawValue(), this.isInitializing]);
+    this.logger.debug(`meterTypeEffect:`, [engType, this.rawValue(), this.isInitializing]);
     if (!engType?.length || this.isInitializing) return;
     this.dataForm.patchValue({ ENG_MeterNo: void 0 });
   }, { allowSignalWrites: !0 });
@@ -149,7 +151,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       ENG_MeterNo: this.service.engMeterNoMap().get(payload.ENG_MeterNo!)?.ENG_MeterNo,
     });
 
-    this.logger.debug(`initEffect:`, [payload, data, this.dataForm.getRawValue()]);
+    this.logger.debug(`initEffect:`, [payload, data, this.rawValue()]);
     if (this.isFormCreateable) {
       this.isInitializing = !1;
       return void this.initEffect.destroy();
@@ -176,7 +178,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    const loading = this.service.tableLoading()
+    this.loading = this.service.tableLoading()
       || this.service.engMeterNoLoading()
       || this.service.tltByFlagLoading();
   });

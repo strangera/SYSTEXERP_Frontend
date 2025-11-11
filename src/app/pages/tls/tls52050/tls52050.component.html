@@ -1,7 +1,8 @@
 <div class="card tls52050">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button [outlined]="true" label="匯出EXCEL範本" (click)="exportExcel()"></app-button>
+    <app-button [outlined]="true" label="匯出EXCEL範本"
+      (click)="excelExportService.exportTemplate(excelColumns, '進價/售價變價作業Excel範本')"></app-button>
     <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xlsx,.xls"
       (onSelect)="importExcel($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
     <app-button btnType="create" (click)="onCreate()"></app-button>
@@ -37,7 +38,7 @@
           <div class="col-12 md:col-6 lg:col-4 flex align-items-center">
             <p-checkbox formControlName="showReturnPriceOrdersOnly" [binary]="true"
               inputId="showReturnPriceOrdersOnlyCheckbox" />
-            <label for="showReturnPriceOrdersOnlyCheckbox" class="ml-2">是否為永久變價</label>
+            <label for="showReturnPriceOrdersOnlyCheckbox" class="ml-2">僅顯示回價變價單</label>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

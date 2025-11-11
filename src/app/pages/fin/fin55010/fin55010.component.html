@@ -1,117 +1,88 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2 align-items-center">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <!-- 日期(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="傳票日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate"
-              [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="日期" [startControl]="queryForm.controls.DateFrom"
+              [endControl]="queryForm.controls.DateTo" [submitted]="submitted">
+            </app-calendar-range>
           </div>
+
+          <!-- 傳票號碼(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳票號碼"
-              [startControl]="queryForm.controls.startserialticket"
-              [endControl]="queryForm.controls.endserialticket"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-text-range label="傳票號碼(起訖)" controlNameStart="VouNoFrom" controlNameEnd="VouNoTo"
+              [startControl]="queryForm.controls.VouNoFrom" [endControl]="queryForm.controls.VouNoTo"
+              [submitted]="submitted">
+            </app-input-text-range>
           </div>
+
+          <!-- 建立者 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="建立者"
-              controlName="builder"
-              [options]="usercode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.builder"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-input-text label="建立者" controlName="CRT_USR" [control]="queryForm.controls.CRT_USR"
+              [submitted]="submitted">
+            </app-input-text>
           </div>
+
+          <!-- 建立日期(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="建立日期"
-              controlName="builddate"
-              [startControl]="queryForm.controls.Sbuilddate"
-              [endControl]="queryForm.controls.Ebuilddate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="建立日期" [startControl]="queryForm.controls.CRT_DateFrom"
+              [endControl]="queryForm.controls.CRT_DateTo" [submitted]="submitted">
+            </app-calendar-range>
           </div>
+
+          <!-- 傳票型態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票型態"
-              controlName="Subpoenastatus"
-              [options]="Subpoenastatus"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenastatus"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-multi-select label="傳票型態" controlName="VoucherTypeList" [options]="VoucherTypeListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.VoucherTypeList"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
+
+          <!-- 傳票狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票狀態"
-              controlName="Subpoenatype2"
-              [options]="Subpoenatype2"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Subpoenatype2"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-multi-select label="傳票狀態" controlName="VouStatusList" [options]="VouStatusListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.VouStatusList"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="列印方式"
-              controlName="printtype"
-              [options]="printtype"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.printtype"
-              [submitted]="submitted"
-            ></app-radiobutton>
+          <div class="col-12">
+            <app-radiobutton label="列印方式" groupname="PrintType" [control]="queryForm.controls.PrintType"
+              [options]="PrintTypeOptions" [submitted]="submitted"></app-radiobutton>
           </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <!-- 右上角工具列：匯出 PDF / Excel -->
+  <div class="flex justify-content-end gap-2 mb-2">
+    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="btnLoading"
+      [disabled]="loading || (data.length || 0) === 0">
+    </app-button>
+
+    <!-- <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportXLSX()" [loading]="btnLoading"
+      [disabled]="loading || (data.length || 0) === 0">
+    </app-button> -->
   </div>
+
+  <app-table-subheader tableKey="FIN55010" dataKey="VouNo" [data]="data" [columns]="columns" [showCheckBox]="false"
+    [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showSerialNo]="true" [showPaginator]="true" [showGroupheader]="false" [showCheckBox]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
+  </app-table-subheader>
 </div>

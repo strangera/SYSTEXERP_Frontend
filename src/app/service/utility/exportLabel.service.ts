@@ -1,6 +1,6 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs'; // 引入 tap
 import { environment } from '../../../environments/environment';
 
 /**
@@ -54,40 +54,6 @@ export class ExportLabelService {
   ) { }
 
   /**
-   * @method ExportLabel
-   * 確認產生標籤檔(格式.txt)
-   * @param data IExportLabelRequest 陣列
-   * @returns Observable<HttpResponse<Blob>> 包含 .txt 檔案內容的 Observable
-   */
-  ExportLabel(data: IExportLabelRequest[]): Observable<HttpResponse<Blob>> {
-    return this.http.post<Blob>(
-      `${this.apiUrl}/ExportLabel/ExportLabel`,
-      data,
-      {
-        responseType: 'blob' as 'json', // 必須明確指定為 'blob'
-        observe: 'response' // 觀察完整的 HttpResponse，以便讀取 headers (如 filename)
-      }
-    );
-  }
-
-  /**
-   * @method ExportDXT
-   * 產生申報檔(格式.DXT) - 新增的 API
-   * @param data IExportDXTRequest 陣列
-   * @returns Observable<HttpResponse<Blob>> 包含 .DXT 檔案內容的 Observable
-   */
-  ExportDXT(data: IExportDXTRequest[]): Observable<HttpResponse<Blob>> {
-    return this.http.post<Blob>(
-      `${this.apiUrl}/ExportLabel/ExportDXT`,
-      data,
-      {
-        responseType: 'blob' as 'json', // 指定 responseType 為 'blob' 以接收檔案資料
-        observe: 'response' // 觀察完整的 HttpResponse
-      }
-    );
-  }
-
-  /**
    * @method handleFileDownload
    * 處理檔案下載的核心邏輯：從 HttpResponse 讀取 Blob 和檔名，並觸發瀏覽器下載。
    * @param exportHttpResponse 完整的 HTTP Response，包含 Blob。
@@ -95,6 +61,7 @@ export class ExportLabelService {
    */
   handleFileDownload(exportHttpResponse: HttpResponse<Blob>, defaultFilename = 'unknown.txt'): void {
     if (!exportHttpResponse.ok || !exportHttpResponse.body) {
+      // 這裡可以加上錯誤處理或日誌
       console.warn('File download failed: Response not OK or body is null.');
       return;
     }
@@ -126,5 +93,53 @@ export class ExportLabelService {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * @method ExportLabel
+   * 確認產生標籤檔(格式.txt)，並自動處理檔案下載。
+   * @param data IExportLabelRequest 陣列
+   * @returns Observable<HttpResponse<Blob>> 包含 .txt 檔案內容的 Observable
+   */
+  ExportLabel(data: IExportLabelRequest[]): Observable<HttpResponse<Blob>> {
+    return this.http.post<Blob>(
+      `${this.apiUrl}/ExportLabel/ExportLabel`,
+      data,
+      {
+        responseType: 'blob' as 'json', // 必須明確指定為 'blob'
+        observe: 'response' // 觀察完整的 HttpResponse，以便讀取 headers (如 filename)
+      }
+    ).pipe(
+      // 使用 tap 運算子在 Observable 流中執行副作用（處理下載）
+      tap((response) => {
+        if (response.ok && response.body) {
+          this.handleFileDownload(response, 'label_export.txt');
+        }
+      })
+    );
+  }
+
+  /**
+   * @method ExportDXT
+   * 產生申報檔(格式.DXT) - 新增的 API
+   * @param data IExportDXTRequest 陣列
+   * @returns Observable<HttpResponse<Blob>> 包含 .DXT 檔案內容的 Observable
+   */
+  ExportDXT(data: IExportDXTRequest[]): Observable<HttpResponse<Blob>> {
+    return this.http.post<Blob>(
+      `${this.apiUrl}/ExportLabel/ExportDXT`,
+      data,
+      {
+        responseType: 'blob' as 'json', // 指定 responseType 為 'blob' 以接收檔案資料
+        observe: 'response' // 觀察完整的 HttpResponse
+      }
+    ).pipe(
+      // 可以在這裡為 DXT 檔案添加自動下載邏輯
+      tap((response) => {
+        if (response.ok && response.body) {
+          this.handleFileDownload(response, 'declaration_export.DXT');
+        }
+      })
+    );
   }
 }

@@ -1438,15 +1438,20 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   // ===== 導航方法 =====
 
   override onCancel(): void {
-    if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010next2']);
-      return;
-    }
+    const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
 
-    console.log('Next3 返回前一頁，先暫存資料');
+    // 檢視模式：根據合約類型決定導航目標
+    if (contractTermType === '1') {
+      console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next1');
+      this.router.navigate(['account/tls/tls13010next1']);
+    } else {
+      console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
+      this.router.navigate(['account/tls/tls13010next2']);
+
+    }
     this.saveConditionDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010next2']);
   }
+
 
   onClearAndExit(): void {
     this.contractFlowService.clearTempData();

@@ -1,5 +1,3 @@
-// tls13010-data-loader.service.ts
-
 import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,6 +18,7 @@ import { Tls12010Service } from '@service/api/tls/tls12010.service';
 /**
  * TLS13010 資料載入服務
  * 負責所有資料載入、轉換和初始化邏輯
+ * ✅ 已修正：加入 session 資料檢查，避免重複打 API
  */
 @Injectable({
   providedIn: 'root'
@@ -43,7 +42,7 @@ export class TLS13010DataLoaderService {
   // ==================== 主要載入方法 ====================
 
   /**
-   * 載入工作流程資料
+   * ✅ 修正：載入工作流程資料（加入 session 檢查）
    * @param component Component 實例
    */
   loadWorkflowData(component: any): void {
@@ -54,7 +53,8 @@ export class TLS13010DataLoaderService {
       if (this.contractFlowService.isNewContractMode()) {
         this.loadNewModeData(component);
       } else {
-        this.loadEditModeData(component, workflowData);
+        // ✅ 修正：編輯模式先檢查 session
+        this.loadEditModeDataWithSessionCheck(component, workflowData);
       }
     } else {
       console.warn('❌ 沒有工作流程資料,重導向到查詢頁面');
@@ -87,12 +87,90 @@ export class TLS13010DataLoaderService {
   }
 
   /**
-   * 載入編輯模式資料
+   * ✅ 新增：編輯模式資料載入（先檢查 session）
+   * @param component Component 實例
+   * @param workflowData 工作流程資料
+   */
+  private loadEditModeDataWithSessionCheck(component: any, workflowData: any): void {
+    console.log('✏️ 載入編輯模式資料（先檢查 session）');
+
+    const savedFormData = this.contractFlowService.getStep1Data();
+
+    // ✅ 關鍵修正：檢查 session 資料是否完整且有效
+    if (savedFormData && this.isSessionDataValid(savedFormData)) {
+      console.log('✅ Session 資料有效，使用 session（不打 API）');
+      this.loadSavedFormData(component, savedFormData);
+    } else {
+      // ❌ Session 無資料或資料不完整，才從 API 載入
+      console.log('⚠️ Session 無有效資料，需要從 API 載入');
+      this.loadEditModeData(component, workflowData);
+    }
+  }
+
+  /**
+   * ✅ 新增：檢查 session 資料是否有效且完整
+   * @param step1Data Session 中的 step1 資料
+   * @returns 是否有效
+   */
+  private isSessionDataValid(step1Data: any): boolean {
+    if (!step1Data || typeof step1Data !== 'object') {
+      console.log('❌ Session 資料不存在或格式錯誤');
+      return false;
+    }
+
+    // ✅ 檢查關鍵必填欄位
+    const requiredFields = [
+      'talent_id',    // 專櫃ID
+      'tlt_no',       // 專櫃編號
+      'tlt_name',     // 專櫃名稱
+      'ven_no',       // 廠商編號
+      'tlt_bdate',    // 合約起日
+      'tlt_edate'     // 合約迄日
+    ];
+
+    for (const field of requiredFields) {
+      const value = step1Data[field];
+
+      if (value === null || value === undefined || value === '') {
+        console.log(`⚠️ Session 資料缺少必填欄位: ${field}，當前值:`, value);
+        return false;
+      }
+    }
+
+    // ✅ 額外檢查：確保日期欄位有效
+    const dateFields = ['tlt_bdate', 'tlt_edate'];
+    for (const field of dateFields) {
+      const dateValue = step1Data[field];
+
+      // 接受 Date 物件或有效的日期字串
+      if (dateValue instanceof Date) {
+        if (isNaN(dateValue.getTime())) {
+          console.log(`⚠️ 日期欄位 ${field} 無效:`, dateValue);
+          return false;
+        }
+      } else if (typeof dateValue === 'string') {
+        const parsedDate = new Date(dateValue);
+        if (isNaN(parsedDate.getTime())) {
+          console.log(`⚠️ 日期欄位 ${field} 無法解析:`, dateValue);
+          return false;
+        }
+      } else {
+        console.log(`⚠️ 日期欄位 ${field} 格式不正確:`, dateValue);
+        return false;
+      }
+    }
+
+    console.log('✅ Session 資料驗證通過，所有必填欄位完整');
+    return true;
+  }
+
+  /**
+   * 載入編輯模式資料（原有方法，現在只在 session 無效時使用）
    * @param component Component 實例
    * @param workflowData 工作流程資料
    */
   loadEditModeData(component: any, workflowData: any): void {
-    console.log('✏️ 載入編輯模式資料');
+    console.log('✏️ 從 API 載入編輯模式資料');
 
     const savedFormData = this.contractFlowService.getStep1Data();
 
@@ -153,6 +231,7 @@ export class TLS13010DataLoaderService {
     // 重新設定控制狀態
     setTimeout(() => {
       component.setFormControlsState();
+      component.triggerAllDynamicValidators();
     }, 100);
   }
 
@@ -250,353 +329,103 @@ export class TLS13010DataLoaderService {
       rece_yn: queryData['rece_yn'] as string,
       pos_yn: queryData['pos_yn'] as string,
       cash_yn: queryData['cash_yn'] as string,
-      org_id: queryData['org_id'] as string,
-      overall_status: queryData['overall_status'] as string,
-      paytype: queryData['paytype'] as string,
-      invoice_type: queryData['invoice_type'] as string,
-      tlt_openflag: String(queryData['tlt_openflag'] || '').trim(),
-
-      // 聯絡資訊
-      email: queryData['email'] as string,
-      invoice_email: queryData['invoice_email'] as string,
-      CHECK_TITLE: queryData['CHECK_TITLE'] as string,
-      store_tel: queryData['store_tel'] as string,
-      bank_id: queryData['bank_id'] as string,
-      vendor_acct_name: queryData['vendor_acct_name'] as string,
-      vendor_acct_no: queryData['vendor_acct_no'] as string,
-      contact_tel: queryData['contact_tel'] as string,
-      contact_fax: queryData['contact_fax'] as string,
-      contact_addr: queryData['contact_addr'] as string,
-      VEN_Address: queryData['VEN_Address'] as string,
-      tlt_remark: queryData['tlt_remark'] as string,
-
-      // 其他欄位
-      comm_yn: queryData['comm_yn'] as string,
-      base_rent: queryData['base_rent'] as number,
-      tlt_kind: queryData['tlt_kind'] as string,
-      edc_yn: queryData['edc_yn'] as string,
-      tlt_ctype_mtotal: queryData['tlt_ctype_mtotal'] as string,
-      rent_ahead: queryData['rent_ahead'] as string,
-      rent_period: queryData['rent_period'] as number,
-      deposit: queryData['deposit'] as number,
-      vip_yn: queryData['vip_yn'] as string,
-      credit_card: queryData['credit_card'] as string,
-      total_amt: queryData['total_amt'] as string,
-      total_amt_vendor: queryData['total_amt_vendor'] as string,
-      check_day: Number(queryData['check_day']) || 0,
-      construct_fees: Number(queryData['construct_fees']) || 0,
-      expiration_fees: Number(queryData['expiration_fees']) || 0,
-      open_fees: Number(queryData['open_fees']) || 0,
-      ticket_remarks: queryData['ticket_remarks'] as string,
-      cap_saletype1: queryData['cap_saletype1'] as string,
-      cap_saletype2: queryData['cap_saletype2'] as string,
-      cap_saletype3: queryData['cap_saletype3'] as string,
-      cap_saletype4: queryData['cap_saletype4'] as string,
-      cap_saletype5: queryData['cap_saletype5'] as string,
-      contact_USR_No: queryData['contact_USR_No'] as string,
-      contact_USR_Name: queryData['contact_USR_Name'] as string,
+      tlt_ctypemtotal: queryData['tlt_ctypemtotal'] as string,
+      contract_type: queryData['contract_type'] as string,
       total_amt_unit: queryData['total_amt_unit'] as string,
       total_amt_vendor_unit: queryData['total_amt_vendor_unit'] as string,
-      water_flag: queryData['water_flag'] as string || 'N',
-      electric_flag: queryData['electric_flag'] as string || 'N',
-      gas_flag: queryData['gas_flag'] as string || 'N',
+      org_id: queryData['org_id'] as string,
+      vip_yn: queryData['vip_yn'] as string,
+      card_sales: queryData['card_sales'] as number,
+
+      // 金額欄位
+      monthly_rent: queryData['monthly_rent'] as number,
+      rent_ahead: queryData['rent_ahead'] as number,
+      rent_after_months: queryData['rent_after_months'] as number,
+      rent_after: queryData['rent_after'] as number,
+      rent_amount: queryData['rent_amount'] as number,
+      open_deposit: queryData['open_deposit'] as string,
+      open_fees: queryData['open_fees'] as number,
+      construct_deposit: queryData['construct_deposit'] as string,
+      construct_fees: queryData['construct_fees'] as number,
+      expiration_deposit: queryData['expiration_deposit'] as string,
+      expiration_fees: queryData['expiration_fees'] as number,
+
+      // 聯絡資訊
+      contact_USR_No: queryData['contact_USR_No'] as string,
+      contact_USR_Name: queryData['contact_USR_Name'] as string,
+      contact_tel: queryData['contact_tel'] as string,
+      contact_fax: queryData['contact_fax'] as string,
+      contact_email: queryData['contact_email'] as string,
+      contact_usr_email: queryData['contact_usr_email'] as string,
+      vendor_contact: queryData['vendor_contact'] as string,
+      vendor_tel: queryData['vendor_tel'] as string,
+      vendor_fax: queryData['vendor_fax'] as string,
+      vendor_email: queryData['vendor_email'] as string,
+      vendor_address: queryData['vendor_address'] as string,
+
+      // 結算資訊
+      settle_day: queryData['settle_day'] as number,
+      paydays: queryData['paydays'] as number,
+      paytype: queryData['paytype'] as string,
+      payday: queryData['payday'] as number,
+      due_days: queryData['due_days'] as number,
+      invoice_type: queryData['invoice_type'] as string,
+
+      // 其他資訊
+      openflag: queryData['openflag'] as string,
+      tlt_status: queryData['tlt_status'] as string,
+      contract_desc: queryData['contract_desc'] as string,
+      bank_code: queryData['bank_code'] as string,
+      bank_name: queryData['bank_name'] as string,
+      bank_account: queryData['bank_account'] as string,
+      bank_account_name: queryData['bank_account_name'] as string,
+      meter_type: queryData['meter_type'] as string,
+      meter_reading: queryData['meter_reading'] as string,
     };
   }
 
-  // ==================== 下拉選單載入 ====================
-  /**
-   * 載入所有初始下拉選單選項
-   */
-  loadAllInitialDropdownOptions(component: any): Observable<any> {
-    console.log('🔄 開始載入所有初始下拉選單選項');
-
-    // 使用 Service 的統一初始化方法
-    return this.tls13010DropdownService.initialize().pipe(
-      tap((results) => {
-        // 同步資料到 component
-        component.bustypeOptions = this.tls13010DropdownService.bustypeOptions;
-        component.buildingOptions = this.tls13010DropdownService.buildingOptions;
-        component.floorOptions = this.tls13010DropdownService.floorOptions;
-        component.regionOptions = this.tls13010DropdownService.regionOptions;
-        component.orgOptions = this.tls13010DropdownService.orgOptions;
-        component.paperTypeOptions = this.tls13010DropdownService.paperTypeOptions;
-        component.discountTypeOptions = this.tls13010DropdownService.discountTypeOptions;
-        component.pos2013Options = this.tls13010DropdownService.pos2013Options;
-        component.negotiatorOptions = this.tls13010DropdownService.negotiatorOptions;
-        component.payNoOptions = this.tls13010DropdownService.payNoOptions;
-
-        console.log('✅ 下拉選單選項已同步到 Component:', {
-          bustype: component.bustypeOptions.length,
-          building: component.buildingOptions.length,
-          pos2013: component.pos2013Options.length,
-          negotiator: component.negotiatorOptions.length
-        });
-
-        // 檢查關鍵 API 是否成功載入
-        const hasErrors = [];
-        if (component.bustypeOptions.length === 0) {
-          hasErrors.push('大分類');
-        }
-        if (component.pos2013Options.length === 0) {
-          hasErrors.push('廠商資料');
-        }
-        if (component.negotiatorOptions.length === 0) {
-          hasErrors.push('洽談者');
-        }
-
-        if (hasErrors.length > 0) {
-          console.warn(`⚠️ 以下選項載入失敗: ${hasErrors.join(', ')}`);
-          this.messageService.warnBubble(`部分資料載入失敗: ${hasErrors.join(', ')}，您可以重新整理頁面`);
-        }
-      }),
-      switchMap(() => {
-        // 繼續載入其他資料
-        return forkJoin({
-          location: this.loadLocationWithDetailsOptions(component),
-          bank: this.loadBankDropdownOptions(component)
-        });
-      }),
-      tap(additionalResults => {
-        console.log('✅ 所有初始資料載入完成:', {
-          location: additionalResults.location.length,
-          bank: additionalResults.bank.length
-        });
-      }),
-      catchError(error => {
-        console.error('❌ 載入初始資料時發生錯誤:', error);
-        this.messageService.errorBubble('載入資料失敗，請重新整理頁面');
-        return of(null);
-      })
-    );
-  }
+  // ==================== 業務分類相關 ====================
 
   /**
-   * 🆕 載入大分類選項
+   * 載入業務分類選項
    * @param component Component 實例
-   * @returns Observable
+   * @param busType 大分類
    */
-  loadBustypeOptions(component: any): Observable<DropdownOption[]> {
-    console.log('🔄 載入大分類選項');
+  loadBusinessClassifications(component: any, busType: string): void {
+    if (!busType) {
+      console.warn('⚠️ busType 為空,無法載入分類');
+      return;
+    }
 
-    // 等待 Service 初始化
-    return new Observable<DropdownOption[]>(observer => {
-      // 延遲一點時間,確保 Service 初始化完成
-      setTimeout(() => {
-        if (this.tls13010DropdownService.bustypeOptions &&
-          this.tls13010DropdownService.bustypeOptions.length > 0) {
-          // Service 已經載入完成
-          component.bustypeOptions = this.tls13010DropdownService.bustypeOptions;
-          console.log('✅ 大分類載入完成(使用 Service 快取):', component.bustypeOptions.length);
-          observer.next(component.bustypeOptions);
-          observer.complete();
-        } else {
-          // Service 還沒載入完成,等待更久一點
-          console.log('⏳ 等待大分類選項載入...');
-          setTimeout(() => {
-            component.bustypeOptions = this.tls13010DropdownService.bustypeOptions || [];
-            console.log('✅ 大分類載入完成:', component.bustypeOptions.length);
-
-            if (component.bustypeOptions.length === 0) {
-              console.warn('⚠️ 大分類選項為空,可能需要檢查 API');
-            }
-
-            observer.next(component.bustypeOptions);
-            observer.complete();
-          }, 1000);
-        }
-      }, 300);
-    }).pipe(
-      catchError(error => {
-        console.error('❌ 載入大分類失敗:', error);
-        component.bustypeOptions = [];
-        this.messageService.warnBubble('載入大分類選項失敗');
-        return of<DropdownOption[]>([]);
-      })
-    );
-  }
-
-  /**
-   * 🆕 載入 Location 相關選項(館別、樓層、區域、組織、單據別)
-   * @param component Component 實例
-   * @returns Observable
-   */
-  loadLocationBundleOptions(component: any): Observable<any> {
-    console.log('🔄 批次載入 Location 相關選項');
-
-    return forkJoin({
-      building: this.locationOptionsService.getBuildingOptions(),
-      floor: this.locationOptionsService.getFloorOptions(),
-      region: this.locationOptionsService.getRegionOptions(),
-      org: this.locationOptionsService.getOrgOptions(),
-      paperType: this.locationOptionsService.getPaperTypeOptions('T101')
-    }).pipe(
-      tap(results => {
-        // 將結果設定到 Component 屬性
-        component.buildingOptions = results.building;
-        component.floorOptions = results.floor;
-        component.regionOptions = results.region;
-        component.orgOptions = results.org;
-        component.paperTypeOptions = results.paperType;
-
-        console.log('✅ Location 選項批次載入完成:', {
-          building: results.building.length,
-          floor: results.floor.length,
-          region: results.region.length,
-          org: results.org.length,
-          paperType: results.paperType.length
-        });
-
-        // 檢查是否有空陣列
-        if (results.building.length === 0) {
-          console.warn('⚠️ 館別選項為空');
-        }
-        if (results.floor.length === 0) {
-          console.warn('⚠️ 樓層選項為空');
-        }
-        if (results.region.length === 0) {
-          console.warn('⚠️ 區域選項為空');
-        }
-        if (results.org.length === 0) {
-          console.warn('⚠️ 組織選項為空');
-        }
-      }),
-      catchError(error => {
-        console.error('❌ 載入 Location 選項失敗:', error);
-
-        // 設定為空陣列
-        component.buildingOptions = [];
-        component.floorOptions = [];
-        component.regionOptions = [];
-        component.orgOptions = [];
-        component.paperTypeOptions = [];
-
-        this.messageService.warnBubble('載入位置相關選項失敗');
-
-        return of({
-          building: [],
-          floor: [],
-          region: [],
-          org: [],
-          paperType: []
-        });
-      })
-    );
-  }
-
-  /**
-   * 載入位置詳細選項
-   * @param component Component 實例
-   * @returns Observable
-   */
-  loadLocationWithDetailsOptions(component: any): Observable<DropdownOption[]> {
-    const workflowData = this.contractFlowService.getCurrentData();
-    const talentId = workflowData.queryRowData?.talent_id;
-
-    return this.locationOptionsService.getLocationWithDetailsOptions(talentId).pipe(
-      tap((data: DropdownOption[]) => {
-        component.locationWithDetailsOptions = data;
-
-        // 資料載入完成後,更新 selector 面板選項
-        setTimeout(() => {
-          component.updateSelectorPanelOptions();
-        }, 100);
-      }),
-      catchError(err => {
-        console.warn('❌ 載入位置選項失敗:', err);
-        this.messageService.warnBubble('載入位置選項失敗,請重新整理頁面');
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * 載入 POS2013 廠商選項
-   * @param component Component 實例
-   * @returns Observable
-   */
-  loadPOS2013Options(component: any): Observable<Pos2013DropdownOption[]> {
-    return this.vendorCategoryService.getVendorCategoryNoNameOptions("1").pipe(
-      tap((response: any[]) => {
-        component.pos2013Options = response;
-      }),
-      catchError(error => {
-        console.error('❌ 載入POS2013選項失敗:', error);
-        component.pos2013Options = [];
-        this.messageService.warnBubble('載入廠商選項失敗,請重新整理頁面');
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * 載入洽談者選項
-   * @param component Component 實例
-   * @returns Observable
-   */
-  loadNegotiatorOptions(component: any): Observable<DropdownOption[]> {
-    return this.negotiatorService.getNegotiatorOptions().pipe(
-      tap((response: any[]) => {
-        component.negotiatorOptions = response;
-      }),
-      catchError(error => {
-        console.error('❌ 載入洽談者選項失敗:', error);
-        component.negotiatorOptions = [];
-        this.messageService.warnBubble('載入洽談者選項失敗');
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * 載入銀行下拉選項
-   * @param component Component 實例
-   * @returns Observable
-   */
-  loadBankDropdownOptions(component: any): Observable<DropdownOption[]> {
-    return this.bankService.getBankOptions('').pipe(
-      tap((options: DropdownOption[]) => {
-        component.bankDropdownOptions = options;
-      }),
-      catchError(err => {
-        console.warn('⚠️ 載入銀行選項失敗:', err);
-        component.bankDropdownOptions = [];
-        this.messageService.warnBubble('載入銀行選項失敗');
-        return of([]);
-      })
-    );
-  }
-
-  // ==================== 業務分類載入 ====================
-
-  /**
-   * 載入業務分類
-   * @param component Component 實例
-   * @param busType 大分類代碼
-   */
-  loadBusinessClassifications(component: any, busType: string | undefined): void {
-    if (!busType) return;
+    console.log('📂 載入業務分類:', busType);
 
     const currentBusClass = component.dataForm.get('bus_class')?.value;
     const currentBusSClass = component.dataForm.get('bus_sclass')?.value;
 
-    // 先載入中分類
+    // 載入中分類
     this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
-      next: (busClassOptions: DropdownOption[]) => {
-        const validBusClass = busClassOptions.find(option => option.value === currentBusClass);
+      next: (options: DropdownOption[]) => {
+        console.log(` 中分類已載入 (${options.length} 個)`);
 
-        if (currentBusClass && validBusClass) {
-          // 中分類有效,載入小分類
-          this.loadBusSClassWithValidation(component, busType, currentBusClass, currentBusSClass ?? undefined);
-        } else if (currentBusClass && !validBusClass) {
-          console.warn('❌ 中分類無效,清空相關欄位');
-          // 中分類無效,清空相關欄位
-          component.dataForm.get('bus_class')?.setValue('');
-          component.dataForm.get('bus_sclass')?.setValue('');
+        // 驗證中分類是否有效
+        if (currentBusClass) {
+          const validBusClass = options.find(option => option.value === currentBusClass);
+
+          if (validBusClass) {
+            console.log(' 中分類有效,載入小分類');
+            // 中分類有效,載入小分類
+            this.loadBusSClassAndValidate(component, busType, currentBusClass, currentBusSClass);
+          } else {
+            console.warn('❌ 中分類無效,清空中分類和小分類');
+            // 中分類無效,清空兩個欄位
+            component.dataForm.get('bus_class')?.setValue('');
+            component.dataForm.get('bus_sclass')?.setValue('');
+          }
         }
       },
       error: (err) => {
-        console.error('載入中分類失敗:', err);
-        this.messageService.warnBubble('載入中分類選項失敗,請重新選擇大分類');
+        console.error('❌ 載入中分類失敗:', err);
+        this.messageService.warnBubble('載入中分類選項失敗');
       }
     });
   }
@@ -608,16 +437,19 @@ export class TLS13010DataLoaderService {
    * @param busClass 中分類
    * @param currentBusSClass 當前小分類值
    */
-  loadBusSClassWithValidation(
+  private loadBusSClassAndValidate(
     component: any,
     busType: string,
     busClass: string,
-    currentBusSClass?: string
+    currentBusSClass: string
   ): void {
     this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
-      next: (busSClassOptions: DropdownOption[]) => {
+      next: (options: DropdownOption[]) => {
+        console.log(` 小分類已載入 (${options.length} 個)`);
+
+        // 驗證小分類是否有效
         if (currentBusSClass) {
-          const validBusSClass = busSClassOptions.find(option => option.value === currentBusSClass);
+          const validBusSClass = options.find(option => option.value === currentBusSClass);
 
           if (validBusSClass) {
             // 小分類有效,確保表單值正確
