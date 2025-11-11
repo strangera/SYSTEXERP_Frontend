@@ -32,7 +32,7 @@
 
           <!-- 收銀機號（多選） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
@@ -40,13 +40,13 @@
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted">
-            </app-multi-select>
+            </app-dropdown>
           </div>
 
           <!-- 發票號碼區間 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              [useGrouping]="false"
+            
               label="發票號碼"
               [startControl]="queryForm.controls.TXN_GUIBegNoStart"
               [endControl]="queryForm.controls.TXN_GUIBegNoEnd">
@@ -55,12 +55,12 @@
 
           <!-- 交易序號區間 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
+            <app-input-text-range
+              
               label="交易序號"
               [startControl]="queryForm.controls.TXN_NoStart"
               [endControl]="queryForm.controls.TXN_NoEnd">
-            </app-input-number-range>
+            </app-input-text-range>
           </div>
 
           <!-- LOGO_No / TLT_No / HOS_NO / USR_No -->

@@ -35,6 +35,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CounterNameService } from '@service/basic/counter-name.service';
 import { CashierService } from '@service/basic/cashier.service';
 import { tls2b010tableComponent } from '@shared/componentkit/tls2-b010-table/tls2b010table.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 const TOTAL_FIELD_MAP = { TXN_SaleAmt: 'Total_TXN_SaleAmt' } as const;
 type TotalFieldMap = typeof TOTAL_FIELD_MAP;
@@ -61,7 +62,8 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     // Table2Component,
     CheckboxModule,
     ButtonModule,
-    MultiSelectComponent,
+    // MultiSelectComponent,
+    InputTextRangeComponent,
     tls2b010tableComponent
   ],
 })
