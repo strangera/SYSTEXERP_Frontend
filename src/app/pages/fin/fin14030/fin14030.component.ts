@@ -119,9 +119,11 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         next: (response) => {
           if (response.Status === '0000' && response.Data?.printURL) {
             // 補上 API 主機網址 (假設後端回傳的是相對路徑)
-            const rawUrl = response.Data.printURL.startsWith('http')
+            let rawUrl = response.Data.printURL.startsWith('http')
               ? response.Data.printURL
               : `${environment.BaseUrl}${response.Data.printURL}`;
+
+            rawUrl = decodeURIComponent(rawUrl);  // 中文解碼
 
             // 直接在新分頁打開
             // window.open(rawUrl, '_blank');
