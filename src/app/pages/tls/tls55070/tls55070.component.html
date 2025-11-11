@@ -12,7 +12,7 @@
 
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-                    <!-- 銷售單號 -->
+          <!-- 銷售單號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="銷售單號"
@@ -29,8 +29,7 @@
             [endControl]="queryForm.controls.TXN_DateEnd">
           </app-calendar-range-quick>
 
-
-          <!-- 收銀機號（多選） -->
+          <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="收銀機號"
@@ -46,7 +45,6 @@
           <!-- 發票號碼區間 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-            
               label="發票號碼"
               [startControl]="queryForm.controls.TXN_GUIBegNoStart"
               [endControl]="queryForm.controls.TXN_GUIBegNoEnd">
@@ -56,7 +54,6 @@
           <!-- 交易序號區間 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
-              
               label="交易序號"
               [startControl]="queryForm.controls.TXN_NoStart"
               [endControl]="queryForm.controls.TXN_NoEnd">
@@ -145,6 +142,7 @@
 <!-- 明細表（群組小計：以銷售單號為一組，使用 SumTXN_SaleAmt） -->
 <div class="card">
   <app-tls2b010table
+    #saleTable
     tableKey="TLS55070"
     [data]="data"
     [columns]="columns"
@@ -155,13 +153,12 @@
     [multiSortMeta]="sortMeta"
     [showManage]="false"
     [showDelete]="false"
-    [groupRowsBy]="groupByField"  
 
- [mergedColumns]="[]"
+  
+    [groupRowsBy]="groupByField"
 
-
-
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+ 
+    [mergedColumns]="['TXN_SaleNoteNo']"
   >
     <header>
       <div class="flex justify-content-end gap-2">
@@ -184,5 +181,8 @@
         </p-button>
       </div>
     </header>
+
+    <!-- lazy 載入 -->
+    <ng-container (lazyLoadData)="onLazyLoadData($event, queryForm)"></ng-container>
   </app-tls2b010table>
 </div>
