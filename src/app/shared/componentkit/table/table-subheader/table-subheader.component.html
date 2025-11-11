@@ -136,7 +136,7 @@
     </ng-container>
   </ng-template>
   <!-- 群組表頭 -->
-  <ng-template pTemplate="groupheader" let-rowData>
+  <ng-template pTemplate="groupheader" let-rowData *ngIf="showGroupheader">
     <tr pRowGroupHeader style="height: 40.8px">
       <td [attr.colspan]="getVisibleHeaderCount" style="font-weight: bold;">
         <span>

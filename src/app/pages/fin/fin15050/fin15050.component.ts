@@ -67,9 +67,10 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           if (response.Status === '0000' && response.Data?.Print_URL) {
-            const rawUrl = response.Data.Print_URL.startsWith('http')
+            let rawUrl = response.Data.Print_URL.startsWith('http')
               ? response.Data.Print_URL
               : `${environment.BaseUrl}${response.Data.Print_URL}`;
+            rawUrl = decodeURIComponent(rawUrl);
             console.log('rawUrl', rawUrl);
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
