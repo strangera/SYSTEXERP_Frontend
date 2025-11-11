@@ -255,20 +255,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     } catch (error) {
       console.error('❌ loadWorkflowData 失敗:', error);
     }
-    this.routerSubscription = this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.loadWorkflowData();
-      });
+    // this.routerSubscription = this.router.events
+    //   .pipe(filter(event => event instanceof NavigationEnd))
+    //   .subscribe(() => {
+    //     this.loadWorkflowData();
+    //   });
   }
 
   ngOnDestroy(): void {
     // console.log('📄 NEXT1 組件銷毀，確保資料儲存');
     this.saveFareDataToWorkflow();
 
-    if (this.routerSubscription) {
-      this.routerSubscription.unsubscribe();
-    }
+    // if (this.routerSubscription) {
+    //   this.routerSubscription.unsubscribe();
+    // }
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -1190,18 +1190,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 取得合約類型
     const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
 
-    if (this.isViewMode) {
-      // 檢視模式：根據合約類型決定導航目標
-      if (contractTermType === '1') {
-        console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next3');
-        this.router.navigate(['account/tls/tls13010next3']);
-      } else {
-        console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
-        this.router.navigate(['account/tls/tls13010next2']);
-      }
-      return;
-    }
+    // 檢視模式：根據合約類型決定導航目標
+    if (contractTermType === '1') {
+      console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next3');
+      this.router.navigate(['account/tls/tls13010next3']);
+    } else {
+      console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
+      this.router.navigate(['account/tls/tls13010next2']);
 
+    }
     console.log('🔍 開始進行完整驗證...');
 
     // 儲存當前資料

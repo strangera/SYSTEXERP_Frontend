@@ -40,6 +40,7 @@ export interface TLS27040Data {
   TXN_No: string; // 原本有 number, 現在 Swagger 範例是 string
   TLT_No: string;
   CRD_Type: string;
+  CRD_Type_Name: string;
   PayCrdType: string;
   TxnAmt: number;
   TxnDate: Date;
@@ -52,6 +53,7 @@ export interface TLS27040Data {
   TxnType: string;
   CrdTxnFg: string;
   EntryFg: string;
+  EntryFg_Name: string;
   CheckStatus: string; // 可能是 Check 的別名
   TermNo: string; // 原本有 number | string, 現在 Swagger 範例是 string
   acquiring_Bank: string;
@@ -62,6 +64,7 @@ export interface TLS27040Data {
   UPD_Date: string;
   BatCloseDate: string; // 聯合(NCML) 使用
   tableName: string; // 新增，用於標識資料來源表
+  isClose: string; // 已關帳=Y,未關帳=N Y時不可編輯
 }
 
 export interface TotalData {

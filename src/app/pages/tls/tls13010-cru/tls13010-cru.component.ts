@@ -391,7 +391,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // 步驟 10: 更新 UI（同步）
       this.updateUI();
 
-      console.log('✅ ========== TLS13010 元件初始化完成 ==========');
+      console.log(' ========== TLS13010 元件初始化完成 ==========');
 
     } catch (error) {
       console.error('❌ ========== TLS13010 元件初始化失敗 ==========');
@@ -407,7 +407,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
     this.subscriptions.forEach(sub => sub.unsubscribe());
 
-    // ✅ 清理 FormStateService
+    //  清理 FormStateService
     this.formStateService.cleanup();
   }
 
@@ -436,7 +436,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.isViewMode
     );
 
-    console.log('  ✅ 基本初始化完成');
+    console.log('   基本初始化完成');
   }
 
 
@@ -462,7 +462,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 設定檢視模式 UI 監聽
     this.setupViewModeUI();
 
-    console.log(`  ✅ 檢視模式: ${this.isViewMode ? '是' : '否'}`);
+    console.log(`   檢視模式: ${this.isViewMode ? '是' : '否'}`);
   }
 
   private initializeWorkflow(): void {
@@ -474,7 +474,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 載入工作流程資料
     this.dataLoaderService.loadWorkflowData(this);
 
-    console.log('  ✅ 工作流程初始化完成');
+    console.log('   工作流程初始化完成');
   }
 
   private async loadAllDropdownOptions(): Promise<void> {
@@ -508,7 +508,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.loadNegotiatorOptions(),
       ]);
 
-      console.log('  ✅ 所有下拉選單選項載入完成');
+      console.log('   所有下拉選單選項載入完成');
       this.validateDropdownOptions();
       this.updateSelectorPanelOptions();
 
@@ -524,7 +524,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private async loadOption(name: string, loadFn: () => Promise<any>): Promise<void> {
     try {
       await loadFn();
-      console.log(`    ✅ ${name} 選項已載入`);
+      console.log(`     ${name} 選項已載入`);
     } catch (error) {
       console.error(`    ❌ ${name} 選項載入失敗:`, error);
       // 不中斷整體流程
@@ -539,7 +539,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.pos2013Options = await firstValueFrom(
         this.vendorCategoryService.getVendorCategoryNoNameOptions()
       );
-      console.log(`    ✅ 廠商選項已載入 (${this.pos2013Options.length} 個)`);
+      console.log(`     廠商選項已載入 (${this.pos2013Options.length} 個)`);
     } catch (error) {
       console.error('    ❌ 廠商選項載入失敗:', error);
       this.pos2013Options = [];
@@ -554,7 +554,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.bankDropdownOptions = await firstValueFrom(
         this.bankService.getBankOptions()
       );
-      console.log(`    ✅ 銀行選項已載入 (${this.bankDropdownOptions.length} 個)`);
+      console.log(`     銀行選項已載入 (${this.bankDropdownOptions.length} 個)`);
     } catch (error) {
       console.error('    ❌ 銀行選項載入失敗:', error);
       this.bankDropdownOptions = [];
@@ -569,7 +569,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.negotiatorOptions = await firstValueFrom(
         this.negotiatorService.getNegotiatorOptions()
       );
-      console.log(`    ✅ 洽談者選項已載入 (${this.negotiatorOptions.length} 個)`);
+      console.log(`     洽談者選項已載入 (${this.negotiatorOptions.length} 個)`);
     } catch (error) {
       console.error('    ❌ 洽談者選項載入失敗:', error);
       this.negotiatorOptions = [];
@@ -601,7 +601,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         console.warn(`    ⚠️ ${name}: 選項數量為 0`);
         hasEmptyOptions = true;
       } else {
-        console.log(`    ✅ ${name}: ${count} 個選項`);
+        console.log(`     ${name}: ${count} 個選項`);
       }
     });
 
@@ -618,20 +618,88 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('  🆕 新建模式：設定預設值');
       this.formInitService.setCurrentUserAsNegotiator(this.dataForm);
       this.saveToWorkflow();
-      console.log('  ✅ 預設值設定完成');
+      console.log('   預設值設定完成');
       return;
     }
 
-    // 編輯/檢視模式：載入詳細資料
+    //  修正：編輯/檢視模式先檢查 session
     const queryRowData = this.contractFlowService.getCurrentData()?.queryRowData;
     if (!queryRowData?.talent_id) {
       console.log('  📭 無需載入資料');
       return;
     }
 
-    console.log('  📥 載入詳細資料...');
+    //  關鍵修正：先檢查 session 資料
+    const savedFormData = this.contractFlowService.getStep1Data();
+
+    if (savedFormData && this.isSessionDataComplete(savedFormData)) {
+      console.log('   Session 資料完整，使用 session（不打 API）');
+      // 使用 session 資料填充表單
+      this.loadFromSessionData(savedFormData);
+      return;
+    }
+
+    // ❌ Session 無資料或不完整，才打 API
+    console.log('  ⚠️ Session 無有效資料，從 API 載入');
     await this.loadContractDetailAsync(String(queryRowData.talent_id));
-    console.log('  ✅ 資料載入完成');
+    console.log('   資料載入完成');
+  }
+
+  /**
+ *  新增：檢查 session 資料是否完整
+ */
+  private isSessionDataComplete(sessionData: any): boolean {
+    if (!sessionData || typeof sessionData !== 'object') {
+      console.log('  ❌ Session 資料格式錯誤');
+      return false;
+    }
+
+    // 檢查關鍵欄位
+    const requiredFields = [
+      'talent_id',
+      'tlt_no',
+      'tlt_name',
+      'ven_no',
+      'tlt_bdate',
+      'tlt_edate'
+    ];
+
+    for (const field of requiredFields) {
+      const value = sessionData[field];
+      if (value === null || value === undefined || value === '') {
+        console.log(`  ⚠️ Session 缺少欄位: ${field}`);
+        return false;
+      }
+    }
+
+    console.log('Session 資料完整');
+    return true;
+  }
+
+  /**
+   *  新增：從 session 載入資料
+   */
+  private loadFromSessionData(sessionData: any): void {
+    console.log('  💾 從 session 載入表單資料');
+
+    // 填充表單
+    this.dataForm.patchValue(sessionData, { emitEvent: false });
+
+    // 載入銀行資訊
+    if (sessionData.selectedBankInfo) {
+      this.selectedBankInfo = sessionData.selectedBankInfo;
+    }
+
+    // 載入位置資料
+    if (sessionData.locationInfo && Array.isArray(sessionData.locationInfo)) {
+      this.locationData = sessionData.locationInfo;
+    }
+
+    // 重新觸發驗證和控制項狀態
+    setTimeout(() => {
+      this.setFormControlsState();
+      this.triggerAllDynamicValidators();
+    }, 100);
   }
 
   private async loadContractDetailAsync(talentId: string): Promise<void> {
@@ -648,7 +716,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       );
 
       if (response.Status === '0000' && response.Data) {
-        console.log('    ✅ API 回應成功');
+        console.log('     API 回應成功');
         await this.patchFormWithDetailDataAsync(response.Data);
       } else {
         console.warn('    ⚠️ 查無詳細資料');
@@ -669,16 +737,16 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 處理 check_type 轉換
     if (detailData.check_type && (!detailData.check_typeList || detailData.check_typeList.length === 0)) {
       detailData.check_typeList = detailData.check_type.split(',').filter((x: string) => x);
-      console.log('    ✅ check_type 已轉換');
+      console.log('     check_type 已轉換');
     }
 
-    // ✅ 步驟 1: 解析日期字串為 Date 物件（參考 TLS12040）
+    //  步驟 1: 解析日期字串為 Date 物件（參考 TLS12040）
     const dataWithDates = this.parseDateStringsToDates(detailData);
 
-    // ✅ 步驟 2: 清理字串欄位
+    //  步驟 2: 清理字串欄位
     const cleanedData = this.cleanStringFields(dataWithDates);
 
-    // ✅ 步驟 3: 根據模式決定如何填充（參考 TLS12040）
+    //  步驟 3: 根據模式決定如何填充（參考 TLS12040）
     if (this.isViewMode || this.isFormReadonly) {
       console.log('    🔒 Readonly 模式填充');
       // Readonly 模式：enable → 填充 → disable
@@ -691,19 +759,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.dataForm.patchValue(cleanedData, { emitEvent: false });
     }
 
-    console.log('    ✅ 表單資料填充完成');
+    console.log('     表單資料填充完成');
 
-    // ✅ 步驟 4: 載入相關分類資料
+    //  步驟 4: 載入相關分類資料
     if (detailData.bus_type) {
       await this.ensureClassificationDataLoaded(detailData.bus_type);
     }
 
-    // ✅ 步驟 5: 儲存到 workflow
+    //  步驟 5: 儲存到 workflow
     this.saveToWorkflow();
   }
 
   /**
-   * ✅ 新增：解析日期字串為 Date 物件（參考 TLS12040）
+   *  新增：解析日期字串為 Date 物件（參考 TLS12040）
    */
   private parseDateStringsToDates(data: any): any {
     if (!data) return data;
@@ -722,7 +790,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         try {
           const dateObject = new Date(dateString);
           if (!isNaN(dateObject.getTime())) {
-            parsedData[field] = dateObject;  // ✅ Date 物件
+            parsedData[field] = dateObject;  //  Date 物件
             console.log(`      📅 ${field}: "${dateString}" → Date`);
           }
         } catch (error) {
@@ -735,7 +803,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   /**
-   * ✅ 新增：清理字串欄位（去除空格）
+   *  新增：清理字串欄位（去除空格）
    */
   private cleanStringFields(data: any): any {
     const safeTrim = (value: any): string => {
@@ -844,7 +912,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.validationService.updateAllValidators(this.dataForm);
     this.validateWorkflowData();
 
-    console.log('  ✅ 初始驗證完成');
+    console.log('   初始驗證完成');
   }
 
   private updateUI(): void {
@@ -853,11 +921,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.updateDisplayLocationData();
     this.updateSelectorPanelOptions();
 
-    console.log('  ✅ UI 更新完成');
+    console.log('   UI 更新完成');
   }
 
   /**
-   * ✅ 確保分類資料已載入
+   *  確保分類資料已載入
    */
   private async ensureClassificationDataLoaded(busType: string): Promise<void> {
     try {
@@ -872,7 +940,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         );
       }
 
-      console.log('    ✅ 分類資料載入完成');
+      console.log('     分類資料載入完成');
     } catch (error) {
       console.error('    ❌ 分類資料載入失敗:', error);
     }
@@ -901,7 +969,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         // 🔥 Data 是物件，不是陣列
         if (response.Status === '0000' && response.Data && typeof response.Data === 'object') {
           const detailData = response.Data;
-          console.log('✅ 詳細資料載入成功:', detailData);
+          console.log(' 詳細資料載入成功:', detailData);
 
           // 將 detail 資料填充到表單中
           this.patchFormWithDetailData(detailData);
@@ -930,11 +998,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (detailData.check_type && typeof detailData.check_type === 'string') {
       // 從 check_type 字串轉換為陣列
       checkTypeList = detailData.check_type.split(',').map((s: string) => s.trim()).filter((s: string) => s);
-      console.log('✅ API check_type 轉換為 check_typeList:', checkTypeList);
+      console.log(' API check_type 轉換為 check_typeList:', checkTypeList);
     } else if (Array.isArray(detailData.check_typeList) && detailData.check_typeList.length > 0) {
       // 已經是陣列，直接使用
       checkTypeList = detailData.check_typeList;
-      console.log('✅ 使用現有的 check_typeList:', checkTypeList);
+      console.log(' 使用現有的 check_typeList:', checkTypeList);
     }
 
     // 同步更新 check_type（用於儲存）
@@ -1045,7 +1113,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       approve_status: detailData.approve_status || '',
     }, { emitEvent: false });
 
-    console.log('✅ 表單資料填充完成');
+    console.log(' 表單資料填充完成');
 
     // 填充完資料後，更新到 workflow
     setTimeout(() => {
@@ -1060,11 +1128,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.setupBusTypeListener();
     this.setupVendorUniformListener();
 
-    console.log('  ✅ 監聽器設定完成');
+    console.log('   監聽器設定完成');
   }
 
   private setupVendorUniformListener(): void {
-    // ✅ 使用標記追蹤是否為初始載入
+    //  使用標記追蹤是否為初始載入
     let skipCount = 0;
     const SKIP_INITIAL_LOADS = 2; // 跳過前兩次（ngOnInit + patchValue）
 
@@ -1072,14 +1140,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       .subscribe(vendorVenNo => {
         console.log('📝 vendor_ven_no 變更:', vendorVenNo, '跳過計數:', skipCount);
 
-        // ✅ 跳過初始載入
+        //  跳過初始載入
         if (skipCount < SKIP_INITIAL_LOADS) {
           skipCount++;
           console.log(`⏭️ 跳過第 ${skipCount} 次觸發（初始載入）`);
           return;
         }
 
-        // ✅ 檢視模式下不執行自動帶入
+        //  檢視模式下不執行自動帶入
         if (this.isViewMode) {
           console.log('👁️ 檢視模式，不執行自動帶入');
           return;
@@ -1121,7 +1189,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
               }
             });
 
-            console.log('✅ 已帶入廠商基本資料');
+            console.log(' 已帶入廠商基本資料');
           }
         } else {
           // 清空相關欄位
@@ -2083,7 +2151,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       return false;
     }
 
-    console.log('✅ 所有必填欄位已填寫');
+    console.log(' 所有必填欄位已填寫');
     console.log('========== 調試完成 ==========');
     return true;
   }
@@ -2130,7 +2198,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (paytypeSub) this.subscriptions.push(paytypeSub);
     this.subscriptions.push(...rentSubscriptions);
 
-    console.log('  ✅ 動態驗證器設定完成');
+    console.log('   動態驗證器設定完成');
   }
 
   // //設定初始必填欄位
@@ -2192,7 +2260,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       VEN_Address: selectedOption.VEN_Address
     }, { emitEvent: false });
 
-    console.log('✅ 已更新廠商資料，包含 ven_uniform:', this.dataForm.get('ven_uniform')?.value);
+    console.log(' 已更新廠商資料，包含 ven_uniform:', this.dataForm.get('ven_uniform')?.value);
 
     // 觸發儲存
     this.saveToWorkflow();

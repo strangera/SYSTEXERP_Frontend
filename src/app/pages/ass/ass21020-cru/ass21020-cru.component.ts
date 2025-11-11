@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -54,19 +54,41 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
-  public readonly tableData = signal<ASS21020Detail[]>([]);
-  private isInitializing = !0;
+  private readonly rawValue = computed(() => this.dataForm.getRawValue());
 
-  private readonly payload = computed((): ASS21020Query => {
-    const types = this.engTypeSignal();
-    const mtrNos = this.meterNoSignal();
-    const type = types && this.service.engTypeMap.get(types) || void 0;
-    const mtrNo = mtrNos && this.service.engMeterNoMap().get(mtrNos) || void 0;
-    this.logger.debug(`payload:`, [types, mtrNos, type, mtrNo]);
+  public readonly tableData = signal<ASS21020Detail[]>([]);
+
+  /** 初始資料 */
+  private readonly initialData = computed(() => {
+    if (this.isFormCreateable || !this.rowdata) return void 0;
+    const Details = this.rowdata.Details;
+    if (!Details?.length) return void 0;
+    return {
+      Details,
+      ENG_Type: this.rowdata.ENG_Type,
+      ENG_MeterNo: this.rowdata.ENG_MeterNo,
+    };
+  });
+
+  /** 選單是否已準備好 */
+  private readonly isOptionsReady = computed(() => {
+    const engTypes = this.service.engTypeOptions;
+    const meterNos = this.service.engMeterNoOptions();
+    return engTypes.length > 0 && meterNos.length > 0;
+  });
+
+  /** 初始查詢參數 */
+  private readonly initialQuery = computed((): ASS21020Query | void => {
+    if (!this.isOptionsReady()) return void 0;
+    const init = this.initialData();
+    if (!init) return void 0;
+
+    const engType = this.service.engTypeMap.get(init.ENG_Type);
+    if (!engType) return void 0;
 
     return {
-      EngTypes: type,
-      ENG_MeterNo: mtrNo?.ENG_MeterNo,
+      EngTypes: engType,
+      ENG_MeterNo: init.ENG_MeterNo,
       Mid: +this.user.mid,
       SYS_StoreNo: this.user.SYS_StoreNo,
     };
@@ -103,80 +125,89 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   /** 錶別改變時，清空錶號 */
   public readonly meterTypeEffect = effect(() => {
     const engType = this.engTypeSignal();
-    this.logger.debug(`meterTypeEffect:`, [engType, this.dataForm.getRawValue(), this.isInitializing]);
-    if (!engType?.length || this.isInitializing) return;
-    this.dataForm.patchValue({ ENG_MeterNo: void 0 });
+    const isReady = this.isOptionsReady();
+
+    this.logger.debug(`meterTypeEffect:`, [engType, this.rawValue(), isReady]);
+
+    // 選單未準備好時不處理
+    if (!isReady || !engType?.length) return;
+
+    // 清空錶號（使用者主動切換類型時）
+    untracked(() => this.dataForm.patchValue({ ENG_MeterNo: void 0 }));
   }, { allowSignalWrites: !0 });
 
-  /** 錶號改變時帶出專櫃清單 */
+  /** 錶號改變時帶出位置資訊與專櫃清單 */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
     if (!meterNo) return;
+
     const data = this.service.engMeterNoMap().get(meterNo);
     this.logger.debug(`meterNoEffect:`, [meterNo, data]);
 
     if (!data) return;
-    this.dataForm.patchValue({
-      Location_No: data.Location_No,
-      floor_no: data.Floor_No,
-      floor_name: data.Floor_Desc,
-      Building_No: data.building_No,
-      Building_Name: data.building_DESC,
-      x_coord: data.Draw_X,
-      y_coord: data.Draw_Y,
+
+    untracked(() => {
+      this.dataForm.patchValue({
+        Location_No: data.Location_No,
+        floor_no: data.Floor_No,
+        floor_name: data.Floor_Desc,
+        Building_No: data.building_No,
+        Building_Name: data.building_DESC,
+        x_coord: data.Draw_X,
+        y_coord: data.Draw_Y,
+      });
     });
+
     this.service.getTltByFlags(meterNo, +this.user.mid);
   }, { allowSignalWrites: !0 });
 
-  /** 統一初始化效果器 */
-  public readonly initEffect = effect(() => {
-    const engTypes = this.service.engTypeOptions;
-    const meterNos = this.service.engMeterNoOptions();
+  public readonly initFormEffect = effect((onCleanup) => {
+    const query = this.initialQuery();
+    if (!query || !query.ENG_MeterNo) return;
 
-    if (!engTypes.length || !meterNos.length) return;
-    const rowData = this.rowdata;
-    const payload = this.payload();
+    const init = this.initialData()!;
+    const meterData = this.service.engMeterNoMap().get(query.ENG_MeterNo);
 
-    if (!payload.ENG_MeterNo) return;
-    if (!this.isFormCreateable && rowData?.Details?.length) this.tableData.set(rowData.Details);
+    if (!meterData) return;
 
-    if (!payload.EngTypes) return;
-    const data = this.service.engMeterNoMap().get(payload.ENG_MeterNo);
+    this.logger.debug(`initFormEffect:`, [query, meterData]);
 
-    if (!data) return;
-    this.dataForm.patchValue({
-      ENG_Type: this.service.engTypeMap.get(payload.EngTypes),
-      ENG_MeterNo: this.service.engMeterNoMap().get(payload.ENG_MeterNo!)?.ENG_MeterNo,
+    untracked(() => {
+      this.dataForm.patchValue({
+        ENG_Type: this.service.engTypeMap.get(init.ENG_Type),
+        ENG_MeterNo: init.ENG_MeterNo,
+      });
+
+      this.tableData.set(init.Details);
     });
-
-    this.logger.debug(`initEffect:`, [payload, data, this.dataForm.getRawValue()]);
-    if (this.isFormCreateable) {
-      this.isInitializing = !1;
-      return void this.initEffect.destroy();
-    }
-
-    this.service.loadASS21020({
-      EngTypes: this.service.engTypeMap.get(payload.EngTypes),
-      ENG_MeterNo: payload.ENG_MeterNo,
-      Mid: +this.user.mid,
-      SYS_StoreNo: this.user.SYS_StoreNo,
-    }).pipe(finalize(() => {
-      this.isInitializing = !1;
-      this.initEffect.destroy();
-    })).subscribe();
+    onCleanup(() => this.logger.debug('initFormEffect cleaned up'));
   }, { allowSignalWrites: !0 });
 
-  /** 監聽表格資料變化 */
+  public readonly loadDataEffect = effect((onCleanup) => {
+    const query = this.initialQuery();
+    if (!query || this.isFormCreateable) return;
+    this.logger.debug(`loadDataEffect:`, [query]);
+
+    this.service.loadASS21020(query).subscribe();
+    onCleanup(() => this.logger.debug('loadDataEffect cleaned up'));
+  }, { allowSignalWrites: !0 });
+
+  /** 同步後端資料到表格（當服務資料變化時） */
   public readonly tableDataEffect = effect(() => {
     const data = this.service.ASS21020Data();
-    const meterNo = this.meterNoSignal();
+    const meterNo = this.df().ENG_MeterNo.value;
+
     if (!data.length || !meterNo) return;
-    this.tableData.set(data.find(v => v.ENG_MeterNo === meterNo)?.Details || []);
-    this.logger.debug(`tableDataEffect:`, [data, meterNo]);
+
+    const matchedData = data.find(v => v.ENG_MeterNo === meterNo);
+    if (matchedData?.Details) {
+      this.tableData.set(matchedData.Details);
+      this.logger.debug(`tableDataEffect:`, [matchedData.Details]);
+    }
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    const loading = this.service.tableLoading()
+    this.loading = this.service.tableLoading()
       || this.service.engMeterNoLoading()
       || this.service.tltByFlagLoading();
   });
