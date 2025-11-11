@@ -69,34 +69,50 @@ export class TLS55070Service {
     return this.http.post<LogoHosApiResponse>(url, {});
   }
 
-  getLogoHosOptions(): Observable<{
-    logoOptions: Array<{ label: string; value: string }>;
-    hosOptions: Array<{ label: string; value: string }>;
-  }> {
-    return this.queryPLULOGO_HOS_No_DropDownList().pipe(
-      map((res) => {
-        const rows = this.extractLogoHosRows(res);
-        const logoMap = new Map<string, string>();
-        const hosSet = new Set<string>();
-        for (const r of rows) {
-          const no = (r?.No ?? '').trim();
-          const name = (r?.Name ?? '').trim();
-          const hos = (r?.HOS_No ?? '').trim();
-          if (no && !logoMap.has(no)) logoMap.set(no, name);
-          if (hos) hosSet.add(hos);
-        }
-        const logoOptions = Array.from(logoMap.entries()).map(([no, name]) => ({
+// === 取 LOGO/HOS_No 選項（label: "代碼 - 中文"）===
+getLogoHosOptions(): Observable<{
+  logoOptions: Array<{ label: string; value: string }>;
+  hosOptions: Array<{ label: string; value: string }>;
+}> {
+  return this.queryPLULOGO_HOS_No_DropDownList().pipe(
+    map((res) => {
+      const rows = this.extractLogoHosRows(res);
+
+      // LOGO_No -> Name
+      const logoMap = new Map<string, string>();
+      // HOS_No -> 中文名稱（可能欄位叫 Name 或 HOS_NAME，都兼容）
+      const hosMap = new Map<string, string>();
+
+      for (const r of rows) {
+        const no  = (r?.No ?? '').trim();              // LOGO_No
+        const nm  = (r?.Name ?? '').trim();            // 可能是 LOGO 名或倉別名（API 規格會放這）
+        const hos = (r?.HOS_No ?? '').trim();          // 倉別代碼
+        const hosName = (r as any)?.HOS_NAME?.toString().trim?.() || nm; // 若有 HOS_NAME 優先用
+
+        if (no && !logoMap.has(no)) logoMap.set(no, nm);
+        if (hos && !hosMap.has(hos)) hosMap.set(hos, hosName);
+      }
+
+      const logoOptions = Array.from(logoMap.entries())
+        .map(([no, name]) => ({
           label: name ? `${no} - ${name}` : no,
           value: no,
-        }));
-        const hosOptions = Array.from(hosSet.values()).map((h) => ({
-          label: h,
-          value: h,
-        }));
-        return { logoOptions, hosOptions };
-      })
-    );
-  }
+        }))
+        // 可選：依代碼排序
+        .sort((a, b) => a.value.localeCompare(b.value, 'zh-Hant'));
+
+      const hosOptions = Array.from(hosMap.entries())
+        .map(([hos, name]) => ({
+          label: name ? `${hos} - ${name}` : hos,   // ★ 關鍵：顯示「代碼 - 中文」
+          value: hos,
+        }))
+        .sort((a, b) => a.value.localeCompare(b.value, 'zh-Hant'));
+
+      return { logoOptions, hosOptions };
+    })
+  );
+}
+
 
   /** 展平任意層級的 Data，擷取具有 No/Name/HOS_No 的葉節點 */
   private extractLogoHosRows(payload: any): LogoHosApiRow[] {

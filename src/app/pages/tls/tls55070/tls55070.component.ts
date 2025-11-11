@@ -467,51 +467,71 @@ onSubmit(form: FormGroup): void {
     return payload;
   }
 
-  private unpackResponse(wrappers: any[]) {
-    const rows: any[] = [];
-    const allSubtotals: Record<string, Record<string, number>> = {};
-    let totalRecords = 0;
+private unpackResponse(wrappers: any[]) {
+  const rows: any[] = [];
+  const allSubtotals: Record<string, Record<string, number>> = {};
+  let totalRecords = 0;
 
-    for (const w of wrappers || []) {
-      const list = Array.isArray(w?._DetailList) ? w._DetailList : [];
-      const grpKey =
-        String(w?.TXN_SaleNoteNo ?? '').trim() ||
-        `${w?.TXN_Date ?? ''}|${w?.ECR_No ?? ''}|${rows.length}`;
+  for (const w of wrappers || []) {
+    const list = Array.isArray(w?._DetailList) ? w._DetailList : [];
 
-      allSubtotals[grpKey] = {
-        [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(
-          w?.SumTXN_SaleAmt ?? 0,
-        ),
-      };
+    const grpKey =
+      String(w?.TXN_SaleNoteNo ?? '').trim() ||
+      `${w?.TXN_Date ?? ''}|${w?.ECR_No ?? ''}|${rows.length}`;
 
-      list.forEach((d: any, i: number) => {
-        rows.push({
-          ...w,
-          ...d,
-          _rowKey: `${grpKey}|${i}`,
-          [this.groupByField]: grpKey,
-          TXN_SaleAmt: Number(d?.TXN_SaleAmt ?? 0),
-          TXN_Qty: Number(d?.TXN_Qty ?? 0),
-          TXN_Disc: Number(d?.TXN_Disc ?? 0),
-          DiscRate: this.parsePercent(d?.DiscRate),
-        });
+    // 收集小計（保留你原本的 visibleSubtotals 用）
+    allSubtotals[grpKey] = {
+      [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(w?.SumTXN_SaleAmt ?? 0),
+    };
+
+    // 明細列
+    list.forEach((d: any, i: number) => {
+      rows.push({
+        ...w,
+        ...d,
+        _rowKey: `${grpKey}|${i}`,
+        [this.groupByField]: grpKey,                 // ← 關鍵：群組鍵
+        TXN_SaleAmt: Number(d?.TXN_SaleAmt ?? 0),
+        TXN_Qty: Number(d?.TXN_Qty ?? 0),
+        TXN_Disc: Number(d?.TXN_Disc ?? 0),
+        DiscRate: this.parsePercent(d?.DiscRate),
       });
+    });
 
-      totalRecords += list.length || 0;
-    }
+    // === ★ 新增：小計列（顯示「銷售金額」與 SumTXN_SaleAmt） ===
+    rows.push({
+      _rowKey: `${grpKey}|__SUBTOTAL__`,
+      [this.groupByField]: grpKey,                   // ← 放進同一組底下
+      TXN_SaleNoteNo: w?.TXN_SaleNoteNo ?? '',
+      TXN_Date: w?.TXN_Date ?? '',
+      ECR_No: w?.ECR_No ?? '',
+      TLT_No: w?.TLT_No ?? '',
+      HOS_NO: w?.HOS_NO ?? '',
+      HOS_NAME: w?.HOS_NAME ?? '',
+      TXN_TaxType: w?.TXN_TaxType ?? '',
+      GUINO: w?.GUINO ?? '',
+      // 用商品名稱欄位放「銷售金額」標籤
+      PLU_Name: '銷售金額',
+      // 小計金額
+      TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
+      // 打上旗標，方便樣式與計算時辨識
+      __isSubRow: true,
+    });
+    // ===============================================================
 
-    const externalTotals = wrappers.reduce(
-      (agg, w) => {
-        const a = Number(w?.SumTXN_SaleAmt ?? 0);
-        const keyA = this.detailTotalFieldMap.TXN_SaleAmt;
-        agg[keyA] = Number(agg[keyA] ?? 0) + a;
-        return agg;
-      },
-      {} as Record<string, number>,
-    );
-
-    return { rows, allSubtotals, externalTotals, totalRecords };
+    totalRecords += list.length || 0;
   }
+
+  const externalTotals = wrappers.reduce((agg, w) => {
+    const a = Number(w?.SumTXN_SaleAmt ?? 0);
+    const keyA = this.detailTotalFieldMap.TXN_SaleAmt;
+    agg[keyA] = Number(agg[keyA] ?? 0) + a;
+    return agg;
+  }, {} as Record<string, number>);
+
+  return { rows, allSubtotals, externalTotals, totalRecords };
+}
+
 
   private ensureGroupFirst(sortBy: any[] | undefined): any[] {
     const g = this.groupByField;

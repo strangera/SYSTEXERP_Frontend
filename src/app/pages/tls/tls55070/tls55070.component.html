@@ -155,15 +155,11 @@
     [multiSortMeta]="sortMeta"
     [showManage]="false"
     [showDelete]="false"
+    [groupRowsBy]="groupByField"  
+
+ [mergedColumns]="[]"
 
 
-    [groupRowsBy]="groupByField"
-
-  
-    [groupKey]="groupByField"
-
-
-    [mergedColumns]="['TXN_SaleNoteNo']"
 
     (lazyLoadData)="onLazyLoadData($event, queryForm)"
   >
