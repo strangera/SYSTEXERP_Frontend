@@ -30,11 +30,10 @@ export class Tls51110Service {
     return this.http.post<any>(`${this.apiUrl}/approveTLS51110`, data);
   }
   /** 匯入 Excel 檔 */
-  uploadTLS51110(file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<any>(`${this.apiUrl}/uploadTLS51110`, formData);
+  uploadTLS51110(formData: FormData): Observable<any> {
+     return this.http.post<any>(`${this.apiUrl}/uploadTLS51110`, formData);
   }
+
 
   /** 下載範例檔案 */
   downloadTemplate(): Observable<Blob> {
