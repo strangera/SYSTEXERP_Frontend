@@ -81,7 +81,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 
   data: any[] = [];
   totalRecords = 0;
-
+ activated = false; // 尚未按查詢前，不處理任何 lazy 事件
   detailTotals: Record<string, number> = {};
   visibleSubtotals: Record<string, Record<string, number>> = {};
   private allSubtotals: Record<string, Record<string, number>> = {};
@@ -189,6 +189,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
   }
 
   ngOnInit(): void {
+    this.loading = false;
     this.initializePage('TLS55070', 'tls/tls55070', this.queryForm, (f) => this.onSubmit(f));
     this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
@@ -373,6 +374,16 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
           if (this.saleTable) this.saleTable.groupKey = this.groupByField;
         });
       });
+        queueMicrotask(() => {
+      const raw: any = this.queryForm.getRawValue();
+      const pageSize = Number(raw?.pageSize) || 20;
+      const pageIndex = Number(raw?.pageIndex) || 1;
+      const SortBy =
+        Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : this.defaultSort;
+
+      this.onLazyLoadData({ pageIndex, pageSize, SortBy } as any, this.queryForm);
+      this.loading = false; // 外層自己關 loading（真正資料載入時，子流程會再設定）
+    });
   }
 
   // === 匯出 Excel ===
@@ -585,24 +596,25 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 
   /** 提供給外層 lazy slot（TLS2B010 用法） */
 // 原本：override onLazyLoadData = (evt: LazyLoadEvent, _form: FormGroup) => {
-override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
-  // 將可能的 DOM Event 轉成你的 LazyLoadEvent 介面
-  const e = evt as any as LazyLoadEvent;
+  override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
+    if (!this.activated) return; // 未按查詢前，不要自動打 API
 
-  this.fetchTLS55070(e).subscribe({
-    next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
-      this.data = rows;
-      this.totalRecords = totalRecords;
-      this.detailTotals = externalTotals;
-      this.visibleSubtotals = externalSubtotals;
-    },
-    error: _ => {
-      this.data = [];
-      this.totalRecords = 0;
-      this.detailTotals = {};
-      this.visibleSubtotals = {};
-    }
-  });
-};
+    const e = evt as any as LazyLoadEvent;
+    this.fetchTLS55070(e).subscribe({
+      next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
+        this.data = rows;
+        this.totalRecords = totalRecords;
+        this.detailTotals = externalTotals;
+        this.visibleSubtotals = externalSubtotals;
+      },
+      error: _ => {
+        this.data = [];
+        this.totalRecords = 0;
+        this.detailTotals = {};
+        this.visibleSubtotals = {};
+      }
+    });
+  };
+
 
 }

@@ -147,17 +147,15 @@
     [data]="data"
     [columns]="columns"
     [dataKey]="'_rowKey'"
-    [loading]="loading"
+    [loading]="activated && loading"
     [lazy]="true"
     [totalRecords]="totalRecords"
     [multiSortMeta]="sortMeta"
     [showManage]="false"
     [showDelete]="false"
-
-  
+     [autoLoad]="false"   
+    [showReportMode]="false"
     [groupRowsBy]="groupByField"
-
- 
     [mergedColumns]="['TXN_SaleNoteNo']"
   >
     <header>
