@@ -134,11 +134,11 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     { field: 'PLU_No', header: '國際條碼', excelFormat: '@' },
     { field: 'PLU_OrderPrc', header: '調整前進價' },
     { field: 'costPriceDiscount', header: '折扣%調整' },
-    { field: 'costPriceAmount', header: '金額調整' },
+    { field: 'costPriceAmount', header: '金額調整' }, // 假設也是數值
     { field: 'MAM_OrderPrc', header: '調整後進價' },
     { field: 'PLU_SalePrc', header: '調整前售價' },
     { field: 'salePriceDiscount', header: '折扣%調整' },
-    { field: 'salePriceAmount', header: '金額調整' },
+    { field: 'salePriceAmount', header: '金額調整' }, // 假設也是數值
     { field: 'MAM_UnitPrc', header: '調整後售價' },
   ]
   importExcel(event: FileSelectEvent) {
