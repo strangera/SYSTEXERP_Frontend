@@ -18,7 +18,7 @@ export class ExcelExportService {
   // 【修改 1/3】定義預設的 Excel 格式為 null，表示不強制設定格式
   private readonly DEFAULT_EXCEL_FORMAT: string | null = null;
   // 定義範本中預設要包含的空資料行數
-  private readonly TEMPLATE_EMPTY_ROWS = 1; // 預設新增 100 行空資料
+  private readonly TEMPLATE_EMPTY_ROWS = 10000; // 預設新增 100 行空資料
 
   /**
    * 匯出 Excel 範本

@@ -127,11 +127,11 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     });
   }
   excelColumns: ExcelColumn[] = [
-    { field: 'VEN_No', header: '廠商編號' },
-    { field: 'LOGO_No', header: '品牌編號' },
+    { field: 'VEN_No', header: '廠商編號', excelFormat: '@' },
+    { field: 'LOGO_No', header: '品牌編號', excelFormat: '@' },
     { field: 'MAM_BegDate', header: '啟用日期(起)(YYYY/MM/DD)' },
     { field: 'MAM_EndDate', header: '啟用日期(迄)(YYYY/MM/DD)' },
-    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_No', header: '國際條碼', excelFormat: '@' },
     { field: 'PLU_OrderPrc', header: '調整前進價' },
     { field: 'costPriceDiscount', header: '折扣%調整' },
     { field: 'costPriceAmount', header: '金額調整' }, // 假設也是數值
