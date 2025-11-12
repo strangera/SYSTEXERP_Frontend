@@ -32,7 +32,7 @@ export class TLS26010Service {
   public readonly ecrData = signal<EcrItem[]>([]);
   public readonly tltData = signal<TltItem[]>([]);
 
-  public readonly totalRecords = computed(() => this.TLS26010Data().length);
+  public readonly totalRecords = signal<number>(0);
 
   // 讀取狀態
   public readonly sys3800Loading = signal<boolean>(!1);
@@ -82,11 +82,11 @@ export class TLS26010Service {
     this.sys3800Loading.set(!0);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, {}).pipe(
       take(1),
-      tap(response => this.sys3800Data.set(response.Data)),
-      finalize(() => {
-        this.sys3800Loading.set(!1);
+      tap(response => {
+        this.sys3800Data.set(response.Data);
         this.logger.debug('館別查詢結果:', this.sys3800Data());
-      })
+      }),
+      finalize(() => this.sys3800Loading.set(!1))
     ).subscribe();
   }
 
@@ -95,11 +95,11 @@ export class TLS26010Service {
     this.sys3900Loading.set(!0);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, {}).pipe(
       take(1),
-      tap(response => this.sys3900Data.set(response.Data)),
-      finalize(() => {
-        this.sys3900Loading.set(!1);
+      tap(response => {
+        this.sys3900Data.set(response.Data);
         this.logger.debug('樓層查詢結果:', this.sys3900Data());
-      })
+      }),
+      finalize(() => this.sys3900Loading.set(!1))
     ).subscribe();
   }
 
@@ -108,11 +108,11 @@ export class TLS26010Service {
     this.sys3A00Loading.set(!0);
     this.http.post<any>(`${apiUrl}/querySYS3A00_DropDownList`, {}).pipe(
       take(1),
-      tap(response => this.sys3A00Data.set(response.Data)),
-      finalize(() => {
-        this.sys3A00Loading.set(!1);
+      tap(response => {
+        this.sys3A00Data.set(response.Data);
         this.logger.debug('區域代碼查詢結果:', this.sys3A00Data());
-      })
+      }),
+      finalize(() => this.sys3A00Loading.set(!1))
     ).subscribe();
   }
 
@@ -122,11 +122,11 @@ export class TLS26010Service {
     this.ecrLoading.set(!0);
     this.http.post<BaseQueryResponse<EcrItem>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
-      tap(response => this.ecrData.set(response.Data)),
-      finalize(() => {
-        this.ecrLoading.set(!1);
+      tap(response => {
+        this.ecrData.set(response.Data);
         this.logger.debug('收銀機號查詢結果:', this.ecrData());
       }),
+      finalize(() => this.ecrLoading.set(!1)),
     ).subscribe();
   }
 
@@ -136,11 +136,11 @@ export class TLS26010Service {
     this.tltLoading.set(!0);
     this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
-      tap(response => this.tltData.set(response.Data)),
-      finalize(() => {
-        this.tltLoading.set(!1);
+      tap(response => {
+        this.tltData.set(response.Data);
         this.logger.debug('專櫃編號查詢結果:', this.tltData());
-      })
+      }),
+      finalize(() => this.tltLoading.set(!1))
     ).subscribe();
   }
 
@@ -149,11 +149,12 @@ export class TLS26010Service {
     this.tableLoading.set(!0);
     this.http.post<BaseQueryResponse<TLS26010Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010`, query).pipe(
       take(1),
-      tap(response => this.TLS26010Data.set(response.Data)),
-      finalize(() => {
-        this.tableLoading.set(!1);
+      tap(response => {
+        this.TLS26010Data.set(response.Data);
+        this.totalRecords.set(response.TotalCount ?? 0);
         this.logger.debug('預購活動檔期查詢結果:', this.TLS26010Data());
-      })
+      }),
+      finalize(() => this.tableLoading.set(!1))
     ).subscribe();
   }
 
@@ -162,11 +163,11 @@ export class TLS26010Service {
     this.tableLoading.set(!0);
     this.http.post<TLS26010DetailResponse>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010Detail`, query).pipe(
       take(1),
-      tap(response => this.TLS26010Detail.set(response.Data)),
-      finalize(() => {
-        this.tableLoading.set(!1);
+      tap(response => {
+        this.TLS26010Detail.set(response.Data);
         this.logger.debug('預購活動檔期細節查詢結果:', this.TLS26010Detail());
-      })
+      }),
+      finalize(() => this.tableLoading.set(!1))
     ).subscribe();
   }
 
@@ -176,11 +177,8 @@ export class TLS26010Service {
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26010`, payload).pipe(
       take(1),
-      tap(() => { }),
-      finalize(() => {
-        this.tableLoading.set(!1);
-        this.logger.debug('新增結果:', this.TLS26010Data());
-      })
+      tap(() => this.logger.debug('新增結果:', this.TLS26010Data())),
+      finalize(() => this.tableLoading.set(!1)),
     );
   }
 
@@ -230,7 +228,10 @@ export class TLS26010Service {
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
-      tap(() => this.TLS26010Data.set(this.TLS26010Data())),
+      tap(res => {
+        this.TLS26010Data.set(this.TLS26010Data());
+        this.logger.debug(`刪除結果:`, [res]);
+      }),
       finalize(() => this.tableLoading.set(!1))
     );
   }
@@ -254,11 +255,11 @@ export class TLS26010Service {
           }
           return currentData;
         })),
-        finalize(() => {
-          this.approvalStatusLoading.set(!1);
-          this.logger.debug('核准結果:',);
-        })
+        tap(res => {
+          if (res.Status !== '0000') return void this.messageService.errorBubble(`${this.approvalCheck(data).confirm}失敗: ${res.Message}`);
+          this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
+        }),
+        finalize(() => this.approvalStatusLoading.set(!1))
       ).subscribe();
-    this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
   }
 }
