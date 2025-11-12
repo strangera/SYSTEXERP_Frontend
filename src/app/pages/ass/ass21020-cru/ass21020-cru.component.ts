@@ -21,7 +21,7 @@ import { ASS21020Data, ASS21020Detail } from '../ass21020/ass21020.model';
   selector: 'app-ass21020-cru',
   templateUrl: './ass21020-cru.component.html',
   styleUrl: './ass21020-cru.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     TranslateModule,
     ReactiveFormsModule,
@@ -86,24 +86,47 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   /** 錶號改變時帶出位置資訊與專櫃清單 */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    const engMeterOptions = this.service.engMeterNoOptions();
-    if (!meterNo || !engMeterOptions.length) return;
+    if (!meterNo) return;
 
-    const data = this.service.engMeterNoMap().get(meterNo);
-    if (data) untracked(() => {
-      this.dataForm.patchValue({
-        Location_No: data.Location_No,
-        floor_no: data.Floor_No,
-        floor_name: data.Floor_Desc,
-        Building_No: data.building_No,
-        Building_Name: data.building_DESC,
-        x_coord: data.Draw_X,
-        y_coord: data.Draw_Y,
-      });
+    // 取得當前選中的能源類型並轉換為 API 格式
+    const engType = this.df().ENG_Type.value;
+    const engTypeApi = engType != null ? this.service.engTypeMap.get(String(engType)) : undefined;
+
+    if (!engTypeApi) {
+      this.logger.warn(`無效的能源類型:`, [engType]);
+      return;
+    }
+
+    const mid = +this.user.mid;
+
+    this.logger.debug(`meterNoEffect - 錶號改變:`, { meterNo, engTypeApi, mid });
+
+    // 1. 取得錶號位置資訊（帶出上半部表單）
+    this.service.getENG1001Location(meterNo, mid, engTypeApi).subscribe({
+      next: (res) => {
+        if (res.Status === '0000' && res.Data.length > 0) {
+          const locationData = res.Data[0];
+          untracked(() => {
+            this.dataForm.patchValue({
+              Location_No: locationData.Location_No,
+              floor_no: locationData.Floor_No,
+              floor_name: locationData.Floor_Desc,
+              Building_No: locationData.Building_No,
+              Building_Name: locationData.Building_Desc,
+              x_coord: locationData.Draw_X?.toString() || '',
+              y_coord: locationData.Draw_Y?.toString() || '',
+            });
+          });
+          this.logger.debug(`錶號位置資訊已更新:`, [locationData]);
+        }
+      },
+      error: (err) => {
+        this.logger.error(`取得錶號位置資訊失敗:`, err);
+      }
     });
 
-    this.logger.debug(`meterNoEffect:`, [meterNo, data]);
-    this.service.getTltByFlags(meterNo, +this.user.mid);
+    // 2. 取得未設定的專櫃清單（提供下半部表格選項）
+    this.service.getTLTUnset(meterNo, mid, engTypeApi);
   }, { allowSignalWrites: !0 });
 
   /** 同步後端資料到表格 */
@@ -120,7 +143,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.tableLoading()
       || this.service.engMeterNoLoading()
-      || this.service.tltByFlagLoading();
+      || this.service.locationLoading()
+      || this.service.tltUnsetLoading();
   });
 
   public readonly columns: EditColumn[] = [
@@ -129,7 +153,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       header: '專櫃編號/名稱',
       type: 'dropdown',
       showClear: !1,
-      options: () => this.service.tltNoOptions().map(({ TLT_No, TLT_Name }) => ({
+      // 使用未設定專櫃清單作為選項
+      options: () => this.service.tltUnsetOptions().map(({ TLT_No, TLT_Name }) => ({
         No: TLT_No,
         Name: `${TLT_No} - ${TLT_Name}`
       })),
@@ -137,10 +162,11 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       optionValue: 'No',
       calculate: (row) => {
         if (!row.TLT_No) return {};
-        const mapData = this.service.tltByFlagMap().get(row.TLT_No);
+        // 從當前錶號的位置資訊取得 Location_No 和 NET_SPACE
+        const locationInfo = this.service.currentLocationInfo();
         return {
-          Location_No: mapData?.Location_No || '',
-          NET_SPACE: mapData?.NET_SPACE || 0,
+          Location_No: locationInfo?.Location_No || '',
+          NET_SPACE: locationInfo?.NET_SPACE || 0,
         };
       },
       // validate: [this.validateTltNo.bind(this)],
@@ -228,9 +254,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public onAutoCalculate(): void {
     this.tableData.update(current => {
-      const tltMap = this.service.tltByFlagMap();
+      // 從當前錶號的位置資訊取得面積
+      const locationInfo = this.service.currentLocationInfo();
+      const netSpace = locationInfo?.NET_SPACE || 0;
+
       if (!current.length) return current;
-      this.logger.debug(`onAutoCalculate:`, [current]);
+      this.logger.debug(`onAutoCalculate:`, [current, netSpace]);
 
       // 只計算非自動插入候選列的資料
       const validData = current.filter(d => !d._isAutoInsertCandidate);
@@ -245,21 +274,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
         }));
       }
 
-      // 單次遍歷預先取出各筆面積，並同時計算總有效面積（>0 才計入）
-      const netSpaces: number[] = new Array(validLen);
-      let totalSpace = 0;
-      const positiveIdx: number[] = [];
-      for (let i = 0; i < validLen; i++) {
-        const ns = tltMap.get(validData[i].TLT_No)?.NET_SPACE || 0;
-        netSpaces[i] = ns;
-        if (ns > 0) {
-          totalSpace += ns;
-          positiveIdx.push(i);
-        }
-      }
-
       // 如果沒有有效面積，平均分攤（以基點 10000 為單位確保總和精確為 100）
-      if (totalSpace === 0) {
+      if (netSpace <= 0) {
         const quotient = Math.floor(10000 / validLen);
         const remainder = 10000 % validLen;
         let validIdx = 0;
@@ -271,27 +287,14 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
         });
       }
 
-      // 按面積比例分攤（僅在有效面積項目間分攤；無效者給 0）
+      // 按專櫃數量平均分攤（所有專櫃使用相同的面積）
       // 使用基點法避免四捨五入造成總和非 100 的問題
-      let assignedBp = 0;
-      const lastPosIdx = positiveIdx[positiveIdx.length - 1];
+      const quotient = Math.floor(10000 / validLen);
+      const remainder = 10000 % validLen;
       let validIdx = 0;
       return current.map(d => {
         if (d._isAutoInsertCandidate) return d;
-        const ns = netSpaces[validIdx];
-        if (ns <= 0) {
-          validIdx++;
-          return { ...d, ENG_Rate: 0 };
-        }
-
-        // 最後一個有效索引承接剩餘基點,確保總和精確 10000（=100%）
-        let bp: number;
-        if (validIdx !== lastPosIdx) {
-          bp = Math.floor((ns * 10000) / totalSpace);
-          assignedBp += bp;
-        } else {
-          bp = 10000 - assignedBp;
-        }
+        const bp = quotient + (validIdx < remainder ? 1 : 0);
         validIdx++;
         return { ...d, ENG_Rate: bp / 100 };
       });
@@ -299,8 +302,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   }
 
   private validateTltNo(value: string): { isValid: boolean; errorMessage: string[]; } {
-    if (value && value.trim() !== '' && this.service.tltByFlagMap().has(value)) {
-      return { isValid: !0, errorMessage: [] };
+    if (value && value.trim() !== '') {
+      // 檢查專櫃編號是否在未設定清單中
+      const inUnsetList = this.service.tltUnsetMap().has(value);
+      if (inUnsetList) {
+        return { isValid: !0, errorMessage: [] };
+      }
     }
     return { isValid: !1, errorMessage: ['專櫃編號不可為空或無效'] };
   }
