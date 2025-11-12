@@ -17,7 +17,7 @@
                         controlName="pod_no"
                         [control]="df().pod_no"
                         [submitted]="submitted"
-                        [disabled]="true">
+                        [disabled]="!0">
         </app-input-text>
         <app-calendar-range class="col-12 md:col-6 lg:col-8"
                             calendarType="dateRange"
@@ -36,7 +36,7 @@
                         label="核准狀態"
                         controlName="pod_status"
                         [control]="df().pod_status"
-                        [disabled]="true">
+                        [disabled]="!0">
         </app-input-text>
       </div>
       <div *ngIf="!isFormReadable"
@@ -60,15 +60,14 @@
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="false"
-               [showEdit]="false"
-               [showDetail]="false"
-               [showDelete]="false"
-               [showManage]="false"
-               [showReportMode]="false"
+    <app-table [showCheckBox]="!0"
+               [showEdit]="!1"
+               [showDetail]="!1"
+               [showManage]="!1"
+               [showReportMode]="!1"
                [isRowSelectable]="service.isRowSelectable"
                (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
-               [lazy]="true"
+               [lazy]="!0"
                [data]="ecrTableData()"
                [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
@@ -88,18 +87,17 @@
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="false"
-               [showEdit]="false"
-               [showDetail]="false"
-               [showDelete]="false"
-               [showManage]="false"
-               [showReportMode]="false"
+    <app-table [showCheckBox]="!0"
+               [showEdit]="!1"
+               [showDetail]="!1"
+               [showManage]="!1"
+               [showReportMode]="!1"
                [isRowSelectable]="service.isRowSelectable"
                [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
                (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
-               [lazy]="true"
+               [lazy]="!0"
                [loading]="service.tableLoading()"
                [data]="tltTableData()"
                [dataKey]="'tlt_no'"
@@ -111,7 +109,7 @@
 
 <app-dialog [visible]="!!dialogVisible()"
             [header]="dialogHeader()"
-            (visibleChange)="onVisibleChange($event)"
+            (visibleChange)="onVisibleChange($event); dt.dt.reset()"
             (save)="onDialogSubmit()"
             [height]="'auto'"
             [loading]="loading">
@@ -151,14 +149,14 @@
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12">
-        <app-table [showCheckBox]="true"
-                   [showManage]="false"
-                   [showDelete]="false"
-                   [showReportMode]="false"
+        <app-table #dt
+                   [showCheckBox]="!0"
+                   [showManage]="!1"
+                   [showDelete]="!1"
+                   [showReportMode]="!1"
+                   [rows]="10"
                    [selectedItems]="dialogSelectedData"
                    (selectionChange)="onSelectionChange($event)"
-                   (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
-                   [lazy]="true"
                    [data]="dialogData()"
                    [dataKey]="dialogDataKey()"
                    [tableKey]="dialogTableKey()"

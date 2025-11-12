@@ -1,4 +1,4 @@
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 
 /**
@@ -14,9 +14,10 @@ export interface DependentDataQuery {
   area_nos?: string[] | null;
 }
 
-export interface TLS26010Query {
-  ecr_nos: string[];
+export interface TLS26010Query extends BaseQueryRequest {
+  ECR_No: string[];
   tlt_nos: string[];
+  tlt_no: string;
   pod_sdate_S?: Date;
   pod_sdate_E?: Date;
   pod_edate_S?: Date;
