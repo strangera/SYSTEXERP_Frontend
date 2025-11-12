@@ -4,7 +4,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { IPOS2004DetailData, ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
-import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize } from 'rxjs';
@@ -26,6 +26,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
   selector: 'app-tls52020-cru',
@@ -86,15 +87,15 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       width: '100px',
       calculate: (row) => {
         return {
-          'CRN_BuyNet': row.CRN_SubQty * row.CRN_BuyPrc, // 計算小計
-          'CRN_SaleAmt': row.CRN_SubQty * row.CRN_SalePrc // 計算售價小計
+          'CRN_BuyNet': Math.round(row.CRN_SubQty * row.CRN_BuyPrc), // 計算小計
+          'CRN_SaleAmt': Math.round(row.CRN_SubQty * row.CRN_SalePrc) // 計算售價小計
         };
       }
     },
-    { field: 'CRN_BuyPrc', header: '單價' },
-    { field: 'CRN_BuyNet', header: '小計' },
-    { field: 'CRN_SalePrc', header: '售價' },
-    { field: 'CRN_SaleAmt', header: '售價小計' },
+    { field: 'CRN_BuyPrc', header: '單價', format: (v) => formatAmountWithDecimals(v, 2) },
+    { field: 'CRN_BuyNet', header: '小計', format: formatAmount },
+    { field: 'CRN_SalePrc', header: '售價', format: formatAmount },
+    { field: 'CRN_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'CRN_Remark', header: '備註', type: 'input', width: '150px' },
   ]
   data: TLS52020Detail[] = [];
