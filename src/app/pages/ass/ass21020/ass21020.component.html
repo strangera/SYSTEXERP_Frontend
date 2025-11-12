@@ -1,74 +1,88 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo"
-                 class="flex-1"></app-menubar>
-    <app-button btnType="create"
-                (click)="onCreate()"></app-button>
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate"
-                    [selected]="true"
-                    class="line-height-3 m-0"
-                    [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit()">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-multi-select class="col-12 md:col-6 lg:col-4"
-                            label="能源類型"
-                            controlName="ENG_Type"
-                            [options]="service.engTypeOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            [control]="qf().ENG_Type"
-                            [submitted]="submitted"></app-multi-select>
-          <app-dropdown class="col-12 md:col-6 lg:col-4"
-                        label="錶號"
-                        controlName="ENG_MeterNo"
-                        [options]="filteredMeterNo()"
-                        optionLabel="ENG_MeterNo"
-                        optionValue="ENG_MeterNo"
-                        [loading]="service.engMeterNoLoading()"
-                        [control]="qf().ENG_MeterNo"
-                        [submitted]="submitted"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4"
-                        label="專櫃編號/名稱"
-                        controlName="TLT_No"
-                        [options]="service.tltNoOptions()"
-                        optionLabel="TLT_Name"
-                        optionValue="TLT_No"
-                        [loading]="service.tltByFlagLoading()"
-                        [control]="qf().TLT_No"
-                        [submitted]="submitted"></app-dropdown>
-          <app-input-text class="col-12 md:col-6 lg:col-4"
-                          label="設備位置編號"
-                          controlName="Location_No"
-                          [control]="qf().Location_No"
-                          [disabled]="true"
-                          [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4"
-                          label="營業面積"
-                          controlName="NET_SPACE"
-                          [control]="qf().NET_SPACE"
-                          [disabled]="true"
-                          [submitted]="submitted"></app-input-text>
-          <app-input-number class="col-12 md:col-6 lg:col-4"
-                            label="面積比例(%)"
-                            [pKeyFilter]="ratePtn"
-                            controlName="ENG_Rate"
-                            [control]="qf().ENG_Rate"
-                            [max]="100"
-                            [min]="0"
-                            [maxFractionDigits]="0"
-                            [suffix]="'%'"
-                            [submitted]="submitted"></app-input-number>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="能源類型"
+            controlName="ENG_Type"
+            [options]="service.engTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().ENG_Type"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="錶號"
+            controlName="ENG_MeterNo"
+            [options]="filteredMeterNo()"
+            optionLabel="ENG_MeterNo"
+            optionValue="ENG_MeterNo"
+            [loading]="service.engMeterNoLoading()"
+            [control]="qf().ENG_MeterNo"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="專櫃編號/名稱"
+            controlName="TLT_No"
+            [options]="service.tltNoOptions()"
+            optionLabel="TLT_Name"
+            optionValue="TLT_No"
+            [loading]="service.tltByFlagLoading()"
+            [control]="qf().TLT_No"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="設備位置編號"
+            controlName="Location_No"
+            [control]="qf().Location_No"
+            [disabled]="true"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="營業面積"
+            controlName="NET_SPACE"
+            [control]="qf().NET_SPACE"
+            [disabled]="true"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-input-number
+            class="col-12 md:col-6 lg:col-4"
+            label="面積比例(%)"
+            [pKeyFilter]="ratePtn"
+            controlName="ENG_Rate"
+            [control]="qf().ENG_Rate"
+            [max]="100"
+            [min]="0"
+            [maxFractionDigits]="0"
+            [suffix]="'%'"
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"
-                      [form]="queryForm"></app-button>
-          <app-button btnType="query"
-                      [loading]="loading"></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -77,20 +91,22 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="true"
-               [data]="service.ASS21020Data()"
-               [dataKey]="'ENG_MeterNo'"
-               [tableKey]="'ASS21020_Data'"
-               [columns]="columns"
-               [totalRecords]="service.totalRecords()"
-               [multiSortMeta]="qf().SortBy.value ?? []"
-               [loading]="service.tableLoading()"
-               [expansionColumns]="extColumns"
-               [expansionDataKey]="'Details'"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="true"
-               (edit)="onEdit($event)"
-               (delete)="onDelete($event)"
-               (detail)="onDetail($event)"></app-table>
+    <app-table
+      [showCheckBox]="true"
+      [data]="service.ASS21020Data()"
+      [dataKey]="'ENG_MeterNo'"
+      [tableKey]="'ASS21020_Data'"
+      [columns]="columns"
+      [totalRecords]="service.totalRecords()"
+      [multiSortMeta]="qf().SortBy.value ?? []"
+      [loading]="service.tableLoading()"
+      [expansionColumns]="extColumns"
+      [expansionDataKey]="'Details'"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      (edit)="onEdit($event)"
+      (delete)="onDelete($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>
