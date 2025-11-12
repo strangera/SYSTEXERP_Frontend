@@ -3,8 +3,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize, map } from 'rxjs';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
@@ -17,9 +16,11 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle } from '@angular/common';
+import { AsyncPipe, NgStyle } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 export const enum POStatus {
   已確認 = '1',
@@ -47,33 +48,34 @@ export const enum POStatus {
     TooltipModule,
     NgStyle,
     TranslateModule,
-    CalendarRangeQuickComponent
+    CalendarRangeQuickComponent,
+    AsyncPipe
   ],
 })
 export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    RJM_No: ['', [Validators.maxLength(16)]], // 驗收編號
+    RJM_No: [null, [Validators.maxLength(16)]], // 驗收編號
     LOGO_NoList: [null], // 品牌代碼
     HOS_NoList: [null], // 倉庫代碼
-    VEN_No: [''], // 廠商代號
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
+    VEN_No: [null], // 廠商代號
+    queryNo: [null, [Validators.maxLength(20)]], // 管理編號
     RJM_StatusList: [null], // 驗收狀態
-    APPLY_USR: [''], // 申請人員
-    APPLY_Date_Start: [''], // 申請日期起
-    APPLY_Date_End: [''], // 申請日期迄
-    CRN_No: ['', [Validators.maxLength(16)]], // 採購單號
-    APRV_USR: [''], // 審核人員
-    APRV_Date_Start: [''], // 審核(驗收)日期起
-    APRV_Date_End: [''], // 審核(驗收)日期迄
+    APPLY_USR: [null], // 申請人員
+    APPLY_Date_Start: [null], // 申請日期起
+    APPLY_Date_End: [null], // 申請日期迄
+    CRN_No: [null, [Validators.maxLength(16)]], // 採購單號
+    APRV_USR: [null], // 審核人員
+    APRV_Date_Start: [null], // 審核(驗收)日期起
+    APRV_Date_End: [null], // 審核(驗收)日期迄
     ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'RJM_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  warehouseOptions: IDropdownItem[] = []; // 倉別
+  warehouseOptions = this.dropdown.queryPos2034(); // 倉別
+  brandOptions = this.dropdown.queryPluLogo(); // 品牌代碼
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  poStatusOptions = getSYS1000Options('RJM_Status');
+  userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
   pluMagNoOptions: { label: string, value: string }[] = []; // 商品管理編號
-  brandOptions: IDropdownItem[] = []; // 品牌代碼
-  vendorOptions: IDropdownItem[] = []; // 廠商編號
-  poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
-  userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
   data: ITLS52040Data[] = [];
   selectedItems: ITLS52040Data[] = [];
   columns: Column[] = [
@@ -136,44 +138,13 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     },
   ];
   constructor(
-    private tls52010Service: Tls52010Service,
-    private tls52040Service: Tls52040Service,
-    private dropDownListService: DropDownListService,
+    private readonly tls52010Service: Tls52010Service,
+    private readonly tls52040Service: Tls52040Service,
+    private readonly dropdown: DropdownApiService
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS52040', 'TLS/TLS52040cru', this.queryForm, (f) => this.onSubmit(f));
-    // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;
-    });
-    // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data.map(brand => ({
-        ...brand,
-        label: `${brand.No} - ${brand.Name}`,
-      }));
-    });
-    // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(vendor => ({
-        ...vendor,
-        label: `${vendor.VEN_No} - ${vendor.Name}`,
-      }));
-    });
-    // 採購單狀態 (PO_Status) - 靜態資料，已更新為你提供的正確值
-    this.poStatusOptions = [
-      { label: '已確認', value: '1' },
-      { label: '已審核', value: '2' },
-      { label: '作廢', value: '9' },
-    ];
-    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => {
-      this.userOptions = options;
-    });
-
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

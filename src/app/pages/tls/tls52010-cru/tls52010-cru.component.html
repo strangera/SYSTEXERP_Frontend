@@ -40,7 +40,7 @@
           [control]="dataForm.controls.PO_TotalBuyAmt" [useGrouping]="true" [minFractionDigits]="0"
           [maxFractionDigits]="2" [submitted]="submitted" />
 
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR_No"
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR_Name"
           [control]="dataForm.controls.APPLY_USR_Name" [submitted]="submitted" />
 
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="申請日期" controlName="APPLY_Date"
@@ -62,7 +62,7 @@
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" />
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onReset()" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

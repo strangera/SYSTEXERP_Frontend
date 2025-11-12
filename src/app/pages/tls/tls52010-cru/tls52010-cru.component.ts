@@ -57,7 +57,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   dataForm = this.formBuilder.nonNullable.group({
     PO_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
     VEN_No: [null as string | null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
-    vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
+    vendorShortName: [{ value: '' as string | undefined, disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
     LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     remainingBudgetAmount: [{ value: 0, disabled: true }], // 剩餘預算金額 (前端顯示用，不對應資料庫欄位)
     HOS_No: [null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
@@ -74,7 +74,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商下拉選單選項
   brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
   warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
-  userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
   editColumns: EditColumn[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
@@ -88,7 +87,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       type: 'inputNumber',
       validate: [validateRequired, validateMinNumber(1)],
       width: '100px',
-      // 這裡放主要的計算邏輯
       calculate: (row) => {
         return {
           // *** 修正點：使用 Math.round() 進行四捨五入取整數 ***
@@ -102,6 +100,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'POD_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'POD_Remark', header: '備註', type: 'input', width: '150px' },
   ]
+  originalData: IPOS2004DetailData[] = [];
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
 
@@ -121,7 +120,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       VEN_No.disable();
       LOGO_No.disable();
     }
-    this.loadDropdownOptions();
     if (!this.isFormCreateable) {
       this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data.map(item => ({
@@ -129,11 +127,15 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           PLU_SalePrc_UNI: item.POD_BuyPrc,
           PLU_SalePrc: item.POD_SalePrc
         }));
+        this.originalData = [...this.data];
       });
       this.vendorOptions.subscribe(options => {
         this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '');
+        this.ShortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '';
       });
       this.GetBudgetAmount();
+    } else {
+      this.loadDropdownOptions();
     }
     this.loadDialogData();
   }
@@ -145,11 +147,19 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
     // 監聽品牌代碼變化，用於顯示剩餘預算金額和建議倉別
-    this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, options]) => {
-      this.dataForm.controls.HOS_No.setValue(options?.find(opt => opt.value === logoNo)?.value ?? null, { emitEvent: false });
-      this.GetBudgetAmount();
-      this.calculateTotals();
-      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
+    this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
+      this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
+        const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
+        const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
+        let finalHOSNo: string | null = null;
+        if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
+          finalHOSNo = suggestedHOSNo;
+        }
+        this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
+        this.GetBudgetAmount();
+        this.calculateTotals();
+        [this.data, this.selectedItems, this.dialogData] = [[], [], []];
+      });
     });
   }
   GetBudgetAmount(): void {// 獲取剩餘預算金額
@@ -159,6 +169,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     const budgetRequest: IGetBudgetAmountRequest = { LOGO_No: LOGO_No.value ?? '', YYYYMM: applyYearMonth };
     this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(untilDestroyed(this)).subscribe(response => {
       this.dataForm.controls.remainingBudgetAmount.setValue(response.Data);
+      this.remainingBudgetAmount = response.Data;
     });
   }
   // 選擇商品相關
@@ -403,5 +414,12 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
+  }
+  ShortName? = '';
+  remainingBudgetAmount = 0;
+  onReset() {
+    this.dataForm.controls.vendorShortName.setValue(this.ShortName, { emitEvent: false });
+    this.dataForm.controls.remainingBudgetAmount.setValue(this.remainingBudgetAmount, { emitEvent: false });
+    this.data = [...this.originalData];
   }
 }

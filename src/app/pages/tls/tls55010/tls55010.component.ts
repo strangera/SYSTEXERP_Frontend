@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { CheckTls55010Data, Tls55010Service } from '@service/api/tls/tls55010.service';
+import { CheckTls55010Data, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
@@ -28,6 +28,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   queryForm = this.formBuilder.nonNullable.group({
     TXN_Date: [null as Date | null, Validators.required],
   });
+  lastDate?: Tls55010DateRequest;
   data: any = [];
   columns: Column[] = [
     { field: 'check_content', header: '檢查內容' },
@@ -110,6 +111,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       this.messageService.successBubble(res.Message);
       this.isConfirmDate = true;
       this.showReverseBtn = true;
+      this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
       this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
         this.cls_date = res.Data.CLS_DATE;
       });
@@ -129,6 +131,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
     }
     this.tls55010Service.queryTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.queryLoading = false)).subscribe((res) => {
       this.messageService.successBubble(res.Message);
+      this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
       this.isConfirmDate = true;
       this.showReverseBtn = true;
       this.dataForm.patchValue(res.Data.Data._gls6001);
@@ -175,8 +178,11 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   showReverseBtn = false;
   // 反日節方法
   onReverse(frm: FormGroup) {
+    if (!this.lastDate) {
+      return;
+    }
     this.reverseLoading = true;
-    this.tls55010Service.unLockTLS55010(frm.value.VouDate).pipe(untilDestroyed(this), finalize(() => this.reverseLoading = false)).subscribe((res) => {
+    this.tls55010Service.unLockTLS55010(this.lastDate).pipe(untilDestroyed(this), finalize(() => this.reverseLoading = false)).subscribe((res) => {
       this.messageService.successBubble(res.Message);
       this.showReverseBtn = false;
       this.dataForm.reset();

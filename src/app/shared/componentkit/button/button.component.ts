@@ -80,17 +80,17 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
       this.systemDataService.menuUpdated.pipe(filter(menu => menu && menu.length > 0)),
       this.currentPageService.currentPageProgNo$.pipe(filter(progNo => !!progNo))
     ])
-    .pipe(takeUntil(this.ngUnsubscribe))
-    .subscribe(([menu, progNo]) => {
-      if (config.permissionCode) {
-        const funInfo = this.systemDataService.getUserPermissions(progNo!);
-        const hasPermission = funInfo?.PrivilegeBehavior?.some(b => b.function_code === config.permissionCode);
-        this.disabled = !hasPermission;
-      } else if (this.disabled === undefined) {
-        this.disabled = config.disabled;
-      }
-      this.cdr.detectChanges(); // 確保 OnPush 變更檢測更新
-    });
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(([menu, progNo]) => {
+        if (config.permissionCode) {
+          const funInfo = this.systemDataService.getUserPermissions(progNo!);
+          const hasPermission = funInfo?.PrivilegeBehavior?.some(b => b.function_code === config.permissionCode);
+          this.disabled = !hasPermission;
+        } else if (this.disabled === undefined) {
+          this.disabled = config.disabled;
+        }
+        this.cdr.detectChanges(); // 確保 OnPush 變更檢測更新
+      });
   }
 
   private initialFormValue: any;
