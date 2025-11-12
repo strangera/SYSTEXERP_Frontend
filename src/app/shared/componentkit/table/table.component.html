@@ -26,15 +26,15 @@
       [selectedItems]="selectedItems" [tableKey]="tableKey" [expansionColumns]="expansionColumns"
       [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showReportMode]="showReportMode"
       [showReportPDF]="showReportPDF" [showReportExcel]="showReportExcel" [showInsert]="showInsert"
-      [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
-      [insertDisabled]="insertDisabled" [deleteData]="deleteData" [showDelete]="showDelete" [deleteIcon]="deleteIcon"
-      [deletepTooltip]="deletepTooltip" [showExcel]="showExcel" [disabled]="disabled"
-      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport"
-      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="showPage"
-      [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows" [first]="first"
-      (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
-      (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
+      [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting" [insertDisabled]="insertDisabled"
+      [deleteData]="deleteData" [showDelete]="showDelete" [deleteIcon]="deleteIcon" [deletepTooltip]="deletepTooltip"
+      [showExcel]="showExcel" [disabled]="disabled" [showExcelExport]="showExcelExport"
+      [showExcelImport]="showExcelImport" [showCustomExcelImport]="showCustomExcelImport"
+      [exportExcelLoading]="exportExcelLoading" [showPage]="showPage" [totalPages]="totalPages" [pages]="pages"
+      [selectedPage]="selectedPage" [rows]="rows" [first]="first" (insert)="insertRow()" (delete)="deleteRow($event)"
+      (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)"
+      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>

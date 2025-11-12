@@ -51,7 +51,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
   @Input() loading = false;
-  @Input() firstLoading = false;
+  public _loading = false;
   @Input() apiUrl: string | undefined = undefined;
   @Input() showReorder = true;
   // Checkbox 相關
@@ -155,7 +155,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
   loadMoreData() {
-    if (this.loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords) {
+    if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
     // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
@@ -167,8 +167,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       pageIndex: Math.floor(this.data.length / pageSize) + 1,
       pageSize: pageSize, // 使用 pageSize 變數
     };
-    this.loading = true;
-    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+    this._loading = true;
+    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this._loading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.virtualData = Array.from({ length: this.data.length + res.Data.length });
         this.updateGroupTotals(res.Data);
@@ -181,7 +181,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onSort(event: any) {
-    if (this.loading) {
+    if (this._loading) {
       return;
     }
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
