@@ -17,6 +17,7 @@ import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
 import { finalize, Observable } from 'rxjs';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 2.2.18.2 大分類換開品項維護作業
 @Component({
@@ -113,6 +114,11 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
           },
         });
     });
+  }
+
+  /** 詳細查看 */
+  override onDetail(data: any) {
+    this.navigateWithState(CRUDStatus.Read, data);
   }
 
 }
