@@ -43,8 +43,8 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   queryForm = this.fb.group({
     menuType: [null],                               // 菜單類別(多選)
     tltNo: [null],                                  // 專櫃編號(多選)
-    SBM_BegDate: [null, Validators.required],  // 開始日期(起)
-    SBM_EndDate: [null, Validators.required],  // 結束日期(起)
+    SBM_BegDate: [null],  // 開始日期(起)
+    SBM_EndDate: [null],  // 結束日期(起)
     ...createPaginationConfig([{ field: "TLT_No", order: 0 }])
   });
 
