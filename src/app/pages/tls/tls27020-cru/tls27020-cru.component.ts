@@ -96,11 +96,16 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
         : this.tLS27020Service.updateTLS27020(this.updateTLS27020(frm));
       serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
         next: (res) => {
-          this.messageService.successBubble(res.Message);
-          if (this.isFormCreateable) {
-            this.dataForm.reset();
-          } else if (this.isFormEditable) {
-            this.onCancel();
+          if(res.Data){
+            this.messageService.successBubble(res.Message);
+            if (this.isFormCreateable) {
+              this.dataForm.reset();
+            } else if (this.isFormEditable) {
+              this.onCancel();
+            }
+          }
+          else{
+            this.messageService.warnBubble(res.Message);
           }
         },
       });
@@ -120,6 +125,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
       id: this.rowdata?.id ?? 0,
       ...frm.value,
       MOD_PayAmt: frm.getRawValue().MOD_PayAmt,
+      BOOK_PayAmt: this.rowdata?.BOOK_PayAmt,
       Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || null,
     };
   }

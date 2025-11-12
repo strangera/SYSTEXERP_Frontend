@@ -13,9 +13,9 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { skip, tap } from 'rxjs';
 import { ASS2100ENGMeterType, EngType } from '../ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Detail, ASS21020Query } from '../ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Detail } from '../ass21020/ass21020.model';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -54,99 +54,43 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
-  private readonly rawValue = computed(() => this.dataForm.getRawValue());
-
   public readonly tableData = signal<ASS21020Detail[]>([]);
-
-  /** 初始資料 */
-  private readonly initialData = computed(() => {
-    if (this.isFormCreateable || !this.rowdata) return void 0;
-    const Details = this.rowdata.Details;
-    if (!Details?.length) return void 0;
-    return {
-      Details,
-      ENG_Type: this.rowdata.ENG_Type,
-      ENG_MeterNo: this.rowdata.ENG_MeterNo,
-    };
-  });
-
-  /** 選單是否已準備好 */
-  private readonly isOptionsReady = computed(() => {
-    const engTypes = this.service.engTypeOptions;
-    const meterNos = this.service.engMeterNoOptions();
-    return engTypes.length > 0 && meterNos.length > 0;
-  });
-
-  /** 初始查詢參數 */
-  private readonly initialQuery = computed((): ASS21020Query | void => {
-    if (!this.isOptionsReady()) return void 0;
-    const init = this.initialData();
-    if (!init) return void 0;
-
-    const engType = this.service.engTypeMap.get(init.ENG_Type);
-    if (!engType) return void 0;
-
-    return {
-      EngTypes: engType,
-      ENG_MeterNo: init.ENG_MeterNo,
-      Mid: +this.user.mid,
-      SYS_StoreNo: this.user.SYS_StoreNo,
-    };
-  });
 
   /** 根據能源類型篩選的錶號清單 */
   public readonly filteredMeterNo = computed<ASS2100ENGMeterType[]>(() => {
-    const engType = this.engTypeSignal() ? this.service.engTypeMap.get(this.engTypeSignal()!) : EngType.水;
-    const MeterNos = this.service.engMeterNoOptions();
-    this.logger.debug(`filteredMeterNo:`, [engType, MeterNos]);
+    const engType = this.engTypeSignal() ?? void 0;
+    const typeValue = engType && this.service.engTypeMap.get(engType);
+    const options = this.service.engMeterNoOptions();
+    this.logger.debug(`filteredMeterNo:`, [engType, typeValue, options]);
 
-    if (!engType || !MeterNos.length) return [];
-    return MeterNos.filter(m => EngType[m.ENG_Type as unknown as keyof typeof EngType] === engType);
+    if (!typeValue || !options.length) return options;
+    return options.filter(o => EngType[o.ENG_Type] === typeValue);
   });
 
   /** 驗證和存檔控制 */
   public readonly canSave = computed(() => {
     const data = this.tableData();
-
     if (!this.dataForm.valid || !data.length) return !1;
-    this.logger.debug(`canSave:`, [this.dataForm.valid, data]);
 
-    const validData = data.filter(item => {
-      return !!(item.TLT_No || (item.ENG_Rate !== null && item.ENG_Rate !== void 0));
-    });
-
+    const validData = data.filter(item => item.TLT_No && item.ENG_Rate != null);
     if (!validData.length) return !1;
 
-    const isComplete = this.isTableDataComplete(validData);
-    const totalRate = this.calculateTotalRate(validData);
-    return isComplete && totalRate === 100;
+    return this.isTableDataComplete(validData) && this.calculateTotalRate(validData) === 100;
   });
 
-  /** 錶別改變時，清空錶號 */
+  /** 能源類型改變時,清空錶號 */
   public readonly meterTypeEffect = effect(() => {
-    const engType = this.engTypeSignal();
-    const isReady = this.isOptionsReady();
-
-    this.logger.debug(`meterTypeEffect:`, [engType, this.rawValue(), isReady]);
-
-    // 選單未準備好時不處理
-    if (!isReady || !engType?.length) return;
-
-    // 清空錶號（使用者主動切換類型時）
-    untracked(() => this.dataForm.patchValue({ ENG_MeterNo: void 0 }));
+    untracked(() => this.df().ENG_MeterNo.setValue(void this.engTypeSignal()));
   }, { allowSignalWrites: !0 });
 
   /** 錶號改變時帶出位置資訊與專櫃清單 */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    if (!meterNo) return;
+    const engMeterOptions = this.service.engMeterNoOptions();
+    if (!meterNo || !engMeterOptions.length) return;
 
     const data = this.service.engMeterNoMap().get(meterNo);
-    this.logger.debug(`meterNoEffect:`, [meterNo, data]);
-
-    if (!data) return;
-
-    untracked(() => {
+    if (data) untracked(() => {
       this.dataForm.patchValue({
         Location_No: data.Location_No,
         floor_no: data.Floor_No,
@@ -158,54 +102,21 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       });
     });
 
+    this.logger.debug(`meterNoEffect:`, [meterNo, data]);
     this.service.getTltByFlags(meterNo, +this.user.mid);
   }, { allowSignalWrites: !0 });
 
-  public readonly initFormEffect = effect((onCleanup) => {
-    const query = this.initialQuery();
-    if (!query || !query.ENG_MeterNo) return;
-
-    const init = this.initialData()!;
-    const meterData = this.service.engMeterNoMap().get(query.ENG_MeterNo);
-
-    if (!meterData) return;
-
-    this.logger.debug(`initFormEffect:`, [query, meterData]);
-
-    untracked(() => {
-      this.dataForm.patchValue({
-        ENG_Type: this.service.engTypeMap.get(init.ENG_Type),
-        ENG_MeterNo: init.ENG_MeterNo,
-      });
-
-      this.tableData.set(init.Details);
-    });
-    onCleanup(() => this.logger.debug('initFormEffect cleaned up'));
-  }, { allowSignalWrites: !0 });
-
-  public readonly loadDataEffect = effect((onCleanup) => {
-    const query = this.initialQuery();
-    if (!query || this.isFormCreateable) return;
-    this.logger.debug(`loadDataEffect:`, [query]);
-
-    this.service.loadASS21020(query).subscribe();
-    onCleanup(() => this.logger.debug('loadDataEffect cleaned up'));
-  }, { allowSignalWrites: !0 });
-
-  /** 同步後端資料到表格（當服務資料變化時） */
+  /** 同步後端資料到表格 */
   public readonly tableDataEffect = effect(() => {
     const data = this.service.ASS21020Data();
     const meterNo = this.df().ENG_MeterNo.value;
-
     if (!data.length || !meterNo) return;
 
-    const matchedData = data.find(v => v.ENG_MeterNo === meterNo);
-    if (matchedData?.Details) {
-      this.tableData.set(matchedData.Details);
-      this.logger.debug(`tableDataEffect:`, [matchedData.Details]);
-    }
+    const matched = data.find(v => v.ENG_MeterNo === meterNo);
+    if (matched?.Details) this.tableData.set(matched.Details);
   }, { allowSignalWrites: !0 });
 
+  /** 整合所有載入中狀態 */
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.tableLoading()
       || this.service.engMeterNoLoading()
@@ -268,10 +179,23 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public ngOnInit(): void {
     this.initializePage('ASS21020', this.dataForm);
+    this.logger.debug(`init:`, [this.rowdata]);
 
     this.service.getEngMeterNos();
 
-    this.logger.debug(`init:`, [this.rowdata]);
+    if (this.isFormCreateable || !this.rowdata?.ENG_MeterNo) return;
+    this.service.loadASS21020({ ENG_MeterNo: this.rowdata.ENG_MeterNo }).pipe(
+      tap(res => {
+        if (res.Status === '0000' && res.Data.length) {
+          const data = res.Data[0];
+          this.dataForm.patchValue({
+            ENG_Type: this.service.engTypeMap.get(data.ENG_Type),
+            ENG_MeterNo: data.ENG_MeterNo
+          });
+          this.tableData.set(data.Details);
+        }
+      })
+    ).subscribe();
   }
 
   public onSubmit(): void {
@@ -328,16 +252,13 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       for (let i = 0; i < validLen; i++) {
         const ns = tltMap.get(validData[i].TLT_No)?.NET_SPACE || 0;
         netSpaces[i] = ns;
-        if (ns > 0) {
-          totalSpace += ns;
-          positiveIdx.push(i);
-        }
+        if (ns > 0) { totalSpace += ns; positiveIdx.push(i); }
       }
 
-      // 如果沒有有效面積，平均分攤（以基點 10000 為單位確保總和精確為 100）
+      // 如果沒有有效面積，平均分攤（以基點 1e4 為單位確保總和精確為 100）
       if (totalSpace === 0) {
-        const quotient = Math.floor(10000 / validLen);
-        const remainder = 10000 % validLen;
+        const quotient = Math.floor(1e4 / validLen);
+        const remainder = 1e4 % validLen;
         let validIdx = 0;
         return current.map(d => {
           if (d._isAutoInsertCandidate) return d;
@@ -355,19 +276,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       return current.map(d => {
         if (d._isAutoInsertCandidate) return d;
         const ns = netSpaces[validIdx];
-        if (ns <= 0) {
-          validIdx++;
-          return { ...d, ENG_Rate: 0 };
-        }
+        if (ns <= 0) { validIdx++; return { ...d, ENG_Rate: 0 }; }
 
         // 最後一個有效索引承接剩餘基點,確保總和精確 10000（=100%）
         let bp: number;
-        if (validIdx !== lastPosIdx) {
-          bp = Math.floor((ns * 10000) / totalSpace);
-          assignedBp += bp;
-        } else {
-          bp = 10000 - assignedBp;
-        }
+        if (validIdx !== lastPosIdx) { bp = Math.floor((ns * 1e4) / totalSpace); assignedBp += bp; }
+        else { bp = 1e4 - assignedBp; }
         validIdx++;
         return { ...d, ENG_Rate: bp / 100 };
       });

@@ -62,9 +62,11 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
       this.queryForm.patchValue({ TXN_Date: formatDate(rawDate) }); // 預設日期
     });
   }
+
   editDisabled = (rowData: any): boolean => {
-    return (rowData.Check_Status === 'Y'); // 若 Check_Status 為 'Y'已審核，則禁用編輯按鈕
+    return (rowData.Check_Status === 'Y' || rowData.isClose === 'Y'); // 已審核或已關帳的資料不可編輯
   };
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls27020Service.queryTLS27020(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
