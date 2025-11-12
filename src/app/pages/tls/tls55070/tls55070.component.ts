@@ -236,6 +236,11 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 
   percent(val: any): string {
     const n = this.parsePercent(val);
+
+    if (val === 'nopercent') {
+    //  不要顯示百分比
+    return '0'; 
+    }
     return (n / 100).toLocaleString('en-US', {
       style: 'percent',
       maximumFractionDigits: 2,
@@ -494,14 +499,15 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
         _rowKey: `${grpKey}|__SUBTOTAL__`,
         [this.groupByField]: grpKey,
         TXN_SaleNoteNo: saleNo,
-        TXN_Date: w?.TXN_Date ?? '',
-        ECR_No: w?.ECR_No ?? '',
-        TLT_No: w?.TLT_No ?? '',
-        HOS_NO: w?.HOS_NO ?? '',
-        HOS_NAME: w?.HOS_NAME ?? '',
-        TXN_TaxType: w?.TXN_TaxType ?? '',
-        GUINO: w?.GUINO ?? '',
+        TXN_Date: '',
+        ECR_No: '',
+        TLT_No: '',
+        HOS_NO: '',
+        HOS_NAME:'',
+        TXN_TaxType: '',
+        GUINO: '',
         PLU_Name: '銷售金額',
+        DiscRate:'nopercent',
         TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
         __isSubRow: true,
       });
@@ -598,7 +604,6 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 // 原本：override onLazyLoadData = (evt: LazyLoadEvent, _form: FormGroup) => {
   override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
     if (!this.activated) return; // 未按查詢前，不要自動打 API
-
     const e = evt as any as LazyLoadEvent;
     this.fetchTLS55070(e).subscribe({
       next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
