@@ -84,7 +84,12 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const meterNo = this.meterNoSignal() ?? void 0;
     untracked(() => this.qf().TLT_No.setValue(void 0));
     if (!meterNo) return untracked(() => this.qf().Location_No.setValue(void 0));
-    this.service.getTltByFlags(meterNo, this.usrData().Mid);
+
+    // 取得選中的能源類型並轉換為 API 格式
+    const engTypes = this.qf().ENG_Type.value || [];
+    const engTypesApi = engTypes.map(type => this.service.engTypeMap.get(type)).filter(Boolean) as string[];
+
+    this.service.getTltByFlags(meterNo, this.usrData().Mid, engTypesApi);
   }, { allowSignalWrites: !0 });
 
   /** 改變專櫃編號 更新相關欄位 */

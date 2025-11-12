@@ -20,7 +20,7 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './a
   selector: 'app-ass21010',
   templateUrl: './ass21010.component.html',
   styleUrl: './ass21010.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -34,6 +34,7 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './a
     TableComponent,
   ],
 })
+
 export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> implements OnInit {
 
   public queryForm = this.formBuilder.group({
