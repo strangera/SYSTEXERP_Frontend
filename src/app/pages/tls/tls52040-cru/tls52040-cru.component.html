@@ -17,7 +17,7 @@
           optionLabel="label" optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No" [options]="warehouseOptions"
           optionLabel="label" optionValue="No" [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="進貨驗收金額" controlName="RJM_TotalBuyNet"
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="退貨驗收金額" controlName="RJM_TotalBuyNet"
           [control]="dataForm.controls.RJM_TotalBuyNet" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="稅額" controlName="RJM_TotalBuyTax"
           [control]="dataForm.controls.RJM_TotalBuyTax" [submitted]="submitted" />
@@ -30,7 +30,7 @@
           [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="售價總計" controlName="RJM_TotalSaleAmt"
           [control]="dataForm.controls.RJM_TotalSaleAmt" [submitted]="submitted" />
-        <app-input-textarea class="col-12" label="進貨驗收單說明" controlName="RJM_Remark"
+        <app-input-textarea class="col-12" label="退貨驗收單說明" controlName="RJM_Remark"
           [control]="dataForm.controls.RJM_Remark" [submitted]="submitted" />
       </div>
       <app-table-edit class="col-12" tableKey="TLS52040Detail" [columns]="editColumns" [data]="data"

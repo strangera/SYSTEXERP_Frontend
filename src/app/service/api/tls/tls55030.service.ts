@@ -26,6 +26,10 @@ export interface IInvoiceDetail {
   PUR_VoucherType: string; // 發票格式代碼
   PUR_Amt: number;       // 發票金額
   Rebate_Amt: number;    // 已折讓金額
+
+  Rebate_Amt_New?: number;
+  Rebate_Net?: number;
+  Rebate_Tax?: number;
 }
 
 @Injectable({

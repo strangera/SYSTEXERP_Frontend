@@ -24,6 +24,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
@@ -90,11 +91,12 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       // 這裡放主要的計算邏輯
       calculate: (row) => {
         return {
-          'POD_BuyNet': row.POD_SubQty * row.PLU_SalePrc_UNI, // 計算小計
-          'POD_SaleAmt': row.POD_SubQty * row.PLU_SalePrc // 計算售價小計
+          // *** 修正點：使用 Math.round() 進行四捨五入取整數 ***
+          'POD_BuyNet': Math.round(row.POD_SubQty * row.PLU_SalePrc_UNI), // 計算小計並四捨五入
+          'POD_SaleAmt': Math.round(row.POD_SubQty * row.PLU_SalePrc) // 計算售價小計並四捨五入
         };
       }
-    }, { field: 'PLU_SalePrc_UNI', header: '單價', format: formatAmount },
+    }, { field: 'PLU_SalePrc_UNI', header: '單價', format: (v) => formatAmountWithDecimals(v, 2) },
     { field: 'POD_BuyNet', header: '小計', format: formatAmount },
     { field: 'PLU_SalePrc', header: '售價', format: formatAmount },
     { field: 'POD_SaleAmt', header: '售價小計', format: formatAmount },
@@ -277,6 +279,12 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (this.data && this.data.length === 0) {
+        this.messageService.errorBubble('明細至少要有一筆');
+        this.loading = false
+        return;
+      }
+
       const valid = this.tableEditComponent.validateAndShowErrors()
       if (!valid) {
         this.loading = false
@@ -288,8 +296,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         this.loading = false
         return;
       }
-      console.log(this.data);
-
       const details: IPODetail[] = this.data.map((item) => ({
         id: this.isFormCreateable ? 0 : item.id,
         PO_No: this.dataForm.controls.PO_No.value,

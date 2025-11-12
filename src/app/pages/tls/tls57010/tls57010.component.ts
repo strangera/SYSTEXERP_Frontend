@@ -3,7 +3,6 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -34,7 +33,6 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     FormsModule,
     ReactiveFormsModule,
     MultiSelectComponent,
-    CalendarComponent,
     ButtonComponent,
     NgIf,
     ButtonModule,

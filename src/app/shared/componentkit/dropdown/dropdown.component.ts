@@ -50,6 +50,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() disabled = false; // 是否禁用
   @Input() loading = false;// 是否載入中
   @Input() editable = true; // 是否可編輯輸入
+  @Input() helpMsg?: string;
   // 自訂屬性
   @Input() showErrorMessage = true;
   @Input() templateLabel = ''; // 自訂 Label 模板
