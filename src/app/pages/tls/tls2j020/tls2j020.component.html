@@ -18,8 +18,8 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="稅別" controlName="Item_TaxType" [options]="Item_TaxType_Option"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.Item_TaxType"
+            <app-multi-select label="稅別" controlName="Item_TaxType" [options]="Item_TaxType_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Item_TaxType"
               [submitted]="submitted"></app-multi-select>
           </div>
         </div>
@@ -33,22 +33,11 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table-report
-      [data]="data"
-      [columns]="columns"
-      [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction"
-      (edit)="onEdit($event)"
-      [showDelete]="false"
-      [showReportMode]="false"
-      [dataKey]="'id'"
-      [totalRecords]="totalRecords"
-      [showCheckBox]="true"
-      [loading]="loading"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      [showExcel]="false"
-      [showManage]="false">
+    <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction"
+      (edit)="onEdit($event)" [showDelete]="true" [showReportMode]="false" [dataKey]="'id'"(detail)="onDetail($event)"
+      [totalRecords]="totalRecords" [showCheckBox]="true" [loading]="loading" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" [showExcel]="false" [showDetail]="true" [showManage]="true" [showEdit]="true">
+
     </app-table-report>
   </div>
 </div>
