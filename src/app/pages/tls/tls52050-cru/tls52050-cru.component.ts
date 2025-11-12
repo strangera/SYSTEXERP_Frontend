@@ -86,6 +86,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   },);
   brandOptions = this.dropdown.queryPluLogo(); // 品牌
   vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  originalData: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   data: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   editColumns = columns;
@@ -131,6 +132,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       if (this.rowdata?.MAM_No) {
         this.tls52050Service.queryTLS52050UpdateDetail(this.rowdata?.MAM_No).pipe(untilDestroyed(this)).subscribe(response => {
           this.data = response.Data.map(item => ({ ...item, id: Number(item.id) }));
+          this.originalData = JSON.parse(JSON.stringify(this.data));
         });
       }
     }
@@ -138,21 +140,20 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.setupDialogLogic();
   }
   private setupFormLogic(): void {
-    const controls = this.dataForm.controls;
-    controls.LOGO_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
+    this.dataForm.controls.LOGO_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
       if (value) {
         this.vendorOptions = this.dropdown.queryPos2013LOGO_No({ LOGO_No: value });
       } else {
         this.vendorOptions = of([])
       }
     })
-    controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
+    this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
       const isPermanent = value === '1';
-      controls.MAM_EndDate.setValue(null);
+      this.dataForm.controls.MAM_EndDate.setValue(null);
       if (isPermanent) {
-        controls.MAM_EndDate.disable()
+        this.dataForm.controls.MAM_EndDate.disable()
       } else {
-        controls.MAM_EndDate.enable();
+        this.dataForm.controls.MAM_EndDate.enable();
       }
     });
     this.setupPriceFields('costPriceDiscount', 'costPriceAmount', this.roundToTwo);
@@ -418,5 +419,8 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         }
       })
     });
+  }
+  onReset() {
+    this.data = JSON.parse(JSON.stringify(this.originalData));
   }
 }
