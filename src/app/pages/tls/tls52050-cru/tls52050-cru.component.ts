@@ -119,6 +119,11 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       if (this.rowdata?.MAM_Status === '0') {
         this.dataForm.controls.VEN_No.disable();
         this.dataForm.controls.LOGO_No.disable();
+        if (this.dataForm.controls.MAM_BegDate.value < new Date()) {
+          this.dataForm.controls.MAM_BegDate.disable();
+          this.dataForm.controls.MAM_EndDate.disable();
+          this.dataForm.controls.MAM_Method.disable();
+        }
       }
       if (this.rowdata?.MAM_Method === '1') {
         this.dataForm.controls.MAM_EndDate.disable();
@@ -309,6 +314,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   saveDialog() {
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
+      ID: 0,
       PLU_MagNo: item.PLU_MagNo,
       PLU_Name: item.PLU_Name,
       CAT_LNo: item.CAT_LNo,
@@ -391,7 +397,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         ID: this.isFormCreateable ? undefined : Number(this.rowdata?.Id),
         MAM_No: this.isFormCreateable ? undefined : this.rowdata?.MAM_No,
         details: this.data.map(item => ({
-          ID: Number(item.id) || null,
+          ID: Number(item.id) || 0,
           PLU_MagNo: item.PLU_MagNo,
           PLU_OrderPrcRate: item.PLU_OrderPrcRate,
           PLU_OrderPrc: item.PLU_OrderPrc,

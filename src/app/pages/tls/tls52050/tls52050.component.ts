@@ -65,7 +65,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     APRV_Date_Start: [null],   // 審核日期起
     APRV_Date_End: [null],     // 審核日期迄
     showReturnPriceOrdersOnly: [false],
-    ...createPaginationConfig([{ field: 'MAM_No', order: 1 }]),
+    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'MAM_No', order: -1 }]),
   });
   // Options
   MAM_StatusOptions = getSYS1000Options('MAM_Status');        // 進價變價單狀態選項

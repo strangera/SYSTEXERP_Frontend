@@ -19,7 +19,7 @@
             optionValue="value" [control]="dataForm.controls.DIS_EntryType" [submitted]="submitted" />
         </div>
       </div>
-      <app-table-edit title="退貨明細" [data]="data2" [columns]="columns2" [showInsert]="true"
+      <app-table-edit title="退貨明細" [data]="data2" [columns]="columns2" [showInsert]="true" (dataChange)="data2 = $event"
         (selectionChange)="selectedItems2 = $event" [selectedItems]="selectedItems2" [tableRequired]="true"
         [disabled]="isFormReadable" (insert)="onInsert2()" [showInsert]="!isFormReadable" [canInsert]="false"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.ACP_YYYYMM.value ? false : true">
@@ -30,10 +30,10 @@
           </div>
         </header>
       </app-table-edit>
-      <app-table-edit title="折讓單明細" [data]="data" [columns]="columns" [showInsert]="true"
+      <app-table-edit title="折讓單明細" [data]="data" [columns]="columns" [showInsert]="true" (dataChange)="data = $event"
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
         [disabled]="isFormReadable" (insert)="onInsert()" [showInsert]="!isFormReadable" [canInsert]="false"
-        [insertDisabled]="dataForm.controls.VEN_No.value ? false : true">
+        [insertDisabled]="dataForm.controls.VEN_No.value ? false : true" (fieldChange)="onFieldChange($event)">
         <header>
           <div class="flex flex-wrap">
             <app-input-text class="col-12 md:col-6 lg:col-3" label="發票總金額" controlName="invoiceTotalAmount"
@@ -72,7 +72,7 @@
   <app-table-report tableKey="tls52010CruDialogTable" dataKey="PUR_GUINo" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
-    [isRowSelectable]="isRowSelectable.bind(this)" [lastQueryBody]="lastQueryBody"
+    [isRowSelectable]="isRowSelectable.bind(this)" [lastQueryBody]="lastQueryBody" [showReorder]="false"
     [queryFunction]="tls55030Service.queryInvoiceDetailsForRebate.bind(tls55030Service)" [totalRecords]="totalRecords2"
     [loading]="dialogLoading2">
   </app-table-report>

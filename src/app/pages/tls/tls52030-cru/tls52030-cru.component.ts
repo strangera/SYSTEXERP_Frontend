@@ -18,12 +18,13 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { getSYS1000 } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
   selector: 'app-tls52030-cru',
@@ -44,7 +45,8 @@ import { getSYS1000 } from '@service/system/sys1000.service';
     NgIf,
     DialogComponent,
     TranslateModule,
-    TableEditComponent
+    TableEditComponent,
+    AsyncPipe
   ],
 })
 export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> implements OnInit {
@@ -62,7 +64,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     ODM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
-  vendorOptions: IDropdownItem[] = []; // 廠商下拉選單選項
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
   brandOptions: IDropdownItem[] = []; // 品牌下拉選單選項
   warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
   userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
@@ -115,7 +117,8 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   constructor(
     private tls52030Service: Tls52030Service,
     private dropDownListService: DropDownListService,
-    private sys0110Service: Sys0110Service
+    private sys0110Service: Sys0110Service,
+    private readonly dropdown: DropdownApiService
   ) { super(); }
 
   ngOnInit(): void {
@@ -141,11 +144,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   loadDropdownOptions() {
     // 專門清空資料的共用方法
     const resetFormData = () => { this.data = []; this.selectedItems = []; this.dialogData = []; this.calculateTotals(); };
-    // 1. 供應商下拉選單
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(vendor => ({ ...vendor, label: `${vendor.VEN_No} - ${vendor.Name}` }));
-      this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
-    });
+    this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
     // 2. 品牌下拉選單
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));

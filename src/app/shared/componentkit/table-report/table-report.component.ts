@@ -53,6 +53,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() loading = false;
   @Input() firstLoading = false;
   @Input() apiUrl: string | undefined = undefined;
+  @Input() showReorder = true;
   // Checkbox 相關
   @Input() showCheckBox = false;
   @Input() selectedItems: any = [];
