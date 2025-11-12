@@ -252,16 +252,13 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       for (let i = 0; i < validLen; i++) {
         const ns = tltMap.get(validData[i].TLT_No)?.NET_SPACE || 0;
         netSpaces[i] = ns;
-        if (ns > 0) {
-          totalSpace += ns;
-          positiveIdx.push(i);
-        }
+        if (ns > 0) { totalSpace += ns; positiveIdx.push(i); }
       }
 
-      // 如果沒有有效面積，平均分攤（以基點 10000 為單位確保總和精確為 100）
+      // 如果沒有有效面積，平均分攤（以基點 1e4 為單位確保總和精確為 100）
       if (totalSpace === 0) {
-        const quotient = Math.floor(10000 / validLen);
-        const remainder = 10000 % validLen;
+        const quotient = Math.floor(1e4 / validLen);
+        const remainder = 1e4 % validLen;
         let validIdx = 0;
         return current.map(d => {
           if (d._isAutoInsertCandidate) return d;
@@ -279,19 +276,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       return current.map(d => {
         if (d._isAutoInsertCandidate) return d;
         const ns = netSpaces[validIdx];
-        if (ns <= 0) {
-          validIdx++;
-          return { ...d, ENG_Rate: 0 };
-        }
+        if (ns <= 0) { validIdx++; return { ...d, ENG_Rate: 0 }; }
 
         // 最後一個有效索引承接剩餘基點,確保總和精確 10000（=100%）
         let bp: number;
-        if (validIdx !== lastPosIdx) {
-          bp = Math.floor((ns * 10000) / totalSpace);
-          assignedBp += bp;
-        } else {
-          bp = 10000 - assignedBp;
-        }
+        if (validIdx !== lastPosIdx) { bp = Math.floor((ns * 1e4) / totalSpace); assignedBp += bp; }
+        else { bp = 1e4 - assignedBp; }
         validIdx++;
         return { ...d, ENG_Rate: bp / 100 };
       });
