@@ -66,7 +66,10 @@ export class Tls51140Component extends BasicQueryPageComponent<QueryTLS51140Resp
     this.handleSubmit(frm, () => {
       const request = this.queryForm.getRawValue();
       this.tls51140Service.queryTLS51140(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data;
+        this.data = res.Data.map(item => ({
+          ...item,
+          id: item.TLT_NO + '-' + item.HOS_No,
+        }));
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       });

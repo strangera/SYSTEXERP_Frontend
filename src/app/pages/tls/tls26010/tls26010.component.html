@@ -73,11 +73,17 @@
                               [startControl]="qf().podEdateS"
                               [endControl]="qf().podEdateE"
                               [submitted]="submitted"></app-calendar-range>
+          @if (queryForm.errors) {
+          <div class="col-12 text-red-500 text-center">
+            {{ queryForm.errors | json }}
+          </div>
+          }
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
+                      [disabled]="queryForm.invalid"
                       [loading]="loading"></app-button>
         </div>
       </form>
@@ -90,7 +96,7 @@
     <app-table [showCheckBox]="true"
                [data]="service.TLS26010Data()"
                [tableKey]="'TLS26010'"
-               [dataKey]="'pod_no'"
+               [dataKey]="'id'"
                [columns]="columns"
                [addButton]="addButton"
                [editDisabled]="editDisabled"
@@ -99,6 +105,7 @@
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
                [columns]="columns"
+               [multiSortMeta]="[{ field: 'id', order: 1 }]"
                [totalRecords]="service.totalRecords()"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"

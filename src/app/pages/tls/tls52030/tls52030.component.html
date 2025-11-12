@@ -27,24 +27,24 @@
               [control]="opForm.controls.PLU_Name" />
           </app-dropdown-table>
           <!-- 廠商編號 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions"
-            optionLabel="label" optionValue="No" [control]="queryForm.controls.VEN_No"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No"
+            [options]="vendorOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
           <!-- 品牌代碼 (對應 LOGO_No) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
-            [options]="brandOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.LOGO_NoList"
-            [submitted]="submitted"></app-multi-select>
+            [options]="brandOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.LOGO_NoList" [submitted]="submitted"></app-multi-select>
           <!-- 倉別 (對應 HOS_No) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No"
-            [options]="warehouseOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.HOS_NoList"
-            [submitted]="submitted"></app-multi-select>
+            [options]="warehouseOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
         </div>
         <hr />
         <div class="grid p-fluid">
           <!-- 申請人員 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="ODM_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.ODM_USR"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="ODM_USR"
+            [options]="userOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ODM_USR" [submitted]="submitted"></app-dropdown>
           <!-- 申請日期 -->
           <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
@@ -55,9 +55,9 @@
         </div>
         <div class="grid p-fluid">
           <!-- 審核人員 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核人" controlName="APRV_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核人" controlName="APRV_USR"
+            [options]="userOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.APRV_USR" [submitted]="submitted"></app-dropdown>
           <!-- 審核日期 -->
           <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"

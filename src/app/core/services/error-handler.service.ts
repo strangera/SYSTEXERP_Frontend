@@ -76,7 +76,7 @@ export class ErrorHandlerService {
         // 處理其他所有錯誤
         userFriendlyMessage = backendMessage || `發生未知錯誤 (狀態碼: ${error.status})。`;
         notificationDetails = userFriendlyMessage;
-        notificationHeader = `未知錯誤 (${error.status})`;
+        notificationHeader = `失敗`;
         break;
     }
 

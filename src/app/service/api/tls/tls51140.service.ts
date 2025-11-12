@@ -17,10 +17,20 @@ export interface QueryTLS51140Request {
   ECR_No?: string | null;
 }
 
+export interface QueryTLS51140ResponseData {
+  id: string;
+  TLT_NO: string;
+  TLT_Name: string;
+  ECR_No: string;
+  ECR_Name: string;
+  HOS_No: string;
+  HOS_Name: string;
+  Remark: string;
+}
 /**
  * 查詢 POS2034_ECR 資料的 Response 資料格式
  */
-export interface QueryTLS51140ResponseData {
+export interface QueryTLS51140ByTltNoResponseData {
   id: number;
   TLT_NO: string;
   TLT_Name: string;
@@ -92,9 +102,9 @@ export class Tls51140Service {
     return this.http.post<ApiResponse<number>>(url, data);
   }
 
-  queryTLS51140ByTltNo(TltNo: string, HOS_No: string): Observable<ApiResponse<QueryTLS51140ResponseData[]>> {
+  queryTLS51140ByTltNo(TltNo: string, HOS_No: string): Observable<ApiResponse<QueryTLS51140ByTltNoResponseData[]>> {
     const url = `${this.apiUrl}/queryTLS51140ByTltNo`;
-    return this.http.post<ApiResponse<QueryTLS51140ResponseData[]>>(url, { TLT_NO: TltNo, HOS_No: HOS_No });
+    return this.http.post<ApiResponse<QueryTLS51140ByTltNoResponseData[]>>(url, { TLT_NO: TltNo, HOS_No: HOS_No });
   }
 
   /**

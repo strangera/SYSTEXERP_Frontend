@@ -12,7 +12,7 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { CRUDStatus, ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
@@ -350,6 +350,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
         ecr_list: this.ecrTableFiltered(),
         talent_list: this.tltTableFiltered(),
         pod_info: {
+          ...createPaginationConfig(),
           ...(this.isFormCreateable ? {} : { pod_no: this.rowdata?.pod_no }),
           ...(this.isFormCreateable ? {} : { id: this.rowdata?.id }),
           pod_desc: d.pod_desc || '',

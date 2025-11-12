@@ -14,5 +14,10 @@ export class TLS2J020Service {
   queryTLS2J020(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2J020`, body);
   }
-
+  insertTLS2J020(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS2J020`, body);
+  }
+  updateTLS2J020(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS2J020`, body);
+  }
 }

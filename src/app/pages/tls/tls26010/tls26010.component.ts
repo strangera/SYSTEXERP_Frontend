@@ -1,8 +1,8 @@
 
-import { DatePipe } from '@angular/common';
+import { DatePipe, JsonPipe } from '@angular/common';
 import { Component, OnInit, computed, effect, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -11,11 +11,10 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
 import { TLS26010Data, TLS26010Query } from './tls26010.model';
 
 @Component({
@@ -24,6 +23,7 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
   styleUrls: ['./tls26010.component.scss'],
   standalone: !0,
   imports: [
+    JsonPipe,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
@@ -47,6 +47,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     podSdateE: new FormControl<Date | void>(void 0), // 起始日期(迄)
     podEdateS: new FormControl<Date | void>(void 0), // 截止日期(起)
     podEdateE: new FormControl<Date | void>(void 0), // 截止日期(迄)
+    ...createPaginationConfig([{ field: 'id', order: 1 }]),
   }, {
     validators: [
       (group) => {
@@ -54,10 +55,38 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
         const podSdateE = group.get('podSdateE')?.value;
         const podEdateS = group.get('podEdateS')?.value;
         const podEdateE = group.get('podEdateE')?.value;
+        let isValid = !0;
 
-        if (!podSdateS && !podSdateE && !podEdateS && !podEdateE) {
-          return { dateRequired: !0 };
+        // 檢查起始日期範圍
+        if (podSdateS && podSdateE) {
+          const start = new Date(podSdateS);
+          const end = new Date(podSdateE);
+          if (start > end) isValid = !1;
         }
+
+        // 檢查截止日期範圍
+        if (podEdateS && podEdateE) {
+          const start = new Date(podEdateS);
+          const end = new Date(podEdateE);
+          if (start > end) isValid = !1;
+        }
+
+        // 檢查起始日期與截止日期的關係
+        if (podSdateS && podEdateS) {
+          const start = new Date(podSdateS);
+          const end = new Date(podEdateS);
+          if (start > end) isValid = !1;
+        }
+
+        // 檢查起始日期與截止日期的關係
+        if (podSdateE && podEdateE) {
+          const start = new Date(podSdateE);
+          const end = new Date(podEdateE);
+          if (start > end) isValid = !1;
+        }
+
+        if (!podSdateS && !podSdateE && !podEdateS && !podEdateE) return { dateRequired: !0 };
+        if (!isValid) return { dateRangeInvalid: !0 };
 
         return null;
       }
@@ -69,12 +98,12 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   private readonly sys3800Signal = toSignal(this.qf().sys3800.valueChanges);
   private readonly sys3900Signal = toSignal(this.qf().sys3900.valueChanges);
   private readonly sys3A00Signal = toSignal(this.qf().sys3A00.valueChanges);
-  private readonly ecrNosSignal = toSignal(this.qf().ecrNos.valueChanges);
-  private readonly tltNosSignal = toSignal(this.qf().tltNos.valueChanges);
-  private readonly podSdateSSignal = toSignal(this.qf().podSdateS.valueChanges);
-  private readonly podSdateESignal = toSignal(this.qf().podSdateE.valueChanges);
-  private readonly podEdateSSignal = toSignal(this.qf().podEdateS.valueChanges);
-  private readonly podEdateESignal = toSignal(this.qf().podEdateE.valueChanges);
+  private readonly ecrsignal = toSignal(this.qf().ecrNos.valueChanges);
+  private readonly tltsignal = toSignal(this.qf().tltNos.valueChanges);
+  private readonly sdateSSignal = toSignal(this.qf().podSdateS.valueChanges, { initialValue: this.service.dateS });
+  private readonly sdateESignal = toSignal(this.qf().podSdateE.valueChanges);
+  private readonly edateSSignal = toSignal(this.qf().podEdateS.valueChanges);
+  private readonly edateESignal = toSignal(this.qf().podEdateE.valueChanges);
 
   // Table 相關
   public readonly editDisabled = (rowData: TLS26010Data) =>
@@ -110,51 +139,25 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     });
   }, { allowSignalWrites: !0 });
 
-  private readonly queryTLS26010 = computed<TLS26010Query & { isValid: boolean; }>(() => {
-    const pod_sdate_S = this.podSdateSSignal() || this.service.dateS;
-    const pod_sdate_E = this.podSdateESignal() || void 0;
-    const pod_edate_S = this.podEdateSSignal() || void 0;
-    const pod_edate_E = this.podEdateESignal() || void 0;
-
-    let isValid = !0;
-
-    // 檢查起始日期範圍
-    if (pod_sdate_S && pod_sdate_E) {
-      const start = new Date(pod_sdate_S);
-      const end = new Date(pod_sdate_E);
-      if (start > end) isValid = !1;
-    }
-
-    // 檢查截止日期範圍
-    if (pod_edate_S && pod_edate_E) {
-      const start = new Date(pod_edate_S);
-      const end = new Date(pod_edate_E);
-      if (start > end) isValid = !1;
-    }
-
-    // 檢查起始日期與截止日期的關係
-    if (pod_sdate_S && pod_edate_S) {
-      const start = new Date(pod_sdate_S);
-      const end = new Date(pod_edate_S);
-      if (start > end) isValid = !1;
-    }
-
-    // 檢查起始日期與截止日期的關係
-    if (pod_sdate_E && pod_edate_E) {
-      const start = new Date(pod_sdate_E);
-      const end = new Date(pod_edate_E);
-      if (start > end) isValid = !1;
-    }
-
-    return <TLS26010Query & { isValid: boolean; }>{
-      ecr_nos: Array.isArray(this.ecrNosSignal()) ? Array.from(this.ecrNosSignal()!) : [],
-      tlt_nos: Array.isArray(this.tltNosSignal()) ? Array.from(this.tltNosSignal()!) : [],
-      pod_sdate_S,
-      pod_sdate_E,
-      pod_edate_S,
-      pod_edate_E,
-      isValid,
+  private readonly queryTLS26010 = computed<TLS26010Query>(() => {
+    const { pageIndex, pageSize, SortBy, ...rest } = this.queryForm.getRawValue();
+    const raw = <TLS26010Query>{
+      ECR_No: this.ecrsignal(),
+      tlt_nos: this.tltsignal(),
+      tlt_no: '',
+      pod_sdate_S: this.sdateSSignal()?.toISOString(),
+      pod_sdate_E: this.sdateESignal()?.toISOString(),
+      pod_edate_S: this.edateSSignal()?.toISOString(),
+      pod_edate_E: this.edateESignal()?.toISOString(),
+      pageIndex, pageSize, SortBy,
     };
+
+    const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+      v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+    )) as TLS26010Query;
+
+    this.logger.debug(`queryTLS26010:`, [rest, raw, payload]);
+    return payload;
   });
 
   public readonly loadingEffect = effect(() => {
@@ -192,6 +195,8 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     this.service.loadSYS3800();
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
+
+    this.service.loadPreorderECRList({ ecr_type: '2' });
   };
 
   public onSubmit(): void {

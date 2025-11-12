@@ -1,11 +1,9 @@
 import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { IODDetail, ITLS52030Data, ITLS52030Request, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize } from 'rxjs';
-import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
+import { debounceTime, finalize, withLatestFrom } from 'rxjs';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { POStatus } from '../tls52030/tls52030.component';
 import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
@@ -18,12 +16,13 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { getSYS1000 } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
   selector: 'app-tls52030-cru',
@@ -44,7 +43,8 @@ import { getSYS1000 } from '@service/system/sys1000.service';
     NgIf,
     DialogComponent,
     TranslateModule,
-    TableEditComponent
+    TableEditComponent,
+    AsyncPipe
   ],
 })
 export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> implements OnInit {
@@ -57,15 +57,16 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     ODM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
     ODM_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
     ODM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
-    ODM_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
+    ODM_USR_No: [{ value: this.user?.user_No, disabled: true }], // 申請人
+    ODM_USR_Name: [{ value: this.user?.user_Name, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     ODM_Date: [{ value: new Date(), disabled: true }], // 申請日期
     ODM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
-  vendorOptions: IDropdownItem[] = []; // 廠商下拉選單選項
-  brandOptions: IDropdownItem[] = []; // 品牌下拉選單選項
-  warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
-  userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
+  brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
+  warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
+  originalData: IODDetail[] = [];
   data: IODDetail[] = [];
   selectedItems: IODDetail[] = [];
   editColumns: EditColumn[] = [
@@ -114,8 +115,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   ]
   constructor(
     private tls52030Service: Tls52030Service,
-    private dropDownListService: DropDownListService,
-    private sys0110Service: Sys0110Service
+    private readonly dropdown: DropdownApiService
   ) { super(); }
 
   ngOnInit(): void {
@@ -125,46 +125,42 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
       this.dataForm.controls.LOGO_No.disable();
     }
     this.loadDropdownOptions();
-    if (this.isFormCreateable) {
-      this.dataForm.controls.ODM_Date.setValue(new Date());
-      this.userOptions = [{ user_No: this.user?.user_No || '', user_Name: this.user?.user_Name || '' }];
-      this.dataForm.controls.ODM_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
-    } else {
+    if (!this.isFormCreateable) {
       this.tls52030Service.GetPOS2019({ ODM_No: this.rowdata?.ODM_No }).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data.Data;
+        this.originalData = JSON.parse(JSON.stringify(response.Data.Data));
       });
-      this.sys0110Service.queryUser({ user_No: this.rowdata?.ODM_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
-        this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
-      })
     }
   }
   loadDropdownOptions() {
     // 專門清空資料的共用方法
-    const resetFormData = () => { this.data = []; this.selectedItems = []; this.dialogData = []; this.calculateTotals(); };
-    // 1. 供應商下拉選單
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(vendor => ({ ...vendor, label: `${vendor.VEN_No} - ${vendor.Name}` }));
+    if (this.isFormCreateable) {
+      const resetFormData = () => { this.data = []; this.selectedItems = []; this.dialogData = []; this.calculateTotals(); };
       this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
-    });
-    // 2. 品牌下拉選單
-    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-      this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
-        const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
-        this.dataForm.controls.HOS_No.setValue(HOS_No);
-        this.dataForm.controls.HOS_No.enable();
-        resetFormData();
-      });
-    });
-    // 3. 倉別下拉選單
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 倉別
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
-    });
+      // 2. 品牌下拉選單
+      this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
+        this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
+          const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
+          const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
+          let finalHOSNo: string | null = null;
+          if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
+            finalHOSNo = suggestedHOSNo;
+          }
+          this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
+          resetFormData();
+        });
+      });
+    }
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (this.data && this.data.length === 0) {
+        this.messageService.errorBubble('明細至少要有一筆');
+        this.loading = false
+        return;
+      }
       const valid = this.tableEditComponent.validateAndShowErrors()
       if (!valid) {
         this.loading = false
@@ -309,6 +305,9 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
       ODM_TotalBuyAmt: Math.round(totalBuyAmt),
       ODM_TotalSaleAmt: Math.round(totalSaleAmt),
     });
+  }
+  onReset() {
+    this.data = JSON.parse(JSON.stringify(this.originalData));
   }
 }
 // 預設0，(驗收數量+已驗數量)不可大於 應驗數量
