@@ -15,10 +15,10 @@ export interface ExcelColumn {
   providedIn: 'root'
 })
 export class ExcelExportService {
-  // 定義預設的 Excel 格式為 '@' (文字格式)
-  private readonly DEFAULT_EXCEL_FORMAT = '@';
+  // 【修改 1/3】定義預設的 Excel 格式為 null，表示不強制設定格式
+  private readonly DEFAULT_EXCEL_FORMAT: string | null = null;
   // 定義範本中預設要包含的空資料行數
-  private readonly TEMPLATE_EMPTY_ROWS = 10000; // 預設新增 100 行空資料
+  private readonly TEMPLATE_EMPTY_ROWS = 1; // 預設新增 100 行空資料
 
   /**
    * 匯出 Excel 範本
@@ -50,29 +50,29 @@ export class ExcelExportService {
 
         // --- 應用格式到所有預設的空資料單元格 (從 r=1 到 r=100) ---
         visibleColumns.forEach((col, colIndex) => {
+          // 【修改 2/3】如果 excelFormat 未指定，則 format 為 null，不設定 cell.z
           const format = col.excelFormat || this.DEFAULT_EXCEL_FORMAT;
 
-          // 從資料列的第一行 (r=1) 開始到最後一行 (r=TEMPLATE_EMPTY_ROWS)
-          for (let r = 1; r <= this.TEMPLATE_EMPTY_ROWS; r++) {
-            const cellAddress = XLSX.utils.encode_cell({ c: colIndex, r: r });
-            const cell = ws[cellAddress] || {};
+          if (format) { // 僅當 format 存在時才進行格式設定
+            // 從資料列的第一行 (r=1) 開始到最後一行 (r=TEMPLATE_EMPTY_ROWS)
+            for (let r = 1; r <= this.TEMPLATE_EMPTY_ROWS; r++) {
+              const cellAddress = XLSX.utils.encode_cell({ c: colIndex, r: r });
+              const cell = ws[cellAddress] || {};
 
-            // 確保單元格有值 (例如一個空字串) 才能設定格式
-            if (cell.v === undefined) {
-              cell.t = 's'; // 設為字串類型
-              cell.v = '';  // 設為空字串值
-            } else if (format === this.DEFAULT_EXCEL_FORMAT) {
-              // 如果是文字格式，確保類型是字串
-              cell.t = 's';
+              // 確保單元格有值 (例如一個空字串) 才能設定格式
+              if (cell.v === undefined) {
+                cell.t = 's'; // 設為字串類型
+                cell.v = '';  // 設為空字串值
+              }
+
+              // 設定 Excel 數字格式 ('z' 屬性)
+              cell.z = format;
+              ws[cellAddress] = cell;
             }
-
-            // 設定 Excel 數字格式 ('z' 屬性)
-            cell.z = format;
-            ws[cellAddress] = cell;
           }
         });
 
-        // --- 處理欄位寬度 ---
+        // --- 處理欄位寬度 (不變) ---
         const wscols: any[] = [];
         const charWidthMultiplier = 1.5;
 
@@ -117,7 +117,7 @@ export class ExcelExportService {
 
   /**
    * 匯出資料為 Excel 檔案
-   * **新增功能：** 應用 `excelFormat` 或預設文字格式 '@' 到所有資料單元格。
+   * **修改：** 應用 `excelFormat`，如果未指定則不套用格式。
    * @param data 要匯出的 JSON 陣列。
    * @param fileName 匯出檔案的名稱（不含副檔名）。
    * @param columns 可選，用於定義匯出欄位、標頭和格式的陣列。
@@ -160,24 +160,21 @@ export class ExcelExportService {
         const headerRowCount = 1; // 假設第一行是標題
 
         finalColumns.forEach((col, colIndex) => {
+          // 【✅ 修改 3/3-A】如果 excelFormat 未指定，則 format 為 null，不設定 cell.z
           const format = col.excelFormat || this.DEFAULT_EXCEL_FORMAT;
 
-          // 從資料的第二行開始 (r = 1) 遍歷到最後一行
-          for (let r = range.s.r + headerRowCount; r <= range.e.r; r++) {
-            const cellAddress = XLSX.utils.encode_cell({ c: colIndex, r: r });
-            const cell = ws[cellAddress];
+          if (format) { // 僅當 format 存在時才進行格式設定
+            // 從資料的第二行開始 (r = 1) 遍歷到最後一行
+            for (let r = range.s.r + headerRowCount; r <= range.e.r; r++) {
+              const cellAddress = XLSX.utils.encode_cell({ c: colIndex, r: r });
+              const cell = ws[cellAddress];
 
-            if (cell) {
-              // 設定 Excel 數字格式 ('z' 屬性)
-              cell.z = format;
+              if (cell) {
+                // 設定 Excel 數字格式 ('z' 屬性)
+                cell.z = format;
 
-              // 如果格式是 '@' (文字格式)，確保類型是 's' (string)
-              // 否則如果資料是純數字，json_to_sheet 預設會設為 'n' (number)，可能會導致格式不生效
-              if (format === '@' && cell.t !== 's') {
-                cell.t = 's';
-                // 重新寫入單元格值，確保它是字串，但對於已轉換的值這一步可能多餘
-                // 這裡只是確保類型是正確的
-                cell.v = String(cell.v);
+                // 【移除】移除強制改為字串的邏輯，讓 XLSX.utils.json_to_sheet 自動處理類型
+                // if (format === '@' && cell.t !== 's') { ... }
               }
             }
           }
@@ -185,7 +182,7 @@ export class ExcelExportService {
         // --- 應用整欄格式結束 ---
 
 
-        // --- 處理欄位寬度 ---
+        // --- 處理欄位寬度 (不變) ---
         const wscols: any[] = [];
         const charWidthMultiplier = 1.5;
 
