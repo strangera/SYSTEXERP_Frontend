@@ -47,7 +47,9 @@ import {
   BusSClassItem,
   TALPORDERMQuery,
   TLTTALENTQuery,
-  TLTTALENTItem
+  TLTTALENTItem,
+  ENG1001Item,
+  TlttalentTltSpaceItem
 } from './dropdown-api.model';
 import { ApiResponse } from '@service/system/auth.service';
 import { environment } from 'src/environments/environment';
@@ -540,6 +542,23 @@ export class DropdownApiService {
       shareReplay(1) // 避免重複查詢;
     );
   }
+
+  // 能源系列
+
+  // 取得能源錶號
+  queryENG1001_ENG_MeterNo(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<ENG1001Item>('/Share/queryENG1001_ENG_MeterNo_DropDownList', 'ENG_MeterNo', 'Location_No').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  // 能源下拉選單
+  queryTLTTALENT_TLT_SPACE(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<TlttalentTltSpaceItem>('/queryTLTTALENT_TLT_SPACE_DropDownList', 'TltNo', 'TltName').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
 
   // --- 其他 ---
 

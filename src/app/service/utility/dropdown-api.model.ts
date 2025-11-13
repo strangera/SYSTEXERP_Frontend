@@ -401,3 +401,32 @@ export interface TALPORDERMQuery {
   pod_typeList: string[];
   pod_statusList: string[];
 }
+
+
+/**
+ * 查詢 queryENG1001_ENG_MeterNo_DropDownList 回傳的項目型別
+ */
+export interface ENG1001Item {
+  Id: number,
+  ENG_MeterNo: string,
+  Location_No: string,
+  Location_Name: string,
+  building_No: string,
+  building_DESC: string,
+  Floor_No: string,
+  Floor_Desc: string,
+  AREA_NO: string,
+  AREA_DESC: string,
+  Draw_X: string,
+  Draw_Y: string,
+  ENG_Type: string
+}
+// TLTTALENT_TLT_SPACE
+export interface TlttalentTltSpaceItem {
+  TalentId: number,
+  TltNo: string
+  TltName: string
+  ApplyNo: string
+  LocationNo: string
+  TltSpace: number
+}
