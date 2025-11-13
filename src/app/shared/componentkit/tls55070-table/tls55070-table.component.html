@@ -1,0 +1,378 @@
+<p-divider align="left" type="solid" *ngIf="title" styleClass="pb-2">
+  <span class="text-center text-xl font-bold text-primary">{{ title }}</span>
+</p-divider>
+
+<p-blockUI [target]="dt" [blocked]="disabled"></p-blockUI>
+
+<p-table
+  #dt
+  [value]="data"
+  [columns]="selectedColumns"
+  [dataKey]="dataKey"
+  [rowTrackBy]="trackByRow"
+  [resizableColumns]="true"
+  [reorderableColumns]="true"
+  [scrollable]="true"
+  scrollHeight="500px"            
+  [virtualScroll]="true"
+  [virtualScrollItemSize]="46"
+  [virtualScrollDelay]="0"
+  [virtualScrollOptions]="{
+    inline: true,                   
+    autoSize: false,                
+    trackBy: trackByRow,
+    onScroll: onScroll              
+  }"
+  [lazy]="false"
+  [loading]="loading && data.length === 0"
+  [selectionMode]="showCheckBox ? selectionMode : null"
+  [(selection)]="selectedItems"
+  (selectionChange)="onSelectionChangeInternal($event)"
+  [rowSelectable]="rowSelectableWrapper"
+  (onRowSelect)="select.emit($event)"
+  (onRowUnselect)="unSelect.emit($event)"
+  tableStyleClass="h-full"
+  [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines table-font-md'">
+
+  <!-- ===== Caption / 工具列 ===== -->
+  <ng-template pTemplate="caption">
+    <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption">
+      <!-- 左邊：欄位過濾 + 內建報表匯出 -->
+      <div class="caption-left button-group flex gap-2 py-2">
+        <!-- 欄位過濾 -->
+        <p-multiSelect
+          *ngIf="showFilter"
+          [options]="columns"
+          [(ngModel)]="selectedColumns"
+          optionLabel="header"
+          dropdownIcon="pi pi-cog"
+          pTooltip="過濾欄位"
+          tooltipPosition="top"
+          (onChange)="onHeaderFilterChange($event)">
+        </p-multiSelect>
+
+
+      </div>
+
+      <!-- 右邊：Excel 範本 / 匯入 + 外層主匯出按鈕 -->
+      <div class="flex gap-2 py-2 align-items-center justify-content-end w-full">
+        <!-- 範本匯出 / 匯入 -->
+        <div *ngIf="showExcel" class="flex gap-2 align-items-center">
+          <button
+            *ngIf="showExcelExport"
+            pButton
+            type="button"
+            label="匯出excel範本"
+            severity="success"
+            [icon]="exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'"
+            (click)="onExportExcel()">
+          </button>
+
+          <p-fileUpload
+            *ngIf="showExcelImport"
+            #fileUpload
+            styleClass="p-button-info"
+            mode="basic"
+            chooseIcon="pi pi-file-import"
+            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            severity="info"
+            (onSelect)="onImportExcel($event)"
+            [auto]="true"
+            chooseLabel="Excel匯入">
+          </p-fileUpload>
+
+          <button
+            *ngIf="showCustomExcelImport"
+            pButton
+            type="button"
+            severity="info"
+            label="Excel匯入"
+            icon="pi pi-file-import"
+            (click)="onImportExcel()">
+          </button>
+        </div>
+
+        <!-- 🔹 主頁用：匯出銷售明細 Excel / PDF -->
+        <div *ngIf="showMainExportButtons" class="flex gap-2 align-items-center">
+          <button
+            pButton
+            type="button"
+            styleClass="p-2"
+            label="匯出銷售明細.xlsx"
+            icon="pi pi-file-excel"
+            [loading]="mainExcelLoading"
+            [disabled]="data.length === 0"
+            (click)="mainExcelExport.emit()">
+          </button>
+
+          <button
+            pButton
+            type="button"
+            styleClass="p-2"
+            label="匯出銷售明細.pdf"
+            icon="pi pi-file-pdf"
+            [loading]="mainPdfLoading"
+            [disabled]="data.length === 0"
+            (click)="mainPdfExport.emit()">
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- ===== 單列表頭 ===== -->
+  <ng-template pTemplate="header">
+    <tr>
+      <!-- 序號：以「群組」為單位 -->
+      <th class="w-1rem text-center">
+        序號
+      </th>
+
+      <!-- 勾選欄 -->
+      <th
+        class="w-1rem text-center"
+        *ngIf="showCheckBox">
+        <p-tableHeaderCheckbox [disabled]="disabled"></p-tableHeaderCheckbox>
+      </th>
+
+      <!-- Left 固定欄 -->
+      <th
+        *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol"
+        class="text-center wrap-header"
+        pReorderableColumn
+        pResizableColumn
+        [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
+        [pSortableColumnDisabled]="!showSort || col.showSort === false"
+        [style.minWidth]="getColMinWidth(col)">
+        {{ col.header }}
+        <span *ngIf="col.required" class="text-red-500">*</span>
+        <p-sortIcon
+          *ngIf="showSort && col.showSort !== false && data.length"
+          [field]="col.sortField ?? col.field">
+        </p-sortIcon>
+      </th>
+
+      <!-- 其他欄位 -->
+      <th
+        *ngFor="let col of headerRow1Columns; trackBy: trackByCol"
+        class="text-center wrap-header"
+        pReorderableColumn
+        pResizableColumn
+        [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
+        [pSortableColumnDisabled]="!showSort || col.showSort === false"
+        [style.minWidth]="getColMinWidth(col)">
+        {{ col.header }}
+        <span *ngIf="col.required" class="text-red-500">*</span>
+        <p-sortIcon
+          *ngIf="showSort && col.showSort !== false && data.length"
+          [field]="col.sortField ?? col.field">
+        </p-sortIcon>
+      </th>
+
+      <!-- 管理欄 -->
+      <th
+        *ngIf="showManage"
+        class="w-1rem text-center">
+        管理
+      </th>
+    </tr>
+  </ng-template>
+
+  <!-- ===== BODY ===== -->
+<!-- ===== BODY ===== -->
+<ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+
+  <!-- 一般資料列（非小計） -->
+  <ng-container *ngIf="!rowData?.__isSubRow; else subRowTemplate">
+    <tr
+      [attr.data-key]="rowData[dataKey]"
+      [pSelectableRow]="rowData"
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
+      (click)="itemClick.emit(rowData)">
+
+      <!-- 群組序號：只畫在群組第一列，rowspan = 群組筆數 -->
+      <td
+        *ngIf="isFirstInGroup(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+        [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+        class="text-center">
+        {{ getGroupDisplayIndex(rowIndex, rowData) }}
+      </td>
+
+      <!-- 小計列不會用到這格，但為了對齊保留 template 區塊 -->
+      <ng-container *ngIf="!isFirstInGroup(rowIndex, getGroupKeyValue(rowData, rowIndex))">
+        <!-- rowspan 已經吃掉，不再輸出 td -->
+      </ng-container>
+
+      <!-- 勾選欄 -->
+      <td *ngIf="showCheckBox">
+        <p-tableCheckbox
+          class="flex justify-content-center pointer-events-none"
+          [pSelectableRow]="rowData"
+          [value]="rowData"
+          [disabled]="!isRowSelectable(rowData) || disabled">
+        </p-tableCheckbox>
+      </td>
+
+      <!-- Left 固定欄 -->
+      <td
+        *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol"
+        class="text-center"
+        [ngClass]="col.style"
+        [style.minWidth]="getColMinWidth(col)">
+        <span *ngIf="!col.type">
+          {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+        </span>
+      </td>
+
+      <!-- 其他欄位（包含直向合併） -->
+      <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
+
+        <!-- 非合併欄位 -->
+        <td
+          *ngIf="!mergedColumns.includes(col.field)"
+          class="text-center"
+          [ngClass]="col.style"
+          [style.minWidth]="getColMinWidth(col)"
+          (dblclick)="detailRow(rowData)">
+          <span *ngIf="!col.type">
+            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+          </span>
+        </td>
+
+        <!-- 合併欄位：只在群組首列輸出，rowspan = 該群組筆數 -->
+        <ng-container *ngIf="mergedColumns.includes(col.field)">
+          <td
+            *ngIf="isFirstInGroup(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+            [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+            class="text-center"
+            [ngClass]="col.style"
+            [style.minWidth]="getColMinWidth(col)"
+            (dblclick)="detailRow(rowData)">
+            <span *ngIf="!col.type">
+              {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+            </span>
+          </td>
+        </ng-container>
+
+      </ng-container>
+
+      <!-- 管理欄 -->
+      <td
+        *ngIf="showManage"
+        [ngClass]="{'flex justify-content-center gap-2': showManage}"
+        class="no-wrap icon-button"
+        [style.text-align]="'center'">
+        <button
+          *ngIf="showDetail"
+          pButton
+          icon="pi pi-search"
+          class="p-button-text p-button-sm"
+          pTooltip="檢視"
+          tooltipPosition="top"
+          (click)="detailRow(rowData)">
+        </button>
+        <button
+          *ngIf="showEdit"
+          pButton
+          icon="pi pi-pencil"
+          class="p-button-text p-button-sm"
+          severity="warning"
+          pTooltip="編輯"
+          tooltipPosition="top"
+          [disabled]="editDisabled(rowData)"
+          (click)="editRow(rowData)">
+        </button>
+      </td>
+    </tr>
+  </ng-container>
+
+  <!-- ✅ 小計列（__isSubRow === true） -->
+  <ng-template #subRowTemplate>
+    <tr class="subtotal-row surface-100 font-semibold">
+      <!-- 序號空欄 -->
+      <td class="w-1rem"></td>
+
+      <!-- 勾選欄位佔位 -->
+      <td *ngIf="showCheckBox" class="w-1rem"></td>
+
+      <!-- Left 固定欄佔位 -->
+      <td
+        *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol"
+        [style.minWidth]="getColMinWidth(col)">
+      </td>
+
+      <!-- 其他欄位 -->
+      <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
+        <td class="text-center" [ngClass]="col.style" [style.minWidth]="getColMinWidth(col)">
+          <ng-container *ngIf="col.field === 'TXN_SaleAmt'; else blankSubtotalCell">
+            銷售金額：
+            {{ getSubtotalValue(rowData) | number : '1.0-0' }}
+          </ng-container>
+          <ng-template #blankSubtotalCell></ng-template>
+        </td>
+      </ng-container>
+
+      <!-- 管理欄位佔位 -->
+      <td *ngIf="showManage"></td>
+    </tr>
+  </ng-template>
+
+</ng-template>
+
+
+
+  <!-- ===== 載入中骨架 ===== -->
+  <ng-template pTemplate="loadingbody">
+    <tr style="height: 35px">
+      <td *ngFor="let _ of [].constructor((selectedColumns.length || 0) + 2)">
+        <p-skeleton></p-skeleton>
+      </td>
+    </tr>
+  </ng-template>
+
+  <!-- ===== Footer：總計列（可選） ===== -->
+  <ng-template pTemplate="footer" *ngIf="showTotal">
+    <tr class="font-bold surface-100">
+      <!-- 左側序號 -->
+      <td class="text-center">總計</td>
+
+      <!-- 勾選欄位佔位 -->
+      <td *ngIf="showCheckBox"></td>
+
+      <!-- Left 固定欄：通常直接留空 -->
+      <td *ngFor="let col of leftFixedHeaderColumns"></td>
+
+      <!-- 資料欄位：只有 isTotal 的欄位會顯示總計 -->
+      <td *ngFor="let col of headerRow1Columns" class="text-center pr-2" [ngClass]="col.style">
+        <ng-container *ngIf="col.isTotal">
+          {{ col.format ? col.format(getFooterTotal(col.field)) : getFooterTotal(col.field) }}
+        </ng-container>
+      </td>
+
+      <td *ngIf="showManage"></td>
+    </tr>
+  </ng-template>
+
+  <!-- ===== 空資料 ===== -->
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="(selectedColumns.length || 0) + (showCheckBox ? 2 : 1) + (showManage ? 1 : 0)">
+        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+          {{ emptyMessage }}
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+</p-table>
+
+<!-- 匯出對話框：沿用你的 TLS55070TableExportComponent 寫法 -->
+<app-TLS55070Table-export
+  [visible]="exportDialog"
+  header="列印選項"
+  (visibleChange)="exportDialog = $event"
+  (save)="exportStatus === 'PDF'
+            ? exportPDFDownload($event, selectedColumns, apiUrl)
+            : exportExcelDownload($event, selectedColumns, apiUrl)"
+  [exportStatus]="exportStatus">
+</app-TLS55070Table-export>
