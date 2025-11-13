@@ -31,6 +31,7 @@ import { CounterNameService } from '@service/basic/counter-name.service';
 import { CashierService } from '@service/basic/cashier.service';
 import { tls2b010tableComponent } from '@shared/componentkit/tls2-b010-table/tls2b010table.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { TLS55070TableComponent } from '@shared/componentkit/tls55070-table/tls55070-table.component';
 
 const TOTAL_FIELD_MAP = { TXN_SaleAmt: 'Total_TXN_SaleAmt' } as const;
 type TotalFieldMap = typeof TOTAL_FIELD_MAP;
@@ -56,7 +57,7 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     CheckboxModule,
     ButtonModule,
     InputTextRangeComponent,
-    tls2b010tableComponent,
+    TLS55070TableComponent,
   ],
 })
 export class TLS55070Component extends BasicQueryPageComponent<any> implements AfterViewInit {
@@ -483,21 +484,24 @@ onSubmit(form: FormGroup): void {
   }
 
   private unpackResponse(wrappers: any[]) {
+      
     const rows: any[] = [];
     const allSubtotals: Record<string, Record<string, number>> = {};
     let totalRecords = 0;
 
     for (const w of wrappers || []) {
       const list = Array.isArray(w?._DetailList) ? w._DetailList : [];
+    
+
 
       // 以銷售單號做群組鍵
       const saleNo = String(w?.TXN_SaleNoteNo ?? '').trim();
       const grpKey = saleNo || `${w?.TXN_Date ?? ''}|${w?.ECR_No ?? ''}|${rows.length}`;
 
       // 收集小計
-      allSubtotals[grpKey] = {
-        [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(w?.SumTXN_SaleAmt ?? 0),
-      };
+allSubtotals[grpKey] = {
+  [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(w?.SumTXN_SaleAmt ?? 0),
+};
 
       // 明細列
       list.forEach((d: any, i: number) => {
@@ -516,10 +520,13 @@ onSubmit(form: FormGroup): void {
 
       // 小計列（放在每組最後一筆，PLU_Name 顯示「銷售金額」）
       // ✅ 小計列獨立成另一個群組，且不顯示銷售單號
+// 小計列（放在每組最後一筆，PLU_Name 顯示「銷售金額」）
 rows.push({
   _rowKey: `${grpKey}|__SUBTOTAL__`,
-  [this.groupByField]: `${grpKey}__SUB`, // ← 讓小計成為獨立群組，不被合併
-  TXN_SaleNoteNo: '',                    // ← 不顯示銷售單號（也避免置中）
+  [this.groupByField]: `${grpKey}__SUB`, // 小計獨立群組
+  _grpBase: grpKey,                      // 👈 加這個，記住原本的群組鍵
+
+  TXN_SaleNoteNo: '',
   TXN_Date: '',
   ECR_No: '',
   TLT_No: '',
@@ -529,7 +536,8 @@ rows.push({
   GUINO: '',
   PLU_Name: '銷售金額',
   DiscRate: '',
-  TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
+  SumTXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),  // 原始小計（可留著）
+ TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
   __isSubRow: true,
 });
 

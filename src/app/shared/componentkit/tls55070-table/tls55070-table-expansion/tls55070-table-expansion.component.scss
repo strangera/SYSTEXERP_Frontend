@@ -1,0 +1,23 @@
+/* 容器：允許左右捲動 */
+:host ::ng-deep .expansion-container {
+  overflow-x: auto;
+}
+
+/* 子表：不要吃滿，寬度由內容決定 */
+:host ::ng-deep .expansion-datatable {
+  display: inline-block;
+  width: max-content !important; /* 或者 width:auto 也可 */
+}
+
+/* 子表 table 本體：內容決定欄寬 */
+:host ::ng-deep .expansion-datatable .p-datatable-table {
+  table-layout: auto !important;
+}
+
+/* 如果主表有全域 sticky 樣式，這裡移除以免影響展開表 */
+:host ::ng-deep .expansion-datatable .p-datatable-scrollable-header,
+:host ::ng-deep .expansion-datatable thead th {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+}

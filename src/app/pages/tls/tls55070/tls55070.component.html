@@ -141,43 +141,23 @@
 
 <!-- 明細表（群組小計：以銷售單號為一組，使用 SumTXN_SaleAmt） -->
 <div class="card">
-<app-tls2b010table
+<app-tls55070-table
   #saleTable
-  tableKey="TLS55070"
   [data]="data"
   [columns]="columns"
   [dataKey]="'_rowKey'"
-  [loading]="activated && loading"
-  [lazy]="true"
   [totalRecords]="totalRecords"
-  [multiSortMeta]="sortMeta"
-  [showManage]="false"
-  [showDelete]="false"
-
-  [showReportMode]="false"
-  [groupRowsBy]="groupByField"
+  [pageSize]="queryForm.value.pageSize || 20"
+  [loading]="loading"
+  [groupKey]="groupByField"
   [mergedColumns]="['TXN_SaleNoteNo']"
-  (lazyLoadData)="onLazyLoadData($event, queryForm)">    <header>
-      <div class="flex justify-content-end gap-2">
-        <p-button
-          styleClass="p-2"
-          label="匯出銷售明細.xlsx"
-          [loading]="btnLoadingExcel"
-          icon="pi pi-file-excel"
-          (click)="onExportExcel()"
-          [disabled]="data.length === 0">
-        </p-button>
-
-        <p-button
-          styleClass="p-2"
-          label="匯出銷售明細.pdf"
-          [loading]="btnLoadingPDF"
-          icon="pi pi-file-pdf"
-          (click)="onExportPDF()"
-          [disabled]="data.length === 0">
-        </p-button>
-      </div>
-    </header>
-
-  </app-tls2b010table>
+  [showTotal]="true"
+  [totals]="detailTotals"
+  [showMainExportButtons]="true"
+  [mainExcelLoading]="btnLoadingExcel"
+  [mainPdfLoading]="btnLoadingPDF"
+  (mainExcelExport)="onExportExcel()"
+  (mainPdfExport)="onExportPDF()"
+  (lazyLoadData)="onLazyLoadData($event, queryForm)">
+</app-tls55070-table>
 </div>
