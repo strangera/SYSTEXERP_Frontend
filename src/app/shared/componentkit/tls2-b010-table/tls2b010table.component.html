@@ -16,7 +16,7 @@
                 + ' table-font-md'" currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [loading]="effectiveLoading" paginatorDropdownAppendTo="body" editMode="row">
+  [loading]="loading && data.length === 0" paginatorDropdownAppendTo="body" editMode="row">
 
   <!-- ===== Caption / 工具列 ===== -->
   <ng-template pTemplate="caption">
@@ -125,86 +125,73 @@
 
   <!-- ===== 單列 BODY（含真正的 rowspan 合併） ===== -->
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-editing="editing">
-  <!-- 一般資料列 -->
-  <tr *ngIf="!rowData?.__isSubRow"
-      #htmlTableRowElement
-      [attr.data-key]="rowData[dataKey]"
-      [pSelectableRow]="rowData"
-      [pSelectableRowIndex]="rowIndex"
-      [pEditableRow]="rowData"
-      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
-      (click)="itemClick.emit(rowData)">
 
-    <!-- 序號 -->
-    <td *ngIf="isFirstInGroupOnPage(rowIndex, getGroupKeyValue(rowData, rowIndex))"
-        [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))"
-        class="text-center">
-      {{ getGlobalGroupDisplayIndex(rowIndex, rowData) }}
-    </td>
+    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData"
+      [pSelectableRowIndex]="rowIndex" [pEditableRow]="rowData"
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" (click)="itemClick.emit(rowData)">
 
-    <!-- 勾選 -->
-    <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-      <p-tableCheckbox class="flex justify-content-center pointer-events-none"
-        [pSelectableRow]="rowData"
-        [value]="rowData"
-        [disabled]="!isRowSelectable(rowData) || disabled">
-      </p-tableCheckbox>
-    </td>
+      <!-- 序號（跟著群組做 rowspan，只在本頁群組首列顯示） -->
+      <td *ngIf="isFirstInGroupOnPage(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+        [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))" class="text-center">
+        {{ getGlobalGroupDisplayIndex(rowIndex, rowData) }}
+      </td>
 
-    <!-- 左固定欄 -->
-    <td *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol" class="text-center" [ngClass]="col.style"
-      [style.minWidth]="getColMinWidth(col)">
-      {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
-    </td>
 
-    <!-- 主要欄 -->
-    <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
-      <td class="text-center" [ngClass]="col.style"
-          [style.minWidth]="getColMinWidth(col)"
+      <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
+          [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled">
+        </p-tableCheckbox>
+      </td>
+
+      <!-- Left 固定欄（不再凍結） -->
+      <td *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol" class="text-center" [ngClass]="col.style"
+        [style.minWidth]="getColMinWidth(col)">
+        <span *ngIf="!col.type">
+          {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+        </span>
+      </td>
+
+      <!-- 其他欄位（一般 + 真的合併） -->
+      <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
+
+        <!-- 非合併欄位 -->
+        <td *ngIf="!mergedColumns.includes(col.field)" class="text-center" [ngClass]="col.style"
+          [style.minWidth]="getColMinWidth(col)" (click)="editing ? $event.stopPropagation() : null"
           (dblclick)="detailRow(rowData)">
-        {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
-      </td>
-    </ng-container>
+          <span *ngIf="!col.type">
+            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+          </span>
+        </td>
 
-    <!-- 管理欄 -->
-    <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
-        [hidden]="!IsPrint || !showManage"
-        [ngClass]="{'flex justify-content-center gap-2': IsPrint && showManage}">
-      <p-button *ngIf="showDetail" icon="pi pi-search" text pTooltip="檢視" tooltipPosition="top"
-        (click)="detailRow(rowData)"></p-button>
-      <p-button *ngIf="showEdit" icon="pi pi-pencil" text severity="warning" pTooltip="編輯"
-        tooltipPosition="top" [disabled]="editDisabled(rowData)"
-        (click)="editRow(rowData)"></p-button>
-      <ng-container *ngFor="let b of addButton">
-        <p-button [icon]="b.icon" [label]="b.label" [severity]="b.severity"
-          [text]="b.text !== false"
-          (click)="onSelectButton({ rowData, button: b })"></p-button>
+        <!-- 合併欄位：只在“本頁群組首列”輸出，rowspan 用本頁長度 -->
+        <ng-container *ngIf="mergedColumns.includes(col.field)">
+          <td *ngIf="isFirstInGroupOnPage(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+            [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))" class="text-center"
+            [ngClass]="col.style" [style.minWidth]="getColMinWidth(col)"
+            (click)="editing ? $event.stopPropagation() : null" (dblclick)="detailRow(rowData)">
+            <span *ngIf="!col.type">
+              {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+            </span>
+          </td>
+        </ng-container>
+
       </ng-container>
-    </td>
-  </tr>
 
-  <!-- 小計列（獨立一行，不合併銷售單號、不顯示序號） -->
-  <tr *ngIf="rowData?.__isSubRow"
-      class="font-bold text-center text-sm bg-gray-200 text-primary">
-    <!-- 左側固定欄與勾選 -->
-    <td class="text-center"
-        [colSpan]="1 + (IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple' ? 1 : 0)
-                   + leftFixedHeaderColumns.length">
-      <span class="font-bold">小計</span>
-    </td>
-
-    <!-- 小計數值 -->
-    <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
-      <td class="text-center font-bold" [ngClass]="col.style">
-        {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+      <!-- 管理欄 -->
+      <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"
+        [ngClass]="{'flex justify-content-center gap-2': IsPrint && showManage}" class="no-wrap icon-button"
+        [style.text-align]="'center'">
+        <p-button *ngIf="showDetail" icon="pi pi-search" text pTooltip="檢視" tooltipPosition="top"
+          (click)="detailRow(rowData)"></p-button>
+        <p-button *ngIf="showEdit" icon="pi pi-pencil" text severity="warning" pTooltip="編輯" tooltipPosition="top"
+          [disabled]="editDisabled(rowData)" (click)="editRow(rowData)"></p-button>
+        <ng-container *ngFor="let b of addButton">
+          <p-button [icon]="b.icon" [label]="b.label" [severity]="b.severity" [text]="b.text !== false"
+            (click)="onSelectButton({ rowData, button: b })"></p-button>
+        </ng-container>
       </td>
-    </ng-container>
-
-    <!-- 管理欄空白 -->
-    <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
-        [hidden]="!IsPrint || !showManage"></td>
-  </tr>
-</ng-template>
+    </tr>
+  </ng-template>
 
   <!-- ===== 載入中骨架 ===== -->
   <ng-template pTemplate="loadingbody">
