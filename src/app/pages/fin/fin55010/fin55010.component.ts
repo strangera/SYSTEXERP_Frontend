@@ -229,44 +229,12 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
       });
   }
 
-  // TODO: 待實作
-  // onExportXLSX() {
-  //   if ((this.data?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
-  //   const payload = this.buildExportBody();
-  //   if (!payload) return;
+  // TODO: 待實作 參考fin55050
+  onExportXLSX() {
 
-  //   this.btnLoading = true;
-  //   this.fin55010Service.exportFIN55010Excel(payload)
-  //     .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-  //     .subscribe({
-  //       next: (r) => this.handleFileExport(r, '.xlsx', '傳票列印'),
-  //       error: () => this.messageService?.warnBubble?.('匯出 Excel 失敗。'),
-  //     });
-  // }
+  }
 
   // ========= 本地工具 =========
-  private toDateOnly(d: any): string | null {
-    if (!d) return null;
-    const dt = (d instanceof Date) ? d : new Date(d);
-    if (isNaN(dt.getTime())) return null;
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth() + 1).padStart(2, '0');
-    const da = String(dt.getDate()).padStart(2, '0');
-    return `${y}-${m}-${da}`;
-  }
-
-  private sanitizeSortBy(sort: any[]): { field: string; order: number }[] {
-    if (!Array.isArray(sort)) return [];
-    return sort
-      .filter(s => s && s.field)
-      .map(s => ({ field: String(s.field), order: Number(s.order ?? 1) }));
-  }
-
-  private ensureArr<T = string>(val: any): T[] {
-    if (val == null) return [];
-    return Array.isArray(val) ? val : [val];
-  }
-
   private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const fileName = `${baseName}_${new Date().getTime()}${ext}`;
