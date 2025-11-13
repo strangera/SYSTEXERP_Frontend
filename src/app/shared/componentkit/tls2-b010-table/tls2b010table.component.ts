@@ -258,33 +258,64 @@ export class tls2b010tableComponent
     this.calculateTotalPages();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['columns'] && this.columns?.length > 0) {
+ngOnChanges(changes: SimpleChanges): void {
+  // 1) 欄位變更：重建 selectedColumns、還原 rows / sort（若有快取）
+  if (changes['columns']) {
+    const firstChange = changes['columns'].firstChange === true;
+
+    if (Array.isArray(this.columns) && this.columns.length > 0) {
       this.originalColumns = this.columns;
+
+      // 讀取快取的欄位可見性配置
       const saved = this.queryState.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
+
+      // 以 saved 為主，否則用傳入 columns；最後過濾 hidden/visible=false
       this.selectedColumns = (saved?.length ? saved : this.columns)
         .filter(c => c.visible !== false && c.hidden !== true);
 
-      if (changes['columns'].firstChange) {
+      if (firstChange) {
+        // 初次有 columns 時，恢復 rows 與排序（若有快取）
         setTimeout(() => {
-          this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
-          this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
+          // rows
+          const savedRows = this.queryState.getQueryState(this.tableKey + 'rows')?.value;
+          if (Number.isFinite(savedRows)) {
+            this.rows = Number(savedRows);
+          }
+
+          // sort
+          const savedSort = this.queryState.getQueryState(this.tableKey + 'Sort')?.value as SortMeta[] | undefined;
+          if (Array.isArray(savedSort) && savedSort.length) {
+            this.multiSortMeta = savedSort;
+          }
+
+          // 讓群組鍵優先排序
           this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
         }, 0);
       }
     }
-
-    if (changes['data'] || changes['totalRecords']) {
-      this.rebuildPageGroupMeta();
-      this.calculateTotalPages();
-      this.resyncFirstAfterRowsChange();
-      this.cdr.detectChanges?.();
-    }
-
-    if (changes['rows'] && !changes['rows'].firstChange) {
-      this.resyncFirstAfterRowsChange();   // ★ rows 變了也同步
-    }
   }
+
+  // 2) 資料或總筆數變更：重建本頁群組 meta、重新計算總頁數、同步 first
+  if (changes['data'] || changes['totalRecords']) {
+    this.rebuildPageGroupMeta();
+    this.calculateTotalPages();
+    this.resyncFirstAfterRowsChange();   // lazy 模式下，rows/totalRecords 變更時同步 first 以避免多餘觸發
+    this.cdr?.detectChanges?.();
+  }
+
+  // 3) 每頁筆數變更：同步 first 與頁數（避免跨頁錯位）
+  if (changes['rows'] && !changes['rows'].firstChange) {
+    this.resyncFirstAfterRowsChange();   // ★ rows 改變要同步 first
+    this.calculateTotalPages();
+    this.cdr?.detectChanges?.();
+  }
+
+  // 4) 允許外部直接改排序（multiSortMeta）時，更新排序簽章
+  if (changes['multiSortMeta']) {
+    this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
+  }
+}
+
 
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
@@ -353,22 +384,28 @@ export class tls2b010tableComponent
     if (!this.lazy) this.rebuildPageGroupMeta();
   }
 
- onPageChange(event: TablePageEvent) {
+onPageChange(event: TablePageEvent) {
   this.first = event.first;
   this.rows = event.rows;
   this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
-  this.selectedPage = Math.ceil(event.first / event.rows + 1);
+  this.selectedPage = Math.floor((event.first ?? 0) / (event.rows || 1)) + 1;
 
   if (!this.lazy) {
     this.rebuildPageGroupMeta();
     this.calculateTotalPages();
   }
 
-  // ★ 關鍵：禁止自動載入時，不要往外丟 lazy
-  if (!this.autoLoad) return;
-
-  this.emitFromPaginator(event);
+  // ✅ Lazy 模式：主動對外送出一次 lazy 取數（force=true 以略過 _skipFirstLazy）
+  if (this.lazy) {
+    const ev = {
+      first: this.first,
+      rows: this.rows,
+      multiSortMeta: this.multiSortMeta
+    } as any; // TableLazyLoadEvent 的必要欄位
+    this.loadDataLazy(ev, /* force */ true);
+  }
 }
+
 
 
 loadDataLazy(event: TableLazyLoadEvent, force = false) {
