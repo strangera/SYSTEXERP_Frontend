@@ -8,9 +8,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 日期(起訖) -->
+          <!-- 傳票日期(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="日期" [startControl]="queryForm.controls.DateFrom"
+            <app-calendar-range calendarType="dateRange" label="傳票日期" [startControl]="queryForm.controls.DateFrom"
               [endControl]="queryForm.controls.DateTo" [submitted]="submitted">
             </app-calendar-range>
           </div>
