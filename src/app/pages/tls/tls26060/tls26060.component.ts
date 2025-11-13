@@ -252,6 +252,22 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+
+    // 獲取活動ID選項
+    this.dropDownListService.getActivityOptions({
+      mid: 0,
+      str_no: '10',
+      pod_type: ['1', '2', '8'],
+      pod_status: '1',
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.EventIDOptions = response?.Data?.map((item: any) => ({
+          ...item,
+          label: `${item.pod_no} - ${item.pod_desc}`,
+          value: item.pod_no,
+        })) ?? [];
+      });
   }
 
   // 根據銷售金額是否含稅設定顯示Header
