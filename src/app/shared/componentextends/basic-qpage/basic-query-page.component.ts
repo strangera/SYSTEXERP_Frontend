@@ -49,7 +49,6 @@ export abstract class BasicQueryPageComponent<T> {
     // 通用規則：檢查 previousRoute 是否包含 ProgNo（例如 tls13010），涵蓋 CRU 和所有 next 頁面
     const isFromRelatedRoute = previousRoute.includes(this.ProgNo.toLowerCase());
     if (this.canPerformAction('10') && isFromRelatedRoute && queryForm) {
-      console.log('Previous Route:', previousRoute); // 調試輸出
       const query = this.queryStateService.getQueryStateValue(this.ProgNo);
       if (query) {
         queryForm?.patchValue(query);

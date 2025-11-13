@@ -7,6 +7,8 @@ import { STORE_WAY } from '../tls24010-cru.model';
 import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { TLS24010CRUComponent } from '../tls24010-cru.component';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { DatePipe } from '@angular/common';
+import { getSYS1000 } from '@service/system/sys1000.service';
 
 @UntilDestroy()
 @Component({
@@ -39,6 +41,7 @@ export class Tls24010TltnoComponent implements OnChanges {
   POS2004Options: POS2004ForUpdateResponse[] = []; //下拉選單 商品資料
   constructor(
     private readonly tls24010Service: Tls24010Service,
+    private readonly datePipe: DatePipe,
     @Optional() @Host() public tls24010?: TLS24010CRUComponent
   ) { }
   ngOnChanges(changes: SimpleChanges): void {
@@ -52,7 +55,7 @@ export class Tls24010TltnoComponent implements OnChanges {
       this.columns = [
         ...this.columns,
         { field: 'tlt_id_desc', header: '分類抽成類別' },
-        { field: 'PLU_TaxType', header: '稅別', format: (value: string) => value === '0' ? '免稅' : (value === '1' ? '應稅' : value) },
+        { field: 'PLU_TaxType', header: '稅別', format: (v) => getSYS1000('PLU_TaxType', v) },
         { field: 'TXN_DiscName', header: '折扣別', },
       ]
       const updatedColumn = {
@@ -73,58 +76,29 @@ export class Tls24010TltnoComponent implements OnChanges {
   // 過濾PLU_MagNo
   filterPLU_MagNo(event: { rowData: POS5007Data, value: string }): void {
     const query = event.value.toLowerCase();
-
-    if (!query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 6) {
+    const TXN_Date = this.datePipe.transform(this.TXN_Date, 'yyyy-MM-dd');
+    if (!TXN_Date || !query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 5) {
       return;
     }
-    const txnDate = this.TXN_Date as unknown as Date
-    const formatToLocalISO = (date: Date) => {
-      // 檢查 date 是否為有效的 Date 物件
-      if (!date || isNaN(date.getTime())) {
-        return '';
-      }
-
-      // 取得本地時間的年、月、日
-      const year = date.getFullYear();
-      // getMonth() 回傳 0-11，所以要 +1
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-
-      // 格式化為 YYYY-MM-DD (確保月和日有兩位數，不足補零)
-      const formattedMonth = String(month).padStart(2, '0');
-      const formattedDay = String(day).padStart(2, '0');
-
-      return `${year}-${formattedMonth}-${formattedDay}`;
-    };
     const body = {
       Store_way: this.store_way,
-      TXN_Date: txnDate ? formatToLocalISO(txnDate) : '',
+      TXN_Date: TXN_Date,
       Keyword: query
     }
     this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
-      const newPOS2004Options = response.Data.map((item, index) => ({
-        ...item,
-        id: index,
-        label: this.store_way === STORE_WAY.自營 ? `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}` :
+      this.POS2004Options = response.Data.map((item, index) => ({
+        ...item, id: index,
+        label: this.store_way === STORE_WAY.自營 ?
+          `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}` :
           `${item.TLT_No} - ${item.TLT_Name}`
       }));
-      this.POS2004Options = newPOS2004Options;
-      const updatedColumn = {
-        ...this.columns[0], // 複製所有舊屬性
-        options: newPOS2004Options // 替換 options 屬性
-      };
-      // 替換整個 columns 陣列中的第一個元素
-      this.columns = [
-        updatedColumn,
-        ...this.columns.slice(1) // 保持其他欄位不變
-      ];
+      this.POS2004Options = this.POS2004Options.filter(item => !this.tltIdData.find(data => data.tlt_id === item.tlt_id));
+      this.columns = [{ ...this.columns[0], options: this.POS2004Options }, ...this.columns.slice(1)];
     });
   }
   onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {
-    console.log(event.rowData);
     if (this.store_way === STORE_WAY.自營) {
       const selectedItem = this.POS2004Options.find(item => item.PLU_MagNo === event.value?.value.PLU_MagNo);
-      console.log(selectedItem);
       if (!selectedItem) { return; }
       event.rowData.PLU_Name = selectedItem.PLU_Name;
       event.rowData.TLT_No = selectedItem.TLT_No;
@@ -133,7 +107,6 @@ export class Tls24010TltnoComponent implements OnChanges {
       event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
     } else if (this.store_way === STORE_WAY.專櫃) {
       const selectedItem = this.POS2004Options.find(item => item.talent_id === event.value?.value.talent_id);
-      console.log(selectedItem);
       if (!selectedItem) { return; }
       event.rowData.PLU_Name = selectedItem.TLT_Name;
       event.rowData.PLU_No = selectedItem.TLT_No;
