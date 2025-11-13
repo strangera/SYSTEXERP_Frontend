@@ -15,11 +15,8 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { QueryStateService } from '@shared/service/query-state.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { formatDate } from '@angular/common';
-import { TLS31080DetailRequest, TLS31080Item, TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
+import { TLS31080DetailRequest, TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
@@ -69,7 +66,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
   
     });
     totalRecords = 0;
-    data: TLS31080Item[] = [];
+    data: TLS31080Response[] = [];
     footerTotal: TLS31020Total | null = null; // 總計
     footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
     footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比

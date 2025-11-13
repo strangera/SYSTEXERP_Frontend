@@ -21,7 +21,7 @@ import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TLS31080Item, TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
+import { TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
@@ -81,36 +81,42 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       { value: 'A', label: '全時段顯示' },
       { value: 'T', label: '交易時間' }
     ];
+
+    TimeTypeOptions = [
+      { value: 'A', label: '全時段顯示' },
+      { value: 'T', label: '交易時間' }
+    ];
   
     totalRecords = 0;
-    data: TLS31080Item[] = [];
+    data: TLS31080Response[] = [];
     footerTotal: TLS31020Total | null = null; // 總計取得原始資料
     footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
     footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
     historyRequestBody: TLS31080Request | null = null; //歷史查詢條件
   
     columns: Column[] = [
-      { field: 'paper_type', header: '營業形態代號', visible: false },
-      { field: 'paper_type_desc', header: '營業形態', visible: true },
-  
-      { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-      { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-      { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-      { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-      { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-      { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-      { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-      { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-      { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
-      // { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
-  
-      { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' },
-      { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' },
-      { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' },
-  
-      { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-      { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-      { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+      { field: 'floor_desc', header: '樓層名稱', visible: true },
+      { field: 'TimeType', header: '時段類型', visible: true }, // (營業實績 / 交易筆數 / 營業實績佔比)
+
+      { field: 'H08', header: '08時段', visible: true },
+      { field: 'H09', header: '09時段', visible: true },
+      { field: 'H10', header: '10時段', visible: true },
+      { field: 'H11', header: '11時段', visible: true },
+      { field: 'H12', header: '12時段', visible: true },
+      { field: 'H13', header: '13時段', visible: true },
+      { field: 'H14', header: '14時段', visible: true },
+      { field: 'H15', header: '15時段', visible: true },
+      { field: 'H16', header: '16時段', visible: true },
+      { field: 'H17', header: '17時段', visible: true },
+      { field: 'H18', header: '18時段', visible: true },
+      { field: 'H19', header: '19時段', visible: true },
+      { field: 'H20', header: '20時段', visible: true },
+      { field: 'H21', header: '21時段', visible: true },
+      { field: 'H22', header: '22時段', visible: true },
+      { field: 'H23', header: '23時段', visible: true },
+
+      { field: 'Reentry', header: '補登金額或筆數', visible: true },
+      { field: 'Subtotal', header: '小計', visible: true },
     ];
     columnGroup: ColumnGroup[] = [
       { field: 'budgetAmt', header: '營業額' },
@@ -237,7 +243,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   
         console.log('送出request請求', formValue);
         this.tls31080Service.queryTLS31080(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-          // this.data = res.Data ?? [];               // 查詢資料
+          this.data = res.Data ?? [];               // 查詢資料
           console.log('查詢結果', res.Data ?? []);
           // this.footerTotal = res.TotalData ?? null;;    // 總計資料
   
@@ -294,7 +300,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       //       window.open(downloadUrl, '_blank');
       //     }
       // });
-      console.log('等待後端API中......');
+      console.log('目前沒有後端API');
       this.loading = false;
     }
 
