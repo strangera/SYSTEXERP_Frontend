@@ -25,9 +25,9 @@
   <div class="col-12">
     <app-table-report tableKey="TLS2J010" [data]="data" [columns]="columns" [totalRecords]="totalRecords" dataKey="ID"
       [queryFunction]="tls2j010Service.queryTLS2J010.bind(tls2j010Service)" [lastQueryBody]="lastQueryBody"
-      [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"[showDetail]="false"
-       (edit)="onEdit($event)" (delete)="onDelete()" [showCheckBox]="true" [showDelete]="true"
-      [showReportMode]="false" [showExcel]="false" [isRowSelectable]="isRowSelectable">
+      [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+      [showDetail]="false" (edit)="onEdit($event)" (delete)="onDelete()" [showCheckBox]="true" [showDelete]="true"
+      [loading]="loading" [showReportMode]="false" [showExcel]="false" [isRowSelectable]="isRowSelectable">
     </app-table-report>
 
 

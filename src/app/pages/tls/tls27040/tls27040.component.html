@@ -75,8 +75,9 @@
 </div>
 <div class="card">
   <app-table-report tableKey="tls27040" dataKey="dataKey" [data]="data" [columns]="columns" [showCheckBox]="true"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showReportMode]="false"
-    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" (detail)="onDetail($event)" (edit)="onEdit($event)" [editDisabled]="editDisabled"
+    [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)" [showReportMode]="false" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    (detail)="onDetail($event)" (edit)="onEdit($event)" [editDisabled]="editDisabled"
     [queryFunction]="tls27040Service.queryTLS27040.bind(tls27040Service)" [footerData]="footerData">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">

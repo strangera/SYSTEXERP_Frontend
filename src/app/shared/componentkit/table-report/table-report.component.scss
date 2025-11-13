@@ -126,6 +126,10 @@
       padding: 0.2rem 0.2rem;
       background: transparent;
     }
+
+    .p-component-overlay {
+      background-color: rgb(217 217 217 / 40%) !important;
+    }
   }
   .html-cell,
   .html-cell * {

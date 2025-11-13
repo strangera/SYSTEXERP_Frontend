@@ -83,7 +83,7 @@
   <app-table-report tableKey="tls57090" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [loading]="loading"
     [queryFunction]="tls2e080Service.queryTLS2E080.bind(tls2e080Service)" [showCheckBox]="true"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [loading]="loading">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">

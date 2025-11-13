@@ -36,7 +36,7 @@
 <div class="card">
   <app-table-report tableKey="TLS2G040" dataKey="tlt_no" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"
-    [lastQueryBody]="lastQueryForm" [footerData]="footerTotal"
+    [lastQueryBody]="lastQueryForm" [footerData]="footerTotal" [loading]="loading"
     [queryFunction]="tls2g040Service.queryTLS2G040.bind(tls2g040Service)">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">

@@ -1,13 +1,13 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>    
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
 </div>
 <div class="card">
   <app-table-report tableKey="tls31020" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
     [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
-    [queryFunction]="tls31020Service.queryTLS31020Detail.bind(tls31020Service)"
+    [queryFunction]="tls31020Service.queryTLS31020Detail.bind(tls31020Service)" [loading]="loading"
     [footerData]="footershowTotal" [footerPercentData]="footershowPercent">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">

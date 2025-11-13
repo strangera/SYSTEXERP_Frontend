@@ -27,7 +27,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="ECR_TmplNo" [lastQueryBody]="lastQueryFormValue"
+  <app-table-report dataKey="ECR_TmplNo" [lastQueryBody]="lastQueryFormValue" [loading]="loading"
     [queryFunction]="tls46020Service.queryTLS46020.bind(tls46020Service)" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [showCheckBox]="true" (delete)="onDelete($event)" [data]="data" [columns]="columns" [pageSizeSetting]="'A0'"

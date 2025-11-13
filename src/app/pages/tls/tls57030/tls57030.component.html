@@ -36,8 +36,8 @@
               [options]="stockRangeOptions" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="顯示行數" controlName="DisplayRowNumber" [control]="queryForm.controls.DisplayRowNumber"
-              [submitted]="submitted"></app-input-number>
+            <app-input-number label="顯示行數" controlName="DisplayRowNumber"
+              [control]="queryForm.controls.DisplayRowNumber" [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -49,8 +49,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls57030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
-    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="true"
-    [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
+  <app-table-report tableKey="tls57030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+    [columnGroup]="columnGroup" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false"
+    [showReportMode]="true" [loading]="loading" [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
   </app-table-report>
 </div>
