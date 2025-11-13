@@ -54,6 +54,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
+  public readonly ass21020Data = signal<ASS21020Data[]>([]);
   public readonly tableData = signal<ASS21020Detail[]>([]);
 
   /** 根據能源類型篩選的錶號清單 */
@@ -109,7 +110,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   /** 同步後端資料到表格 */
   public readonly tableDataEffect = effect(() => {
-    const data = this.service.ASS21020Data();
+    const data = this.ass21020Data();
     const meterNo = this.df().ENG_MeterNo.value;
     if (!data.length || !meterNo) return;
 
@@ -194,6 +195,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
             ENG_MeterNo: data.ENG_MeterNo
           });
           this.tableData.set(data.Details);
+          this.ass21020Data.set(res.Data);
         }
       })
     ).subscribe();

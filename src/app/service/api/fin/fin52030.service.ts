@@ -13,12 +13,6 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52030Service {
 
-
-  public readonly FIN52030Data = signal<FIN52030Data[]>([]);
-  public readonly FIN52030Detail = signal<FIN52030DetailData>(Object.create(null));
-
-  public readonly totalRecords = signal<number>(0);
-
   public readonly tableLoading = signal(!1);
   public readonly accLoading = signal(!1);
   public readonly venLoading = signal(!1);
@@ -60,27 +54,20 @@ export class FIN52030Service {
   ) { }
 
   public loadFIN52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
-    this.FIN52030Data.set([]);
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, payload).pipe(
       take(1),
-      tap(res => this.totalRecords.set(res.TotalCount || 0)),
-      tap(res => this.FIN52030Data.set(res.Data)),
-      finalize(() => {
-        this.tableLoading.set(!1);
-        this.logger.debug('查詢FIN52030結果:', [this.FIN52030Data()]);
-      })
+      tap(res => this.logger.debug('查詢FIN52030結果:', [res]),
+        finalize(() => this.tableLoading.set(!1))
+      )
     );
   }
 
   public loadFIN52030Detail(id: number): Observable<FIN52030DetailDataResponse> {
     return this.http.post<FIN52030DetailDataResponse>(`${apiUrl}/queryFIN52030Detail`, { id }).pipe(
       take(1),
-      tap(res => this.FIN52030Detail.set(res.Data)),
-      finalize(() => {
-        this.tableLoading.set(!1);
-        this.logger.debug('查詢FIN52030 Detail結果:', [this.FIN52030Detail()]);
-      })
+      tap(res => this.logger.debug('查詢FIN52030 Detail結果:', [res])),
+      finalize(() => this.tableLoading.set(!1)),
     );
   }
 

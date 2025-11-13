@@ -12,7 +12,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -20,8 +20,8 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { combineLatest, finalize, tap } from 'rxjs';
-import { FIN52030Data, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
+import { finalize, switchMap, tap } from 'rxjs';
+import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -62,6 +62,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly fin52030DetailData = signal<FIN52030DetailData>(Object.create(null));
+  public readonly totalRecords = signal<number>(0);
   public readonly tableData = signal<FIN52030DetailTable[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
@@ -117,7 +119,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       this.service.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
-    const data = this.service.FIN52030Detail();
+    const data = this.fin52030DetailData();
     this.logger.debug(`set init table:`, [data]);
     if (!data.Details?.length) return;
 
@@ -354,7 +356,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     if (ids.length === 0) return;
 
     this.service.deleteFIN52030Data(ids).pipe(
-      finalize(() => this.service.loadFIN52030Detail(this.rowdata!.id))
+      switchMap(res => {
+        return this.service.loadFIN52030Detail(this.rowdata!.id);
+      }),
+      tap(res => {
+        this.fin52030DetailData.set(res.Data);
+        this.totalRecords.set(res.TotalCount ?? 0);
+      }),
+      finalize(() => this.logger.debug('onDelete:', [event, ids, this.tableData()])),
     ).subscribe({
       next: () => this.messageService.successBubble('刪除成功'),
       error: () => this.messageService.errorBubble('刪除失敗')

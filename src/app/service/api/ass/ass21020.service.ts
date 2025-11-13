@@ -41,8 +41,6 @@ export interface TLTUnset {
 @Injectable({ providedIn: 'root' })
 export class ASS21020Service {
 
-  public readonly ASS21020Data = signal<ASS21020Data[]>([]);
-
   /** 能源類型下拉選單 */
   public readonly engTypeOptions: Option[] = [
     { value: EngType.水, label: '水錶' },
@@ -89,8 +87,6 @@ export class ASS21020Service {
   public readonly locationLoading = signal<boolean>(!1);
   public readonly tltUnsetLoading = signal<boolean>(!1);
 
-  public readonly totalRecords = signal<number>(0);
-
   constructor(
     private http: HttpClient,
     private logger: NGXLogger,
@@ -100,8 +96,6 @@ export class ASS21020Service {
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/queryASS21020`, query).pipe(
       take(1),
-      tap(({ TotalCount }) => this.totalRecords.set(TotalCount || 0)),
-      tap(({ Data }) => this.ASS21020Data.set(Data.map((item, index) => ({ ...item, Id: index + 1 })))),
       tap(res => this.logger.debug(`查詢ASS21020結果:`, [res])),
       finalize(() => this.tableLoading.set(!1))
     );

@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52030Service } from '@service/api/fin/fin52030.service';
@@ -11,7 +11,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, tap } from 'rxjs';
 import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 
 @Component({
@@ -41,6 +41,9 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
   public readonly qf = computed(() => this.queryForm.controls);
+
+  public readonly tableData = signal<FIN52030Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
@@ -84,6 +87,10 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
       this.logger.debug(`onSubmit:`, [payload]);
 
       this.service.loadFIN52030(payload).pipe(
+        tap(res => {
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        }),
         finalize(() => {
           this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue()]);
         }),

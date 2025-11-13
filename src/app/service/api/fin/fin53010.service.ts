@@ -14,12 +14,6 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN53010Service {
 
-
-  public readonly FIN53010Data = signal<FIN53010Data[]>([]);
-  public readonly FIN53010Detail = signal<QueryFIN53010Detail>(Object.create(null));
-
-  public readonly totalRecords = signal<number>(0);
-
   public readonly tableLoading = signal<boolean>(!1);
   public readonly accLoading = signal<boolean>(!1);
   public readonly venLoading = signal<boolean>(!1);
@@ -109,8 +103,6 @@ export class FIN53010Service {
     this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN53010Data>>(`${apiUrl}/queryFIN53010`, payload).pipe(
       take(1),
-      tap(res => this.totalRecords.set(res.TotalCount || 0)),
-      tap(res => this.FIN53010Data.set(res.Data)),
       tap(res => this.logger.debug('查詢FIN53010結果:', [res])),
       finalize(() => this.tableLoading.set(!1))
     );
@@ -120,8 +112,6 @@ export class FIN53010Service {
     this.tableLoading.set(!0);
     return this.http.post<FIN53010DataDetail>(`${apiUrl}/queryFIN53010Detail`, { id }).pipe(
       take(1),
-      tap(res => this.totalRecords.set(res.TotalCount || 0)),
-      tap(res => this.FIN53010Detail.set(res.Data)),
       tap(res => this.logger.debug('查詢FIN53010 Detail結果:', [res])),
       finalize(() => this.tableLoading.set(!1))
     );
@@ -158,8 +148,10 @@ export class FIN53010Service {
     this.fin52030Loading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, { ...payload, PageSize: 9999, PageIndex: 1 }).pipe(
       take(1),
-      tap(res => this.voucherTemplateList.set(res.Data)),
-      tap(res => this.logger.debug('查詢FIN52030結果:', [res])),
+      tap(res => {
+        this.voucherTemplateList.set(res.Data);
+        this.logger.debug('查詢FIN52030結果:', [res]);
+      }),
       finalize(() => this.fin52030Loading.set(!1)),
     );
   }
@@ -168,8 +160,10 @@ export class FIN53010Service {
     this.vocTempLoading.set(!0);
     return this.http.post<FIN52030DetailDataResponse>(`${apiUrl}/GetFIN52030Detail`, { TempNo, CompNo, Mid }).pipe(
       take(1),
-      tap(res => this.voucherTemplateDetail.set(res.Data)),
-      tap(res => this.logger.debug('查詢VoucherTemplateList結果:', [res])),
+      tap(res => {
+        this.voucherTemplateDetail.set(res.Data);
+        this.logger.debug('查詢VoucherTemplateList結果:', [res]);
+      }),
       finalize(() => this.vocTempLoading.set(!1)),
     );
   }
@@ -179,8 +173,10 @@ export class FIN53010Service {
     this.http.post<BaseQueryResponse<VoucherType>>(`${environment.ApiUrl}/FIN50000/FIN52020/queryFIN52020`, { PageSize: 9999, PageIndex: 1 }).pipe(
       take(1),
       map(res => res.Data?.map(item => ({ value: item.VoucherKind.trim(), label: item.VoucherName } as Option)) ?? []),
-      tap(res => this.voucherTypeList.set(res)),
-      tap(res => this.logger.debug('查詢VoucherTypeList結果:', [res])),
+      tap(res => {
+        this.voucherTypeList.set(res);
+        this.logger.debug('查詢VoucherTypeList結果:', [res]);
+      }),
       finalize(() => this.voucherTypeLoading.set(!1)),
     ).subscribe();
   }
@@ -190,8 +186,10 @@ export class FIN53010Service {
     this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
       take(1),
       map(res => res?.map(item => ({ value: item.No, label: item.Name } as Option)) ?? []),
-      tap(res => this.sys1000List.set(res)),
-      tap(res => this.logger.debug('查詢SYS1000List結果:', [res])),
+      tap(res => {
+        this.sys1000List.set(res);
+        this.logger.debug('查詢SYS1000List結果:', [res]);
+      }),
       finalize(() => this.sys1000Loading.set(!1)),
     ).subscribe();
   }
@@ -201,8 +199,10 @@ export class FIN53010Service {
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
       map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
-      tap(res => this.refNameList.set(res)),
-      tap(res => this.logger.debug('查詢RefNameList結果:', [res])),
+      tap(res => {
+        this.refNameList.set(res);
+        this.logger.debug('查詢RefNameList結果:', [res]);
+      }),
       finalize(() => this.refNameLoading.set(!1)),
     ).subscribe();
   }
@@ -213,8 +213,10 @@ export class FIN53010Service {
       take(1),
       map(res => Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
         ({ value: key, label: value[0], data: value.map((v, i) => ({ value: String(i), label: v })) } as AccDescOption)) ?? []),
-      tap(res => this.noteDescList.set(res)),
-      tap(res => this.logger.debug('查詢NoteDescList結果:', [res])),
+      tap(res => {
+        this.noteDescList.set(res);
+        this.logger.debug('查詢NoteDescList結果:', [res]);
+      }),
       finalize(() => this.noteDescLoading.set(!1)),
     ).subscribe();
   }
@@ -223,8 +225,10 @@ export class FIN53010Service {
     this.orgNoLoading.set(!0);
     this.dropdownApi.querySys3100().pipe(
       take(1),
-      tap(res => this.orgNoList.set(res ?? [])),
-      tap(res => this.logger.debug('查詢OrgNoList結果:', [res])),
+      tap(res => {
+        this.orgNoList.set(res ?? []);
+        this.logger.debug('查詢OrgNoList結果:', [res]);
+      }),
       finalize(() => this.orgNoLoading.set(!1)),
     ).subscribe();
   }
@@ -234,8 +238,10 @@ export class FIN53010Service {
     this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName, templateLabel: `${item.AccNo} - ${item.AccCName}` } as Option))),
-      tap(res => this.accNoList.set(res)),
-      tap(res => this.logger.debug('查詢AccNoList結果:', [res])),
+      tap(res => {
+        this.accNoList.set(res);
+        this.logger.debug('查詢AccNoList結果:', [res]);
+      }),
       finalize(() => this.accLoading.set(!1)),
     ).subscribe();
   }
@@ -245,8 +251,10 @@ export class FIN53010Service {
     this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
       map(res => res.Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
-      tap(res => this.vendorList.set(res as (Option & { short: string; })[])),
-      tap(res => this.logger.debug('查詢VendorList結果:', [res])),
+      tap(res => {
+        this.vendorList.set(res as (Option & { short: string; })[]);
+        this.logger.debug('查詢VendorList結果:', [res]);
+      }),
       finalize(() => this.venLoading.set(!1)),
     ).subscribe();
   }
@@ -256,8 +264,10 @@ export class FIN53010Service {
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
       map(res => res?.map(item => ({ value: item.user_No, label: item.user_Name } as Option)) ?? []),
-      tap(res => this.usrList.set(res)),
-      tap(res => this.logger.debug('查詢UsrList結果:', [res])),
+      tap(res => {
+        this.usrList.set(res);
+        this.logger.debug('查詢UsrList結果:', [res]);
+      }),
       finalize(() => this.usrLoading.set(!1)),
     ).subscribe();
   }
