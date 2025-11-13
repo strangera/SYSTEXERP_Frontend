@@ -768,23 +768,32 @@ loadDataLazy(event: TableLazyLoadEvent, force = false) {
     return Math.max(0, globalIndex - (this.first || 0));
   }
 
-  /** 樣板用：接受「全域」rowIndex，內部換算成本頁索引再產生群組鍵 */
-  getGroupKeyValue(rowData: any, rowIndexGlobal: number): string {
-    const local = this.toPageIndex(rowIndexGlobal);
-    const raw = rowData?.[this.groupKey];
-    return (raw !== undefined && raw !== null && String(raw) !== '')
-      ? String(raw)
-      : `__row_${local}`;
-  }
+/** 樣板用：接受本頁 rowIndex（含小計），轉成資料列索引再產生群組鍵 */
+getGroupKeyValue(rowData: any, rowIndexGlobal: number): string {
+  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
+  const raw = rowData?.[this.groupKey];
+  return (raw !== undefined && raw !== null && String(raw) !== '')
+    ? String(raw)
+    : `__row_${localDataIdx}`;
+}
 
-  /** 判斷是否為「本頁」群組首列：頁首一定畫 rowspan 的首格 */
-  isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
-    if (!this.hasRowSpan) return false;
-    const local = this.toPageIndex(rowIndexGlobal);
-    if (local === 0) return true; // 跨頁延續：第二頁也要當作首列畫出
-    const m = this.pageGroupMeta[key];
-    return !!m && m.index === local;
-  }
+/** 是否為本頁該群組首列（以資料列為準） */
+isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
+  if (!this.hasRowSpan) return false;
+  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
+  if (localDataIdx === 0) return true; // 頁首視為首列
+  const m = this.pageGroupMeta[key];
+  return !!m && m.index === localDataIdx;
+}
+
+/** 本頁該群組的 rowspan（以資料列為準） */
+getPageRowSpan(rowIndexGlobal: number, key: string): number {
+  if (!this.hasRowSpan) return 1;
+  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
+  const m = this.pageGroupMeta[key];
+  return (m && m.index === localDataIdx) ? m.size : 1;
+}
+
   private resyncFirstAfterRowsChange() {
     if (!this.lazy) return;
     const curPage = this.selectedPage ?? 1;
@@ -794,47 +803,66 @@ loadDataLazy(event: TableLazyLoadEvent, force = false) {
   }
 
 
-  /** 取得本頁的 rowspan；meta 查不到也回 1，避免整欄被吃掉 */
-  getPageRowSpan(rowIndexGlobal: number, key: string): number {
-    if (!this.hasRowSpan) return 1;
-    const local = this.toPageIndex(rowIndexGlobal);
-    const m = this.pageGroupMeta[key];
-    return (m && m.index === local) ? m.size : 1;
-  }
+
+  private getPageRowsAll(): any[] {
+  if (this.lazy) return this.data ?? [];
+  const start = this.first ?? 0;
+  const end = Math.min(start + (this.rows ?? 0), this.data?.length ?? 0);
+  return (this.data ?? []).slice(start, end);
+}
+
+/** 本頁僅資料列（排除小計 __isSubRow） */
+private getPageRowsData(): any[] {
+  return this.getPageRowsAll().filter(r => !r?.__isSubRow);
+}
   // 新增：本頁分組的序號 (1-based)
   private pageGroupOrder: Record<string, number> = {};
+/** 將 PrimeNG 提供的本頁 rowIndex（含小計）轉成「本頁資料列索引」（排除小計） */
+private toDataLocalIndex(globalIndex: number): number {
+  // 本頁中，前 globalIndex 個（含自己）裡有多少是「資料列」
+  const pageAll = this.getPageRowsAll();
+  const clamp = Math.max(0, Math.min(globalIndex, pageAll.length - 1));
+  let count = 0;
+  for (let i = 0; i <= clamp; i++) {
+    if (!pageAll[i]?.__isSubRow) count++;
+  }
+  // 轉成 0-based 索引
+  return Math.max(0, count - 1);
+}
 
   // 調整：重建本頁 group meta 時，順便建立組序
-  private rebuildPageGroupMeta(): void {
-    const rows = this.getPageRows();
-    const meta: Record<string, { index: number; size: number }> = {};
-    const order: Record<string, number> = {};
+// 調整：重建本頁 group meta（只用純資料列），並建立「本頁組序」供序號用
+private rebuildPageGroupMeta(): void {
+  const rows = this.getPageRowsData(); // ★ 僅資料列
+  const meta: Record<string, { index: number; size: number }> = {};
+  const order: Record<string, number> = {};
 
-    let lastKey: string | null = null;
-    let groupNo = 0;
+  let lastKey: string | null = null;
+  let groupNo = 0;
 
-    rows.forEach((row, i) => {
-      const key = this.buildGroupKey(row?.[this.groupKey], i);
-      if (lastKey === key) {
-        meta[key].size++;
-      } else {
-        groupNo++;
-        meta[key] = { index: i, size: 1 };
-        order[key] = groupNo;         // 這一組在本頁的組序
-        lastKey = key;
-      }
-    });
+  rows.forEach((row, dataIdx) => {
+    const key = this.buildGroupKey(row?.[this.groupKey], dataIdx);
+    if (lastKey === key) {
+      meta[key].size++;
+    } else {
+      groupNo++;
+      meta[key] = { index: dataIdx, size: 1 };
+      order[key] = groupNo; // 這一組在本頁的組序（1-based）
+      lastKey = key;
+    }
+  });
 
-    this.pageGroupMeta = meta;
-    this.pageGroupOrder = order;
-  }
+  this.pageGroupMeta = meta;
+  this.pageGroupOrder = order;
+}
 
-  // 取得本頁組序，用於序號顯示（fallback 為 rowIndex+1）
-  getGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
-    const key = this.getGroupKeyValue(rowData, rowIndexGlobal);
-    const local = this.toPageIndex(rowIndexGlobal);
-    return this.pageGroupOrder[key] ?? (local + 1);
-  }
+
+// 取得本頁組序（1-based），fallback 為「本頁資料列位置 + 1」
+getGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+  const key = this.getGroupKeyValue(rowData, rowIndexGlobal);
+  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
+  return this.pageGroupOrder[key] ?? (localDataIdx + 1);
+}
 get effectiveLoading(): boolean {
   // 只在允許自動載入時才顯示 loading；且資料為空才顯示骨架
   return this.autoLoad && (this.loading || this.internalLoading) && (this.data?.length ?? 0) === 0;
