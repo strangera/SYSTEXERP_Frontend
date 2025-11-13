@@ -104,7 +104,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     });
 
     this.logger.debug(`meterNoEffect:`, [meterNo, data]);
-    this.service.getTltByFlags(meterNo, +this.user.mid, engType);
+    this.service.getTltByFlags(meterNo, +this.user.mid, [engType]);
   }, { allowSignalWrites: !0 });
 
   /** 同步後端資料到表格 */
