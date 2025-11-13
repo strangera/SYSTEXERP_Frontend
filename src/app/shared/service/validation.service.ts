@@ -46,7 +46,7 @@ export class ValidationService {
       invalidEnglishNumberSymbol: '只能輸入英文和數字和符號',
       invalidPhoneNumber: '電話號碼格式錯誤',
       warehouseMismatch: '調出倉別與調入倉別必需不同',
-      timeGreaterThan: `時間必須大於 ${(formatDate(validatorValue.requiredTime))}`,
+      timeGreaterThan: `時間必須大於等於 ${(formatDate(validatorValue.requiredTime))}`,
       max: `最大值為${validatorValue.max}`,
       min: `最小值為${validatorValue.min}`,
       textRange: '起號不可大於迄號',
@@ -438,14 +438,20 @@ export class ValidationService {
   }
 
   // 時間必須大於指定的時間
-  timeGreaterThanValidator(requiredTime: Date): ValidatorFn {
+  timeGreaterThanValidator(requiredDate: Date): ValidatorFn {
+    const requiredDateOnly = new Date(requiredDate.getFullYear(), requiredDate.getMonth(), requiredDate.getDate());
     return (control: AbstractControl): ValidationErrors | null => {
       const inputTime = control.value;
-      // 確保輸入值是有效日期
-      if (inputTime && inputTime instanceof Date && !isNaN(inputTime.getTime())) {
-        if (inputTime <= requiredTime) { // 使用 <= 以確保時間不能等於
-          return { timeGreaterThan: { requiredTime: requiredTime } };
-        }
+      if (!inputTime || !(inputTime instanceof Date) || isNaN(inputTime.getTime())) {
+        return null;
+      }
+      const inputDateOnly = new Date(inputTime.getFullYear(), inputTime.getMonth(), inputTime.getDate());
+      if (inputDateOnly < requiredDateOnly) {
+        return {
+          timeGreaterThan: {
+            requiredTime: requiredDate.toISOString().split('T')[0] // 傳回 YYYY-MM-DD 格式
+          }
+        };
       }
       return null;
     };

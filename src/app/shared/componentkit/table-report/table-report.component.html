@@ -10,7 +10,7 @@
     trackBy: trackByFn,
     autoSize: true,
     onScroll: onScroll,
-  }" [expandedRowKeys]="expandedRows" [loading]="firstLoading">
+  }" [expandedRowKeys]="expandedRows" [loading]="loading">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
@@ -165,7 +165,7 @@
         <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
       </tr>
     </ng-container>
-    <ng-container *ngIf="loading && data.length < totalRecords && rowIndex === data.length - 1">
+    <ng-container *ngIf="_loading && data.length < totalRecords && rowIndex === data.length - 1">
       <tr *ngFor="let i of [0, 1, 2, 3]" style="height:46px">
         <td [colSpan]="1 + (showCheckBox ? 1 : 0)+ (showReorder ? 1 : 0) + (expansionColumns.length ? 1 : 0)"
           pFrozenColumn>

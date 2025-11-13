@@ -85,9 +85,10 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   /** 錶號改變時帶出位置資訊與專櫃清單 */
   public readonly meterNoEffect = effect(() => {
-    const meterNo = this.meterNoSignal();
+    const meterNo = this.meterNoSignal() ?? void 0;
+    const engType = this.engTypeSignal() ?? void 0;
     const engMeterOptions = this.service.engMeterNoOptions();
-    if (!meterNo || !engMeterOptions.length) return;
+    if (!meterNo || !engType || !engMeterOptions.length) return;
 
     const data = this.service.engMeterNoMap().get(meterNo);
     if (data) untracked(() => {
@@ -103,7 +104,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     });
 
     this.logger.debug(`meterNoEffect:`, [meterNo, data]);
-    this.service.getTltByFlags(meterNo, +this.user.mid);
+    this.service.getTltByFlags(meterNo, +this.user.mid, engType);
   }, { allowSignalWrites: !0 });
 
   /** 同步後端資料到表格 */

@@ -69,7 +69,7 @@
     (detail)="onDetail(setCounterType($event))" [showCheckBox]="true" dataKey="id"
     [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true" [loading]="loading"
-   [showExcelExport]="false" [showExcel]="true" (importExcel)="onImportExcel($event)" (delete)="onDelete($event)">
+   [showExcelExport]="true" [showExcel]="true" (importExcel)="onImportExcel($event)" (delete)="onDelete($event)">
 
   </app-table>
 </div>

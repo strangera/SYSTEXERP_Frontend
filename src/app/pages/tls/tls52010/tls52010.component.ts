@@ -115,6 +115,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'UPD_USR_No', header: '變更人員編號', visible: false }, // 變更人員編號
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
+  btnLoading = false;
   warehouseOptions = this.dropdown.queryPos2034(); // 倉別
   brandOptions = this.dropdown.queryPluLogo(); // 品牌代碼
   vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
@@ -128,8 +129,6 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   ngOnInit(): void {
     this.initializePage('TLS52010', 'TLS/TLS52010cru', this.queryForm, (form) => this.onSubmit(form));
   }
-
-  // 表單提交處理方法
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls52010Service.queryTLS52010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
@@ -144,38 +143,19 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   }
   statusChange(rowData: ITLS52010Data, status: string) {
     this.btnLoading = true;
-    const body = {
-      _DetailList: [
-        {
-          PO_No: rowData.PO_No,
-          PO_Status: status,
-          PO_Status_Ori: rowData.PO_Status
-        }
-      ]
-    }
-    this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+    this.tls52010Service.updateStatusTLS52010([rowData], status).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
   }
 
   close(rowData: ITLS52010Data[]) {
-    const body = {
-      _DetailList: rowData.map(item => {
-        return {
-          PO_No: item.PO_No,
-          PO_Status: POStatus.強制結案,
-          PO_Status_Ori: item.PO_Status
-        };
-      })
-    };
-    this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52010Service.updateStatusTLS52010(rowData, POStatus.強制結案).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.selectedItems = [];
       this.onSubmit(this.queryForm);
     });
   }
-  btnLoading = false;
   // 產生標籤
   generateLabelFile(rowData: ITLS52010Data) {
     this.btnLoading = true;
