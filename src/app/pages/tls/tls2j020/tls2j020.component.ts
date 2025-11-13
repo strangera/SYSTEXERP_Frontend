@@ -38,12 +38,14 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
+  deleteLoading = false;
   busTypeOptions: any[] = [];
   Item_TaxType_Option = [
     { label: '免稅', value: '0' },
     { label: '應稅', value: '1' }
   ];
   columns: ReportColumn[] = [
+    { field: 'id', header: 'ID', visible: false },
     { field: 'bus_type', header: '大分類代碼', visible: true },
     { field: 'bus_type_name', header: '大分類', visible: true },
     { field: 'CHG_ItemName', header: '品項名稱', visible: true },
@@ -119,6 +121,47 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
   /** 詳細查看 */
   override onDetail(data: any) {
     this.navigateWithState(CRUDStatus.Read, data);
+  }
+
+  /** 刪除功能 */
+  onDelete(): void {
+    if (this.selectedItems.length === 0) {
+      this.messageService.warnBubble('請先選擇要刪除的資料');
+      return;
+    }
+    const selectedIds = this.selectedItems.map(item => item.id);
+    const confirmMessage = `確定要刪除所選的 ${this.selectedItems.length} 筆資料嗎？`;
+
+    this.confirmationService.confirm({
+      message: confirmMessage,
+      header: '確認刪除',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        this.executeDelete(selectedIds);
+      }
+    });
+  }
+  /** 執行刪除 */
+  private executeDelete(idList: number[]): void {
+    const body = { idList };
+    this.deleteLoading = true;
+    this.tls2j020Service.deleteTLS2J020(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.deleteLoading = false)
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.messageService.successBubble('刪除成功');
+            this.selectedItems = [];
+          } else {
+            this.messageService.errorBubble(`刪除失敗：${response.Message || '系統錯誤'}`);
+          }
+        },
+      });
   }
 
 }

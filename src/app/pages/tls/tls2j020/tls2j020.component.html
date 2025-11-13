@@ -34,7 +34,8 @@
 <div class="card">
   <div class="col-12">
     <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction"
-      (edit)="onEdit($event)" [showDelete]="true" [showReportMode]="false" [dataKey]="'id'"(detail)="onDetail($event)"
+      (edit)="onEdit($event)" [showDelete]="true" [showReportMode]="false" [dataKey]="'id'" (detail)="onDetail($event)"
+      (delete)="onDelete()"
       [totalRecords]="totalRecords" [showCheckBox]="true" [loading]="loading" [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event" [showExcel]="false" [showDetail]="true" [showManage]="true" [showEdit]="true">
 

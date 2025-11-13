@@ -20,4 +20,7 @@ export class TLS2J020Service {
   updateTLS2J020(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS2J020`, body);
   }
+ deleteTLS2J020(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS2J020`, body);
+  }
 }
