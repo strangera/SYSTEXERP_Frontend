@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { PanelModule } from 'primeng/panel';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
@@ -23,7 +23,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 export class TLS2J030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
-    TXN_GUIBegNo: [''],
+    TXN_GUIBegNo: ['', [Validators.maxLength(10)]],
   });
   selectedItems: any[] = [];
   data: any[] = [];
