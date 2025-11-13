@@ -14,7 +14,6 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { Column } from '@shared/componentkit/table/table.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
@@ -23,7 +22,7 @@ import { finalize } from 'rxjs';
   selector: 'app-tls55030',
   templateUrl: './tls55030.component.html',
   standalone: true,
-  imports: [TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule, CalendarRangeQuickComponent]
+  imports: [TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
 })
 export class TLS55030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -41,8 +40,8 @@ export class TLS55030Component extends BasicQueryPageComponent<any> implements O
     unTaxAmountTo: [],
     taxAmountFrom: [],
     taxAmountTo: [],
-    format: [],
 
+    PUR_VoucherType: [],
     DIS_Status: [],
 
     sendDateFrom: [],
@@ -54,6 +53,7 @@ export class TLS55030Component extends BasicQueryPageComponent<any> implements O
   TABTYPEOptions = getSYS1000Options('TABTYPE');
   DIS_StatusOptions = getSYS1000Options('DIS_Status');
   PUR_TaxTypeOptions = getSYS1000Options('PUR_TaxType');
+  PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType');
   tblUserOptions = this.dropdown.queryTblUser();
   data: any[] = [];
   totalRecords = 0;

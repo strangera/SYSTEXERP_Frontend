@@ -16,8 +16,8 @@
           <app-input-text class="col-12 md:col-6 lg:col-4" label="發票/收據號碼" controlName="PUR_GUINo"
             [control]="queryForm.controls.PUR_GUINo" [submitted]="submitted"></app-input-text>
           <!-- 單據日期 -->
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="單據日期" controlName="PUR_GUIDate"
-            [control]="queryForm.controls.PUR_GUIDate" [submitted]="submitted"></app-calendar>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="發票/收據日期"
+            controlName="PUR_GUIDate" [control]="queryForm.controls.PUR_GUIDate" [submitted]="submitted"></app-calendar>
           <!-- 結帳年月 -->
           <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="結帳年月"
             controlName="ACP_YYYYMM" [control]="queryForm.controls.ACP_YYYYMM" [submitted]="submitted" />
@@ -36,24 +36,21 @@
             [startControl]="queryForm.controls.amountFrom" [endControl]="queryForm.controls.amountTo"
             [submitted]="submitted"></app-input-number-range>
           <!-- 未稅金額 -->
-          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="未稅金額"
+          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折讓未稅金額"
             [startControl]="queryForm.controls.unTaxAmountFrom" [endControl]="queryForm.controls.unTaxAmountTo"
             [submitted]="submitted"></app-input-number-range>
           <!-- 稅額 -->
-          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="稅額"
+          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折讓稅額"
             [startControl]="queryForm.controls.taxAmountFrom" [endControl]="queryForm.controls.taxAmountTo"
             [submitted]="submitted"></app-input-number-range>
           <!-- 格式 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="格式" controlName="format"
-            [control]="queryForm.controls.format" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="格式" controlName="PUR_VoucherType"
+            [control]="queryForm.controls.PUR_VoucherType" [options]="PUR_VoucherTypeOptions" optionLabel="label"
+            optionValue="value" [submitted]="submitted"></app-dropdown>
           <!-- 狀況 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="狀況" controlName="DIS_Status"
             [options]="DIS_StatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.DIS_Status" [submitted]="submitted" />
-          <!-- 傳送日期 -->
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="傳送日期"
-            [startControl]="queryForm.controls.sendDateFrom" [endControl]="queryForm.controls.sendDateTo"
-            [submitted]="submitted" />
           <!-- 建立者 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="建立者" controlName="CRT_USR_No"
             [control]="queryForm.controls.CRT_USR_No" [options]="tblUserOptions | async" optionLabel="label"

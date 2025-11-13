@@ -149,25 +149,23 @@
           [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta" />
       </td>
     </tr>
-    <ng-container *ngIf="hasSubtotalColumns()">
-      <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex)"
-        class="font-bold text-center text-sm bg-gray-200 text-primary">
-        <td class="text-center"
-          [colSpan]="1 + (showCheckBox ? 1 : 0)+ (showReorder ? 1 : 0) + (expansionColumns.length ? 1 : 0)"
-          pFrozenColumn>
-          <span class="font-bold">小計</span>
+    <!-- 我想像的顯示在這裡顯示，如果是最後一筆的畫， -->
+    <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()"
+      class="font-bold text-center text-sm bg-gray-200 text-primary">
+      <td class="text-center"
+        [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0)" pFrozenColumn>
+        <span class="font-bold">小計</span>
+      </td>
+      <ng-container *ngFor="let col of columns">
+        <td class="text-center" [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '',]">
+          <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
         </td>
-        <ng-container *ngFor="let col of columns">
-          <td class="text-center" [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '',]">
-            <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
-          </td>
-        </ng-container>
-        <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
-      </tr>
-    </ng-container>
+      </ng-container>
+      <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
+    </tr>
     <ng-container *ngIf="_loading && data.length < totalRecords && rowIndex === data.length - 1">
       <tr *ngFor="let i of [0, 1, 2, 3]" style="height:46px">
-        <td [colSpan]="1 + (showCheckBox ? 1 : 0)+ (showReorder ? 1 : 0) + (expansionColumns.length ? 1 : 0)"
+        <td [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0)"
           pFrozenColumn>
           <p-skeleton />
         </td>
@@ -181,11 +179,13 @@
     </ng-container>
   </ng-template>
   <ng-template pTemplate="footer" let-columns let-rowData>
+    <!-- 我想像的顯示在這裡顯示，如果還沒是最後一筆的話 -->
     <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
-      <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
+      <td class="text-center" [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0)" pFrozenColumn>
         <span class="font-bold">總計</span>
       </td>
       <td *ngIf="expansionColumns.length"></td>
+
       <ng-container *ngFor="let col of columns">
         <td class="text-center" [ngClass]="[ col.cellClass ? col.cellClass(rowData) || '' : '',]">
           <span class="font-bold">
@@ -195,11 +195,13 @@
       </ng-container>
       <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
     </tr>
+
     <tr *ngIf="footerPercentData" class="font-bold text-center text-sm bg-gray-200 text-primary">
-      <td class="text-center" [colSpan]="showCheckBox ? 2 : 1" pFrozenColumn>
+      <td class="text-center" [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0)" pFrozenColumn>
         <span class="font-bold">平均</span>
       </td>
       <td *ngIf="expansionColumns.length"></td>
+
       <ng-container *ngFor="let col of columns">
         <td class="text-center" [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '',]">
           <span class="font-bold">
@@ -218,7 +220,7 @@
         </span>
       </div>
       <div class="flex align-items-center">
-        <span>
+        <span [pTooltip]="'已載入筆數 ' + data.length">
           總筆數: {{ totalRecords }} 筆
         </span>
         <p-button icon="pi pi-arrow-up" (click)="dt.scrollTo({ top: 0, behavior: 'smooth'});"
