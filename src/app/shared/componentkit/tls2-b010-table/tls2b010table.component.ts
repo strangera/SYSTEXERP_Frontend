@@ -59,7 +59,7 @@ export class tls2b010tableComponent
   /* ===== Utilities ===== */
   trackByCol = (_: number, col: any) => col.key ?? col.__uid ?? col.field;
   trackByRow = (_: number, item: any) => (item as any)?.[this.dataKey] ?? _;
-@Input() autoLoad = true;
+
   @ViewChild('dt', { static: false }) dt!: Table;
   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
@@ -69,10 +69,7 @@ export class tls2b010tableComponent
   constructor(
     private readonly messageService: NotificationService,
   ) { super(); }
-  @Input() preserveRowsWhileLoading = false;
 
-  // === 新增：內部 loading 狀態（配合清空資料時顯示 skeleton）===
-  internalLoading = false;
   /* ======================= Inputs / Outputs ======================= */
   // 基本
   @Input() dataKey = 'ID';
@@ -88,14 +85,11 @@ export class tls2b010tableComponent
 
   private _data: any[] = [];
   @Input() set data(v: any[]) {
-    // 一旦外部把新資料丟進來，就視為載入完成
     this._data = Array.isArray(v) ? v : [];
-    this.internalLoading = false;             // ★ 關閉內部 loading
-    this.rebuildPageGroupMeta();
+    this.rebuildPageGroupMeta();       // data 變更先重建 meta
     this.dataChange.emit(this._data);
   }
   get data(): any[] { return this._data; }
-
 
   @Output() dataChange = new EventEmitter<any[]>();
   @Input() loading = false;
@@ -212,7 +206,6 @@ export class tls2b010tableComponent
   @Input() showTotal = false;
   /** 後端回來的總計：{ 欄位名稱: 數值 }，例如 { BOOK_PayAmt: 123, ACT_PayAmt: 456, OVER_PayAmt: 789 } */
   @Input() totals: Record<string, number> = {};
-  
 
   /** 取得 footer 總計：優先吃 this.totals[col.field]；沒有就用前端加總（排除 __isTotal 資料列） */
   getFooterTotal(field: string): number {
@@ -258,64 +251,33 @@ export class tls2b010tableComponent
     this.calculateTotalPages();
   }
 
-ngOnChanges(changes: SimpleChanges): void {
-  // 1) 欄位變更：重建 selectedColumns、還原 rows / sort（若有快取）
-  if (changes['columns']) {
-    const firstChange = changes['columns'].firstChange === true;
-
-    if (Array.isArray(this.columns) && this.columns.length > 0) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['columns'] && this.columns?.length > 0) {
       this.originalColumns = this.columns;
-
-      // 讀取快取的欄位可見性配置
       const saved = this.queryState.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
-
-      // 以 saved 為主，否則用傳入 columns；最後過濾 hidden/visible=false
       this.selectedColumns = (saved?.length ? saved : this.columns)
         .filter(c => c.visible !== false && c.hidden !== true);
 
-      if (firstChange) {
-        // 初次有 columns 時，恢復 rows 與排序（若有快取）
+      if (changes['columns'].firstChange) {
         setTimeout(() => {
-          // rows
-          const savedRows = this.queryState.getQueryState(this.tableKey + 'rows')?.value;
-          if (Number.isFinite(savedRows)) {
-            this.rows = Number(savedRows);
-          }
-
-          // sort
-          const savedSort = this.queryState.getQueryState(this.tableKey + 'Sort')?.value as SortMeta[] | undefined;
-          if (Array.isArray(savedSort) && savedSort.length) {
-            this.multiSortMeta = savedSort;
-          }
-
-          // 讓群組鍵優先排序
+          this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+          this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
           this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
         }, 0);
       }
     }
-  }
 
-  // 2) 資料或總筆數變更：重建本頁群組 meta、重新計算總頁數、同步 first
-  if (changes['data'] || changes['totalRecords']) {
-    this.rebuildPageGroupMeta();
-    this.calculateTotalPages();
-    this.resyncFirstAfterRowsChange();   // lazy 模式下，rows/totalRecords 變更時同步 first 以避免多餘觸發
-    this.cdr?.detectChanges?.();
-  }
+    if (changes['data'] || changes['totalRecords']) {
+      this.rebuildPageGroupMeta();
+      this.calculateTotalPages();
+      this.resyncFirstAfterRowsChange();
+      this.cdr.detectChanges?.();
+    }
 
-  // 3) 每頁筆數變更：同步 first 與頁數（避免跨頁錯位）
-  if (changes['rows'] && !changes['rows'].firstChange) {
-    this.resyncFirstAfterRowsChange();   // ★ rows 改變要同步 first
-    this.calculateTotalPages();
-    this.cdr?.detectChanges?.();
+    if (changes['rows'] && !changes['rows'].firstChange) {
+      this.resyncFirstAfterRowsChange();   // ★ rows 變了也同步
+    }
   }
-
-  // 4) 允許外部直接改排序（multiSortMeta）時，更新排序簽章
-  if (changes['multiSortMeta']) {
-    this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
-  }
-}
-
 
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
@@ -384,85 +346,52 @@ ngOnChanges(changes: SimpleChanges): void {
     if (!this.lazy) this.rebuildPageGroupMeta();
   }
 
-onPageChange(event: TablePageEvent) {
-  this.first = event.first;
-  this.rows = event.rows;
-  this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
-  this.selectedPage = Math.floor((event.first ?? 0) / (event.rows || 1)) + 1;
+  onPageChange(event: TablePageEvent) {
+    this.first = event.first;
+    this.rows = event.rows;
+    this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
+    this.selectedPage = Math.ceil(event.first / event.rows + 1);
 
-  if (!this.lazy) {
-    this.rebuildPageGroupMeta();
-    this.calculateTotalPages();
+    if (!this.lazy) {
+      this.rebuildPageGroupMeta();
+      this.calculateTotalPages();
+    }
   }
 
-  // ✅ Lazy 模式：主動對外送出一次 lazy 取數（force=true 以略過 _skipFirstLazy）
-  if (this.lazy) {
-    const ev = {
-      first: this.first,
-      rows: this.rows,
-      multiSortMeta: this.multiSortMeta
-    } as any; // TableLazyLoadEvent 的必要欄位
-    this.loadDataLazy(ev, /* force */ true);
-  }
-}
+  loadDataLazy(event: TableLazyLoadEvent, force = false) {
+    if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
+    if (force) { this._skipFirstLazy = false; }
 
 
-
-loadDataLazy(event: TableLazyLoadEvent, force = false) {
-  // ★ 禁止自動載入：除非 force，否則不處理 PrimeNG 的 onLazyLoad
-  if (!this.autoLoad && !force) return;
-
-  if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
-  if (force) { this._skipFirstLazy = false; }
-
-    // 計算頁碼與每頁筆數
     const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-    let pageIndex = (event.first ?? 0) / (pageSize || 1) + 1;
+    let pageIndex = (event.first ?? 0) / pageSize + 1;
 
-    // 取排序（multiSort > 單欄 > 無）
-    const sortRaw =
-      event.multiSortMeta ??
-      (event as any).multisortmeta ??
+    const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
       (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-
     const normalized = this.normalizeSortMeta(sortRaw);
     const sort = this.ensureGroupFirst(normalized);
     const sortSig = JSON.stringify(sort);
 
-    // 有沒有真的由使用者觸發排序
-    const userSorted = !!(
-      event.sortField ||
-      (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length)
-    );
+    // 判斷這次 onLazyLoad 是否真的是「使用者點了排序」
+    const userSorted = !!(event.sortField || (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length));
 
-    // 偵測排序變更：若變更且目前不是第 1 頁，回到第 1 頁
     if (!this.lastSortSig) {
       this.lastSortSig = sortSig;
     } else if (sortSig !== this.lastSortSig) {
       this.lastSortSig = sortSig;
+
       if (userSorted && pageIndex !== 1) {
-        // 回到第一頁（讓 primeNG 重新拋一次 lazy 事件）
         this.first = 0;
         this.selectedPage = 1;
         return;
       }
     }
 
-    // 記錄頁碼/排序到狀態（保留原行為）
     this.selectedPage = pageIndex;
     this.queryState.setQueryState(this.tableKey + 'Sort', sort);
 
-    // ★ 進入 loading 狀態：清空當前畫面資料，避免殘留上一頁
-    if (!this.preserveRowsWhileLoading) {
-      this.internalLoading = true;
-      this._data = [];              // 直接清空私有欄位，避免觸發 setter 把 loading 關掉
-      this.rebuildPageGroupMeta();  // 清空後重建群組資訊，避免 rowspan 殘影
-    }
-
-    // 組 payload 丟給外層（由父元件打 API 再把新資料 set 回來）
     const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
 
-    // 去抖：同一個參數就不重複 emit
     const key = `${pageIndex}|${pageSize}|${sortSig}`;
     if (!force && key === this.lastEmitKey) return;
     this.lastEmitKey = key;
@@ -768,32 +697,23 @@ loadDataLazy(event: TableLazyLoadEvent, force = false) {
     return Math.max(0, globalIndex - (this.first || 0));
   }
 
-/** 樣板用：接受本頁 rowIndex（含小計），轉成資料列索引再產生群組鍵 */
-getGroupKeyValue(rowData: any, rowIndexGlobal: number): string {
-  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
-  const raw = rowData?.[this.groupKey];
-  return (raw !== undefined && raw !== null && String(raw) !== '')
-    ? String(raw)
-    : `__row_${localDataIdx}`;
-}
+  /** 樣板用：接受「全域」rowIndex，內部換算成本頁索引再產生群組鍵 */
+  getGroupKeyValue(rowData: any, rowIndexGlobal: number): string {
+    const local = this.toPageIndex(rowIndexGlobal);
+    const raw = rowData?.[this.groupKey];
+    return (raw !== undefined && raw !== null && String(raw) !== '')
+      ? String(raw)
+      : `__row_${local}`;
+  }
 
-/** 是否為本頁該群組首列（以資料列為準） */
-isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
-  if (!this.hasRowSpan) return false;
-  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
-  if (localDataIdx === 0) return true; // 頁首視為首列
-  const m = this.pageGroupMeta[key];
-  return !!m && m.index === localDataIdx;
-}
-
-/** 本頁該群組的 rowspan（以資料列為準） */
-getPageRowSpan(rowIndexGlobal: number, key: string): number {
-  if (!this.hasRowSpan) return 1;
-  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
-  const m = this.pageGroupMeta[key];
-  return (m && m.index === localDataIdx) ? m.size : 1;
-}
-
+  /** 判斷是否為「本頁」群組首列：頁首一定畫 rowspan 的首格 */
+  isFirstInGroupOnPage(rowIndexGlobal: number, key: string): boolean {
+    if (!this.hasRowSpan) return false;
+    const local = this.toPageIndex(rowIndexGlobal);
+    if (local === 0) return true; // 跨頁延續：第二頁也要當作首列畫出
+    const m = this.pageGroupMeta[key];
+    return !!m && m.index === local;
+  }
   private resyncFirstAfterRowsChange() {
     if (!this.lazy) return;
     const curPage = this.selectedPage ?? 1;
@@ -803,102 +723,45 @@ getPageRowSpan(rowIndexGlobal: number, key: string): number {
   }
 
 
-
-  private getPageRowsAll(): any[] {
-  if (this.lazy) return this.data ?? [];
-  const start = this.first ?? 0;
-  const end = Math.min(start + (this.rows ?? 0), this.data?.length ?? 0);
-  return (this.data ?? []).slice(start, end);
-}
-
-/** 本頁僅資料列（排除小計 __isSubRow） */
-private getPageRowsData(): any[] {
-  return this.getPageRowsAll().filter(r => !r?.__isSubRow);
-}
+  /** 取得本頁的 rowspan；meta 查不到也回 1，避免整欄被吃掉 */
+  getPageRowSpan(rowIndexGlobal: number, key: string): number {
+    if (!this.hasRowSpan) return 1;
+    const local = this.toPageIndex(rowIndexGlobal);
+    const m = this.pageGroupMeta[key];
+    return (m && m.index === local) ? m.size : 1;
+  }
   // 新增：本頁分組的序號 (1-based)
   private pageGroupOrder: Record<string, number> = {};
-/** 將 PrimeNG 提供的本頁 rowIndex（含小計）轉成「本頁資料列索引」（排除小計） */
-private toDataLocalIndex(globalIndex: number): number {
-  // 本頁中，前 globalIndex 個（含自己）裡有多少是「資料列」
-  const pageAll = this.getPageRowsAll();
-  const clamp = Math.max(0, Math.min(globalIndex, pageAll.length - 1));
-  let count = 0;
-  for (let i = 0; i <= clamp; i++) {
-    if (!pageAll[i]?.__isSubRow) count++;
-  }
-  // 轉成 0-based 索引
-  return Math.max(0, count - 1);
-}
 
   // 調整：重建本頁 group meta 時，順便建立組序
-// 調整：重建本頁 group meta（只用純資料列），並建立「本頁組序」供序號用
-private rebuildPageGroupMeta(): void {
-  const rows = this.getPageRowsData(); // ★ 僅資料列
-  const meta: Record<string, { index: number; size: number }> = {};
-  const order: Record<string, number> = {};
+  private rebuildPageGroupMeta(): void {
+    const rows = this.getPageRows();
+    const meta: Record<string, { index: number; size: number }> = {};
+    const order: Record<string, number> = {};
 
-  let lastKey: string | null = null;
-  let groupNo = 0;
+    let lastKey: string | null = null;
+    let groupNo = 0;
 
-  rows.forEach((row, dataIdx) => {
-    const key = this.buildGroupKey(row?.[this.groupKey], dataIdx);
-    if (lastKey === key) {
-      meta[key].size++;
-    } else {
-      groupNo++;
-      meta[key] = { index: dataIdx, size: 1 };
-      order[key] = groupNo; // 這一組在本頁的組序（1-based）
-      lastKey = key;
-    }
-  });
+    rows.forEach((row, i) => {
+      const key = this.buildGroupKey(row?.[this.groupKey], i);
+      if (lastKey === key) {
+        meta[key].size++;
+      } else {
+        groupNo++;
+        meta[key] = { index: i, size: 1 };
+        order[key] = groupNo;         // 這一組在本頁的組序
+        lastKey = key;
+      }
+    });
 
-  this.pageGroupMeta = meta;
-  this.pageGroupOrder = order;
-}
-
-
-// 取得本頁組序（1-based），fallback 為「本頁資料列位置 + 1」
-getGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
-  const key = this.getGroupKeyValue(rowData, rowIndexGlobal);
-  const localDataIdx = this.toDataLocalIndex(rowIndexGlobal);
-  return this.pageGroupOrder[key] ?? (localDataIdx + 1);
-}
-get effectiveLoading(): boolean {
-  // 只在允許自動載入時才顯示 loading；且資料為空才顯示骨架
-  return this.autoLoad && (this.loading || this.internalLoading) && (this.data?.length ?? 0) === 0;
-}
-ngAfterViewInit(): void {
-  if (this.lazy && this.autoLoad) {
-    queueMicrotask(() => this.emitLazyNow());
+    this.pageGroupMeta = meta;
+    this.pageGroupOrder = order;
   }
-}
-private emitLazyNow() {
-  const evt: LazyLoadEvent = {
-    pageIndex: Math.floor((this.first ?? 0) / (this.rows || 1)) + 1,
-    pageSize: this.rows || 20,
-    SortBy: this.multiSortMeta || []
-  };
-  this.lazyLoadData.emit(evt);
-}
 
-private emitFromPaginator(e: any) {
-  const pageIndex = (e?.first ?? 0) / (e?.rows || this.rows || 1) + 1;
-  const pageSize  = e?.rows || this.rows || 20;
-  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: this.multiSortMeta || [] });
-}
-
-private emitFromSort(e: any) {
-  const SortBy    = Array.isArray(e?.multiSortMeta) ? e.multiSortMeta : (this.multiSortMeta || []);
-  const pageIndex = Math.floor((this.first ?? 0) / (this.rows || 1)) + 1;
-  const pageSize  = this.rows || 20;
-  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
-}
-
-private emitFromPrime(e: any) {
-  const pageIndex = (e?.first ?? 0) / (e?.rows || this.rows || 1) + 1;
-  const pageSize  = e?.rows || this.rows || 20;
-  const SortBy    = Array.isArray(e?.multiSortMeta) ? e.multiSortMeta : (this.multiSortMeta || []);
-  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
-}
-
+  // 取得本頁組序，用於序號顯示（fallback 為 rowIndex+1）
+  getGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+    const key = this.getGroupKeyValue(rowData, rowIndexGlobal);
+    const local = this.toPageIndex(rowIndexGlobal);
+    return this.pageGroupOrder[key] ?? (local + 1);
+  }
 }
