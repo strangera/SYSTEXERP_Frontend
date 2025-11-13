@@ -36,7 +36,6 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   dataForm = this.formBuilder.nonNullable.group({
     bus_type: ['', Validators.required],
   });
-
   mode: CRUDStatus = CRUDStatus.Create; // 新增 or 編輯模式
   override formTitle = '';
   busTypeOptions: any[] = [];
@@ -56,8 +55,7 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       showClear: false
     },
   ];
-
-  /**  編輯時使用的欄位配置 */
+  /**  編輯 */
   editColumns: EditColumn[] = [
     { field: 'bus_type', header: '大分類代碼', type: 'input', width: '100px', disabled: () => true },
     { field: 'bus_type_name', header: '大分類名稱', type: 'input', width: '120px', disabled: () => true },
@@ -72,10 +70,9 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       optionValue: 'value',
       showClear: false
     },
-
   ];
 
-  /**  詳細查看時使用的欄位配置（全部唯讀） */
+  /**  查看 */
   readColumns: EditColumn[] = [
     { field: 'bus_type', header: '大分類代碼', type: 'input', width: '100px', disabled: () => true },
     { field: 'bus_type_name', header: '大分類名稱', type: 'input', width: '120px', disabled: () => true },
@@ -91,7 +88,6 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       showClear: false,
       disabled: () => true
     },
-
   ];
 
   /**  動態決定顯示哪組欄位 */
@@ -103,9 +99,8 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     } else if (this.mode === CRUDStatus.Read) {
       return this.readColumns;
     }
-    return this.editColumns; // 預設值
+    return this.editColumns;
   }
-
 
   constructor(
     private dropDownListService: DropDownListService,
@@ -119,21 +114,15 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     const state = history.state;
     this.mode = state.crudstatus;
     const rowData = state.rowdata;
-
     // 初始化頁面
     this.initializePage('TLS2J020', this.dataForm);
-
     // 下拉選項
     this.loadOptions();
-
     if (this.mode === CRUDStatus.Edit && rowData) {
       this.formTitle = '編輯大分類換開品項';
-      // 編輯模式：將單筆資料轉換為陣列格式供 table-edit 使用
       this.dataForm.patchValue({
         bus_type: rowData.bus_type
       });
-
-      // 將單筆 rowData 轉換為 table-edit 所需的陣列格式
       this.data = [{
         id: rowData.id,
         ID: rowData.id, // 保持相容性
@@ -147,15 +136,12 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       }];
     } else if (this.mode === CRUDStatus.Read && rowData) {
       this.formTitle = '查看大分類換開品項';
-      // 詳細查看模式：將單筆資料轉換為陣列格式供 table-edit 使用（全部唯讀）
       this.dataForm.patchValue({
         bus_type: rowData.bus_type
       });
-
-      // 將單筆 rowData 轉換為 table-edit 所需的陣列格式
       this.data = [{
         id: rowData.id,
-        ID: rowData.id, // 保持相容性
+        ID: rowData.id,
         tds1009_id: rowData.tds1009_id || 0,
         bus_type: rowData.bus_type,
         bus_type_name: rowData.bus_type_name,
@@ -182,24 +168,20 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
-  /** 查詢按鈕：載入指定大分類的品項資料 */
+  /** 查詢*/
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
       const v = form.value;
-
       if (this.mode === CRUDStatus.Create) {
-        // 新增模式：檢查是否有選擇大分類並且有明細資料
+        // 新增
         if (!v.bus_type) {
           this.messageService.errorBubble('請選擇大分類', '缺少必要資料');
           return;
         }
-
         if (!this.data || this.data.length === 0) {
           this.messageService.errorBubble('請先查詢品項資料', '缺少明細資料');
           return;
         }
-
-        // 呼叫新增 API
         this.insertData(v.bus_type);
       } else if (this.mode === CRUDStatus.Edit) {
         // 編輯模式執行更新邏輯
@@ -218,7 +200,6 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       CHG_ItemName: null,
       Item_TaxType: null
     };
-
     this.loading = true;
     this.tls2j020Service
       .queryTLS2J020(payload)
@@ -240,7 +221,6 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   /** 查詢按鈕點擊事件 */
   onQuery() {
     const busType = this.dataForm.get('bus_type')?.value;
-
     if (!busType) {
       this.messageService.errorBubble('請先選擇大分類', '缺少必要條件');
       return;
@@ -255,11 +235,10 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       item.CHG_ItemName && item.CHG_ItemName.trim() !== '' &&
       item.Item_TaxType && item.Item_TaxType.trim() !== ''
     );
-
     if (selectedValidData.length === 0) {
       this.messageService.errorBubble('請選擇至少一筆完整的資料', '沒有選中的有效資料');
       return;
-    }    // 準備 API 請求的資料格式 - 符合後端期望的格式
+    }
     const requestBody = {
       bus_type: busType,
       TLS2J020_Detail: selectedValidData.map(item => ({
@@ -269,9 +248,6 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
         Item_TaxType: item.Item_TaxType ? item.Item_TaxType.trim() : ''
       }))
     };
-
-    console.log('送出的資料:', JSON.stringify(requestBody, null, 2));
-
     this.loading = true;
     this.tls2j020Service
       .insertTLS2J020(requestBody)
@@ -280,7 +256,7 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
         next: (res) => {
           if (res.Status === '0000') {
             this.messageService.successBubble('新增成功');
-            this.onCancel(); // 新增成功後返回上一頁
+            this.onCancel();
           } else {
             this.messageService.errorBubble(res.Message || '新增失敗');
           }
@@ -296,7 +272,6 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       this.messageService.errorBubble('沒有可更新的資料');
       return;
     }
-
     const updateItem = this.data[0]; // 編輯模式通常只有一筆資料
 
     // 驗證必要欄位
@@ -304,24 +279,24 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       this.messageService.errorBubble('品項名稱不能為空');
       return;
     }
-
     if (!updateItem.Item_TaxType || updateItem.Item_TaxType.trim() === '') {
       this.messageService.errorBubble('稅別不能為空');
       return;
     }
 
-    // 準備更新 API 的資料格式
+    // 準備更新 API 的資料格式 - 符合後端要求
     const requestBody = {
-      id: updateItem.id || updateItem.ID,
-      bus_type: this.dataForm.get('bus_type')?.value,
-      CHG_ItemName: updateItem.CHG_ItemName.trim(),
-      Item_TaxType: updateItem.Item_TaxType.trim()
+      id: updateItem.id || updateItem.ID || 0,
+      tds1009_id: updateItem.tds1009_id || 0,
+      bus_type: this.dataForm.get('bus_type')?.value || updateItem.bus_type || '',
+      chg_item_name: updateItem.CHG_ItemName.trim(),
+      item_tax_type: updateItem.Item_TaxType.trim(),
+      upd_date: new Date().toISOString(),
+      upd_usr_no: this.authService.currentUserValue?.user_No || '',
+      upd_usr_name: this.authService.currentUserValue?.user_Name || ''
     };
 
-    console.log('更新的資料:', JSON.stringify(requestBody, null, 2));
-
     this.loading = true;
-    // 假設有 updateTLS2J020 方法，如果沒有需要先實作
     this.tls2j020Service
       .updateTLS2J020(requestBody)
       .pipe(
@@ -332,15 +307,11 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
         next: (res: any) => {
           if (res.Status === '0000') {
             this.messageService.successBubble('更新成功');
-            this.onCancel(); // 更新成功後返回上一頁
+            this.onCancel();
           } else {
             this.messageService.errorBubble(res.Message || '更新失敗');
           }
         },
-        error: (error: any) => {
-          console.error('更新失敗:', error);
-          this.messageService.errorBubble('更新失敗，請稍後再試');
-        }
       });
   }
 

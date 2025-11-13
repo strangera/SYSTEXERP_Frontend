@@ -1,50 +1,63 @@
-<!-- //*ngIf="isNotECR" -->
-
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()"></app-button>
+    <app-button btnType="create" (click)="onCreate()" *ngIf="!isNotECR"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
+
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4"> <app-input-text label="換開編號" controlName="CHG_No"
-              [control]="queryForm.controls.CHG_No" [submitted]="submitted"></app-input-text> </div>
+          <!-- <div class="col-12 flex justify-content-start align-items-center" *ngIf="isNotECR">
+            <span class="text-red-500 font-bold">
+              【本機台未設定為發票換開機台，無法執行換開作業】
+            </span>
+          </div> -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="換開編號" controlName="CHG_No" [control]="queryForm.controls.CHG_No"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="換開日期" calendarType="dateRange"
             [startControl]="queryForm.controls.GUI_INPUTDATE_Start" [endControl]="queryForm.controls.GUI_INPUTDATE_End"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted">
+          </app-calendar-range>
+
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="來源發票日期" calendarType="dateRange"
             [startControl]="queryForm.controls.TXN_Date_Start" [endControl]="queryForm.controls.TXN_Date_End"
-            [submitted]="submitted"></app-calendar-range>
-          <div class="col-12 md:col-6 lg:col-4"> <app-input-text label="來源發票號碼" controlName="TXN_GUIBegNo"
-              [control]="queryForm.controls.TXN_GUIBegNo" [submitted]="submitted"></app-input-text> </div>
-          <div class="col-12 md:col-6 lg:col-4"> <app-dropdown label="換開狀態" [options]="GUI_STATS_Options"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_Status"
-              [submitted]="submitted"></app-dropdown> </div>
+            [submitted]="submitted">
+          </app-calendar-range>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="來源發票號碼" controlName="TXN_GUIBegNo" [control]="queryForm.controls.TXN_GUIBegNo"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="換開狀態" [options]="GUI_STATS_Options" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.GUI_Status" [submitted]="submitted">
+            </app-dropdown>
+          </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isNotECR">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
+
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- isNotECR -->
-<div class="card">
-  <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody"
-    [queryFunction]="tls2j030Service.queryTLS2J030.bind(tls2j030Service)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true" [showExcel]="false"
-    [showReportMode]="false" [showManage]="false" [showDelete]="true" [dataKey]="'CHG_No'">
+
+<div class="card" *ngIf="!isNotECR">
+  <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody" [loading]="loading"
+    (detail)="onDetail($event)" [queryFunction]="tls2j030Service.queryTLS2J030.bind(tls2j030Service)"
+    [selectedItems]="selectedItems" [showEdit]="false" (selectionChange)="selectedItems = $event"
+    [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true" [showExcel]="false" [showReportMode]="false"
+    [showManage]="true" [showDelete]="true" [dataKey]="'CHG_No'">
   </app-table-report>
 </div>
-
-<!--
-<div class="card flex justify-content-center align-items-center h-20rem"> //*ngIf="isNotECR"
-  <span class="text-red-500 font-bold text-lg">
-    本機台未設定為發票換開機台，無法執行換開作業。
-  </span>
-</div> -->

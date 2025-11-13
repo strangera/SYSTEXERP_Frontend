@@ -59,7 +59,7 @@
 
 <div class="card">
   <app-table-report tableKey="tls57150" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
+    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false" [loading]="loading"
     [queryFunction]="tls57150Service.queryTLS57150.bind(tls57150Service)" [footerData]="footerTotal"
     [groupRowsBy]="queryForm.value.DisplayMode === 1 ? undefined : 'PST_NO'" [showSort]="false"
     [subTotalData]="subTotalData">

@@ -109,7 +109,7 @@
 <div class="card">
   <app-table-report tableKey="tls27090" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
     [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false" [footerData]="footerData"
-    [queryFunction]="getCurrentQueryFunction()" [showManage]="false">
+    [queryFunction]="getCurrentQueryFunction()" [showManage]="false" [loading]="loading">
     <header>
       <p-selectButton [options]="typeOptions" [(ngModel)]="reportType" (onChange)="switchReport($event.value)"
         optionLabel="label" optionValue="value" [allowEmpty]="false" />

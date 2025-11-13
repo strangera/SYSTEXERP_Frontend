@@ -188,39 +188,42 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     });
   }
 
-  ngOnInit(): void {
-    this.loading = false;
-    this.initializePage('TLS55070', 'tls/tls55070', this.queryForm, (f) => this.onSubmit(f));
-    this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
-    this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
+// src/app/pages/tls/tls55070/tls55070.component.ts (ngOnInit 部分)
 
-    this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
+ngOnInit(): void {
+  this.loading = false;
+  this.initializePage('TLS55070', 'tls/tls55070', this.queryForm, (f) => this.onSubmit(f));
+  this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
+  this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
 
-    this.tls55070Service.getLogoHosOptions().subscribe(({ logoOptions, hosOptions }) => {
-      this.logoOptions = logoOptions;
-      this.hosOptions = hosOptions;
-    });
+  // 其它下拉（各打一支即可）
+  this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
+  this.counterNameService.getCounters().subscribe((res) => {
+    this.CounterOptions =
+      res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+  });
+  this.cashierService.getCashierOptions().subscribe((res) => {
+    this.cashierOptions =
+      res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+  });
 
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
+  // ★ LOGO + 倉別：一次合併取回（倉別改打 /queryPOS2034_DropDownList）
+  this.tls55070Service.getLogoAndHosOptions().subscribe(({ logoOptions, hosOptions }) => {
+    this.logoOptions = logoOptions;
+    this.hosOptions = hosOptions;
+  });
 
-    this.cashierService.getCashierOptions().subscribe((res) => {
-      this.cashierOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
+  this.loading = false;
+}
 
-    this.loading = false; // 關閉初始 loading
-  }
 
   private parsePercent(v: any): number {
     if (v === null || v === undefined || v === '') return 0;
@@ -234,18 +237,19 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     return isNaN(n) ? 0 : n;
   }
 
-  percent(val: any): string {
-    const n = this.parsePercent(val);
+percent(val: any): string {
+  // 空值（null/undefined/''）→ 直接顯示空白，不轉百分比
+  if (val === null || val === undefined || val === '') return '';
 
-    if (val === 'nopercent') {
-    //  不要顯示百分比
-    return '0'; 
-    }
-    return (n / 100).toLocaleString('en-US', {
-      style: 'percent',
-      maximumFractionDigits: 2,
-    });
-  }
+  // 若你之前用 'nopercent' 當禁用標記，也一起回傳空白
+  if (val === 'nopercent') return '';
+
+  const n = this.parsePercent(val);
+  return (n / 100).toLocaleString('en-US', {
+    style: 'percent',
+    maximumFractionDigits: 2,
+  });
+}
 
   /** Lazy 取數（提供給子元件） */
 /** Lazy 取數（提供給子元件） */
@@ -511,22 +515,23 @@ onSubmit(form: FormGroup): void {
       });
 
       // 小計列（放在每組最後一筆，PLU_Name 顯示「銷售金額」）
-      rows.push({
-        _rowKey: `${grpKey}|__SUBTOTAL__`,
-        [this.groupByField]: grpKey,
-        TXN_SaleNoteNo: saleNo,
-        TXN_Date: '',
-        ECR_No: '',
-        TLT_No: '',
-        HOS_NO: '',
-        HOS_NAME:'',
-        TXN_TaxType: '',
-        GUINO: '',
-        PLU_Name: '銷售金額',
-        DiscRate:'nopercent',
-        TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
-        __isSubRow: true,
-      });
+      // ✅ 小計列獨立成另一個群組，且不顯示銷售單號
+rows.push({
+  _rowKey: `${grpKey}|__SUBTOTAL__`,
+  [this.groupByField]: `${grpKey}__SUB`, // ← 讓小計成為獨立群組，不被合併
+  TXN_SaleNoteNo: '',                    // ← 不顯示銷售單號（也避免置中）
+  TXN_Date: '',
+  ECR_No: '',
+  TLT_No: '',
+  HOS_NO: '',
+  HOS_NAME: '',
+  TXN_TaxType: '',
+  GUINO: '',
+  PLU_Name: '銷售金額',
+  DiscRate: '',
+  TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
+  __isSubRow: true,
+});
 
       totalRecords += list.length || 0;
     }

@@ -41,7 +41,8 @@
   <app-table-report tableKey="tls2e070" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
     [queryFunction]="tls2e070Service.queryTLS2E070.bind(tls2e070Service)" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [showCheckBox]="showCheckBox" [isRowSelectable]="isRowSelectable">
+    [loading]="loading" (selectionChange)="selectedItems = $event" [showCheckBox]="showCheckBox"
+    [isRowSelectable]="isRowSelectable">
     <header>
       <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
         pTooltip="更新鎖定狀態" tooltipPosition="top" pButton icon="pi pi-lock" severity="success"

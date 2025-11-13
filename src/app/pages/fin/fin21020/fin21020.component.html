@@ -47,7 +47,7 @@
     [totalRecords]="totalRecords" [data]="data" [showCheckBox]="true" (edit)="onEdit($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)"
     [columns]="columns" [addButton]="addButton" [buttonsLoading]="btnLoading" (delete)="onDelete($event)"
-    [queryFunction]="fin21020Service.queryFIN21020.bind(fin21020Service)"></app-table-report>
+    [queryFunction]="fin21020Service.queryFIN21020.bind(fin21020Service)" [loading]="loading"></app-table-report>
 </div>
 <app-dialog [visible]="dialogVisible()" header="複製費率" (visibleChange)="dialogVisible.set($event)" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">

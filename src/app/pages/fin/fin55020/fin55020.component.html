@@ -48,7 +48,7 @@
 
 <div class="card">
   <app-table-report tableKey="tls57090" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" groupRowsBy="VouDate"
+    [totalRecords]="totalRecords" groupRowsBy="VouDate" [loading]="loading"
     [queryFunction]="fin55020Service.queryFIN55020.bind(fin55020Service)">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
