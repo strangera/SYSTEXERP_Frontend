@@ -68,7 +68,5 @@
              [dataKey]="'pod_no'"
              [columns]="columns"
              [totalRecords]="service.totalRecords()"
-             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-             [lazy]="!0"
              [loading]="service.dataLoading()"></app-table>
 </div>

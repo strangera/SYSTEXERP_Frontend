@@ -87,8 +87,6 @@
                [loading]="service.tableLoading()"
                [expansionColumns]="extColumns"
                [expansionDataKey]="'Details'"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="true"
                (edit)="onEdit($event)"
                (delete)="onDelete($event)"
                (detail)="onDetail($event)"></app-table>
