@@ -66,7 +66,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     LOCATION_No: ['', Validators.maxLength(10)],
     org_id: [[]],
-    building_no: [''],
+    building_no: [[]],
     FLOOR_NO: [[] as string[]],
     AREA_NO: [[] as string[]],
     GROSS_SPACE_Start: [null, [Validators.min(0), Validators.max(9999.999)]],
@@ -81,7 +81,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   // 注意：狀態欄改用 LOCATION_Status_Label，避免資料在排序/再查詢時被型別影響
   columns: any[] = [
     { field: 'LOCATION_No', header: '位置代碼', visible: true },
-    
+
     { field: 'org_id', header: '組織代碼', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
     {

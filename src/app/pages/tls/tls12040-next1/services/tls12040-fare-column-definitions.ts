@@ -137,16 +137,16 @@ export class TLS12040FareColumnDefinitions {
         dateFormat: 'year-month',
         required: true,
 
-        defaultValueFunction: () => {
-          if ((this as any)?._isCopiedItem) {
-            return null; // 保持現有值
-          }
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_bdate) {
-            return new Date(contractInfo.tlt_contract_bdate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   if ((this as any)?._isCopiedItem) {
+        //     return null; // 保持現有值
+        //   }
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_bdate) {
+        //     return new Date(contractInfo.tlt_contract_bdate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_type',
@@ -173,7 +173,7 @@ export class TLS12040FareColumnDefinitions {
 
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1,
+        // defaultValue: 1,
 
         allowDecimal: true, // 是否允許小數點
         decimalPlaces: 3  // 小數位數，預設2位
@@ -207,7 +207,7 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
+        // defaultValue: 'Y',
 
       }
     ];
@@ -256,21 +256,19 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
-
         autoWidth: true,
         dateFormat: 'year-month',
         required: true,
-
-        defaultValueFunction: () => {
-          if ((this as any)?._isCopiedItem) {
-            return null; // 保持現有值
-          }
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_bdate) {
-            return new Date(contractInfo.tlt_contract_bdate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   if ((this as any)?._isCopiedItem) {
+        //     return null; // 保持現有值
+        //   }
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_bdate) {
+        //     return new Date(contractInfo.tlt_contract_bdate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_edate',
@@ -280,16 +278,16 @@ export class TLS12040FareColumnDefinitions {
         dateFormat: 'year-month',
         required: true,
 
-        defaultValueFunction: () => {
-          if ((this as any)?._isCopiedItem) {
-            return null; // 保持現有值
-          }
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_edate) {
-            return new Date(contractInfo.tlt_contract_edate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   if ((this as any)?._isCopiedItem) {
+        //     return null; // 保持現有值
+        //   }
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_edate) {
+        //     return new Date(contractInfo.tlt_contract_edate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_type',
@@ -308,7 +306,7 @@ export class TLS12040FareColumnDefinitions {
 
         required: true,
         validators: [TableValidators.positive('單價必須大於0')],
-        defaultValue: 0,
+        // defaultValue: 0,
 
       },
       {
@@ -319,7 +317,7 @@ export class TLS12040FareColumnDefinitions {
 
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1,
+        // defaultValue: 1,
 
       },
       {
@@ -327,7 +325,7 @@ export class TLS12040FareColumnDefinitions {
         header: '扣款金額(未稅)',
         type: 'number',
         editable: false,
-        defaultValue: 0,
+        // defaultValue: 0,
 
       },
       {
@@ -340,7 +338,7 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
+        // defaultValue: 'Y',
 
       },
       {
@@ -353,16 +351,15 @@ export class TLS12040FareColumnDefinitions {
           { label: '否', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
+        // defaultValue: 'Y',
 
       },
       {
         field: 'interval',
         header: '扣款週期數(月)',
         type: 'number',
-
         required: true,
-        defaultValue: 1,
+        // defaultValue: 1,
 
       }
     ];
@@ -423,14 +420,13 @@ export class TLS12040FareColumnDefinitions {
 
         dateFormat: 'year-month',
         required: true,
-
-        defaultValueFunction: () => {
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_bdate) {
-            return new Date(contractInfo.tlt_contract_bdate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_bdate) {
+        //     return new Date(contractInfo.tlt_contract_bdate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_edate',
@@ -439,23 +435,20 @@ export class TLS12040FareColumnDefinitions {
 
         dateFormat: 'year-month',
         required: true,
-
-        defaultValueFunction: () => {
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_edate) {
-            return new Date(contractInfo.tlt_contract_edate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_edate) {
+        //     return new Date(contractInfo.tlt_contract_edate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_totalamt',
         header: '總金額',
         type: 'number',
-
         autoWidth: true,
         required: true,
-
       },
       {
         field: 'period_nos',
@@ -542,7 +535,7 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
+        // defaultValue: 'Y',
 
       }
     ];
@@ -662,13 +655,13 @@ export class TLS12040FareColumnDefinitions {
         style: 'min-width: 120px; width: 140px;',
         required: true,
 
-        defaultValueFunction: () => {
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_bdate) {
-            return new Date(contractInfo.tlt_contract_bdate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_bdate) {
+        //     return new Date(contractInfo.tlt_contract_bdate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_edate',
@@ -678,13 +671,13 @@ export class TLS12040FareColumnDefinitions {
         dateFormat: 'year-month',
         required: true,
         style: 'min-width: 120px; width: 140px;',
-        defaultValueFunction: () => {
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_edate) {
-            return new Date(contractInfo.tlt_contract_edate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_edate) {
+        //     return new Date(contractInfo.tlt_contract_edate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_type',
@@ -725,7 +718,7 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
+        // defaultValue: 'Y',
 
       }
     ];
@@ -774,29 +767,27 @@ export class TLS12040FareColumnDefinitions {
         dateFormat: 'year-month',
         required: true,
 
-        defaultValueFunction: () => {
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_bdate) {
-            return new Date(contractInfo.tlt_contract_bdate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_bdate) {
+        //     return new Date(contractInfo.tlt_contract_bdate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'tpy_edate',
         header: '扣款結束年月',
         type: 'date',
-
         dateFormat: 'year-month',
         required: true,
-
-        defaultValueFunction: () => {
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_edate) {
-            return new Date(contractInfo.tlt_contract_edate);
-          }
-          return null;
-        }
+        // defaultValueFunction: () => {
+        //   const contractInfo = contractInfoData[0];
+        //   if (contractInfo?.tlt_contract_edate) {
+        //     return new Date(contractInfo.tlt_contract_edate);
+        //   }
+        //   return null;
+        // }
       },
       {
         field: 'cap_saletype',
@@ -853,7 +844,7 @@ export class TLS12040FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
+        // defaultValue: 'Y',
 
       }
     ];
