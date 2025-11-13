@@ -236,6 +236,11 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 
   percent(val: any): string {
     const n = this.parsePercent(val);
+
+    if (val === 'nopercent') {
+    //  不要顯示百分比
+    return '0'; 
+    }
     return (n / 100).toLocaleString('en-US', {
       style: 'percent',
       maximumFractionDigits: 2,
@@ -243,148 +248,164 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
   }
 
   /** Lazy 取數（提供給子元件） */
-  fetchTLS55070 = (evt: LazyLoadEvent) => {
-    const raw: any = this.queryForm.getRawValue();
-    const pageSize = Number.isFinite(evt?.pageSize) ? Number(evt.pageSize) : Number(raw?.pageSize) || 20;
-    const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt.pageIndex) : Number(raw?.pageIndex) || 1;
+/** Lazy 取數（提供給子元件） */
+fetchTLS55070 = (evt: LazyLoadEvent) => {
+  const raw: any = this.queryForm.getRawValue();
 
-    const uiSort = this.ensureGroupFirst(
-      Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
-        ? (evt as any).SortBy
-        : Array.isArray(raw?.SortBy) && raw.SortBy.length
+  // 事件可能給 pageSize 或 rows（PrimeNG）
+  const evtPageSize = Number.isFinite((evt as any)?.pageSize)
+    ? Number((evt as any).pageSize)
+    : Number.isFinite((evt as any)?.rows)
+      ? Number((evt as any).rows)
+      : undefined;
+
+ // 改成（加上分組）
+const pageSize = (evtPageSize ?? Number(raw?.pageSize)) || 20;
+
+  // 事件可能沒有 pageIndex（PrimeNG 常見），用 first/rows 推回 pageIndex
+  const evtHasPageIndex = Number.isFinite((evt as any)?.pageIndex);
+  const evtFirst = Number.isFinite((evt as any)?.first) ? Number((evt as any).first) : 0;
+  const pageIndex = evtHasPageIndex
+    ? Number((evt as any).pageIndex)
+    : Math.floor(evtFirst / pageSize) + 1;
+
+  // 排序：evt.SortBy > raw.SortBy > defaultSort，並確保 group 欄位優先
+  const uiSort = this.ensureGroupFirst(
+    Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+      ? (evt as any).SortBy
+      : Array.isArray(raw?.SortBy) && raw.SortBy.length
         ? raw.SortBy
         : this.defaultSort,
-    );
-    const apiSort = this.toApiSort(uiSort);
+  );
+  const apiSort = this.toApiSort(uiSort);
 
-    const payload = this.buildPayload({
-      ...raw,
-      pageSize,
-      pageIndex,
-      SortBy: apiSort,
-    });
+  const payload = this.buildPayload({
+    ...raw,
+    pageSize,
+    pageIndex,
+    SortBy: apiSort,
+  });
 
-    return this.tls55070Service.queryTLS55070(payload).pipe(
-      map((res: any) => {
-        const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
-        const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
-          this.unpackResponse(wrappers);
+  // 同步表單（匯出或續載時可拿到正確的頁碼/筆數/排序）
+  this.queryForm.patchValue({ pageSize, pageIndex, SortBy: uiSort }, { emitEvent: false });
 
-        const apiTotal = Number(res?.TotalCount);
-        const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+  return this.tls55070Service.queryTLS55070(payload).pipe(
+    map((res: any) => {
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+        this.unpackResponse(wrappers);
 
-        const ended = new Set<string>();
-        for (let i = 0; i < rows.length - 1; i++) {
-          const g1 = rows[i][this.groupByField];
-          const g2 = rows[i + 1][this.groupByField];
-          if (g1 !== g2) ended.add(g1);
-        }
-        const last = rows[rows.length - 1];
-        const lastKey = last?.[this.groupByField];
-        const totalPage =
-          Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
-        const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
-        if (!hasNext && lastKey) ended.add(lastKey);
+      const apiTotal = Number(res?.TotalCount);
+      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
 
-        const externalSubtotals: Record<string, Record<string, number>> = {};
-        ended.forEach((k) => {
-          if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
-        });
+      // 決定哪些群組已經結束 -> 顯示外部小計
+      const ended = new Set<string>();
+      for (let i = 0; i < rows.length - 1; i++) {
+        const g1 = rows[i][this.groupByField];
+        const g2 = rows[i + 1][this.groupByField];
+        if (g1 !== g2) ended.add(g1);
+      }
+      const totalPage =
+        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+      const lastKey = rows[rows.length - 1]?.[this.groupByField];
+      if (!hasNext && lastKey) ended.add(lastKey);
 
-        this.allSubtotals = allSubtotals;
-        this.visibleSubtotals = externalSubtotals;
-        this.detailTotals = externalTotals;
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      ended.forEach((k) => {
+        if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
+      });
 
-        return { rows, totalRecords, externalTotals, externalSubtotals };
+      this.allSubtotals = allSubtotals;
+      this.visibleSubtotals = externalSubtotals;
+      this.detailTotals = externalTotals;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    }),
+    catchError(() =>
+      of({
+        rows: [],
+        totalRecords: 0,
+        externalTotals: {},
+        externalSubtotals: {},
       }),
-      catchError(() =>
-        of({
-          rows: [],
-          totalRecords: 0,
-          externalTotals: {},
-          externalSubtotals: {},
-        }),
-      ),
-    );
-  };
+    ),
+  );
+};
 
-  onSubmit(form: FormGroup): void {
-    this.loading = true;
-    const raw: any = { ...form.getRawValue() };
-    const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
-    const pageIndex = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+onSubmit(form: FormGroup): void {
+  this.activated = true;          // 允許後續 lazy 載入
+  this.loading = true;
 
-    const uiSortBy: any[] = this.ensureGroupFirst(
-      Array.isArray(raw?.SortBy) && raw.SortBy.length
-        ? raw.SortBy
-        : this.sortMeta?.length
+  // 重新查詢 -> 回到第一頁
+  this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+
+  const raw: any = { ...this.queryForm.getRawValue() };
+  const pageSize = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
+  const pageIndex = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+
+  // 排序：raw.SortBy 或現有 sortMeta，最後保底 defaultSort；並確保群組優先
+  const uiSortBy: any[] = this.ensureGroupFirst(
+    Array.isArray(raw?.SortBy) && raw.SortBy.length
+      ? raw.SortBy
+      : this.sortMeta?.length
         ? this.sortMeta
         : this.defaultSort,
-    ).map((s) => ({ ...s }));
+  ).map((s) => ({ ...s }));
 
-    const payload = this.buildPayload({
-      ...raw,
-      pageSize,
-      pageIndex,
-      SortBy: this.toApiSort(uiSortBy),
-    });
-    this.historyRequestBody = { ...payload };
+  const payload = this.buildPayload({
+    ...raw,
+    pageSize,
+    pageIndex,
+    SortBy: this.toApiSort(uiSortBy),
+  });
+  this.historyRequestBody = { ...payload };
 
-    this.tls55070Service
-      .queryTLS55070(payload)
-      .pipe(
-        timeout(60_000),
-        finalize(() => (this.loading = false)),
-        catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
-      )
-      .subscribe((res: any) => {
-        const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
-        const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
-          this.unpackResponse(wrappers);
+  this.tls55070Service
+    .queryTLS55070(payload)
+    .pipe(
+      timeout(60_000),
+      finalize(() => (this.loading = false)),
+      catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
+    )
+    .subscribe((res: any) => {
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+        this.unpackResponse(wrappers);
 
-        const apiTotal = Number(res?.TotalCount);
-        const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+      const apiTotal = Number(res?.TotalCount);
+      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
 
-        const ended = new Set<string>();
-        for (let i = 0; i < rows.length - 1; i++) {
-          const g1 = rows[i][this.groupByField];
-          const g2 = rows[i + 1][this.groupByField];
-          if (g1 !== g2) ended.add(g1);
-        }
+      const ended = new Set<string>();
+      for (let i = 0; i < rows.length - 1; i++) {
+        const g1 = rows[i][this.groupByField];
+        const g2 = rows[i + 1][this.groupByField];
+        if (g1 !== g2) ended.add(g1);
+      }
+      const totalPage =
+        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+      const lastKey = rows[rows.length - 1]?.[this.groupByField];
+      if (!hasNext && lastKey) ended.add(lastKey);
 
-        const totalPage =
-          Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
-        const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
-        const lastKey = rows[rows.length - 1]?.[this.groupByField];
-        if (!hasNext && lastKey) ended.add(lastKey);
-
-        const vis: Record<string, Record<string, number>> = {};
-        ended.forEach((k) => {
-          if (allSubtotals[k]) vis[k] = allSubtotals[k];
-        });
-
-        this.data = rows;
-        this.totalRecords = totalRecords;
-        this.allSubtotals = allSubtotals;
-        this.visibleSubtotals = vis;
-        this.detailTotals = externalTotals;
-
-        // 確保子表格的 groupKey 在初次查詢完也有設定
-        queueMicrotask(() => {
-          if (this.saleTable) this.saleTable.groupKey = this.groupByField;
-        });
+      const vis: Record<string, Record<string, number>> = {};
+      ended.forEach((k) => {
+        if (allSubtotals[k]) vis[k] = allSubtotals[k];
       });
-        queueMicrotask(() => {
-      const raw: any = this.queryForm.getRawValue();
-      const pageSize = Number(raw?.pageSize) || 20;
-      const pageIndex = Number(raw?.pageIndex) || 1;
-      const SortBy =
-        Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : this.defaultSort;
 
-      this.onLazyLoadData({ pageIndex, pageSize, SortBy } as any, this.queryForm);
-      this.loading = false; // 外層自己關 loading（真正資料載入時，子流程會再設定）
+      this.data = rows;
+      this.totalRecords = totalRecords;
+      this.allSubtotals = allSubtotals;
+      this.visibleSubtotals = vis;
+      this.detailTotals = externalTotals;
+
+      // 確保子表格群組鍵
+      queueMicrotask(() => {
+        if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+      });
     });
-  }
+}
+
 
   // === 匯出 Excel ===
   onExportExcel() {
@@ -494,14 +515,15 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
         _rowKey: `${grpKey}|__SUBTOTAL__`,
         [this.groupByField]: grpKey,
         TXN_SaleNoteNo: saleNo,
-        TXN_Date: w?.TXN_Date ?? '',
-        ECR_No: w?.ECR_No ?? '',
-        TLT_No: w?.TLT_No ?? '',
-        HOS_NO: w?.HOS_NO ?? '',
-        HOS_NAME: w?.HOS_NAME ?? '',
-        TXN_TaxType: w?.TXN_TaxType ?? '',
-        GUINO: w?.GUINO ?? '',
+        TXN_Date: '',
+        ECR_No: '',
+        TLT_No: '',
+        HOS_NO: '',
+        HOS_NAME:'',
+        TXN_TaxType: '',
+        GUINO: '',
         PLU_Name: '銷售金額',
+        DiscRate:'nopercent',
         TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
         __isSubRow: true,
       });
@@ -594,27 +616,44 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     return def;
   }
 
-  /** 提供給外層 lazy slot（TLS2B010 用法） */
-// 原本：override onLazyLoadData = (evt: LazyLoadEvent, _form: FormGroup) => {
-  override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
-    if (!this.activated) return; // 未按查詢前，不要自動打 API
+/** 提供給外層 lazy slot（TLS2B010 用法） */
+override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
+  if (!this.activated) return; // 未按查詢前，不要自動打 API
 
-    const e = evt as any as LazyLoadEvent;
-    this.fetchTLS55070(e).subscribe({
-      next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
-        this.data = rows;
-        this.totalRecords = totalRecords;
-        this.detailTotals = externalTotals;
-        this.visibleSubtotals = externalSubtotals;
-      },
-      error: _ => {
-        this.data = [];
-        this.totalRecords = 0;
-        this.detailTotals = {};
-        this.visibleSubtotals = {};
-      }
-    });
-  };
+  const e = evt as any as LazyLoadEvent;
+
+  // 事件可能給 pageSize 或 rows（PrimeNG）
+  const evtPageSize = Number.isFinite((e as any)?.pageSize)
+    ? Number((e as any).pageSize)
+    : Number.isFinite((e as any)?.rows)
+      ? Number((e as any).rows)
+      : undefined;
+  const pageSize = (evtPageSize ?? Number(this.queryForm.value?.pageSize)) || 20;
+
+  // 事件可能沒有 pageIndex（PrimeNG 常見）：用 first/rows 推回 pageIndex
+  const evtHasPageIndex = Number.isFinite((e as any)?.pageIndex);
+  const first = Number.isFinite((e as any)?.first) ? Number((e as any).first) : 0;
+  const pageIndex = evtHasPageIndex ? Number((e as any).pageIndex) : Math.floor(first / pageSize) + 1;
+
+  // 同步回表單
+  this.queryForm.patchValue({ pageIndex, pageSize }, { emitEvent: false });
+
+  this.fetchTLS55070(e).subscribe({
+    next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
+      this.data = rows;
+      this.totalRecords = totalRecords;
+      this.detailTotals = externalTotals;
+      this.visibleSubtotals = externalSubtotals;
+    },
+    error: _ => {
+      this.data = [];
+      this.totalRecords = 0;
+      this.detailTotals = {};
+      this.visibleSubtotals = {};
+    }
+  });
+};
+
 
 
 }

@@ -37,8 +37,8 @@
                         label="設備位置編號"
                         controlName="Location_No"
                         [options]="service.locationOptions()"
-                        optionLabel="Name"
-                        optionValue="No"
+                        optionLabel="LOCATION_Name"
+                        optionValue="LOCATION_No"
                         [control]="qf().Location_No"
                         [loading]="service.locationLoading()"
                         [submitted]="submitted"></app-dropdown>
@@ -46,8 +46,7 @@
                               label="備註"
                               controlName="ENG_Remark"
                               [control]="qf().ENG_Remark"
-                              [submitted]="submitted">
-          </app-input-textarea>
+                              [submitted]="submitted"></app-input-textarea>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"

@@ -10,6 +10,34 @@ import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2000';
 
+/** 錶號位置資訊 */
+export interface ENG1001Location {
+  Mid: number;
+  SYS_StoreNo: string;
+  ENG_Type: string;
+  ENG_MeterNo: string;
+  Location_No: string;
+  Building_No: string;
+  Building_Desc: string;
+  Floor_No: string;
+  Floor_Desc: string;
+  Draw_X: number | null;
+  Draw_Y: number | null;
+  NET_SPACE: number | null;
+}
+
+/** 未設定專櫃清單 */
+export interface TLTUnset {
+  TLT_No: string;
+  TLT_Name: string;
+  TLT_bdate: string | null;
+  TLT_edate: string | null;
+  Water_Flag: string;
+  Electric_Flag: string;
+  Gas_Flag: string;
+  Apply_No: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ASS21020Service {
 
@@ -24,6 +52,12 @@ export class ASS21020Service {
   public readonly engMeterNoOptions = signal<ASS2100ENGMeterType[]>([]);
   public readonly tltNoOptions = signal<TLTByFlag[]>([]);
 
+  /** 未設定專櫃清單  */
+  public readonly tltUnsetOptions = signal<TLTUnset[]>([]);
+
+  /** 當前錶號的位置資訊*/
+  public readonly currentLocationInfo = signal<ENG1001Location | null>(null);
+
   /** 能源類型對應表 */
   public readonly engTypeMap = new Map<string, EngType>([
     ['水錶', EngType.水],
@@ -33,19 +67,27 @@ export class ASS21020Service {
     ['G02', EngType.電],
     ['G03', EngType.瓦斯],
   ]);
+
   /** 錶號應表 */
   public readonly engMeterNoMap = computed(() =>
     new Map(this.engMeterNoOptions().map(item => [item.ENG_MeterNo, item]))
   );
+
   /** 專櫃編號應表 */
   public readonly tltByFlagMap = computed(() =>
     new Map(this.tltNoOptions().map(item => [item.TLT_No, item]))
   );
 
+  /** 未設定專櫃編號應表  */
+  public readonly tltUnsetMap = computed(() =>
+    new Map(this.tltUnsetOptions().map(item => [item.TLT_No, item]))
+  );
+
   public readonly tableLoading = signal<boolean>(!1);
   public readonly engMeterNoLoading = signal<boolean>(!1);
   public readonly tltByFlagLoading = signal<boolean>(!1);
-
+  public readonly locationLoading = signal<boolean>(!1);
+  public readonly tltUnsetLoading = signal<boolean>(!1);
 
   public readonly totalRecords = signal<number>(0);
 
@@ -93,13 +135,55 @@ export class ASS21020Service {
     ).subscribe();
   };
 
-  public getTltByFlags(ENG_MeterNo: string, MID: number): void {
+  public getTltByFlags(ENG_MeterNo: string, MID: number, ENG_Types: string[]): void {
     this.tltByFlagLoading.set(!0);
-    this.http.post<BaseQueryResponse<TLTByFlag>>(`${environment.ApiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID, ENG_MeterNo }).pipe(
+    this.http.post<BaseQueryResponse<TLTByFlag>>(
+      `${environment.ApiUrl}/Share/queryTLTTALENTByFlag_DropDownList`,
+      { MID, ENG_MeterNo, ENG_Types }
+    ).pipe(
       take(1),
       tap(res => this.tltNoOptions.set(res.Data)),
       tap(res => this.logger.debug(`查詢TltByFlag參數:`, [res])),
       finalize(() => this.tltByFlagLoading.set(!1))
+    ).subscribe();
+  }
+
+  /**
+   * 取得錶號位置資訊
+   * 當選擇錶號後，帶出位置、建築、樓層等資訊
+   */
+  public getENG1001Location(ENG_MeterNo: string, MID: number, ENG_Type: string): Observable<BaseQueryResponse<ENG1001Location>> {
+    this.locationLoading.set(!0);
+    return this.http.post<BaseQueryResponse<ENG1001Location>>(
+      `${environment.ApiUrl}/Share/queryENG1001Location_DropDownList`,
+      { MID, ENG_MeterNo, ENG_Type }
+    ).pipe(
+      take(1),
+      tap(res => {
+        // 儲存位置資訊供表格使用
+        if (res.Data && res.Data.length > 0) {
+          this.currentLocationInfo.set(res.Data[0]);
+        }
+      }),
+      tap(res => this.logger.debug(`查詢錶號位置資訊:`, [res])),
+      finalize(() => this.locationLoading.set(!1))
+    );
+  }
+
+  /**
+   * 取得未設定抄表的專櫃清單
+   * 當選擇錶號後，取得可以分配給該錶號的專櫃清單
+   */
+  public getTLTUnset(ENG_MeterNo: string, MID: number, ENG_Type: string): void {
+    this.tltUnsetLoading.set(!0);
+    this.http.post<BaseQueryResponse<TLTUnset>>(
+      `${environment.ApiUrl}/Share/queryTLTTALENTUnset_DropDownList`,
+      { MID, ENG_MeterNo, ENG_Type }
+    ).pipe(
+      take(1),
+      tap(res => this.tltUnsetOptions.set(res.Data)),
+      tap(res => this.logger.debug(`查詢未設定專櫃清單:`, [res])),
+      finalize(() => this.tltUnsetLoading.set(!1))
     ).subscribe();
   }
 }

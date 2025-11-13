@@ -11,6 +11,12 @@ import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
+export interface ENG1002DropdownOption {
+  LOCATION_No: string;
+  LOCATION_Name: string;
+  NET_SPACE: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ASS21010Service {
 
@@ -27,7 +33,7 @@ export class ASS21010Service {
     { value: EngType.瓦斯, label: '瓦斯錶' },
   ];
   public readonly engMeterNoOptions = signal<ASS2100ENGMeterType[]>([]);
-  public readonly locationOptions = signal<DropdownOption[]>([]);
+  public readonly locationOptions = signal<ENG1002DropdownOption[]>([]);
 
   /** 能源類型對應表 */
   public readonly engTypeMap = new Map<string, EngType>([
@@ -67,16 +73,27 @@ export class ASS21010Service {
   };
 
   public loadLocationNo(): void {
-    this.locationLoading.set(!0);
-    this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
+    this.locationLoading.set(true);
+    this.http.post<any>(`${apiUrl}/Share/queryENG1002_DropDownList`, {}).pipe(
       take(1),
       tap(res => {
-        this.locationOptions.set(res.Data);
+        this.logger.debug('查詢Location原始回應:', res);
+        // 根據實際回傳結構調整
+        const data = res.Data || res || [];
+        this.locationOptions.set(data);
         this.logger.debug('查詢Location結果:', [this.locationOptions()]);
       }),
-      finalize(() => this.locationLoading.set(!1))
-    ).subscribe();
-  };
+      finalize(() => {
+        this.logger.debug('loadLocationNo finalize');
+        this.locationLoading.set(false);
+      })
+    ).subscribe({
+      error: (err) => {
+        this.logger.error('查詢Location失敗:', err);
+        this.notification.errorBubble('查詢設備位置失敗');
+      }
+    });
+  }
 
   public loadASS21010(payload: ASS21010Payload): void {
     this.tableLoading.set(!0);
