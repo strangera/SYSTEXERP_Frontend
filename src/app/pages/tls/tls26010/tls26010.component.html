@@ -107,8 +107,6 @@
                [columns]="columns"
                [multiSortMeta]="[{ field: 'id', order: 1 }]"
                [totalRecords]="service.totalRecords()"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="true"
                [loading]="service.tableLoading()"
                (lazyLoadData)="onSubmit()"></app-table>
   </div>

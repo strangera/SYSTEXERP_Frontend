@@ -35,16 +35,16 @@
   <div class="col-12">
     <app-table-report tableKey="FIN55110" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
       [queryFunction]="queryFunction" [lastQueryBody]="lastQueryBody" [loading]="loading" [showManage]="false"
-      [showReportMode]="false" [showDetail]="false" [showEdit]="false" [showDelete]="false"
-      [showCaption]="true" [showExcel]="false" [firstLoading]="false" [showSort]="true">
+      [showReportMode]="false" [showDetail]="false" [showEdit]="false" [showDelete]="false" [showCaption]="true"
+      [showExcel]="false" [loading]="false" [showSort]="true">
       <header>
-      <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="產出⽇記帳表.PDF" [loading]="btnLoading1" icon="pi pi-file" (click)="onExportPDF()"
-          [disabled]="data.length === 0" ></p-button>
-        <p-button styleClass="p-2" label="產出⽇記帳表.XLSX" [loading]="btnLoading2" icon="pi pi-file" (click)="onExportXLSX()"
-          [disabled]="data.length === 0" ></p-button>
-      </div>
-    </header>
-      </app-table-report >
+        <div class="flex justify-content-end align-items-center gap-2">
+          <p-button styleClass="p-2" label="產出⽇記帳表.PDF" [loading]="btnLoading1" icon="pi pi-file"
+            (click)="onExportPDF()" [disabled]="data.length === 0"></p-button>
+          <p-button styleClass="p-2" label="產出⽇記帳表.XLSX" [loading]="btnLoading2" icon="pi pi-file"
+            (click)="onExportXLSX()" [disabled]="data.length === 0"></p-button>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>
