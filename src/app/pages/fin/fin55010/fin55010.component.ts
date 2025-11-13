@@ -65,10 +65,10 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
   private lastQueryBody: any | null = null;
 
   queryForm = this.formBuilder.group({
-    // DateFrom: [this.yesterday, Validators.required],
-    // DateTo: [this.yesterday, Validators.required],
-    DateFrom: ['2025-04-01', Validators.required],
-    DateTo: ['2025-04-30', Validators.required],
+    DateFrom: [this.yesterday, Validators.required],
+    DateTo: [this.yesterday, Validators.required],
+    // DateFrom: ['2025-04-01', Validators.required],
+    // DateTo: ['2025-04-30', Validators.required],
     VouNoFrom: [null],
     VouNoTo: [null],
     CRT_USR: [null],
