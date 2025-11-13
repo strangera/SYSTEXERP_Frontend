@@ -975,7 +975,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         this.orgPOS2005Data = this.POS2005Data;
         this.orgPOS2020Data = this.POS2020Data;
-        this.orgImg1001Data = [...this.img1001Detail];
+        this.orgImg1001Data = [...this.img1001Data];
       });
     }
   }
