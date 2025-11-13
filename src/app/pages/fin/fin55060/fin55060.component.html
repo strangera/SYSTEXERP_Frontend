@@ -4,73 +4,44 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
 
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 日期(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="日期"
-              [startControl]="queryForm.controls.TXN_BDATE"
-              [endControl]="queryForm.controls.TXN_EDATE"
-              [submitted]="submitted">
+            <app-calendar-range calendarType="dateRange" label="日期" [startControl]="queryForm.controls.TXN_BDATE"
+              [endControl]="queryForm.controls.TXN_EDATE" [submitted]="submitted">
             </app-calendar-range>
           </div>
 
           <!-- 部門 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="部門"
-              controlName="org_idList"
-              [options]="org_idListOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.org_idList"
-              [submitted]="submitted">
+            <app-multi-select label="部門" controlName="org_idList" [options]="org_idListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.org_idList" [submitted]="submitted">
             </app-multi-select>
           </div>
 
           <!-- 活動代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="活動代碼"
-              controlName="ProjectNoList"
-              [options]="ProjectNoListOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ProjectNoList"
+            <app-multi-select label="活動代碼" controlName="ProjectNoList" [options]="ProjectNoListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.ProjectNoList"
               [submitted]="submitted">
             </app-multi-select>
           </div>
 
           <!-- 科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="科目代號"
-              controlName="AccNoList"
-              [options]="AccNoListOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.AccNoList"
-              [submitted]="submitted">
+            <app-multi-select label="科目代號" controlName="AccNoList" [options]="AccNoListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.AccNoList" [submitted]="submitted">
             </app-multi-select>
           </div>
 
           <!-- 廠商代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="廠商代號"
-              controlName="DetailNoList"
-              [options]="DetailNoListOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.DetailNoList"
+            <app-multi-select label="廠商代號" controlName="DetailNoList" [options]="DetailNoListOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.DetailNoList"
               [submitted]="submitted">
             </app-multi-select>
           </div>
@@ -88,44 +59,19 @@
 <!-- 表格 + 匯出按鈕在同一個 CARD，分頁模式依 FIN55050（不顯示 paginator / serialNo） -->
 <div class="card">
   <div class="flex justify-content-end gap-2 mb-2">
-    <app-button
-      label="匯出 PDF"
-      icon="pi pi-file-pdf"
-      (clickEvent)="onExportPDF()"
-      [loading]="btnLoading"
+    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (clickEvent)="onExportPDF()" [loading]="btnLoading"
       [disabled]="loading || (data.length || 0) === 0">
     </app-button>
 
-    <app-button
-      label="匯出 Excel"
-      icon="pi pi-file-excel"
-      (clickEvent)="onExportXLSX()"
-      [loading]="btnLoading"
+    <app-button label="匯出 Excel" icon="pi pi-file-excel" (clickEvent)="onExportXLSX()" [loading]="btnLoading"
       [disabled]="loading || (data.length || 0) === 0">
     </app-button>
   </div>
 
-  <app-table-subheader
-    tableKey="FIN55060"
-    dataKey="AccNo4"                
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    [showManage]="false"
-    [showDelete]="false"
-    [multiSortMeta]="[]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    [showSerialNo]="false"
-    [showPaginator]="false"
-    [showReportMode]="false"
-    [groupRowsBy]="'AccNo4'"
-    [groupRowsByName]="'AccNo4Name'"
-    [showExcel]="false"
-    [showExcelExport]="false"
-    [showExcelImport]="false"
-    (detail)="onDetail($event)"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
+  <app-table-subheader tableKey="FIN55060" dataKey="AccNo4" [data]="data" [columns]="columns" [showCheckBox]="false"
+    [showManage]="false" [showDelete]="false" [multiSortMeta]="[]" [totalRecords]="totalRecords" [lazy]="true"
+    [loading]="loading" [showSerialNo]="false" [showPaginator]="false" [showReportMode]="false" [groupRowsBy]="'AccNo4'"
+    [groupRowsByName]="'AccNo4Name'" (detail)="onDetail($event)"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showSort]="false">
   </app-table-subheader>
 </div>
