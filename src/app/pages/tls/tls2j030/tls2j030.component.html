@@ -35,10 +35,10 @@
 </div>
 <!-- isNotECR -->
 <div class="card">
-  <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody" [loading]="loading"
-    [queryFunction]="tls2j030Service.queryTLS2J030.bind(tls2j030Service)" [selectedItems]="selectedItems"
+  <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody" [loading]="loading"(detail)="onDetail($event)"
+    [queryFunction]="tls2j030Service.queryTLS2J030.bind(tls2j030Service)" [selectedItems]="selectedItems"[showEdit]="false"
     (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true"
-    [showExcel]="false" [showReportMode]="false" [showManage]="false" [showDelete]="true" [dataKey]="'CHG_No'">
+    [showExcel]="false" [showReportMode]="false" [showManage]="true" [showDelete]="true" [dataKey]="'CHG_No'">
   </app-table-report>
 </div>
 
