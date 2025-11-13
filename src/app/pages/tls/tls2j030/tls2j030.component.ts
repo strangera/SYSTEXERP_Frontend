@@ -17,7 +17,7 @@ import { NgIf } from '@angular/common';
 import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs/operators';
-import { formatAmount, formatDateTime, formatDateToYYYYMMDD } from '@shared/componentkit/table2/table2.model';
+import { formatAmount } from '@shared/componentkit/table2/table2.model';
 
 // 2.2.18.3 後台發票換開補登作業
 @Component({
@@ -86,22 +86,28 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2J030', 'TLS/TLS2J030cru', this.queryForm, (form) => this.onSubmit(form));
-    // this.checkECRMachine();
+    this.checkECRMachine();
   }
 
-  // private checkECRMachine() {
-  //   const ip = this.authService.currentUserValue?.client_ip;
-  //   if (!ip) {
-  //     this.isNotECR = true;
-  //     return;
-  //   }
+  private checkECRMachine() {
+    const ip = this.authService.currentUserValue?.client_ip;
+    if (!ip) {
+      this.isNotECR = true;
+      return;
+    }
+    // this.tls2j030Service.queryEcrNo(ip).subscribe({
+    //   next: (res: any) => {
+    //     this.isNotECR = (res.Data === null);
 
-  //   this.tls2j030Service.checkECR(ip).subscribe({
-  //     next: (res) => {
-  //       this.isNotECR = !res.isValid;
-  //     },
-  //   });
-  // }
+    //     if (this.isNotECR) {
+    //       this.queryForm.disable();
+    //     } else {
+    //       this.queryForm.enable();
+    //     }
+    //   }
+    // });
+
+  }
 
   onSubmit(frm: FormGroup) {
     if (this.isNotECR) return;
