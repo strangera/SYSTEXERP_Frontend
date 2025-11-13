@@ -1075,44 +1075,6 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.messageService.errorBubble('資料儲存失敗，請重試');
     }
   }
-
-  // onSubmitNext(): void {
-  //   // 確保表單有效性
-  //   if (this.dataForm.invalid) {
-  //     this.messageService.warnBubble('請檢查必填欄位');
-  //     this.markFormGroupTouched(this.dataForm);
-  //     return;
-  //   }
-
-  //   const completeData = {
-  //     ...this.dataForm.value,
-  //     locationInfo: this.locationInfo
-  //   };
-
-  //   // 保存到工作流程
-  //   const saveResult = this.flowService.setCruData(completeData);
-
-  //   if (!saveResult) {
-  //     this.messageService.errorBubble('資料儲存失敗，請重試');
-  //     return;
-  //   }
-
-  //   // 確保狀態正確傳遞
-  //   const navigationExtras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: this.crudstatus, // 確保這個值是正確的
-  //       fromRoute: this.router.url,
-  //       // 添加額外的標識
-  //       fromCRU: true,
-  //       applyNo: this.dataForm.get('apply_no')?.value || ''
-  //     }
-  //   };
-
-  //   console.log('🚀 CRU 導航到 Next1，傳遞狀態:', navigationExtras.state);
-
-  //   this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
-  // }
-
   onSubmitNext(): void {
     // 確保表單有效
     if (this.dataForm.invalid) {
