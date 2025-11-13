@@ -1,97 +1,80 @@
-import { ValidationService } from './../../../shared/service/validation.service';
-import { Component } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { CommonModule, DatePipe } from '@angular/common';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgFor } from '@angular/common';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { Button } from 'primeng/button';
-
+import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { TLS2J040Request, TLS2j040Service } from '@service/api/tls/tls2j040.service';
+import { environment } from 'src/environments/environment';
+import { DomSanitizer } from '@angular/platform-browser';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
-// 2.2.18.4 發票換開作業
 @Component({
   selector: 'app-tls2j040',
   templateUrl: './tls2j040.component.html',
   styleUrl: './tls2j040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, CalendarRangeComponent, InputNumberComponent, InputNumberRangeComponent, Button, TranslateModule]
+  imports: [
+    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
+    InputTextComponent, TranslateModule, CalendarComponent, CommonModule
+  ]
 })
-export class TLS2J040Component {
-  ProgNo: string = '220093';
-  submitted = false;
-
-  cruForm = this.formBuilder.group({
-    uID: ['', [Validators.required, Validators.maxLength(8)]], // 統一編號
-    buyer: ['', [Validators.maxLength(60)]], // 買受人
-    address: ['', [Validators.maxLength(50)]], // 地址
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+export class TLS2J040Component extends BasicQueryPageComponent<any> implements OnInit {
+  
+  // Updated form group to match the fields in TLS2J040Request
+  queryForm = this.formBuilder.group({
+    TxnDate: ['', Validators.required],               // 換開日期 (TxnDate)
+    TxnGUINo: ['', [Validators.maxLength(20)]],        // 三聯式發票號碼 (TxnGUINo)
+    TxnUniform: ['', [Validators.maxLength(8)]],       // 買受人統一編號 (TxnUniform)
   });
 
+  pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
+
   constructor(
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private validationService: ValidationService,) {
+    private readonly service: TLS2j040Service,
+    private readonly validationService: ValidationService,
+    private readonly datePipe: DatePipe,
+    private sanitizer: DomSanitizer
+  ) {
+    super();
   }
 
   ngOnInit(): void {
-  }
-  //
-  get items(): FormArray {
-    return this.cruForm.get('items') as FormArray;
+    this.initializePage('TLS2J040', '/TLS/TLS2J040', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-
-  //
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      startdate: [, [Validators.required, Validators.required]], // 銷售日期
-      enddate: [, [Validators.required, Validators.required]], // 銷售日期
-      registerID: [, [Validators.required, Validators.maxLength(6),]], // 收銀機號
-      transferID: [, [Validators.required, Validators.maxLength(6),]], // 交易流水號
-      counterID: [, [Validators.required, Validators.maxLength(6),]], // 專櫃編號
-      startserialticket: [, [Validators.required, this.validationService.numberValidator]], // 二聯發票號碼
-      endserialticket: [, [Validators.required, this.validationService.numberValidator]], // 二聯發票號碼
-      taxPrice: [, [Validators.required, this.validationService.numberValidator]], // 應稅金額
-      notaxPrice: [0, [Validators.required, this.validationService.numberValidator]], // 免稅金額
-    });
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    console.log(frm.value); // 取得表frm的值
-
-    if (this.cruForm.invalid) {
-      this.messageService.unblockUi();
-      return;
+  // Updated onSubmit method to match new payload structure
+  onSubmit(frm: FormGroup): void {
+    const payload: TLS2J040Request = {
+      TxnDate: frm.get('TxnDate')?.value,             // 換開日期
+      TxnGUINo: frm.get('TxnGUINo')?.value,           // 三聯式發票號碼
+      TxnUniform: frm.get('TxnUniform')?.value,       // 買受人統一編號
     }
 
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+    this.handleSubmit(frm, () => {
+      this.service.print(payload)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          if (response.Status === '0000' && response.Data?.Print_URL) {
+            let rawUrl = response.Data.Print_URL.startsWith('http')
+              ? response.Data.Print_URL
+              : `${environment.BaseUrl}${response.Data.Print_URL}`;
+            rawUrl = decodeURIComponent(rawUrl);
+            console.log('rawUrl', rawUrl);
+            // ⬇️ 用 sanitizer 包裝
+            this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+          }
+          else {
+            this.messageService.errorBubble(response.Message);
+          }
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 }
