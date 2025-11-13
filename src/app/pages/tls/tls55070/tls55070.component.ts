@@ -468,11 +468,17 @@ onSubmit(form: FormGroup): void {
       IsShowStatus: this.emptyToNull(raw['IsShowStatus']),
     };
 
-    if (this.includePagingAndSorting) {
-      payload['pageSize'] = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
-      payload['pageIndex'] = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
-      payload['SortBy'] = Array.isArray(raw?.SortBy) ? raw.SortBy : this.toApiSort(this.defaultSort);
-    }
+if (this.includePagingAndSorting) {
+  payload['pageSize'] = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
+  payload['pageIndex'] = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+
+  const uiSort = Array.isArray(raw?.SortBy) && raw.SortBy.length
+    ? raw.SortBy
+    : this.defaultSort;
+
+  // ✅ 一律透過 toApiSort 做欄位過濾 & 轉換
+  payload['SortBy'] = this.toApiSort(uiSort);
+}
 
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
@@ -564,25 +570,48 @@ rows.push({
   }
 
   /** UI sort 轉 API sort：把 _grp 映成 TXN_SaleNoteNo，避免打散群組 */
-  private toApiSort(
-    uiSort: Array<{ field: string; order: 1 | -1 }>
-  ): Array<{ field: string; order: 1 | -1 }> {
-    const out: Array<{ field: string; order: 1 | -1 }> = [];
-    let injectedSaleNo = false;
+/** UI sort 轉 API sort：
+ *   - 把 _grp 映成 TXN_SaleNoteNo
+ *   - 忽略 UI 專用欄位（像 _rowKey 之類）
+ */
+private toApiSort(
+  uiSort: Array<{ field: string; order: 1 | -1 }>
+): Array<{ field: string; order: 1 | -1 }> {
+  const out: Array<{ field: string; order: 1 | -1 }> = [];
+  let injectedSaleNo = false;
 
-    for (const s of uiSort ?? []) {
-      if (s.field === this.groupByField) {
-        out.push({ field: 'TXN_SaleNoteNo', order: s.order });
-        injectedSaleNo = true;
-      } else {
-        out.push(s);
-      }
+  for (const s of uiSort ?? []) {
+    if (!s || !s.field) continue;
+
+    // 群組欄位：_grp -> TXN_SaleNoteNo
+    if (s.field === this.groupByField) {
+      out.push({ field: 'TXN_SaleNoteNo', order: s.order });
+      injectedSaleNo = true;
+      continue;
     }
-    if (!injectedSaleNo) out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
 
-    const seen = new Set<string>();
-    return out.filter(s => (seen.has(s.field) ? false : (seen.add(s.field), true)));
+    // 🚫 忽略前端用的 UI 欄位，不送給後端（_rowKey 等）
+    if (s.field.startsWith('_')) {
+      continue;
+    }
+
+    // 一般欄位：直接帶出去
+    out.push(s);
   }
+
+  // 沒有任何 TXN_SaleNoteNo，就幫忙補一個在最前面
+  if (!injectedSaleNo) {
+    out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
+  }
+
+  // 去掉重複欄位
+  const seen = new Set<string>();
+  return out.filter((s) => {
+    if (seen.has(s.field)) return false;
+    seen.add(s.field);
+    return true;
+  });
+}
 
   private emptyToNull(v: any) {
     return v === '' ? null : v;
@@ -630,6 +659,7 @@ rows.push({
   }
 
 /** 提供給外層 lazy slot（TLS2B010 用法） */
+/** 提供給外層 lazy slot（TLS2B010 用法） */
 override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
   if (!this.activated) return; // 未按查詢前，不要自動打 API
 
@@ -651,20 +681,32 @@ override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
   // 同步回表單
   this.queryForm.patchValue({ pageIndex, pageSize }, { emitEvent: false });
 
-  this.fetchTLS55070(e).subscribe({
-    next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
-      this.data = rows;
-      this.totalRecords = totalRecords;
-      this.detailTotals = externalTotals;
-      this.visibleSubtotals = externalSubtotals;
-    },
-    error: _ => {
-      this.data = [];
-      this.totalRecords = 0;
-      this.detailTotals = {};
-      this.visibleSubtotals = {};
-    }
-  });
+  // 🔒 開啟 loading，讓 table 的 onScroll 停止觸發
+  this.loading = true;
+
+  this.fetchTLS55070(e)
+    .pipe(
+      finalize(() => {
+        // 🔓 API 回來再解鎖
+        this.loading = false;
+      })
+    )
+    .subscribe({
+      next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
+        // ✅ 重點：這裡改成「累加」而不是覆蓋
+        this.data = [...this.data, ...rows];
+
+        this.totalRecords = totalRecords;
+        this.detailTotals = externalTotals;
+        this.visibleSubtotals = externalSubtotals;
+      },
+      error: _ => {
+        this.data = [];
+        this.totalRecords = 0;
+        this.detailTotals = {};
+        this.visibleSubtotals = {};
+      }
+    });
 };
 
 

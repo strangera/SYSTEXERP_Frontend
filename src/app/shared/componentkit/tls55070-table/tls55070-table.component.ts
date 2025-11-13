@@ -277,26 +277,33 @@ export class TLS55070TableComponent
   }
 
   /** 重新依「全部資料」建立群組 meta（沒有分頁概念） */
-  private rebuildGroupMeta(): void {
-    const rows = this.data || [];
-    const meta: Record<string, { start: number; size: number; index: number }> = {};
+/** 重新依「全部資料」建立群組 meta（沒有分頁概念） */
+private rebuildGroupMeta(): void {
+  const rows = this.data || [];
+  const meta: Record<string, { start: number; size: number; index: number }> = {};
 
-    let lastKey: string | null = null;
-    let groupIndex = 0;
+  let lastKey: string | null = null;
+  let groupIndex = 0;
 
-    rows.forEach((row, i) => {
-      const key = this.buildGroupKey(row?.[this.groupKey], i);
-      if (key === lastKey) {
-        meta[key].size++;
-      } else {
-        groupIndex++;
-        meta[key] = { start: i, size: 1, index: groupIndex };
-        lastKey = key;
-      }
-    });
+  rows.forEach((row, i) => {
+    // 🚫 小計列直接略過，不參與群組序號與 rowspan 計算
+    if (row && row.__isSubRow) {
+      return;
+    }
 
-    this.groupMeta = meta;
-  }
+    const key = this.buildGroupKey(row?.[this.groupKey], i);
+    if (key === lastKey) {
+      meta[key].size++;
+    } else {
+      groupIndex++;
+      meta[key] = { start: i, size: 1, index: groupIndex };
+      lastKey = key;
+    }
+  });
+
+  this.groupMeta = meta;
+}
+
 
   /** 樣板用：取得群組鍵（用 index 當 fallback） */
   getGroupKeyValue(rowData: any, rowIndex: number): string {
@@ -493,11 +500,7 @@ getSubtotalValue(rowData: any): number {
   // 優先用 SumTXN_SaleAmt，沒有再退回 TXN_SaleAmt
   const raw = rowData.SumTXN_SaleAmt ?? rowData.TXN_SaleAmt ?? 0;
 
-  console.log('===== [TLS55070Table] subtotal rowData =====');
-  console.log('rowData =', rowData);
-  console.log('SumTXN_SaleAmt =', rowData?.SumTXN_SaleAmt, 'type =', typeof rowData?.SumTXN_SaleAmt);
-  console.log('TXN_SaleAmt =', rowData?.TXN_SaleAmt, 'type =', typeof rowData?.TXN_SaleAmt);
-  console.log('_grp =', rowData?._grp, '_grpBase =', rowData?._grpBase);
+
 
   let n: number;
 
@@ -510,8 +513,7 @@ getSubtotalValue(rowData: any): number {
 
   if (!isFinite(n)) n = 0;
 
-  console.log('=> subtotal value used =', n);
-  console.log('=========================================');
+
 
   return n;
 }
