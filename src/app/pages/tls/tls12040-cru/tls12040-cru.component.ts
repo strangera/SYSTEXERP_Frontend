@@ -25,7 +25,7 @@ import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/ex
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { debounceTime, distinctUntilChanged, forkJoin, Observable, Subscription } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, forkJoin, Observable, of, Subscription, tap } from 'rxjs';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
 import { TLS12040Response } from '../tls12040/tls12040.component';
@@ -58,6 +58,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   locationInfo: LocationDetails[] = [];
   displayLocationData: LocationDetails[] = [];
   private subscriptions: Subscription[] = [];
+  private isLoadingExistingData = false;
 
   locationColumns: ColumnDef[] = [
     {
@@ -456,17 +457,17 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   private loadCachedDataWithClassifications(cruData: any): void {
     console.log('📄 開始載入暫存表單資料（含分類處理）');
+
     if (cruData.check_type && !cruData.check_typeList) {
       cruData.check_typeList = cruData.check_type.split(',').map((s: string) => s.trim());
     }
-    // 先載入基本資料（不包括分類）
-    const basicData = { ...cruData };
-    delete basicData.bus_type;
-    delete basicData.bus_class;
-    delete basicData.bus_sclass;
-    delete basicData.locationInfo;
 
-    this.dataForm.patchValue(basicData);
+    // 新做法：保留分類，只分開處理 locationInfo
+    const formData = { ...cruData };
+    delete formData.locationInfo;  // 只刪除 locationInfo
+
+    // 使用 { emitEvent: false } 不觸發監聽器
+    this.dataForm.patchValue(formData, { emitEvent: false });
 
     // 處理位置資料
     if (cruData.locationInfo) {
@@ -474,57 +475,47 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.updateDisplayLocationData();
     }
 
-    // 關鍵修正：確保分類按正確順序載入
+    // 關鍵：只載入選項，不重新設定值
     if (cruData.bus_type) {
-      this.loadClassificationChain(cruData);
+      this.loadClassificationOptionsOnly(cruData);
     } else {
       // 沒有分類資料時，直接重新保存
       this.flowService.setCruData({
         ...cruData,
-        ...this.dataForm.value,
+        ...this.dataForm.getRawValue(),  // 使用 getRawValue() 取得包含 disabled 欄位的值
         locationInfo: this.locationInfo
       });
     }
   }
 
-  //  新增方法：按順序載入分類鏈
-  private loadClassificationChain(cruData: any): void {
-    console.log('🏷️ 開始載入分類鏈:', {
+  private loadClassificationOptionsOnly(cruData: any): void {
+    console.log('🔧 載入分類選項（不設定值）:', {
       bus_type: cruData.bus_type,
       bus_class: cruData.bus_class,
       bus_sclass: cruData.bus_sclass
     });
 
-    // 1. 設定大分類
-    this.dataForm.patchValue({ bus_type: cruData.bus_type });
-
-    // 2. 載入中分類選項
+    // 只載入中分類選項，不設定值
     this.businessClassificationService.getBusClassOptions(cruData.bus_type).subscribe({
       next: (busClassOptions) => {
         this.busClassOptions = busClassOptions;
-        console.log(' 中分類選項載入完成:', busClassOptions.length);
+        console.log('中分類選項載入完成:', busClassOptions.length, '筆');
 
-        // 3. 如果有中分類值，設定並載入小分類
+        // 如果有中分類，載入小分類選項
         if (cruData.bus_class) {
-          this.dataForm.patchValue({ bus_class: cruData.bus_class });
-
-          // 4. 載入小分類選項
           this.businessClassificationService.getBusSClassOptions(cruData.bus_type, cruData.bus_class).subscribe({
             next: (busSClassOptions) => {
               this.busSClassOptions = busSClassOptions;
-              console.log(' 小分類選項載入完成:', busSClassOptions.length);
+              console.log('小分類選項載入完成:', busSClassOptions.length, '筆');
 
-              // 5. 如果有小分類值，設定
-              if (cruData.bus_sclass) {
-                this.dataForm.patchValue({ bus_sclass: cruData.bus_sclass });
-              }
+              // 選項載入完成，觸發變更偵測
+              this.cdr.detectChanges();
 
-              // 6. 所有分類載入完成後，重新保存
+              // 重新保存完整資料
               this.saveCompleteDataToFlow(cruData);
             },
             error: (error) => {
               console.error('❌ 載入小分類失敗:', error);
-              // 即使失敗也要保存其他資料
               this.saveCompleteDataToFlow(cruData);
             }
           });
@@ -535,7 +526,6 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       },
       error: (error) => {
         console.error('❌ 載入中分類失敗:', error);
-        // 即使失敗也要保存其他資料
         this.saveCompleteDataToFlow(cruData);
       }
     });
@@ -545,14 +535,18 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private saveCompleteDataToFlow(originalData: any): void {
     const completeData = {
       ...originalData,
-      ...this.dataForm.value,
+      ...this.dataForm.getRawValue(),  //  使用 getRawValue() 確保取得所有值
       locationInfo: this.locationInfo
     };
 
     this.flowService.setCruData(completeData);
-    console.log(' 完整資料已保存到流程');
-  }
 
+    console.log(' 完整資料已保存到流程:', {
+      bus_type: completeData.bus_type,
+      bus_class: completeData.bus_class,
+      bus_sclass: completeData.bus_sclass
+    });
+  }
 
   private handleRouterState(): void {
     const state = this.router.lastSuccessfulNavigation?.extras?.state;
@@ -571,7 +565,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         if (cruData) {
           console.log('💾 載入暫存的 CRU 資料');
 
-          // ✅ 根據模式選擇載入方式
+          //  根據模式選擇載入方式
           if (this.crudstatus === CRUDStatus.Read) {
             // Readonly 模式
             this.dataForm.enable(); // 暫時啟用
@@ -591,13 +585,13 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
               _isNew: item._isNew || false,
               _isEmpty: item._isEmpty || false
             }));
-            console.log('✅ 位置資料已恢復:', this.locationInfo.length, '筆');
+            console.log(' 位置資料已恢復:', this.locationInfo.length, '筆');
           }
 
           this.updateDisplayLocationData();
           return;
         } else {
-          console.warn('⚠️ 沒有暫存的 CRU 資料');
+          console.warn(' 沒有暫存的 CRU 資料');
         }
       }
 
@@ -675,7 +669,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
    * 處理載入錯誤的情況
    */
   private handleLoadError(): void {
-    console.log('⚠️ 處理載入錯誤');
+    console.log(' 處理載入錯誤');
 
     // 3秒後返回列表頁面
     setTimeout(() => {
@@ -685,7 +679,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   private loadContractDetail(rowData: TLS12040DetailModel): void {
     console.log('🔍 開始載入合約詳細資料:', rowData);
+
     this.loading = true;
+    this.isLoadingExistingData = true; //  設定旗標：開始載入
 
     const request: TLS12040RequestModel = {
       id: rowData.id,
@@ -697,35 +693,43 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         if (response && response.Status === '0000' && response.Data) {
           console.log('📦 API 回應資料:', response.Data);
 
-          // ✅ 根據模式選擇載入方式
+          //  根據模式選擇載入方式
           if (this.crudstatus === CRUDStatus.Read) {
-            // Readonly 模式:使用特殊載入方法
             this.populateFormForReadMode(response.Data);
           } else {
-            // Edit 模式:使用一般載入方法
             this.populateForm(response.Data);
           }
 
           this.loadLocationData(response.Data.LocationDetails || []);
+
+          //  載入業種分類選項（不會清空值）
           this.loadDependentDropdowns(response.Data);
 
           // 強制更新選項
           this.refreshAllDropdownOptions();
 
           this.cdr.detectChanges();
-          console.log('✅ 合約資料載入完成');
+          console.log(' 合約資料載入完成');
         }
       },
       error: (error) => {
         console.error('❌ 載入合約資料失敗:', error);
         this.messageService.errorBubble('載入資料失敗');
         this.loading = false;
+        this.isLoadingExistingData = false; //  重置旗標
       },
       complete: () => {
         this.loading = false;
+
+        // ⚠️ 延遲重置旗標，確保所有非同步操作完成
+        setTimeout(() => {
+          this.isLoadingExistingData = false; //  重置旗標
+          console.log('🏁 資料載入完成，已重置旗標');
+        }, 500);
       }
     });
   }
+
 
 
   private refreshAllDropdownOptions(): void {
@@ -756,35 +760,52 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   private loadDependentDropdowns(data: TLS12040DetailModel): void {
-    if (data.bus_type) {
-      this.onBusTypeChange(data.bus_type);  // 大分類變更邏輯（會清空中小分類，這在 load 時是OK的，因為我們會重新載入）
-      if (data.bus_class) {
-        this.businessClassificationService.getBusClassOptions(data.bus_type).subscribe({
-          next: (options) => {
-            this.busClassOptions = options;
-            this.dataForm.patchValue({ bus_class: data.bus_class });
-            if (data.bus_sclass) {
-              // 直接載入小分類，不要呼叫 onBusClassChange（避免清空）
-              this.businessClassificationService.getBusSClassOptions(data.bus_type, data.bus_class).subscribe({
-                next: (sOptions) => {
-                  this.busSClassOptions = sOptions;
-                  this.dataForm.patchValue({ bus_sclass: data.bus_sclass });
-                },
-                error: (error) => {
-                  console.error('載入小分類失敗:', error);
-                  // this.notificationService.errorBubble('載入小分類失敗');
-                }
-              });
-            }
-          },
-          error: (error) => {
-            console.error('載入中分類失敗:', error);
-            // this.notificationService.errorBubble('載入中分類失敗');
-          }
-        });
-      }
+    console.log('🔄 載入業種分類資料:', {
+      bus_type: data.bus_type,
+      bus_class: data.bus_class,
+      bus_sclass: data.bus_sclass
+    });
+
+    if (!data.bus_type) {
+      console.warn('⚠️ 沒有大分類代碼');
+      return;
     }
+
+    //  關鍵：不要呼叫 onBusTypeChange，直接載入選項
+    // ❌ 錯誤：this.onBusTypeChange(data.bus_type); // 這會清空值！
+
+    //  正確：直接載入中分類選項（不清空值）
+    this.businessClassificationService.getBusClassOptions(data.bus_type).subscribe({
+      next: (options) => {
+        this.busClassOptions = options;
+        console.log(' 中分類選項已載入:', options.length, '筆');
+
+        // ⚠️ 如果有中分類資料，繼續載入小分類
+        if (data.bus_class) {
+          this.businessClassificationService.getBusSClassOptions(data.bus_type, data.bus_class).subscribe({
+            next: (sOptions) => {
+              this.busSClassOptions = sOptions;
+              console.log(' 小分類選項已載入:', sOptions.length, '筆');
+
+              //  選項載入完成後，強制觸發變更偵測
+              this.cdr.detectChanges();
+            },
+            error: (error) => {
+              console.error('❌ 載入小分類失敗:', error);
+              this.busSClassOptions = [];
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('❌ 載入中分類失敗:', error);
+        this.busClassOptions = [];
+      }
+    });
+
+    console.log('📝 注意：不要清空表單值，保留既有的 bus_class 和 bus_sclass');
   }
+
 
   private populateForm(data: any): void {
     console.log('🔍 populateForm 開始,原始資料:', data);
@@ -803,7 +824,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         ? data.check_type.split(',').map((s: string) => s.trim())
         : []
     };
-
+    this.dataForm.patchValue(processedData, {
+      emitEvent: false  // 關鍵：不觸發 valueChanges
+    });
 
     dateFields.forEach(field => {
       if (processedData[field]) {
@@ -819,7 +842,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 填充表單
     this.dataForm.patchValue(processedData);
 
-    // ✅ 在 readonly 模式下,立即保存到 session
+    //  在 readonly 模式下,立即保存到 session
     if (this.crudstatus === CRUDStatus.Read) {
       setTimeout(() => {
         this.forceSaveToSession();
@@ -830,12 +853,12 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.triggerAllDynamicValidators();
     this.dataForm.markAsPristine();
 
-    console.log('✅ populateForm 完成');
+    console.log(' populateForm 完成');
   }
 
   private loadLocationData(locationDetails: any[]): void {
     if (!locationDetails || !Array.isArray(locationDetails)) {
-      console.warn('⚠️ LocationDetails 為空或格式不正確:', locationDetails);
+      console.warn(' LocationDetails 為空或格式不正確:', locationDetails);
       this.locationInfo = [];
       this.updateDisplayLocationData();
       return;
@@ -930,24 +953,73 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // 大分類變更時載入中分類（需要屬性方式）
   onBusTypeChange(busType: string) {
-    this.busClassOptions = [];  // 清空中分類
-    this.busSClassOptions = [];  // 清空小分類（級聯清空）
+    console.log('🔄 大分類變更:', busType);
 
-    if (!busType) return;
+    // ⚠️ 只在使用者手動變更時才清空
+    // 載入既有資料時不應該清空
+    const shouldClearOnChange = !this.isLoadingExistingData;
 
-    this.businessClassificationService.getBusClassOptions(busType).subscribe(options => {
-      this.busClassOptions = options;
+    if (shouldClearOnChange) {
+      this.dataForm.patchValue({
+        bus_class: '',
+        bus_sclass: ''
+      }, { emitEvent: false });
+    }
+
+    // 清空選項（這是必要的）
+    this.busClassOptions = [];
+    this.busSClassOptions = [];
+
+    if (!busType) {
+      return;
+    }
+
+    // 載入中分類選項
+    this.businessClassificationService.getBusClassOptions(busType).subscribe({
+      next: (options) => {
+        this.busClassOptions = options;
+        console.log('中分類選項已載入:', options.length, '筆');
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('❌ 載入中分類失敗:', error);
+        this.busClassOptions = [];
+      }
     });
   }
 
   onBusClassChange(busClass: string) {
+    console.log('🔄 中分類變更:', busClass);
+
     const busType = this.dataForm.get('bus_type')?.value;
-    this.busSClassOptions = [];  // 清空小分類
 
-    if (!busType || !busClass) return;
+    // ⚠️ 只在使用者手動變更時才清空
+    const shouldClearOnChange = !this.isLoadingExistingData;
 
-    this.businessClassificationService.getBusSClassOptions(busType, busClass).subscribe(options => {
-      this.busSClassOptions = options;
+    if (shouldClearOnChange) {
+      this.dataForm.patchValue({
+        bus_sclass: ''
+      }, { emitEvent: false });
+    }
+
+    // 清空選項
+    this.busSClassOptions = [];
+
+    if (!busType || !busClass) {
+      return;
+    }
+
+    // 載入小分類選項
+    this.businessClassificationService.getBusSClassOptions(busType, busClass).subscribe({
+      next: (options) => {
+        this.busSClassOptions = options;
+        console.log('小分類選項已載入:', options.length, '筆');
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('❌ 載入小分類失敗:', error);
+        this.busSClassOptions = [];
+      }
     });
   }
 
@@ -1078,7 +1150,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 🔍 驗證保存後的資料
     const savedData = this.flowService.getCruData();
-    console.log('✅ 保存後驗證:', {
+    console.log(' 保存後驗證:', {
       tlt_bdate: savedData?.tlt_bdate,
       tlt_edate: savedData?.tlt_edate,
       tlt_contract_bdate: savedData?.tlt_contract_bdate,
@@ -1412,7 +1484,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 找到對應項目並更新
     const index = this.locationInfo.findIndex(item => item.id === newData.id);
     if (index > -1) {
-      console.log(`🎯 找到對應項目，索引: ${index}`);
+      console.log(` 找到對應項目，索引: ${index}`);
       this.locationInfo[index] = { ...newData };
       this.locationInfo = [...this.locationInfo];
     } else {
@@ -1912,7 +1984,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
         if (vendorVenNo && vendorVenNo.trim()) {
           if (!this.vendorOptions || this.vendorOptions.length === 0) {
-            console.warn('⚠️ vendorOptions 尚未載入');
+            console.warn(' vendorOptions 尚未載入');
             return;
           }
 
@@ -1938,19 +2010,19 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
             this.dataForm.get('VEN_Address')?.markAsTouched();
             this.dataForm.get('vendor_acct_name')?.markAsTouched();
 
-            console.log('✅ 已設定表單值');
+            console.log(' 已設定表單值');
             this.messageService.successBubble('已自動填入廠商編號、廠商名稱、公司登記地址和帳戶名稱');
 
-            // B. ✅ 載入潛在客戶資料
+            // B.  載入潛在客戶資料
             const venUniform = vendorData.No || '';
             if (venUniform) {
               this.loadPotentialCustomerData(venUniform);
             }
           } else {
-            console.warn('⚠️ 找不到對應選項');
+            console.warn(' 找不到對應選項');
           }
         } else {
-          // ✅ 清空所有欄位（包含潛在客戶相關欄位）
+          //  清空所有欄位（包含潛在客戶相關欄位）
           this.dataForm.patchValue({
             vendor_no: '',
             ven_no: '',
@@ -1958,10 +2030,10 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
             VEN_Name: '',
             VEN_Address: '',
             vendor_acct_name: '',
-            tlt_name: '',        // ✅ 清空專櫃名稱
-            bus_type: '',        // ✅ 清空大分類
-            contact_tel: '',     // ✅ 清空電話
-            contact_fax: ''      // ✅ 清空傳真
+            tlt_name: '',        //  清空專櫃名稱
+            bus_type: '',        //  清空大分類
+            contact_tel: '',     //  清空電話
+            contact_fax: ''      //  清空傳真
           }, { emitEvent: false });
         }
       });
@@ -1976,6 +2048,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
  * 大分類 → 中分類 → 小分類
  */
   private setupBusinessClassificationListeners(): void {
+    console.log('🎧 設定業種分類監聽器');
+
     // 監聽大分類變更
     const busTypeSubscription = this.dataForm.get('bus_type')?.valueChanges
       .pipe(
@@ -1983,7 +2057,27 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         distinctUntilChanged()
       )
       .subscribe(busType => {
-        console.log('🔍 大分類變更:', busType);
+        console.log('🔔 大分類變更事件觸發:', busType);
+
+        //  關鍵：如果是載入既有資料，不要清空
+        if (this.isLoadingExistingData) {
+          console.log('⏭️ 正在載入既有資料，跳過清空邏輯');
+
+          // 但還是要載入選項
+          if (busType) {
+            this.businessClassificationService.getBusClassOptions(busType).subscribe({
+              next: (options) => {
+                this.busClassOptions = options;
+                console.log(' 已載入中分類選項:', options.length, '筆');
+                this.cdr.detectChanges();
+              }
+            });
+          }
+          return; // ⚠️ 關鍵：直接 return，不執行下面的清空邏輯
+        }
+
+        //  只有使用者手動變更時，才執行清空邏輯
+        console.log('👤 使用者手動變更大分類，執行清空邏輯');
 
         if (busType) {
           // 清空中分類和小分類的值
@@ -2000,7 +2094,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
           this.businessClassificationService.getBusClassOptions(busType).subscribe({
             next: (options) => {
               this.busClassOptions = options;
-              console.log('✅ 已載入中分類選項:', options.length, '筆');
+              console.log(' 已載入中分類選項:', options.length, '筆');
+              this.cdr.detectChanges();
             },
             error: (err) => {
               console.error('❌ 載入中分類失敗:', err);
@@ -2029,7 +2124,28 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         distinctUntilChanged()
       )
       .subscribe(busClass => {
-        console.log('🔍 中分類變更:', busClass);
+        console.log('🔔 中分類變更事件觸發:', busClass);
+
+        //  如果是載入既有資料，不要清空
+        if (this.isLoadingExistingData) {
+          console.log('⏭️ 正在載入既有資料，跳過清空邏輯');
+
+          // 但還是要載入小分類選項
+          const busType = this.dataForm.get('bus_type')?.value;
+          if (busType && busClass) {
+            this.businessClassificationService.getBusSClassOptions(busType, busClass).subscribe({
+              next: (options) => {
+                this.busSClassOptions = options;
+                console.log(' 已載入小分類選項:', options.length, '筆');
+                this.cdr.detectChanges();
+              }
+            });
+          }
+          return; // ⚠️ 關鍵：直接 return
+        }
+
+        //  只有使用者手動變更時，才執行清空邏輯
+        console.log('👤 使用者手動變更中分類，執行清空邏輯');
 
         const busType = this.dataForm.get('bus_type')?.value;
 
@@ -2046,7 +2162,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
           this.businessClassificationService.getBusSClassOptions(busType, busClass).subscribe({
             next: (options) => {
               this.busSClassOptions = options;
-              console.log('✅ 已載入小分類選項:', options.length, '筆');
+              console.log(' 已載入小分類選項:', options.length, '筆');
+              this.cdr.detectChanges();
             },
             error: (err) => {
               console.error('❌ 載入小分類失敗:', err);
@@ -2066,29 +2183,15 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.autoSaveToWorkflow();
       });
 
-    // 監聽小分類變更（如需要）
-    const busSClassSubscription = this.dataForm.get('bus_sclass')?.valueChanges
-      .pipe(
-        debounceTime(100),
-        distinctUntilChanged()
-      )
-      .subscribe(busSClass => {
-        console.log('🔍 小分類變更:', busSClass);
-
-        // 自動保存
-        this.autoSaveToWorkflow();
-      });
-
-    // 將訂閱加入清單，以便在 ngOnDestroy 時取消訂閱
+    // 記得取消訂閱
     if (busTypeSubscription) {
       this.subscriptions.push(busTypeSubscription);
     }
     if (busClassSubscription) {
       this.subscriptions.push(busClassSubscription);
     }
-    if (busSClassSubscription) {
-      this.subscriptions.push(busSClassSubscription);
-    }
+
+    console.log(' 業種分類監聽器設定完成');
   }
 
 
@@ -2119,7 +2222,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         if (result.Data && result.Data.length > 0) {
           const potentialData = result.Data[0];
 
-          console.log('✅ 找到潛在客戶資料:', potentialData);
+          console.log(' 找到潛在客戶資料:', potentialData);
 
           // 回填欄位
           this.dataForm.patchValue({
@@ -2134,10 +2237,10 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
           this.dataForm.get('bus_type')?.markAsTouched();
 
           this.messageService.successBubble('已自動帶入潛在客戶資料');
-          console.log('✅ 已載入潛在客戶資料');
+          console.log(' 已載入潛在客戶資料');
 
         } else {
-          // ✅ 查無資料時清空相關欄位
+          //  查無資料時清空相關欄位
           console.log('ℹ️ 查無潛在客戶資料');
 
           this.dataForm.patchValue({
@@ -2153,7 +2256,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       error: (err) => {
         console.error('❌ 載入潛在客戶資料失敗:', err);
 
-        // ✅ 錯誤時也要清空欄位
+        //  錯誤時也要清空欄位
         this.dataForm.patchValue({
           tlt_name: '',
           bus_type: '',
@@ -2172,15 +2275,29 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // 3. 初始化預設值的方法
   private initializeFormDefaults(): void {
     const existingData = this.flowService.getCruData() as TLS12040DetailModel;
-    console.log('CRU 初始化時 cruData:', JSON.stringify(existingData?.locationInfo, null, 2));
+    console.log('🔄 CRU 初始化時 cruData:', JSON.stringify(existingData?.locationInfo, null, 2));
 
     if (existingData && Object.keys(existingData).length > 0) {
-      console.log('使用暫存資料，跳過預設值設定');
-      this.dataForm.patchValue(existingData);
+      console.log('📦 使用暫存資料，跳過預設值設定');
+
+      // ⚠️ 設定旗標
+      this.isLoadingExistingData = true;
+
+      // 使用 { emitEvent: false } 避免觸發監聽器
+      this.dataForm.patchValue(existingData, { emitEvent: false });
+
       this.locationInfo = existingData.locationInfo || [];
       this.displayLocationData = this.locationInfo.filter(item => item._status !== 'deleted');
       this.cdr.detectChanges();
+
+      // 載入分類
       this.loadCachedDataWithClassifications(existingData);
+
+      // ⚠️ 延遲重置旗標
+      setTimeout(() => {
+        this.isLoadingExistingData = false;
+        console.log('🏁 初始化完成，重置旗標');
+      }, 1000);
     } else {
       console.log('🆕 新增模式，設定預設值');
       this.formInitService.initializeByMode(this.dataForm, this.crudstatus);
@@ -2352,7 +2469,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const currentUser = this.authService.currentUserValue;
 
     if (!currentUser) {
-      console.warn('⚠️ 無法取得當前使用者資訊');
+      console.warn(' 無法取得當前使用者資訊');
       return;
     }
 
@@ -2420,7 +2537,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 構建完整資料
     const completeData = {
-      ...this.dataForm.getRawValue(), // ⚠️ 使用 getRawValue() 取得 disabled 欄位的值
+      ...this.dataForm.getRawValue(), //  使用 getRawValue() 取得 disabled 欄位的值
       locationInfo: this.locationInfo
     };
 
@@ -2453,7 +2570,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       'due_date',
       'contact_Date'
 
-      // ⚠️ 請根據您的 TLS12040DetailModel 補上所有日期欄位
+      //  請根據您的 TLS12040DetailModel 補上所有日期欄位
     ];
 
     const parsedData = { ...data };
