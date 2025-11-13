@@ -74,8 +74,6 @@
                [customReport]="true"
                (exportEvent)="onExport($event)"
                [exportExcelLoading]="service.exportLoading()"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="true"
                (edit)="onEdit($event)"
                (delete)="onDelete($event)"
                (detail)="onDetail($event)"></app-table>
