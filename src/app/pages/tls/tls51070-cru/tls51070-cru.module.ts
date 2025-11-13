@@ -37,7 +37,7 @@ export interface IMG1001Detail {
     "IMG_SeqNo": string,
     "IMG_Path": string,
     "IMG_File": string,
-    "IMG_Remark": string
+    "IMG_Remark": string | null,
     "CRT_Date": Date,
     "CRT_USR_No": string,
     "CRT_USR_Name": string,
