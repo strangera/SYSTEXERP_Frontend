@@ -220,6 +220,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // #region POS2005定義
   // 國際條碼編號	下拉
   POS2005Data: POS2005Detail[] = [];
+  orgPOS2005Data: POS2005Detail[] = []; // pos2005(備分)
   selectedPOS2005Items: POS2005Detail[] = [];
   // POS2005 展開式表格的欄位定義
   POS2005DataColumn: EditColumn[] = [
@@ -229,6 +230,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // #region POS2020定義
   // 廠商編號	下拉
   POS2020Data: POS2020Detail[] = [];
+  orgPOS2020Data: POS2020Detail[] = []; // pos2020(備分)
   selectedPOS2020Items: POS2020Detail[] = [];
   // 預設新項目模板
   defaultNew2020 = {
@@ -277,6 +279,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ------
   files: File[] = [];        // 上傳的檔案
   img1001Data: IMG1001Detail[] = []; // 圖片List editable, readable
+  orgImg1001Data: IMG1001Detail[] = []; // 圖片List editable, readable (備分)
   confirmDeleteImages: string[] = []; // 確定刪除的圖片
 
   constructor(
@@ -961,14 +964,18 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           VDP_LastStockDate: item.VDP_LastStockDate,
           status: 'old'
         }));
-        this.img1001Data = this.img1001Detail;
+        this.img1001Data = [...this.img1001Detail];
 
         //建立項目模板
         this.createDefaultNew2020(pLU_MagNo, pLU_OrderPrc);
 
-        console.log('POS2005Data', this.POS2005Data);
-        console.log('POS2020Data', this.POS2020Data);
-        console.log('img1001Data', this.img1001Data);
+        console.log('明細 POS2005Data', this.POS2005Data);
+        console.log('明細 POS2020Data', this.POS2020Data);
+        console.log('明細 img1001Data', this.img1001Data);
+
+        this.orgPOS2005Data = this.POS2005Data;
+        this.orgPOS2020Data = this.POS2020Data;
+        this.orgImg1001Data = [...this.img1001Detail];
       });
     }
   }
@@ -1000,7 +1007,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             this.isRefreshing = false;
           });
 
-        
+          // 重製明細檔
+          this.POS2005Data = this.orgPOS2005Data;
+          this.POS2020Data = this.orgPOS2020Data;
+          this.img1001Data = this.orgImg1001Data;
       }
     } else {
       console.log('查看模式無須重製');
@@ -1089,7 +1099,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   // #region 圖片更新
   async createImage(IMG_SeqNo: string) {
-    console.log('變更資料', this.files);
+    // console.log('本地變更資料', this.files);
 
     if (!IMG_SeqNo) {
       console.warn('⚠️ 缺少圖片編號 IMG_SeqNo，無法上傳');
@@ -1143,14 +1153,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     const tasks: Promise<any>[] = [];
 
     // ✅ 從目前 img1001Data 中，找出任一筆作為參考值（前提是該批圖片屬性都相同）
-    console.log('img1001Data目標',[...this.img1001Data]);
-    const reference = this.img1001Data.find(img =>
-      img.IMG_Type && img.IMG_SeqNo
-    );
+    console.log('img1001Detail目標',this.img1001Detail);
+    console.log('img1001Data目標',this.img1001Data);
+    const reference =
+      this.img1001Data.find(img => img.IMG_Type && img.IMG_SeqNo) ||
+      this.img1001Detail.find(img => img.IMG_Type && img.IMG_SeqNo);
 
     if (!reference) {
-      console.warn('⚠️ 找不到任何參考圖片資料，無法補齊request參數');
-      console.log('刪除目標',this.confirmDeleteImages);
+      console.warn('⚠️ 找不到任何參考圖片資料，無法補齊 request 參數');
+      console.log('刪除目標', this.confirmDeleteImages);
       return;
     }
 
