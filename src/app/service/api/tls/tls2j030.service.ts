@@ -11,8 +11,9 @@ export class TLS2j030Service {
 
   constructor(private http: HttpClient) { }
 
-  queryTLS2j030(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS2j030`, data);
+  queryTLS2J030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2J030`, data);
   }
 
 }
+

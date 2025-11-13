@@ -21,7 +21,7 @@
           <div class="col-12 md:col-6 lg:col-4"> <app-input-text label="來源發票號碼" controlName="TXN_GUIBegNo"
               [control]="queryForm.controls.TXN_GUIBegNo" [submitted]="submitted"></app-input-text> </div>
           <div class="col-12 md:col-6 lg:col-4"> <app-dropdown label="換開狀態" [options]="GUI_STATS_Options"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_STATS"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_Status"
               [submitted]="submitted"></app-dropdown> </div>
         </div>
 
@@ -35,12 +35,11 @@
 </div>
 <!-- isNotECR -->
 <div class="card">
-  <app-table #tableComponent tableKey="TLS26020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="tlt_no" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [lazy]="true" [loading]="loading" [showManage]="false"
-    [showDelete]="false" [expansionShowPaginator]="true">
-  </app-table>
+  <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls2j030Service.queryTLS2J030.bind(tls2j030Service)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true" [showExcel]="false"
+    [showReportMode]="false" [showManage]="false" [showDelete]="true" [dataKey]="'CHG_No'">
+  </app-table-report>
 </div>
 
 <!--
