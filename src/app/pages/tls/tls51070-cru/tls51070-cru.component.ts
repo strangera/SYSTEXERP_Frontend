@@ -1133,7 +1133,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.messageService.errorBubble('圖片上傳失敗');
     }
   }
-
+  
   private async deleteImages() {
     if (!this.confirmDeleteImages || this.confirmDeleteImages.length === 0) {
       console.info('⚠️ 無需刪除圖片');
@@ -1143,12 +1143,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     const tasks: Promise<any>[] = [];
 
     // ✅ 從目前 img1001Data 中，找出任一筆作為參考值（前提是該批圖片屬性都相同）
+    console.log('img1001Data目標',[...this.img1001Data]);
     const reference = this.img1001Data.find(img =>
       img.IMG_Type && img.IMG_SeqNo
     );
 
     if (!reference) {
-      console.warn('⚠️ 找不到任何參考圖片資料，無法補齊 API 參數');
+      console.warn('⚠️ 找不到任何參考圖片資料，無法補齊request參數');
+      console.log('刪除目標',this.confirmDeleteImages);
       return;
     }
 
@@ -1158,7 +1160,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       const request = {
         'IMG_Type': 'POS2004',
         "IMG_SeqNo": IMG_SeqNo,
-        IMG_File: fileName,
+        "IMG_File": fileName,
       };
 
       console.log('📤 刪除圖片內容:', request);

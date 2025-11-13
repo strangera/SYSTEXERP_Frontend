@@ -8,7 +8,7 @@
       <div class="image-container">
         <div
           class="m-2 p-3 flex flex-column justify-content-between align-items-center border-1 surface-border border-round gap-2">
-          <p-image [src]="image.IMG_Path" alt="圖片已失效，請刪除後上傳" />
+          <p-image [src]="image.IMG_Path" alt="圖片不存在伺服器或失效，請按【刪除圖片】再重新上傳" />
           <p-button *ngIf="showEdit" [label]="confirmDelete.has(image.IMG_File) ? '確定刪除' : '刪除圖片'"
             [outlined]="!confirmDelete.has(image.IMG_File)" severity="danger" icon="pi pi-trash"
             (click)="onDeleteClick(image)" />
