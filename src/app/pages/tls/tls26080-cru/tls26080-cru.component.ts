@@ -21,7 +21,7 @@ import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fi
 import { PanelModule } from 'primeng/panel';
 import { tap } from 'rxjs';
 import * as XLSX from 'xlsx';
-import { TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -45,7 +45,9 @@ import { TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
 
-  public dataForm = this.formBuilder.nonNullable.group({
+  public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
+
+  public readonly dataForm = this.formBuilder.nonNullable.group({
     pod_no: new FormControl<string>('自動給號', [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | void>(void 0, [Validators.required]), // 活動名稱
     pod_sdate: new FormControl<Date>(this.service.dateS, [Validators.required]), // 起始日期(起)
@@ -55,38 +57,38 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  public calcDateType = [
+  public readonly tls26080Data = signal<TLS26080Data[]>([]);
+  public readonly tableData = signal<TLS26080Detail[]>([]);
+  public readonly totalRecords = signal(0);
+  public readonly campaignData = signal<CampaignData[]>([]);
+
+  public readonly calcDateType = [
     { label: '活動起始日至截止日', value: 'Y' },
     { label: '正檔日至截止日', value: 'N' }
   ];
 
-  private fileSignal = signal<FormData | undefined>(void 0);
-  public fileUpload = viewChild.required<FileUpload>('fileUpload');
-
-  private podDescSignal = toSignal(this.df().pod_desc.valueChanges);
+  private readonly fileSignal = signal<FormData>(Object.create(null));
+  private readonly podDescSignal = toSignal(this.df().pod_desc.valueChanges);
 
   private readonly selectedCampaign = computed(() => {
     const podDesc = this.podDescSignal();
-    return this.service.campaignData().find(campaign => campaign.CampaignId === podDesc);
+    return this.campaignData().find(d => d.CampaignId === podDesc);
   });
-
-  // private counterData = new Map<string, CounterData>();
-  // private deductionData = new Map<string, DeductionItem>();
-
-  // public selectedCounter?: CounterData;
 
   public readonly fileUploadEffect = effect(() => {
     const file = this.fileSignal();
     if (!file) return;
-    this.service.uploadFile(file);
+    this.service.uploadFile(file, this.tableData);
     this.logger.debug(`fileUploadEffect:`, [file]);
   }, { allowSignalWrites: !0 });
 
   /** 抓取全部podNos */
   public readonly podNosEffect = effect(() => {
+    const data = this.tableData();
+    if (!data?.length) return;
     this.podNos.clear();
-    for (const item of this.service.TLS26080Data()) this.podNos.add(item.pod_no);
-    this.logger.debug(`podNos:`, [this.service.TLS26080Data(), Array.from(this.podNos)]);
+    for (const item of data) this.podNos.add(item.pod_no);
+    this.logger.debug(`podNos:`, [data, Array.from(this.podNos)]);
   }, { allowSignalWrites: !0 });
 
   /** 根據選擇的活動名稱更新表單 */
@@ -102,7 +104,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.dataLoading()
+    this.loading = this.service.tableLoading()
       || this.service.approvalStatusLoading()
       || this.service.campaignLoading()
       || this.service.capItemsLoading()
@@ -215,13 +217,23 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-    if (this.crudstatus !== CRUDStatus.Create) this.service.loadTLS26080Detail(this.rowdata!.pod_no || '');
-    // this.service.loadTLS26080({ pod_sdate: this.df().pod_sdate.value!, pod_edate: this.df().pod_edate.value! });
-    this.service.loadAPS1003(['E']);
-    this.service.loadCampaignData();
-    // this.service.getTLTTalentOptions();
+    const podNo = this.rowdata?.pod_no || '';
+    if (!this.isFormCreateable) {
+      this.service.loadTLS26080({ pod_no: podNo }).pipe(
+        tap(res => this.tls26080Data.set(res.Data)),
+      ).subscribe();
+      this.service.loadTLS26080Detail(podNo).pipe(
+        tap(res => {
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        }),
+      ).subscribe();
+    };
 
-    this.logger.debug(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
+    this.service.loadAPS1003(['E']);
+    this.service.loadCampaignData().pipe(
+      tap(res => this.campaignData.set(res.Data)),
+    ).subscribe();
   }
 
   public onInsert(event: RowEditSaveEvent): void {
@@ -236,26 +248,25 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       tpy_rate_D16: String(d.tpy_rate_D16),
       tpy_rate_D17: String(d.tpy_rate_D17),
     };
-    this.service.keyInTLS26080(payload);
+    this.service.keyInTLS26080(payload, this.tableData);
     this.logger.debug(`onInsert:`, [d, event]);
   }
 
   // 表單提交
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const d = this.dataForm.getRawValue();
+      const d = Object.fromEntries(
+        Object.entries(this.df())
+          .map(([k, v]) => [k, v.value])
+          .filter(([_, v]) => v !== null && v !== void 0 && v !== '')
+      ) as Partial<TLS2608InsertPayload>;
+
       const payload = <TLS2608InsertPayload>{
         ...d,
-        pod_no: d.pod_no,
-        pod_desc: d.pod_desc,
-        pod_sdate: d.pod_sdate,
-        pod_edate: d.pod_edate,
-        pod_busdate: d.pod_busdate,
-        pod_type: d.pod_type,
-        TALPORDERD_VOUCHERDetails: this.service.TLS26080Detail().map(item => ({
+        TALPORDERD_VOUCHERDetails: this.tableData().map(item => ({
           ...item,
-          pod_no: d.pod_no,
-          pod_type: d.pod_type,
+          pod_no: d.pod_no!,
+          pod_type: d.pod_type!,
         })),
       };
 
@@ -279,7 +290,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       const selected = this.service.tltTalentMap().get(valueStr);
       this.service.getTLTTalentChargeOptions(valueStr);
 
-      this.service.TLS26080Detail.update(current => {
+      this.tableData.update((current: TLS26080Detail[]) => {
         if (!isIndex) return current;
         const data = [...current];
         let rowD = data[index!];
@@ -297,7 +308,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       const valueStr = String(value);
       if (!valueStr?.length) return;
       const selected = this.service.tltTalentChargeMap.get(rowData.talent_id as string);
-      this.service.TLS26080Detail.update(current => {
+      this.tableData.update((current: TLS26080Detail[]) => {
         if (!isIndex) return current;
         const data = [...current];
         let rowD = data[index!];

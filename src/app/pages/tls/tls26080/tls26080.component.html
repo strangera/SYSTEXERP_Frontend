@@ -61,14 +61,14 @@
              (edit)="onEdit($event)"
              (detail)="onDetail($event)"
              (delete)="onDelete($event)"
-             [selectedItems]="selectedItems"
-             (selectionChange)="selectedItems = $event"
+             [selectedItems]="selectedItems()"
+             (selectionChange)="selectedItems.set($event)"
              [tableKey]="'TLS26080'"
-             [data]="service.TLS26080Data()"
+             [data]="tableData()"
              [dataKey]="'pod_no'"
              [columns]="columns"
-             [totalRecords]="service.totalRecords()"
+             [totalRecords]="totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
              [lazy]="!0"
-             [loading]="service.dataLoading()"></app-table>
+             [loading]="service.tableLoading()"></app-table>
 </div>

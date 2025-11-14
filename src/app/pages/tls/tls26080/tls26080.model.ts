@@ -1,4 +1,4 @@
-import { BaseQueryResponse } from "@shared/models/api/base-api.interface";
+import { BaseQueryRequest, BaseQueryResponse } from "@shared/models/api/base-api.interface";
 
 export interface TLS26080Data {
   act_no: string;              // 活動編號
@@ -79,7 +79,7 @@ export interface TLS2608InsertPayload {
   TALPORDERD_VOUCHERDetails: TLS26080Detail[]; // 活動專櫃資料
 }
 
-export interface TLS26080Query {
+export interface TLS26080Query extends BaseQueryRequest {
   pod_no?: string;            // 活動申請編號
   pod_desc?: string;          // 活動名稱
   pod_sdate_start?: Date;     // 活動日期 (起)
