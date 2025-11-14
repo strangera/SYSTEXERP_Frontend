@@ -34,7 +34,7 @@ import { finalize } from 'rxjs';
 })
 export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    bus_type: ['', Validators.required],
+    bus_type: [''],
   });
   mode: CRUDStatus = CRUDStatus.Create; // 新增 or 編輯模式
   override formTitle = '';
@@ -57,8 +57,16 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   ];
   /**  編輯 */
   editColumns: EditColumn[] = [
-    { field: 'bus_type', header: '大分類代碼', type: 'input', width: '100px', disabled: () => true },
-    { field: 'bus_type_name', header: '大分類名稱', type: 'input', width: '120px', disabled: () => true },
+    {
+      field: 'bus_type',
+      header: '大分類代碼',
+      type: 'dropdown',
+      width: '200px',
+      options: () => this.busTypeOptions,
+      optionLabel: 'Name',
+      optionValue: 'No',
+      showClear: false
+    },
     { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '250px' },
     {
       field: 'Item_TaxType', header: '稅別', type: 'dropdown', width: '150px',
@@ -239,6 +247,8 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       this.messageService.errorBubble('請選擇至少一筆完整的資料', '沒有選中的有效資料');
       return;
     }
+
+    // 符合後端新的 API 格式
     const requestBody = {
       bus_type: busType,
       TLS2J020_Detail: selectedValidData.map(item => ({
@@ -289,8 +299,8 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       id: updateItem.id || updateItem.ID || 0,
       tds1009_id: updateItem.tds1009_id || 0,
       bus_type: this.dataForm.get('bus_type')?.value || updateItem.bus_type || '',
-      chg_item_name: updateItem.CHG_ItemName.trim(),
-      item_tax_type: updateItem.Item_TaxType.trim(),
+      CHG_ItemName: updateItem.CHG_ItemName.trim(),  // 使用後端期望的 Pascal Case
+      Item_TaxType: updateItem.Item_TaxType.trim(),  // 使用後端期望的 Pascal Case
       upd_date: new Date().toISOString(),
       upd_usr_no: this.authService.currentUserValue?.user_No || '',
       upd_usr_name: this.authService.currentUserValue?.user_Name || ''

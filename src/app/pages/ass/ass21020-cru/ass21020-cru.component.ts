@@ -46,7 +46,7 @@ import { validateMinNumber, validateRequired } from '@shared/componentkit/table-
 export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> implements OnInit {
   public readonly dataForm = this.formBuilder.nonNullable.group({
     ENG_Type: [null, [Validators.required]],
-    ENG_MeterNo: [null, [Validators.required]],
+    ENG_MeterNo: [null as string | null, [Validators.required]],
     Location_No: [{ value: null, disabled: true }],
     Floor_No: [{ value: null, disabled: true }],
     Floor_Desc: [{ value: null, disabled: true }],
@@ -110,12 +110,15 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       }
     });
 
+
     // 3. 監聽 ENG_Type 變化來篩選錶號
-    this.dataForm.controls.ENG_Type.valueChanges.pipe(untilDestroyed(this)).subscribe(engType => {
-      this.filterMeterNoOptions(engType);
-      // 當能源類型改變時，清空當前的錶號，避免選擇到錯誤的錶號
-      this.dataForm.controls.ENG_MeterNo.patchValue(null);
-    });
+    if (this.isFormCreateable) {
+      this.dataForm.controls.ENG_Type.valueChanges.pipe(untilDestroyed(this)).subscribe(engType => {
+        this.filterMeterNoOptions(engType);
+        // 當能源類型改變時，清空當前的錶號，避免選擇到錯誤的錶號
+        this.dataForm.controls.ENG_MeterNo.patchValue(null);
+      });
+    }
 
     // 4. 監聽 ENG_MeterNo 變化來更新附帶資訊 (與原邏輯相同，只是提取為方法)
     this.dataForm.controls.ENG_MeterNo.valueChanges
@@ -132,7 +135,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     if (!this.isFormCreateable) {
       // 這裡保留原始的 data 初始化，但詳細資訊的補齊在 TLT_NoOptions 載入後處理
       this.data = this.rowdata?.Details || [];
-      this.dataForm.disable(); // 非建立模式下禁用表單
+      this.dataForm.disable();
     }
   }
 
@@ -237,6 +240,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
       // 建構傳送給後端的 payload
       const payload: ASS21020UpdateData[] = this.data.map(detail => ({
+        Id: detail.Id || 0, // 新增時 Id 為 0
         ENG_Type: headerData.ENG_Type,
         ENG_MeterNo: headerData.ENG_MeterNo,
         TLT_No: detail.TLT_No || '', // 確保非 null
@@ -303,6 +307,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   saveDialog() {
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
+      Id: 0,
       TalentId: item['TalentId'] as number,
       TLT_No: item['TltNo'],
       TltName: item['TltName'], // <-- 已包含 TltName

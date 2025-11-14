@@ -20,6 +20,9 @@ import {
   COLUMNS_DETAIL_VIEW,
   TLS2J030Data
 } from '../tls2j030/tls2j030.model';
+import { finalize, forkJoin } from 'rxjs';
+import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 @Component({
   selector: 'app-tls2j030-cru',
   templateUrl: './tls2j030-cru.component.html',
@@ -28,7 +31,7 @@ import {
   imports: [
     TableEditComponent, MenubarComponent, NgIf,
     PanelModule, ReactiveFormsModule, ButtonComponent, TranslateModule, InputTextComponent, TableComponent
-],
+  ],
 })
 export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> implements OnInit {
   /** 表單定義 */
@@ -36,6 +39,9 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     TXN_GUIBegNo: ['', [Validators.maxLength(10)]],
   });
 
+  detailNaturalData: any[] = [];  // 來源發票
+  detailChangeData: any[] = [];   // 換開發票
+  detailItemData: any[] = [];     // 換開發票明細
   selectedItems: TLS2J030Data[] = [];
   data: TLS2J030Data[] = [];
 
@@ -52,17 +58,56 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   constructor(
     private dropDownListService: DropDownListService,
     private route: ActivatedRoute,
+    public readonly tls2j030Service: TLS2j030Service,
   ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('TLS2J030', this.dataForm);
-    this.isViewMode = this.isFormReadable;
-    const mode = this.route.snapshot.queryParamMap.get('mode');
-    if (mode === 'view') {
-      this.isViewMode = true;
+    const nav = this.router.getCurrentNavigation();
+    const routeRow = nav?.extras?.state?.['rowdata'] as any;
+    const row = this.rowdata || routeRow;
+    if (row?.CHG_No) {
+      this.loadDetails(row.CHG_No);
     }
+    this.isViewMode = true;
   }
+
+  loadDetails(chgNo: string) {
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: "",
+      Offset: 0,
+      SortBy: [],
+      CHG_No: chgNo
+    };
+
+    this.loading = true;
+
+    forkJoin({
+      natural: this.tls2j030Service.queryTLS2J030Detail1(payload),
+      change: this.tls2j030Service.queryTLS2J030Detail2(payload),
+      item: this.tls2j030Service.queryTLS2J030Detail3(payload),
+    })
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          console.log("[CRU] API 調用完成，loading 設為 false");
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          this.detailNaturalData = res.natural?.Data ?? [];
+          this.detailChangeData = res.change?.Data ?? [];
+          this.detailItemData = res.item?.Data ?? [];
+        },
+      });
+  }
+
+
+
 
   /** 送出 */
   onSubmit(frm: FormGroup) {
