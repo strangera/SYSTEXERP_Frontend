@@ -199,9 +199,17 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     this.filterTableData(inputValue);
   }
 
-  onFormValueChanged(event: any): void {
+  // 處理從 OverlayPanel 表格選擇的事件
+  onTltNoSelect(selectedData: Option): void {
+    // 確保選中的項目在 suggestions 中，這樣 getFieldValue 才能找到對應的 TltSpace 值
+    if (selectedData && !this.tltNoSuggestions.some(item => item['TltNo'] === selectedData['TltNo'])) {
+      this.tltNoSuggestions = [selectedData, ...this.tltNoSuggestions];
+    }
+  }
+
+  onFormValueChanged(event: Record<string, string>): void {
     // 只取 filterText 的值
-    const filterText = (event.filterText || '').toLowerCase();
+    const filterText = (event['filterText'] || '').toLowerCase();
     this.filterTableData(filterText);
   }
 
