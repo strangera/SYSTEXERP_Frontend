@@ -32,6 +32,11 @@ export class TLS2j040Service {
 
   constructor(private http: HttpClient) { }
 
+    // 查詢
+    queryTLS2J040(data: any): Observable<any> {
+      return this.http.post<any>(`${this.apiUrl}/QueryTLS2J040`, data);
+    }
+
       // 列印
     print(data: TLS2J040Request): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/PrintTLS2J040`, data);
