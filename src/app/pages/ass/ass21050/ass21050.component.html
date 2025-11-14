@@ -48,7 +48,7 @@
   <div class="col-12">
     <app-table-report tableKey="TLS2J010" [data]="data" [columns]="columns" [totalRecords]="totalRecords" dataKey="id"
       [queryFunction]="ass21050Service.queryASS21050.bind(ass21050Service)" [lastQueryBody]="lastQueryBody"
-      [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+      [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
       [showDetail]="false" (edit)="onEdit($event)" [showCheckBox]="true" [showDelete]="true" [showReportMode]="false"
       [showExcel]="false">
     </app-table-report>

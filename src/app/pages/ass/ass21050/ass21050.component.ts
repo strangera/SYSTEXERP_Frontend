@@ -18,6 +18,13 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ASS21050Service } from '@service/api/ass/ass21050.service';
 import { finalize } from 'rxjs/operators';
 import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+
+interface ASS21050Item {
+  id?: number;
+  LOCATION_No?: string;
+  [key: string]: unknown;
+}
+
 @Component({
   selector: 'app-ass21050',
   templateUrl: './ass21050.component.html',
@@ -36,7 +43,7 @@ import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
     MultiSelectComponent,
   ],
 })
-export class ASS21050Component extends BasicQueryPageComponent<any> implements OnInit {
+export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     LOCATION_No: [''],
     FLOOR_NO: [''],
@@ -48,10 +55,10 @@ export class ASS21050Component extends BasicQueryPageComponent<any> implements O
   floorNoOptions: IDropdownItem[] = [];
   areaNoOptions: IDropdownItem[] = [];
   ENG_MeterNo_Option: apiOption[] = [];
-  data: any[] = [];
+  data: ASS21050Item[] = [];
   totalRecords = 0;
-  selectedItems: any[] = [];
-  lastQueryBody: any = {};
+  selectedItems: ASS21050Item[] = [];
+  lastQueryBody: Record<string, unknown> = {};
   columns: any[] = [
     { field: 'LOCATION_No', header: '設備位置編號', visible: true },
     // { field: 'building_no', header: '館別代碼', visible: true },
@@ -138,10 +145,50 @@ export class ASS21050Component extends BasicQueryPageComponent<any> implements O
           } else {
             this.data = [];
             this.totalRecords = 0;
-            console.warn('查詢回應異常:', response);
           }
         },
       });
+    });
+  }
+
+  onDelete(event: ASS21050Item | ASS21050Item[]): void {
+    // 取得選中的項目或傳入的單一項目
+    const itemsToDelete = Array.isArray(event) ? event : [event];
+
+    if (!itemsToDelete || itemsToDelete.length === 0) {
+      this.messageService.warnBubble('請選擇要刪除的項目');
+      return;
+    }
+
+    // 顯示確認對話框
+    this.confirmationService.confirm({
+      message: `確定要刪除選取的 ${itemsToDelete.length} 筆資料嗎？`,
+      header: '確認刪除',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        // 建構刪除請求的參數，提取 id 組成 idList
+        const deleteBody = {
+          idList: itemsToDelete.map(item => item?.id || item?.LOCATION_No || 0)
+        };
+
+        this.loading = true;
+        this.ass21050Service.deleteASS21050(deleteBody).pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        ).subscribe({
+          next: (response: { Status: string; Message?: string }) => {
+            if (response && response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              // 清空選中項目
+              this.selectedItems = [];
+              // 重新查詢資料
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(response?.Message || '刪除失敗');
+            }
+          },
+        });
+      }
     });
   }
 
