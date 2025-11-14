@@ -418,6 +418,27 @@ export class ValidationService {
   }
 
   /**
+   * 只能輸入半形英文、數字和特殊符號（不含中文或全形字元） > 支援空字串
+   * @description 該驗證器同時檢查是否為純空白字串。
+   */
+  englishNumberSpaceSymbolValidator(control: { value: string | null }) {
+    const value = control.value;
+
+    // 如果值為 null 或 undefined，則不進行驗證。
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    // 檢查是否只包含半形英數字和半形特殊符號。
+    // 這個正則表達式會匹配所有 ASCII 字元（0-127），
+    // 這樣可以有效地排除所有全形字元和中文字。
+    const isValid = /^[\x20-\x7E]*$/.test(value);
+
+    // 如果驗證不通過，返回錯誤；否則返回 null。
+    return isValid ? null : { invalidEnglishNumberSymbol: true };
+  }
+
+  /**
    * 電話號碼驗證器
    * 只允許數字和連字號(-)
    */
