@@ -14,9 +14,7 @@ import { ButtonModule } from 'primeng/button';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { QueryStateService } from '@shared/service/query-state.service';
 import { TLS31080DetailResponse, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
@@ -69,9 +67,6 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     });
     totalRecords = 0;
     data: TLS31080DetailResponse[] = [];
-    footerTotal: TLS31020Total | null = null; // 總計
-    footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
-    footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
     historyRequestBody: any = null; //歷史查詢條件
     columns: Column[] = [
       { field: 'tlt_no', header: '專櫃代號', visible: true },
@@ -136,7 +131,6 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     constructor(
       public readonly tls31080Service: Tls31080Service,
       private readonly dropDownListService: DropDownListService,
-      private readonly queryStateService: QueryStateService
     ) {
       super(); // 呼叫父類建構子
     }
@@ -178,27 +172,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
   
     btnLoading = false;
     onReport(isExcel: boolean) {
-      // const formValue = {
-      //   ...this.queryConditions,
-      //   IsExcel: isExcel,
-      //   paper_type: this.dataForm.get('paper_type')?.value ?? '',
-      //   TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-      //   TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
-      // } as TLS31080PrintDetailRequest;
-  
-      // console.log('單時段之營業報表print請求', JSON.stringify(formValue, null, 2));
-  
-      // this.btnLoading = true;
-      // this.tls31080Service.printTLS31080Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      //   .subscribe(res => {
-      //     this.messageService.successBubble(res.Message);
-      //     if (res.Data && res.Data.Print_URL) {
-      //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-      //       window.open(downloadUrl, '_blank');
-      //     }
-      //   });
-
-      console.log('等待後端API中......');
+      //後端: 先做主表，就系統明細沒有匯出
     }
   
     queryTLS31030Detail() {

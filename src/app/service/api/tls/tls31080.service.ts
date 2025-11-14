@@ -82,18 +82,22 @@ export class Tls31080Service {
     return this.http.post<TLS31080Response>(`${this.apiUrl}/queryTLS31080`, body);
   }
               
-  // 匯出各時段之營業報表
-  exportTLS31080(body: TLS31080Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/exportTLS31080`, body);
+  // 匯出各時段之營業報表 (EXCEL)
+  exportTLS31080(body: TLS31080Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS31080`, body, {
+      responseType: 'blob'
+    });
   }
 
-  // 查詢各時段之營業報表
+  // 匯出各時段之營業報表 (PDF)
+  exportTLS31080PDF(body: TLS31080Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS31080PDF`, body, {
+      responseType: 'blob'
+    });
+  }
+
+  // 查詢時段之營業報表 明細
   queryTLS31080Detail(body: TLS31080Request): Observable<any> {
     return this.http.post<TLS31080DetailResponse>(`${this.apiUrl}/queryTLS31080Detail`, body);
   }
-        
-  // 產出單時段展開之營業報表
-  // printTLS31080Detail(body: TLS31080PrintDetailRequest): Observable<ApiResponse<{ Print_URL: string }>> {
-  //   return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31080Detail`, body);
-  // }
 }
