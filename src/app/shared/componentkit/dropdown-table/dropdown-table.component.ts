@@ -123,7 +123,6 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.suggestions = [...this.dialogData]
     this.control.setValue(this.optionValue ? this.selectedItems[this.optionValue] : this.selectedItems);
     this.op?.hide();
-    this.dialogData = [];
     this.selectedItems = [];
     this.formGroup.reset();
   }

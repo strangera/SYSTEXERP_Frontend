@@ -132,6 +132,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     if (!this.isFormCreateable) {
       // 這裡保留原始的 data 初始化，但詳細資訊的補齊在 TLT_NoOptions 載入後處理
       this.data = this.rowdata?.Details || [];
+      this.dataForm.disable(); // 非建立模式下禁用表單
     }
   }
 
@@ -206,6 +207,29 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions;
     }
   }
+
+  // 【修正 validateRow】: 檢查資料中是否有重複的 TLT_No (專櫃編號)
+  validateRow = (rowData: ASS21020Detail): { isValid: boolean, errorMessage: string } => {
+    const currentRowTLT_No = rowData.TLT_No;
+    const rowIndex = this.data.indexOf(rowData);
+
+    // 檢查當前的 TLT_No 是否在 data 陣列中其他行重複出現
+    const isDuplicate = this.data.some((item, index) => {
+      // 忽略正在驗證的這一行 (避免自己跟自己比較)
+      if (index === rowIndex) {
+        return false;
+      }
+      // 檢查專櫃編號是否重複
+      return item.TLT_No === currentRowTLT_No;
+    });
+
+    if (isDuplicate) {
+      return { isValid: false, errorMessage: `專櫃編號 (${currentRowTLT_No}) 已重複` };
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
+
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   public onSubmit(frm: FormGroup): void {
     this.handleSubmit(this.dataForm, () => {
@@ -235,11 +259,13 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
         return;
       }
 
+      // 必須先執行 TableEditComponent 的驗證 (包含重複專櫃編號檢查)
       const valid = this.tableEditComponent.validateAndShowErrors();
       if (!valid) {
         this.loading = false;
         return;
       }
+
       // 呼叫 Service
       this.service.updateASS21020(updatePayload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
         next: (res) => {

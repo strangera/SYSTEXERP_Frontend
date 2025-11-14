@@ -31,9 +31,9 @@
       <hr />
       <app-table-edit [data]="data" dataStatusField="status" (dataChange)="data = $event" [loading]="loading"
         tableKey="ASS21020_detail" [columns]="columns" (selectionChange)="selectedItems = $event"
-        (fieldChange)="fieldChange()" [showInsert]="!isFormReadable" (insert)="dialogVisible = true"
-        [selectedItems]="selectedItems" (dataChange)="data = $event" [tableRequired]="true" [disabled]="isFormReadable"
-        [canInsert]="false">
+        [rowValidate]="validateRow" (fieldChange)="fieldChange()" [showInsert]="!isFormReadable"
+        (insert)="dialogVisible = true" [selectedItems]="selectedItems" (dataChange)="data = $event"
+        [tableRequired]="true" [disabled]="isFormReadable" [canInsert]="false">
         <header>
           <div class="flex justify-content-between align-items-center w-full">
             <div>

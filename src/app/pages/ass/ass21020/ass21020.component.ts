@@ -49,8 +49,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public readonly queryForm = this.formBuilder.group({
     EngTypes: [null],
     ENG_MeterNo: [null],
-    TLT_No: [null],
-    ENG_Rate: [null],
+    TLT_No: [null, [Validators.maxLength(12)]],
+    ENG_Rate: [null, [Validators.min(0), Validators.max(100)]],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? null],
     Mid: [this.authService.currentUserValue?.mid ?? null],
     pageSize: [30],
@@ -116,6 +116,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
         }));
         this.totalRecords = res.TotalCount;
         this.lastQueryBody = frm.getRawValue();
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     });
   }
@@ -161,7 +162,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   // 專櫃的 FieldsConfig
   tltNoFieldsConfig: FieldsConfig[] = [
     { field: 'TltNo', header: '專櫃編號', mainDataField: true }, // 主要輸入欄位
-    { field: 'LocationNo', header: '位置編號' }, // 顯示在 AutoComplete 旁邊的額外資訊
+    { field: 'TltSpace', header: '面積' }, // 顯示在 AutoComplete 旁邊的額外資訊
   ];
 
   // OverlayPanel 裡面的 Table Columns
