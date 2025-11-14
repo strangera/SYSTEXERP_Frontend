@@ -7,8 +7,8 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="能源類型" controlName="ENG_Type" [showClear]="!1"
-          [options]="ENG_TypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.ENG_Type"
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="能源類型" controlName="ENG_Type" [options]="ENG_TypeOptions"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.ENG_Type"
           [submitted]="submitted"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="錶號" controlName="ENG_MeterNo"
           [options]="filteredENG_MeterNoOptions" optionLabel="ENG_MeterNo" optionValue="ENG_MeterNo"

@@ -15,6 +15,7 @@ export interface ASS21020Data {
 }
 
 export interface ASS21020Detail {
+  Id: number; // custom for sort
   TalentId: number,
   TLT_No: string;
   TltName: string;
@@ -35,6 +36,7 @@ export interface ASS21020Query extends BaseQueryRequest {
 }
 
 export interface ASS21020UpdateData {
+  Id: number;
   ENG_Type: string;
   ENG_MeterNo: string;
   TLT_No: string;

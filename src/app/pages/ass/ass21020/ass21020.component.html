@@ -18,7 +18,7 @@
             [options]="TLT_NoOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-dropdown> -->
           <app-dropdown-table class="col-12 md:col-12 lg:col-8" [control]="queryForm.controls.TLT_No"
-            [submitted]="submitted" optionLabel="TltNo" optionValue="TltNo" [suggestions]="tltNoSuggestions"
+            [submitted]="submitted" optionLabel="TltNo" [suggestions]="tltNoSuggestions"
             [fieldsConfig]="tltNoFieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)" [lazy]="false"
             [formGroup]="tltNoOpForm" (formValueChanged)="onFormValueChanged($event)" [dialogData]="tltNoOpData"
             [dialogColumns]="tltNoOpColumns" [loading]="tltNoLoading" [totalRecords]="tltNoOpTotalRecords">

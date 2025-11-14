@@ -109,10 +109,16 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
 
   public onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.service.queryASS21020(frm.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      console.log('查詢參數:', frm.getRawValue());
+
+      const body = {
+        ...frm.getRawValue(),
+        TLT_No: frm.getRawValue().TLT_No?.TltNo || null,
+      }
+      this.service.queryASS21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.lastQueryBody = frm.getRawValue();
+        this.lastQueryBody = body;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     });
@@ -133,7 +139,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     // 組裝最終的 API Request Body
     const payload: ASS21020Delete = { DeleteKeys: deleteKeys };
     this.confirmationService.confirm({
-      message: `確定要作廢合約嗎？作廢後無法恢復。`,
+      header: '刪除確認',
+      message: `確定要刪除嗎？刪除後無法恢復。`,
       accept: () => {
         this.loading = true;
         this.service.deleteASS21020(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
