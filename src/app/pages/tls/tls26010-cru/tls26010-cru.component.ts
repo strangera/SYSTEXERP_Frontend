@@ -62,6 +62,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly tableData = signal<TLS26010Data[]>([]);
+  public readonly tableDetailedData = signal<TLS26010Detail>(Object.create(null));
+  public readonly totalRecords = signal(0);
+
   // 變化追蹤
   private readonly sys3800Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3800.valueChanges);
   private readonly sys3900Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3900.valueChanges);
@@ -127,7 +131,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     const dialog = this.dialogVisible();
     if (!dialog) return;
 
-    const incoming = dialog === 'ecr' ? this.service.ecrData() : this.service.tltData();
+    const incoming = dialog === 'ecr' ? this.service.ecrOptions() : this.service.tltOptions();
     if (!incoming?.length) return;
 
     const filtered = dialog === 'ecr' ? this.ecrTableFiltered() : this.tltTableFiltered();
@@ -146,7 +150,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   });
   /** 初始化 ECR & TLT Table資料 */
   public readonly TLS26010DetailEffect = effect(() => {
-    const detail = this.service.TLS26010Detail();
+    const detail = this.tableDetailedData();
     if (!detail) return;
     this.dataForm.patchValue({
       ecr_nos: detail.ecr_list,
@@ -160,8 +164,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly dialogData = computed(() =>
-    this.dialogVisible() === 'ecr' ? this.service.ecrData() :
-      this.dialogVisible() === 'tlt' ? this.service.tltData() : []
+    this.dialogVisible() === 'ecr' ? this.service.ecrOptions() :
+      this.dialogVisible() === 'tlt' ? this.service.tltOptions() : []
   );
   public readonly dialogColumn = computed(() =>
     this.dialogVisible() === 'ecr' ? this.columns3 :
@@ -267,12 +271,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.service.loadSYS3A00();
 
     // 使用 map + 結構賦值，避免在迴圈中建立暫時物件
-    const ecrInit = this.service.ecrData();
+    const ecrInit = this.service.ecrOptions();
     this.ecrTableFiltered.set(ecrInit.map(({ ecr_no, ecr_name, tlt_no, tlt_name }): EcrItem => (
       { ecr_no, ecr_name, tlt_no, tlt_name, Status: ItemOperationStatus.Original }
     )));
 
-    const tltInit = this.service.tltData();
+    const tltInit = this.service.tltOptions();
     this.tltTableFiltered.set(tltInit.map((item): TltItem => ({
       tlt_no: item.tlt_no,
       tlt_name: item.tlt_name,
@@ -361,7 +365,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       };
 
       this.logger.debug(`submit:`, [d, payload]);
-      (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload))
+      (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload, this.tableData))
         .pipe(
           tap(() => { if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel(); }),
           finalize(() => {
@@ -472,7 +476,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   };
 
   public ngOnDestroy(): void {
-    this.service.TLS26010Detail.set(void 0);
     this.dependencyChangeSubject.complete();
     this.destroy$.next();
     this.destroy$.complete();
