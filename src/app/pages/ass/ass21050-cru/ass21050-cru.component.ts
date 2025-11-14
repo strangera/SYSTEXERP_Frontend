@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
@@ -12,8 +12,10 @@ import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
+import { ASS21050Service } from '@service/api/ass/ass21050.service';
 import { apiOption } from '@shared/models/tls/tls000.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-ass21050-cru',
@@ -24,19 +26,25 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 })
 export class ASS21050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    ENG_MeterNo: [''],
+    id: [0], // 編輯時需要的 ID
+    LOCATION_No: [{ value: '', disabled: false }], // 將根據模式動態禁用
+    LOCATION_Name: ['', [Validators.maxLength(30)]],
     FLOOR_NO: [''],
     AREA_NO: [''],
-    remark: [''],
+    LOCATION_Remark: ['', [Validators.maxLength(200)]],
     mark: [''],
-    xCoordinate: [''],
-    yCoordinate: ['']
+    Draw_X: [''],
+    Draw_Y: [''],
+    building_no: [''],
+    NET_SPACE: ['']
   });
   floorNoOptions: IDropdownItem[] = [];
   areaNoOptions: IDropdownItem[] = [];
+  buildingNoOptions: IDropdownItem[] = [];
   ENG_MeterNo_Option: apiOption[] = [];
   constructor(
     private ass21030Service: ASS21030Service,
+    private ass21050Service: ASS21050Service,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
   ) {
@@ -45,6 +53,24 @@ export class ASS21050CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('ASS21050', this.dataForm);
     this.loadOptions();
+    this.setFieldStates();
+  }
+
+  /**
+   * 設定欄位狀態（可編輯/禁用）
+   */
+  private setFieldStates(): void {
+    if (this.isFormCreateable) {
+      // 新增模式：設備位置編號禁用（後端自動給號）
+      this.dataForm.controls.LOCATION_No.disable();
+    } else {
+      // 編輯模式：只允許修改特定欄位，其他為唯讀
+      this.dataForm.controls.LOCATION_No.disable();
+      this.dataForm.controls.FLOOR_NO.disable();
+      this.dataForm.controls.AREA_NO.disable();
+      this.dataForm.controls.building_no.disable();
+      this.dataForm.controls.mark.disable();
+    }
   }
   loadOptions() {
     // 查 取得能源表號
@@ -62,12 +88,61 @@ export class ASS21050CRUComponent extends BasicCruPageComponent<any> implements 
     this.dropdownApiService.querySys3A00().subscribe(options => {
       this.areaNoOptions = options ?? [];
     });
+    //館別
+    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
+    });
   }
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const v = frm.value;
+      const formValue = frm.getRawValue();
 
+      this.loading = true;
 
+      let apiCall$;
+
+      if (this.isFormCreateable) {
+        // 新增模式
+        const insertRequestBody = {
+          LOCATION_Name: formValue.LOCATION_Name || '',
+          building_no: formValue.building_no || '',
+          FLOOR_NO: formValue.FLOOR_NO || '',
+          AREA_NO: formValue.AREA_NO || '',
+          Draw_X: formValue.Draw_X ? String(formValue.Draw_X).trim() : '',
+          Draw_Y: formValue.Draw_Y ? String(formValue.Draw_Y).trim() : '',
+          NET_SPACE: formValue.NET_SPACE ? String(formValue.NET_SPACE).trim() : '',
+          LOCATION_Remark: formValue.LOCATION_Remark || ''
+        };
+
+        apiCall$ = this.ass21050Service.insertASS21050(insertRequestBody);
+      } else {
+        // 編輯模式
+        const updateRequestBody = {
+          id: formValue.id || 0,
+          LOCATION_Name: formValue.LOCATION_Name || '',
+          Draw_X: formValue.Draw_X || '',
+          Draw_Y: formValue.Draw_Y || '',
+          LOCATION_Remark: formValue.LOCATION_Remark || ''
+        };
+        apiCall$ = this.ass21050Service.updateASS21050(updateRequestBody);
+      }
+
+      apiCall$.pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe({
+        next: (response: any) => {
+          if (response && response.Status === '0000') {
+            const successMessage = this.isFormCreateable ? '新增成功' : '修改成功';
+            this.messageService.successBubble(response.Message || successMessage);
+            this.onCancel();
+          } else {
+            const errorMessage = this.isFormCreateable ? '新增失敗' : '修改失敗';
+            this.messageService.errorBubble(response?.Message || errorMessage);
+          }
+        },
+
+      });
     });
   }
 }
