@@ -6,48 +6,59 @@
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <!-- 隱藏的 ID 欄位，編輯時需要 -->
+      <input type="hidden" formControlName="id">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="錶號位置編號" controlName="ENG_MeterNo" [options]="ENG_MeterNo_Option" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.ENG_MeterNo" [submitted]="submitted"></app-dropdown>
+          <app-input-text label="設備位置編號" controlName="LOCATION_No" [control]="dataForm.controls.LOCATION_No"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="樓層" controlName="FLOOR_NO" [options]="floorNoOptions" optionLabel="Name" optionValue="No"
-            [control]="dataForm.controls.FLOOR_NO" [submitted]="submitted">
-          </app-dropdown>
+          <app-input-text label="設備位置名稱" controlName="LOCATION_Name" [control]="dataForm.controls.LOCATION_Name"
+            [submitted]="submitted"></app-input-text>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="區域" controlName="AREA_NO" [options]="areaNoOptions" optionLabel="Name" optionValue="No"
-            [control]="dataForm.controls.AREA_NO" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
+
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown label="樓層" controlName="FLOOR_NO" [options]="floorNoOptions" optionLabel="Name" optionValue="No"
+          [control]="dataForm.controls.FLOOR_NO" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown label="區域" controlName="AREA_NO" [options]="areaNoOptions" optionLabel="Name" optionValue="No"
+          [control]="dataForm.controls.AREA_NO" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown label="館別" controlName="building_no" [options]="buildingNoOptions" optionLabel="label"
+          optionValue="value" [control]="dataForm.controls.building_no" [submitted]="submitted"></app-dropdown>
+      </div>
+      <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="流水號" controlName="mark" [control]="dataForm.controls.mark"
             [submitted]="submitted"></app-input-text>
-        </div>
+        </div> -->
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖X座標" controlName="xCoordinate" [control]="dataForm.controls.xCoordinate"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖Y座標" controlName="yCoordinate" [control]="dataForm.controls.yCoordinate"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="說明" controlName="remark" [control]="dataForm.controls.remark"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="置放位置說明" controlName="remark" [control]="dataForm.controls.remark"
-            [submitted]="submitted"></app-input-text>
-        </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-input-text label="X 軸" controlName="Draw_X" [control]="dataForm.controls.Draw_X"
+          [submitted]="submitted"></app-input-text>
       </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-input-text label="Y 軸" controlName="Draw_Y" [control]="dataForm.controls.Draw_Y"
+          [submitted]="submitted"></app-input-text>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-input-text label="營業坪數" controlName="NET_SPACE" [control]="dataForm.controls.NET_SPACE"
+          [submitted]="submitted"></app-input-text>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-input-text label="設備位置說明" controlName="LOCATION_Remark" [control]="dataForm.controls.LOCATION_Remark"
+          [submitted]="submitted"></app-input-text>
+      </div>
+</div>
 
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit" [loading]="loading" />
-      </div>
-    </form>
-  </p-panel>
+<div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+  <app-button btnType="cancel" [form]="dataForm"></app-button>
+  <app-button btnType="submit" [loading]="loading" />
+</div>
+</form>
+</p-panel>
 </div>

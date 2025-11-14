@@ -14,6 +14,15 @@ export class TLS2j030Service {
   queryTLS2J030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2J030`, data);
   }
+  queryTLS2J030Detail1(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2J030Detail1`, data);
+  }
+  queryTLS2J030Detail2(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2J030Detail2`, data);
+  }
+   queryTLS2J030Detail3(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2J030Detail3`, data);
+  }
   queryEcrNo(ip: string) {
     return this.http.post(`${environment.ApiUrl}/TLS0000/TLS2000/queryEcrNo`, {
       ECR_IP: ip
