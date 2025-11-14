@@ -7,7 +7,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { yesterday } from '@shared/models/system/query-form.model';
@@ -21,7 +21,7 @@ import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TLS31080PrintDetailRequest, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
+import { TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
@@ -78,11 +78,6 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     });
 
     reportTypeOptions = [
-      { value: 'A', label: '全時段顯示' },
-      { value: 'T', label: '交易時間' }
-    ];
-
-    TimeTypeOptions = [
       { value: 'A', label: '全時段顯示' },
       { value: 'T', label: '交易時間' }
     ];
@@ -160,7 +155,6 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     constructor(
       private readonly dropDownListService: DropDownListService,
       public readonly tls31080Service: Tls31080Service,
-      private datePipe: DatePipe,
     ) { super(); }
   
     ngOnInit(): void {
@@ -270,38 +264,42 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
           // console.log('查詢總計(轉換後)', this.footershowTotal);
   
           // this.totalRecords = res.TotalCount;
-          // this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         })
       })
     }
     btnLoading = false;
     onReport(frm: FormGroup, isExcel: boolean) {
-      const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
+      const raw = frm.getRawValue();
       const formValue = {
-        ...printData,
-        IsExcel: isExcel,
-        IsMerge: true,
-        // SortBy: undefined,
-        // pageIndex: undefined,
-        // pageSize: undefined,
-        CatLNos: frm.getRawValue().CatLNos.map((item: IDropdownItem) => item.No),
-        CatMNos: frm.getRawValue().CatMNos.map((item: IDropdownItem) => item.No),
-        TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
-      } as TLS31080PrintDetailRequest;
+          ...raw,
+          // 日期格式化
+          TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
+
+          // 分類轉成編號
+          CatLNos: (raw.CatLNos || []).map((x: any) => x.No ?? x).join(','),
+          CatMNos: (raw.CatMNos || []).map((x: any) => x.No ?? x).join(','),
+
+          // 多選陣列轉成逗號字串
+          Floors: (raw.Floors || []).join(','),
+          Areas: (raw.Areas || []).join(','),
+          CabinetKinds: (raw.CabinetKinds || []).join(','),
+          OrgIds: (raw.OrgIds || []).join(','),
+          CounterNos: (raw.CounterNos || []).join(','),
+          ChargeTypes: (raw.ChargeTypes || []).join(','),
+          Buildings: (raw.Buildings || []).join(','),
+        } as TLS31080Request;
   
       console.log('各時段之營業報表print請求', JSON.stringify(formValue));
 
-      // this.btnLoading = true;
-      // this.tls31080Service.printTLS31080(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      //   .subscribe(res => {
-      //     this.messageService.successBubble(res.Message);
-      //     if (res.Data && res.Data.Print_URL) {
-      //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-      //       window.open(downloadUrl, '_blank');
-      //     }
-      // });
-      console.log('目前沒有後端API');
-      this.loading = false;
+      this.btnLoading = true;
+      this.tls31080Service.exportTLS31080(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+        .subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          if (res.Data) {
+            console.log('查詢結果', res ?? []);
+          }
+      });
     }
 
     //#region 日期表單控制
@@ -322,7 +320,30 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     }
 
     onDetail1(event: any) {
-      const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-      this.onDetail(event, queryConditions);
+      // 直接從查詢頁 state 拿已格式化好的 request
+      const rawQuery = this.queryStateService.getQueryStateValue(this.ProgNo);
+
+      if (!rawQuery) {
+        this.messageService.errorBubble('請返回查詢頁重新操作');
+        return;
+      }
+
+      // 將日期轉 string、分類轉編號、多選陣列轉逗號字串
+      const formValue: TLS31080Request = {
+        ...rawQuery,
+        TxnDate: formatDate(rawQuery.TxnDate, 'yyyy-MM-dd', 'en-US'),
+        CatLNos: (rawQuery.CatLNos || []).map((x: any) => x.No ?? x).join(','),
+        CatMNos: (rawQuery.CatMNos || []).map((x: any) => x.No ?? x).join(','),
+        Floors: (rawQuery.Floors || []).join(','),
+        Areas: (rawQuery.Areas || []).join(','),
+        CabinetKinds: (rawQuery.CabinetKinds || []).join(','),
+        OrgIds: (rawQuery.OrgIds || []).join(','),
+        CounterNos: (rawQuery.CounterNos || []).join(','),
+        ChargeTypes: (rawQuery.ChargeTypes || []).join(','),
+        Buildings: (rawQuery.Buildings || []).join(','),
+      };
+
+      // 再傳給明細方法
+      this.onDetail(event, formValue);
     }
 }
