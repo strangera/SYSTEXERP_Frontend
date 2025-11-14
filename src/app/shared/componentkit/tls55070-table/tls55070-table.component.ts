@@ -95,7 +95,8 @@ export class TLS55070TableComponent
   trackByCol = (_: number, col: any) => col.key ?? col.__uid ?? col.field;
   trackByRow = (_: number, item: any) => (item as any)?.[this.dataKey] ?? _;
 
-  @ViewChild('saleTable', { static: false }) saleTable?: TLS55070TableComponent;
+@ViewChild('dt', { static: false }) dt?: Table;
+
   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
   private ngUnsubscribe = new Subject<void>();
@@ -276,7 +277,10 @@ export class TLS55070TableComponent
       : `__row_${rowIndex}`;
   }
 
-  /** 重新依「全部資料」建立群組 meta（沒有分頁概念） */
+private getGlobalIndex(localIndex: number): number {
+  const first = (this.dt?.first as number) ?? 0;
+  return first + localIndex;
+}
 /** 重新依「全部資料」建立群組 meta（沒有分頁概念） */
 private rebuildGroupMeta(): void {
   const rows = this.data || [];
@@ -306,29 +310,35 @@ private rebuildGroupMeta(): void {
 
 
   /** 樣板用：取得群組鍵（用 index 當 fallback） */
-  getGroupKeyValue(rowData: any, rowIndex: number): string {
-    return this.buildGroupKey(rowData?.[this.groupKey], rowIndex);
-  }
+/** 樣板用：取得群組鍵（用「全表 index」當 fallback key） */
+getGroupKeyValue(rowData: any, rowIndex: number): string {
+  const globalIndex = this.getGlobalIndex(rowIndex);
+  return this.buildGroupKey(rowData?.[this.groupKey], globalIndex);
+}
 
-  /** 判斷是不是該群組的首列（用來決定是否畫出序號與 rowspan 儲存格） */
-  isFirstInGroup(rowIndex: number, key: string): boolean {
-    if (!this.hasRowSpan && this.groupKey === '') return false;
-    const m = this.groupMeta[key];
-    return !!m && m.start === rowIndex;
-  }
+/** 判斷是不是該群組的首列（用「全表 index」跟 meta 比） */
+isFirstInGroup(rowIndex: number, key: string): boolean {
+  if (!this.hasRowSpan && this.groupKey === '') return false;
 
-  /** 取得該群組的 rowspan（筆數） */
-  getPageRowSpan(rowIndex: number, key: string): number {
-    const m = this.groupMeta[key];
-    return m ? m.size : 1;
-  }
+  const globalIndex = this.getGlobalIndex(rowIndex);
+  const m = this.groupMeta[key];
+  return !!m && m.start === globalIndex;
+}
 
-  /** 取得「第幾組」：用來顯示序號 */
-  getGroupDisplayIndex(rowIndex: number, rowData: any): number {
-    const key = this.getGroupKeyValue(rowData, rowIndex);
-    const m = this.groupMeta[key];
-    return m ? m.index : (rowIndex + 1);
-  }
+/** rowSpan 只跟群組 size 有關，不用 rowIndex */
+getPageRowSpan(_rowIndex: number, key: string): number {
+  const m = this.groupMeta[key];
+  return m ? m.size : 1;
+}
+
+/** 顯示用的群組序號（16、17、18…） */
+getGroupDisplayIndex(rowIndex: number, rowData: any): number {
+  const key = this.getGroupKeyValue(rowData, rowIndex);
+  const m = this.groupMeta[key];
+  const globalIndex = this.getGlobalIndex(rowIndex);
+  return m ? m.index : (globalIndex + 1);
+}
+
 
   /* ======================= Header / Filter ======================= */
 
@@ -493,15 +503,26 @@ formatSubtotal(rowData: any): string {
 
     return Number(v ?? 0);
   }
-/** 小計顯示：直接吃後端給的小計欄位（SumTXN_SaleAmt / TXN_SaleAmt） */
+/** 小計顯示：同一張銷售單號的 TXN_SaleAmt 加總 */
 getSubtotalValue(rowData: any): number {
   if (!rowData) return 0;
 
-  // 優先用 SumTXN_SaleAmt，沒有再退回 TXN_SaleAmt
+  // 這一列代表哪一張銷售單：
+  // 小計列本身 TXN_SaleNoteNo 是空字串，我們在 unpack 時有塞 _grpBase = 原本的群組 key
+  const saleNo = rowData.TXN_SaleNoteNo || rowData._grpBase;
+  if (saleNo) {
+    const sum = (this.data || [])
+      .filter(r =>
+        !r?.__isSubRow &&                           // 排除小計列
+        (r?.TXN_SaleNoteNo === saleNo || r?._grpBase === saleNo)
+      )
+      .reduce((acc, r) => acc + Number(r?.TXN_SaleAmt ?? 0), 0);
+
+    return Number.isFinite(sum) ? sum : 0;
+  }
+
+  // 沒有 saleNo（理論上不會發生），退回舊邏輯
   const raw = rowData.SumTXN_SaleAmt ?? rowData.TXN_SaleAmt ?? 0;
-
-
-
   let n: number;
 
   if (typeof raw === 'string') {
@@ -512,10 +533,8 @@ getSubtotalValue(rowData: any): number {
   }
 
   if (!isFinite(n)) n = 0;
-
-
-
   return n;
 }
+
 
 }

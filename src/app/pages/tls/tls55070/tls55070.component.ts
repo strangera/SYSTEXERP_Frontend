@@ -659,9 +659,11 @@ private toApiSort(
   }
 
 /** 提供給外層 lazy slot（TLS2B010 用法） */
-/** 提供給外層 lazy slot（TLS2B010 用法） */
 override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
   if (!this.activated) return; // 未按查詢前，不要自動打 API
+
+  // 如果上一筆 lazy 還在 loading，就先不再打，避免同時多發
+  if (this.loading) return;
 
   const e = evt as any as LazyLoadEvent;
 
@@ -676,39 +678,88 @@ override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
   // 事件可能沒有 pageIndex（PrimeNG 常見）：用 first/rows 推回 pageIndex
   const evtHasPageIndex = Number.isFinite((e as any)?.pageIndex);
   const first = Number.isFinite((e as any)?.first) ? Number((e as any).first) : 0;
-  const pageIndex = evtHasPageIndex ? Number((e as any).pageIndex) : Math.floor(first / pageSize) + 1;
+  const pageIndex = evtHasPageIndex
+    ? Number((e as any).pageIndex)
+    : Math.floor(first / pageSize) + 1;
 
   // 同步回表單
   this.queryForm.patchValue({ pageIndex, pageSize }, { emitEvent: false });
 
-  // 🔒 開啟 loading，讓 table 的 onScroll 停止觸發
+  // ===== 真正打 API =====
   this.loading = true;
 
   this.fetchTLS55070(e)
-    .pipe(
-      finalize(() => {
-        // 🔓 API 回來再解鎖
-        this.loading = false;
-      })
-    )
+    .pipe(finalize(() => (this.loading = false)))
     .subscribe({
       next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
-        // ✅ 重點：這裡改成「累加」而不是覆蓋
-        this.data = [...this.data, ...rows];
+        // 沒資料直接收
+        if (!rows || !rows.length) {
+          this.totalRecords = totalRecords;
+          this.detailTotals = externalTotals;
+          this.visibleSubtotals = {
+            ...this.visibleSubtotals,
+            ...externalSubtotals,
+          };
+          return;
+        }
+
+        // 第一次或 pageIndex = 1：直接覆蓋
+        if (!this.data || !this.data.length || pageIndex === 1) {
+          this.data = rows;
+        } else {
+          // 後續頁：要接在前一頁後面，並處理「跨頁同單號」的情況
+          let merged = [...this.data];
+
+          // 找「前一頁最後一個一般明細列」的銷售單號
+          const revPrev = [...merged].reverse();
+          const lastDetailIdxFromEnd = revPrev.findIndex(r => !r?.__isSubRow);
+          const lastDetail =
+            lastDetailIdxFromEnd >= 0
+              ? merged[merged.length - 1 - lastDetailIdxFromEnd]
+              : null;
+          const lastSaleNo: string | null =
+            lastDetail?.TXN_SaleNoteNo ?? null;
+
+          // 找「新頁第一個一般明細列」的銷售單號
+          const firstDetailIdx = rows.findIndex(r => !r?.__isSubRow);
+          const firstDetail =
+            firstDetailIdx >= 0 ? rows[firstDetailIdx] : null;
+          const firstSaleNo: string | null =
+            firstDetail?.TXN_SaleNoteNo ?? null;
+
+          // ✅ 兩頁交界的 TXN_SaleNoteNo 一樣：
+          //    代表同一張銷售單被拆成兩頁，我們要把前一頁的小計列拿掉，
+          //    然後讓明細無縫接在一起，最後由「最新一頁」的小計作為整張的總小計。
+          if (lastSaleNo && firstSaleNo && lastSaleNo === firstSaleNo) {
+            if (merged.length && merged[merged.length - 1]?.__isSubRow) {
+              // 最後一列是小計列 -> 砍掉它
+              merged = merged.slice(0, -1);
+            }
+          }
+
+          // 把新的 rows 接在後面
+          this.data = [...merged, ...rows];
+        }
 
         this.totalRecords = totalRecords;
         this.detailTotals = externalTotals;
-        this.visibleSubtotals = externalSubtotals;
+        this.visibleSubtotals = {
+          ...this.visibleSubtotals,
+          ...externalSubtotals,
+        };
+
+        // 確保子表格的 groupKey 還是用 _grp（銷售單號群組）
+        queueMicrotask(() => {
+          if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+        });
       },
       error: _ => {
-        this.data = [];
-        this.totalRecords = 0;
-        this.detailTotals = {};
-        this.visibleSubtotals = {};
-      }
+        // lazy 失敗就維持原本的 data，不清空
+        this.data = this.data || [];
+        this.totalRecords = this.totalRecords || 0;
+      },
     });
 };
-
 
 
 }
