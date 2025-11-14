@@ -1,5 +1,5 @@
 
-import { DatePipe, JsonPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -24,7 +24,6 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
   styleUrls: ['./tls26010.component.scss'],
   standalone: !0,
   imports: [
-    JsonPipe,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,

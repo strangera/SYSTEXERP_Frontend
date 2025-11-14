@@ -75,7 +75,7 @@
                               [submitted]="submitted"></app-calendar-range>
           @if (queryForm.errors) {
           <div class="col-12 text-red-500 text-center">
-            {{ queryForm.errors | json }}
+            @if (queryForm.errors['dateRangeInvalid']) {{{ '日期範圍無效' }}}
           </div>
           }
         </div>
