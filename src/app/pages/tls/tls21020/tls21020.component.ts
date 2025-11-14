@@ -69,8 +69,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
   }, { allowSignalWrites: !0 });
 
-  private AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
-  private ABATYN = (v: any) => v?.ABAT_YN === 'N';
+  private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
+  private readonly ABATYN = (v: any) => v?.ABAT_YN === 'N';
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.tableLoading()
@@ -182,6 +182,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     },
   ];
 
+  private readonly fail = (msg: string) => ({ isValid: !1, errorMessage: msg });
+  private readonly warn = (msg: string) => ({ isValid: !0, errorMessage: msg });
+  private readonly isEmpty = (v: unknown) => !v?.toString().trim();
+
   private abatVal(value: any, rowData: any): { isValid: boolean; errorMessage: string[]; } {
     return Object.create(this.ABATYN(rowData) ? { isValid: !0, errorMessage: [] } : validateRequired(value));
   }
@@ -234,42 +238,34 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     });
   }
 
-  public rowEditValid(row: TLS21020Data, index: number, data: TLS21020Data[]): boolean {
-    return index === data.length - 2;
-  }
-
   public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
-    const fail = (msg: string) => ({ isValid: !1, errorMessage: msg });
-    const warn = (msg: string) => ({ isValid: !0, errorMessage: msg });
-    const isEmpty = (v: unknown) => !v?.toString().trim();
-
     // Org_ID 必填
-    if (isEmpty(rowData.Org_ID)) return fail('組織代碼必須填寫');
+    if (this.isEmpty(rowData.Org_ID)) return this.fail('組織代碼必須填寫');
 
     // ABAT_YN 為 Y 時，VEN_No 與 PAY_days 必填
     if (rowData.ABAT_YN !== 'N') {
-      if (isEmpty(rowData.VEN_No)) return fail('應收廠商必須填寫');
-      if (isEmpty(rowData.PAY_days)) return fail('付款天數必須填寫');
+      if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
+      if (this.isEmpty(rowData.PAY_days)) return this.fail('付款天數必須填寫');
     }
 
     // 可選欄位警告檢查
-    if (this.validateValue(rowData.PAY_days)) return warn('付款天數必須為大於等於0的整數');
-    if (isEmpty(rowData.PAY_No)) return warn('付款別編號必須填寫');
-    if (isEmpty(rowData.AccNotes)) return warn('傳票備註必須填寫');
-    if (isEmpty(rowData.AccNo)) return warn('會計科目必須填寫');
-    if (isEmpty(rowData.RelatedPartyAccNo)) return warn('區分關係人會科必須填寫');
+    if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
+    if (this.isEmpty(rowData.PAY_No)) return this.warn('付款別編號必須填寫');
+    if (this.isEmpty(rowData.AccNotes)) return this.warn('傳票備註必須填寫');
+    if (this.isEmpty(rowData.AccNo)) return this.warn('會計科目必須填寫');
+    if (this.isEmpty(rowData.RelatedPartyAccNo)) return this.warn('區分關係人會科必須填寫');
 
     // 檢查重複 (AccDC, ItemDesc, AccNo)
     const rows = this.tableData();
     const rowIndex = rows.indexOf(rowData);
-    if (rowIndex === -1) return fail('找不到該列資料');
+    if (rowIndex === -1) return this.fail('找不到該列資料');
 
     const { AccDC, ItemDesc, AccNo } = rowData;
     for (let i = 0; i < rows.length; i++) {
       if (i === rowIndex) continue;
       const item = rows[i];
       if (item.AccDC === AccDC && item.ItemDesc === ItemDesc && item.AccNo === AccNo)
-        return fail('會計科目與項目描述必須唯一');
+        return this.fail('會計科目與項目描述必須唯一');
     }
 
     return { isValid: !0, errorMessage: '' };
@@ -281,7 +277,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.canSave.set(!validate);
   }
 
-  private validateValue(value: unknown): boolean {
+  /** 檢查型別 */
+  private validateValue<T>(value: T): boolean {
     if (typeof value === 'string') return !value.trim();
     if (typeof value === 'number') return !Number.isInteger(value) || value < 0;
     const str = value?.toString();
