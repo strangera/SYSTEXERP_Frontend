@@ -64,13 +64,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (data) { return this.isRowSelectable(data); }
     return false; //
   };
-  @Input() isAllSelected = false;                            // 是否全選
-  @Output() dataChange = new EventEmitter<any[]>();               // 用來儲存查詢結果
+  @Input() isAllSelected = false;                     // 是否全選
+  @Output() dataChange = new EventEmitter<any[]>();   // 用來儲存查詢結果
   // Header 相關
-  @Input() showCaption = true;                         // 是否顯示 Caption
+  @Input() showCaption = true;                        // 是否顯示 Caption
   @Input() showSort = true;                           // 是否顯示 排序
   // Header(左) 相關
-  @Input() showFilter = true;         // 是否顯示 Filter
+  @Input() showFilter = true;           // 是否顯示 Filter
   @Input() showReportMode = true;       // 是否顯示 匯出按鈕
   @Input() customReport = false;        // 是否自訂報表
   @Input() pageOrientation: string | null = 'Landscape'; // PDF橫式

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ASS21020Data, ASS21020Delete, ASS21020Query, ASS21020Update, ASS21020UpdateStatus } from '@pages/ass/ass21020/ass21020.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2000';
@@ -42,9 +42,31 @@ export class ASS21020Service {
     private http: HttpClient,
   ) { }
 
+  /**
+   * 查詢 ASS21020 數據，並在 Service 層處理 dataKey 的生成。
+   * @param query 查詢條件
+   * @returns 包含 EnhancedASS21020Data 陣列的回應 Observable
+   */
   public queryASS21020(query: ASS21020Query): Observable<BaseQueryResponse<ASS21020Data>> {
-    return this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/queryASS21020`, query)
-  };
+    // 呼叫 HTTP POST 請求
+    return this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/queryASS21020`, query).pipe(
+      // 使用 map 操作符來轉換服務器的回應
+      map(res => {
+        // 處理 Data 陣列，為每個項目添加 dataKey
+        const enhancedData: ASS21020Data[] = res.Data.map(item => ({
+          ...item,
+          // 邏輯已從 Component 移到此處
+          dataKey: item.ENG_MeterNo + '-' + item.ENG_Type
+        }));
+
+        // 返回包含增強數據的新回應對象，TotalCount 保持不變
+        return {
+          ...res,
+          Data: enhancedData
+        } as BaseQueryResponse<ASS21020Data>;
+      })
+    );
+  }
 
   public updateASS21020(payload: ASS21020Update): Observable<ASS21020UpdateStatus> {
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/updateASS21020`, payload)

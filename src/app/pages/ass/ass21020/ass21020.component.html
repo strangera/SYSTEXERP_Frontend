@@ -41,11 +41,9 @@
 </div>
 
 <div class="card">
-  <div class="col-12">
-    <app-table-report [showCheckBox]="true" [lastQueryBody]="lastQueryBody" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" [queryFunction]="service.queryASS21020.bind(service)" [data]="data"
-      dataKey="dataKey" tableKey="ASS21020_Data" [columns]="columns" [totalRecords]="totalRecords" [loading]="loading"
-      [expansionColumns]="extColumns" [expansionDataKey]="'Details'" (edit)="onEdit($event)" (delete)="onDelete($event)"
-      (detail)="onDetail($event)"></app-table-report>
-  </div>
+  <app-table-report [showCheckBox]="true" [lastQueryBody]="lastQueryBody" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [queryFunction]="service.queryASS21020.bind(service)" [data]="data"
+    dataKey="dataKey" tableKey="ASS21020_Data" [columns]="columns" [totalRecords]="totalRecords" [loading]="loading"
+    [expansionColumns]="extColumns" [expansionDataKey]="'Details'" (edit)="onEdit($event)" (delete)="onDelete($event)"
+    (detail)="onDetail($event)"></app-table-report>
 </div>

@@ -110,10 +110,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.service.queryASS21020(frm.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data.map(item => ({
-          ...item,
-          dataKey: item.ENG_MeterNo + '-' + item.ENG_Type
-        }));
+        this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.lastQueryBody = frm.getRawValue();
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());

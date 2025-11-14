@@ -104,8 +104,8 @@
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
-          [raised]="!expandedRows[rowData?.[dataKey ?? 'id']]" [loading]="rowData?.expansionLoading"
-          [icon]=" expandedRows[rowData?.[dataKey ?? 'id']] ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton
+          [raised]="!expandedRows[rowData?.[dataKey ?? index]]" [loading]="rowData?.expansionLoading"
+          [icon]=" expandedRows[rowData?.[dataKey ?? index]] ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton
           (click)="toggleRowExpansion(rowData)" [disabled]="rowData?.expansionLoading ||
         (!expansionLoadFn && !rowData?.[expansionDataKey]?.length)" />
       </td>
@@ -141,7 +141,7 @@
         </ng-container>
       </td>
     </tr>
-    <tr *ngIf="expansionColumns.length && expandedRows[rowData?.[dataKey ?? 'id']]" class="p-row-expansion">
+    <tr *ngIf="expansionColumns.length && expandedRows[rowData?.[dataKey ?? index]]" class="p-row-expansion">
       <td
         [attr.colspan]="this.columns.length + (showManage ? 1 : 0) + (showCheckBox ? 1 : 0) + (showReorder ? 1 : 0) + 1"
         class="p-0">
