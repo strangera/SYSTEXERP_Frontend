@@ -1,9 +1,22 @@
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDateToYYYY_MM_DD, formatYN } from '@shared/componentkit/table/table.model';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 
 /**
  * TLS2J030 後台發票換開補登作業 - 欄位定義
  */
+
+// 換開狀態選項
+export const GUI_STATUS_OPTIONS = [
+  { label: '正常', value: '0' },
+  { label: '刪除', value: '1' }
+];
+
+// 換開狀態格式化函數
+export function formatGUIStatus(value: string | number): string {
+  const stringValue = String(value);
+  const item = GUI_STATUS_OPTIONS.find(o => o.value === stringValue);
+  return item?.label ?? String(value);
+}
 
 // ===== 來源發票欄位定義 =====
 
@@ -28,21 +41,15 @@ export const COLUMNS_NATURAL_EDIT: EditColumn[] = [
 
 /** 查看模式用的來源發票欄位（用於 app-table） */
 export const COLUMNS_NATURAL_VIEW: Column[] = [
-  { field: 'TXN_DATE', header: '發票日期', visible: true },
-  { field: 'TXN_GUIPAPER', header: '發票聯式', visible: true },
-  { field: 'TXN_GUINO', header: '發票號碼', visible: true },
-  { field: 'PLU_TAXTYPE', header: '稅別', visible: true },
-  { field: 'TXN_SALETAX', header: '應稅金額', visible: true },
-  { field: 'TXN_SALENOTAX', header: '免稅金額', visible: true },
-  { field: 'TXN_NET', header: '未稅金額', visible: true },
-  { field: 'TXN_TAX', header: '稅額', visible: true },
-  { field: 'TXN_SaleAmt', header: '發票金額', visible: true },
-  { field: 'TXN_UNIFORM', header: '統一編號', visible: true },
-  { field: 'INV_NoneTax', header: '零稅註記', visible: true },
-  { field: 'TXN_GUIRemark', header: '免徵營業稅證明卡卡號', visible: true },
-  { field: 'GUI_DingType', header: '是否為丁種發票', visible: true },
-  { field: 'TXN_GUIRemark', header: '電子發票隨機碼', visible: true },
-  { field: 'txn_notes', header: '備註', visible: true },
+  { field: 'CHG_No', header: '換開編號', visible: true },
+  { field: 'GUI_InputDate', header: '換開日期', visible: true , format: formatDateToYYYY_MM_DD },
+  { field: 'TXN_Date', header: '來源發票日期', visible: true, format: formatDateToYYYY_MM_DD  },
+  { field: 'ECR_No', header: '收銀機號', visible: true },
+  { field: 'TXN_No', header: '交易序號', visible: true },
+  { field: 'TXN_GUIBegNo', header: '來源發票號碼', visible: true },
+  { field: 'TXN_TotGui', header: '來源發票金額', visible: true, format: formatAmount },
+  { field: 'GUI_Status', header: '換開狀態', visible: true, format: formatGUIStatus },
+  { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDateToYYYY_MM_DD  },
 ];
 
 // ===== 換開發票欄位定義 =====
@@ -68,21 +75,21 @@ export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
 
 /** 查看模式用的換開發票欄位（用於 app-table） */
 export const COLUMNS_CHANGE_VIEW: Column[] = [
-  { field: 'TXN_DATE', header: '發票日期', visible: true },
-  { field: 'TXN_GUIPAPER', header: '發票聯式', visible: true },
-  { field: 'TXN_GUINO', header: '發票號碼', visible: true },
-  { field: 'PLU_TAXTYPE', header: '稅別', visible: true },
-  { field: 'TXN_SALETAX', header: '應稅金額', visible: true },
-  { field: 'TXN_SALENOTAX', header: '免稅金額', visible: true },
-  { field: 'TXN_NET', header: '未稅金額', visible: true },
-  { field: 'TXN_TAX', header: '稅額', visible: true },
-  { field: 'TXN_SaleAmt', header: '發票金額', visible: true },
-  { field: 'TXN_UNIFORM', header: '統一編號', visible: true },
+  { field: 'TXN_Date', header: '發票日期', visible: true , format: formatDateToYYYY_MM_DD },
+  { field: 'TXN_GUIPaper', header: '發票聯式', visible: true },
+  { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+  { field: 'PLU_TaxType', header: '稅別', visible: true },
+  { field: 'TXN_SaleTax', header: '應稅金額', visible: true , format: formatAmount},
+  { field: 'TXN_SaleNoTax', header: '免稅金額', visible: true, format: formatAmount},
+  { field: 'TXN_Net', header: '未稅金額', visible: true, format: formatAmount },
+  { field: 'TXN_Tax', header: '稅額', visible: true , format: formatAmount},
+  { field: 'TXN_SaleAmt', header: '發票金額', visible: true, format: formatAmount },
+  { field: 'TXN_Uniform', header: '統一編號', visible: true },
   { field: 'INV_NoneTax', header: '零稅註記', visible: true },
-  { field: 'TXN_GUIRemark', header: '免徵營業稅證明卡卡號', visible: true },
-  { field: 'GUI_DingType', header: '是否為丁種發票', visible: true },
+  { field: 'BusTaxExmpCard', header: '免徵營業稅證明卡卡號', visible: true },
+  { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN},
   { field: 'TXN_GUIRemark', header: '電子發票隨機碼', visible: true },
-  { field: 'txn_notes', header: '備註', visible: true },
+  { field: 'TXN_Notes', header: '備註', visible: true },
 ];
 
 // ===== 商品明細欄位定義 =====
@@ -97,17 +104,18 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
 
 /** 查看模式用的商品明細欄位（用於 app-table） */
 export const COLUMNS_DETAIL_VIEW: Column[] = [
-  { field: 'txn_item', header: '項次', visible: true },
-  { field: 'txn_itemname', header: '項目名稱', visible: true },
-  { field: 'inv_qty', header: '數量', visible: true },
-  { field: 'txn_saleamt', header: '金額', visible: true },
+  { field: 'TXN_Item', header: '項次', visible: true },
+  { field: 'INV_ItemName', header: '項目名稱', visible: true },
+  { field: 'INV_Qty', header: '數量', visible: true },
+  { field: 'TXN_SaleAmt', header: '金額', visible: true, format: formatAmount },
 ];
 
 // ===== 介面定義 =====
 
 /** TLS2J030 資料介面 */
 export interface TLS2J030Data {
-  // 發票基本資訊
+  CHG_No?: string;
+
   TXN_DATE?: string;
   TXN_GUIPAPER?: string;
   TXN_GUINO?: string;
@@ -129,3 +137,4 @@ export interface TLS2J030Data {
   inv_qty?: number;
   txn_saleamt?: number;
 }
+
