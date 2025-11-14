@@ -55,3 +55,11 @@ export interface FieldChangeEvent {
   value: any;
   index?: number;
 }
+
+export interface EditColumnExtend {
+  _TABLE_KEY: string;
+  _dataStatus: 'original' | 'new' | 'modified' | 'deleted';
+  _rowValidationError: boolean;
+  _isAutoInsertCandidate: boolean;
+  [key: string]: any;
+}

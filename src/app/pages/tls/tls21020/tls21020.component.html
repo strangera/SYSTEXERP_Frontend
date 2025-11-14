@@ -1,9 +1,6 @@
 <div class="flex gap-2 mb-2">
   <app-menubar [ProgNo]="ProgNo"
                class="flex-1"></app-menubar>
-  <!-- <app-button btnType="create"
-              (click)="onCreate()"
-              [label]="'create' | translate"></app-button> -->
 </div>
 <p-accordion>
   <p-accordionTab [header]="'query-conditions' | translate"
@@ -21,18 +18,19 @@
                       [control]="qf().ENTRY_TYPE"
                       [submitted]="submitted"></app-dropdown>
 
-        <app-table-edit class="col-12"
+        <app-table-edit #dt
+                        class="col-12"
                         title="會計科目明細"
                         tableKey="TLS21020Detail"
                         [columns]="columns"
-                        [data]="service.TLS21020Data()"
-                        (selectionChange)="selectedItems = $event"
-                        [selectedItems]="selectedItems"
-                        (dataChange)="service.TLS21020Data.set($event)"
-                        [rowValidate]="validateEntireRow"
+                        [data]="tableData()"
+                        [selectedItems]="selectedItems()"
+                        (selectionChange)="selectedItems.set($event)"
+                        (dataChange)="dataChange($event, dt.validateAndShowErrors())"
+                        [rowValidate]="validateRow"
                         [tableRequired]="true"
                         [showReorder]="false"
-                        [insertDisabled]="!qf().ENTRY_TYPE.value?.length"
+                        [canInsert]="!!qf().ENTRY_TYPE.value"
                         [loading]="service.tableLoading()"
                         [defaultInsertData]="defaultInsertData"></app-table-edit>
       </div>
@@ -41,7 +39,7 @@
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="!canSave()"
+                    [disabled]="canSave()"
                     [loading]="loading"></app-button>
       </div>
     </form>
