@@ -31,6 +31,15 @@ export interface IDropdownItem {
   PAY_OverPay?: string;
 }
 
+export interface TLTTALENT_TLT_SPACE extends IDropdownItem {
+  TalentId: number,
+  TltNo: string,
+  TltName: string,
+  ApplyNo: string,
+  LocationNo: string,
+  TltSpace: number
+}
+
 export interface BusSClass extends IDropdownItem {
   bus_class: string,
   bus_class_name: string
@@ -548,5 +557,9 @@ export class DropDownListService {
   // 查詢傳票型態(GLS1010)下拉選單
   queryGLS1010_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1010_DropDownList`, {});
+  }
+  // 能源下拉選單
+  queryTLTTALENT_TLT_SPACE(params: { TltNo: string }): Observable<ApiResponse<TLTTALENT_TLT_SPACE[]>> {
+    return this.http.post<ApiResponse<TLTTALENT_TLT_SPACE[]>>(`${this.apiUrl}/queryTLTTALENT_TLT_SPACE_DropDownList`, params);
   }
 }

@@ -40,11 +40,11 @@ import { trigger, style, transition, animate } from '@angular/animations'; // 1.
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') public dt!: Table;
-  @Input() lastQueryBody?: any;              // 用來儲存上一次的查詢條件
+  @Input({ required: true }) lastQueryBody?: any;              // 用來儲存上一次的查詢條件
   @Input({ required: true }) totalRecords = 0;                // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];                // 用來儲存查詢結果
   @Input({ required: true }) columns: ReportColumn[] = [];               // 用來儲存查詢結果
-  @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
+  @Input({ required: true }) queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
   @Input() dataKey: string | undefined;                 // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];         // 用來儲存查詢結果

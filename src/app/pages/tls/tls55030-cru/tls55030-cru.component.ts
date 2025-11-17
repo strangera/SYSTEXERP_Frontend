@@ -141,7 +141,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     this.dialogLoading = true;
     this.tls55030Service.queryTLS55030ReturnNotRebate(frm.value).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe((res) => {
       this.dialogData = res.Data;
-      this.dialogtotalRecords = res.TotalCount;
+      this.dialogtotalRecords = res.TotalCount || res.Data.length;
       this.dialoglastQueryBody = frm.value;
     })
   }
