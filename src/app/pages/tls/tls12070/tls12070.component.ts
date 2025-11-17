@@ -153,6 +153,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   onSubmit(frm: FormGroup) {
     this.activeReport = 'query';
     this.handleSubmit(frm, () => {
+      // 查詢 Customer_interview資料表
       this.tls12070Service.queryTLS12070(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
