@@ -169,46 +169,62 @@ CounterOptions: any[] = [];
    * 懶載入（分頁/排序）：
    * 僅「讀取」子元件丟出的參數，不再把排序/分頁回灌給子元件，避免循環。
    */
-  override onLazyLoadData(event: any, form: FormGroup): void {
-    this.loading = true;
+ override onLazyLoadData(event: any, form: FormGroup): void {
+  this.loading = true;
 
-    // TableComponent 會在 goToPage/loadDataLazy 丟出 pageIndex/pageSize/SortBy
-    const pageIndex =
-      event?.pageIndex ??
-      ((event?.first ?? 0) / (event?.rows ?? (form.value?.PageSize || 20)) + 1);
+  const pageIndex =
+    event?.pageIndex ??
+    ((event?.first ?? 0) / (event?.rows ?? (form.value?.PageSize || 20)) + 1);
 
-    const pageSize =
-      event?.pageSize ?? event?.rows ?? form.value?.PageSize ?? 20;
+  const pageSize =
+    event?.pageSize ?? event?.rows ?? form.value?.PageSize ?? 20;
 
-    let sort: ApiSort[] = this.defaultSort;
+  let sort: ApiSort[] = this.defaultSort;
 
-    if (Array.isArray(event?.SortBy) && event.SortBy.length) {
-      // 直接沿用 TableComponent 傳出的 SortBy（1 / -1）
-      sort = event.SortBy.map((m: any) => ({
-        field: m.field,
-        order: m.order === -1 ? -1 : 1,
-      }));
-    } else if (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length) {
-      // 兼容：若外層直接用 PrimeNG 事件
-      sort = event.multiSortMeta.map((m: any) => ({
-        field: m.field,
-        order: m.order === -1 ? -1 : 1,
-      }));
-    } else if (event?.sortField) {
-      sort = [{ field: event.sortField, order: event.sortOrder === -1 ? -1 : 1 }];
-    }
-
-    const payload = this.buildPayload(form, { pageIndex, pageSize, sort });
-
-    this.tls41020Service.queryTLS41020(payload).subscribe({
-      next: (res) => {
-        this.data = res?.Data || [];
-        this.totalRecords = res?.TotalCount ?? 0;
-      },
-      error: () => this.messageService.errorBubble('資料載入失敗'),
-      complete: () => (this.loading = false),
-    });
+  if (Array.isArray(event?.SortBy) && event.SortBy.length) {
+    // TableComponent 丟出的 SortBy
+    sort = event.SortBy.map((m: any) => ({
+      field: this.mapSortField(m.field),
+      order: m.order === -1 ? -1 : 1,
+    }));
+  } else if (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length) {
+    // 兼容 PrimeNG 事件
+    sort = event.multiSortMeta.map((m: any) => ({
+      field: this.mapSortField(m.field),
+      order: m.order === -1 ? -1 : 1,
+    }));
+  } else if (event?.sortField) {
+    sort = [{
+      field: this.mapSortField(event.sortField),
+      order: event.sortOrder === -1 ? -1 : 1,
+    }];
   }
+
+  const payload = this.buildPayload(form, { pageIndex, pageSize, sort });
+
+  this.tls41020Service.queryTLS41020(payload).subscribe({
+    next: (res) => {
+      this.data = res?.Data || [];
+      this.totalRecords = res?.TotalCount ?? 0;
+    },
+    error: () => {
+      this.messageService.errorBubble('資料載入失敗');
+      this.loading = false;
+    },
+    complete: () => (this.loading = false),
+  });
+}
+/** 將前端顯示欄位名稱轉成後端排序欄位名稱 */
+private mapSortField(field: string): string {
+  switch (field) {
+    case 'EDC_Status1Name':
+      return 'EDC_Status1';
+    case 'EDC_Status2Name':
+      return 'EDC_Status2';
+    default:
+      return field;
+  }
+}
 
   onClearForm(): void {
     this.queryForm.reset();
