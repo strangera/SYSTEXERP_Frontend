@@ -69,8 +69,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   lastQueryBody: any = {}; // 用於比較，防止重複查詢
   public readonly columns: EditColumn[] = [
     { field: 'TLT_No', header: '專櫃編號', },
-    { field: 'TltName', header: '櫃位名稱', },
-    { field: 'LocationNo', header: '位置編號', },
+    { field: 'TLT_Name', header: '櫃位名稱', },
+    // { field: 'LocationNo', header: '位置編號', },
     { field: 'ApplyNo', header: '招募編號', },
     {
       field: 'ENG_Rate', header: '比率', type: 'inputNumber', min: 0, max: 100, maxFractionDigits: 2,
@@ -118,35 +118,24 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     }
 
     // 4. 監聽 ENG_MeterNo 變化來更新附帶資訊 (保持不變)
-    this.dataForm.controls.ENG_MeterNo.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((meterNo) => {
-        this.updateMeterNoRelatedFields(meterNo);
-      });
+    this.dataForm.controls.ENG_MeterNo.valueChanges.pipe(untilDestroyed(this)).subscribe((meterNo) => {
+      this.updateMeterNoRelatedFields(meterNo);
+    });
 
     // 5. 監聽 Dialog 查詢表單 (改用 Debounce 呼叫 API)
-    this.dialogQueryForm.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(query => {
-        // 僅當 TltNo 變化時才發送，或當分頁/排序參數變化時發送
-        this.dialogQuerySubject.next(query);
-      });
+    this.dialogQueryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(query => {
+      // 僅當 TltNo 變化時才發送，或當分頁/排序參數變化時發送
+      this.dialogQuerySubject.next(query);
+    });
 
     // 訂閱 Subject，應用 debounceTime(300ms) 後才呼叫 API
-    this.dialogQuerySubject
-      .pipe(debounceTime(300), untilDestroyed(this))
-      .subscribe(query => {
-        this.loadDialogData(query);
-      });
+    this.dialogQuerySubject.pipe(debounceTime(300), untilDestroyed(this)).subscribe(query => {
+      this.loadDialogData(query);
+    });
 
     if (!this.isFormCreateable) {
       this.data = this.rowdata?.Details || [];
       this.dataForm.disable();
-
-      // 非建立模式下補齊明細資料
-      this.dropdown.queryTLTTALENT_TLT_SPACE().pipe(untilDestroyed(this)).subscribe(options => {
-        this.updateDetailDataWithFullInfo(options || []);
-      });
     }
   }
 
@@ -199,32 +188,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     });
   }
 
-  // 新增方法: 補齊非建立模式的明細資料 (保持不變)
-  private updateDetailDataWithFullInfo(tltOptions: Option[]): void {
-    const tltMap = new Map<number, Option>();
-    tltOptions.forEach(opt => {
-      if (opt['TalentId']) {
-        tltMap.set(opt['TalentId'] as number, opt);
-      }
-    });
-
-    this.data = this.data.map(detail => {
-      const fullInfo = tltMap.get(detail.TalentId);
-
-      if (fullInfo) {
-        return {
-          ...detail,
-          TltName: fullInfo['TltName'] || detail.TltName || '',
-          LocationNo: fullInfo['LocationNo'] || '',
-          ApplyNo: fullInfo['ApplyNo'] || '',
-          TltSpace: fullInfo['TltSpace'] || detail.TltSpace || 0,
-        };
-      }
-      return detail;
-    });
-    this.fieldChange();
-  }
-
   // 根據能源類型代碼篩選可用的錶號選項 (保持不變)
   private filterMeterNoOptions(engType: string | null): void {
     if (!engType) {
@@ -234,7 +197,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
     const engTypeOption = this.ENG_TypeOptions.find(opt => opt.value === engType);
     const engTypeDesc = engTypeOption?.label;
-    console.log('engType:', engType, 'engTypeDesc:', engTypeDesc);
 
     if (engTypeDesc) {
       this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions.filter(
@@ -384,7 +346,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       Id: 0,
       TalentId: item['TalentId'] as number,
       TLT_No: item['TltNo'],
-      TltName: item['TltName'],
+      TLT_Name: item['TltName'],
       ApplyNo: item['ApplyNo'],
       LocationNo: item['LocationNo'],
       TltSpace: item['TltSpace'],

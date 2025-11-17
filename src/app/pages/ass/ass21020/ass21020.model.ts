@@ -18,7 +18,7 @@ export interface ASS21020Detail {
   Id: number; // custom for sort
   TalentId: number,
   TLT_No: string;
-  TltName: string;
+  TLT_Name: string;
   ApplyNo: string
   LocationNo?: string;
   TltSpace: number
