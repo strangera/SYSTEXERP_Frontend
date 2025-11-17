@@ -10,40 +10,49 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="日期" controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate" [endControl]="queryForm.controls.ESubpoenadate"
+              [startControl]="queryForm.controls.SVOUDATE" [endControl]="queryForm.controls.EVOUDATE"
               [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="部門" controlName="ORG_ID" [options]="ORG_IDOptions | async" optionLabel="label"
+            <app-dropdown label="部門代碼" controlName="ORG_ID" [options]="ORG_IDOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="科目代號" controlName="AccNoFrom" [options]="AccNo_Options | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.AccNoFrom" [submitted]="submitted"></app-dropdown>
+            <app-dropdown-range
+              label="科目代號"
+              controlName="dropdownRange"
+              [startControl]="queryForm.controls.SACCNO"
+              [endControl]="queryForm.controls.EACCNO"
+              [submitted]="submitted"
+              [options]="AccNo_Options"
+              optionLabel="label"
+              optionValue="value"
+            ></app-dropdown-range>  
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VenNoOptions" optionLabel="Name" optionValue="No"
-              [control]="queryForm.controls.VEN_No" [submitted]="submitted" [editable]="false"></app-dropdown>
+            <app-dropdown-range
+              label="廠商編號"
+              controlName="dropdownRange"
+              [startControl]="queryForm.controls.SDetailNo"
+              [endControl]="queryForm.controls.EDetailNo"
+              [submitted]="submitted"
+              [options]="ORG_IDOptions"
+              optionLabel="label"
+              optionValue="value"
+            ></app-dropdown-range>  
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="立沖代號"
-              [startControl]="queryForm.controls.startserialticket" [endControl]="queryForm.controls.endserialticket"
+              [startControl]="queryForm.controls.SPTA" [endControl]="queryForm.controls.EPTA"
               [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="對象別編號" controlName="TargetNoList" [options]="TargetNoListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.TargetNoList"
-              [submitted]="submitted">
-            </app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="對帳KEY值" controlName=" Subpoenacode" [control]="queryForm.controls.Subpoenacode"
+            <app-input-text label="對象別編號" controlName=" SubDetailNo" [control]="queryForm.controls.SubDetailNo"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="傳票型態" controlName="VouTypeList" [options]="VouTypeListOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VouTypeList" [submitted]="submitted">
+            <app-multi-select label="傳票型態" controlName="PostFlag" [options]="VouTypeListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PostFlag" [submitted]="submitted">
             </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
