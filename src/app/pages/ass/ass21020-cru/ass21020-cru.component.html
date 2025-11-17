@@ -31,9 +31,9 @@
       <hr />
       <app-table-edit [data]="data" dataStatusField="status" (dataChange)="data = $event" [loading]="loading"
         tableKey="ASS21020_detail" [columns]="columns" (selectionChange)="selectedItems = $event"
-        [rowValidate]="validateRow" (fieldChange)="fieldChange()" [showInsert]="!isFormReadable"
-        (insert)="dialogVisible = true" [selectedItems]="selectedItems" (dataChange)="data = $event"
-        [tableRequired]="true" [disabled]="isFormReadable" [canInsert]="false">
+        [rowValidate]="validateRow" (fieldChange)="fieldChange()" [showInsert]="!isFormReadable" (insert)="openDialog()"
+        [selectedItems]="selectedItems" (dataChange)="data = $event" [tableRequired]="true" [disabled]="isFormReadable"
+        [canInsert]="false">
         <header>
           <div class="flex justify-content-between align-items-center w-full">
             <div>
@@ -57,16 +57,14 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm">
     <div class="grid p-fluid">
-      <app-input-text class="col-3" label="專櫃編號" controlName="TltNo" [control]="dialogQueryForm.controls.TltNo" />
-      <app-input-text class="col-3" label="櫃位名稱" controlName="TltName" [control]="dialogQueryForm.controls.TltName" />
-      <app-input-text class="col-3" label="位置編號" controlName="LocationNo"
-        [control]="dialogQueryForm.controls.LocationNo" />
-      <app-input-text class="col-3" label="招募編號" controlName="ApplyNo" [control]="dialogQueryForm.controls.ApplyNo" />
+      <app-input-text class="col-12" label="專櫃編號" controlName="TltNo" [control]="dialogQueryForm.controls.TltNo" />
     </div>
   </form>
-  <app-table-report tableKey="Ass21020CruDialogTable" dataKey="TalentId" [showReportMode]="false" [data]="dialogData"
+  <app-table-report tableKey="Ass21020CruDialogTable" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
-    [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords" [loading]="dialogLoading">
+    [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords" [loading]="dialogLoading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="dropDownListService.queryTLTTALENT_TLT_SPACE.bind(dropDownListService)">
   </app-table-report>
 </app-dialog>

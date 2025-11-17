@@ -1,4 +1,4 @@
-import { Tls55030Service } from './../../../service/api/tls/tls55030.service';
+import { Tls55030ListData, Tls55030QueryBody, Tls55030Service } from './../../../service/api/tls/tls55030.service';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -11,8 +11,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '@shared/componentkit/table/table.model';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Column, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { AsyncPipe } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -24,7 +24,7 @@ import { finalize } from 'rxjs';
   standalone: true,
   imports: [TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
 })
-export class TLS55030Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData> implements OnInit {
   queryForm = this.formBuilder.group({
     TABTYPE: [],
     PUR_GUINo: [],
@@ -55,16 +55,16 @@ export class TLS55030Component extends BasicQueryPageComponent<any> implements O
   PUR_TaxTypeOptions = getSYS1000Options('PUR_TaxType');
   PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType');
   tblUserOptions = this.dropdown.queryTblUser();
-  data: any[] = [];
+  data: Tls55030ListData[] = [];
   totalRecords = 0;
-  lastQueryBody: any;
+  lastQueryBody: Tls55030QueryBody | null = null;
   columns: Column[] = [
-    { field: 'billingMonth', header: '結帳年月' },
-    { field: 'storeCode', header: '廠商編號' },
-    { field: 'documentType', header: '單據種類' },
-    { field: 'format', header: '格式' },
-    { field: 'status', header: '狀況' },
-    { field: 'totalDiscountAmount', header: '總折讓金額' },
+    { field: 'DIS_No', header: '折讓單維護編號' },
+    { field: 'ACP_YYYYMM', header: '結帳年月', format: formatYYYYMM },
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'TABTYPE', header: '單據種類', format: (v) => getSYS1000('TABTYPE', v) },
+    { field: 'DIS_Status', header: '狀況', format: (v) => getSYS1000('DIS_Status', v) },
+    // { field: 'totalDiscountAmount', header: '總折讓金額' }, // TODO: 後端又不給
   ];
   constructor(
     private readonly dropdown: DropdownApiService,

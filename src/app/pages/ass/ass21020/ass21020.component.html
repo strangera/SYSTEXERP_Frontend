@@ -18,13 +18,12 @@
             [options]="TLT_NoOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-dropdown> -->
           <app-dropdown-table class="col-12 md:col-12 lg:col-8" [control]="queryForm.controls.TLT_No"
-            [submitted]="submitted" optionLabel="TltNo" optionValue="TltNo" [suggestions]="tltNoSuggestions"
-            [fieldsConfig]="tltNoFieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)" [lazy]="false"
+            [submitted]="submitted" optionLabel="TltNo" templateLabel="label" [suggestions]="tltNoSuggestions"
+            [fieldsConfig]="tltNoFieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
             [formGroup]="tltNoOpForm" (formValueChanged)="onFormValueChanged($event)" [dialogData]="tltNoOpData"
-            [dialogColumns]="tltNoOpColumns" [loading]="tltNoLoading" [totalRecords]="tltNoOpTotalRecords"
-            (select)="onTltNoSelect($event)">
-            <app-input-text class="col-12" label="專櫃編號/名稱/其他" controlName="filterText"
-              [control]="tltNoOpForm.controls.filterText" />
+            [dialogColumns]="tltNoOpColumns" [loading]="tltNoLoading" [totalRecords]="tltNoOpTotalRecords">
+            <app-input-text class="col-12" label="專櫃編號/名稱/其他" controlName="TLT_No"
+              [control]="tltNoOpForm.controls.TltNo" />
           </app-dropdown-table>
           <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="營業面積" controlName="NET_SPACE"
             [control]="queryForm.controls.NET_SPACE" [disabled]="true" [submitted]="submitted"></app-input-text> -->

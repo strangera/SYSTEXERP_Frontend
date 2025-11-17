@@ -40,11 +40,11 @@ import { trigger, style, transition, animate } from '@angular/animations'; // 1.
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') public dt!: Table;
-  @Input() lastQueryBody?: any;              // 用來儲存上一次的查詢條件
+  @Input({ required: true }) lastQueryBody?: any;              // 用來儲存上一次的查詢條件
   @Input({ required: true }) totalRecords = 0;                // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];                // 用來儲存查詢結果
   @Input({ required: true }) columns: ReportColumn[] = [];               // 用來儲存查詢結果
-  @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
+  @Input({ required: true }) queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
   @Input() dataKey: string | undefined;                 // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];         // 用來儲存查詢結果
@@ -60,10 +60,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() selectionChange = new EventEmitter<any>();
   @Output() selectAllChange = new EventEmitter<boolean>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
-  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => {
-    if (data) { return this.isRowSelectable(data); }
-    return false; //
-  };
+  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
   @Input() isAllSelected = false;                     // 是否全選
   @Output() dataChange = new EventEmitter<any[]>();   // 用來儲存查詢結果
   // Header 相關
@@ -231,7 +228,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   }
   onLazyLoad() {
     if (this.isAllSelected) {
-      this.selectedItems = [...this.data];
+      this.selectedItems = this.data.filter(rowData => {
+        const selectable = this.isRowSelectable(rowData);
+        return selectable === undefined ? true : selectable;
+      });
       this.selectionChange.emit(this.selectedItems);
       this.selectAllChange.emit(true);
     } else {
@@ -260,7 +260,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   onSelectAllChange(event: TableSelectAllChangeEvent) {
     this.isAllSelected = event.checked;
     if (this.isAllSelected) {
-      this.selectedItems = [...this.data];
+      this.selectedItems = this.data.filter(rowData => {
+        // 確保 rowData 可選時才加入 selectedItems
+        const selectable = this.isRowSelectable(rowData);
+        return selectable === undefined ? true : selectable;
+      });
       this.selectionChange.emit(this.selectedItems);
       this.selectAllChange.emit(true);
     } else {

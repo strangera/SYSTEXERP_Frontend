@@ -81,8 +81,8 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
       this.suggestions = [];
       return;
     }
-    // 不再直接 emit，而是將值發送到 inputChangeSubject
-    this.inputChangeSubject.next({ [this.optionValue]: this.control.value });
+    // 【修改處】使用 optionLabel 作為 key，因為 control.value 是使用者在 p-autoComplete 輸入的字串
+    this.inputChangeSubject.next({ [this.optionLabel]: this.control.value });
   }
 
   getFieldValue(field: FieldsConfig): string {
@@ -91,25 +91,34 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
       return '';
     }
 
-    let selectedValue: string;
-    if (typeof this.control.value === 'string') {
-      selectedValue = this.control.value;
-    } else if (typeof this.control.value === 'object') {
-      // 這裡也需要檢查 this.control.value 是否為 null 或 undefined
-      // 在最前面已經檢查過了，所以這裡可以放心地使用
-      selectedValue = this.control.value[this.optionValue];
-    } else {
-      return ''; // 如果 control.value 不是字串也不是物件，則返回空字串
+    let selectedData: any;
+
+    if (typeof this.control.value === 'object' && this.control.value !== null) {
+      // 情況一：如果 optionValue 未傳入（為空字串），control.value 就是選取的完整物件。
+      if (!this.optionValue) {
+        selectedData = this.control.value;
+      } else {
+        // 情況二：如果 optionValue 有傳入，control.value 是該屬性的值。
+        // 需從 suggestions 中尋找完整的物件。
+        const selectedValue = this.control.value[this.optionValue];
+        selectedData = this.suggestions.find((item: any) => item[this.optionValue] === selectedValue);
+      }
+    } else if (typeof this.control.value === 'string' && this.optionLabel) {
+      // 情況三：如果 control.value 是字串，且我們沒有設定 optionValue，
+      // PrimeNG 預設將 optionLabel 的值寫入。
+      // 需從 suggestions 中尋找完整的物件。
+      selectedData = this.suggestions.find((item: any) => item[this.optionLabel] === this.control.value);
     }
 
-    const selectedSuggestion = this.suggestions.find((item: any) => item[this.optionValue] === selectedValue);
-
-    if (selectedValue && selectedSuggestion && this.suggestions && this.optionValue) {
-      if (selectedSuggestion[field.field] !== undefined) {
+    // 如果找到選取的資料物件 (selectedData)
+    if (selectedData) {
+      // 檢查 field 是否存在於選取的資料物件中
+      if (selectedData[field.field] !== undefined) {
+        const value = selectedData[field.field];
         if (field.format) {
-          return field.format(selectedSuggestion[field.field]) as string;
+          return field.format(value) as string;
         } else {
-          return selectedSuggestion[field.field];
+          return value;
         }
       }
     }
@@ -121,7 +130,10 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.selectedItems = event.data;
     this.select.emit(event.data);
     this.suggestions = [...this.dialogData]
+
+    // 【修改處】當 optionValue 為空時，設定完整的物件
     this.control.setValue(this.optionValue ? this.selectedItems[this.optionValue] : this.selectedItems);
+
     this.op?.hide();
     this.selectedItems = [];
     this.formGroup.reset();
@@ -133,5 +145,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
       pageIndex: event.pageIndex,
       SortBy: event.SortBy
     });
+    console.log(dataForm.value);
+
   }
 }

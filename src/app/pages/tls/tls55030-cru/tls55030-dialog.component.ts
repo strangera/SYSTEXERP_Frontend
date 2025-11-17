@@ -4,7 +4,7 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { IInvoiceDetail, IReturnDetailData, Tls55030Service } from '@service/api/tls/tls55030.service';
+import { IInvoiceDetail, IReturnDetailData, RebateDetailQueryBody, ReturnDetailQueryBody, Tls55030Service } from '@service/api/tls/tls55030.service';
 
 /**
  * 處理 TLS55030 頁面中所有彈跳視窗 (Dialog) 邏輯的元件。
@@ -21,7 +21,7 @@ import { IInvoiceDetail, IReturnDetailData, Tls55030Service } from '@service/api
         [columns]="dialogColumns2" [showDelete]="false" [selectedItems]="selectedItemsDialog2" [showCaption]="false"
         (selectionChange)="selectedItemsDialog2 = $event" [showManage]="false" [showCheckBox]="true"
         [isRowSelectable]="isRowSelectable2.bind(this)" [lastQueryBody]="lastQueryBody2"
-        [queryFunction]="tls55030Service.queryReturnDetailData.bind(tls55030Service)" [totalRecords]="totalRecords2"
+        [queryFunction]="tls55030Service.queryTLS55030ReturnDetail.bind(tls55030Service)" [totalRecords]="totalRecords2"
         [loading]="dialogLoading2">
       </app-table-report>
     </app-dialog>
@@ -33,7 +33,7 @@ import { IInvoiceDetail, IReturnDetailData, Tls55030Service } from '@service/api
         [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
         (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
         [isRowSelectable]="isRowSelectable.bind(this)" [lastQueryBody]="lastQueryBody" [showReorder]="false"
-        [queryFunction]="tls55030Service.queryInvoiceDetailsForRebate.bind(tls55030Service)" [totalRecords]="totalRecords"
+        [queryFunction]="tls55030Service.queryTLS55030RebateDetail.bind(tls55030Service)" [totalRecords]="totalRecords"
         [loading]="dialogLoading">
       </app-table-report>
     </app-dialog>
@@ -67,7 +67,7 @@ export class TLS55030DialogComponent {
   selectedItemsDialog: IInvoiceDetail[] = [];
   dialogLoading = false;
   totalRecords = 0;
-  lastQueryBody: any;
+  lastQueryBody: RebateDetailQueryBody | null = null;
 
   dialogColumns: ReportColumn[] = [
     { field: 'SeqNo', header: '序號' },
@@ -87,10 +87,10 @@ export class TLS55030DialogComponent {
     this.dialogVisible = true;
     this.dialogLoading = true;
     this.selectedItemsDialog = []; // 清空上次的選擇
-    this.tls55030Service.queryInvoiceDetailsForRebate(this.venNo).pipe(untilDestroyed(this)).subscribe(res => {
-      this.dialogData = res;
+    this.tls55030Service.queryTLS55030RebateDetail({ VEN_No: this.venNo }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogData = res.Data;
       this.dialogLoading = false;
-      this.totalRecords = res.length;
+      this.totalRecords = res.TotalCount || res.Data.length;
     });
   }
 
@@ -115,7 +115,7 @@ export class TLS55030DialogComponent {
   selectedItemsDialog2: IReturnDetailData[] = [];
   dialogLoading2 = false;
   totalRecords2 = 0;
-  lastQueryBody2: any;
+  lastQueryBody2: ReturnDetailQueryBody | null = null;
 
   dialogColumns2: ReportColumn[] = [
     { field: 'RJM_No', header: '退貨單號' },
@@ -132,15 +132,17 @@ export class TLS55030DialogComponent {
     this.dialogVisible2 = true;
     this.dialogLoading2 = true;
     this.selectedItemsDialog2 = []; // 清空上次的選擇
-    const body = {
+    const body: ReturnDetailQueryBody = {
       VEN_No: this.venNo,
-      ACP_YYYYMM: this.datePipe.transform(this.acpYyyyMm, 'yyyyMM'),
+      ACP_YYYYMM: this.datePipe.transform(this.acpYyyyMm, 'yyyyMM') as string,
+      PageSize: 30,
+      PageIndex: 1
     };
-    this.lastQueryBody2 = body; // For report table
-    this.tls55030Service.queryReturnDetailData(body).pipe(untilDestroyed(this)).subscribe(res => {
-      this.dialogData2 = res;
+    this.tls55030Service.queryTLS55030ReturnDetail(body).pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogData2 = res.Data;
+      this.lastQueryBody2 = body;
       this.dialogLoading2 = false;
-      this.totalRecords2 = res.length;
+      this.totalRecords2 = res.TotalCount;
     });
   }
 

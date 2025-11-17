@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core'; // 新增 OnDestroy
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
@@ -15,13 +15,14 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NgIf } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { debounceTime, finalize, Subject } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -43,7 +44,8 @@ import { validateMinNumber, validateRequired } from '@shared/componentkit/table-
     NgIf
   ]
 })
-export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> implements OnInit {
+export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> implements OnInit, OnDestroy { // 實作 OnDestroy
+
   public readonly dataForm = this.formBuilder.nonNullable.group({
     ENG_Type: [null, [Validators.required]],
     ENG_MeterNo: [null as string | null, [Validators.required]],
@@ -64,6 +66,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public tltNoOptionsArray: Option[] = [];
   data: ASS21020Detail[] = [];
   selectedItems: ASS21020Detail[] = [];
+  lastQueryBody: any = {}; // 用於比較，防止重複查詢
   public readonly columns: EditColumn[] = [
     { field: 'TLT_No', header: '專櫃編號', },
     { field: 'TltName', header: '櫃位名稱', },
@@ -76,9 +79,13 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     { field: 'ENG_Remark', header: '備註', type: 'input', maxLength: 200, width: '100%' },
   ];
 
+  // ⬇️ 【修正】用於處理 Dialog 查詢的延遲 Subject (使用 protected 或 private 確保內部使用)
+  protected dialogQuerySubject = new Subject<any>();
+
   constructor(
     public readonly service: ASS21020Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    public readonly dropDownListService: DropDownListService, // 注入 DropDownListService
   ) {
     super();
   }
@@ -89,61 +96,98 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     // 1. 取得所有錶號資料並保存，同時初始化篩選
     this.ENG_MeterNoOptions.pipe(untilDestroyed(this)).subscribe(options => {
       this.allENG_MeterNoOptions = options || [];
-      // 載入完畢後，執行一次篩選，使用當前的 ENG_Type 初始值 (通常是 null)
       this.filterMeterNoOptions(this.dataForm.controls.ENG_Type.value);
 
-      // 【需求 1: 非建立模式 - 載入錶號附帶資訊】
       if (!this.isFormCreateable && this.rowdata && this.rowdata.ENG_MeterNo) {
         this.updateMeterNoRelatedFields(this.rowdata.ENG_MeterNo);
       }
     });
 
-    // 2. 監聽 TLT_NoOptions (櫃位資料)
-    this.TLT_NoOptions.pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe(options => {
-      this.tltNoOptionsArray = options || [];
-      this.totalRecords = this.tltNoOptionsArray.length;
-      this.dialogData = this.tltNoOptionsArray;
+    // 2. 初始化 Dialog 相關屬性 (保持不變)
+    this.tltNoOptionsArray = [];
+    this.dialogData = [];
+    this.totalRecords = 0;
+    this.dialogLoading = false;
 
-      // 【需求 2: 非建立模式 - 補齊明細資料】
-      if (!this.isFormCreateable && this.rowdata && this.rowdata.Details) {
-        this.updateDetailDataWithFullInfo(this.tltNoOptionsArray);
-      }
-    });
-
-
-    // 3. 監聽 ENG_Type 變化來篩選錶號
+    // 3. 監聽 ENG_Type 變化來篩選錶號 (保持不變)
     if (this.isFormCreateable) {
       this.dataForm.controls.ENG_Type.valueChanges.pipe(untilDestroyed(this)).subscribe(engType => {
         this.filterMeterNoOptions(engType);
-        // 當能源類型改變時，清空當前的錶號，避免選擇到錯誤的錶號
         this.dataForm.controls.ENG_MeterNo.patchValue(null);
       });
     }
 
-    // 4. 監聽 ENG_MeterNo 變化來更新附帶資訊 (與原邏輯相同，只是提取為方法)
+    // 4. 監聽 ENG_MeterNo 變化來更新附帶資訊 (保持不變)
     this.dataForm.controls.ENG_MeterNo.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((meterNo) => {
         this.updateMeterNoRelatedFields(meterNo);
       });
 
-    // 5. 監聽 Dialog 查詢表單
-    this.dialogQueryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(query => {
-      this.filterDialogData(query);
-    });
+    // 5. 監聽 Dialog 查詢表單 (改用 Debounce 呼叫 API)
+    this.dialogQueryForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(query => {
+        // 僅當 TltNo 變化時才發送，或當分頁/排序參數變化時發送
+        this.dialogQuerySubject.next(query);
+      });
+
+    // 訂閱 Subject，應用 debounceTime(300ms) 後才呼叫 API
+    this.dialogQuerySubject
+      .pipe(debounceTime(300), untilDestroyed(this))
+      .subscribe(query => {
+        this.loadDialogData(query);
+      });
 
     if (!this.isFormCreateable) {
-      // 這裡保留原始的 data 初始化，但詳細資訊的補齊在 TLT_NoOptions 載入後處理
       this.data = this.rowdata?.Details || [];
       this.dataForm.disable();
+
+      // 非建立模式下補齊明細資料
+      this.dropdown.queryTLTTALENT_TLT_SPACE().pipe(untilDestroyed(this)).subscribe(options => {
+        this.updateDetailDataWithFullInfo(options || []);
+      });
     }
   }
 
-  // 新增方法: 根據 ENG_MeterNo 更新相關欄位
+  // ⬇️ 【新增】實作 OnDestroy 以清理 Subject 訂閱
+  public ngOnDestroy(): void {
+    // 由於您對 dialogQuerySubject 使用了 untilDestroyed(this)，
+    // 只要 BasicCruPageComponent 或 Angular 本身有正確實現 OnDestroy，即可自動清理。
+    // 為了程式碼的完整性，我們假設 BasicCruPageComponent 處理了大多數，但對於 Subject 還是手動清理一下。
+    this.dialogQuerySubject.complete();
+  }
+
+  // ⬇️ 【新增】開啟 Dialog 時重置查詢條件並載入資料的方法
+  public openDialog(): void {
+    this.dialogVisible = true;
+    this.dialogData = [];
+    this.selectedItemsDialog = [];
+
+    // 1. 重設查詢欄位 (TltNo 清空)
+    this.dialogQueryForm.patchValue({
+      TltNo: null,
+    });
+
+    // 2. 重設分頁/排序到初始狀態 (這會觸發 loadDialogData)
+    const initialQuery = {
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'tlt_no', order: 1 }],
+    };
+
+    this.dialogQueryForm.patchValue(initialQuery);
+
+    // 立即載入資料 (如果 patchValue 沒有觸發 valueChanges，則手動發送)
+    // 由於 dialogQueryForm.patchValue 已經會觸發 valueChanges，通常不需要手動 next，
+    // 但為確保萬一，如果 form 的初始值就是 initialQuery，需要強制查詢
+    this.loadDialogData(initialQuery);
+  }
+
+  // 新增方法: 根據 ENG_MeterNo 更新相關欄位 (保持不變)
   private updateMeterNoRelatedFields(meterNo: string | null): void {
     const selectedOption = this.allENG_MeterNoOptions.find(opt => opt.value === meterNo);
 
-    // 使用 patchValue 更新相關的 form control
     this.dataForm.patchValue({
       Location_No: selectedOption?.['Location_No'] ?? '',
       Floor_No: selectedOption?.['Floor_No'] ?? '',
@@ -155,23 +199,19 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     });
   }
 
-  // 新增方法: 補齊非建立模式的明細資料 (需求 2)
+  // 新增方法: 補齊非建立模式的明細資料 (保持不變)
   private updateDetailDataWithFullInfo(tltOptions: Option[]): void {
-    // 建立一個 map，方便快速查找
     const tltMap = new Map<number, Option>();
     tltOptions.forEach(opt => {
-      // 假設 TalentId 是唯一的 key
       if (opt['TalentId']) {
         tltMap.set(opt['TalentId'] as number, opt);
       }
     });
 
-    // 遍歷當前的 data (已由 rowdata.Details 初始化)
     this.data = this.data.map(detail => {
       const fullInfo = tltMap.get(detail.TalentId);
 
       if (fullInfo) {
-        // 補齊 TltName, LocationNo, ApplyNo
         return {
           ...detail,
           TltName: fullInfo['TltName'] || detail.TltName || '',
@@ -180,49 +220,41 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
           TltSpace: fullInfo['TltSpace'] || detail.TltSpace || 0,
         };
       }
-      return detail; // 如果找不到，保留原資料
+      return detail;
     });
-    // 補齊資料後，重新計算總比率
     this.fieldChange();
   }
 
-  // 根據能源類型代碼篩選可用的錶號選項
+  // 根據能源類型代碼篩選可用的錶號選項 (保持不變)
   private filterMeterNoOptions(engType: string | null): void {
     if (!engType) {
-      // 如果沒有選擇能源類型，則顯示全部錶號
       this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions;
       return;
     }
 
-    // 1. 根據能源類型代碼 (ENG_Type) 找出對應的中文描述
     const engTypeOption = this.ENG_TypeOptions.find(opt => opt.value === engType);
-    const engTypeDesc = engTypeOption?.label; // 應該是 '水錶'/'電錶'/'瓦斯錶'
+    const engTypeDesc = engTypeOption?.label;
     console.log('engType:', engType, 'engTypeDesc:', engTypeDesc);
 
     if (engTypeDesc) {
-      // 2. 使用中文描述來篩選錶號選項
       this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions.filter(
         item => item['ENG_Type'] === engTypeDesc
       );
       console.log('filteredENG_MeterNoOptions:', this.filteredENG_MeterNoOptions);
     } else {
-      // 如果找不到對應的中文描述，顯示全部或清空（這裡選擇顯示全部作為安全機制）
       this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions;
     }
   }
 
-  // 【修正 validateRow】: 檢查資料中是否有重複的 TLT_No (專櫃編號)
+  // 【修正 validateRow】: 檢查資料中是否有重複的 TLT_No (專櫃編號) (保持不變)
   validateRow = (rowData: ASS21020Detail): { isValid: boolean, errorMessage: string } => {
     const currentRowTLT_No = rowData.TLT_No;
     const rowIndex = this.data.indexOf(rowData);
 
-    // 檢查當前的 TLT_No 是否在 data 陣列中其他行重複出現
     const isDuplicate = this.data.some((item, index) => {
-      // 忽略正在驗證的這一行 (避免自己跟自己比較)
       if (index === rowIndex) {
         return false;
       }
-      // 檢查專櫃編號是否重複
       return item.TLT_No === currentRowTLT_No;
     });
 
@@ -236,46 +268,40 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   public onSubmit(frm: FormGroup): void {
     this.handleSubmit(this.dataForm, () => {
-      const headerData = frm.getRawValue(); // 取得 ENG_Type, ENG_MeterNo
+      const headerData = frm.getRawValue();
 
-      // 建構傳送給後端的 payload
       const payload: ASS21020UpdateData[] = this.data.map(detail => ({
-        Id: detail.Id || 0, // 新增時 Id 為 0
+        Id: detail.Id || 0,
         ENG_Type: headerData.ENG_Type,
         ENG_MeterNo: headerData.ENG_MeterNo,
-        TLT_No: detail.TLT_No || '', // 確保非 null
-        ENG_Rate: detail.ENG_Rate || 0, // 確保非 null
-        ENG_Remark: detail.ENG_Remark || '', // 確保非 null
-        TalentId: detail.TalentId || 0, // 【新增/重要】傳入 TalentId
+        TLT_No: detail.TLT_No || '',
+        ENG_Rate: detail.ENG_Rate || 0,
+        ENG_Remark: detail.ENG_Remark || '',
+        TalentId: detail.TalentId || 0,
       }));
 
       const updatePayload: ASS21020Update = { UpdateASS21020Datas: payload };
 
-      // 【修正點】: 在進行 100% 檢查前，強制重新計算總比率，以防狀態不同步
       const rawTotal = this.data.reduce((total, item) => total + (item.ENG_Rate || 0), 0);
       this.totalPercent = this.roundToTwoDecimals(rawTotal);
-      // --- 修正結束 ---
 
-      // 檢查攤提比率是否為 100
       if (this.totalPercent !== 100) {
         this.messageService.errorBubble('攤提比率加總必須為 100%');
         this.loading = false;
         return;
       }
 
-      // 必須先執行 TableEditComponent 的驗證 (包含重複專櫃編號檢查)
       const valid = this.tableEditComponent.validateAndShowErrors();
       if (!valid) {
         this.loading = false;
         return;
       }
 
-      // 呼叫 Service
       this.service.updateASS21020(updatePayload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
         next: (res) => {
           if (res.Data.IsUpdateSuccess) {
             this.messageService.successBubble('能源攤提設定更新成功');
-            this.onCancel(); // 成功後導回查詢頁或刷新
+            this.onCancel();
           } else {
             this.messageService.errorBubble(res.Data.ErrorMsg);
           }
@@ -295,40 +321,88 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     { field: 'ApplyNo', header: '招募編號', },
   ];
   totalRecords = 0;
+
+  // ⬇️ 【修正】移除不必要的預設值，在 openDialog 中設置
   dialogQueryForm = this.formBuilder.nonNullable.group({
-    TltNo: [null],
-    TltName: [null],
-    LocationNo: [null],
-    ApplyNo: [null],
+    TltNo: [null as string | null],
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   })
+
+  // ⬇️ 【修正】處理 TableReportComponent 的 lazyLoadData 事件
+  public onDialogLazyLoad(event: any): void {
+    // 將分頁/排序參數補到 dialogQueryForm，這將觸發 dialogQuerySubject -> loadDialogData
+    this.dialogQueryForm.patchValue({
+      pageSize: event.rows,
+      pageIndex: (event.first / event.rows) + 1,
+      // 統一 SortBy 格式
+      SortBy: event.multiSortMeta || event.sortField && event.sortOrder ?
+        (event.multiSortMeta || [{ field: event.sortField, order: event.sortOrder }]) :
+        [{ field: 'tlt_no', order: 1 }]
+    });
+  }
+
+  // ⬇️ 【修正】: 使用 API 查詢 Dialog 資料 (增加防止重複查詢的邏輯)
+  private loadDialogData(query: { TltNo?: string | null, pageSize?: number, pageIndex?: number, SortBy?: any[] }): void {
+
+    const body = {
+      TltNo: query.TltNo || '',
+      pageSize: query.pageSize || 30,
+      pageIndex: query.pageIndex || 1,
+      SortBy: query.SortBy || [{ field: 'tlt_no', order: 1 }],
+    };
+
+    // 比較當前查詢條件與上次是否一致，防止 debounce 後的重複查詢
+    if (JSON.stringify(body) === JSON.stringify(this.lastQueryBody)) {
+      return;
+    }
+
+    this.dialogLoading = true;
+    this.lastQueryBody = body; // 更新最後的查詢條件
+
+    // 呼叫 API 查詢
+    this.dropDownListService.queryTLTTALENT_TLT_SPACE(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.dialogLoading = false)
+      )
+      .subscribe((results) => {
+        this.dialogData = results.Data as Option[];
+        this.totalRecords = results.TotalCount;
+      });
+  }
+  // ⬆️ 【修正結束】
+
   isRowSelectable(row: ASS21020Detail): boolean {
     return !this.data || !this.data.some((item: ASS21020Detail) => item.TalentId === row.TalentId);
   }
+
   saveDialog() {
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
       Id: 0,
       TalentId: item['TalentId'] as number,
       TLT_No: item['TltNo'],
-      TltName: item['TltName'], // <-- 已包含 TltName
-      ApplyNo: item['ApplyNo'], // <-- 已包含 ApplyNo
-      LocationNo: item['LocationNo'], // <-- 已包含 LocationNo
+      TltName: item['TltName'],
+      ApplyNo: item['ApplyNo'],
+      LocationNo: item['LocationNo'],
       TltSpace: item['TltSpace'],
       ENG_Rate: 0,
       ENG_Remark: null,
     }))];
     this.selectedItemsDialog = [];
-    this.fieldChange(); // 選擇完畢後重新計算總比率
+    this.fieldChange();
   }
   totalPercent = 0;
   errorMsg = false;
 
-  // 【保留】私有方法：將數值四捨五入到小數點後兩位 (用於手動輸入檢查)
+  // 【保留】私有方法：將數值四捨五入到小數點後兩位
   private roundToTwoDecimals(num: number): number {
     return Math.round(num * 100) / 100;
   }
 
-  // 【修正】 onAutoCalculate：改用整數分配邏輯，確保總和為 100
+  // 【保留】 onAutoCalculate：改用整數分配邏輯
   public onAutoCalculate(): void {
     if (this.data.length === 0) {
       this.totalPercent = 0;
@@ -338,70 +412,31 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
     const length = this.data.length;
 
-    // 1. 計算基礎整數比率 (向下取整)
-    const baseRate = Math.floor(100 / length); // 例如: 100 / 7 = 14
-
-    // 2. 計算剩餘需要分配的量 (餘數)
-    const remainder = 100 % length; // 例如: 100 % 7 = 2
+    const baseRate = Math.floor(100 / length);
+    const remainder = 100 % length;
 
     this.data = this.data.map((item, index) => {
       let rate = baseRate;
 
-      // 3. 將餘數分配給前 'remainder' 筆資料 (每筆 +1)
       if (index < remainder) {
         rate += 1;
       }
 
       return {
         ...item,
-        ENG_Rate: rate, // 確保是整數
+        ENG_Rate: rate,
       };
     });
 
-    // 4. 總和保證是 100 (因為分配邏輯已確保)
     this.totalPercent = 100;
     this.errorMsg = false;
   }
 
-  // 【保留】 fieldChange：處理手動輸入 (可能含小數)，計算總和時對結果進行四捨五入，確保比對精確度
+  // 【保留】 fieldChange：處理手動輸入
   public fieldChange(): void {
-    // 計算總和，並對結果進行捨入 (保留小數點後兩位)
     const rawTotal = this.data.reduce((total, item) => total + (item.ENG_Rate || 0), 0);
     this.totalPercent = this.roundToTwoDecimals(rawTotal);
 
-    // 檢查捨入後的總和是否為 100
     this.errorMsg = this.totalPercent !== 100;
-  }
-
-  private filterDialogData(query: { TltNo?: string | null, TltName?: string | null, LocationNo?: string | null, ApplyNo?: string | null }): void {
-    if (!this.tltNoOptionsArray || this.tltNoOptionsArray.length === 0) {
-      this.dialogData = [];
-      this.totalRecords = 0;
-      return;
-    }
-
-    // 將所有的篩選條件轉換為小寫，並確保空值為空字串
-    const tltNo = (query.TltNo || '').toLowerCase();
-    const tltName = (query.TltName || '').toLowerCase();
-    const locationNo = (query.LocationNo || '').toLowerCase();
-    const applyNo = (query.ApplyNo || '').toLowerCase();
-
-    const filteredData = this.tltNoOptionsArray.filter(item => {
-      const itemTltNo = (item['TltNo'] || '').toLowerCase();
-      const itemTltName = (item['TltName'] || '').toLowerCase();
-      const itemLocationNo = (item['LocationNo'] || '').toLowerCase();
-      const itemApplyNo = (item['ApplyNo'] || '').toLowerCase();
-
-      // 檢查每個欄位是否包含篩選條件 (如果條件為空，則始終通過該條件的篩選)
-      const tltNoMatch = itemTltNo.includes(tltNo);
-      const tltNameMatch = itemTltName.includes(tltName);
-      const locationNoMatch = itemLocationNo.includes(locationNo);
-      const applyNoMatch = itemApplyNo.includes(applyNo);
-
-      return tltNoMatch && tltNameMatch && locationNoMatch && applyNoMatch;
-    });
-
-    this.dialogData = filteredData;
-    this.totalRecords = filteredData.length;
   }
 }

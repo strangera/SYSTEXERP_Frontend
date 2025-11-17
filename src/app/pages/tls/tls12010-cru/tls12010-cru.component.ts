@@ -210,7 +210,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         console.log('暫存廠商資料:', this.cachedVendorData);
       }
     } else {
-      if(this.crudstatus != CRUDStatus.Create)
+      if (this.crudstatus != CRUDStatus.Create)
         console.warn('無法讀取明細資料，因為沒有提供PC_id');
     }
 
@@ -227,7 +227,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
     //品牌 valueChanges
     // --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
-    
+
     // this.dataForm.get('tlt_name')?.valueChanges.subscribe(value => {
     //   if (this.skipValueChanges) return;
     //   const match = this.tlt_name_Option.find(opt => opt.No === value);
@@ -334,10 +334,10 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       console.log('接待人員代號:', this.contact_USR_Option);
 
       //2025/10/30: 加入規則: 新增模式 將接洽人員自動帶入登入者
-      if(this.crudstatus == CRUDStatus.Create){
+      if (this.crudstatus == CRUDStatus.Create) {
         const userInfo = this.authService?.getUserInfo?.();
         console.log('登入用戶', userInfo);
-        if(this.contact_USR_Option && userInfo){ //接待人員清單存在就自動帶入
+        if (this.contact_USR_Option && userInfo) { //接待人員清單存在就自動帶入
           // 找出登入者在下拉選項中的對應值
           const matchedUser = this.contact_USR_Option.find(
             (u: apiOption) =>
