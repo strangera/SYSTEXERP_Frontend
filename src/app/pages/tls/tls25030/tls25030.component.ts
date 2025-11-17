@@ -1,21 +1,12 @@
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
   FunsrightInfo,
-  PermissionsInfo,
 } from '../../../shared/models/system/funsrightInfo';
 // 共用服務
-import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { ViolationStatusService } from '../../../service/basic/violation-status.service';
-import { DeductionItemService } from '../../../service/basic/deduction-item.service';
-
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -114,39 +105,9 @@ export class TLS25030Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號 service
-    private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
-    private floorService: FloorService,  // 樓層 service
-    private violationStatusService: ViolationStatusService,  // 狀態 service
-    private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService: OrganizationNumberService
   ) { }
 
   ngOnInit(): void {
-
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
-
-    this.violationCategoryService.getViolationCategories().subscribe((data) => {
-      this.violationCategoryOptions = data;
-    });
-
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-
-    this.violationStatusService.getViolationStatuses().subscribe((data) => {
-      this.statusOptions = data;
-    });
-
-    this.deductionItemService.getDeductionItems().subscribe((data) => {
-      this.deductionItemOptions = data;
-    });
-    this.OrganizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationNumberOptions = data;
-    });
   }
 
   canQuery(): boolean {

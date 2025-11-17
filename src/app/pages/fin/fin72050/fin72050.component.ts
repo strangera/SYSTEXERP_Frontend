@@ -2,21 +2,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-// Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
-import { ViolationStatusService } from '../../../service/basic/violation-status.service';
-import { DeductionItemService } from '../../../service/basic/deduction-item.service';
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -144,54 +132,12 @@ export class FIN72050Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private vendorService: VendorService,
-    private userCodeService: UserCodeService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號 service
-    private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
-    private floorService: FloorService,  // 樓層 service
-    private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService: OrganizationNumberService
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.ProgNo = '170007';
-    // Initialize dropdown options
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions = data)
-    );
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.userCodeService
-      .getUserCode()
-      .subscribe((data) => (this.usercode = data));
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
-
-    this.violationCategoryService.getViolationCategories().subscribe((data) => {
-      this.violationCategoryOptions = data;
-    });
-
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-
-
-
-    this.deductionItemService.getDeductionItems().subscribe((data) => {
-      this.deductionItemOptions = data;
-    });
-    this.OrganizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationNumberOptions = data;
-    });
   }
 
   onSubmit(frm: FormGroup) {

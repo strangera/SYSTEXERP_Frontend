@@ -1,16 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
-import { ViolationStatusService } from '../../../service/basic/violation-status.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
@@ -27,11 +21,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.3.2.1 應收帳款維護
 @Component({
-    selector: 'app-fin32010',
-    templateUrl: './fin32010.component.html',
-    styleUrl: './fin32010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, CalendarRangeComponent, MultiSelectComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin32010',
+  templateUrl: './fin32010.component.html',
+  styleUrl: './fin32010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, CalendarRangeComponent, MultiSelectComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN32010Component extends BasicQpageComponent implements OnInit {
   //
@@ -111,13 +105,7 @@ export class FIN32010Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
-    private organizationNumberService: OrganizationNumberService,
-    private vendorService: VendorService,
-    private needPayTicketService: NeedPayTicketService,
-    private violationStatusService: ViolationStatusService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -126,29 +114,6 @@ export class FIN32010Component extends BasicQpageComponent implements OnInit {
     // 初始化
     this.ProgNo = '130003';
     this.cruPage = '/FIN3000/FIN32010CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationCodeOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.factoryIDOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.accountingCodeOptions = data;
-    });
-    //
-    this.violationStatusService.getViolationStatuses().subscribe(data => {
-      this.statusOptions = data;
-      // 全選填入
-      // let allSystemValues = this.statusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   status: allSystemValues
-      // });
-    });
     // ----------------------------------------------------------------
   }
 

@@ -9,7 +9,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { TLS23060Service } from '../../../service/api/tls/tls23060.service';
-import { WhetherService } from '../../../service/basic/whether.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
@@ -70,13 +69,13 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd:   [this.yesterday, [Validators.required]],
-    rece_yn:       [null],
-    ECR_No:        [],
-    tlt_no:        [],
-    tlt_building:  [],
-    tlt_floor:     [],
-    org_id:        [],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    rece_yn: [null],
+    ECR_No: [],
+    tlt_no: [],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
@@ -109,7 +108,6 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service,
-    private whetherService: WhetherService,
   ) {
     super();
   }
@@ -154,17 +152,17 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
       const payload: any = {
         TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
-        rece_yn:       val?.rece_yn ?? undefined,
-        ECR_No:        Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
-        tlt_no:        Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
-        tlt_building:  val?.tlt_building ?? undefined,
-        tlt_floor:     Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
-        org_id:        Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+        rece_yn: val?.rece_yn ?? undefined,
+        ECR_No: Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
+        tlt_no: Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
+        tlt_building: val?.tlt_building ?? undefined,
+        tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
+        org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
 
-        pageSize : 30,
+        pageSize: 30,
         pageIndex: Number(val?.pageIndex) || 1,
-        SortBy   : Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
+        SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
       };
 
       this.historyRequestBody = { ...payload };
@@ -205,7 +203,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         ...body,
         pageSize: 30,
         TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-        TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
       })
       .pipe(
         map((res: any) => {
@@ -229,99 +227,98 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   // ===== 明細：提供給 Dialog 內 app-table-report 的查詢函式 → 打 /queryTLS23060_Detail，以日期為主 =====
 
 
-override onDetail(row: any): void {
-  if (!row) return;
+  override onDetail(row: any): void {
+    if (!row) return;
 
-  this.selectedMainRow = row;
-  this.dialogVisible = true;
+    this.selectedMainRow = row;
+    this.dialogVisible = true;
 
-  const formVal = this.queryForm.getRawValue() as any;
+    const formVal = this.queryForm.getRawValue() as any;
 
-  // 依你給的 Request 規格組 body
-  const body: any = {
-    PageSize: 0,
-    PageIndex: 0,
-    SortBy: [{ field: 'TXN_Date', order: 1 as 1 }],
+    // 依你給的 Request 規格組 body
+    const body: any = {
+      PageSize: 0,
+      PageIndex: 0,
+      SortBy: [{ field: 'TXN_Date', order: 1 as 1 }],
 
-    TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(formVal?.TXN_DateEnd),
-    rece_yn:       formVal?.rece_yn ?? undefined,
+      TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
+      rece_yn: formVal?.rece_yn ?? undefined,
 
-    // 用被點那列的值
-    ECR_No:  row?.ECR_No ?? undefined,
-    tlt_no:  row?.tlt_no ?? undefined,
+      // 用被點那列的值
+      ECR_No: row?.ECR_No ?? undefined,
+      tlt_no: row?.tlt_no ?? undefined,
 
-    // 下面三個是陣列型別
-    tlt_building: formVal?.tlt_building ?? [],
-    tlt_floor:    Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
-    org_id:       Array.isArray(formVal?.org_id) ? formVal.org_id : [],
-  };
+      // 下面三個是陣列型別
+      tlt_building: formVal?.tlt_building ?? [],
+      tlt_floor: Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
+      org_id: Array.isArray(formVal?.org_id) ? formVal.org_id : [],
+    };
 
-  // 給 app-table-report 的 lastQueryBody 用
-  this.dialogHistoryRequestBody = body;
+    // 給 app-table-report 的 lastQueryBody 用
+    this.dialogHistoryRequestBody = body;
 
-  // 先查一次明細，開 Dialog 就有資料
-  this.dialogLoading = true;
-  this.queryTLS23060DetailForReport(body)
-    .pipe(finalize(() => (this.dialogLoading = false)))
-    .subscribe({
-      error: () => {
-        this.dialogData = [];
-        this.dialogTotalRecords = 0;
-        this.dialogFooterData = {};
-      },
-    });
-}
+    // 先查一次明細，開 Dialog 就有資料
+    this.dialogLoading = true;
+    this.queryTLS23060DetailForReport(body)
+      .pipe(finalize(() => (this.dialogLoading = false)))
+      .subscribe({
+        error: () => {
+          this.dialogData = [];
+          this.dialogTotalRecords = 0;
+          this.dialogFooterData = {};
+        },
+      });
+  }
 
-public queryTLS23060DetailForReport = (body: any) =>
-  this.tls23060Service
-    .queryTLS23060Detail({
-      ...(this.dialogHistoryRequestBody ?? {}),
-      ...body,
-      // 保底 pageIndex / pageSize / SortBy
-      pageSize: Number(body?.pageSize) || 30,
-      pageIndex: Number(body?.pageIndex) || 1,
-      SortBy: Array.isArray(body?.SortBy) && body.SortBy.length
-        ? body.SortBy
-        : [{ field: 'TXN_Date', order: 1 as 1 }],
-      TXN_DateStart: this.toDateOnly(
-        body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart
-      ),
-      TXN_DateEnd: this.toDateOnly(
-        body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd
-      ),
-    })
-    .pipe(
-      map((res: any) => {
-        const wrapper = this.pickWrapper(res?.Data);
-        const details = this.pickDetails(wrapper);
-
-        const rows = details.map((r: any, i: number) => ({
-          ...r,
-          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${
-            r?.tlt_no ?? ''
-          }|${i}`,
-        }));
-
-        // 以日期排序
-        rows.sort((a, b) => {
-          const ad = a.TXN_Date ?? '';
-          const bd = b.TXN_Date ?? '';
-          return ad > bd ? 1 : ad < bd ? -1 : 0;
-        });
-
-        const totalCount =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-        const grand = this.buildFooterFromPack(wrapper);
-
-        // 給 dialog 綁定用
-        this.dialogFooterData = grand;
-        this.dialogTotalRecords = totalCount;
-        this.dialogData = rows;
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+  public queryTLS23060DetailForReport = (body: any) =>
+    this.tls23060Service
+      .queryTLS23060Detail({
+        ...(this.dialogHistoryRequestBody ?? {}),
+        ...body,
+        // 保底 pageIndex / pageSize / SortBy
+        pageSize: Number(body?.pageSize) || 30,
+        pageIndex: Number(body?.pageIndex) || 1,
+        SortBy: Array.isArray(body?.SortBy) && body.SortBy.length
+          ? body.SortBy
+          : [{ field: 'TXN_Date', order: 1 as 1 }],
+        TXN_DateStart: this.toDateOnly(
+          body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart
+        ),
+        TXN_DateEnd: this.toDateOnly(
+          body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd
+        ),
       })
-    );
+      .pipe(
+        map((res: any) => {
+          const wrapper = this.pickWrapper(res?.Data);
+          const details = this.pickDetails(wrapper);
+
+          const rows = details.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''
+              }|${i}`,
+          }));
+
+          // 以日期排序
+          rows.sort((a, b) => {
+            const ad = a.TXN_Date ?? '';
+            const bd = b.TXN_Date ?? '';
+            return ad > bd ? 1 : ad < bd ? -1 : 0;
+          });
+
+          const totalCount =
+            typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+          const grand = this.buildFooterFromPack(wrapper);
+
+          // 給 dialog 綁定用
+          this.dialogFooterData = grand;
+          this.dialogTotalRecords = totalCount;
+          this.dialogData = rows;
+
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
 
 
   onDialogClose(v: boolean): void {
@@ -488,10 +485,10 @@ public queryTLS23060DetailForReport = (body: any) =>
       TXN_PayAmt23: n(first?.totalPayAmt23),
 
       TXN_PrePayAmt: n(first?.totalPrePayAmt),
-      TXN_OverAmt:   n(first?.totalOverAmt),
+      TXN_OverAmt: n(first?.totalOverAmt),
       TXN_ReturnAmt: n(first?.totalReturnAmt),
       TXN_CancelAmt: n(first?.totalCancelAmt),
-      TXN_ExchgAmt:  n(first?.totalExchgAmt),
+      TXN_ExchgAmt: n(first?.totalExchgAmt),
     };
   }
 
@@ -600,8 +597,8 @@ public queryTLS23060DetailForReport = (body: any) =>
   // Dialog 明細欄位（以日期為主）
   detailColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: any) => this.formatYMD(v) },
-    { field: 'ECR_No',   header: '收銀機號', visible: true },
-    { field: 'tlt_no',   header: '專櫃編號', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
 
     { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },

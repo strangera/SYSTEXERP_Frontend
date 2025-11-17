@@ -15,7 +15,6 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { WhetherService } from '../../../service/basic/whether.service';
 import { InstallmentPeriodService } from '../../../service/basic/installment-period.service';
 import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
 
@@ -87,13 +86,13 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   // 排序
   readonly defaultSortCredit = [
     { field: 'TXN_Date', order: 1 as 1 | -1 },
-    { field: 'ECR_No',   order: 1 as 1 | -1 },
-    { field: 'TXN_No',   order: 1 as 1 | -1 },
+    { field: 'ECR_No', order: 1 as 1 | -1 },
+    { field: 'TXN_No', order: 1 as 1 | -1 },
   ];
   readonly defaultSortCounter = [
     { field: 'TXN_Date', order: 1 as 1 | -1 },
-    { field: 'ECR_No',   order: 1 as 1 | -1 },
-    { field: 'tlt_no',   order: 1 as 1 | -1 },
+    { field: 'ECR_No', order: 1 as 1 | -1 },
+    { field: 'tlt_no', order: 1 as 1 | -1 },
   ];
   sortMeta: any[] = [];
 
@@ -107,7 +106,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   /* ----------------- 表單 ----------------- */
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd:   [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [],
     tlt_no: [],
     CRD_Type: [[]],
@@ -122,8 +121,8 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     IsHaveTERM_No: [null],
     ...createPaginationConfig([
       { field: 'TXN_Date', order: 1 },
-      { field: 'ECR_No',   order: 1 },
-      { field: 'TXN_No',   order: 1 },
+      { field: 'ECR_No', order: 1 },
+      { field: 'TXN_No', order: 1 },
     ]),
   });
 
@@ -148,7 +147,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private whetherService: WhetherService,
     private installmentPeriodService: InstallmentPeriodService,
     private acquiringBankService: AcquiringBankService,
     private tls11010Service: Tls11010Service,
@@ -158,8 +156,8 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- 總計對應 ----------------- */
   private readonly creditTotalFieldMap: Record<string, string> = {
-    TXN_PayAmt:      'TotalPayAmt',
-    TXN_Point:       'TotalPoint',
+    TXN_PayAmt: 'TotalPayAmt',
+    TXN_Point: 'TotalPoint',
     EDC_InstHeadAmt: 'TotalInstHeadAmt',
     EDC_InstEachAmt: 'TotalInstEachAmt',
   };
@@ -181,7 +179,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   private columnsCredit = [
     { field: 'TXN_Date', header: '銷售日期', format: (v: any) => this.formatDate(v), visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true , format: (v:any) => this.padTxnNo(v) },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: (v: any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'CRD_Name', header: '信用卡卡別', visible: true },
@@ -200,41 +198,41 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
    */
   private columnsCounter = [
     { field: 'TXN_Date', header: '銷售日期', format: (v: any) => this.formatDate(v), visible: true },
-    { field: 'ECR_No',   header: '收銀機號', visible: true },
-    { field: 'tlt_no',   header: '專櫃編號', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃編號/名稱', visible: true, style: 'text-left' },
 
     // AE
-    { field: 'AE_Count',  header: 'AE 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'AE_Amount', header: 'AE 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'AE_Count', header: 'AE 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'AE_Amount', header: 'AE 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
     // DA
-    { field: 'DA_Count',  header: 'DA 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'DA_Amount', header: 'DA 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'DA_Count', header: 'DA 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'DA_Amount', header: 'DA 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
     // MASTER
-    { field: 'MASTER_Count',  header: 'MASTER 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'MASTER_Amount', header: 'MASTER 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'MASTER_Count', header: 'MASTER 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'MASTER_Amount', header: 'MASTER 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
     // VISA
-    { field: 'VISA_Count',  header: 'VISA 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'VISA_Amount', header: 'VISA 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'VISA_Count', header: 'VISA 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'VISA_Amount', header: 'VISA 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
     // JCB
-    { field: 'JCB_Count',  header: 'JCB 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'JCB_Amount', header: 'JCB 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'JCB_Count', header: 'JCB 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'JCB_Amount', header: 'JCB 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
     // UnionPay
-    { field: 'UnionPay_Count',  header: 'UnionPay 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'UnionPay_Amount', header: 'UnionPay 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'UnionPay_Count', header: 'UnionPay 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'UnionPay_Amount', header: 'UnionPay 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
     // Others
-    { field: 'Others_Count',  header: '其他 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'Others_Amount', header: '其他 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'Others_Count', header: '其他 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'Others_Amount', header: '其他 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
     // Total
-    { field: 'Total_Count',  header: '合計 筆數',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'Total_Amount', header: '合計 金額',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'Total_Count', header: '合計 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'Total_Amount', header: '合計 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
   ];
 
   /* ----------------- 生命週期 ----------------- */
@@ -249,7 +247,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     // 下拉選項
     this.cardTypeService.getCardType().subscribe(data => this.cardTypeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
@@ -276,103 +273,146 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     this.acquiringBankService.getAcquiringBanks().subscribe(data => this.acquiringBankOptions = data);
   }
 
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const val = this.queryForm.getRawValue() as any;
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const val = this.queryForm.getRawValue() as any;
 
-    const defaultSort = this.viewMode === 'counter'
-      ? this.defaultSortCounter
-      : this.defaultSortCredit;
+      const defaultSort = this.viewMode === 'counter'
+        ? this.defaultSortCounter
+        : this.defaultSortCredit;
 
-    const sortByArr: any[] =
-      (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy :
-        (this.sortMeta.length ? this.sortMeta : defaultSort)).map((s: any) => ({ ...s }));
+      const sortByArr: any[] =
+        (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy :
+          (this.sortMeta.length ? this.sortMeta : defaultSort)).map((s: any) => ({ ...s }));
 
-    const payloadBase = this.prune({
-      TXN_DateStart: this.toDateOnly(val?.TXN_DateStart ?? this.yesterday),
-      TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd   ?? this.yesterday),
+      const payloadBase = this.prune({
+        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart ?? this.yesterday),
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd ?? this.yesterday),
 
-      ECR_No     : this.ensureArr(val?.ECR_No),
-      TLT_No     : this.ensureArr(val?.tlt_no),
-      CRD_Type   : this.ensureArr(val?.CRD_Type),
-      CRD_No     : (val?.CRD_No ?? '') || undefined,
-      TXN_PayAmt : (val?.TXN_PayAmt === '' || val?.TXN_PayAmt == null) ? undefined : Number(val.TXN_PayAmt),
+        ECR_No: this.ensureArr(val?.ECR_No),
+        TLT_No: this.ensureArr(val?.tlt_no),
+        CRD_Type: this.ensureArr(val?.CRD_Type),
+        CRD_No: (val?.CRD_No ?? '') || undefined,
+        TXN_PayAmt: (val?.TXN_PayAmt === '' || val?.TXN_PayAmt == null) ? undefined : Number(val.TXN_PayAmt),
 
-      tlt_building: (val?.tlt_building ?? '') || undefined,
-      tlt_floor   : this.ensureArr(val?.tlt_floor),
-      org_id      : this.ensureArr(val?.org_id),
+        tlt_building: (val?.tlt_building ?? '') || undefined,
+        tlt_floor: this.ensureArr(val?.tlt_floor),
+        org_id: this.ensureArr(val?.org_id),
 
-      IsHaveTERM_No: this.toBoolOrNull(val?.IsHaveTERM_No),
-      TERM_No      : this.ensureArr(val?.TERM_No),
-      Acquirer     : this.ensureArr(val?.Acquirer),
-      Conn_Status  : (val?.ConnStatus ?? '') || undefined,
+        IsHaveTERM_No: this.toBoolOrNull(val?.IsHaveTERM_No),
+        TERM_No: this.ensureArr(val?.TERM_No),
+        Acquirer: this.ensureArr(val?.Acquirer),
+        Conn_Status: (val?.ConnStatus ?? '') || undefined,
 
-      SortBy: sortByArr,
+        SortBy: sortByArr,
+      });
+
+      // ✅ 只送小寫
+      const pageIndex = Number(val?.pageIndex) || 1;
+      const pageSize = 30;
+      const payload = {
+        ...payloadBase,
+        pageIndex,
+        pageSize,
+      };
+
+      // 提供給 app-table-report（也只存小寫，避免外流大寫）
+      this.historyRequestBody = { ...payload };
+
+      this.loading = true;
+      this.messageService?.blockUi();
+
+      const call$ = this.viewMode === 'counter'
+        ? this.tls23090Service.queryTLS23090CounterCard(payload)
+        : this.tls23090Service.queryTLS23090(payload);
+
+      call$.pipe(finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      })).subscribe({
+        next: (res: any) => {
+          if (this.viewMode === 'counter') {
+            const items: any[] =
+              Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+                Array.isArray(res?.Data) ? res.Data :
+                  [];
+
+            const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
+              Number(obj?.[brand]?.[field] ?? 0);
+
+            const rows = items.map((r: any, i: number) => {
+              const list = r?.CRD_Type_List || {};
+              return {
+                TXN_Date: r?.TXN_Date,
+                ECR_No: r?.ECR_No,
+                tlt_no: r?.tlt_no,
+                tlt_name: r?.tlt_name,
+
+                AE_Count: pick(list, 'AE', 'Count'), AE_Amount: pick(list, 'AE', 'Amount'),
+                DA_Count: pick(list, 'DA', 'Count'), DA_Amount: pick(list, 'DA', 'Amount'),
+                MASTER_Count: pick(list, 'MASTER', 'Count'), MASTER_Amount: pick(list, 'MASTER', 'Amount'),
+                VISA_Count: pick(list, 'VISA', 'Count'), VISA_Amount: pick(list, 'VISA', 'Amount'),
+                JCB_Count: pick(list, 'JCB', 'Count'), JCB_Amount: pick(list, 'JCB', 'Amount'),
+                UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
+                Others_Count: pick(list, 'Others', 'Count'), Others_Amount: pick(list, 'Others', 'Amount'),
+                Total_Count: pick(list, 'Total', 'Count'), Total_Amount: pick(list, 'Total', 'Amount'),
+
+                _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+              };
+            });
+
+            this.columns = this.columnsCounter;
+            this.data = rows;
+            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+            const summary = res?.Data?.Summary ?? null;
+            this.grandTotal = summary
+              ? this.summaryToCounterGrandTotal(summary)
+              : this.computeCounterGrandTotal(res);
+          } else {
+            const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
+            const takeDetails = (w: any) =>
+              w?.tLS23090_CreditDetails ?? w?.TLS23090_CreditDetails ?? w?.CreditDetails ?? w?.Details ?? [];
+
+            const rows = wrappers
+              .flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : [])
+              .map((r: any, idx: number) => ({
+                ...r,
+                _rowKey: `crt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TXN_No ?? idx}`,
+              }));
+
+            this.columns = this.columnsCredit;
+            this.data = rows;
+            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+            this.grandTotal = this.computeCreditGrandTotal(wrappers);
+          }
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.grandTotal = {};
+        },
+      });
     });
+  }
 
-    // ✅ 只送小寫
-    const pageIndex = Number(val?.pageIndex) || 1;
-    const pageSize = 30;
-    const payload = {
-      ...payloadBase,
-      pageIndex,
-      pageSize,
-    };
 
-    // 提供給 app-table-report（也只存小寫，避免外流大寫）
-    this.historyRequestBody = { ...payload };
+  /* ----------------- 給 app-table-report 的查詢函式（統一送大小寫分頁參數） ----------------- */
 
-    this.loading = true;
-    this.messageService?.blockUi();
-
-    const call$ = this.viewMode === 'counter'
-      ? this.tls23090Service.queryTLS23090CounterCard(payload)
-      : this.tls23090Service.queryTLS23090(payload);
-
-    call$.pipe(finalize(() => {
-      this.loading = false;
-      this.messageService?.unblockUi();
-    })).subscribe({
-      next: (res: any) => {
-        if (this.viewMode === 'counter') {
-          const items: any[] =
-            Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-            Array.isArray(res?.Data)            ? res.Data :
-            [];
-
-          const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
-            Number(obj?.[brand]?.[field] ?? 0);
-
-          const rows = items.map((r: any, i: number) => {
-            const list = r?.CRD_Type_List || {};
-            return {
-              TXN_Date: r?.TXN_Date,
-              ECR_No  : r?.ECR_No,
-              tlt_no  : r?.tlt_no,
-              tlt_name: r?.tlt_name,
-
-              AE_Count:       pick(list, 'AE', 'Count'),       AE_Amount:       pick(list, 'AE', 'Amount'),
-              DA_Count:       pick(list, 'DA', 'Count'),       DA_Amount:       pick(list, 'DA', 'Amount'),
-              MASTER_Count:   pick(list, 'MASTER', 'Count'),   MASTER_Amount:   pick(list, 'MASTER', 'Amount'),
-              VISA_Count:     pick(list, 'VISA', 'Count'),     VISA_Amount:     pick(list, 'VISA', 'Amount'),
-              JCB_Count:      pick(list, 'JCB', 'Count'),      JCB_Amount:      pick(list, 'JCB', 'Amount'),
-              UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
-              Others_Count:   pick(list, 'Others', 'Count'),   Others_Amount:   pick(list, 'Others', 'Amount'),
-              Total_Count:    pick(list, 'Total', 'Count'),    Total_Amount:    pick(list, 'Total', 'Amount'),
-
-              _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-            };
-          });
-
-          this.columns = this.columnsCounter;
-          this.data = rows;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-          const summary = res?.Data?.Summary ?? null;
-          this.grandTotal = summary
-            ? this.summaryToCounterGrandTotal(summary)
-            : this.computeCounterGrandTotal(res);
-        } else {
+  /** 信用卡明細（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
+  public queryTLS23090CreditForReport = (body: any) =>
+    this.tls23090Service.queryTLS23090({
+      ...(body || {}),
+      // ✅ 只補小寫
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+      pageSize: body?.pageSize ?? 30,
+      pageIndex: body?.pageIndex ?? 1,
+      // ⛔ 不再送 PageSize / PageIndex
+    })
+      .pipe(
+        map((res: any) => {
           const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
           const takeDetails = (w: any) =>
             w?.tLS23090_CreditDetails ?? w?.TLS23090_CreditDetails ?? w?.CreditDetails ?? w?.Details ?? [];
@@ -384,128 +424,85 @@ onSubmit(form: FormGroup): void {
               _rowKey: `crt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TXN_No ?? idx}`,
             }));
 
-          this.columns = this.columnsCredit;
-          this.data = rows;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          this.grandTotal = this.computeCreditGrandTotal(wrappers);
-        }
-      },
-      error: () => {
-        this.data = [];
-        this.totalRecords = 0;
-        this.grandTotal = {};
-      },
-    });
-  });
-}
+          const grand: Record<string, number> = {};
+          Object.entries(this.creditTotalFieldMap).forEach(([field, apiKey]) => {
+            const sum = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
+            grand[field] = sum;
+          });
 
+          const isFirstPage = !body?.pageIndex || Number(body?.pageIndex) === 1;
+          if (isFirstPage) this.grandTotal = { ...grand };
 
-  /* ----------------- 給 app-table-report 的查詢函式（統一送大小寫分頁參數） ----------------- */
-
-  /** 信用卡明細（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
-public queryTLS23090CreditForReport = (body: any) =>
-  this.tls23090Service.queryTLS23090({
-    ...(body || {}),
-    // ✅ 只補小寫
-    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-    pageSize: body?.pageSize ?? 30,
-    pageIndex: body?.pageIndex ?? 1,
-    // ⛔ 不再送 PageSize / PageIndex
-  })
-  .pipe(
-    map((res: any) => {
-      const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
-      const takeDetails = (w: any) =>
-        w?.tLS23090_CreditDetails ?? w?.TLS23090_CreditDetails ?? w?.CreditDetails ?? w?.Details ?? [];
-
-      const rows = wrappers
-        .flatMap((w: any) => Array.isArray(takeDetails(w)) ? takeDetails(w) : [])
-        .map((r: any, idx: number) => ({
-          ...r,
-          _rowKey: `crt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TXN_No ?? idx}`,
-        }));
-
-      const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-      const grand: Record<string, number> = {};
-      Object.entries(this.creditTotalFieldMap).forEach(([field, apiKey]) => {
-        const sum = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
-        grand[field] = sum;
-      });
-
-      const isFirstPage = !body?.pageIndex || Number(body?.pageIndex) === 1;
-      if (isFirstPage) this.grandTotal = { ...grand };
-
-      return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-    })
-  );
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
 
 
   /** 專櫃卡別分析（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
-public queryTLS23090CounterForReport = (body: any) =>
-  this.tls23090Service
-    .queryTLS23090CounterCard({
-      ...(body || {}),
-      // ✅ 只送小寫
-      pageSize: body?.pageSize ?? 30,
-      pageIndex: body?.pageIndex ?? 1,
-      // ⛔ 不送 PageSize / PageIndex
-    })
-    .pipe(
-      map((res: any) => {
-        const items: any[] =
-          Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
-          Array.isArray(res?.Data)            ? res.Data :
-          [];
-
-        const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
-          Number(obj?.[brand]?.[field] ?? 0);
-
-        const rows = items.map((r: any, i: number) => {
-          const list = r?.CRD_Type_List || {};
-          return {
-            TXN_Date: r?.TXN_Date,
-            ECR_No  : r?.ECR_No,
-            tlt_no  : r?.tlt_no,
-            tlt_name: r?.tlt_name,
-
-            AE_Count:       pick(list, 'AE', 'Count'),       AE_Amount:       pick(list, 'AE', 'Amount'),
-            DA_Count:       pick(list, 'DA', 'Count'),       DA_Amount:       pick(list, 'DA', 'Amount'),
-            MASTER_Count:   pick(list, 'MASTER', 'Count'),   MASTER_Amount:   pick(list, 'MASTER', 'Amount'),
-            VISA_Count:     pick(list, 'VISA', 'Count'),     VISA_Amount:     pick(list, 'VISA', 'Amount'),
-            JCB_Count:      pick(list, 'JCB', 'Count'),      JCB_Amount:      pick(list, 'JCB', 'Amount'),
-            UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
-            Others_Count:   pick(list, 'Others', 'Count'),   Others_Amount:   pick(list, 'Others', 'Amount'),
-            Total_Count:    pick(list, 'Total', 'Count'),    Total_Amount:    pick(list, 'Total', 'Amount'),
-
-            _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-          };
-        });
-
-        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-        let grand: Record<string, number> = {};
-        const summary = res?.Data?.Summary ?? null;
-
-        if (summary) {
-          grand = this.summaryToCounterGrandTotal(summary);
-        } else {
-          const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
-          Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
-            grand[field] = Number(
-              carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
-            );
-          });
-        }
-
-        const isFirstPage = !body?.pageIndex || Number(body?.pageIndex) === 1;
-        if (isFirstPage) this.grandTotal = { ...grand };
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+  public queryTLS23090CounterForReport = (body: any) =>
+    this.tls23090Service
+      .queryTLS23090CounterCard({
+        ...(body || {}),
+        // ✅ 只送小寫
+        pageSize: body?.pageSize ?? 30,
+        pageIndex: body?.pageIndex ?? 1,
+        // ⛔ 不送 PageSize / PageIndex
       })
-    );
+      .pipe(
+        map((res: any) => {
+          const items: any[] =
+            Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+              Array.isArray(res?.Data) ? res.Data :
+                [];
+
+          const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
+            Number(obj?.[brand]?.[field] ?? 0);
+
+          const rows = items.map((r: any, i: number) => {
+            const list = r?.CRD_Type_List || {};
+            return {
+              TXN_Date: r?.TXN_Date,
+              ECR_No: r?.ECR_No,
+              tlt_no: r?.tlt_no,
+              tlt_name: r?.tlt_name,
+
+              AE_Count: pick(list, 'AE', 'Count'), AE_Amount: pick(list, 'AE', 'Amount'),
+              DA_Count: pick(list, 'DA', 'Count'), DA_Amount: pick(list, 'DA', 'Amount'),
+              MASTER_Count: pick(list, 'MASTER', 'Count'), MASTER_Amount: pick(list, 'MASTER', 'Amount'),
+              VISA_Count: pick(list, 'VISA', 'Count'), VISA_Amount: pick(list, 'VISA', 'Amount'),
+              JCB_Count: pick(list, 'JCB', 'Count'), JCB_Amount: pick(list, 'JCB', 'Amount'),
+              UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
+              Others_Count: pick(list, 'Others', 'Count'), Others_Amount: pick(list, 'Others', 'Amount'),
+              Total_Count: pick(list, 'Total', 'Count'), Total_Amount: pick(list, 'Total', 'Amount'),
+
+              _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+            };
+          });
+
+          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+          let grand: Record<string, number> = {};
+          const summary = res?.Data?.Summary ?? null;
+
+          if (summary) {
+            grand = this.summaryToCounterGrandTotal(summary);
+          } else {
+            const carrier = Array.isArray(res?.Data) ? res.Data[0] : (res?.Data ?? res ?? {});
+            Object.entries(this.counterTotalFieldMap).forEach(([field, apiKey]) => {
+              grand[field] = Number(
+                carrier?.Totals?.[apiKey] ?? carrier?.Summary?.[apiKey] ?? carrier?.[apiKey] ?? 0
+              );
+            });
+          }
+
+          const isFirstPage = !body?.pageIndex || Number(body?.pageIndex) === 1;
+          if (isFirstPage) this.grandTotal = { ...grand };
+
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
 
   /* ----------------- 檢視模式切換 ----------------- */
   onModeChange(): void { this.applyViewMode(); }
@@ -626,9 +623,9 @@ public queryTLS23090CounterForReport = (body: any) =>
     return isNaN(date.getTime())
       ? val
       : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date
-          .getDate()
-          .toString()
-          .padStart(2, '0')}`;
+        .getDate()
+        .toString()
+        .padStart(2, '0')}`;
   }
   private padTxnNo(v: any): string {
     const s = String(v ?? '').trim();
@@ -665,46 +662,46 @@ public queryTLS23090CounterForReport = (body: any) =>
     return grand;
   }
   /** 專櫃卡別分析：把 Data.Summary 映射成 footer 需要的 GrandTotal */
-private summaryToCounterGrandTotal(summary: any): Record<string, number> {
-  if (!summary || typeof summary !== 'object') return {};
+  private summaryToCounterGrandTotal(summary: any): Record<string, number> {
+    if (!summary || typeof summary !== 'object') return {};
 
-  const pick = (brand: string, key: 'Count' | 'Amount') =>
-    Number(summary?.[brand]?.[key] ?? 0);
+    const pick = (brand: string, key: 'Count' | 'Amount') =>
+      Number(summary?.[brand]?.[key] ?? 0);
 
-  return {
-    // AE
-    AE_Count: pick('AE', 'Count'),
-    AE_Amount: pick('AE', 'Amount'),
+    return {
+      // AE
+      AE_Count: pick('AE', 'Count'),
+      AE_Amount: pick('AE', 'Amount'),
 
-    // DA
-    DA_Count: pick('DA', 'Count'),
-    DA_Amount: pick('DA', 'Amount'),
+      // DA
+      DA_Count: pick('DA', 'Count'),
+      DA_Amount: pick('DA', 'Amount'),
 
-    // MASTER
-    MASTER_Count: pick('MASTER', 'Count'),
-    MASTER_Amount: pick('MASTER', 'Amount'),
+      // MASTER
+      MASTER_Count: pick('MASTER', 'Count'),
+      MASTER_Amount: pick('MASTER', 'Amount'),
 
-    // VISA
-    VISA_Count: pick('VISA', 'Count'),
-    VISA_Amount: pick('VISA', 'Amount'),
+      // VISA
+      VISA_Count: pick('VISA', 'Count'),
+      VISA_Amount: pick('VISA', 'Amount'),
 
-    // JCB
-    JCB_Count: pick('JCB', 'Count'),
-    JCB_Amount: pick('JCB', 'Amount'),
+      // JCB
+      JCB_Count: pick('JCB', 'Count'),
+      JCB_Amount: pick('JCB', 'Amount'),
 
-    // UnionPay
-    UnionPay_Count: pick('UnionPay', 'Count'),
-    UnionPay_Amount: pick('UnionPay', 'Amount'),
+      // UnionPay
+      UnionPay_Count: pick('UnionPay', 'Count'),
+      UnionPay_Amount: pick('UnionPay', 'Amount'),
 
-    // Others
-    Others_Count: pick('Others', 'Count'),
-    Others_Amount: pick('Others', 'Amount'),
+      // Others
+      Others_Count: pick('Others', 'Count'),
+      Others_Amount: pick('Others', 'Amount'),
 
-    // Total
-    Total_Count: pick('Total', 'Count'),
-    Total_Amount: pick('Total', 'Amount'),
-  };
-}
+      // Total
+      Total_Count: pick('Total', 'Count'),
+      Total_Amount: pick('Total', 'Amount'),
+    };
+  }
 
 
   // yyyy-MM-dd（date-only）

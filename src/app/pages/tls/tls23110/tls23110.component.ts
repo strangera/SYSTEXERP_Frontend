@@ -25,7 +25,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
-import { WhetherService } from '../../../service/basic/whether.service';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -159,7 +158,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   CounterOpCatOptions: any[] = [];
-  WhetherOptions: any[] = [];
 
   // ====== 欄位（動態建置，因後端多傳） ======
   columns: any[] = [];
@@ -173,7 +171,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     private counterNameService: CounterNameService,
     private organizationNumberService: OrganizationNumberService,
     private floorService: FloorService,
-    private whetherService: WhetherService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -220,15 +217,13 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     endCtrl.valueChanges.subscribe(clampEndToStartMonth);
     clampEndToStartMonth();
 
-    // 選項載入
-    this.whetherService.getWhetherOptions().subscribe((data) => (this.WhetherOptions = data));
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe((data) => {
-  // 確保 optionValue 一律是字串
-  this.DeductionbigCategoryOptions = (data ?? []).map((o: any) => ({
-    ...o,
-    value: String(o.value), // 例如 0 -> "0"
-  }));
-});
+      // 確保 optionValue 一律是字串
+      this.DeductionbigCategoryOptions = (data ?? []).map((o: any) => ({
+        ...o,
+        value: String(o.value), // 例如 0 -> "0"
+      }));
+    });
     this.typeService.getTypeOptions().subscribe((data) => (this.TypeOptions = data));
     this.categoryService.getCategories().subscribe((data) => (this.CategoryOptions = data));
     this.counterNameService.getCounters().subscribe((res) => {
@@ -265,7 +260,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
       const label = this.labelMap[key] ?? key;
       cols.push(
         { field: `${key}_TXN_Net`, header: `${label}-未稅`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-         { field: `${key}_TXN_SaleNoTax`, header: `${label}-免稅`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+        { field: `${key}_TXN_SaleNoTax`, header: `${label}-免稅`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
         { field: `${key}_TXN_Tax`, header: `${label}-稅額`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
         { field: `${key}_Total`, header: `${label}-合計`, visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       );
@@ -295,26 +290,26 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
       };
       const asArr = (x: any) => (Array.isArray(x) ? x : x == null || x === '' ? undefined : [x]);
 
- const payload: any = {
-  TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-  TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+      const payload: any = {
+        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
 
-  // 🔴 關鍵：統一送「字串」
-  tlt_term_type: this.toStringOrUndef(val?.tlt_term_type),
+        // 🔴 關鍵：統一送「字串」
+        tlt_term_type: this.toStringOrUndef(val?.tlt_term_type),
 
-  rece_yn: val?.rece_yn ?? undefined,
-  IsNoPLU_No: toTF(val?.IsNoPLU_No),
-  TLT_No: asArr(val?.TLT_No),
-  tlt_building: val?.tlt_building ?? undefined,
-  tlt_floor: asArr(val?.tlt_floor),
-  org_id: asArr(val?.org_id),
+        rece_yn: val?.rece_yn ?? undefined,
+        IsNoPLU_No: toTF(val?.IsNoPLU_No),
+        TLT_No: asArr(val?.TLT_No),
+        tlt_building: val?.tlt_building ?? undefined,
+        tlt_floor: asArr(val?.tlt_floor),
+        org_id: asArr(val?.org_id),
 
-  pageIndex: val?.pageIndex ?? 1,
-  pageSize: 30,
-  PageIndex: val?.pageIndex ?? 1,
-  PageSize: 30,
-  SortBy: Array.isArray(val?.SortBy) ? val.SortBy : this.sortMeta,
-};
+        pageIndex: val?.pageIndex ?? 1,
+        pageSize: 30,
+        PageIndex: val?.pageIndex ?? 1,
+        PageSize: 30,
+        SortBy: Array.isArray(val?.SortBy) ? val.SortBy : this.sortMeta,
+      };
 
       // 提供給 app-table-report
       this.historyRequestBody = { ...payload };
@@ -336,12 +331,12 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
               Array.isArray(res?.Data?.QueryData)
                 ? res.Data.QueryData
                 : Array.isArray(res?.Data)
-                ? res.Data
-                : Array.isArray(res?.QueryData)
-                ? res.QueryData
-                : [];
+                  ? res.Data
+                  : Array.isArray(res?.QueryData)
+                    ? res.QueryData
+                    : [];
 
-            const metrics = ['TXN_Net', 'TXN_SaleNoTax','TXN_Tax', 'Total'] as const;
+            const metrics = ['TXN_Net', 'TXN_SaleNoTax', 'TXN_Tax', 'Total'] as const;
 
             const mapped = rawRows.map((row: any) => {
               const flat: any = { Day: row?.Day ?? '' };
@@ -351,7 +346,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
                 if (!obj) continue;
 
                 // 兼容：優先 TXN_Net，沒有就退回 TXN_SaleNoTax
-                const pick = (o: any, k: 'TXN_Net' |'TXN_SaleNoTax' |'TXN_Tax' | 'Total') =>
+                const pick = (o: any, k: 'TXN_Net' | 'TXN_SaleNoTax' | 'TXN_Tax' | 'Total') =>
                   k === 'TXN_Net' ? Number(o?.TXN_Net ?? o?.TXN_SaleNoTax ?? 0) : Number(o?.[k] ?? 0);
 
                 for (const m of metrics) {
@@ -385,28 +380,28 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
   // ====== 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，回傳 GrandTotal ======
   public queryTLS23110ForReport = (body: any) =>
-  this.tls23110Service
-    .queryTLS23110({
-      ...(body || {}),
-      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+    this.tls23110Service
+      .queryTLS23110({
+        ...(body || {}),
+        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
 
-      // 🔴 關鍵：統一字串
-      tlt_term_type: this.toStringOrUndef(body?.tlt_term_type ?? this.queryForm.value?.tlt_term_type),
+        // 🔴 關鍵：統一字串
+        tlt_term_type: this.toStringOrUndef(body?.tlt_term_type ?? this.queryForm.value?.tlt_term_type),
 
-      pageSize: 30,
-      PageSize: 30,
-    })
+        pageSize: 30,
+        PageSize: 30,
+      })
       .pipe(
         map((res: any) => {
           const rawRows: any[] =
             Array.isArray(res?.Data?.QueryData)
               ? res.Data.QueryData
               : Array.isArray(res?.Data)
-              ? res.Data
-              : Array.isArray(res?.QueryData)
-              ? res.QueryData
-              : [];
+                ? res.Data
+                : Array.isArray(res?.QueryData)
+                  ? res.QueryData
+                  : [];
 
           const metrics = ['TXN_Net', 'TXN_Tax', 'Total'] as const;
 
@@ -609,16 +604,16 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     return `${yyyy}-${mm}-${dd}`;
   }
   // 放在 class 內
-private normalizeTermType(v: any): string[] | undefined {
-  if (v == null || v === '') return undefined;
-  if (Array.isArray(v)) return v.map((x) => String(x));
-  return [String(v)]; // 0 -> "0"
-}
-// class 裡加上：把任何輸入轉成「字串 or undefined」；若傳陣列取第一個
-private toStringOrUndef(v: any): string | undefined {
-  if (v === null || v === undefined || v === '') return undefined;
-  const take = Array.isArray(v) ? v[0] : v; // 防呆：有人把單選設成 [0]
-  return String(take);
-}
+  private normalizeTermType(v: any): string[] | undefined {
+    if (v == null || v === '') return undefined;
+    if (Array.isArray(v)) return v.map((x) => String(x));
+    return [String(v)]; // 0 -> "0"
+  }
+  // class 裡加上：把任何輸入轉成「字串 or undefined」；若傳陣列取第一個
+  private toStringOrUndef(v: any): string | undefined {
+    if (v === null || v === undefined || v === '') return undefined;
+    const take = Array.isArray(v) ? v[0] : v; // 防呆：有人把單選設成 [0]
+    return String(take);
+  }
 
 }

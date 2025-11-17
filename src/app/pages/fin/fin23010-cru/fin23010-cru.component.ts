@@ -1,19 +1,11 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
+import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-//
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
 import { ValidationService } from '../../../shared/service/validation.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { PaymentMethodService } from '../../../service/basic/payment-method.service';
-import { WhetherService } from '../../../service/basic/whether.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
@@ -52,23 +44,13 @@ export class FIN23010CRUComponent extends BasicCrupageComponent implements OnIni
   //
   // ----------------------------------------------------------------
   //
-  requsetEmployeeOptions: any[] = [];
-  payoutMethodOptions: any[] = [];
-  whetherOptions: any[] = [];
-  organizationOptions: any[] = [];
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
     private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
-    private paymentMethodService: PaymentMethodService,
-    private whetherService: WhetherService,
-    private organizationNumberService: OrganizationNumberService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -77,34 +59,6 @@ export class FIN23010CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '120007';
     //
-    // ----------------------------------------------------------------
-    //
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.requsetEmployeeOptions = data;
-    });
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationOptions = data;
-    });
-    //
-    this.paymentMethodService.getSystemTypes().subscribe(data => {
-      this.payoutMethodOptions = data;
-      // 全選填入
-      // let allSystemValues = this.payoutMethodOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   payoutMethod: allSystemValues
-      // });
-    });
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   ticketTransfer: allSystemValues
-      // });
-    });
     // ----------------------------------------------------------------
     //
     // ----------------------------------------------------------------

@@ -14,7 +14,6 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
-import { ViolationStatusService } from '../../../service/basic/violation-status.service';
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
