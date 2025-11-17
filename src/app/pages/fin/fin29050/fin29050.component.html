@@ -1,101 +1,74 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2 align-items-center">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <!-- 廠客代號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="廠商代號"
-              [startControl]="queryForm.controls.startFactoryID"
-              [endControl]="queryForm.controls.endFactoryID"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-dropdown-range label="廠客代號" [startControl]="queryForm.controls.VendorNoFrom"
+              [endControl]="queryForm.controls.VendorNoTo" [submitted]="submitted" [options]="VendorNoOptions"
+              optionLabel="label" optionValue="value" />
           </div>
+
+          <!-- 立帳日期(起訖) - 必填 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="立帳日期"
-              [startControl]="queryForm.controls.startBillDate"
-              [endControl]="queryForm.controls.endBillDate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="立帳日期"
+              [startControl]="queryForm.controls.BillingDateFrom" [endControl]="queryForm.controls.BillingDateTo"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
+
+          <!-- 應付金額(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="應付金額"
-              [startControl]="queryForm.controls.startShouldPay"
-              [endControl]="queryForm.controls.endShouldPay"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range label="應付金額" [startControl]="queryForm.controls.PayableAmountFrom"
+              [endControl]="queryForm.controls.PayableAmountTo" [submitted]="submitted"></app-input-number-range>
+          </div>
+
+          <!-- 科目代號(起訖) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-range label="科目代號" [startControl]="queryForm.controls.AccNoFrom"
+              [endControl]="queryForm.controls.AccNoTo" [submitted]="submitted" [options]="AccNoOptions"
+              optionLabel="label" optionValue="value" />
+          </div>
+
+          <!-- 帳款餘額為零是否顯示 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="帳款餘額為零是否顯示" groupname="g1" [control]="queryForm.controls.ShowZeroBalance" [options]="[
+                { label: '顯示全部', value: 'ALL' },
+                { label: '顯示負值', value: 'NEGATIVE' }
+              ]" [submitted]="submitted">
+            </app-radiobutton>
+          </div>
+
+          <!-- 未付金額是否包含保留款餘額 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="未付金額是否包含保留款餘額" groupname="g2" [control]="queryForm.controls.ShowRetentionInUnpaid"
+              [options]="[
+                { label: '顯示全部', value: 'ALL' },
+                { label: '顯示負值', value: 'NEGATIVE' }
+              ]" [submitted]="submitted">
+            </app-radiobutton>
           </div>
         </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="科目代號"
-              [startControl]="queryForm.controls.startSubjectID"
-              [endControl]="queryForm.controls.endSubjectID"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="帳款餘額為零是否顯示"
-              groupname="showUp"
-              [control]="queryForm.controls.showUp"
-              [options]="showUpOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="未付金額是否包含保留款餘額"
-              groupname="anyRemain"
-              [control]="queryForm.controls.anyRemain"
-              [options]="showUpOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-        </div>
-        <hr />
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-subheader tableKey="FIN29050" dataKey="VouNo" [data]="data" [columns]="columns" [showCheckBox]="false"
+    [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showSerialNo]="true" [showPaginator]="true" [showReportMode]="false" [showGroupheader]="false">
+  </app-table-subheader>
 </div>

@@ -1,150 +1,217 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-//
+import { finalize } from 'rxjs';
 
-//1.2.9.5 應付帳款明細表
+import {
+  FIN29050Service,
+  QueryFIN29050Response,
+} from '../../../service/api/fin/fin29050.service';
+
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+
 @Component({
-    selector: 'app-fin29050',
-    templateUrl: './fin29050.component.html',
-    styleUrl: './fin29050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin29050',
+  templateUrl: './fin29050.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    CalendarRangeComponent,
+    RadiobuttonComponent,
+    TableSubheaderComponent,
+    DropdownRangeComponent,
+    InputNumberRangeComponent
+  ]
 })
-export class FIN29050Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    startFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠商代號
-    endFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠商代號
-    startBillDate: [], //立帳日期
-    endBillDate: [], //立帳日期
-    startShouldPay: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 應付金額
-    endShouldPay: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 應付金額
-    startSubjectID: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 科目代號
-    endSubjectID: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 科目代號
-    showUp: [1, []], // 帳款餘額為零是否顯示
-    anyRemain: [1, []], // 未付金額是否包含保留款餘額
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '廠客代號', visible: true },
-    { field: 'col2', header: '廠客名稱', visible: true },
-    { field: 'col3', header: '摘要', visible: true },
-    { field: 'col4', header: '立帳日期', visible: true },
-    { field: 'col5', header: '傳票編號', visible: true },
-    { field: 'col6', header: '應付金額', visible: true },
-    { field: 'col7', header: '沖帳金額', visible: true },
-    { field: 'col8', header: '保留款金額', visible: true },
-    { field: 'col9', header: '沖保留款金額', visible: true },
-    { field: 'col10', header: '未付金額', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  factoryIDOptions: any[] = [];
-  showUpOptions: any[] = [
-    { value: 1, label: '顯示全部' },
-    { value: 2, label: '顯示負值' },
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '未異動' },
-    { value: 3, label: '到期' },
-    { value: 4, label: '兌現' },
-    { value: 5, label: '撤票' },
-    { value: 6, label: '退票' },
-  ];
+export class FIN29050Component extends BasicQueryPageComponent<QueryFIN29050Response> implements OnInit {
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private fin29050Service: FIN29050Service,
+    private dropDownListService: DropDownListService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
+
+  /** 記住上一次查詢的 payload */
+  private lastQueryBody: any | null = null;
+
+  queryForm = this.formBuilder.group({
+    VendorNoFrom: [null],
+    VendorNoTo: [null],
+    BillingDateFrom: [null, Validators.required],
+    BillingDateTo: [null, Validators.required],
+    PayableAmountFrom: [null],
+    PayableAmountTo: [null],
+    AccNoFrom: [null],
+    AccNoTo: [null],
+    ShowZeroBalance: ['ALL'],
+    ShowRetentionInUnpaid: ['ALL'],
+    ...createPaginationConfig([])
+  });
+
+  data: QueryFIN29050Response[] = [];
+  selectedItems: QueryFIN29050Response[] = [];
+  totalRecords = 0;
+
+  columns: Column[] = [
+    { field: 'VendorNo', header: '廠客代號', visible: true },
+    { field: 'VendorName', header: '廠客名稱', visible: true },
+    { field: 'Notes', header: '摘要', visible: true },
+    { field: 'BillingDate', header: '立帳日期', visible: true },
+    { field: 'VouNo', header: '傳票編號', visible: true, type: 'detail' },
+    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount },
+    { field: 'ClearedAmount', header: '沖帳金額', visible: true, format: formatAmount },
+    { field: 'RetentionAmount', header: '保留款金額', visible: true, format: formatAmount },
+    { field: 'ClearedRetentionAmount', header: '沖保留款金額', visible: true, format: formatAmount },
+    { field: 'UnpaidAmount', header: '未付金額', visible: true, format: formatAmount },
+  ];
+
+  // 下拉選項
+  VendorNoOptions: any[] = []; // 廠客代號選項
+  AccNoOptions: any[] = []; // 科目代號選項
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120028';
-    this.cruPage = '/FIN2000/FIN29050CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
-  }
+    this.initializePage('FIN29050', 'account/fin/fin29050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    // 預先把 ProgNo 寫入一次，避免你從其它地方直開 CRU
+    try {
+      localStorage.setItem('FIN29050_CRU_PROGNO', 'FIN29050');
+    } catch { }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+    if (saved) {
+      this.queryForm.patchValue(this.coerceDates(saved), { emitEvent: false });
+      this.lastQueryBody = saved;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.queryForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  private coerceDates(raw: any) {
+    const fix = (v: any) => {
+      if (!v) return v;
+      if (v instanceof Date) return v;
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    };
+    return {
+      ...raw,
+      BillingDateFrom: fix(raw?.BillingDateFrom),
+      BillingDateTo: fix(raw?.BillingDateTo),
+    };
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      const payload = this.buildQueryPayload(form.getRawValue());
+
+      this.fin29050Service.queryFIN29050(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe((response) => {
+          this.data = response.Data ?? [];
+          this.totalRecords = response.TotalCount ?? this.data.length;
+
+          // 記住本次查詢
+          this.lastQueryBody = form.getRawValue();
+
+          // 保存查詢狀態
+          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
+        });
+    });
   }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+
+  override onLazyLoadData(event: any, form: FormGroup) {
+    form.patchValue({
+      pageSize: event?.pageSize,
+      pageIndex: event?.pageIndex,
+      SortBy: event?.SortBy
+    }, { emitEvent: false });
+
+    this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+  }
+
+  /** 清單 → 明細（CRU）：使用 localStorage 交接資料 */
+  override onDetail(row: QueryFIN29050Response) {
+    const vouNo = row?.VouNo;
+    if (!vouNo) {
+      this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
+    // 儲存交接資料到 localStorage（含 ProgNo）
+    try {
+      const handoff = {
+        vouNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN29050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN29050_CRU_PROGNO', 'FIN29050');
+      console.log('[FIN29050] 已儲存 handoff:', handoff);
+    } catch (err) {
+      console.error('[FIN29050] handoff save failed:', err);
+      this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
+
+    // 開新分頁
+    window.open('/account/fin/fin29050cru', '_blank', 'noopener');
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  /** 產生查詢 payload */
+  private buildQueryPayload(raw: any): any {
+    const from = this.toDateOnly(raw?.BillingDateFrom);
+    const to = this.toDateOnly(raw?.BillingDateTo);
+
+    return {
+      ...raw,
+      BillingDateFrom: from,
+      BillingDateTo: to,
+    };
+  }
+
+  // ========= 本地工具 =========
+  private toDateOnly(d: any): string | null {
+    if (!d) return null;
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt.getTime())) return null;
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const da = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${da}`;
+  }
+
+  // 載入下拉選項
+  private loadOptions(): void {
+    // 廠客代號
+    this.dropDownListService.queryPOS2013_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => this.VendorNoOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+    // 科目代號
+    this.dropDownListService.queryGLS1005_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => this.AccNoOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+
   }
 }
