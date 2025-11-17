@@ -256,7 +256,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           TABTYPE: item.TABTYPE,
           PUR_TaxType: item.PUR_TaxType,
           GUI_Amt: item.PUR_Amt,
-          // Rebate_GUIDate: this.datePipe.transform(new Date(new Date(frm.value.ACP_YYYYMM).getFullYear(), new Date(frm.value.ACP_YYYYMM).getMonth() + 1, 0), 'yyyy-MM-dd') || '',
+          Rebate_GUIDate: this.datePipe.transform(new Date(new Date(frm.value.ACP_YYYYMM).getFullYear(), new Date(frm.value.ACP_YYYYMM).getMonth() + 1, 0), 'yyyy-MM-dd') || '',
           Rebate_Amt: item.Rebate_Amt_New || 0,
           Rebate_Net: item.Rebate_Net || 0,
           Rebate_Tax: item.Rebate_Tax || 0,
