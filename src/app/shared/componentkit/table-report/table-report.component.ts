@@ -60,10 +60,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() selectionChange = new EventEmitter<any>();
   @Output() selectAllChange = new EventEmitter<boolean>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
-  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => {
-    if (data) { return this.isRowSelectable(data); }
-    return false; //
-  };
+  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
   @Input() isAllSelected = false;                     // 是否全選
   @Output() dataChange = new EventEmitter<any[]>();   // 用來儲存查詢結果
   // Header 相關
@@ -231,7 +228,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   }
   onLazyLoad() {
     if (this.isAllSelected) {
-      this.selectedItems = [...this.data];
+      this.selectedItems = this.data.filter(rowData => {
+        const selectable = this.isRowSelectable(rowData);
+        return selectable === undefined ? true : selectable;
+      });
       this.selectionChange.emit(this.selectedItems);
       this.selectAllChange.emit(true);
     } else {
@@ -260,7 +260,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   onSelectAllChange(event: TableSelectAllChangeEvent) {
     this.isAllSelected = event.checked;
     if (this.isAllSelected) {
-      this.selectedItems = [...this.data];
+      this.selectedItems = this.data.filter(rowData => {
+        // 確保 rowData 可選時才加入 selectedItems
+        const selectable = this.isRowSelectable(rowData);
+        return selectable === undefined ? true : selectable;
+      });
       this.selectionChange.emit(this.selectedItems);
       this.selectAllChange.emit(true);
     } else {
