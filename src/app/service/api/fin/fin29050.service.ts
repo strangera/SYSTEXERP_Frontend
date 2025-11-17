@@ -19,6 +19,7 @@ export interface QueryFIN29050Request extends BaseQueryRequest {
 
 // 明細 Row
 export interface QueryFIN29050Response {
+  id: number; // 用於前端識別每一列資料
   VendorNo: string;
   VendorName: string;
   Notes: string;
@@ -63,11 +64,12 @@ export class FIN29050Service {
       TotalPage: 1,
       Data: [
         {
+          id: 1,
           VendorNo: '1001',
           VendorName: '廠商A',
           Notes: '測試資料A',
           BillingDate: '2024-01-15',
-          VouNo: 'VOU123456',
+          VouNo: '20250901001',
           PayableAmount: 5000,
           ClearedAmount: 2000,
           RetentionAmount: 500,
@@ -75,11 +77,12 @@ export class FIN29050Service {
           UnpaidAmount: 2300,
         },
         {
+          id: 2,
           VendorNo: '1002',
           VendorName: '廠商B',
           Notes: '測試資料B',
           BillingDate: '2024-01-20',
-          VouNo: 'VOU654321',
+          VouNo: '20250901002',
           PayableAmount: 7000,
           ClearedAmount: 3000,
           RetentionAmount: 700,
