@@ -37,7 +37,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
+    // DropdownComponent,
     MultiSelectComponent,
     InputTextComponent,
     InputNumberRangeComponent,
@@ -117,49 +117,57 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   constructor(private tls11010Service: Tls11010Service) {
     super();
   }
+ngOnInit(): void {
+  // 1. 初始化頁面（只負責 ProgNo、權限、cruPage 等，不由它幫你做查詢還原）
+  this.initializePage('TLS11010', 'tls/tls11010cru');
 
-  ngOnInit(): void {
-    this.initializePage('TLS11010', 'tls/tls11010cru', this.queryForm, (f) => this.onSubmit(f));
+  // 2. 使用 BasicQueryPageComponent 提供的通用「查詢條件還原」機制
+  //   - 會從 QueryStateService 抓上次的查詢條件
+  //   - 有資料就 patch 回 form
+  //   - 然後自動幫你再 call 一次 onSubmit(queryForm)
+  this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
 
-    this.tls11010Service
-      .getFloorOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => (this.floorOptions = res));
+  // 3. 以下維持原本的 dropdown 載入邏輯
+  this.tls11010Service
+    .getFloorOptions()
+    .pipe(untilDestroyed(this))
+    .subscribe((res) => (this.floorOptions = res));
 
-    this.tls11010Service
-      .getRegionOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => (this.RegionCodeOptions = res));
+  this.tls11010Service
+    .getRegionOptions()
+    .pipe(untilDestroyed(this))
+    .subscribe((res) => (this.RegionCodeOptions = res));
 
-    this.tls11010Service
-      .getOrgOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        this.OrganizationCodeOptions =
-          res?.map((x: any) => ({
-            label: x.label, // table 顯示
-            formLabel: `${x.value} - ${x.label}`, // 下拉顯示
-            value: x.value,
-          })) || [];
-      });
+  this.tls11010Service
+    .getOrgOptions()
+    .pipe(untilDestroyed(this))
+    .subscribe((res) => {
+      this.OrganizationCodeOptions =
+        res?.map((x: any) => ({
+          label: x.label, // table 顯示
+          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
+          value: x.value,
+        })) || [];
+    });
 
-    this.tls11010Service
-      .getUsageOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        this.usageOptions =
-          res?.map((x: any) => ({
-            label: x.label,
-            formLabel: `${x.value} - ${x.label}`,
-            value: x.value,
-          })) || [];
-      });
+  this.tls11010Service
+    .getUsageOptions()
+    .pipe(untilDestroyed(this))
+    .subscribe((res) => {
+      this.usageOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
+    });
 
-    this.tls11010Service
-      .getBuildingOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => (this.BUILDING_NO_Options = res));
-  }
+  this.tls11010Service
+    .getBuildingOptions()
+    .pipe(untilDestroyed(this))
+    .subscribe((res) => (this.BUILDING_NO_Options = res));
+}
+
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -177,6 +185,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
         formValue.LOCATION_Status = formValue.LOCATION_Status.map((x: string | number) =>
           String(x),
         );
+      }
+            // 將 Purpose_no 轉成字串陣列，變成 ["1","2"]
+      if (Array.isArray(formValue.Purpose_no)) {
+        formValue.Purpose_no = formValue.Purpose_no.map((x: string | number) => String(x));
       }
 
       // console.log('🔍 查詢條件 request payload:', formValue);
