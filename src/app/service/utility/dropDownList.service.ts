@@ -307,6 +307,10 @@ export class DropDownListService {
   queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
   }
+  // 查詢 ENG1002 下拉式選單
+  queryENG1002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/queryENG1002_DropDownList`, {});
+  }
 
   // 查詢會計科目設定檔(GLS1005)下拉式選單 (只取1103科目)
   queryGLS1005For1103_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
