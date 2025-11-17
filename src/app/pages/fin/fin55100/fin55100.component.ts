@@ -9,7 +9,6 @@ import { FlippingstateService } from './../../../service/basic/flippingstate.ser
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
 
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -23,17 +22,14 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 @Component({
   selector: 'app-fin55100',
   templateUrl: './fin55100.component.html',
-  styleUrl: './fin55100.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class FIN55100Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN55100Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     startserialticket: [],
     endserialticket: [],
@@ -214,18 +210,10 @@ export class FIN55100Component extends BasicQpageComponent implements OnInit {
     { field: 'cumulativeGrowthRate', header: '增減率(%)', visible: true }
   ];
 
-
-
-
-
-
   // TypeScript Options
   AccountcodeOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private authService: AuthService,
     private IfdisplayService: IfdisplayService,
     private AnalysisdateCService: AnalysisdateCService,
     private vendorService: VendorService,
@@ -244,9 +232,7 @@ export class FIN55100Component extends BasicQpageComponent implements OnInit {
   FlippingstateOptions: any[] = [];
   usercode: any[] = [];
   ngOnInit(): void {
-    this.ProgNo = '150034';
-    // Initialize dropdown options
-
+    this.initializePage('FIN55100');
     this.userCodeService
       .getUserCode()
       .subscribe((data) => (this.usercode = data));
@@ -278,9 +264,6 @@ export class FIN55100Component extends BasicQpageComponent implements OnInit {
     this.loading = true;
     this.notificationService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
 
     this.loading = false;
     this.notificationService.unblockUi();
@@ -288,45 +271,6 @@ export class FIN55100Component extends BasicQpageComponent implements OnInit {
 
   onSubmitQuery(frm: FormGroup) {
     this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單
