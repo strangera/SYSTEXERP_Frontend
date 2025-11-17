@@ -79,7 +79,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     { field: 'ENG_Remark', header: '備註', type: 'input', maxLength: 200, width: '100%' },
   ];
 
-  // ⬇️ 【修正】用於處理 Dialog 查詢的延遲 Subject (使用 protected 或 private 確保內部使用)
+  // string 【修正】用於處理 Dialog 查詢的延遲 Subject (使用 protected 或 private 確保內部使用)
   protected dialogQuerySubject = new Subject<any>();
 
   constructor(
@@ -139,7 +139,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     }
   }
 
-  // ⬇️ 【新增】實作 OnDestroy 以清理 Subject 訂閱
+  // string 【新增】實作 OnDestroy 以清理 Subject 訂閱
   public ngOnDestroy(): void {
     // 由於您對 dialogQuerySubject 使用了 untilDestroyed(this)，
     // 只要 BasicCruPageComponent 或 Angular 本身有正確實現 OnDestroy，即可自動清理。
@@ -147,7 +147,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.dialogQuerySubject.complete();
   }
 
-  // ⬇️ 【新增】開啟 Dialog 時重置查詢條件並載入資料的方法
+  // string 【新增】開啟 Dialog 時重置查詢條件並載入資料的方法
   public openDialog(): void {
     this.dialogVisible = true;
     this.dialogData = [];
@@ -262,8 +262,16 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       this.service.updateASS21020(updatePayload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
         next: (res) => {
           if (res.Data.IsUpdateSuccess) {
-            this.messageService.successBubble('能源攤提設定更新成功');
-            this.onCancel();
+            // 只要有一筆Id不為0就是更新成功，Id都是0就是新增成功
+            if (payload.some(item => item.Id !== 0)) {
+              this.messageService.successBubble('能源攤提設定更新成功');
+              this.onCancel();
+            } else {
+              this.messageService.successBubble('能源攤提設定新增成功');
+              this.dataForm.reset();
+              this.data = [];
+              this.selectedItems = [];
+            }
           } else {
             this.messageService.errorBubble(res.Data.ErrorMsg);
           }
@@ -284,7 +292,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   ];
   totalRecords = 0;
 
-  // ⬇️ 【修正】移除不必要的預設值，在 openDialog 中設置
+  // string 【修正】移除不必要的預設值，在 openDialog 中設置
   dialogQueryForm = this.formBuilder.nonNullable.group({
     TltNo: [null as string | null],
     pageSize: [30],
@@ -292,7 +300,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
   })
 
-  // ⬇️ 【修正】處理 TableReportComponent 的 lazyLoadData 事件
+  // string 【修正】處理 TableReportComponent 的 lazyLoadData 事件
   public onDialogLazyLoad(event: any): void {
     // 將分頁/排序參數補到 dialogQueryForm，這將觸發 dialogQuerySubject -> loadDialogData
     this.dialogQueryForm.patchValue({
@@ -305,7 +313,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     });
   }
 
-  // ⬇️ 【修正】: 使用 API 查詢 Dialog 資料 (增加防止重複查詢的邏輯)
+  // string 【修正】: 使用 API 查詢 Dialog 資料 (增加防止重複查詢的邏輯)
   private loadDialogData(query: { TltNo?: string | null, pageSize?: number, pageIndex?: number, SortBy?: any[] }): void {
 
     const body = {
