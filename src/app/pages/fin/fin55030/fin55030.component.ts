@@ -18,29 +18,47 @@ import { AsyncPipe } from '@angular/common';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 @Component({
   selector: 'app-fin55030',
   templateUrl: './fin55030.component.html',
   styleUrl: './fin55030.component.scss',
   standalone: true,
   imports: [
-    AsyncPipe, MultiSelectComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+    AsyncPipe,
+    AccordionModule,
+    MultiSelectComponent,
+    MenubarComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    DropdownComponent,
+    DropdownRangeComponent,
+    InputNumberRangeComponent,
+    InputTextComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
 
+// 立沖科目餘額表
 export class FIN55030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    SSubpoenadate: [new Date(), [Validators.required]],
-    ESubpoenadate: [new Date(), [Validators.required]],
-    ORG_ID: [''],
-    AccNoFrom: [''],
-    VEN_No: [''],
-    startserialticket: [''],
-    endserialticket: [''],
-    TargetNoList: [[]],
-    Subpoenacode: [''],
-    VouTypeList: [[]],
-    ifOptions: [''],
-    ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
+    SVOUDATE: [new Date(), [Validators.required]], // 日期 GLS3001.VOUDATE
+    EVOUDATE: [new Date(), [Validators.required]],
+    ORG_ID: [''],   // 部門代碼 GLS3001.ORG_ID
+    SACCNO: [''], // 科目代號 GLS3003.ACCNO
+    EACCNO: [''],
+    SDetailNo: [''], // 廠商代號 GLS3001.DetailNo
+    EDetailNo: [''],
+    SPTA: [''], // 立沖代號 GLS3003.PTA
+    EPTA: [''],
+    SubDetailNo: [[]], // 對象別編號 GLS3001.SubDetailNo
+    PostFlag: [''], // 傳票狀態 GLS3001.PostFlag
+    ifOptions: [''], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
+
+    // ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
   });
 
   columns: any[] = [
@@ -55,8 +73,8 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   ];
   data: any[] = [];
   totalRecords = 0;
-  AccNo_Options = this.fin55070Service.getAccNoList();
-  ORG_IDOptions = this.dropdown.querySys3100();
+  AccNo_Options: any[] = []; 
+  ORG_IDOptions: any[] = []; 
   VenNoOptions: any[] = [];
   TargetNoListOptions: any[] = [];
   VouTypeListOptions: any[] = [];
@@ -78,6 +96,12 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     this.loadOptions();
   }
   loadOptions() {
+    this.fin55070Service.getAccNoList().subscribe(res => {
+      this.AccNo_Options = res;
+    });
+    this.dropdown.querySys3100().subscribe(res => {
+      this.ORG_IDOptions = res || [];
+    });
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
