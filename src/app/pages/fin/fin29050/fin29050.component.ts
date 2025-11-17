@@ -11,7 +11,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -86,6 +86,16 @@ export class FIN29050Component extends BasicQueryPageComponent<QueryFIN29050Resp
   // 下拉選項
   VendorNoOptions: any[] = []; // 廠客代號選項
   AccNoOptions: any[] = []; // 科目代號選項
+
+  loadingStates: Map<number, boolean> = new Map();
+  addButton: AddButton[] = [
+    {
+      label: '匯出',
+      icon: 'pi pi-file-export text-green-500',
+      action: (rowData: QueryFIN29050Response) => { this.onExport(rowData); },
+      loading: (rowData: QueryFIN29050Response) => this.getLoadingState(rowData.id),
+    },
+  ];
 
   ngOnInit(): void {
     this.initializePage('FIN29050', 'account/fin/fin29050cru', this.queryForm, (form) => this.onSubmit(form));
@@ -213,5 +223,40 @@ export class FIN29050Component extends BasicQueryPageComponent<QueryFIN29050Resp
       .pipe(untilDestroyed(this))
       .subscribe(res => this.AccNoOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
 
+  }
+
+  // 匯出
+  onExport(rowData: QueryFIN29050Response): void {
+    this.setLoadingState(rowData.id, true);
+
+    // TODO: 待實作
+    // this.tls53010Service.exportTLS53010Detail(this.createDetailQueryRequest(rowData))
+    //   .pipe(
+    //     untilDestroyed(this),
+    //     finalize(() => {
+    //       this.setLoadingState(rowData.id, 'export', false);
+    //     })
+    //   )
+    //   .subscribe({
+    //     next: (response: HttpResponse<Blob>) => {
+    //       this.downloadFile(response, '盤點單明細報表.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    //     },
+    //     error: (err: any) => {
+    //       console.error('匯出失敗:', err);
+    //     }
+    //   });
+  }
+
+  // 取得 loading 狀態
+  getLoadingState(id: number): boolean {
+    return this.loadingStates.get(id) || false;
+  }
+
+  // 設定 loading 狀態
+  setLoadingState(id: number, loading: boolean): void {
+    if (!this.loadingStates.has(id)) {
+      this.loadingStates.set(id, false);
+    }
+    this.loadingStates.set(id, loading);
   }
 }

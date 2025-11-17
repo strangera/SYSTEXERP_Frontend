@@ -67,8 +67,9 @@
 
 <div class="card">
   <app-table-subheader tableKey="FIN29050" dataKey="VouNo" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showSerialNo]="true" [showPaginator]="true" [showReportMode]="false" [showGroupheader]="false">
+    [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showPaginator]="true" [showReportMode]="false" [showGroupheader]="false" [showDetail]="false" [showEdit]="false"
+    [addButton]="addButton">
   </app-table-subheader>
 </div>
