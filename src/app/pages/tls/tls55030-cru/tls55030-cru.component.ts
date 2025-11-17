@@ -246,22 +246,37 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
+      const acpDateValue = formValue.ACP_YYYYMM;
+      let rebateGUIDate = '';
+      if (acpDateValue) {
+        const inputDate = acpDateValue instanceof Date ? acpDateValue : new Date(acpDateValue);
+        if (!isNaN(inputDate.getTime())) {
+          const year = inputDate.getFullYear();// 2. 獲取當前的年份
+          const month = inputDate.getMonth();// 3. 獲取當前的月份 (JavaScript 月份是 0-11)
+          const lastDay = new Date(year, month + 1, 0);// 4. 計算該月的最後一天：設置下一個月 (month + 1) 的第 0 天
+          rebateGUIDate = this.datePipe.transform(lastDay, 'yyyy-MM-dd') || '';// 5. 格式化為 YYYY-MM-dd
+        }
+      }
       const paramBody = {
-        ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM') || '',
-        VEN_No: frm.value.VEN_No,
-        DIS_EntryType: frm.value.DIS_EntryType,
+        ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',
+        VEN_No: formValue.VEN_No,
+        DIS_EntryType: formValue.DIS_EntryType,
         rebateDetails: this.data.map(item => ({
           PUR_GUINo: item.PUR_GUINo,
           PUR_GUIDate: item.PUR_GUIDate,
           TABTYPE: item.TABTYPE,
           PUR_TaxType: item.PUR_TaxType,
           GUI_Amt: item.PUR_Amt,
-          Rebate_GUIDate: this.datePipe.transform(new Date(new Date(frm.value.ACP_YYYYMM).getFullYear(), new Date(frm.value.ACP_YYYYMM).getMonth() + 1, 0), 'yyyy-MM-dd') || '',
+
+          Rebate_GUIDate: rebateGUIDate,
+
           Rebate_Amt: item.Rebate_Amt_New || 0,
           Rebate_Net: item.Rebate_Net || 0,
           Rebate_Tax: item.Rebate_Tax || 0,
-          Rebate_Name: frm.value.DIS_EntryType === '1' ? '退貨' : frm.value.Rebate_Name || '',
+          Rebate_Name: formValue.DIS_EntryType === '1' ? '退貨' : formValue.Rebate_Name || '',
         })),
+        // ... (後續的 returnDetails 和 switch 邏輯不變)
         returnDetails: this.data2.map(item => ({
           EVENT_ID: item.RJM_No,
           Rebate_Amt: item.RJM_TotalBuyAmt,
@@ -269,6 +284,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           Rebate_Tax: item.RJM_TotalBuyTax
         }))
       }
+
+      // ... (switch 邏輯不變)
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           this.tls55030Service.insertTLS55030(paramBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
@@ -286,7 +303,6 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       }
     });
   }
-
 
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
@@ -312,11 +328,12 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
 
   onQuery(frm: FormGroup) {
     this.dialogLoading = true;
+    const formValue = frm.getRawValue();
     const paramBody = {
-      ...frm.value,
+      ...formValue,
       // 使用 DatePipe 轉換日期格式
-      APRV_Date_Start: this.datePipe.transform(frm.value.APRV_Date_Start, 'yyyy-MM-dd'),
-      APRV_Date_End: this.datePipe.transform(frm.value.APRV_Date_End, 'yyyy-MM-dd'),
+      APRV_Date_Start: this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd'),
+      APRV_Date_End: this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd'),
       PageIndex: 1,
       PageSize: 30,
       SortBy: [{ field: 'RJM_No', order: 1 }]
