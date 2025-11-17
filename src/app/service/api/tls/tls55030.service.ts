@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service'; // 假設此路徑正確
@@ -259,7 +258,6 @@ export class Tls55030Service {
 
   constructor(
     private readonly http: HttpClient,
-    private readonly datePipe: DatePipe
   ) { }
 
   /**
@@ -374,7 +372,7 @@ export class Tls55030Service {
    * @param body 包含 DIS_No 的查詢參數
    * @returns Observable<ApiResponse<IInvoiceDetailByDisNo[]>> 發票明細資料陣列
    */
-  queryTLS55030RebateDetailByDisNo(body: { VEN_No: string }): Observable<ApiResponse<IInvoiceDetailByDisNo[]>> {
+  queryTLS55030RebateDetailByDisNo(body: { DIS_No: string }): Observable<ApiResponse<IInvoiceDetailByDisNo[]>> {
     return this.http.post<ApiResponse<IInvoiceDetailByDisNo[]>>(
       `${this.apiUrl}/queryTLS55030RebateDetail`,
       body

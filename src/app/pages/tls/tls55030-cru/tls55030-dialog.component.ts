@@ -121,7 +121,7 @@ export class TLS55030DialogComponent {
   /** 判斷折讓單明細行是否可選 (已存在的不能再選) */
   isRowSelectable(event: IInvoiceDetail): boolean {
     // 使用 SeqNo 作為唯一鍵
-    return !this.existingInvoiceData || !this.existingInvoiceData.some((item: IInvoiceDetail) => item.SeqNo === event.SeqNo);
+    return !this.existingInvoiceData || !this.existingInvoiceData.some((item: IInvoiceDetail) => item.PUR_GUINo === event.PUR_GUINo);
   }
 
   // --- Return Detail Dialog (退貨明細) 相關屬性 ---

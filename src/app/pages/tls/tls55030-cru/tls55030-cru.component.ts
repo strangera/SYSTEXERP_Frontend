@@ -10,7 +10,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { IInvoiceDetail, IReturnDetailData, ReturnNotRebateQueryBody, Tls55030ListData, Tls55030Service } from '@service/api/tls/tls55030.service';
+import { IInvoiceDetail, IInvoiceDetailByDisNo, IReturnDetailByDisNoData, IReturnDetailData, ReturnNotRebateQueryBody, Tls55030ListData, Tls55030Service } from '@service/api/tls/tls55030.service';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
@@ -22,7 +22,7 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { combineLatest, finalize, startWith } from 'rxjs';
+import { combineLatest, finalize, map, startWith } from 'rxjs';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { Option } from '@service/utility/dropdown-api.model';
 import { RadioButtonModule } from 'primeng/radiobutton';
@@ -106,9 +106,52 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     this.initializePage('TLS55030', this.dataForm);
     this.setupVendorUniformNoListener();
     this.setupRebateNameValidator();
+    if (!this.isFormCreateable) {
+      this.loadDetailData();
+    }
   }
-
-  // <-- 新增方法：監聽 VEN_No 變化並找出對應的廠商統一編號 (No)
+  // 在非新增模式下 (編輯/查詢)，根據 DIS_No 載入發票/退貨明細資料。
+  loadDetailData(): void {
+    const disNo = this.rowdata?.DIS_No; // 假設 DIS_No 是從路由傳入，並儲存在 this.paramBody.id 中
+    const venNo = this.dataForm.controls.VEN_No.value; // 假設主單資訊已經載入或可取得
+    if (!disNo || !venNo) { return; }
+    this.loading = true;
+    // 1. 查詢發票/收據明細 (Rebate Detail)
+    const loadRebate$ = this.tls55030Service.queryTLS55030RebateDetailByDisNo({ DIS_No: disNo }).pipe(map(res => {
+      const rebateDetails: IInvoiceDetailByDisNo[] = res.Data || [];
+      const convertedData: IRebateDetailForCRU[] = rebateDetails.map(item => ({
+        ...item,
+        PUR_Amt: 0, //  注意：IInvoiceDetailByDisNo 介面缺少 PUR_Amt，這裡暫時給 0，可能需要後端補充或手動計算
+        // Rebate_Amt_New: item.Rebate_Amt, // 將已折讓金額視為本次輸入
+        Rebate_Amt_New: 0, // 先給0
+        Rebate_Net: 0, // 需從 Rebate_Amt 計算或後端提供
+        Rebate_Tax: 0  // 需從 Rebate_Amt 計算或後端提供
+      }));
+      this.data = convertedData;
+      this.updateInvoiceSummaryAndFormState(); // 彙總金額並更新表單狀態
+    })
+    );
+    // 2. 查詢退貨明細 (Return Detail)
+    const loadReturn$ = this.tls55030Service.queryTLS55030ReturnDetailByDisNo({ DIS_No: disNo }).pipe(
+      map(res => {
+        const returnDetails: IReturnDetailByDisNoData[] = res.Data || [];
+        const convertedData: IReturnDetailData[] = returnDetails.map(item => ({
+          RJM_No: item.RJM_No,
+          APRV_Date: item.APRV_Date,
+          HOS_NAME: item.HOS_NAME,
+          RJM_TotalBuyNet: Number(item.Rebate_Net), // 這裡用 Rebate_Net 暫時對應 RJM_TotalBuyNet
+          RJM_TotalBuyTax: Number(item.Rebate_Tax), // 這裡用 Rebate_Tax 暫時對應 RJM_TotalBuyTax
+          RJM_TotalBuyAmt: Number(item.Rebate_Amt), // 這裡用 Rebate_Amt 暫時對應 RJM_TotalBuyAmt
+        }));
+        this.data2 = convertedData;
+        this.updateReturnSummaryAmounts(); // 彙總退貨金額並更新表單狀態
+      })
+    );
+    combineLatest([loadRebate$, loadReturn$]).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(() => {
+      this.messageService.successBubble('資料載入成功');
+    });
+  }
+  // 監聽 VEN_No 變化並找出對應的廠商統一編號 (No)
   setupVendorUniformNoListener(): void {
     // 監聽廠商編號變動，並結合廠商下拉選單資料，找出對應的 Uniform No (No)
     combineLatest([
