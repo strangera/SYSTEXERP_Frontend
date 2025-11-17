@@ -52,21 +52,21 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     if (!ENTRY_TYPE) return;
 
     const controls = this.qf();
-    const payload: TLS21020Query = { ENTRY_TYPE, PageSize: 9999 };
+    const payload: TLS21020Query = { ENTRY_TYPE };
 
     for (const [k, v] of Object.entries(controls)) {
       const val = v.value;
       if (val !== null && val !== void 0 && val !== '') (payload as any)[k] = val;
     }
 
-    this.service.queryTLS21020(payload).pipe(
+    this.service.queryTLS21020({ ...payload, pageSize: 9999 }).pipe(
       tap(res => {
         this.tableData.set(res.Data ?? []);
         this.totalRecords.set(res.TotalCount ?? 0);
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       }),
     ).subscribe();
     this.logger.debug(`entryType changed:`, [ENTRY_TYPE, payload]);
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
   }, { allowSignalWrites: !0 });
 
   private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
@@ -271,10 +271,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     return { isValid: !0, errorMessage: '' };
   };
 
-  public dataChange(event: TLS21020Data[], validate: boolean): void {
+  public dataChange(event: TLS21020Data[], validate?: boolean): void {
     // this.logger.debug(`dataChange:`, [event]);
     this.tableData.set(event);
-    this.canSave.set(!validate);
+    this.canSave.set(!validate || event.every(row => this.validateRow(row).isValid));
   }
 
   /** 檢查型別 */

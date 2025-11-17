@@ -42,6 +42,8 @@ export interface TLS21020GLS1005Data {
 
 export interface TLS21020Query extends BaseQueryRequest {
   ENTRY_TYPE: string;
+  pageSize?: number;
+  pageIndex?: number;
 }
 
 export interface TLS21020GLS1005Query extends BaseQueryRequest {

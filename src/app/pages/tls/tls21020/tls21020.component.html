@@ -28,8 +28,8 @@
                         (selectionChange)="selectedItems.set($event)"
                         (dataChange)="dataChange($event, dt.validateAndShowErrors())"
                         [rowValidate]="validateRow"
-                        [tableRequired]="true"
-                        [showReorder]="false"
+                        [tableRequired]="!0"
+                        [showReorder]="!1"
                         [canInsert]="!!qf().ENTRY_TYPE.value"
                         [loading]="service.tableLoading()"
                         [defaultInsertData]="defaultInsertData"></app-table-edit>
