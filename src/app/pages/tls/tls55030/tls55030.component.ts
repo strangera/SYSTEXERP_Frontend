@@ -63,8 +63,9 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     { field: 'ACP_YYYYMM', header: '結帳年月', format: formatYYYYMM },
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'TABTYPE', header: '單據種類', format: (v) => getSYS1000('TABTYPE', v) },
+    { field: 'PUR_VoucherType', header: '格式' },
     { field: 'DIS_Status', header: '狀況', format: (v) => getSYS1000('DIS_Status', v) },
-    // { field: 'totalDiscountAmount', header: '總折讓金額' }, // TODO: 後端又不給
+    { field: 'Rebate_Amt', header: '總折讓金額' },
   ];
   constructor(
     private readonly dropdown: DropdownApiService,
