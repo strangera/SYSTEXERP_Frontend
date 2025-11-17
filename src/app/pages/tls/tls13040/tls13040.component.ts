@@ -140,7 +140,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_bdate', header: '合約起始日期', visible: true },
     { field: 'tlt_edate', header: '合約終止日期', visible: true },
 
-    
+    { field: 'tlt_id_desc', header: '抽成別', visible: true },
     { field: 'cag_taxtype', header: '稅別', visible: true },
 
     // 折扣群
