@@ -22,7 +22,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Option } from '@service/utility/dropdown-api.model';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -71,9 +71,9 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public readonly columns: ReportColumn[] = [
     { field: 'ENG_TypeDesc', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'CRT_Date', header: '建立日期' },
+    { field: 'CRT_Date', header: '建立日期', format: formatDate },
     { field: 'CRT_USR_Name', header: '建立人員名稱' },
-    { field: 'UPD_Date', header: '變更日期' },
+    { field: 'UPD_Date', header: '變更日期', format: formatDate },
     { field: 'UPD_USR_Name', header: '變更人員名稱' },
   ];
   public readonly extColumns: ReportColumn[] = [
@@ -95,6 +95,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     this.ENG_MeterNoOptions.pipe(untilDestroyed(this)).subscribe(options => {
       this.allENG_MeterNoOptions = options || [];
     });
+    this.onFormValueChanged(this.tltNoOpForm.getRawValue() as unknown as Record<string, string>);
   }
 
   public onSubmit(frm: FormGroup): void {

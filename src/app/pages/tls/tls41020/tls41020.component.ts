@@ -19,6 +19,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { CounterNameService } from '@service/basic/counter-name.service';
 
 // 與後端一致：order 用 1 / -1
 type ApiSort = { field: string; order: number };
@@ -34,7 +35,7 @@ type ApiSort = { field: string; order: number };
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputNumberComponent,
+    // InputNumberComponent,
     CalendarRangeComponent,
     MultiSelectComponent,
     TableComponent,
@@ -101,7 +102,7 @@ export class TLS41020Component
     { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true },
     { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true },
   ];
-
+CounterOptions: any[] = [];
   EDC_Status_Option: any[] = [
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' },
@@ -110,6 +111,7 @@ export class TLS41020Component
   constructor(
     private tls41020Service: TLS41020Service,
     private ECRNoSvc: ECRNoService,
+    private counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -126,6 +128,12 @@ export class TLS41020Component
           value: x.value,
         })) || [];
     });
+        this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = (res ?? []).map((x: any) => ({
+        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
+      }));
+    });
+  
   }
 
   /** 查詢：回到第一頁，送出預設排序（1/-1），不回灌 table 排序狀態 */
@@ -149,7 +157,7 @@ export class TLS41020Component
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount ?? this.data.length ?? 0;
       },
-      error: () => this.messageService.errorBubble('查詢失敗'),
+      error: () => {this.loading = false;this.messageService.errorBubble('查詢失敗')},
       complete: () => {
         this.loading = false;
         this.messageService.unblockUi();

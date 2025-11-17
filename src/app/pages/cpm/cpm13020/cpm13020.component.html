@@ -8,8 +8,13 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 交易日期 -->
           <app-calendar-range-quick
@@ -17,7 +22,8 @@
             label="交易日期"
             [startControl]="queryForm.controls.TXN_BDate"
             [endControl]="queryForm.controls.TXN_EDate"
-            [submitted]="submitted">
+            [submitted]="submitted"
+          >
           </app-calendar-range-quick>
 
           <!-- 支付別 -->
@@ -29,7 +35,8 @@
             optionLabel="label"
             optionValue="value"
             [control]="queryForm.controls.PAY_No"
-            [submitted]="submitted">
+            [submitted]="submitted"
+          >
           </app-dropdown>
 
           <!-- 檢視模式（下拉選單） -->
@@ -41,11 +48,14 @@
             optionLabel="label"
             optionValue="value"
             [control]="queryForm.controls.reportMode"
-            [submitted]="submitted">
+            [submitted]="submitted"
+          >
           </app-dropdown>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -58,32 +68,34 @@
   <div class="col-12">
     <!-- 全館彙總 -->
     <app-table-report
-      *ngIf="reportMode==='ALL'"
+      *ngIf="reportMode === 'ALL'"
       tableKey="CPM13020_ALL"
       [lastQueryBody]="historyRequestBody"
       [data]="rows"
       [columns]="columnsAll"
       [totalRecords]="totalRecords"
-      [footerData]="grandTotal"       
+      [footerData]="grandTotal"
       [showDelete]="false"
       [showManage]="false"
       [showReportMode]="false"
-      [queryFunction]="queryAllForReport">
+      [queryFunction]="queryAllForReport"
+    >
     </app-table-report>
 
     <!-- 機台彙總 -->
     <app-table-report
-      *ngIf="reportMode==='POS'"
+      *ngIf="reportMode === 'POS'"
       tableKey="CPM13020_POS"
       [lastQueryBody]="historyRequestBody"
       [data]="rows"
       [columns]="columnsPos"
       [totalRecords]="totalRecords"
-      [footerData]="grandTotal"       
+      [footerData]="grandTotal"
       [showDelete]="false"
       [showManage]="false"
       [showReportMode]="false"
-      [queryFunction]="queryPosForReport">
+      [queryFunction]="queryPosForReport"
+    >
     </app-table-report>
   </div>
 </div>
