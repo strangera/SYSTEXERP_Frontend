@@ -45,7 +45,11 @@ import {
   Pos2013Query,
   Pos2013Item,
   BusSClassItem,
-  TALPORDERMQuery
+  TALPORDERMQuery,
+  TLTTALENTQuery,
+  TLTTALENTItem,
+  ENG1001Item,
+  TlttalentTltSpaceItem
 } from './dropdown-api.model';
 import { ApiResponse } from '@service/system/auth.service';
 import { environment } from 'src/environments/environment';
@@ -114,6 +118,34 @@ export class DropdownApiService {
   private queryDropdownWithParams<T, U>(endpoint: string, body: U): Observable<T[] | null> {
     return this.http.post<ApiResponse<T[]>>(`${this.apiUrl}${endpoint}`, body).pipe(
       map(response => response?.Data ?? null),
+      catchError(err => {
+        console.error(`API ${endpoint} 呼叫失敗:`, err);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * 泛型底層方法：處理所有【帶參數】且【需要轉換為 Option[]】的下拉選單查詢
+   * @param endpoint API 路徑
+   * @param noKey 代表「值」的屬性名稱 (e.g., 'No', 'user_No')
+   * @param nameKey 代表「顯示名稱」的屬性名稱 (e.g., 'Name', 'user_Name')
+   * @param body 請求 body (必填)
+   * @returns Observable，包含標準的 Option[] 陣列或 null
+   */
+  private queryAndMapDropdownWithParams<T, U>(endpoint: string, noKey: keyof T, nameKey: keyof T, body: U): Observable<Option[] | null> {
+    return this.http.post<ApiResponse<T[]>>(`${this.apiUrl}${endpoint}`, body).pipe(
+      map(response => {
+        const data = response?.Data;
+        if (!data) {
+          return null;
+        }
+        return data.map(item => ({
+          ...item,
+          value: item[noKey] as string | number,
+          label: `${item[noKey]} - ${item[nameKey]}`,
+        }));
+      }),
       catchError(err => {
         console.error(`API ${endpoint} 呼叫失敗:`, err);
         return of(null);
@@ -229,13 +261,40 @@ export class DropdownApiService {
     );
   }
 
-  /** 查詢扣款代碼檔(APS1003) */
-  queryAps1003(body: Aps1003Query): Observable<IDropdownItem[] | null> {
-    return this.queryDropdownWithParams<IDropdownItem, Aps1003Query>('/queryAPS1003_DropDownList', body).pipe(
+  /** 查詢會計科目設定檔(GLS1005) (只取 公司銀行科目) */
+  queryGls1005_BNK_DepositAcc(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_DepositAcc').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
 
+  /** 查詢會計科目設定檔(GLS1005) (只取 應收票據科目) */
+  queryGls1005_BNK_CheckInAcc(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckInAcc').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢會計科目設定檔(GLS1005) (只取 應付票據科目) */
+  queryGls1005_BNK_CheckOutAcc(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckOutAcc').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢扣款代碼檔(APS1003) */
+  queryAps1003(body: Aps1003Query): Observable<Option[] | null> {
+    // 使用新的泛型底層方法 queryAndMapDropdownWithParams
+    // T = IDropdownItem, U = Aps1003Query
+    return this.queryAndMapDropdownWithParams<IDropdownItem, Aps1003Query>(
+      '/queryAPS1003_DropDownList', // API 路徑
+      'No',                       // 代號欄位 (noKey)
+      'Name',                     // 名稱欄位 (nameKey)
+      body                        // 查詢參數 (body)
+    ).pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
   // --- POS 相關 ---
 
   /** 查詢後台主機IP(POS10015) */
@@ -435,6 +494,13 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢專櫃主檔(TLTTALENT) (取最新契約，含對應資料) */
+  queryTLTTALENTDropDownList(body: TLTTALENTQuery = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<TLTTALENTItem, TLTTALENTQuery>('/TLS0000/TLS2000/queryTLTTALENTDropDownList', 'tlt_no', 'tlt_name', body).pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
   /** 查詢專櫃主檔(TLTTALENT) (依照審核狀態查詢) */
   queryTltTalentStatus(body: TalentStatusQuery): Observable<IDropdownItem[] | null> {
     return this.queryDropdownWithParams<IDropdownItem, TalentStatusQuery>('/queryTLTTALENT_Status_DropDownList', body).pipe(
@@ -450,8 +516,8 @@ export class DropdownApiService {
   }
 
   /** 查詢專櫃主檔(TLTTALENT) (Store_way=2 and approve_status=2) */
-  queryTltTalentStoreWay2Approve(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryTLTTALENT__StoreWay2_Approve_DropDownList').pipe(
+  queryTltTalentStoreWay2Approve(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT__StoreWay2_Approve_DropDownList', 'No', 'Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
@@ -476,6 +542,23 @@ export class DropdownApiService {
       shareReplay(1) // 避免重複查詢;
     );
   }
+
+  // 能源系列
+
+  // 取得能源錶號
+  queryENG1001_ENG_MeterNo(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<ENG1001Item>('/Share/queryENG1001_ENG_MeterNo_DropDownList', 'ENG_MeterNo', 'Location_No').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
+  // 能源下拉選單
+  queryTLTTALENT_TLT_SPACE(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<TlttalentTltSpaceItem>('/queryTLTTALENT_TLT_SPACE_DropDownList', 'TltNo', 'TltName').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
+
 
   // --- 其他 ---
 

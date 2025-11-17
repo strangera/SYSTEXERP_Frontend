@@ -21,15 +21,15 @@ export class BasicKitComponent {
 
   initControl(control: FormControl): void {
     if (this.controlName && this.label) {
-      console.log(`註冊標籤: ${this.controlName} -> ${this.label}`);
-
       this.formLabelService.registerLabel(this.controlName, this.label);
     }
     // 訂閱 control 的狀態變化
     control.statusChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.updateControlState(control);
+      this.cdr.markForCheck();
     });
     this.updateControlState(control);
+    this.cdr.markForCheck();
   }
 
   updateControlState(...controls: FormControl[]) {

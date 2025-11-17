@@ -59,7 +59,6 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
   ngOnInit(): void {
     this.ProgNo = '410011';
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     this.userStatusService.getUserStatus().subscribe(data => {
       this.codeStatusOptions = data;

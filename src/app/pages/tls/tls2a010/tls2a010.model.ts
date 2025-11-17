@@ -34,7 +34,16 @@ export const defaultColumns = [
   { header: '系統帳', field: 'BOOK_PayAmt', isTotal: true, format: formatAmount },
   { header: '實收帳', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
   { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true, format: formatAmount },
-
+  {
+    header: '審核狀態',
+    field: 'check_status',
+    format: (v: any) => {
+      // check_status: 'N' = 未審核, 其他 = 已審核
+      if (v === 'N' || v === 0) return '未審核';
+      if (v === 'Y' || v === 1) return '已審核';
+      return v;
+    }
+  },
   {
     header: '狀況',
     field: 'OVER_Status',
@@ -94,11 +103,7 @@ export const creditCardColumns: Column[] = [
     },
   },
   { header: '審核人員', field: 'check_usr_name' },
-  {
-    header: '是否有缺單',
-    field: 'onAbnormalClick',
-    format: (v) => v === 'Y' ? '是' : v === 'N' ? '否' : v
-  }
+  { header: '是否有缺單', field: 'lose_doc' }
 ];
 
 export const creditCardGroup: ColumnGroup[] = [

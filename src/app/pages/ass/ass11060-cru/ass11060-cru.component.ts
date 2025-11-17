@@ -22,11 +22,11 @@ import { NgIf } from '@angular/common';
 
 //3.1.1.6 供應商資料維護作業  CRU
 @Component({
-    selector: 'app-ass11060-cru',
-    templateUrl: './ass11060-cru.component.html',
-    styleUrl: './ass11060-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass11060-cru',
+  templateUrl: './ass11060-cru.component.html',
+  styleUrl: './ass11060-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS11060CRUComponent extends BasicCrupageComponent implements OnInit {
   //
@@ -94,8 +94,7 @@ export class ASS11060CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310006';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
     //

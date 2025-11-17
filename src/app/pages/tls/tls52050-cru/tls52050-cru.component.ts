@@ -6,7 +6,7 @@ import { IInsertTLS52050Detail, IQueryTLS52050DetailData, IQueryTLS52050DetailRe
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, distinctUntilChanged, finalize, merge, Observable, of, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, merge, of, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -23,7 +23,6 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { tomorrow } from '@shared/models/system/query-form.model';
-import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { columnGroup, columns } from './tls52050-cru.model';
 import { Tls52010Service } from '@service/api/tls/tls52010.service';
@@ -58,7 +57,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    MAM_No: [{ value: '系統自動產生', disabled: true }],  // 變價單號
+    MAM_No: [{ value: '系統自動產生', disabled: true }], // 變價單號
     VEN_No: [null, [Validators.required]], // 廠商代號
     LOGO_No: [null, [Validators.required]], // 品牌代碼
     MAM_Method: ['H'], // 是否為永久變價
@@ -85,8 +84,9 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     salePriceDiscount: [0, [Validators.min(0), Validators.max(99)]], // 售價折扣%
     salePriceAmount: [0], // 售價金額調整
   },);
-  brandOptions = this.dropdown.queryPluLogo();   // 品牌
-  vendorOptions?: Observable<Option[] | null> = of([]);  // 廠商編號
+  brandOptions = this.dropdown.queryPluLogo(); // 品牌
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  originalData: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   data: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   editColumns = columns;
@@ -104,7 +104,6 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   ngOnInit(): void {
     this.initializePage('TLS52050', this.dataForm);
     // 監聽 MAM_Method 是否為永久變價
-    this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       if (!this.isFormCreateable) {
         return;
@@ -121,17 +120,19 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       if (this.rowdata?.MAM_Status === '0') {
         this.dataForm.controls.VEN_No.disable();
         this.dataForm.controls.LOGO_No.disable();
-        this.dataForm.controls.MAM_Method.disable();
-        this.dataForm.controls.MAM_BegDate.disable();
-        this.dataForm.controls.MAM_EndDate.disable();
+        if (this.dataForm.controls.MAM_BegDate.value < new Date()) {
+          this.dataForm.controls.MAM_BegDate.disable();
+          this.dataForm.controls.MAM_EndDate.disable();
+          this.dataForm.controls.MAM_Method.disable();
+        }
       }
       if (this.rowdata?.MAM_Method === '1') {
         this.dataForm.controls.MAM_EndDate.disable();
       }
-      const MAM_No = this.rowdata?.MAM_No;
-      if (MAM_No) {
-        this.tls52050Service.queryTLS52050UpdateDetail(MAM_No).pipe(untilDestroyed(this)).subscribe(response => {
+      if (this.rowdata?.MAM_No) {
+        this.tls52050Service.queryTLS52050UpdateDetail(this.rowdata?.MAM_No).pipe(untilDestroyed(this)).subscribe(response => {
           this.data = response.Data.map(item => ({ ...item, id: Number(item.id) }));
+          this.originalData = JSON.parse(JSON.stringify(this.data));
         });
       }
     }
@@ -139,21 +140,20 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.setupDialogLogic();
   }
   private setupFormLogic(): void {
-    const controls = this.dataForm.controls;
-    controls.LOGO_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
+    this.dataForm.controls.LOGO_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
       if (value) {
         this.vendorOptions = this.dropdown.queryPos2013LOGO_No({ LOGO_No: value });
       } else {
         this.vendorOptions = of([])
       }
     })
-    controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
+    this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
       const isPermanent = value === '1';
-      controls.MAM_EndDate.setValue(null);
+      this.dataForm.controls.MAM_EndDate.setValue(null);
       if (isPermanent) {
-        controls.MAM_EndDate.disable()
+        this.dataForm.controls.MAM_EndDate.disable()
       } else {
-        controls.MAM_EndDate.enable();
+        this.dataForm.controls.MAM_EndDate.enable();
       }
     });
     this.setupPriceFields('costPriceDiscount', 'costPriceAmount', this.roundToTwo);
@@ -187,6 +187,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
           row[discountControl === 'costPriceDiscount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = 0;
         }
       });
+      this.data = [...this.data];
     });
   }
   private setupDialogLogic(): void {
@@ -210,9 +211,16 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     });
 
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), untilDestroyed(this), switchMap(mNo => {
-      if (mNo) {
+      if (mNo && this.dialogQueryForm.controls.CAT_LNo.value) {
         this.dialogQueryForm.controls.CAT_SNo.enable();
-        return this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [mNo] });
+        return this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.dialogQueryForm.controls.CAT_LNo.value,
+              CAT_MNo: mNo
+            }
+          ]
+        });
       } else {
         this.dialogQueryForm.controls.CAT_SNo.disable();
         return of(null);
@@ -275,8 +283,15 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
-      if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+      if (value && this.dialogQueryForm.controls.CAT_LNo.value) {
+        this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.dialogQueryForm.controls.CAT_LNo.value,
+              CAT_MNo: value
+            }
+          ]
+        }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
         });
         this.dialogQueryForm.controls.CAT_SNo.enable();
@@ -300,6 +315,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   saveDialog() {
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
+      ID: 0,
       PLU_MagNo: item.PLU_MagNo,
       PLU_Name: item.PLU_Name,
       CAT_LNo: item.CAT_LNo,
@@ -312,7 +328,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       PLU_OrderPrc: Number(item.PLU_OrderPrc),
       MAM_OrderPrc: Number(item.PLU_OrderPrc),
       PLU_SalePrc: Number(item.PLU_SalePrc),
-      MAM_UnitPrc: 0,
+      MAM_UnitPrc: Number(item.PLU_SalePrc), // *** 已修改：預設為調整前售價 ***
       MAD_Remark: ''
     }))];
     this.selectedItemsDialog = [];
@@ -382,7 +398,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         ID: this.isFormCreateable ? undefined : Number(this.rowdata?.Id),
         MAM_No: this.isFormCreateable ? undefined : this.rowdata?.MAM_No,
         details: this.data.map(item => ({
-          ID: Number(item.id) || null,
+          ID: Number(item.id) || 0,
           PLU_MagNo: item.PLU_MagNo,
           PLU_OrderPrcRate: item.PLU_OrderPrcRate,
           PLU_OrderPrc: item.PLU_OrderPrc,
@@ -403,5 +419,8 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         }
       })
     });
+  }
+  onReset() {
+    this.data = JSON.parse(JSON.stringify(this.originalData));
   }
 }

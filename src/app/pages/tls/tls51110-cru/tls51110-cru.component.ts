@@ -66,7 +66,7 @@ export class TLS51110CRUComponent
     YYYYMM2: ['', Validators.required],
     BUDGET: [0, Validators.required],
     BUDGET_Cost: [0],
-    BUD_Status: ['0'], // 預設未審核
+    BUD_Status: ['0'],
     BUD_Remark: [''],
     CRT_USR_No: [''],
     CRT_USR_Name: [''],
@@ -114,9 +114,6 @@ export class TLS51110CRUComponent
           ...item,
           label: `${item.No} - ${item.Name}`,
         }));
-      },
-      error: (err) => {
-        console.error('載入品牌失敗', err);
       },
     });
   }

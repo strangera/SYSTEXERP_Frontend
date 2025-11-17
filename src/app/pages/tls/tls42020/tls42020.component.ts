@@ -3,17 +3,13 @@ import { FormGroup, Validators, FormBuilder, FormsModule, ReactiveFormsModule } 
 import { finalize } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-
-import { TLS42020Service, TLS42020DetailData, TLS42020Data } from '../../../service/api/tls/tls42020.service';
+import { TLS42020Service, TLS42020Data } from '../../../service/api/tls/tls42020.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-
-// Shared & UI Components
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
@@ -21,6 +17,7 @@ import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls42020',
@@ -34,23 +31,21 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
     FormsModule,
     ReactiveFormsModule,
     MultiSelectComponent,
-    CalendarRangeComponent,
     TableComponent,
     TranslateModule,
     DialogComponent,
     FileUploadComponent,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    CalendarComponent
   ]
 })
 export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> implements OnInit {
   queryForm = this.fb.group({
-    menuType: [[]],                               // 菜單類別(多選)
-    tltNo: [[]],                                  // 專櫃編號(多選)
-    SBM_BegDate_s: [null, Validators.required],  // 開始日期(起)
-    SBM_BegDate_e: [null, Validators.required],  // 開始日期(迄)
-    SBM_EndDate_s: [null, Validators.required],  // 結束日期(起)
-    SBM_EndDate_e: [null, Validators.required],  // 結束日期(迄)
-    ...createPaginationConfig([])
+    menuType: [null],                               // 菜單類別(多選)
+    tltNo: [null],                                  // 專櫃編號(多選)
+    SBM_BegDate: [null],  // 開始日期(起)
+    SBM_EndDate: [null],  // 結束日期(起)
+    ...createPaginationConfig([{ field: "TLT_No", order: 0 }])
   });
 
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
@@ -58,7 +53,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   data: TLS42020Data[] = [];
   selectedItems: TLS42020Data[] = [];
 
-  // 匯入菜單 dialog
+  //#region 匯入菜單 dialog
   queryForm2 = this.fb.group({
     uploadType: ['0', Validators.required],  // 異動方式                         
   });
@@ -70,12 +65,15 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     { label: '更新', value: '1' },
     { label: '新增', value: '2' }
   ];
+  //#endregion
 
-  // 下拉選單選項
+  // 菜單類別選項
   menuTypeOptions: any[] = [
     { label: '一般菜單', value: '1' },
     { label: '員工菜單', value: '2' }
   ];
+
+  // 專櫃編號選項
   tltNoOptions: any[] = [];
 
   // 主表格欄位定義
@@ -154,8 +152,8 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     });
   }
 
+  // 載入專櫃編號選項
   private loadOptions(): void {
-    // 載入專櫃編號選項
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -166,18 +164,20 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
       });
   }
 
+  // 載入詳細資料
   loadDetails = (rowData: TLS42020Data): Observable<any> => {
     return this.tls42020Service.queryTLS42020Detail({
       tltNo: rowData.TLT_No
     });
   };
 
-  onDelete(rowData: TLS42020Data[]) {
+  // 刪除資料
+  onDelete(selectedItems: TLS42020Data[]) {
     this.messageService.confirm({
-      header: '是否確認刪除',
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         this.tls42020Service.deleteTLS42020({
-          idList: rowData.map(item => item.id)
+          idList: selectedItems.map(item => item.id)
         }).subscribe((res) => {
           if (res.Status === '0000') {
             this.messageService.successBubble('刪除成功');
@@ -190,14 +190,17 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     });
   }
 
+  // 開啟匯入對話框
   onImport(event: FileSelectEvent) {
     this.dialogVisible = true;
   }
 
+  // 檔案選擇事件
   onFileSelect(event: FileSelectEvent) {
-    // TODO: 檔案檢查邏輯
+    // 檔案檢查邏輯
   }
 
+  // 檔案上傳事件
   onFileUpload(event: FileUploadHandlerEvent) {
     const file = event.files[0];
     this.tls42020Service.uploadTLS42020(file, this.queryForm2.value.uploadType!).pipe(untilDestroyed(this)).subscribe(res => {
@@ -207,12 +210,15 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
         this.fileUploadComponent.clearFiles();
         // 關閉對話框
         this.dialogVisible = false;
+        // 重新查詢資料
+        this.onSubmit(this.queryForm);
       } else {
         this.messageService.errorBubble(res.Data.Errors[0]);
       }
     });
   }
 
+  // 下載範例檔案
   downloadTemplate() {
     this.tls42020Service.downloadRule().subscribe(response => {
       if (!response.Data.FileData) return;

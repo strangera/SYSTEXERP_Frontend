@@ -6,7 +6,7 @@
 <p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems"
   [selectionMode]="showCheckBox ? 'multiple' : undefined" sortMode="multiple" [dataKey]="dataKey"
   [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  (onRowReorder)="onRowReorder($event)" [multiSortMeta]="multiSortMeta"
+  (onRowReorder)="onRowReorder($event); rowReorderData.emit($event)" [multiSortMeta]="multiSortMeta"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
   [rowSelectable]="rowSelectableWrapper" [loading]="loading">
   <ng-template pTemplate="caption">
@@ -65,7 +65,7 @@
         <ng-container *ngFor="let col of columns">
           <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn>
             {{ col.header }}
-            <span *ngIf="isRequired(col)" class="required">*</span>
+            <span *ngIf="isRequired(col)" class="text-red-500">*</span>
           </th>
         </ng-container>
       </tr>
@@ -82,7 +82,7 @@
         </th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
           {{ col.header }}
-          <span *ngIf="isRequired(col)" class="required">*</span>
+          <span *ngIf="isRequired(col)" class="text-red-500">*</span>
         </th>
       </tr>
     </ng-container>
@@ -128,7 +128,7 @@
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               (blur)="onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
-            <p-inputNumber *ngSwitchCase="'inputNumber'" class="min-w-max" mode="decimal"
+            <p-inputNumber *ngSwitchCase="'inputNumber'" class="min-w-max w-full" mode="decimal"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
               [placeholder]="'請輸入' + col.header" [min]="col.min" [max]="col.max"
               [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
@@ -140,15 +140,27 @@
               [style]="{'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [inputStyle]="{'width': col.width}" [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
+            <div *ngSwitchCase="'percent'" class="flex align-items-center gap-1">
+              <input pInputText class="min-w-max" [placeholder]="'請輸入' + col.header" [(ngModel)]="rowData[col.field]"
+                [ngModelOptions]="{ standalone: true }"
+                [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+                (ngModelChange)="onValueChange(rowData,$event, col, index)"
+                [maxlength]="3 + (col.maxFractionDigits ?? 0)"
+                [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available' }"
+                [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'" [pKeyFilter]="percentKeyFilter"
+                (blur)="onValueChange(rowData,rowData[col.field], col, index)"
+                [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
+              <span class="d-block">%</span>
+            </div>
             <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" appendTo="body"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
               [placeholder]="'請輸入' + col.header" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
-              [optionValue]="col.optionValue"
+              [optionValue]="col.optionValue" [filter]="true"
               [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [disabled]=" (col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
               [editable]="true" (onChange)="onValueChange(rowData,$event.value, col, index)"
-              (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
-              [virtualScrollItemSize]="40" [showClear]="col.showClear ?? true"
+              (onHide)="onValueChange(rowData,rowData[col.field], col, index);onDropdownHide(rowData, col)"
+              [virtualScroll]="true" [virtualScrollItemSize]="40" [showClear]="col.showClear ?? true"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }">
               <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
@@ -179,12 +191,51 @@
               styleClass="pi pi-exclamation-circle text-red-500" [pTooltip]="rowData._validationErrors?.[col.field]"
               tooltipPosition="bottom" />
           </p-iconField>
+          <ng-container *ngIf="col.type === 'template'">
+            <div class="input-wrapper" [attr.data-suffix]="col.suffix">
+              <input pInputText readonly class="w-full min-w-max" [placeholder]="'請選擇' + (col.header || '')"
+                [value]="templateDisplayValue(rowData, col)" [disabled]="disabled || loading"
+                (click)="overlayPanel.show($event)" />
+              <p-overlayPanel #overlayPanel [dismissable]="true" [showCloseIcon]="false"
+                [ngStyle]="{'max-width': '50vw', 'min-width': '300px'}" [appendTo]="'body'">
+                <div class="grid p-fluid">
+                  <ng-container *ngIf="col.templateRef">
+                    <ng-container
+                      *ngTemplateOutlet="col.templateRef!; context: { $implicit: rowData, col, overlayPanel }"></ng-container>
+                  </ng-container>
+                </div>
+              </p-overlayPanel>
+            </div>
+          </ng-container>
         </ng-container>
         <span *ngIf="!col.type">
           {{ col.format ? col.format(rowData[col.field], index, rowData) : rowData[col.field]}}
         </span>
       </td>
     </tr>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
+      <td class="text-center" [colSpan]="1 + (showCheckBox ? 1 : 0) + (showReorder ? 1 : 0)" pFrozenColumn>
+        <span class="font-bold">總計</span>
+      </td>
+      <ng-container *ngFor="let col of columns">
+        <td class="text-center">
+          <span class="font-bold">
+            {{
+            col.format
+            ? col.format(footerData[col.field])
+            : footerData[col.field]
+            }}
+          </span>
+        </td>
+      </ng-container>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
+    <div class="flex align-items-center justify-content-end p-2">
+      總筆數: {{ data.length - (canInsert ? 1 : 0) }} 筆
+    </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>

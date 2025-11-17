@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { TLS12040FareItem } from '../models/tls12040-next1.model';
 
@@ -13,16 +12,23 @@ export class Tls12040FareDataService {
 
   /**
    * 處理 API 資料，設定正確的初始狀態
+   * @param faresByType API 回傳的扣款資料
+   * @param isNewContract 是否為新合約模式
+   * @param contractInfoData 合約資訊（用於套用預設值）
    */
-  processAPIData(faresByType: any, isNewContract: boolean = false): Record<string, TLS12040FareItem[]> {
+  processAPIData(
+    faresByType: any,
+    isNewContract: boolean = false,
+    contractInfoData?: any[]
+  ): Record<string, TLS12040FareItem[]> {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, TLS12040FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('📄 處理 API 資料，設定正確的初始狀態...');
+    // console.log('📄 處理 API 資料，設定正確的初始狀態...');
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {
-        console.log(`📊 處理 ${capType} 類型，共 ${faresByType[capType].length} 筆`);
+        // console.log(`📊 處理 ${capType} 類型，共 ${faresByType[capType].length} 筆`);
 
         processedData[capType] = faresByType[capType].map((item: TLS12040FareItem, index: number) => {
           // 記錄原始選中狀態
@@ -33,7 +39,7 @@ export class Tls12040FareDataService {
 
           if (originalSelected && item.data_source === 'CONTRACT_EXISTING') {
             initialStatus = 'original';
-            console.log(`📋 ${item.cap_item} (${capType}) - 合約原有資料，狀態: original`);
+            // console.log(`📋 ${item.cap_item} (${capType}) - 合約原有資料，狀態: original`);
           }
 
           // 根據 data_source 決定 ID 處理
@@ -60,10 +66,15 @@ export class Tls12040FareDataService {
             _originalData: { ...item }
           };
 
+          // ✨ 套用預設值（在 API 載入時就設定好，避免在 column 中每次渲染都計算）
+          if (contractInfoData && contractInfoData.length > 0) {
+            this.applyDefaultValues(processedItem, contractInfoData);
+          }
+
           return processedItem;
         });
 
-        console.log(`📊 ${capType} 類型處理完成: ${processedData[capType].length} 筆`);
+        // console.log(`📊 ${capType} 類型處理完成: ${processedData[capType].length} 筆`);
       }
     });
 
@@ -73,11 +84,14 @@ export class Tls12040FareDataService {
   /**
    * 處理新增模式的 API 資料
    */
-  processNewContractAPIData(faresByType: any): Record<string, TLS12040FareItem[]> {
+  processNewContractAPIData(
+    faresByType: any,
+    contractInfoData?: any[]
+  ): Record<string, TLS12040FareItem[]> {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, TLS12040FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log(' 處理新增模式 API 資料...');
+    // console.log('📄 處理新增模式 API 資料...');
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {
@@ -92,6 +106,11 @@ export class Tls12040FareDataService {
             _originalSelected: false,
             _originalData: { ...item }
           } as TLS12040FareItem;
+
+          // ✨ 套用預設值
+          if (contractInfoData && contractInfoData.length > 0) {
+            this.applyDefaultValues(processedItem, contractInfoData);
+          }
 
           return processedItem;
         });
@@ -108,7 +127,7 @@ export class Tls12040FareDataService {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const validatedData: Record<string, TLS12040FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('🔍 驗證和修復暫存資料...');
+    // console.log('🔍 驗證和修復暫存資料...');
 
     if (Array.isArray(data)) {
       data.forEach(item => {
@@ -221,7 +240,7 @@ export class Tls12040FareDataService {
    */
   hasDataChanges(item: TLS12040FareItem): boolean {
     if (!item._originalData) {
-      console.log(`⚠️ 項目 ${item.cap_item} 沒有原始資料，視為無變更`);
+      // console.log(`⚠️ 項目 ${item.cap_item} 沒有原始資料，視為無變更`);
       return false;
     }
 
@@ -247,10 +266,10 @@ export class Tls12040FareDataService {
       const normalizedOriginal = this.normalizeValue(originalValue);
 
       if (normalizedCurrent !== normalizedOriginal) {
-        console.log(`🔍 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
-          原始: originalValue,
-          目前: currentValue
-        });
+        // console.log(`🔍 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
+        //   原始: originalValue,
+        //   目前: currentValue
+        // });
         return true;
       }
     }
@@ -300,29 +319,99 @@ export class Tls12040FareDataService {
   }
 
   /**
-   * 套用動態預設值
+   * ✨ 新增：套用動態預設值（在 API 載入時一次性設定）
+   * 這個方法會直接修改 item 物件，套用所有必要的預設值
+   *
+   * @param item 要套用預設值的項目
+   * @param contractInfoData 合約資訊（用於取得日期預設值）
+   * @param skipIfCopied 是否跳過複製項目（複製項目應保持原有值）
+   */
+  applyDefaultValues(
+    item: TLS12040FareItem,
+    contractInfoData: any[],
+    skipIfCopied: boolean = false
+  ): void {
+    // 🔍 如果是複製項目且要求跳過，則不套用預設值
+    if (skipIfCopied && (item as any)._isCopiedItem) {
+      return;
+    }
+
+    const contractInfo = contractInfoData[0];
+    if (!contractInfo) {
+      console.warn('⚠️ applyDefaultValues: 沒有合約資訊，無法套用日期預設值');
+      return;
+    }
+
+    // 只在新項目或未設定時套用預設值
+    // 如果是既有資料且已有值，就不覆蓋
+
+    // 1. 日期預設值（如果沒有值才設定）
+    // tpy_bdate: 扣款起始日期 → 使用營運起始日 (tlt_contract_bdate)
+    if (!item.tpy_bdate && contractInfo.tlt_contract_bdate) {
+      try {
+        item.tpy_bdate = new Date(contractInfo.tlt_contract_bdate);
+        // console.log(`✅ 設定 ${item.cap_item} 的 tpy_bdate:`, item.tpy_bdate);
+      } catch (error) {
+        console.error(`❌ 設定 ${item.cap_item} 的 tpy_bdate 失敗:`, error);
+      }
+    }
+
+    // tpy_edate: 扣款結束日期 → 使用營運終止日 (tlt_contract_edate)
+    if (!item.tpy_edate && contractInfo.tlt_contract_edate) {
+      try {
+        item.tpy_edate = new Date(contractInfo.tlt_contract_edate);
+        // console.log(`✅ 設定 ${item.cap_item} 的 tpy_edate:`, item.tpy_edate);
+      } catch (error) {
+        console.error(`❌ 設定 ${item.cap_item} 的 tpy_edate 失敗:`, error);
+      }
+    }
+
+    // 2. 開立發票預設值 (所有類型)
+    if (!item.gui_flag || item.gui_flag === '') {
+      item.gui_flag = 'Y';
+      // console.log(`✅ 設定 ${item.cap_item} 的 gui_flag: Y`);
+    }
+
+    // 3. 是否以日計算預設值（B, C 類型）
+    if ((item.cap_type === 'B' || item.cap_type === 'C') && (!item.day_account || item.day_account === '')) {
+      item.day_account = 'Y';
+      // console.log(`✅ 設定 ${item.cap_item} 的 day_account: Y`);
+    }
+
+    // 4. 分攤期數預設值（B, C 類型）
+    if ((item.cap_type === 'B' || item.cap_type === 'C') && (!item.interval || item.interval === 0)) {
+      item.interval = 1;
+      // console.log(`✅ 設定 ${item.cap_item} 的 interval: 1`);
+    }
+
+    // 5. 數量預設值（A 類型）
+    if (item.cap_type === 'A' && (item.tpy_qty === null || item.tpy_qty === undefined || item.tpy_qty === 0)) {
+      item.tpy_qty = 1;
+      // console.log(`✅ 設定 ${item.cap_item} 的 tpy_qty: 1`);
+    }
+
+    // 6. 數量預設值（B 類型）
+    if (item.cap_type === 'B' && (item.tpy_qty === null || item.tpy_qty === undefined)) {
+      item.tpy_qty = 1;
+      // console.log(`✅ 設定 ${item.cap_item} 的 tpy_qty: 1`);
+    }
+
+    // 7. 單價預設值（B 類型，避免 null）
+    if (item.cap_type === 'B' && (item.tpy_unitamt === null || item.tpy_unitamt === undefined)) {
+      item.tpy_unitamt = 0;
+    }
+
+    // 8. 金額預設值（B 類型，避免 null）
+    if (item.cap_type === 'B' && (item.tpy_amount === null || item.tpy_amount === undefined)) {
+      item.tpy_amount = 0;
+    }
+  }
+
+  /**
+   * 套用動態預設值（舊版，保留向下相容）
+   * @deprecated 請使用上面的 applyDefaultValues 方法
    */
   applyDynamicDefaults(item: any, contractInfoData: any[]): void {
-    const contractInfo = contractInfoData[0];
-
-    if (!item.tpy_bdate && contractInfo?.tlt_contract_bdate) {
-      item.tpy_bdate = new Date(contractInfo.tlt_contract_bdate);
-    }
-
-    if (!item.tpy_edate && contractInfo?.tlt_contract_edate) {
-      item.tpy_edate = new Date(contractInfo.tlt_contract_edate);
-    }
-
-    if (!item.gui_flag) {
-      item.gui_flag = 'Y';
-    }
-
-    if (!item.day_account) {
-      item.day_account = 'Y';
-    }
-
-    if (!item.interval) {
-      item.interval = 1;
-    }
+    this.applyDefaultValues(item, contractInfoData);
   }
 }

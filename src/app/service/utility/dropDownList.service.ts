@@ -31,6 +31,15 @@ export interface IDropdownItem {
   PAY_OverPay?: string;
 }
 
+export interface TLTTALENT_TLT_SPACE extends IDropdownItem {
+  TalentId: number,
+  TltNo: string,
+  TltName: string,
+  ApplyNo: string,
+  LocationNo: string,
+  TltSpace: number
+}
+
 export interface BusSClass extends IDropdownItem {
   bus_class: string,
   bus_class_name: string
@@ -81,8 +90,10 @@ export interface ITLTBUSCLASSRequest {
 }
 
 export interface ITLTBUSSCLASSRequest {
-  bus_type: string[];
-  bus_class: string[];
+  queryTLTBUSSCLASSInfos: {
+    bus_type: string,
+    bus_class: string
+  }[]
 }
 
 // 小分類組成['大'+'中'] -- 新版api
@@ -105,13 +116,21 @@ export interface IAPS1003Request {
   cap_typeList: string[];
 }
 
+export interface CAP_ItemRequest {
+  CAP_ItemList: string[]
+}
+
 export interface IPOS20031Request {
   CAT_LNo: string[];
 }
 
 export interface IPOS20032Request {
-  CAT_LNo: string[];
-  CAT_MNo: string[];
+  CATList: [
+    {
+      CAT_LNo: string,
+      CAT_MNo: string
+    }
+  ]
 }
 
 export interface ISYS1000Request {
@@ -132,7 +151,7 @@ export interface IPOS2013Request {
 
 export interface POS2004Item {
   id?: number;
-  PLU_MagNo: string;
+  PLU_MagNo: string | POS2004Item;
   PLU_No: string;
   PLU_Name: string;
   PLU_SalePrc?: number,
@@ -182,6 +201,7 @@ export interface IPOS1018GUITrackResponse {
 // 新增 interface for 發票格式 API
 export interface ITDS1007Request {
   mid: number;
+  inv_guiTypeList?: string[];
 }
 
 export interface ITDS1007Response {
@@ -211,7 +231,7 @@ export interface IAPS1003Item {
   CAP_Item: string;
   CAP_Name: string;
   AccNo?: string;
-  GUI_FLAG?: string;
+  GUI_FLAG: string;
   CAP_TaxType?: string;
   CAP_Type: string;
 }
@@ -253,8 +273,8 @@ export class DropDownListService {
   }
 
   // 查詢TLTBUSSCLASS資料表 (小分類)
-  queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
+  queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<BusSClass[]>> {
+    return this.http.post<ApiResponse<BusSClass[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
   }
 
   // 查詢TLTBUSSCLASS資料表 (小分類) -- 新版api測試
@@ -369,6 +389,14 @@ export class DropDownListService {
   // 查詢品牌代碼(PLULOGO)資料表下拉選單
   queryPLULOGO_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPLULOGO_DropDownList`, {});
+  }
+  // 查詢 CPM13050 店家名稱(PK6001D) 下拉選單
+  queryCPM13050_ShopNameDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCPM13050_shop_nameDropDownList`, {});
+  }
+  // 查詢 CPM13050 折扣名稱(PK68001D) 下拉選單
+  queryCPM13050_RuleNameDropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCPM13050_rule_nameDropDownList`, {});
   }
 
   // 查詢品牌代碼(PLULOGO)資料表下拉選單 (包含 PLU_OrderPrcRate)
@@ -491,17 +519,21 @@ export class DropDownListService {
   queryPOS1008DropDownList(): Observable<ApiResponse<{ TSB_Name: string }[]>> {
     return this.http.post<ApiResponse<{ TSB_Name: string }[]>>(`${this.apiUrl}/queryPOS1008DropDownList`, {});
   }
-  queryTLS42010DropDownList(): Observable<ApiResponse<any>> {
-    const body = { "KB_Func": [] };
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, body);
+  queryTLS42010DropDownList(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
+  queryTLS42010FuncDropDownList(): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
+    const body = { KB_Func: [] }; return this.http.post<any>(url, body);
+  }
+
 
   // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
     return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);
   }
   // 查詢扣款代碼檔(APS1003) 下拉選單
-  queryAPS1003DropDownList(params: IAPS1003Request): Observable<ApiResponse<IAPS1003Item[]>> {
+  queryAPS1003DropDownList(params: CAP_ItemRequest): Observable<ApiResponse<IAPS1003Item[]>> {
     return this.http.post<ApiResponse<IAPS1003Item[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryAPS1003DropDownList`, params);
   }
   // 查詢CPM11010 Service_Id資料表下拉選單
@@ -515,8 +547,19 @@ export class DropDownListService {
   // 查詢環境變數模板 (POS1002TML_ALL)
   queryPOS1002TML_ALL_DropDownList(): Observable<ApiResponse<TLS41010Item[]>> {
     return this.http.post<ApiResponse<TLS41010Item[]>>(
-      `${this.apiUrl}/queryPOS1002TML_ALL_DropDownList`,
-      {}
-    );
+      `${this.apiUrl}/queryPOS1002TML_ALL_DropDownList`, {});
+  }
+  // 查詢下拉選單 (TDS1008)
+  queryTDS1008_DropDownList(SAL_Type: string[]): Observable<ApiResponse<IDropdownItem[]>> {
+    const body = { SAL_Type };
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/QueryTDS1008_DropDownList`, body);
+  }
+  // 查詢傳票型態(GLS1010)下拉選單
+  queryGLS1010_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1010_DropDownList`, {});
+  }
+  // 能源下拉選單
+  queryTLTTALENT_TLT_SPACE(params: { TltNo: string }): Observable<ApiResponse<TLTTALENT_TLT_SPACE[]>> {
+    return this.http.post<ApiResponse<TLTTALENT_TLT_SPACE[]>>(`${this.apiUrl}/queryTLTTALENT_TLT_SPACE_DropDownList`, params);
   }
 }

@@ -1,27 +1,23 @@
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { AddButton, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize, Observable } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-
-// Component Kit
+import { createPaginationConfig, Column, AddButton, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { TLS53030Data, TLS53030DetailData, TLS53030Service } from '../../../service/api/tls/tls53030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
-// Services
-import { TLS53030Data, TLS53030Service } from '../../../service/api/tls/tls53030.service';
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { InventoryCategoryService } from '../../../service/basic/inventory-category.service';
-import { StorageInventoryStatusService } from '../../../service/basic/storage-inventory-status.service';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { DatePipe } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { HttpResponse } from '@angular/common/http';
+import saveAs from 'file-saver';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
@@ -31,155 +27,337 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
   standalone: true,
   imports: [
     MenubarComponent,
+    ButtonComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    DropdownComponent,
+    MultiSelectComponent,
     CalendarRangeComponent,
-    ButtonComponent,
     TableComponent,
     TranslateModule,
     RadiobuttonComponent
-  ],
+  ]
 })
-export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> {
+export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    warehouseCode: [null], // 倉別
-    inventorySerialNo: [null], // 盤點單號
-    brandCode: [null], // 品牌代碼
-    inventoryCategory: [null], // 盤點類別
-    inventoryDateFrom: [null], // 盤點基準開始日期
-    inventoryDateTo: [null], // 盤點基準結束日期
-    storageInventoryStatus: [null], // 盤點單狀態
-    showDifference: ['0'], // 顯示差異
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
+    PST_No: ['', Validators.maxLength(15)],                     // 盤點單編號
+    HOS_No: [[]],                                               // 倉庫代碼 (改為陣列)
+    LOGO_No: [[]],                                              // 品牌代碼 (改為陣列)
+    PST_DateStart: [null],                                      // 盤點基準日期(起)
+    PST_DateEnd: [new Date(), Validators.required],             // 盤點基準日期(迄)
+    PST_Status: [[]],                                           // 盤點狀態 (多選)
+    showDiff: [true],                                          // 是否顯示盤點差異欄位
+    ...createPaginationConfig([{ field: 'PST_No', order: -1 }]) // 分頁和排序參數
   });
 
   data: TLS53030Data[] = [];
-  totalRecords = 0;
   selectedItems: TLS53030Data[] = [];
+  totalRecords = 0;
 
-  // 下拉選單資料
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  storageInventoryStatusOptions: any[] = [
-    { label: '盤點單開立，待盤點', value: '0' },
-    { label: '初盤，盤點中', value: '1' },
-    { label: '複盤，盤點完成', value: '2' },
-    { label: '抽盤，小盤結案', value: '3' },
-    { label: '已結案', value: '4' },
-    { label: '作廢', value: '9' },
-  ];
-  showDifferenceOptions: any[] = [
-    { label: '只顯示有差異資料', value: '0' },
-    { label: '全部', value: '1' },
+  //#region 下拉選項
+  hosOptions: any[] = [];       // 倉別選項
+  logoOptions: any[] = [];      // 品牌選項
+
+  // 盤點狀態選項
+  pstStatusOptions: any[] = [
+    { value: '0', label: '盤點資料維護作業-待盤點' },
+    { value: '1', label: '初盤-盤點中' },
+    { value: '2', label: '複盤-盤點完成' },
+    { value: '3', label: '抽盤-小盤結案' },
+    { value: '4', label: '已結案' },
+    { value: '9', label: '作廢' }
   ];
 
-  columns = [
-    { field: 'inventorySerialNo', header: '盤點單號', visible: true },
-    { field: 'brandCode', header: '品牌', visible: true },
-    { field: 'warehouseCode', header: '倉別', visible: true },
-    { field: 'inventoryDate', header: '盤點基準日', visible: true },
-    { field: 'inventoryCategory', header: '盤點類別', visible: true },
-    { field: 'storageInventoryStatus', header: '狀態', visible: true },
+  // 盤點類別選項
+  pstTypeOptions: any[] = [
+    { value: '1', label: '初盤' },
+    { value: '2', label: '複盤' },
+    { value: '3', label: '抽盤' }
   ];
+
+  // 顯示差異選項
+  showDiffOptions: any[] = [
+    { label: '只顯示有差異資料', value: true },
+    { label: '全部', value: false },
+  ];
+  //#endregion
+
+  columns: Column[] = [
+    { field: 'id', header: '序號', visible: false },
+    { field: 'PST_No', header: '盤點單編號', visible: true },
+    { field: 'HOS_No', header: '倉庫代碼', visible: true },
+    { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
+    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
+    {
+      field: 'PST_Date',
+      header: '盤點基準日期',
+      visible: true,
+      format: formatDate
+    },
+    {
+      field: 'PST_Type',
+      header: '盤點類別',
+      visible: true,
+      format: (v) => this.pstTypeOptions.find(opt => opt.value === v)?.label || v,
+    },
+    {
+      field: 'PST_Status',
+      header: '盤點狀態',
+      visible: true,
+      format: (v) => this.pstStatusOptions.find(opt => opt.value === v)?.label || v,
+    },
+  ];
+
+  loadingStates: Map<number, {
+    print: boolean;
+    conclude: boolean;
+    reverted: boolean;
+    void: boolean
+  }> = new Map();
 
   addButton: AddButton[] = [
     {
       label: '結案',
       icon: 'pi pi-check text-green-500',
-      action: (rowData: TLS53030Data) => { this.onClose(rowData); },
-      disabled: (rowData: TLS53030Data) => rowData.storageInventoryStatus == '4'
+      action: (rowData: TLS53030Data) => { this.concludeTLS53030(rowData); },
+      disabled: (rowData: TLS53030Data) => !['1', '2', '3'].includes(rowData.PST_Status),
+      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'conclude'),
     },
     {
       label: '反結案',
       icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS53030Data) => { this.onReopen(rowData); },
-      disabled: (rowData: TLS53030Data) => rowData.storageInventoryStatus !== '4'
+      action: (rowData: TLS53030Data) => { this.revertedTLS53030(rowData); },
+      disabled: (rowData: TLS53030Data) => rowData.PST_Status !== '4', // 只有已結案(4)才可以反結案
+      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'reverted'),
     },
     {
       label: '作廢',
       icon: 'pi pi-times text-red-500',
-      action: (rowData: TLS53030Data) => { this.onVoid(rowData); },
-      disabled: (rowData: TLS53030Data) => !['0', '1', '2', '3'].includes(rowData.storageInventoryStatus)
-    },
-    {
-      label: '查詢',
-      icon: 'pi pi-search',
-      action: (rowData: TLS53030Data) => { this.onQuery(rowData); },
+      action: (rowData: TLS53030Data) => { this.voidTLS53030(rowData); },
+      disabled: (rowData: TLS53030Data) => !['0', '1', '2', '3'].includes(rowData.PST_Status), // 只有未結案(0,1,2,3)才可以作廢
+      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'void'),
     },
     {
       label: '列印',
-      icon: 'pi pi-print',
+      icon: 'pi pi-print text-cyan-500',
       action: (rowData: TLS53030Data) => { this.onPrint(rowData); },
+      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'print'),
+    },
+  ];
+
+  // 取得 loading 狀態
+  getLoadingState(id: number, action: 'print' | 'conclude' | 'reverted' | 'void'): boolean {
+    return this.loadingStates.get(id)?.[action] || false;
+  }
+
+  // 設定 loading 狀態
+  setLoadingState(id: number, action: 'print' | 'conclude' | 'reverted' | 'void', loading: boolean): void {
+    if (!this.loadingStates.has(id)) {
+      this.loadingStates.set(id, { print: false, conclude: false, reverted: false, void: false });
     }
+    const state = this.loadingStates.get(id)!;
+    state[action] = loading;
+  }
+
+  // 展開行設置
+  expansionColumns: Column[] = [
+    { field: 'PLU_PageNum', header: '貨架編號', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_Name', header: '商品名稱', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true },
+    // { field: 'PLU_Unit', header: '單位代碼', visible: true },
+    { field: 'UNIT_NAME', header: '單位', visible: true },
+    { field: 'SYS_STOCK_QTY', header: '庫存量', visible: true, format: formatAmount },
+    { field: 'PST_Qty1', header: '初盤', visible: true, format: formatAmount },
+    { field: 'PST_Qty2', header: '複盤', visible: true, format: formatAmount },
+    { field: 'PST_Qty3', header: '抽盤', visible: true, format: formatAmount },
+    { field: 'DIFF_Qty', header: '差異量', visible: true, format: formatAmount },
   ];
 
   constructor(
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private inventoryCategoryService: InventoryCategoryService,
-    private storageInventoryStatusService: StorageInventoryStatusService,
     private tls53030Service: TLS53030Service,
-    public validationService: ValidationService,
+    private datePipe: DatePipe,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS53030', '/tls/tls53030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS53030', 'tls/tls53030cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
-  onSubmit(frm: FormGroup): void {
-    this.handleSubmit(this.queryForm, () => {
-      this.tls53030Service.queryTLS53030(frm.getRawValue())
+  onSubmit(frm: FormGroup) {
+    const queryRequest = {
+      ...frm.getRawValue(),
+      PST_DateStart: this.datePipe.transform(frm.get('PST_DateStart')?.value, 'yyyy-MM-dd') || null,
+      PST_DateEnd: this.datePipe.transform(frm.get('PST_DateEnd')?.value, 'yyyy-MM-dd') || null
+    };
+
+    this.handleSubmit(frm, () => {
+      this.tls53030Service.queryTLS53030(queryRequest)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(res => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
   }
 
-  loadOptions(): void {
-    this.warehouseService.getWarehouseOptions().subscribe(data => {
-      this.warehouseOptions = data;
-    });
+  loadOptions() {
+    // 倉別選項
+    this.dropDownListService.getPOS2034Options()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.hosOptions = response.Data.map(item => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+      });
 
-    this.brandCodeService.getSystemTypes().subscribe(data => {
-      this.brandCodeOptions = data;
-    });
-
-    this.storageInventoryStatusService.getStorageInventoryStatusOptions().subscribe(data => {
-      this.storageInventoryStatusOptions = data;
-    });
+    // 品牌選項
+    this.dropDownListService.queryPLULOGO_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.logoOptions = response.Data.map(item => ({
+          value: item.No,
+          label: `${item.No}-${item.Name}`
+        }));
+      });
   }
 
-  onClose(rowData: TLS53030Data): void {
-    // 處理結案邏輯
-    console.log('處理結案邏輯', rowData);
+  private extractFilenameFromResponse(response: HttpResponse<Blob>, defaultFilename: string): string {
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename = defaultFilename;
+
+    if (contentDisposition) {
+      const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.[^.]+)?$|filename="(.+?)(?:\.[^.]+)?"$/;
+      const matches = contentDisposition.match(filenameRegex);
+      if (matches) {
+        filename = matches[1] || matches[2] || filename;
+        filename = decodeURIComponent(filename);
+      }
+      filename = filename.replace(/["']/g, '');
+    }
+
+    return filename;
   }
 
-  onReopen(rowData: TLS53030Data): void {
-    // 處理反結案邏輯
-    console.log('處理反結案邏輯', rowData);
+  private downloadFile(response: HttpResponse<Blob>, defaultFilename: string, mimeType: string): void {
+    if (!response.body) {
+      console.error('下載失敗：檔案內容為空');
+      return;
+    }
+
+    const filename = this.extractFilenameFromResponse(response, defaultFilename);
+    const blob = new Blob([response.body], { type: mimeType });
+    saveAs(blob, filename);
+    console.log('下載成功:', filename);
   }
 
-  onVoid(rowData: TLS53030Data): void {
-    // 處理作廢邏輯
-    console.log('處理作廢邏輯', rowData);
+  // 列印
+  onPrint(rowData: TLS53030Data) {
+    this.setLoadingState(rowData.id, 'print', true);
+
+    const payload = {
+      MID: rowData.MID,
+      PST_No: rowData.PST_No || '',
+      SYS_StoreNo: rowData.SYS_StoreNo || '',
+      HOS_No: rowData.HOS_No || '',
+      PST_Date: this.datePipe.transform(rowData.PST_Date, 'yyyy-MM-dd') || ''
+    };
+
+    this.tls53030Service.exportTLS53030DetailPDF(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.setLoadingState(rowData.id, 'print', false);
+        })
+      )
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          this.downloadFile(response, '盤點試算表.pdf', 'application/pdf');
+        },
+        error: (err: any) => {
+          console.error('匯出失敗:', err);
+        }
+      });
   }
 
-  onQuery(rowData: TLS53030Data): void {
-    // 處理查詢邏輯
-    console.log('處理查詢邏輯', rowData);
+  // 載入明細資料
+  loadDetails = (rowData: TLS53030Data): Observable<BaseQueryResponse<TLS53030DetailData>> => {
+    const request = {
+      MID: rowData.MID || 0,
+      PST_No: rowData.PST_No || '',
+      SYS_StoreNo: rowData.SYS_StoreNo || '',
+      HOS_No: rowData.HOS_No || ''
+    };
+    return this.tls53030Service.queryTLS53030Detail(request);
   }
 
-  onPrint(rowData: TLS53030Data): void {
-    // 處理列印邏輯
-    console.log('處理列印邏輯', rowData);
+  // 結案盤點單
+  concludeTLS53030(rowData: TLS53030Data) {
+    this.setLoadingState(rowData.id, 'conclude', true);
+
+    this.tls53030Service.concludeTLS53030(this.createOperationRequest(rowData))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.setLoadingState(rowData.id, 'conclude', false);
+        })
+      )
+      .subscribe(
+        () => this.onSubmit(this.queryForm)
+      );
+  }
+
+  // 反結案盤點單
+  revertedTLS53030(rowData: TLS53030Data) {
+    this.setLoadingState(rowData.id, 'reverted', true);
+
+    this.tls53030Service.revertedTLS53030(this.createOperationRequest(rowData))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.setLoadingState(rowData.id, 'reverted', false);
+        })
+      )
+      .subscribe(
+        () => this.onSubmit(this.queryForm)
+      );
+  }
+
+  // 作廢盤點單
+  voidTLS53030(rowData: TLS53030Data) {
+    this.setLoadingState(rowData.id, 'void', true);
+
+    this.tls53030Service.voidTLS53030(this.createOperationRequest(rowData))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.setLoadingState(rowData.id, 'void', false);
+        })
+      )
+      .subscribe(
+        () => this.onSubmit(this.queryForm)
+      );
+  }
+
+  // 產生操作請求物件
+  createOperationRequest(rowData: TLS53030Data) {
+    return {
+      MID: rowData.MID || 0,
+      PST_No: rowData.PST_No || '',
+      SYS_StoreNo: rowData.SYS_StoreNo || '',
+      HOS_No: rowData.HOS_No || ''
+    };
+  }
+
+  // 編輯禁用
+  editDisabled(rowData: TLS53030Data) {
+    return !['0', '1', '2', '3'].includes(rowData.PST_Status)
   }
 }

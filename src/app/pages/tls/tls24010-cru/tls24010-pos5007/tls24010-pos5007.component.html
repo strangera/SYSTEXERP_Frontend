@@ -4,7 +4,7 @@
 <p-table class="tls24010-pos5007" [value]="POS5007Data" [(selection)]="POS5007SelectedItems" dataKey="id"
   [rowTrackBy]="trackByRow" [resizableColumns]="true"
   styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
-  <ng-template pTemplate="caption" *ngIf="isFormCreateable">
+  <ng-template pTemplate="caption" *ngIf="isFormCreateable && store_way !== '1'">
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
         <p-button (click)="insertRow()" pTooltip="新增" tooltipPosition="top" pButton icon="pi pi-plus" severity="success"
@@ -135,7 +135,6 @@
   <ng-template pTemplate="footer">
     <tr>
       <td [attr.colspan]="isFormCreateable ? store_way === '2' ? 8 : 8 : 7" class="text-right">
-        <span class="text-red-500" *ngIf="TXN_SaleAmtTotal < 0">銷售總計不得為負數</span>
         總計
       </td>
       <td class="text-right">$ {{TXN_SaleAmtTotal | number:'1.0-0'}}</td>

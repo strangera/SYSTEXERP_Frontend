@@ -13,6 +13,8 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 //建立查詢項目的interface
 export interface TLTContract {
@@ -36,7 +38,6 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-tls14010',
   templateUrl: './tls14010.component.html',
-  styleUrls: ['./tls14010.component.scss'],
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, ButtonComponent, TableComponent, TranslateModule]
 })
@@ -54,7 +55,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     tlt_floorList: [[]], // 樓層(SYS3900)
     area_noList: [[]], // 區域 (SYS3a00)
     bus_typeList: [[]], // 大分類 (tltbustype)
-    org_idList:[[]], // 組織代碼 (SYS3100) 0916新增
+    org_idList: [[]], // 組織代碼 (SYS3100) 0916新增
 
     tlt_openflagList: [[]], // 營運狀況 閉店/撤櫃, 營業中, 合約結束,核准時合約尚未開始, 洽談中, 簽約中, 已作廢 fix
     contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start
@@ -88,14 +89,17 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   tlt_floorOptions: apiOption[] = []; // 樓層的下拉選單
   areaOptions: apiOption[] = []; // 區域的下拉選單
   bus_typeOptions: apiOption[] = []; // 大分類的下拉選單
-  location_noOptions: option[] = []; // 位置的下拉選單
+  location_noOptions: apiOption[] = []; // 位置的下拉選單
   buildingOptions: apiOption[] = []; // 館別的下拉選單
   org_idOptions: apiOption[] = []; // 組織代碼的下拉選單 0916新增
+  ven_uniform_Options: apiOption[] = []; // 統編代碼的下拉選單 1106新增
 
   data: TLTContract[] = [];
   columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱(品牌)', visible: true },
+    { field: 'ven_uniform', header: '廠商統編', visible: true },
+    { field: 'VEN_Name', header: '廠商統編名稱', visible: true },
     { field: 'contract_subno', header: '版本', visible: true },
     { field: 'bus_type', header: '大分類', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
@@ -119,6 +123,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   // ----------------------------------------------------------------
   constructor(
     private tls14010Service: Tls14010Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -157,8 +162,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
   loadOptions() {
     {
-      // 專櫃專櫃清單 下拉選單
-      this.tls14010Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+      // 專櫃專櫃清單(TLTTALENT) 下拉選單
+      this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.tlt_noOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
@@ -167,8 +172,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
         console.log('tlt_noOptions:', this.tlt_noOptions);
       });
-      // 樓層 下拉選單
-      this.tls14010Service.querySYS3900_DropDownList({}).subscribe((response) => {
+      // 樓層(SYS3900) 下拉選單
+      this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.tlt_floorOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
@@ -177,10 +182,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
         console.log('tlt_floorOptions:', this.tlt_floorOptions);
       });
-      // 區域 下拉選單
-      this.tls14010Service
-        .querySYS3A00_DropDownList({})
-        .subscribe((response) => {
+      // 區域(SYS3A00) 下拉選單
+      this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
           this.areaOptions = response.Data.map((item: apiOption) => ({
             No: item.No,
             Name: item.Name,
@@ -189,8 +192,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
           console.log('areaOptions:', this.areaOptions);
         });
-      // 專櫃大分類 下拉選單
-      this.tls14010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+      // 專櫃大分類(TLTBUSTYPE) 下拉選單
+      this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.bus_typeOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
@@ -199,8 +202,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
         console.log('bus_typeOptions:', this.bus_typeOptions);
       });
-      // 館別 下拉選單
-      this.tls14010Service.querySYS3800_DropDownList({}).subscribe((response) => {
+      // 館別(SYS3800) 下拉選單
+      this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.buildingOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
@@ -209,8 +212,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
         console.log('buildingOptions:', this.buildingOptions);
       });
-      // 位置編號 下拉選單
-      this.tls14010Service.queryPOS2002_DropDownList({}).subscribe((response) => {
+      // 位置編號(SYS3A00) 下拉選單
+      this.dropDownListService.queryPOS2002_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.location_noOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
@@ -219,8 +222,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
         console.log('buildingOptions:', this.location_noOptions);
       });
-      // 組織代碼 SYS3100 下拉選單
-      this.tls14010Service.querySYS3100_DropDownList({}).subscribe((response) => {
+      // 組織代碼(SYS3100) 下拉選單
+      this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.org_idOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,

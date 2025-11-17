@@ -1,5 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
-import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21020Service } from '@service/api/tls/tls21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -10,7 +10,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 
 @Component({
@@ -32,15 +32,22 @@ import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> implements OnInit {
   public dataForm = this.formBuilder.nonNullable.group({
     ENTRY_TYPE: new FormControl<string | void>(void 0),
-    // items: this.formBuilder.array([this.createItem()]),
   });
   public readonly df = computed(() => this.dataForm.controls);
   public readonly canSave = computed(() => this.dataForm.valid);
 
-  public selectedItems: TLS21020Data[] = [];
+  public readonly tableData = signal<TLS21020Data[]>([]);
+  public readonly selectedItems = signal<TLS21020Data[]>([]);
 
   private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
   private readonly ABATYN = (v: any) => v?.ABAT_YN === 'N';
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.gls1005Loading()
+      || this.service.pos2013Loading()
+      || this.service.orgIdLoading();
+  });
 
   public readonly columns: EditColumn[] = [
     {
@@ -57,7 +64,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
       field: 'AccNo',
       header: '會計科目',
       type: 'dropdown',
-      options: this.service.GLS1005Data,
+      options: this.service.GLS1005Options,
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -65,7 +72,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
       field: 'Org_ID',
       header: '組織代碼',
       type: 'dropdown',
-      options: this.service.SYS3100Data,
+      options: this.service.SYS3100Options,
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -88,7 +95,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
       header: '區分關係人會科',
       groupField: 'RelatedPartyAcc',
       type: 'dropdown',
-      options: this.service.GLS1005Data,
+      options: this.service.GLS1005Options,
       optionLabel: 'label',
       optionValue: 'value',
       showClear: !1,
@@ -99,7 +106,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
       header: '應收廠商',
       groupField: 'Vendor',
       type: 'dropdown',
-      options: this.service.POS2013Data,
+      options: this.service.POS2013Options,
       optionLabel: 'Name',
       optionValue: 'VEN_No',
       disabled: this.ABATYN,
@@ -139,8 +146,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
     this.service.queryTLS21020({ ENTRY_TYPE: this.rowdata?.ENTRY_TYPE! }).pipe(
-      tap(),
-      finalize(() => this.loading = !1),
+      tap(res => this.tableData.set(res.Data ?? []))
     ).subscribe();
 
     // this.service.queryTLS21020_GLS1005({ AccDC: this.rowdata?.AccDC! });
@@ -150,27 +156,24 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      this.logger.debug(`onSubmit:`, [this.service.TLS21020Data()]);
+      this.logger.debug(`onSubmit:`, [this.tableData()]);
       const entryType = this.rowdata!.ENTRY_TYPE;
       if (!entryType) return;
-      const data = this.service.TLS21020Data();
-      const payload: TLS21020UpdateQuery[] = data.map(v => ({
-        ABAT_YN: v.ABAT_YN,
-        AccNo: v.AccNo,
-        AccNotes: v.AccNotes,
-        ObjectNo: v.ObjectNo,
-        Org_ID: v.Org_ID,
-        PAY_No: v.PAY_No,
-        PAY_days: v.PAY_days,
-        RelatedPartyAccNo: v.RelatedPartyAccNo,
-        VEN_No: v.VEN_No,
-        id: v.id,
-      }));
+      const data = this.tableData();
+      const keys = new Set(['ABAT_YN', 'AccNo', 'AccNotes', 'ObjectNo', 'Org_ID', 'PAY_No', 'PAY_days', 'RelatedPartyAccNo', 'VEN_No', 'id']);
+
+      const payload: TLS21020UpdateQuery[] = this.tableData().map(v => {
+        return Object.fromEntries(Object.entries(v).filter(([k, v]) =>
+          keys.has(k) && !this.validateValue(v)
+        )) as TLS21020UpdateQuery;
+      });
       this.logger.debug(`onSubmit:`, [data, payload]);
       this.service.updateTLS21020(payload).pipe(
-        tap(res => res.Status === '2000' && this.onCancel()),
-        finalize(() => this.loading = !1),
-      ).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
+      });
     });
   }
 
@@ -217,46 +220,18 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
     }
 
     // 檢查是否有重複的組合 (AccDC, ItemDesc, AccNo)
-    const rowIndex = this.service.TLS21020Data().findIndex(item => item === rowData);
+    const rowIndex = this.tableData().findIndex(item => item === rowData);
     if (rowIndex === -1) return { isValid: !1, errorMessage: '找不到該列資料' };
-    const isOverlapping = this.service.TLS21020Data().some((item, idx) => {
+    const isOverlapping = this.tableData().some((item, idx) => {
       if (idx === rowIndex) return !1;
       return item.AccDC === rowData.AccDC && item.ItemDesc === rowData.ItemDesc && item.AccNo === rowData.AccNo;
     });
     return { isValid: !isOverlapping, errorMessage: `` };
   };
 
-  // Get FormArray for items
-  // get items(): FormArray {
-  //   return this.dataForm.get('items') as FormArray;
-  // }
-
-  // Get FormControl based on index and controlName
-  // getFormControl(index: number, controlName: string): FormControl {
-  //   return this.items.at(index).get(controlName) as FormControl;
-  // }
-
-  // Create new form group for item
-  // createItem(): FormGroup {
-  //   return this.formBuilder.group({
-  //     AccDC: new FormControl<string | undefined>(void 0, [Validators.required]),
-  //     ItemDesc: new FormControl<string | undefined>(void 0),
-  //     AccNo_Name: new FormControl<string | undefined>(void 0),
-  //     Org_ID: new FormControl<string | undefined>(void 0),
-  //     AccNotes: new FormControl<string | undefined>(void 0),
-  //     ObjectNo: new FormControl<string | undefined>(void 0),
-  //     RelatedPartyAccNo_Name: new FormControl<string | undefined>(void 0),
-  //     VEN_No: new FormControl<string | undefined>(void 0),
-  //     PAY_days: new FormControl<string | undefined>(void 0, [Validators.pattern('^[0-9]*$')]),
-
-  // itemName: [], // 項目名稱
-  // accountingSubject: [], // 會計科目
-  // organizationCode: [], // 組織代碼
-  // voucherRemarks: ['', Validators.maxLength(100)], // 傳票備註
-  // contractOrganizationSplit: [], // 是否依合約拆立組織
-  // relatedPartyAccounting: [], // 區分關係人會科
-  // receivableVendor: [], // 應收廠商
-  // paymentDays: ['', [Validators.pattern('^[0-9]*$')]], // 付款天數
-  //   });
-  // }
+  private validateValue(value: unknown): boolean {
+    if (typeof value === 'string') return !value.trim();
+    if (typeof value === 'number') return !Number.isInteger(value) || value < 0;
+    return !String(value ?? '').trim();
+  }
 }

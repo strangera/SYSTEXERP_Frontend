@@ -95,7 +95,6 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   ngOnInit(): void {
 
     this.ProgNo = '220034';
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     this.counterCodeService.getCounterCodes().subscribe((data) => {
       this.counterCodeOptions = data;

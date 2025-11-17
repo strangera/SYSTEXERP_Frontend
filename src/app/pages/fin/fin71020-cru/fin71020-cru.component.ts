@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, computed } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, computed, effect } from '@angular/core';
 import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FIN71020Service } from '@service/api/fin/fin71020.service';
@@ -8,10 +8,9 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { FIN71020Data } from '../fin71020/fin71020.model';
 
 @Component({
@@ -30,7 +29,6 @@ import { FIN71020Data } from '../fin71020/fin71020.model';
     InputNumberComponent,
     InputTextareaComponent,
     MenubarComponent,
-    TableComponent,
   ]
 })
 export class FIN71020CRUComponent extends BasicCruPageComponent<FIN71020Data> implements OnInit {
@@ -51,6 +49,11 @@ export class FIN71020CRUComponent extends BasicCruPageComponent<FIN71020Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.orgLoading()
+      || this.service.usrLoading();
+  });
 
   // Get the form array for dynamic items
   get items(): FormArray { return this.dataForm.get('items') as FormArray; }
@@ -91,9 +94,11 @@ export class FIN71020CRUComponent extends BasicCruPageComponent<FIN71020Data> im
       };
 
       this.service.saveFIN71020(payload, this.isFormCreateable ? 'insert' : 'update').pipe(
-        tap(res => res.Status === '2000' && this.onCancel()),
-        finalize(() => this.loading = !1),
-      ).subscribe();
+        tap(res => res.Status === '0000' && this.onCancel()),
+      ).subscribe({
+        next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+        error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+      });
     });
   }
 }

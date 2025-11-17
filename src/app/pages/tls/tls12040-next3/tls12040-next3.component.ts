@@ -26,6 +26,7 @@ import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ContractSubmitService } from '../tls13010-next3/SubmitService/contract-submit.service';
 
 // 工作流程步驟定義
 enum WorkflowStep {
@@ -129,7 +130,8 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     private upconditionDataManager: TLS12040UpConditionDataManager,
     private tableConfigManager: TLS12040TableConfigManager,
     private eventHandlerManager: TLS12040EventHandlerManager,
-    private smartDateService: TLS12040SmartDateSegmentationService
+    private smartDateService: TLS12040SmartDateSegmentationService,
+    private contractSubmitService: ContractSubmitService
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -273,7 +275,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   private prepareContractInfoDisplay(): void {
     console.log('準備合約資訊顯示');
 
-    const cruData = this.contractFlowService.getCruData<TLS12040DetailModel>();
+    const cruData = this.contractFlowService.getCruData();
 
     const contractInfo = {
       apply_no: cruData?.apply_no || this.currentContractData?.apply_no || '',

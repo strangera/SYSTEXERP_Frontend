@@ -1,151 +1,140 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TLS2J010Service } from '@service/api/tls/tls2j010.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
-// 2.2.18.1 換開品項維護作業
 @Component({
-    selector: 'app-tls2j010',
-    templateUrl: './tls2j010.component.html',
-    styleUrl: './tls2j010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2j010',
+  templateUrl: './tls2j010.component.html',
+  styleUrl: './tls2j010.component.scss',
+  standalone: true,
+  imports: [
+    InputTextComponent,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TableReportComponent,
+    TranslateModule
+  ]
 })
-export class TLS2J010Component {
-  ProgNo: string = '220090';
-  // 權限
-  funInfo?: FunsrightInfo;
+export class TLS2J010Component extends BasicQueryPageComponent<any> implements OnInit {
 
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    name: ['', [Validators.maxLength(10)]], // 品項名稱
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+  queryForm = this.formBuilder.nonNullable.group({
+    CHG_ItemName: ['', [Validators.maxLength(10)]],
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'CHG_ItemName', order: 1 }]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
+
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
+
+  lastQueryBody: any = {};
   columns: any[] = [
-    { field: 'contactPerson', header: '品項名稱', visible: true },
-    // 其他欄位
+    { field: 'CHG_ItemName', header: '品項名稱', visible: true },
   ];
-  // ----------------------------------------------------------------
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    public readonly tls2j010Service: TLS2J010Service
   ) {
+    super();
   }
+
+  /** 判斷行是否可選擇 */
+  isRowSelectable = (rowData: any): boolean => {
+    return rowData.CanDel === true;
+  };
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS2J010', '/TLS/TLS2J010CRU', this.queryForm, (frm) => this.onSubmit(frm));
   }
 
-  canQuery(): boolean {
-    return true;
-  }
+  /** 查詢 */
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
 
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
+      const payload = {
+        pageSize: formValue.pageSize || 30,
+        pageIndex: formValue.pageIndex || 1,
+        OrderBy: '',
+        Offset: 0,
+        SortBy: formValue.SortBy || [{ field: 'CHG_ItemName', order: 1 }],
+        CHG_ItemName: formValue.CHG_ItemName?.trim() || '',
       };
 
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2J010CRU'], extras);
-    }
+      this.lastQueryBody = payload;
+      this.loading = true;
+      this.tls2j010Service.queryTLS2J010(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res?.Status === '0000') {
+              this.data = res.Data || [];
+              this.totalRecords = res.TotalCount ?? this.data.length;
+            } else {
+              this.data = [];
+              this.totalRecords = 0;
+            }
+          },
+
+        });
+    });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2J010CRU'], extras);
+  /** 刪除 */
+  onDelete(): void {
+    if (this.selectedItems.length === 0) {
+      alert('請先選擇要刪除的項目');
+      return;
     }
-  }
+    const canDeleteItems = this.selectedItems.filter(item => item.CanDel === true);
+    const cannotDeleteItems = this.selectedItems.filter(item => item.CanDel === false);
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
+    if (cannotDeleteItems.length > 0) {
+      const cannotDeleteNames = cannotDeleteItems.map(item => item.CHG_ItemName || `ID: ${item.ID}`);
+      alert(`以下項目因已被使用，無法刪除：\n${cannotDeleteNames.join('\n')}`);
+      return;
+    }
+    if (canDeleteItems.length === 0) {
+      alert('所選項目均無法刪除');
+      return;
+    }
+
+    const deleteIds = canDeleteItems.map((item) => item.ID ?? item.SeqNo);
+    const payload = { IDs: deleteIds };
+
+    this.confirmationService.confirm({
+      message: `確定要刪除 ${deleteIds.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.tls2j010Service.deleteTLS2J010(payload)
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (res) => {
+              if (res?.Status === '0000') {
+                this.selectedItems = []; // 清空選中項目
+                this.onSubmit(this.queryForm);
+              }
+            },
+          });
       },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2J010CRU'], extras);
+      reject: () => {
+        console.log('用戶取消刪除');
+      }
+    });
   }
 }

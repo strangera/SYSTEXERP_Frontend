@@ -24,6 +24,7 @@ import { DividerModule } from 'primeng/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import type { OuterTokenResponse } from '../../../service/system/auth.service';
+import { SystemDataService } from '@service/system/system-data.service';
 
 @UntilDestroy()
 @Component({
@@ -88,6 +89,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   constructor(
     public layoutService: LayoutService,
     public authService: AuthService,
+    private systemDataService: SystemDataService,
     public router: Router,
     private ssoDashboardService: SsoDashboardService,
     private formBuilder: FormBuilder,
@@ -189,8 +191,8 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
           untilDestroyed(this),
           concatMap((innerResponse: ApiResponse<any>) => {
             if (innerResponse.Status === '0000') {
-              return this.authService.getFunRightsInfo().pipe(
-                concatMap(() => this.authService.queryAllSystemCode())
+              return this.systemDataService.getFunRightsInfo().pipe(
+                concatMap(() => this.systemDataService.queryAllSystemCode())
               );
             } else {
               return throwError(() => new Error(innerResponse.Message || 'Inner API failed'));

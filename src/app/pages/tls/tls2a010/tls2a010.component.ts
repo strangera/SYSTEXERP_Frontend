@@ -56,7 +56,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     PAY_NO: ['', Validators.required],
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
-    pageSize: [30],
+    pageSize: [100],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
@@ -80,13 +80,17 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   todayDisplay = '';
   systemTypeOptions: IDropdownItem[] = [];
   addButtons = [
-    {
-      label: '缺單審核',
-      icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onDetail(rowData),
-      disabled: (rowData: any) => rowData.PAY_NO === '10'  // ⬅ PAY_NO=10 禁用
-    }
-  ];
+  {
+    label: '缺單審核',
+    icon: 'pi pi-exclamation-triangle',
+    action: (rowData: any) => this.onDetail(rowData),
+    disabled: (rowData: any) =>
+      rowData.PAY_Type === 'C' ||
+      rowData.PAY_Type === 'A' ||
+      rowData.PAY_Type === '1'
+  }
+];
+
 
   isRowSelectable(row: any) {
     return row.check_status === 'N';
@@ -252,7 +256,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         this.data = response.Data ? response.Data : [];
         this.footerData = response.footerData;
         this.totalRecords = response.TotalCount;
-
+        this.selectedItems = [];
         this.onPayNoChange(payload.PAY_NO);
         console.log('footerData (API totalData):', response.Data.totalData);
         console.log('selectedColumns:', this.selectedColumns);

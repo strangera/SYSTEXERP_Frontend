@@ -11,8 +11,8 @@
           [control]="dataForm.controls.SBM_Type" [submitted]="submitted" [optionLabel]="'label'"
           [optionValue]="'value'"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="TLT_No" [options]="tltNoOptions"
-          [control]="dataForm.controls.TLT_No" [submitted]="submitted" [optionLabel]="'label'"
-          [optionValue]="'value'"></app-dropdown>
+          [control]="dataForm.controls.TLT_No" [submitted]="submitted" [optionLabel]="'label'" [optionValue]="'value'"
+          (valueChange)="loadPLU_MagNoOptions($event)"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateOne"
           [control]="dataForm.controls.SBM_BegDate" [submitted]="submitted"></app-calendar>
         <app-calendar class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateOne"
@@ -20,7 +20,7 @@
       </div>
 
       <!-- 明細 -->
-      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="id" [columns]="columns" [data]="data"
+      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="ID" [columns]="columns" [data]="data"
         [showEdit]="false" [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
         (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
         [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"

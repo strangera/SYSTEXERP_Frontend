@@ -16,6 +16,7 @@ import { ECRNoService } from '@service/basic/ECRNo.service';
 import { DatePipe } from '@angular/common';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-fin12020',
@@ -66,7 +67,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
   invoiceTypeOptions: any[] = [];
   cashierNoOptions: any[] = [];
   invoiceStatusOptions: any[] = [];
-  usageTypeOptions: any[] = [];
+  usageTypeOptions: any[] = getSYS1000Options('T205');
 
   constructor(
     private fin12020Service: FIN12020Service,
@@ -74,6 +75,19 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     private datePipe: DatePipe
   ) {
     super();
+    // 設定發票年月預設值
+    let month = new Date().getMonth() + 1;
+    let defaultValue = new Date();
+
+    if (month % 2 === 0) {
+      // 偶數月，起始為上個月
+      defaultValue = new Date(defaultValue.getFullYear(), defaultValue.getMonth() - 1, 1);
+    }
+
+    this.queryForm.patchValue({
+      GUI_YYMM_start: this.datePipe.transform(defaultValue, 'yyyy/MM'),
+      GUI_YYMM_end: this.datePipe.transform(defaultValue, 'yyyy/MM')
+    });
   }
 
   ngOnInit(): void {
@@ -117,17 +131,6 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
       { label: '使用中', value: '01' },
       { label: '己用完', value: '02' },
       { label: '停用', value: '03' },
-    ];
-
-    // 取得使用別選項
-    this.usageTypeOptions = [
-      { label: '租金', value: '01' },
-      { label: '其他收入', value: '02' },
-      { label: '抽成', value: '03' },
-      { label: '換開', value: '04' },
-      { label: '應付', value: '05' },
-      { label: '應收', value: '06' },
-      { label: '電子商務', value: '07' }
     ];
   }
 }

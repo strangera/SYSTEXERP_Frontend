@@ -74,7 +74,7 @@ export class TLS2F020Component {
 
   ngOnInit(): void {
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.settlementMethodService.getSettlementMethods().subscribe(data => {
       this.checkoutMethodOptions = data;

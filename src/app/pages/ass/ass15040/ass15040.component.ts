@@ -20,11 +20,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.5.4 財產目錄之會計科目報表
 @Component({
-    selector: 'app-ass15040',
-    templateUrl: './ass15040.component.html',
-    styleUrl: './ass15040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass15040',
+  templateUrl: './ass15040.component.html',
+  styleUrl: './ass15040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS15040Component extends BasicQpageComponent implements OnInit {
   //
@@ -121,8 +121,7 @@ export class ASS15040Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310035';
     this.cruPage = '/ASS1000/ASS15040CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
       this.organizationOptions = data;

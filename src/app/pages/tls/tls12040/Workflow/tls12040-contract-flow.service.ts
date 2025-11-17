@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { TLS12040DetailModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BehaviorSubject } from 'rxjs';
+import { CrudModeService } from './crud-mode.service';
 // 核心資料介面 - 用 interface 控制結構
 export interface TLS12040CoreData {
   readonly applyNo: string;
@@ -39,7 +40,34 @@ export interface TLS12040DataCleaner<T = any> {
 
 // 各步驟的資料清理器
 class CruDataCleaner implements TLS12040DataCleaner {
-  clean(data: any) {
+  clean(data: TLS12040DetailModel) {
+    console.log('清理前的 locationInfo:', JSON.stringify(data.locationInfo, null, 2));
+    const cleanedLocationInfo = Array.isArray(data.locationInfo)
+      ? data.locationInfo
+        .filter((item: any) => {
+          const hasLocationNo = item.location_no && item.location_no.trim() !== '';
+          if (!hasLocationNo) {
+            console.warn('過濾掉無效位置項目:', JSON.stringify(item, null, 2));
+          }
+          return hasLocationNo;
+        })
+        .map((item: any) => ({
+          id: item.id || '',
+          apply_no: item.apply_no || '',
+          location_no: item.location_no.trim(),
+          tlt_building: item.tlt_building || '',
+          tlt_floor: item.tlt_floor || '',
+          area_no: item.area_no || '',
+          tlt_space: Number(item.tlt_space) || 0,
+          building_desc: item.building_desc || '',
+          floor_desc: item.floor_desc || '',
+          area_desc: item.area_desc || '',
+          _status: item._status || 'original',
+          _isNew: Boolean(item._isNew)
+        }))
+      : [];
+    console.log('清理後的 locationInfo:', JSON.stringify(cleanedLocationInfo, null, 2));
+
     return {
       apply_no: data.apply_no || '',
       apply_date: data.apply_date || '',
@@ -50,8 +78,10 @@ class CruDataCleaner implements TLS12040DataCleaner {
       tlt_name: data.tlt_name || '',
       ven_uniform: data.ven_uniform || '',
       ven_no: data.ven_no || '',
+      vendor_ven_no: data.vendor_ven_no || '',
       VEN_Name: data.VEN_Name || '',
       contract_subno: data.contract_subno || '',
+      check_type: data.check_type || '',
       tlt_bdate: data.tlt_bdate || '',
       tlt_edate: data.tlt_edate || '',
       tlt_contract_bdate: data.tlt_contract_bdate || '',
@@ -106,7 +136,6 @@ class CruDataCleaner implements TLS12040DataCleaner {
       cap_saletype3: data.cap_saletype3 || '',
       cap_saletype4: data.cap_saletype4 || '',
       cap_saletype5: data.cap_saletype5 || '',
-
       email: data.email || '',
       invoice_email: data.invoice_email || '',
       CHECK_TITLE: data.CHECK_TITLE || '',
@@ -124,33 +153,17 @@ class CruDataCleaner implements TLS12040DataCleaner {
       total_amt_vendor_unit: data.total_amt_vendor_unit || '',
       approve_status: data.approve_status || '',
       VEN_Address: data.VEN_Address || '',
-      locationData: Array.isArray(data.locationData) ?
-        data.locationData
-          .filter((item: any) => {
-            const hasLocationNo = item.location_no && item.location_no.trim() !== '';
-            if (!hasLocationNo) {
-              console.log('過濾掉空位置編號的資料:', item);
-            }
-            return hasLocationNo;
-          })
-          .map((item: any) => ({
-            id: item.id || '',
-            apply_no: item.apply_no || '',
-            location_no: item.location_no.trim(),
-            tlt_building: item.tlt_building || '',
-            tlt_floor: item.tlt_floor || '',
-            area_no: item.area_no || '',
-            tlt_space: Number(item.tlt_space) || 0,
-            building_desc: item.building_desc || '',
-            floor_desc: item.floor_desc || '',
-            area_desc: item.area_desc || '',
-            _status: item._status || 'original',
-            _isNew: Boolean(item._isNew)
-          })) : []
+      locationInfo: cleanedLocationInfo
     };
   }
+
   validate(data: any): boolean {
-    return true;
+    // 添加簡單驗證邏輯，確保 locationInfo 不為空時至少有一個有效項目
+    const isValidLocationInfo = Array.isArray(data.locationInfo) && data.locationInfo.length > 0;
+    if (!isValidLocationInfo && data.apply_no) {
+      console.warn('驗證失敗：apply_no 存在但 locationInfo 為空', { apply_no: data.apply_no });
+    }
+    return true; // 保留原始邏輯，根據需要可加強驗證
   }
 }
 
@@ -164,7 +177,9 @@ class Next1DataCleaner implements TLS12040DataCleaner {
   }
 
   validate(data: any): boolean {
-    return !!(data.selectedItems && data.selectedItems.length > 0);
+    // 🆕 修正：只要有 fareData 就算有效，不要求一定要有 selectedItems
+    const hasFareData = data.fareData && Object.keys(data.fareData).length > 0;
+    return !!hasFareData;
   }
 }
 
@@ -244,7 +259,7 @@ export class TLS12040FlowService {
   private readonly STORAGE_KEY = 'TLS12040_FLOW';
 
   // 新增 CRUDStatus$ 屬性
-  public CRUDStatus$ = new BehaviorSubject<CRUDStatus>(CRUDStatus.Edit);
+  public CRUDStatus$ = new BehaviorSubject<CRUDStatus>(CRUDStatus.Read);
 
   // 使用 readonly 的 state，避免外部直接修改
   private _state: TLS12040FlowState = this.createInitialState();
@@ -265,7 +280,7 @@ export class TLS12040FlowService {
   private viewModeSubject = new BehaviorSubject<boolean>(false);
   public isViewMode$ = this.viewModeSubject.asObservable();
 
-  constructor() {
+  constructor(private crudModeService: CrudModeService) {
     this.loadFromStorage();
   }
 
@@ -318,7 +333,12 @@ export class TLS12040FlowService {
     }
 
     try {
-      // 自動清理資料
+      // 🔍 儲存前記錄 cru 資料
+      const originalCruData = this._state.stepData.get('cru');
+      // console.log(`儲存 ${stepName} 前，cru locationInfo:`,
+      //   JSON.stringify(originalCruData?.data?.locationInfo || [], null, 2));
+
+      // 清理資料
       const cleanedData = cleaner.clean(rawData);
       const isValid = cleaner.validate(cleanedData);
 
@@ -329,15 +349,22 @@ export class TLS12040FlowService {
         isValid
       };
 
-      // 更新 state - 創建新物件保持 immutable
+      //  建立新的 stepData Map，保留所有現有步驟
       const newStepData = new Map(this._state.stepData);
       newStepData.set(stepName, stepData);
+
+      // ⚠️ 確保 cru 資料不被清空
+      if (stepName !== 'cru' && originalCruData && !newStepData.get('cru')) {
+        console.warn('檢測到 cru 資料丟失，自動恢復');
+        newStepData.set('cru', originalCruData);
+      }
 
       const newCompletedSteps = new Set(this._state.completedSteps);
       if (isValid) {
         newCompletedSteps.add(stepName);
       }
 
+      // 更新狀態
       this._state = {
         ...this._state,
         stepData: newStepData,
@@ -350,12 +377,20 @@ export class TLS12040FlowService {
         }
       };
 
+      // 🔍 儲存後檢查 cru 資料
+      const updatedCruData = this._state.stepData.get('cru');
+      // console.log(`儲存 ${stepName} 後，cru locationInfo:`,
+      //   JSON.stringify(updatedCruData?.data?.locationInfo || [], null, 2));
+
+      if (originalCruData && !updatedCruData?.data?.locationInfo?.length) {
+        console.error('🚨 cru locationInfo 在儲存後變空！');
+      }
+
       this.notifyStateChange();
       this.saveToStorage();
       return true;
-
     } catch (error) {
-      console.error(`步驟 ${stepName} 資料清理失敗:`, error);
+      console.error(`步驟 ${stepName} 資料儲存失敗:`, error);
       return false;
     }
   }
@@ -363,11 +398,11 @@ export class TLS12040FlowService {
   /**
    * 取得步驟資料 - 統一方法
    */
-  getStepData<T>(stepName: string): T | null {
+  getStepData<T = any>(stepName: string): TLS12040StepData<T> | undefined {
     const stepData = this._state.stepData.get(stepName);
-    return stepData?.data as T || null;
+    // console.log(`獲取 ${stepName} 步驟資料:`, stepData);
+    return stepData as TLS12040StepData<T> | undefined;
   }
-
   /**
    * 檢查步驟是否完成
    */
@@ -375,18 +410,15 @@ export class TLS12040FlowService {
     return this._state.completedSteps.has(stepName);
   }
 
-  /**
-   * 取得當前狀態 - 唯讀
-   */
-  getCurrentState(): Readonly<TLS12040FlowState> {
-    return this._state;
-  }
-
   // ========== 便利方法 ==========
 
   // CRU 資料
   setCruData = (data: any) => this.setStepData('cru', data);
-  getCruData = <T>() => this.getStepData<T>('cru');
+  getCruData(): TLS12040DetailModel | undefined {
+    const cruStep = this.getStepData('cru');
+    // console.log('getCruData 獲取 cru 資料:', cruStep?.data?.locationInfo);
+    return cruStep?.data;
+  }
 
   // Next1 資料
   setNext1Data = (data: any) => this.setStepData('next1', data);
@@ -409,7 +441,17 @@ export class TLS12040FlowService {
 
   // Next3 資料
   setNext3Data = (data: any) => this.setStepData('next3', data);
-  getNext3Data = <T>() => this.getStepData<T>('next3');
+  getNext3Data<T = any>(): T | undefined {
+    const stepData = this.getStepData('next3');
+    console.log('📥 getNext3Data 結果:', {
+      found: !!stepData,
+      hasData: !!stepData?.data,
+      dataType: Array.isArray(stepData?.data) ? 'array' : typeof stepData?.data,
+      dataLength: Array.isArray(stepData?.data) ? (stepData?.data as any).length : 0,
+      rawData: stepData?.data
+    });
+    return stepData?.data as T | undefined;
+  }
 
   // ========== 檢視模式 ==========
 
@@ -470,10 +512,15 @@ export class TLS12040FlowService {
     console.log('開始生成 TLS12040 提交資料...');
 
     // 取得各步驟資料
-    const cruData = this.getCruData<TLS12040DetailModel>();
+    const cruData = this.getCruData();
     const next1Data = this.getNext1Data();
     const next2Data = this.getNext2Data();
     const next3Data = this.getNext3Data();
+
+    console.log('\n📦 Step 4 (Next3) 資料檢查:');
+    console.log('Next3 資料存在:', !!next3Data);
+    console.log('Next3 資料類型:', Array.isArray(next3Data) ? 'Array' : typeof next3Data);
+    console.log('Next3 資料數量:', Array.isArray(next3Data) ? next3Data.length : 0);
 
     console.log('原始資料檢查:', {
       hasCruData: !!cruData,
@@ -544,10 +591,23 @@ export class TLS12040FlowService {
    * 處理 Next2 抽成資料
    */
   private processNext2CommissionData(next2Data: any): any {
-    console.log('處理 Next2 抽成資料...');
+    console.log('🔍 處理 Next2 抽成資料...');
+    console.log('Next2Data 結構:', {
+      hasNext2Data: !!next2Data,
+      hasData: !!next2Data?.data,
+      hasCommissionData: !!next2Data?.data?.commissionData,
+      hasPreparedData: !!next2Data?.data?.preparedSubmitData
+    });
 
-    if (!next2Data?.commissionData) {
-      console.log('沒有 Next2 抽成資料');
+    // 🔥 優先使用已準備好的資料
+    if (next2Data?.data?.preparedSubmitData) {
+      console.log('✅ 使用 Next2 準備好的 preparedSubmitData');
+      return next2Data.data.preparedSubmitData;
+    }
+
+    // 🔥 修正：正確的讀取路徑
+    if (!next2Data?.data?.commissionData) {
+      console.log('❌ 沒有 Next2 抽成資料');
       return {
         masters: { toInsert: [], toUpdate: [], toDelete: [] },
         discountSettings: { toInsert: [], toUpdate: [], toDelete: [] },
@@ -556,7 +616,12 @@ export class TLS12040FlowService {
       };
     }
 
-    const commissionData = next2Data.commissionData;
+    // 🔥 使用正確的路徑
+    const commissionData = next2Data.data.commissionData;
+    console.log('📦 找到 commissionData:', {
+      length: commissionData.length,
+      sample: commissionData[0]
+    });
     const masters = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
     const discountSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
     const annualSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
@@ -580,6 +645,7 @@ export class TLS12040FlowService {
         sst_rate: this.parseNumber(commission.sst_rate),
         cap_saletype1: commission.cap_saletype1 === true || commission.cap_saletype1 === 'Y' ? 'Y' : 'N',
         cap_saletype2: commission.cap_saletype2 === true || commission.cap_saletype2 === 'Y' ? 'Y' : 'N',
+        cap_saletype5: commission.cap_saletype5 === true || commission.cap_saletype5 === 'Y' ? 'Y' : 'N',
         cag_bdate: this.formatDate(commission.cag_bdate),
         cag_edate: this.formatDate(commission.cag_edate)
       };
@@ -708,13 +774,13 @@ export class TLS12040FlowService {
   }
 
   /**
-   * 處理 Next3 條件資料
-   */
+ * 處理 Next3 條件資料
+ */
   private processNext3ConditionData(next3Data: any): any {
-    console.log('處理 Next3 條件資料...');
+    console.log('🔍 處理 Next3 條件資料...');
 
     if (!next3Data || !Array.isArray(next3Data)) {
-      console.log('沒有 Next3 條件資料');
+      console.log('❌ 沒有 Next3 條件資料');
       return {
         fixedRents: { toInsert: [], toUpdate: [], toDelete: [] },
         baseRentHigher: { toInsert: [], toUpdate: [], toDelete: [] },
@@ -724,6 +790,16 @@ export class TLS12040FlowService {
       };
     }
 
+    //  從合約資訊中取得抽成類型
+    const cruData = this.getCruData();
+    const commissionType = cruData?.tlt_term_type || '3';
+
+    console.log('📊 Next3 資料處理:', {
+      抽成類型: commissionType,
+      抽成類型名稱: this.getCommissionTypeName(commissionType),
+      資料數量: next3Data.length
+    });
+
     const result = {
       fixedRents: { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] },
       baseRentHigher: { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] },
@@ -732,23 +808,78 @@ export class TLS12040FlowService {
       baseTier: { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] }
     };
 
-    next3Data.forEach((condition: any) => {
+    next3Data.forEach((condition: any, index: number) => {
+      console.log(`\n🔄 處理條件 ${index + 1}:`, {
+        id: condition.id,
+        _status: condition._status,
+        抽成類型: commissionType
+      });
+
+      // 處理刪除項目
       if (condition._status === 'deleted') {
-        this.handleDeletedCondition(condition, result);
+        console.log('🗑️ 處理刪除項目');
+        this.handleDeletedConditionByType(condition, commissionType, result);
         return;
       }
 
-      // 根據條件類型分類處理
-      if ('base_rent' in condition && 'cag_charge_rate' in condition) {
-        this.processBaseRentHigherCondition(condition, result.baseRentHigher);
-      } else if ('base_rent' in condition) {
-        this.processFixedRentCondition(condition, result.fixedRents);
-      } else if ('limit_amt' in condition && 'seq_no' in condition) {
-        this.processBaseTierCondition(condition, result.baseTier);
-      } else if ('limit_amt' in condition) {
-        this.processBaseCommissionCondition(condition, result.baseCommissions);
-      } else if ('seq_no' in condition) {
-        this.processGraduatedCondition(condition, result.graduated);
+      //  根據抽成類型直接分類處理
+      switch (commissionType) {
+        case '1': // 固定租金
+          console.log(' 處理: 固定租金');
+          this.processFixedRentCondition(condition, result.fixedRents);
+          break;
+
+        case '2': // 底租抽成取高者
+          console.log(' 處理: 底租抽成取高者');
+          this.processBaseRentHigherCondition(condition, result.baseRentHigher);
+          break;
+
+        case '4': // 包底抽成
+          console.log(' 處理: 包底抽成');
+          this.processBaseCommissionCondition(condition, result.baseCommissions);
+          break;
+
+        case '5': // 層級抽成
+          console.log(' 處理: 層級抽成');
+          this.processGraduatedCondition(condition, result.graduated);
+          break;
+
+        case '6': // 包底加層級
+          console.log(' 處理: 包底加層級');
+          this.processBaseTierCondition(condition, result.baseTier);
+          break;
+
+        default:
+          console.warn('⚠️ 不支援的抽成類型:', commissionType);
+      }
+    });
+
+    console.log('\n📊 處理結果統計:', {
+      抽成類型: commissionType,
+      fixedRents: {
+        insert: result.fixedRents.toInsert.length,
+        update: result.fixedRents.toUpdate.length,
+        delete: result.fixedRents.toDelete.length
+      },
+      baseRentHigher: {
+        insert: result.baseRentHigher.toInsert.length,
+        update: result.baseRentHigher.toUpdate.length,
+        delete: result.baseRentHigher.toDelete.length
+      },
+      baseCommissions: {
+        insert: result.baseCommissions.toInsert.length,
+        update: result.baseCommissions.toUpdate.length,
+        delete: result.baseCommissions.toDelete.length
+      },
+      graduated: {
+        insert: result.graduated.toInsert.length,
+        update: result.graduated.toUpdate.length,
+        delete: result.graduated.toDelete.length
+      },
+      baseTier: {
+        insert: result.baseTier.toInsert.length,
+        update: result.baseTier.toUpdate.length,
+        delete: result.baseTier.toDelete.length
       }
     });
 
@@ -964,22 +1095,48 @@ export class TLS12040FlowService {
 
   private formatDate(date: any): string {
     if (!date) return '';
+
     try {
+      // 🔥 關鍵修復：如果已經是 YYYY-MM-DD 格式，直接返回
+      if (typeof date === 'string') {
+        const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (dateOnlyRegex.test(date)) {
+          console.log(`日期已是正確格式，直接返回: ${date}`);
+          return date; // ✅ 直接返回，不經過 Date 物件
+        }
+
+        // 處理帶時間的字串
+        if (date.includes('T')) {
+          const dateOnly = date.split('T')[0];
+          console.log(`從時間戳提取日期: ${date} → ${dateOnly}`);
+          return dateOnly;
+        }
+      }
+
+      // 對於 Date 物件或其他格式，使用本地時間
       let dateObj: Date;
       if (date instanceof Date) {
         dateObj = date;
-      } else if (typeof date === 'string') {
-        dateObj = new Date(date);
       } else {
         dateObj = new Date(date);
       }
-      if (isNaN(dateObj.getTime())) return '';
 
+      if (isNaN(dateObj.getTime())) {
+        console.warn('無效的日期:', date);
+        return '';
+      }
+
+      // ✅ 使用本地時間方法，避免時區問題
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch {
+      const result = `${year}-${month}-${day}`;
+
+      console.log(`格式化日期: ${date} → ${result}`);
+      return result;
+
+    } catch (error) {
+      console.error('日期格式化錯誤:', error, date);
       return '';
     }
   }
@@ -1029,6 +1186,12 @@ export class TLS12040FlowService {
           });
         }
 
+        // 載入 crudstatus，並提供 fallback
+        const loadedCrudStatus = data.crudstatus || this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;
+        console.log('載入 crudstatus:', loadedCrudStatus);
+        this.CRUDStatus$.next(loadedCrudStatus);
+        this.crudModeService.setCrudStatus(loadedCrudStatus);  // 同步到 CrudModeService
+
         // 修正：從 CRU 資料取得正確的 applyNo
         let correctedApplyNo = data.applyNo || '';
         const cruStepData = stepDataMap.get('cru');
@@ -1037,8 +1200,14 @@ export class TLS12040FlowService {
           console.log('從 CRU 資料修正 applyNo:', correctedApplyNo);
         }
 
-        // 修正：根據是否有 apply_no 決定 isNewContract
-        const correctedIsNewContract = !correctedApplyNo || correctedApplyNo === '';
+        // 修正 isNewContract：如果 crudstatus 為 Read，則設為 false，避免推斷為 Edit
+        let correctedIsNewContract: boolean;
+        if (loadedCrudStatus === CRUDStatus.Read) {
+          correctedIsNewContract = false;  // Read 模式下不視為新合約
+          console.log('Read 模式：強制 isNewContract = false');
+        } else {
+          correctedIsNewContract = !correctedApplyNo || correctedApplyNo === '';
+        }
 
         this._state = {
           ...data,
@@ -1046,7 +1215,8 @@ export class TLS12040FlowService {
           completedSteps: completedStepsSet,
           applyNo: correctedApplyNo,
           isNewContract: correctedIsNewContract,
-          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo
+          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo,
+          status: loadedCrudStatus  // 儲存載入的 crudstatus
         };
 
         this.notifyStateChange();
@@ -1055,5 +1225,75 @@ export class TLS12040FlowService {
     } catch (error) {
       console.error('載入失敗:', error);
     }
+  }
+
+  setCurrentState(state: any) {
+    const currentCrudStatus = this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;  // fallback 為 Read
+    const currentState = {
+      ...state,
+      crudstatus: currentCrudStatus  // 強制儲存 crudstatus
+    };
+    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(currentState));
+    console.log('儲存狀態到 SessionStorage，包含 crudstatus:', currentCrudStatus);
+    this.CRUDStatus$.next(currentCrudStatus);  // 同步到 BehaviorSubject
+  }
+
+  // 修正 getCurrentState：提供 crudstatus fallback
+  getCurrentState(): any {
+    const saved = sessionStorage.getItem(this.STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const fallbackCrudStatus = parsed.crudstatus || this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;
+      console.log('從 getCurrentState 獲取 crudstatus:', fallbackCrudStatus);
+      return {
+        ...parsed,
+        crudstatus: fallbackCrudStatus
+      };
+    }
+    const fallbackCrudStatus = this.crudModeService.getCrudStatus() || this.CRUDStatus$.value || CRUDStatus.Read;
+    console.log('從 fallback 獲取 crudstatus:', fallbackCrudStatus);
+    return { crudstatus: fallbackCrudStatus };
+  }
+
+  /**
+ * 根據抽成類型處理被刪除的條件
+ */
+  private handleDeletedConditionByType(condition: any, commissionType: string, result: any): void {
+    if (!this.hasValidId(condition.id)) return;
+
+    const deleteItem = { id: Number(condition.id) } as any;
+
+    switch (commissionType) {
+      case '1':
+        result.fixedRents.toDelete.push(deleteItem);
+        break;
+      case '2':
+        result.baseRentHigher.toDelete.push(deleteItem);
+        break;
+      case '4':
+        result.baseCommissions.toDelete.push(deleteItem);
+        break;
+      case '5':
+        result.graduated.toDelete.push(deleteItem);
+        break;
+      case '6':
+        result.baseTier.toDelete.push(deleteItem);
+        break;
+    }
+  }
+
+  /**
+   * 獲取抽成類型名稱 (輔助方法)
+   */
+  private getCommissionTypeName(commissionType: string): string {
+    const typeNames: { [key: string]: string } = {
+      '1': '固定租金',
+      '2': '底租抽成取高者',
+      '3': '一般抽成',
+      '4': '包底抽成',
+      '5': '層級抽成',
+      '6': '包底加層級'
+    };
+    return typeNames[commissionType] || `未知類型(${commissionType})`;
   }
 }

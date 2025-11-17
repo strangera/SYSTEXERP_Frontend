@@ -15,7 +15,7 @@ export class TLS23060Service {
     private errorHandler: ErrorHandlerService
   ) { }
 
-  /** 總表查詢：維持原本 endpoint */
+  /** 總表查詢 */
   queryTLS23060(query: any): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/querytls23060`;
     return this.http.post<any>(url, query).pipe(
@@ -23,7 +23,7 @@ export class TLS23060Service {
     );
   }
 
-  /** 明細查詢：新方法，打 /queryTLS23060_Detail */
+  /** 明細查詢：/queryTLS23060_Detail（Dialog 用，以日期為主） */
   queryTLS23060Detail(query: any): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23060_Detail`;
     return this.http.post<any>(url, query).pipe(

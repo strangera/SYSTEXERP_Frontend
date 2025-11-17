@@ -2,20 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
-
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { FIN15020Data, FIN15020Service, FIN15020QueryRequest, FIN15020PrintRequest } from '@service/api/fin/fin15020.service';
 import { environment } from '../../../../environments/environment';
-
-// Components
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -24,6 +19,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { ValidationService } from '@shared/service/validation.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 export interface Option {
   label: string;
@@ -36,10 +32,19 @@ export interface Option {
   styleUrl: './fin15020.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent, CommonModule,
-    MultiSelectComponent
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextRangeComponent,
+    CalendarRangeComponent,
+    TranslateModule,
+    DropdownComponent,
+    CalendarComponent,
+    MultiSelectComponent,
+    CommonModule,
+    CustomFooterTableComponent
   ]
 })
 export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> implements OnInit {
@@ -54,8 +59,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     PUR_GUIDate_E: [null],                                      // 退出/折讓日期訖
     Credit_Type: [null],                                        // 區別
     PUR_RepYYYYMM: ['', [Validators.required, this.validationService.evenMonthValidator]],               // 申報年月
-    PUR_GUIDateYYYYMM_S: ['', [Validators.required]],         // 資料所屬年月起
-    PUR_GUIDateYYYYMM_E: ['', [Validators.required]],         // 資料所屬年月訖
+    PUR_GUIDateYYYYMM_S: [''],         // 資料所屬年月起
+    PUR_GUIDateYYYYMM_E: [''],         // 資料所屬年月訖
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起
@@ -73,6 +78,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   data: FIN15020Data[] = [];
   selectedItems: FIN15020Data[] = [];
   btnLoading = false;
+  footerData: any[] = [];
 
   columns: Column[] = [
     { field: 'No', header: '序號', hidden: true },
@@ -89,7 +95,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'PUR_DiscNo', header: '折抵代號', visible: true, format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'PUR_Uniform', header: '統一編號', visible: true }
+    { field: 'PUR_VenUniform', header: '統一編號', visible: true }
   ];
 
   //#region 下拉選項
@@ -144,6 +150,11 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
           this.data = res.Data.APS2002_FIN15020s;
+          this.footerData = [{
+            group_name: '合計',
+            PUR_Net: res.Data.TotalNet,
+            PUR_Tax: res.Data.TotalTax,
+          }];
           this.totalRecords = res.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
@@ -179,9 +190,6 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     if (this.queryForm.invalid) {
       const errors: string[] = [];
       if (!this.queryForm.get('PUR_RepYYYYMM')?.value) errors.push('請填寫申報年月');
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_S')?.value) errors.push('請填寫資料所屬年月_起');
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_E')?.value) errors.push('請填寫資料所屬年月_訖');
-
       if (errors.length > 0) {
         this.messageService.errorBubble(errors.join('<br>'));
         return false;

@@ -145,6 +145,16 @@ export interface TLS52050UpdateDetail {
   CAT_SName: string
 }
 
+export interface IExportLabelResponse {
+  PLU_MagNO: string,
+  PLU_Name: string,
+  Label_Qty: string,
+  PLU_SalePrc: string,
+  UNIT_NAME: string,
+  PLU_OrgPLUNo: string,
+  PLU_NO: string
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -197,8 +207,8 @@ export class Tls52050Service {
   }
 
   // 取得標籤檔資料
-  getLabelTLS52050(params: { MAM_No: string }): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52050`, params);
+  getLabelTLS52050(params: { MAM_No: string }): Observable<ApiResponse<IExportLabelResponse[]>> {
+    return this.http.post<ApiResponse<IExportLabelResponse[]>>(`${this.apiUrl}/getLabelTLS52050`, params);
   }
   /**
    * 上傳檔案到伺服器

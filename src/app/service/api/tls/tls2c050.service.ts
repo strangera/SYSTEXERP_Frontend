@@ -42,4 +42,26 @@ export class TLS2C050Service {
     const url = `${this.apiUrl}/TLS0000/TLS2000/GetTLS2C050Date_invoice`;
     return this.http.post<ApiResponse<{ invoice_lock_date: string }>>(url, {});
   }
+
+  /**
+   * 執行發票鎖定 (LockTLS2C050)
+   * @param cls_date 日期字串，格式為 "YYYY-MM-DD"
+   * @returns 回傳 HTTP 響應
+   */
+  lockTLS2C050(cls_date: string): Observable<ApiResponse<number>> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/LockTLS2C050`;
+    const body = { cls_date };
+    return this.http.post<ApiResponse<number>>(url, body);
+  }
+
+  /**
+   * 執行發票反鎖定 (UnLockTLS2C050)
+   * @param cls_date 日期字串，格式為 "YYYY-MM-DD"
+   * @returns 回傳 HTTP 響應
+   */
+  unLockTLS2C050(cls_date: string): Observable<ApiResponse<number>> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/UnLockTLS2C050`;
+    const body = { cls_date };
+    return this.http.post<ApiResponse<number>>(url, body);
+  }
 }

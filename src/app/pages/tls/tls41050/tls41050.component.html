@@ -16,22 +16,22 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="機台類型" controlName="ECR_Type" [options]="ECR_Type_Option" optionLabel="label"
+            <app-dropdown label="機台類型" controlName="ECR_Type" [options]="typeOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_Type" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號/名稱" controlName="ECR_TLT_NoList" [options]="TLTTALENT_Option"
+            <app-multi-select label="專櫃編號" controlName="ECR_TLT_NoList" [options]="TLTTALENT_Option"
               optionLabel="Label" optionValue="No" [control]="queryForm.controls.ECR_TLT_NoList"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃名稱" controlName="ECR_TLT_Name" [control]="queryForm.controls.ECR_TLT_Name"
+            <app-input-text label="櫃位名稱" controlName="ECR_TLT_Name" [control]="queryForm.controls.ECR_TLT_Name"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收銀機狀態" controlName="ECR_Status" [options]="ECR_Status_Option" optionLabel="label"
+            <app-dropdown label="機台狀態" controlName="ECR_Status" [options]="statusOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_Status" [submitted]="submitted"></app-dropdown>
           </div>
         </div>

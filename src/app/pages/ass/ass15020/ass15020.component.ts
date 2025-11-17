@@ -25,11 +25,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.5.2  財產保管清冊
 @Component({
-    selector: 'app-ass15020',
-    templateUrl: './ass15020.component.html',
-    styleUrl: './ass15020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, CalendarRangeComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass15020',
+  templateUrl: './ass15020.component.html',
+  styleUrl: './ass15020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, CalendarRangeComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS15020Component extends BasicQpageComponent implements OnInit {
   //
@@ -150,8 +150,7 @@ export class ASS15020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310033';
     this.cruPage = '/ASS1000/ASS15020CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
       this.keepingDepartmentOptions = data;

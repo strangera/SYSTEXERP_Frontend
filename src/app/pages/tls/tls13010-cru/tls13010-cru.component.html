@@ -58,13 +58,13 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
                 label="廠商統一編號"
-                controlName="ven_uniform"
+                controlName="vendor_ven_no"
                 [options]="pos2013Options"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.ven_uniform"
-                [submitted]="submitted"
+                [control]="dataForm.controls.vendor_ven_no"
                 [readonly]="isFormReadonly"
+                (optionSelected)="onVendorOptionSelected($event)"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -308,7 +308,8 @@
             [showPaginator]="false"
             [showAddButton]="!isViewMode"
             [showBatchDelete]="!isViewMode"
-            [showActionColumn]="!isViewMode"
+            [showActionColumn]="false"
+            [forceEditMode]="!isViewMode"
             [autoEditOnAdd]="true"
             [loading]="loading"
             dataKey="id"
@@ -638,6 +639,15 @@
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number
+                label="準時開業保證金"
+                controlName="open_fees"
+                [control]="dataForm.controls.open_fees"
+                [submitted]="submitted"
+                [readonly]="isFormReadonly"
+              ></app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
                 label="準時開業保證金付款方式"
                 controlName="open_deposit"
@@ -651,9 +661,9 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-number
-                label="準時開業保證金"
-                controlName="open_fees"
-                [control]="dataForm.controls.open_fees"
+                label="施工保證金"
+                controlName="construct_fees"
+                [control]="dataForm.controls.construct_fees"
                 [submitted]="submitted"
                 [readonly]="isFormReadonly"
               ></app-input-number>
@@ -672,9 +682,9 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-number
-                label="施工保證金"
-                controlName="construct_fees"
-                [control]="dataForm.controls.construct_fees"
+                label="契約屆滿保證金"
+                controlName="expiration_fees"
+                [control]="dataForm.controls.expiration_fees"
                 [submitted]="submitted"
                 [readonly]="isFormReadonly"
               ></app-input-number>
@@ -690,15 +700,6 @@
                 [submitted]="submitted"
                 [readonly]="isFormReadonly"
               ></app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number
-                label="契約屆滿保證金"
-                controlName="expiration_fees"
-                [control]="dataForm.controls.expiration_fees"
-                [submitted]="submitted"
-                [readonly]="isFormReadonly"
-              ></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text
@@ -763,7 +764,7 @@
         </form>
       </p-accordionTab>
       <p-accordionTab
-        header="參加活動資訊"
+        header="參加資訊"
         [selected]="true"
         class="line-height-3 m-0"
         [headerStyleClass]="'query-accordionTab'"
@@ -787,7 +788,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype2">全館消費滿額集點活動</label>
+                  <label for="cap_saletype2">會員卡集點</label>
                 </div>
               </div>
 
@@ -815,7 +816,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype3">有價券</label>
+                  <label for="cap_saletype3">收取禮卷</label>
                 </div>
               </div>
               <div class="col-12 md:col-6 no-bottom-padding">
@@ -828,7 +829,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype4">會員卡</label>
+                  <label for="cap_saletype4">累積消費歷程</label>
                 </div>
               </div>
               <div class="col-12 md:col-6 no-bottom-padding">
@@ -841,7 +842,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype5">參加提貨單</label>
+                  <label for="cap_saletype5">收取商品提貨單</label>
                 </div>
               </div>
             </div>

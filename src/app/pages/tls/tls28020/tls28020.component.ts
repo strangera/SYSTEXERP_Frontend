@@ -23,7 +23,6 @@ const now = new Date();
 @Component({
   selector: 'app-tls28020',
   templateUrl: './tls28020.component.html',
-  styleUrls: ['./tls28020.component.scss'],
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
@@ -71,7 +70,6 @@ export class TLS28020Component {
   ) { }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // 初始化下拉選單選項
     this.paymentTimingService.getPaymentTiming().subscribe(data => {

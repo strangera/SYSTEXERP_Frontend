@@ -1,4 +1,5 @@
-import { Component, computed, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
@@ -12,7 +13,10 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, tap } from 'rxjs';
+import { FIN53010Data, FIN53010Payload } from './fin53010.model';
 
 @Component({
   selector: 'app-fin53010',
@@ -34,254 +38,103 @@ import { AccordionModule } from 'primeng/accordion';
     TableComponent,
   ],
 })
-export class FIN53010Component extends BasicQueryPageComponent<unknown> implements OnInit {
+export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> implements OnInit {
+
+  public readonly multiSortMeta = [{ field: 'id', order: 1 }];
 
   public readonly queryForm = this.formBuilder.group({
-    startSubpoenaNo: new FormControl<number | void>(void 0),
-    endSubpoenaNo: new FormControl<number | void>(void 0),
-    subpoenaType: new FormControl<'0' | '1' | '2' | void>(void 0),
-    sSubpoenaDate: new FormControl<Date>(new Date()),
-    eSubpoenaDate: new FormControl<Date>(new Date()),
-    subpoenaStatus: new FormControl<'0' | '1' | '3' | void>(void 0),
-    subpoenaSummary: new FormControl<string | void>(void 0),
-    subpoenaType2: new FormControl<string | void>(void 0),
-    creator: new FormControl<string | void>(void 0),
-    modifier: new FormControl<string | void>(void 0),
-    sBuildDate: new FormControl<Date>(new Date()),
-    eBuildDate: new FormControl<Date>(new Date()),
-    sModifyDate: new FormControl<Date>(new Date()),
-    eModifyDate: new FormControl<Date>(new Date()),
-    rocifrs: new FormControl<'0' | '1' | '2' | '3'>('1'),
-    ...createPaginationConfig([{ field: 'id', order: 1 }]),
+    VouNoStart: new FormControl<number | void>(void 0),
+    VouNoEnd: new FormControl<number | void>(void 0),
+    /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
+    VouType: new FormControl<'0' | '1' | '2' | void>(void 0),
+    VouDateStart: new FormControl<Date | void>(void 0),
+    VouDateEnd: new FormControl<Date | void>(void 0),
+    /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
+    PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
+    Remark: new FormControl<string | void>(void 0),
+    /** 傳票種類(SYS1000.VoucherType) */
+    VoucherType: new FormControl<string | void>(void 0),
+    CRT_USR_No: new FormControl<string | void>(void 0),
+    UPD_USR_No: new FormControl<string | void>(void 0),
+    CrtDateStart: new FormControl<Date | void>(void 0),
+    CrtDateEnd: new FormControl<Date | void>(void 0),
+    UpdDateStart: new FormControl<Date | void>(void 0),
+    UpdDateEnd: new FormControl<Date | void>(void 0),
+    /** ROC/IFRS 0:ROC 1:IFRS 2:全部 */
+    VouAccType: new FormControl<'0' | '1' | '2'>('0'),
+    ...createPaginationConfig(this.multiSortMeta),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  public readonly filteredData = computed(() => {
-    return this.service.FIN53010Data();
+  public readonly tableData = signal<FIN53010Data[]>([]);
+  public readonly totalRecords = signal(0);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.accLoading()
+      || this.service.venLoading()
+      || this.service.usrLoading()
+      || this.service.orgNoLoading()
+      || this.service.sys1000Loading()
+      || this.service.voucherTypeLoading()
+      || this.service.refNameLoading()
+      || this.service.noteDescLoading()
+      || this.service.fin52030Loading()
+      || this.service.vocTempLoading();
   });
 
-  public readonly totalRecords = computed(() => this.filteredData().length);
-
   public readonly columns: Column[] = [
-    { field: 'subpoenaNo', header: '傳票號碼' },
-    { field: 'subpoenaType', header: '傳票種類' },
-    { field: 'subpoenaDate', header: '傳票日期' },
-    { field: 'subpoenaStatus', header: '傳票狀態' },
-    { field: 'subpoenaSummary', header: '傳票摘要' },
-    { field: 'subpoenaAmount', header: '傳票金額' },
-    { field: 'detailCount', header: '明細筆數' },
+    { field: 'VouNo', header: '傳票號碼' },
+    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
+    { field: 'VouDate', header: '傳票日期', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
+    { field: 'Remark', header: '傳票摘要', format: d => this.service.noteDescMap().get(d)?.label ?? d },
+    { field: 'AccAmt', header: '傳票金額' },
+    { field: 'DetailCount', header: '明細筆數' },
   ];
 
-  // // Upload files
-  // fileType: string = '';
-  // uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
-  // queryForm = this.formBuilder.group({
-  //   startserialticket: [],
-  //   endserialticket: [],
-  //   Subpoenatype: [],
-  //   SSubpoenadate: [day],
-  //   ESubpoenadate: [day],
-  //   Subpoenastatus: [],
-  //   Subpoenasummary: [],
-  //   builder: [],
-  //   modifyer: [],
-  //   Sbuilddate: [day],
-  //   Ebuilddate: [day],
-  //   Smodifydate: [day],
-  //   Emodifydate: [day],
-  //   Subpoenatype2: [],
-
-
-  // });
-
-  // // Dropdown options
-  // Subpoenatype2: any[] = [
-  //   { value: 1, label: '贊助金傳票' },
-  //   { value: 2, label: '電匯EDI傳票' },
-  //   { value: 3, label: '年結傳票' },
-  //   { value: 4, label: '銀行資金調撥傳票' },
-  //   { value: 5, label: '零用金拋轉傳票' },
-  //   { value: 6, label: '票據兌現傳票' },
-  //   { value: 7, label: '支票沖轉傳票' },
-  //   { value: 8, label: '退票沖轉票據傳票' },
-  //   { value: 9, label: '開票傳票' },
-  //   { value: 10, label: '撤票沖轉票據傳票' },
-  // ];
-
-  // departmentOptions: any[] = [];
-  // ifOptions: any[] = [
-  //   { value: 1, label: '是' },
-  //   { value: 2, label: '否' },
-  // ];
-  // detail: any[] = [
-  //   { value: 1, label: '統制' },
-  //   { value: 2, label: '明細' },
-  // ];
-  // Subpoenaformatl: any[] = [
-  //   { value: 1, label: '無特定' },
-  //   { value: 2, label: '應付票據' },
-  //   { value: 3, label: '應收票據' },
-  // ];
-  // Subpoenatype: any[] = [
-  //   { value: 1, label: '現金收入傳票' },
-  //   { value: 2, label: '現金支出傳票' },
-  //   { value: 3, label: '轉帳傳票' },
-  // ];
-  // borrowloanOptions: any[] = [
-  //   { value: 1, label: '借' },
-  //   { value: 2, label: '貸' },
-  // ];
-
-  // accountingaccountOptions: any[] = [
-  //   { value: 1, label: '是' },
-  //   { value: 2, label: '否' },
-  // ];
-
-  // statusOptions: any[] = [
-  //   { value: 1, label: '未拋轉' },
-  //   { value: 2, label: '已拋轉' },
-  //   { value: 3, label: '已退回' },
-  // ];
-
-  // unitOptions: any[] = [
-  //   { value: 1, label: '元' },
-  //   { value: 2, label: '千' },
-  //   { value: 3, label: '萬' },
-  // ];
-
-  // typeOptions: any[] = [
-  //   { value: 1, label: '統制' },
-  //   { value: 2, label: '明細' },
-  // ];
-
-  // SubpoenatypeOptions: any[] = [
-  //   { value: 1, label: '現金收入傳票' },
-  //   { value: 2, label: '現金支出傳票' },
-  //   { value: 3, label: '轉帳傳票' },
-  // ];
-
-  // Subpoenastatus: any[] = [
-  //   { value: 1, label: '作廢' },
-  //   { value: 2, label: '建立' },
-  //   { value: 3, label: '確認' },
-  //   { value: 4, label: '過帳' },
-  //   { value: 5, label: '刪除' },
-  // ];
-
-  // codeOptions: any[] = [
-  //   { value: 1, label: '68919301_臺南紡織股份有限公司' },
-  //   { value: 2, label: '73251209_統一企業股份有限公司' },
-  //   { value: 3, label: '96978370_統正開發股份有限公司' },
-  // ];
-
-  // // Table data
-  // data: any[] = [
-
-  // ];
-  // filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'invoiceNumber', header: '傳票號碼', visible: true },
-  //   { field: 'invoiceType', header: '傳票種類', visible: true },
-  //   { field: 'invoiceDate', header: '傳票日期', visible: true },
-  //   { field: 'invoiceStatus', header: '傳票狀態', visible: true },
-  //   { field: 'invoiceSummary', header: '傳票摘要', visible: true },
-  //   { field: 'invoiceAmount', header: '傳票金額', visible: true },
-  //   { field: 'detailCount', header: '明細筆數', visible: true }
-  // ];
-
   constructor(
-    public service: FIN53010Service,
+    public readonly service: FIN53010Service,
+    private readonly logger: NGXLogger,
+    private readonly date: DatePipe,
   ) {
     super();
   }
 
   public ngOnInit(): void {
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
+
+    this.service.getVoucherTypeList();
+    this.service.getAccNoList();
+    this.service.getUsrList();
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      const vns = this.qf().VouNoStart.value;
+      const vne = this.qf().VouNoEnd.value;
 
-      this.submitted = !1;
-      this.loading = !0;
+      const raw = {
+        ...this.queryForm.getRawValue(),
+        VouNoStart: vns ? String(vns).padEnd(12, '0') : void 0,
+        VouNoEnd: vne ? String(vne).padEnd(12, '9') : void 0,
+      };
+
+      const payload = Object.keys(raw).reduce((acc, key) => {
+        const v = (<Record<string, any>>raw)[key];
+        if (v !== null && v !== void 0 && v !== '') (<Record<string, any>>acc)[key] = v;
+        return acc;
+      }, {} as FIN53010Payload);
+
+      this.logger.debug(`onSubmit:`, [this.qf(), raw, payload]);
+
+      this.service.loadFIN53010(payload).pipe(
+        tap(res => {
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount);
+          this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean));
+        }),
+      ).subscribe();
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }
-
-
-  // vendorOptions: any[] = [];
-  // displayOptions2: any[] = [];
-  // AnalysisdateCOptions: any[] = [];
-  // FlippingstateOptions: any[] = [];
-  // usercode: any[] = [];
-  // ngOnInit(): void {
-  //   this.ProgNo = '150016';
-  //   // Initialize dropdown options
-  //   this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-  //   this.userCodeService
-  //     .getUserCode()
-  //     .subscribe((data) => (this.usercode = data));
-
-
-  // }
-
-  // onSubmit(frm: FormGroup) {
-  //   console.log(frm.value);
-  //   this.submitted = true;
-  //   this.loading = true;
-  //   this.notificationService.blockUi();
-
-  //   if (frm.valid && this.canQuery()) {
-  //     // Submit logic here
-  //   }
-
-  //   this.loading = false;
-  //   this.notificationService.unblockUi();
-  // }
-
-  // onSubmitQuery(frm: FormGroup) {
-  //   this.onSubmit(frm);
-  // }
-
-  // onCreate() {
-  //   if (this.canAdd()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Create,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['FIN5000/FIN53010CRU'], extras);
-  //   }
-  // }
-
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
-
-  // onDetail(data: any) {
-  //   let extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
-  // onClearForm() {
-  //   this.queryForm.reset(); // 重置表單
-  // }
 }

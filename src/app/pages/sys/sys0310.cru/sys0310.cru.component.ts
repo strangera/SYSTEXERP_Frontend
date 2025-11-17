@@ -402,7 +402,7 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
 
     this.sys0230Service.updateRolePrivileges(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       this.messageService.successBubble(res.Message);
-      this.authService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe(() => {
+      this.systemDataService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe(() => {
         this.onCancel();
       });
     });

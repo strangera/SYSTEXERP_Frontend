@@ -1,4 +1,3 @@
-import { EngType } from '@service/api/ass/ass21010.service';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface ASS21010Data {
@@ -49,5 +48,14 @@ export interface ASS2100ENGMeterType {
   AREA_DESC: string;
   Draw_X: string;
   Draw_Y: string;
-  ENG_Type: EngType;
+  ENG_Type: keyof typeof EngType;
+}
+
+export enum EngType {
+  水 = 'G01',
+  電 = 'G02',
+  瓦斯 = 'G03',
+  水錶 = 'G01',
+  電錶 = 'G02',
+  瓦斯錶 = 'G03',
 }

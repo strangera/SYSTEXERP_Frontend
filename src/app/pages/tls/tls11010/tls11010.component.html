@@ -7,6 +7,7 @@
       label="{{ 'create' | translate }}"
     ></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -21,16 +22,17 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="館別"
-              controlName="BUILDING_NO"
+              controlName="building_no"
               [options]="BUILDING_NO_Options"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.building_no"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
@@ -42,6 +44,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="區域"
@@ -53,6 +56,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="位置代碼"
@@ -60,6 +64,7 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
@@ -71,6 +76,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="用途代碼/名稱"
@@ -82,6 +88,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
               label="簽約坪數"
@@ -118,6 +125,7 @@
             ></app-multi-select>
           </div>
         </div>
+
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >

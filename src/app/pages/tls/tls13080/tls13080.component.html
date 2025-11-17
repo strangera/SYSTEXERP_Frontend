@@ -1,0 +1,72 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="扣款類型" controlName="cap_type"
+          [options]="[{value: 'D', label: 'D 比率分攤'}]" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.cap_type" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="扣款代號" controlName="cap_item"
+          [options]="cap_itemOptions | async" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.cap_item" [submitted]="submitted"></app-dropdown>
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="抽成率%" controlName="tpy_rate"
+          [control]="dataForm.controls.tpy_rate" [submitted]="submitted"></app-input-number>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="銷售類型" controlName="cap_saletype"
+          [options]="cap_saletypeOptions" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.cap_saletype" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="期數" controlName="instms_type"
+          [options]="instms_typeOptions" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.instms_type" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="收單行" controlName="edc_bank" [options]="edc_bankOptions"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.edc_bank"
+          [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="支付編號" controlName="pay_no"
+          [options]="pay_noOptions | async" optionLabel="Name" optionValue="No" [control]="dataForm.controls.pay_no"
+          [submitted]="submitted"></app-dropdown>
+      </div>
+    </form>
+  </p-panel>
+  <br>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_noList"
+            [options]="tlt_noListOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.tlt_noList" [submitted]="submitted"></app-multi-select>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="大分類" controlName="bus_type"
+            [options]="bus_typeOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-dropdown>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="合約起始日期"
+            [startControl]="queryForm.controls.tlt_bdate_Start" [endControl]="queryForm.controls.tlt_bdate_End"
+            [submitted]="submitted"></app-calendar-range-quick>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="抽成別" controlName="tlt_term_type"
+            [options]="tlt_term_typeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.tlt_term_type" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="ven_uniform"
+            [options]="ven_uniform_noOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ven_uniform" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="org_id"
+            [options]="org_idOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.org_id" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button label="新增合約扣款項目" [loading]="loading" (click)="onCreate(dataForm)"
+            [disabled]="selectedItems.length === 0"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report tableKey="tls13080" dataKey="talent_id" [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords" [data]="data" [columns]="columns" [showCheckBox]="true" [showManage]="false"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
+    [queryFunction]="tls13080Service.queryTLS13080.bind(tls13080Service)" [showCaption]="false" [loading]="loading"
+    (selectAllChange)="isAllSelected = $event" [isAllSelected]="isAllSelected"></app-table-report>
+</div>

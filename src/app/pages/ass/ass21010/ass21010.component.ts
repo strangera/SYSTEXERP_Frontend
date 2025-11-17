@@ -1,8 +1,8 @@
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
+import { ASS21010Service } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -13,14 +13,14 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
-import { ASS21010Data, ASS21010Payload } from './ass21010.model';
+import { tap } from 'rxjs';
+import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
   templateUrl: './ass21010.component.html',
   styleUrl: './ass21010.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -34,40 +34,61 @@ import { ASS21010Data, ASS21010Payload } from './ass21010.model';
     TableComponent,
   ],
 })
-export class ASS21010Component extends BasicQueryPageComponent<unknown> implements OnInit {
+
+export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> implements OnInit {
 
   public queryForm = this.formBuilder.group({
-    ENG_Type: new FormControl<EngType[] | undefined>(void 0),
-    ENG_MeterNo: new FormControl<string | undefined>(void 0),
-    Location_No: new FormControl<string | undefined>(void 0),
-    ENG_Remark: new FormControl<string | undefined>(void 0),
+    ENG_Type: new FormControl<EngType[] | void>(void 0),
+    ENG_MeterNo: new FormControl<string | void>(void 0),
+    Location_No: new FormControl<string | void>(void 0),
+    ENG_Remark: new FormControl<string | void>(void 0),
     ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  // 變化追蹤
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
-  private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
-  private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
+  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
 
-  public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
+  public readonly tableData = signal<ASS21010Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+
   public readonly usrData = computed(() => ({
     SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
     Mid: Number(this.authService.currentUserValue!.mid),
   }));
 
-  public readonly tableEffect = effect(() => {
-    const types = this.engTypeSignal() || [];
-    const meters = this.engMeterSignal() || [];
-    const locs = this.locationSignal() || [];
-    this.logger.debug(`tableEffect:`, [types, meters, locs]);
+  public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
+
+  /** 改變engType 更新錶號選項 */
+  public readonly engTypeEffect = effect(() => {
+    const type = this.engTypeSignal() ?? void 0;
+    const options = this.service.engMeterNoOptions();
+    untracked(() => this.qf().ENG_MeterNo.setValue(void 0));
+
+    if (type?.length && type.length !== 3) this.filteredMeterNo.set(options
+      .filter(o => this.service.engTypeMap.get(o.ENG_Type)));
+    return this.filteredMeterNo.set(options);
   }, { allowSignalWrites: !0 });
+
+  /** 改變錶號 更新設備位置編號 */
+  public readonly meterNoEffect = effect(() => {
+    const meterNo = this.meterNoSignal() ?? void 0;
+    this.logger.debug(`meterNoEffect:`, [meterNo]);
+    if (!meterNo) return untracked(() => this.qf().Location_No.setValue(void 0));
+  }, { allowSignalWrites: !0 });
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.engMeterNoLoading()
+      || this.service.locationLoading()
+      || this.service.exportLoading();
+  });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21010Data; exportFormat?: unknown[]; })[] = [
     {
       field: 'ENG_Type',
       header: '能源類型',
-      format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v,
+      format: v => this.service.engTypeOptions.find(t => t.value === v)?.label || v,
       exportFormat: [{ G01: '水錶' }, { G02: '電錶' }, { G03: '瓦斯錶' }],
     },
     { field: 'ENG_MeterNo', header: '錶號' },
@@ -85,7 +106,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   ngOnInit(): void {
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.service.loadEngType();
     this.service.loadEngMeterNo();
     this.service.loadLocationNo();
 
@@ -94,15 +114,25 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = <ASS21010Payload>{
+      const raw = {
         ...this.queryForm.getRawValue(),
         ...this.usrData(),
       };
-      this.service.loadASS21010(payload);
 
-      this.logger.debug(`onSubmit:`, [payload]);
+      const payload = (Object.keys(raw) as (keyof typeof raw)[]).reduce<Record<string, unknown>>((acc, key) => {
+        const v = raw[key];
+        if (v !== null && v !== void 0 && v !== '' && !(Array.isArray(v) && !v.length)) acc[key] = v;
+        return acc;
+      }, {}) as unknown as ASS21010Payload;
+
+      this.logger.debug(`onSubmit:`, [raw]);
+      this.service.loadASS21010(payload).pipe(
+        tap(response => {
+          this.tableData.set(response.Data.Data);
+          this.totalRecords.set(response.Data.TotalCount || 0);
+        })
+      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.loading = !1;
     });
   }
 
@@ -110,11 +140,12 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.authService.currentUserValue]);
     for (const d of data) {
       this.service.deleteASS21010({ ...d, ...this.usrData() })
-        .pipe(finalize(() => this.loading = !1))
-        .subscribe(res => {
-          if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
-          this.service.ASS21010Data.update(v => v.filter(d => data.some(item => d.ID !== item.ID)));
-          this.messageService.successBubble('刪除成功');
+        .pipe(
+          tap(() => this.tableData.update(v =>
+            v.filter(d => data.some(item => d.ID !== item.ID)))),
+        ).subscribe({
+          next: () => this.messageService.successBubble('刪除成功'),
+          error: () => this.messageService.errorBubble('刪除失敗')
         });
     }
     this.service.loadASS21010(<ASS21010Payload>{

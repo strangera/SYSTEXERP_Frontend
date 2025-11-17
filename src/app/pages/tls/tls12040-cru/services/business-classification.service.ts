@@ -6,7 +6,7 @@ import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 
 
 @Injectable({
-  providedIn: 'root'  // 或 'any' 如果是 lazy-loaded module
+  providedIn: 'root'
 })
 export class BusinessClassificationService {
   // 快取機制：使用 Map 儲存已載入的資料，避免重複 API 呼叫

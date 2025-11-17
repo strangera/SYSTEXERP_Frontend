@@ -245,7 +245,6 @@ export class FIN55130Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '150037';
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     this.userCodeService
       .getUserCode()

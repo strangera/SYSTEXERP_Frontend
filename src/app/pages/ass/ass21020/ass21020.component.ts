@@ -1,31 +1,33 @@
-import { Component, OnInit, computed, effect } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DropDownListService, IDropdownItem, TLTTALENT_TLT_SPACE } from './../../../service/utility/dropDownList.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { EngType } from '@service/api/ass/ass21010.service';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
+import { ASS21020Data, ASS21020Delete, ASS21020Query, DeleteASS21020Key } from './ass21020.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
 import { finalize } from 'rxjs';
-import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020Data, TLTByFlag } from './ass21020.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { Option } from '@service/utility/dropdown-api.model';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-ass21020',
   templateUrl: './ass21020.component.html',
-  styleUrl: './ass21020.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -36,181 +38,155 @@ import { ASS21020Data, TLTByFlag } from './ass21020.model';
     ButtonComponent,
     DropdownComponent,
     InputNumberComponent,
-    InputTextComponent,
     MenubarComponent,
-    MultiSelectComponent,
-    TableComponent,
+    TableReportComponent,
+    AsyncPipe,
+    DropdownTableComponent,
+    InputTextComponent
   ],
 })
 export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    ENG_Type: new FormControl<EngType[]>([]),
-    ENG_MeterNo: new FormControl<string | void>(void 0),
-    TLT_No: new FormControl<string | void>(void 0),
-    Location_No: new FormControl<string>(''),
-    TLT_Name: new FormControl<string>(''),
-    NET_SPACE: new FormControl<string | void>(void 0),
-    ENG_Rate: new FormControl<number | void>(void 0),
-    ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
+    EngTypes: [null],
+    ENG_MeterNo: [null],
+    TLT_No: [null, [Validators.maxLength(12)]],
+    ENG_Rate: [null as number | null, [Validators.min(0), Validators.max(100)]],
+    SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? null],
+    Mid: [this.authService.currentUserValue?.mid ?? null],
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]]
   });
-  public readonly qf = computed(() => this.queryForm.controls);
-  public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
+  ENG_TypeOptions = getSYS1000Options('ENG_Type');
+  allENG_MeterNoOptions: Option[] = [];
+  ENG_MeterNoOptions = this.dropdown.queryENG1001_ENG_MeterNo();
+  TLT_NoOptions: IDropdownItem[] = [];
 
-  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges, { equal: (a, b) => a === b });
-  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges, { equal: (a, b) => a === b });
-  private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges, { equal: (a, b) => a === b });
+  data: ASS21020Data[] = [];
+  selectedItems: ASS21020Data[] = [];
+  totalRecords = 0;
+  lastQueryBody: ASS21020Query | null = null;
 
-  public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
-
-  public filteredMeterNo: ASS2100ENGMeterType[] = [];
-
-  /** ENG_Type 改變時，帶出可用的meterNo */
-  public readonly engTypeEffect = effect(() => {
-    const engType = this.engTypeSignal();
-    this.logger.debug(`engTypeEffect:`, [engType, this.queryForm.getRawValue()]);
-    this.filteredMeterNo = this.service.engMeterNoSignal().filter(i => {
-      if (!engType?.length) return !0;
-      return this.service.engTypeSignal()!.some(t => t.Name === i.ENG_Type
-        && this.qf().ENG_Type.value?.some(v => v === t.No));
-    });
-    this.logger.debug(`engType Effect:`, [this.filteredMeterNo]);
-  }, { allowSignalWrites: !0 });
-
-  /* meterNo改變時，帶出Location_No、ENG_Type */
-  public readonly meterNoEffect = effect(() => {
-    const meterNo = this.meterNoSignal();
-    this.service.tltNoSignal.set([]);
-    this.logger.debug(`meterNoEffect:`, [meterNo, this.queryForm.getRawValue()]);
-    if (!meterNo) return void this.queryForm.patchValue({
-      TLT_No: void 0,
-      TLT_Name: '',
-      Location_No: '',
-      NET_SPACE: void 0,
-      ENG_Rate: void 0,
-    }, { emitEvent: !1 });
-    this.service.queryTltByFlag(meterNo);
-    const metro = this.service.engMeterNoMap.get(meterNo);
-    this.logger.debug(`metroNo metro:`, [metro]);
-    if (!metro) return;
-    const current = this.service.engTypeSignal().find(t => t.Name === metro.ENG_Type);
-    this.logger.debug(`metroNo current:`, [current]);
-    if (!current) return;
-    this.queryForm.patchValue({
-      ENG_Type: this.qf().ENG_Type.value?.length ? this.qf().ENG_Type.value : [current.No as EngType],
-      Location_No: metro.Location_No,
-    }, { emitEvent: !1 });
-    this.logger.debug(`meterNo changes:`, [meterNo, current]);
-  }, { allowSignalWrites: !0 });
-
-  /** TLT_No 改變時，帶出TLT_Name、NET_SPACE */
-  public readonly tltNoEffect = effect(() => {
-    const tltNo = this.tltNoSignal();
-    this.logger.debug(`tltNoEffect:`, [tltNo, this.queryForm.getRawValue()]);
-    if (!tltNo?.length) return;
-    const selected = this.service.tltByFlagMap.get(tltNo);
-    this.logger.debug(`tltNo selected:`, [selected]);
-    if (!selected) return;
-    this.queryForm.patchValue({
-      TLT_Name: selected.TLT_Name,
-      NET_SPACE: String(selected.NET_SPACE),
-    }, { emitEvent: !1 });
-    this.logger.debug(`tltNo changes:`, [tltNo, selected]);
-  }, { allowSignalWrites: !0 });
-
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21020Data; })[] = [
-    { field: 'ENG_Type', header: '能源類型' },
+  public readonly columns: ReportColumn[] = [
+    { field: 'ENG_TypeDesc', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'CRT_Date', header: '建立日期' },
+    { field: 'CRT_Date', header: '建立日期', format: formatDate },
     { field: 'CRT_USR_Name', header: '建立人員名稱' },
-    { field: 'UPD_Date', header: '變更日期' },
+    { field: 'UPD_Date', header: '變更日期', format: formatDate },
     { field: 'UPD_USR_Name', header: '變更人員名稱' },
   ];
-
-  public readonly extColumns: (Omit<Column, 'field'> & { field: keyof TLTByFlag; })[] = [
+  public readonly extColumns: ReportColumn[] = [
     { field: 'TLT_No', header: '專櫃編號/名稱', format: (v, i, r) => `${v}${r?.TLT_Name ? '-' + r.TLT_Name : ''}` },
     { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
     { field: 'ENG_Remark', header: '備註' },
   ];
 
-  public readonly meterColumns: Column[] = [
-    { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'Location_No', header: '設備位置編號' },
-    { field: 'ENG_Type', header: '能源類型' },
-  ];
-
-  public readonly tltNoColumns: (Omit<Column, 'field'> & { field: keyof TLTByFlag; })[] = [
-    { field: 'TLT_No', header: '專櫃編號' },
-    { field: 'TLT_Name', header: '專櫃名稱' },
-    { field: 'NET_SPACE', header: '專櫃面積坪數' },
-    { field: 'Apply_No', header: '招募編號' },
-  ];
-
   constructor(
     public readonly service: ASS21020Service,
-    private readonly logger: NGXLogger,
+    private readonly dropdown: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
-    this.user = this.authService.currentUserValue!;
   }
 
   public ngOnInit(): void {
-    this.initializePage('ASS21020', '/ASS/ASS21020CRU', this.queryForm, this.onSubmit.bind(this));
-
-    this.service.tltNoSignal.set([]);
-
-    this.service.loadEngType();
-    this.service.loadEngMeterNo();
-
-    this.logger.debug(`init:`, []);
+    this.initializePage('ASS21020', '/ass/ass21020cru', this.queryForm, this.onSubmit.bind(this));
+    this.ENG_MeterNoOptions.pipe(untilDestroyed(this)).subscribe(options => {
+      this.allENG_MeterNoOptions = options || [];
+    });
+    this.onFormValueChanged(this.tltNoOpForm.getRawValue() as unknown as Record<string, string>);
   }
 
-  public onSubmit(): void {
-    this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.user]);
-    this.handleSubmit(this.queryForm, () => {
-      const { SortBy, pageSize, pageIndex, ...field } = this.queryForm.getRawValue();
-      this.service.loadASS21020({
-        EngTypes: this.qf().ENG_Type.value!.join(),
-        ENG_Rate: this.qf().ENG_Rate.value!,
-        ENG_MeterNo: this.qf().ENG_MeterNo.value!,
-        Location_No: this.qf().Location_No.value || void 0,
-        SYS_StoreNo: this.user?.SYS_StoreNo!,
-        Mid: Number(this.user?.mid)!,
-        SortBy: SortBy || void 0,
-        PageSize: pageSize || void 0,
-        PageIndex: pageIndex || void 0,
-      });
-
-      this.loading = this.service.tableLoading;
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.getRawValue(),
+        TLT_No: frm.getRawValue().TLT_No?.TltNo || null,
+      }
+      this.service.queryASS21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQueryBody = body;
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      })
     });
   }
 
   public onDelete(items: ASS21020Data[]): void {
-    Array.isArray(items) || (items = [items]);
-    this.logger.debug(`Deleting:`, [items]);
-
-    let deletedCount = 0;
-    const totalItems = items.length;
-
-    for (const item of items) {
-      this.service.deleteASS21020({ ENG_Type: this.service.engTypeMap.get(item.ENG_Type)!, ENG_MeterNo: item.ENG_MeterNo })
-        .subscribe(res => {
-          deletedCount++;
-
-          if (deletedCount === totalItems) {
-            const formValues = this.queryForm.getRawValue();
-            this.service.loadASS21020({
-              EngTypes: formValues.ENG_Type!.join(),
-              ENG_Rate: formValues.ENG_Rate!,
-              ENG_MeterNo: formValues.ENG_MeterNo!,
-              Location_No: formValues.Location_No!,
-              Mid: Number(this.user?.mid)!,
-              SYS_StoreNo: this.user?.SYS_StoreNo!,
-            });
-            this.loading = !1;
+    const deleteKeys: DeleteASS21020Key[] = items.map(item => ({
+      ENG_Type: item.ENG_Type,
+      ENG_MeterNo: item.ENG_MeterNo
+    }));
+    this.confirmationService.confirm({
+      header: '刪除確認',
+      message: `確定要刪除嗎？刪除後無法恢復。`,
+      accept: () => {
+        this.loading = true;
+        this.service.deleteASS21020({ DeleteKeys: deleteKeys } as ASS21020Delete).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          if (res.Data.IsUpdateSuccess) {
+            this.messageService.successBubble('已成功刪除選定的能源攤提設定！');
+            this.selectedItems = [];
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(res.Data.ErrorMsg);
           }
         });
+      },
+    });
+  }
+
+  // 1. TLT_No 相關屬性
+  tltNoLoading = false;
+  tltNoOpForm = this.formBuilder.group({
+    TltNo: [null, [Validators.maxLength(100)]],
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
+  });
+  tltNoSuggestions: TLTTALENT_TLT_SPACE[] = []; // 用於 p-autoComplete 的建議列表
+  // 專櫃的 FieldsConfig
+  tltNoFieldsConfig: FieldsConfig[] = [
+    { field: 'TltNo', header: '專櫃編號', mainDataField: true }, // 主要輸入欄位
+    { field: 'TltSpace', header: '面積' }, // 顯示在 AutoComplete 旁邊的額外資訊
+  ];
+  tltNoOpData: TLTTALENT_TLT_SPACE[] = []; // 用於 OverlayPanel 裡面的 Table 資料
+  // OverlayPanel 裡面的 Table Columns
+  tltNoOpColumns: Column[] = [
+    { field: 'TltNo', header: '專櫃編號', sortField: 'tlt_no' },
+    { field: 'TltName', header: '專櫃名稱', sortField: 'tlt_name' },
+    { field: 'ApplyNo', header: '申請編號', sortField: 'apply_no' },
+    { field: 'LocationNo', header: '位置編號', sortField: 'location_no' },
+    { field: 'TltSpace', header: '面積', sortField: 'tlt_space' },
+  ];
+
+  tltNoOpTotalRecords = 0; // 總筆數 (初始為全部資料筆數)
+  onAutoCompleteInputChange(event: Record<string, string>): void {
+    const body = {
+      ...event,
+      TltNo: event['TltNo'] || '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'tlt_no', order: 1 }],
     }
+    this.dropDownListService.queryTLTTALENT_TLT_SPACE(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.tltNoSuggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.TltNo + ' - ' + item.TltName + ' - ' + item.ApplyNo + ' - ' + item.LocationNo + ' (面積:' + item.TltSpace + ')',
+      }))];
+    });
+  }
+
+  onFormValueChanged(event: Record<string, string>): void {
+    this.tltNoLoading = true;
+    const body = {
+      ...event,
+      TltNo: event['TltNo'] || '',
+      pageSize: event['pageSize'] ? Number(event['pageSize']) : 30,
+      pageIndex: event['pageIndex'] ? Number(event['pageIndex']) : 1,
+      SortBy: [{ field: 'tlt_no', order: 1 }],
+    };
+    this.dropDownListService.queryTLTTALENT_TLT_SPACE(body).pipe(untilDestroyed(this), finalize(() => this.tltNoLoading = false)).subscribe((results) => {
+      this.tltNoOpData = results.Data;
+      this.tltNoOpTotalRecords = results.TotalCount;
+    });
   }
 }

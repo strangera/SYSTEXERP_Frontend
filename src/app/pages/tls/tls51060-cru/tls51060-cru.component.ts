@@ -15,6 +15,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { untilDestroyed } from '@ngneat/until-destroy';
 //
 
 // 2.5.1.6 品牌設定作業  CRU
@@ -40,13 +41,13 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
     // 20251014: 新增 專櫃編號欄位
-    TLT_NO: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
+    TLT_No: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
 
     CanDel: [null],  //能否刪除(僅顯示) 卡控
   });
   //
   storageOptions: apiOption[] = [];
-  TLT_NO_Option: any[] = []; // 專櫃編號
+  TLT_No_Option: any[] = []; // 專櫃編號
   allquery: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
@@ -92,7 +93,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
         if (this.canAdd()) {
           const formValue = frm.getRawValue();
           console.log('insert', JSON.stringify(formValue, null, 2));
-          this.tls51060Service.insertTLS51060(formValue).subscribe(() => {
+          this.tls51060Service.insertTLS51060(formValue).pipe(untilDestroyed(this)).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             this.dataForm.reset(); // 重置表單
@@ -103,7 +104,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
         if (this.canEdit()) {
           const formValue = frm.getRawValue();
           console.log('update', JSON.stringify(formValue, null, 2));
-          this.tls51060Service.updateTLS51060(formValue).subscribe(() => {
+          this.tls51060Service.updateTLS51060(formValue).pipe(untilDestroyed(this)).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });
@@ -127,7 +128,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
   loadOptions() {
     {
       this.tls51060Service
-        .queryPOS2034_DropDownList({})
+        .queryPOS2034_DropDownList({}).pipe(untilDestroyed(this))
         .subscribe((response) => {
           this.storageOptions = response.Data.map((item: apiOption) => ({
             No: item.No,
@@ -136,9 +137,9 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
           }));
         });
 
-      // 查詢 專櫃編號
-      this.dropDownListService.queryTLTTALENT_DropDownList().subscribe((response) => {
-        this.TLT_NO_Option = response.Data.map((item: any) => ({
+      // 查詢 專櫃編號(這邊要用這支_後端提供的queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList )
+      this.tls51060Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+        this.TLT_No_Option = response.Data.map((item: any) => ({
           No: item.No, // 專櫃編號代碼
           Label: item.No + '-' + item.Name, // 組合成顯示用的Label
         }));

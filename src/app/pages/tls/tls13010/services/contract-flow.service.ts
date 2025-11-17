@@ -1,7 +1,7 @@
 // contract-flow.service.ts - 整合 DataCleaner 版本
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import {
   CommissionItem,
   ConditionItem,
@@ -62,6 +62,34 @@ export class ContractFlowService {
     this.restoreViewMode(); // 初始化時恢復檢視模式狀態
   }
 
+  /**
+ * 🆕 為所有已勾選的扣款項目填入組織ID
+ */
+  private fillOrgIdForFares(fareItems: FareItem[], orgId: string | undefined): FareItem[] {
+    if (!orgId) {
+      console.warn('⚠️ 無組織ID，跳過填入');
+      return fareItems;
+    }
+
+    let fillCount = 0;
+
+    const result = fareItems.map(item => {
+      // 只處理已勾選的項目
+      if (item.is_selected && !item.org_id) {
+        fillCount++;
+        return {
+          ...item,
+          org_id: orgId
+        };
+      }
+      return item;
+    });
+
+    console.log(`🏢 已為 ${fillCount} 個扣款項目填入組織ID: ${orgId}`);
+
+    return result;
+  }
+
   // ========== 清理後的資料生成方法 ==========
   generateCleanSubmitData(): CleanSubmitData {
     console.log('開始生成清理後的提交資料...');
@@ -77,6 +105,20 @@ export class ContractFlowService {
     if (!step1Data) {
       throw new Error('缺少合約基本資料 (Step 1)');
     }
+
+    const selectedOrgId = step1Data?.org_id;
+
+    if (!selectedOrgId) {
+      console.warn('⚠️ CRU 未選擇組織ID');
+    } else {
+      console.log('🏢 從 CRU 取得組織ID:', selectedOrgId);
+    }
+
+    // 🆕 在清理扣款資料前，統一填入組織ID
+    const fareDataWithOrgId = this.fillOrgIdForFares(
+      this.cleanFareAmounts(step2Data || []),
+      selectedOrgId
+    );
 
     // 從 Step1 CRU 頁面取得合約日期
     const contractStartDate = this.formatDateForBackend(step1Data.tlt_bdate);
@@ -202,7 +244,7 @@ export class ContractFlowService {
           data: DataCleaner.cleanContractInfo(step1Data)
         },
 
-        deductions: DataCleaner.cleanDeductionItems(step2Data || []),
+        deductions: DataCleaner.cleanDeductionItems(fareDataWithOrgId),
 
         // 關鍵修正：傳遞合約日期給 DataCleaner
         commissions: DataCleaner.cleanCommissionData(
@@ -443,7 +485,7 @@ export class ContractFlowService {
    * 新增：初始化新增模式工作流程
    */
   private initializeNewContractWorkflow(queryRowData: any): void {
-    const contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
 
     this.contractData = {
       contractId: contractId,
@@ -487,9 +529,27 @@ export class ContractFlowService {
 
   /**
    * 新增：初始化編輯模式工作流程
+   * 🔥 修改：只存儲最少的識別資訊，不存儲完整的查詢結果
    */
   private initializeEditContractWorkflow(queryRowData: any): void {
-    const contractId = queryRowData.talent_id || queryRowData.apply_no || Date.now().toString();
+    // 🔥 只提取必要的識別欄位，轉換為字串
+    const talent_id = queryRowData.talent_id ? String(queryRowData.talent_id) : '';
+    const apply_no = queryRowData.apply_no ? String(queryRowData.apply_no) : '';
+    const contractId = talent_id || apply_no || Date.now().toString();
+
+    // 🔥 只存儲最少的必要資訊，不要存整個查詢結果
+    const minimalQueryRowData = {
+      talent_id: talent_id,
+      apply_no: apply_no,
+      tlt_term_type: queryRowData.tlt_term_type,
+      _isNewContract: false
+    };
+
+    console.log('🔄 編輯模式初始化，只存儲識別資訊:', {
+      talent_id: talent_id,
+      talent_id_type: typeof talent_id,
+      apply_no: apply_no
+    });
 
     if (this.contractData.contractId === contractId) {
       console.log('📦 發現現有暫存資料，從暫存重新開始編輯:', contractId);
@@ -505,7 +565,7 @@ export class ContractFlowService {
       console.log('📝 開始新的編輯工作流程:', contractId);
       this.contractData = {
         contractId: contractId,
-        queryRowData: queryRowData,
+        queryRowData: minimalQueryRowData, // 🔥 只存儲識別資訊
         step1: null,
         step2: [],
         step3: [],
@@ -534,9 +594,10 @@ export class ContractFlowService {
       this.workflowStatusSubject.next(newStatus);
     }
 
-    console.log('✅ 編輯模式工作流程初始化完成:', {
+    console.log('✅ 編輯模式工作流程初始化完成 (只存 talent_id):', {
       contractId: contractId,
-      talentId: queryRowData.talent_id
+      talentId: talent_id,
+      talentIdType: typeof talent_id
     });
   }
 
@@ -645,11 +706,12 @@ export class ContractFlowService {
       console.log('🔄 從 API 載入合約資料:', { talentId, mode });
 
       // 使用現有的查詢 API （您需要注入 TLS13010Service）
-      const response = await this.tls13010Service.queryTLS13010({
-        talent_id: talentId
-        // 其他必要參數...
-      }).toPromise();
-
+      const response = await firstValueFrom(
+        this.tls13010Service.queryTLS13010({
+          talent_id: talentId
+          // 其他必要參數...
+        })
+      );
       if (response?.Status === '0000' && response?.Data?.length > 0) {
         const contractData = response.Data[0];
         this.initializeFromContractData(contractData, mode);
@@ -671,17 +733,27 @@ export class ContractFlowService {
     const contractId = contractData.talent_id || contractData.apply_no;
     const isViewMode = mode === 'view';
 
-    // 標記資料來源
-    const enhancedContractData = {
+    // 🔥 關鍵修正：將數字欄位轉換為字串
+    const normalizedContractData = {
       ...contractData,
+      talent_id: contractData.talent_id ? String(contractData.talent_id) : '',
+      apply_no: contractData.apply_no ? String(contractData.apply_no) : '',
+      rental_count: contractData.rental_count ? String(contractData.rental_count) : '',
       _isNewContract: false,
       _isViewMode: isViewMode,
       _loadedFromAPI: true
     };
 
+    console.log('🔄 contractData 正規化:', {
+      原始talent_id: contractData.talent_id,
+      原始類型: typeof contractData.talent_id,
+      轉換後talent_id: normalizedContractData.talent_id,
+      轉換後類型: typeof normalizedContractData.talent_id
+    });
+
     this.contractData = {
       contractId: contractId,
-      queryRowData: enhancedContractData,
+      queryRowData: normalizedContractData, // 🔥 使用轉換後的資料
       step1: null, // 會從 queryRowData 建立
       step2: [],
       step3: [],
@@ -718,15 +790,17 @@ export class ContractFlowService {
    * 修正：儲存第1步資料
    */
   saveStep1Data(formData: ContractInfo): void {
-    if (this.isViewMode()) {
-      console.log('🔍 檢視模式，跳過 Step1 資料儲存');
-      return;
-    }
+    // if (this.isViewMode()) {
+    //   console.log('🔍 檢視模式，跳過 Step1 資料儲存');
+    //   return;
+    // }
     const modeInfo = this.getWorkflowModeInfo();
 
     if (modeInfo.isNewMode) {
       formData.talent_id = '';
-      if (!this.contractData.contractId || !this.contractData.contractId.startsWith('new_contract_')) {
+      // 🔥 修正：確保 contractId 轉換為字串再使用 startsWith
+      const contractIdStr = String(this.contractData.contractId || '');
+      if (!this.contractData.contractId || !contractIdStr.startsWith('new_contract_')) {
         this.contractData.contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       }
     } else {
@@ -782,10 +856,10 @@ export class ContractFlowService {
    * 修正：儲存第2步資料（代扣款）
    */
   saveStep2Data(data: FareItem[]): void {
-    if (this.isViewMode()) {
-      console.log('🔍 檢視模式，跳過 Step2 資料儲存');
-      return;
-    }
+    // if (this.isViewMode()) {
+    //   console.log('🔍 檢視模式，跳過 Step2 資料儲存');
+    //   return;
+    // }
     if (this.contractData.contractId) {
       this.contractData.step2 = data;
       this.contractData.metadata.lastModified = new Date();
@@ -799,10 +873,10 @@ export class ContractFlowService {
    * 修正：儲存第3步資料（抽成設定）
    */
   saveStep3Data(data: CommissionItem[]): void {
-    if (this.isViewMode()) {
-      console.log('🔍 檢視模式，跳過 Step3 資料儲存');
-      return;
-    }
+    // if (this.isViewMode()) {
+    //   console.log('🔍 檢視模式，跳過 Step3 資料儲存');
+    //   return;
+    // }
     if (this.contractData.contractId) {
       this.contractData.step3 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
@@ -816,10 +890,10 @@ export class ContractFlowService {
    * 儲存第4步資料（條件設定）
    */
   saveStep4Data(data: ConditionItem[]): void {
-    if (this.isViewMode()) {
-      console.log('🔒 檢視模式，跳過 Step4 資料儲存');
-      return;
-    }
+    // if (this.isViewMode()) {
+    //   console.log('🔒 檢視模式，跳過 Step4 資料儲存');
+    //   return;
+    // }
 
     console.log('💾 準備儲存 Step4 資料:', data);
     console.log('資料類型:', typeof data, '是否為陣列:', Array.isArray(data));
@@ -1442,8 +1516,12 @@ export class ContractFlowService {
       return true;
     }
 
-    if (currentData.contractId?.startsWith('new_contract_')) {
-      return true;
+    // 🔥 修正：確保 contractId 轉換為字串再使用 startsWith
+    if (currentData.contractId) {
+      const contractIdStr = String(currentData.contractId);
+      if (contractIdStr.startsWith('new_contract_')) {
+        return true;
+      }
     }
 
     if (!currentData.contractId) {
@@ -1477,8 +1555,12 @@ export class ContractFlowService {
         warnings.push('新增模式標記不明確');
       }
 
-      if (this.contractData.contractId && !this.contractData.contractId.startsWith('new_contract_')) {
-        warnings.push('新增模式 contractId 格式異常');
+      // 🔥 修正：確保 contractId 轉換為字串再使用 startsWith
+      if (this.contractData.contractId) {
+        const contractIdStr = String(this.contractData.contractId);
+        if (!contractIdStr.startsWith('new_contract_')) {
+          warnings.push('新增模式 contractId 格式異常');
+        }
       }
     }
 
@@ -1777,5 +1859,19 @@ export class ContractFlowService {
 
     // 預設為編輯模式
     this.isViewModeSubject.next(false);
+  }
+
+  /**
+ * 清理扣款金額,確保都是整數
+ */
+  private cleanFareAmounts(fareItems: FareItem[]): FareItem[] {
+    return fareItems.map(item => ({
+      ...item,
+      tpy_amount: item.tpy_amount ? Math.round(Number(item.tpy_amount)) : null,
+      tpy_totalamt: item.tpy_totalamt ? Math.round(Number(item.tpy_totalamt)) : null,
+      down_payment: item.down_payment ? Math.round(Number(item.down_payment)) : null,
+      period_nos: item.period_nos ? Math.round(Number(item.period_nos)) : null,
+      interval: item.interval ? Math.round(Number(item.interval)) : null,
+    }));
   }
 }

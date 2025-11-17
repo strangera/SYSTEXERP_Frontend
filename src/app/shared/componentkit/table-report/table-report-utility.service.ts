@@ -19,7 +19,7 @@ export class TableReportUtilityService {
 
   // 判斷欄位是否可見
   isColumnVisible(col: ReportColumn): boolean {
-    return col.visible !== false && col.hidden !== true;
+    return col.visible !== false;
   }
 
   // 計算分組欄位跨度
@@ -75,34 +75,30 @@ export class TableReportUtilityService {
    * @returns 如果是最後一筆則回傳 true，否則為 false。
    */
   isGroupLastRow(rowData: any, rowIndex: number, groupRowsBy: string, data: any): boolean {
+    // 1. 確保 rowData 存在，並且有分組欄位 (雖然 HTML 應該已經檢查過 rowData)
+    if (!rowData || !groupRowsBy) {
+      return false; // 或者根據邏輯回傳 true
+    }
+
     // 取得當前行和下一行在分組依據欄位上的值
     const currentRowGroupValue = rowData[groupRowsBy];
-    if (groupRowsBy === undefined || rowIndex === data.length - 1 || data[rowIndex + 1] === undefined || data[rowIndex + 1][groupRowsBy] === undefined) {
+
+    // 檢查是否為最後一行
+    if (rowIndex === data.length - 1) {
       return true;
     }
-    const nextRowGroupValue = data[rowIndex + 1][groupRowsBy];
+
+    // 安全存取下一行資料 (使用 ?. 運算子)
+    const nextRow = data[rowIndex + 1];
+    const nextRowGroupValue = nextRow?.[groupRowsBy];
+
+    // 如果下一行不存在或下一行的分組值未定義，則視為當前分組的最後一筆
+    if (!nextRow || nextRowGroupValue === undefined) {
+      return true;
+    }
 
     // 如果當前行的分組值與下一行不同，表示當前行是該分組的最後一筆
     return currentRowGroupValue !== nextRowGroupValue;
-  }
-  /**
- * 依據群組標示，計算並取得該欄位的小計數值。
- * @param rowData 當前行的資料。
- * @param col 當前的欄位定義。
- * @returns 該欄位的小計數值，如果找不到或不是數值欄位則回傳空字串。
- */
-  getGroupSubtotal(rowData: any, col: ReportColumn, groupRowsBy: string, data: any): any {
-    // 2. 找到屬於同一個群組的所有資料
-    const groupValue = rowData[groupRowsBy];
-    // 這裡使用 'this.data' 是關鍵，它必須在正確的元件上下文裡
-    const groupRows = data.filter((item: any) => item[groupRowsBy!] === groupValue);
-    // 3. 對找到的資料進行加總，並將值轉為數字
-    const total = groupRows.reduce((sum: number, item: Record<string, any>) => {
-      const value = Number(item[col.field]) || 0;
-      return sum + value;
-    }, 0);
-    // 4. 回傳加總後的數值
-    return col.format ? col.format(total) : total;
   }
   /**
      * 處理單一行的展開/收合邏輯。

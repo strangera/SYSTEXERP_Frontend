@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,7 +15,6 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, LedgerMDType, VoucherType } from './fin52080.model';
 
 @Component({
@@ -116,6 +115,12 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     if (!match) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
   });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.classNoLoading()
+      || this.service.treeLoading();
+  });
+
   /**
    * - AccNo: 科目代號
    * - AccCname: 科目名稱
@@ -183,9 +188,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
       this.logger.debug(`對象及對帳維護作業 request:`, [payload]);
 
-      this.service.loadFIN52080(payload).pipe(
-        finalize(() => this.loading = !1),
-      ).subscribe();
+      this.service.loadFIN52080(payload).subscribe();
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });

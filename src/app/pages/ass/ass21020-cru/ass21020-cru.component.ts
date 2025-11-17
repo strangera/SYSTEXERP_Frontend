@@ -1,32 +1,34 @@
-import { NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core'; // 新增 OnDestroy
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { EngType } from '@service/api/ass/ass21010.service';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { NGXLogger } from 'ngx-logger';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
-import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020CRUTable, ASS21020Data, ASS21020Detail, ASS21020Query, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Detail, ASS21020Update, ASS21020UpdateData } from '../ass21020/ass21020.model';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { NgIf } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { debounceTime, finalize, Subject } from 'rxjs';
+import { ButtonModule } from 'primeng/button';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-ass21020-cru',
   templateUrl: './ass21020-cru.component.html',
-  styleUrl: './ass21020-cru.component.scss',
-  standalone: !0,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
   imports: [
-    NgIf,
     TranslateModule,
     ReactiveFormsModule,
     PanelModule,
@@ -35,369 +37,376 @@ import { ASS21020CRUTable, ASS21020Data, ASS21020Detail, ASS21020Query, ASS21020
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
-    TableComponent,
+    TableEditComponent,
+    ButtonModule,
+    DialogComponent,
+    TableReportComponent,
+    NgIf
   ]
 })
-export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> implements OnInit {
-  public tb = viewChild<TableComponent>('tb');
-  public readonly CRUDStatus = CRUDStatus;
-  private readonly ratePtn = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
+export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> implements OnInit, OnDestroy { // 實作 OnDestroy
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENG_Type: new FormControl<EngType | void>(void 0, [Validators.required]),
-    ENG_MeterNo: new FormControl<string | void>(void 0, [Validators.required]),
-    Location_No: new FormControl<string | void>(void 0),
-    floor_no: new FormControl<string | void>(void 0),
-    floor_name: new FormControl<string | void>(void 0),
-    Building_No: new FormControl<string | void>(void 0),
-    Building_Name: new FormControl<string | void>(void 0),
-    x_coord: new FormControl<string | void>(void 0),
-    y_coord: new FormControl<string | void>(void 0),
-  });
-  public readonly df = computed(() => this.dataForm.controls);
-
-  private readonly tltByFlagMap = computed(() => this.service.tltByFlagMap);
-
-  private readonly payload = computed((): ASS21020Query | null => {
-    const type = this.engTypeSignal() as string;
-    const mtrNo = this.meterNoSignal();
-    this.logger.debug(`payload:`, [type, mtrNo]);
-    return {
-      EngTypes: this.service.engTypeMap.get(type) ?? void 0,
-      ENG_MeterNo: mtrNo ?? void 0,
-      Mid: Number(this.user.mid),
-      SYS_StoreNo: this.user.SYS_StoreNo,
-    };
+    ENG_Type: [null, [Validators.required]],
+    ENG_MeterNo: [null as string | null, [Validators.required]],
+    Location_No: [{ value: null, disabled: true }],
+    Floor_No: [{ value: null, disabled: true }],
+    Floor_Desc: [{ value: null, disabled: true }],
+    building_No: [{ value: null, disabled: true }],
+    building_DESC: [{ value: null, disabled: true }],
+    Draw_X: [{ value: null, disabled: true }],
+    Draw_Y: [{ value: null, disabled: true }],
   });
 
-  /** 根據工程類型篩選的電錶編號清單 */
-  public readonly filteredMeterNo = computed<ASS2100ENGMeterType[]>(() => {
-    const selected = this.engTypeSignal();
-    const engTypes = this.service.engTypeSignal();
-    const allMeterNo = this.service.engMeterNoSignal();
-
-    if (!selected || !engTypes.length || !allMeterNo.length) return allMeterNo;
-
-    const selectedTypeName = engTypes.find(t => t.No === selected)?.Name;
-    if (!selectedTypeName) return allMeterNo;
-
-    const filtered = allMeterNo.filter(m => m.ENG_Type === selectedTypeName);
-
-    // filtered.forEach(m => m.ENG_MeterNo !== this.meterNoSignal() && this.df().ENG_MeterNo.setValue(void 0));
-
-    return filtered;
-  });
-
-  public readonly filteredData = computed<ASS21020Detail[]>(() => {
-    const rows = this.tableDataSignal().length > 0
-      ? this.tableDataSignal()
-      : this.rowdata?.Details || [];
-    if (!rows.length) return [];
-
-    this.logger.debug(`filteredData:`, [rows, this.tltByFlagMap()]);
-    return rows.map(d => {
-      const mapData = this.tltByFlagMap().get(d.TLT_No);
-      return {
-        ...d,
-        Location_No: mapData?.Location_No ?? d.Location_No ?? '',
-        NET_SPACE: mapData?.NET_SPACE ?? d.NET_SPACE ?? 0,
-      };
-    });
-  });
-
-  public readonly totalRecords = computed(() => this.filteredData().length);
-
-  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges, { initialValue: void 0 });
-  private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges, { initialValue: void 0 });
-  private readonly tableDataSignal = signal<ASS21020Detail[]>([]);
-  private readonly currentEditingSignal = signal<{ event: FieldChangeEvent<ASS21020Detail> | null; currentData: ASS21020Detail[]; }>({ event: null, currentData: [] });
-  public readonly rowEditValidSignal = signal(!0);
-
-  private editingRow: TLTByFlag | undefined;
-  private lastQueriedMeterNo: string | undefined;
-
-  /* 驗證 ENG_Rate 跟 TLT_No */
-  public readonly validationEffect = effect(() => {
-    const { event, currentData } = this.currentEditingSignal();
-    if (!event || !currentData.length) return void this.rowEditValidSignal.set(!0);
-
-    const tltNoToCheck = <string | undefined>(event.field === 'TLT_No' ? event.value : event.rowData.TLT_No);
-    const rateToCheck = <number | undefined>(event.field === 'ENG_Rate' ? event.value : event.rowData.ENG_Rate);
-
-    //  TLT_No 不重複
-    const isDuplicateTltNo = tltNoToCheck && currentData.some(item =>
-      item.TLT_No === tltNoToCheck && item !== event.rowData
-    );
-
-    // 所有 ENG_Rate 欄位都已填入
-    const hasEmptyRates = currentData.some(item => {
-      const rate = item === event.rowData
-        ? (event.field === 'ENG_Rate' ? event.value : item.ENG_Rate)
-        : item.ENG_Rate;
-      return rate === null || rate === void 0 || rate === '';
-    });
-
-    // ENG_Rate 格式正確（0-100之間或空值）
-    const isInvalidRate = typeof rateToCheck === 'number'
-      ? (rateToCheck < 0 || rateToCheck > 100)
-      : (rateToCheck !== null && rateToCheck !== void 0 && rateToCheck !== '');
-
-    // 總比率不超過100%
-    const totalRate = currentData.reduce((sum, item) => {
-      const rate = item === event.rowData
-        ? (event.field === 'ENG_Rate' ? (event.value ?? 0) : (item.ENG_Rate ?? 0))
-        : (item.ENG_Rate ?? 0);
-      const numericRate = Number(rate);
-      return sum + (isNaN(numericRate) ? 0 : numericRate);
-    }, 0);
-
-    const isValid = !isDuplicateTltNo && !hasEmptyRates && !isInvalidRate && totalRate <= 100;
-    this.rowEditValidSignal.set(isValid);
-  }, { allowSignalWrites: !0 });
-
-  /* 根據表單載入相關資料 */
-  public readonly dataFormEffect = effect(() => {
-    const payload = this.payload();
-    const types = this.service.engTypeSignal();
-    const meters = this.service.engMeterNoSignal();
-    const dtVal = this.tb()!.dt.value ?? [];
-    this.tb()!.rowEditing = !1;
-    this.logger.debug(`dataForm:`, [payload, types, meters, dtVal]);
-
-    if (dtVal.length) this.tableDataSignal.set(dtVal.filter(i => !i.Apply_No?.startsWith('temp')));
-    if (!payload?.EngTypes) this.df().ENG_Type.patchValue(types.find(t =>
-      meters.find(m => m.ENG_Type === t.Name))?.No as EngType);
-    if (!payload?.ENG_MeterNo) return;
-
-    const meterData = meters.find(item => item.ENG_MeterNo === payload.ENG_MeterNo);
-
-    if (payload.ENG_MeterNo && this.lastQueriedMeterNo !== payload.ENG_MeterNo) {
-      this.lastQueriedMeterNo = payload.ENG_MeterNo;
-      this.service.queryTltByFlag(payload.ENG_MeterNo);
-    }
-
-    if (payload.EngTypes && meterData) queueMicrotask(() => {
-      if (this.crudstatus !== CRUDStatus.Create) this.service.loadASS21020(payload);
-
-      this.dataForm.patchValue({
-        Location_No: meterData.Location_No,
-        floor_no: meterData.Floor_No,
-        floor_name: meterData.Floor_Desc,
-        Building_No: meterData.building_No,
-        Building_Name: meterData.building_DESC,
-        x_coord: meterData.Draw_X,
-        y_coord: meterData.Draw_Y,
-      }, { emitEvent: !1 });
-    });
-    if (this.isFormReadable) return void this.dataFormEffect.destroy();
-  }, { allowSignalWrites: !0 });
-
-  /* 初始化 */
-  public readonly initEffect = effect(() => {
-    if (this.isFormCreateable) return void this.initEffect.destroy();
-
-    const rowData = this.rowdata;
-    const data = this.service.ASS21020Data();
-    const engTypes = this.service.engTypeSignal();
-    const meterNos = this.service.engMeterNoSignal();
-    if (!engTypes?.length || !meterNos?.length || !rowData) return;
-
-    const fixedType = engTypes.find(t => t.Name === rowData.ENG_Type);
-    const meterData = meterNos.find(item => item.ENG_MeterNo === rowData.ENG_MeterNo);
-    const target = data.find(v => v.ENG_MeterNo === rowData.ENG_MeterNo);
-
-    if (meterData && fixedType) this.dataForm.patchValue({
-      ENG_Type: fixedType.No as EngType || void 0,
-      ENG_MeterNo: rowData.ENG_MeterNo ?? void 0,
-      Location_No: meterData.Location_No ?? void 0,
-      floor_no: meterData.Floor_No ?? void 0,
-      floor_name: meterData.Floor_Desc ?? void 0,
-      Building_No: meterData.building_No ?? void 0,
-      Building_Name: meterData.building_DESC ?? void 0,
-      x_coord: meterData.Draw_X ?? void 0,
-      y_coord: meterData.Draw_Y ?? void 0,
-    }, { emitEvent: !1 });
-
-    if (rowData.ENG_MeterNo && this.lastQueriedMeterNo !== rowData.ENG_MeterNo) {
-      this.lastQueriedMeterNo = rowData.ENG_MeterNo;
-      this.service.queryTltByFlag(rowData.ENG_MeterNo);
-    }
-
-    this.logger.debug(`initEffect 1:`, [rowData, data, engTypes, meterNos, fixedType, meterData, target]);
-    if (!target) return;
-    this.tableDataSignal.set(target.Details ?? []);
-    this.logger.debug(`initEffect 2:`, [meterData, target]);
-    this.initEffect.destroy();
-  }, { allowSignalWrites: !0 });
-
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21020CRUTable; })[] = [
+  ENG_TypeOptions = getSYS1000Options('ENG_Type');
+  ENG_MeterNoOptions = this.dropdown.queryENG1001_ENG_MeterNo();
+  public filteredENG_MeterNoOptions: Option[] = [];
+  private allENG_MeterNoOptions: Option[] = [];
+  TLT_NoOptions = this.dropdown.queryTLTTALENT_TLT_SPACE();
+  public tltNoOptionsArray: Option[] = [];
+  data: ASS21020Detail[] = [];
+  selectedItems: ASS21020Detail[] = [];
+  lastQueryBody: any = {}; // 用於比較，防止重複查詢
+  public readonly columns: EditColumn[] = [
+    { field: 'TLT_No', header: '專櫃編號', },
+    { field: 'TLT_Name', header: '櫃位名稱', },
+    // { field: 'LocationNo', header: '位置編號', },
+    { field: 'ApplyNo', header: '招募編號', },
     {
-      field: 'TLT_No',
-      header: '專櫃編號/名稱',
-      type: 'dropdown',
-      options: () => this.service.tltNoSignal().map(({ TLT_No, TLT_Name }) => ({ No: TLT_No, Name: `${TLT_No}-${TLT_Name}` })),
-      optionLabel: 'Name',
-      optionValue: 'No',
-      disabled: () => this.isFormReadable,
-      required: !0
+      field: 'ENG_Rate', header: '比率', type: 'inputNumber', min: 0, max: 100, maxFractionDigits: 2,
+      validate: [validateRequired, validateMinNumber(1)],
     },
-    {
-      field: 'Location_No',
-      header: '位置編號',
-      format: (v: string) => v ?? this.editingRow?.Location_No ?? '',
-    },
-    {
-      field: 'NET_SPACE',
-      header: '營業面積',
-      format: (v: number) => v ?? this.editingRow?.NET_SPACE ?? 0,
-      disabled: () => this.isFormReadable,
-    },
-    {
-      field: 'ENG_Rate',
-      header: '比率',
-      type: 'inputNumber',
-      format: (v: number) => (v ?? this.editingRow?.ENG_Rate ?? 0) + '%',
-      disabled: () => this.isFormReadable,
-      validate: [this.validateEngRate.bind(this)],
-      required: !0
-    },
-    { field: 'ENG_Remark', header: '備註', type: 'input', disabled: () => this.isFormReadable, },
+    { field: 'ENG_Remark', header: '備註', type: 'input', maxLength: 200, width: '100%' },
   ];
+
+  // string 【修正】用於處理 Dialog 查詢的延遲 Subject (使用 protected 或 private 確保內部使用)
+  protected dialogQuerySubject = new Subject<any>();
 
   constructor(
     public readonly service: ASS21020Service,
-    private readonly logger: NGXLogger,
+    private readonly dropdown: DropdownApiService,
+    public readonly dropDownListService: DropDownListService, // 注入 DropDownListService
   ) {
     super();
-    this.user = this.authService.currentUserValue!;
   }
 
   public ngOnInit(): void {
     this.initializePage('ASS21020', this.dataForm);
 
-    this.service.loadEngType();
-    this.service.loadEngMeterNo();
-    this.logger.debug(`init:`, [this.rowdata, this.dataForm.value]);
+    // 1. 取得所有錶號資料並保存，同時初始化篩選
+    this.ENG_MeterNoOptions.pipe(untilDestroyed(this)).subscribe(options => {
+      this.allENG_MeterNoOptions = options || [];
+      this.filterMeterNoOptions(this.dataForm.controls.ENG_Type.value);
+
+      if (!this.isFormCreateable && this.rowdata && this.rowdata.ENG_MeterNo) {
+        this.updateMeterNoRelatedFields(this.rowdata.ENG_MeterNo);
+      }
+    });
+
+    // 2. 初始化 Dialog 相關屬性 (保持不變)
+    this.tltNoOptionsArray = [];
+    this.dialogData = [];
+    this.totalRecords = 0;
+    this.dialogLoading = false;
+
+    // 3. 監聽 ENG_Type 變化來篩選錶號 (保持不變)
+    if (this.isFormCreateable) {
+      this.dataForm.controls.ENG_Type.valueChanges.pipe(untilDestroyed(this)).subscribe(engType => {
+        this.filterMeterNoOptions(engType);
+        this.dataForm.controls.ENG_MeterNo.patchValue(null);
+      });
+    }
+
+    // 4. 監聽 ENG_MeterNo 變化來更新附帶資訊 (保持不變)
+    this.dataForm.controls.ENG_MeterNo.valueChanges.pipe(untilDestroyed(this)).subscribe((meterNo) => {
+      this.updateMeterNoRelatedFields(meterNo);
+    });
+
+    // 5. 監聽 Dialog 查詢表單 (改用 Debounce 呼叫 API)
+    this.dialogQueryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(query => {
+      // 僅當 TltNo 變化時才發送，或當分頁/排序參數變化時發送
+      this.dialogQuerySubject.next(query);
+    });
+
+    // 訂閱 Subject，應用 debounceTime(300ms) 後才呼叫 API
+    this.dialogQuerySubject.pipe(debounceTime(300), untilDestroyed(this)).subscribe(query => {
+      this.loadDialogData(query);
+    });
+
+    if (!this.isFormCreateable) {
+      this.data = this.rowdata?.Details || [];
+      this.dataForm.disable();
+    }
   }
 
-  public onSubmit(): void {
-    this.handleSubmit(this.dataForm, () => {
-      const tableValue = this.tb()!.dt.value;
-      const cleanedData = tableValue.filter((i: any) => !i.Apply_No?.startsWith('temp'));
-      const filteredData = this.filteredData();
-      const total = filteredData.reduce((sum: number, item: ASS21020Detail) => sum + (item.ENG_Rate ?? 0), 0);
-      const payload = filteredData.map((item: ASS21020Detail): ASS21020Update => ({
-        ENG_Type: this.df().ENG_Type.value!,
-        ENG_MeterNo: this.df().ENG_MeterNo.value!,
-        TLT_No: item.TLT_No,
-        ENG_Rate: item.ENG_Rate,
-        ENG_Remark: item.ENG_Remark,
-      }));
+  // string 【新增】實作 OnDestroy 以清理 Subject 訂閱
+  public ngOnDestroy(): void {
+    // 由於您對 dialogQuerySubject 使用了 untilDestroyed(this)，
+    // 只要 BasicCruPageComponent 或 Angular 本身有正確實現 OnDestroy，即可自動清理。
+    // 為了程式碼的完整性，我們假設 BasicCruPageComponent 處理了大多數，但對於 Subject 還是手動清理一下。
+    this.dialogQuerySubject.complete();
+  }
 
-      this.tb()!.dt.value = cleanedData;
+  // string 【新增】開啟 Dialog 時重置查詢條件並載入資料的方法
+  public openDialog(): void {
+    this.dialogVisible = true;
+    this.dialogData = [];
+    this.selectedItemsDialog = [];
 
-      if (total > 100) return void (this.loading = !1);
+    // 1. 重設查詢欄位 (TltNo 清空)
+    this.dialogQueryForm.patchValue({
+      TltNo: null,
+    });
 
-      this.service.updateASS21020(payload).pipe(
-        tap(() => {
-          this.onCancel();
-          this.service.loadASS21020({ ENG_MeterNo: this.df().ENG_MeterNo.value! });
-        }),
-        finalize(() => this.loading = !1),
-      ).subscribe();
+    // 2. 重設分頁/排序到初始狀態 (這會觸發 loadDialogData)
+    const initialQuery = {
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'tlt_no', order: 1 }],
+    };
+
+    this.dialogQueryForm.patchValue(initialQuery);
+
+    // 立即載入資料 (如果 patchValue 沒有觸發 valueChanges，則手動發送)
+    // 由於 dialogQueryForm.patchValue 已經會觸發 valueChanges，通常不需要手動 next，
+    // 但為確保萬一，如果 form 的初始值就是 initialQuery，需要強制查詢
+    this.loadDialogData(initialQuery);
+  }
+
+  // 新增方法: 根據 ENG_MeterNo 更新相關欄位 (保持不變)
+  private updateMeterNoRelatedFields(meterNo: string | null): void {
+    const selectedOption = this.allENG_MeterNoOptions.find(opt => opt.value === meterNo);
+
+    this.dataForm.patchValue({
+      Location_No: selectedOption?.['Location_No'] ?? '',
+      Floor_No: selectedOption?.['Floor_No'] ?? '',
+      Floor_Desc: selectedOption?.['Floor_Desc'] ?? '',
+      building_No: selectedOption?.['building_No'] ?? '',
+      building_DESC: selectedOption?.['building_DESC'] ?? '',
+      Draw_X: selectedOption?.['Draw_X'] ?? '',
+      Draw_Y: selectedOption?.['Draw_Y'] ?? '',
     });
   }
 
-  public onClear(): void {
-    this.dataForm.reset();
-    this.tableDataSignal.set([]);
-    this.tb() && (this.tb()!.rowEditing = !1);
+  // 根據能源類型代碼篩選可用的錶號選項 (保持不變)
+  private filterMeterNoOptions(engType: string | null): void {
+    if (!engType) {
+      this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions;
+      return;
+    }
+
+    const engTypeOption = this.ENG_TypeOptions.find(opt => opt.value === engType);
+    const engTypeDesc = engTypeOption?.label;
+
+    if (engTypeDesc) {
+      this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions.filter(
+        item => item['ENG_Type'] === engTypeDesc
+      );
+      console.log('filteredENG_MeterNoOptions:', this.filteredENG_MeterNoOptions);
+    } else {
+      this.filteredENG_MeterNoOptions = this.allENG_MeterNoOptions;
+    }
   }
 
-  public onKancel(): void {
-    this.tb()!.dt.value = this.tb()!.dt.value.filter(i => !i.Apply_No?.startsWith('temp'));
-    this.tableDataSignal.set(this.tb()!.dt.value);
-  }
+  // 【修正 validateRow】: 檢查資料中是否有重複的 TLT_No (專櫃編號) (保持不變)
+  validateRow = (rowData: ASS21020Detail): { isValid: boolean, errorMessage: string } => {
+    const currentRowTLT_No = rowData.TLT_No;
+    const rowIndex = this.data.indexOf(rowData);
 
-  public onRowInit(event: any): void {
-    this.editingRow = void 0;
-    this.currentEditingSignal.set({ event: null, currentData: [] });
-    this.rowEditValidSignal.set(!1);
-    this.logger.debug(`onRowInit:`, [event, this.tableDataSignal(), this.filteredData(), this.tb()!.dt.value]);
-  }
+    const isDuplicate = this.data.some((item, index) => {
+      if (index === rowIndex) {
+        return false;
+      }
+      return item.TLT_No === currentRowTLT_No;
+    });
 
-  public onRowEdit(event: RowEditSaveEvent): void {
-    this.tableDataSignal.set([...event.data.map((d: ASS21020Detail) => ({
-      ...d,
-      Location_No: this.editingRow?.Location_No,
-      NET_SPACE: this.editingRow?.NET_SPACE,
-    }))]);
-    [this.loading, this.editingRow] = [!1, void 0];
-    this.currentEditingSignal.set({ event: null, currentData: [] });
-    this.rowEditValidSignal.set(!0);
-    this.logger.debug(`onRowEdit:`, [event, this.tableDataSignal()]);
+    if (isDuplicate) {
+      return { isValid: false, errorMessage: `專櫃編號 (${currentRowTLT_No}) 已重複` };
+    }
+
+    return { isValid: true, errorMessage: '' };
   };
 
-  public onFieldChange(event: FieldChangeEvent): void {
-    const current = this.tltByFlagMap().get(event.rowData.TLT_No);
-    const currentData = this.tb()!.dt.value;
-    this.currentEditingSignal.set({ event, currentData });
-    this.logger.debug(`onFieldChange:`, [event, current, currentData, this.currentEditingSignal()]);
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(this.dataForm, () => {
+      const headerData = frm.getRawValue();
 
-    if (event.field !== 'TLT_No' || !current) return;
-    this.editingRow = current;
+      const payload: ASS21020UpdateData[] = this.data.map(detail => ({
+        Id: detail.Id || 0,
+        ENG_Type: headerData.ENG_Type,
+        ENG_MeterNo: headerData.ENG_MeterNo,
+        TLT_No: detail.TLT_No || '',
+        ENG_Rate: detail.ENG_Rate || 0,
+        ENG_Remark: detail.ENG_Remark || '',
+        TalentId: detail.TalentId || 0,
+      }));
 
-    if (!event.rowData.Apply_No || event.rowData.Apply_No.startsWith('temp')) return;
-    const updatedData = this.tableDataSignal().map(item =>
-      item === event.rowData ? {
-        ...item,
-        ...current,
-        TLT_No: event.rowData.TLT_No,
-        ENG_Rate: item.ENG_Rate ?? current?.ENG_Rate ?? 0,
-        Location_No: current?.Location_No ?? item.Location_No,
-        NET_SPACE: current?.NET_SPACE ?? item.NET_SPACE,
-      } as ASS21020Detail : item
-    );
-    this.tableDataSignal.set(updatedData);
+      const updatePayload: ASS21020Update = { UpdateASS21020Datas: payload };
+
+      const rawTotal = this.data.reduce((total, item) => total + (item.ENG_Rate || 0), 0);
+      this.totalPercent = this.roundToTwoDecimals(rawTotal);
+
+      if (this.totalPercent !== 100) {
+        this.messageService.errorBubble('攤提比率加總必須為 100%');
+        this.loading = false;
+        return;
+      }
+
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
+
+      this.service.updateASS21020(updatePayload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
+        next: (res) => {
+          if (res.Data.IsUpdateSuccess) {
+            // 只要有一筆Id不為0就是更新成功，Id都是0就是新增成功
+            if (payload.some(item => item.Id !== 0)) {
+              this.messageService.successBubble('能源攤提設定更新成功');
+              this.onCancel();
+            } else {
+              this.messageService.successBubble('能源攤提設定新增成功');
+              this.dataForm.reset();
+              this.data = [];
+              this.selectedItems = [];
+            }
+          } else {
+            this.messageService.errorBubble(res.Data.ErrorMsg);
+          }
+        },
+      });
+    });
   }
 
+  dialogVisible = false;
+  dialogLoading = true;
+  dialogData: Option[] = [];
+  selectedItemsDialog: Option[] = [];
+  dialogColumns: ReportColumn[] = [
+    { field: 'TltNo', header: '專櫃編號', },
+    { field: 'TltName', header: '櫃位名稱', },
+    { field: 'LocationNo', header: '位置編號', },
+    { field: 'ApplyNo', header: '招募編號', },
+  ];
+  totalRecords = 0;
+
+  // string 【修正】移除不必要的預設值，在 openDialog 中設置
+  dialogQueryForm = this.formBuilder.nonNullable.group({
+    TltNo: [null as string | null],
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
+  })
+
+  // string 【修正】處理 TableReportComponent 的 lazyLoadData 事件
+  public onDialogLazyLoad(event: any): void {
+    // 將分頁/排序參數補到 dialogQueryForm，這將觸發 dialogQuerySubject -> loadDialogData
+    this.dialogQueryForm.patchValue({
+      pageSize: event.rows,
+      pageIndex: (event.first / event.rows) + 1,
+      // 統一 SortBy 格式
+      SortBy: event.multiSortMeta || event.sortField && event.sortOrder ?
+        (event.multiSortMeta || [{ field: event.sortField, order: event.sortOrder }]) :
+        [{ field: 'tlt_no', order: 1 }]
+    });
+  }
+
+  // string 【修正】: 使用 API 查詢 Dialog 資料 (增加防止重複查詢的邏輯)
+  private loadDialogData(query: { TltNo?: string | null, pageSize?: number, pageIndex?: number, SortBy?: any[] }): void {
+
+    const body = {
+      TltNo: query.TltNo || '',
+      pageSize: query.pageSize || 30,
+      pageIndex: query.pageIndex || 1,
+      SortBy: query.SortBy || [{ field: 'tlt_no', order: 1 }],
+    };
+
+    // 比較當前查詢條件與上次是否一致，防止 debounce 後的重複查詢
+    if (JSON.stringify(body) === JSON.stringify(this.lastQueryBody)) {
+      return;
+    }
+
+    this.dialogLoading = true;
+    this.lastQueryBody = body; // 更新最後的查詢條件
+
+    // 呼叫 API 查詢
+    this.dropDownListService.queryTLTTALENT_TLT_SPACE(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.dialogLoading = false)
+      )
+      .subscribe((results) => {
+        this.dialogData = results.Data as Option[];
+        this.totalRecords = results.TotalCount;
+      });
+  }
+  // ⬆️ 【修正結束】
+
+  isRowSelectable(row: ASS21020Detail): boolean {
+    return !this.data || !this.data.some((item: ASS21020Detail) => item.TalentId === row.TalentId);
+  }
+
+  saveDialog() {
+    this.dialogVisible = false;
+    this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
+      Id: 0,
+      TalentId: item['TalentId'] as number,
+      TLT_No: item['TltNo'],
+      TLT_Name: item['TltName'],
+      ApplyNo: item['ApplyNo'],
+      LocationNo: item['LocationNo'],
+      TltSpace: item['TltSpace'],
+      ENG_Rate: 0,
+      ENG_Remark: null,
+    }))];
+    this.selectedItemsDialog = [];
+    this.fieldChange();
+  }
+  totalPercent = 0;
+  errorMsg = false;
+
+  // 【保留】私有方法：將數值四捨五入到小數點後兩位
+  private roundToTwoDecimals(num: number): number {
+    return Math.round(num * 100) / 100;
+  }
+
+  // 【保留】 onAutoCalculate：改用整數分配邏輯
   public onAutoCalculate(): void {
-    const current = this.tableDataSignal();
-    this.logger.debug(`onAutoCalculate1:`, [current]);
-    if (!current?.length) return;
+    if (this.data.length === 0) {
+      this.totalPercent = 0;
+      this.errorMsg = true;
+      return;
+    }
 
-    const totalSize = current.reduce((sum: number, item: ASS21020Detail) => {
-      const space = this.tltByFlagMap().get(item.TLT_No)?.NET_SPACE ?? 0;
-      return sum + space;
-    }, 0);
-    this.logger.debug(`onAutoCalculate2:`, [totalSize]);
-    if (!totalSize) return;
+    const length = this.data.length;
 
-    const updated = current.map((d: ASS21020Detail): ASS21020Detail => {
-      const itemSpace = this.tltByFlagMap().get(d.TLT_No)?.NET_SPACE ?? 0;
+    const baseRate = Math.floor(100 / length);
+    const remainder = 100 % length;
+
+    this.data = this.data.map((item, index) => {
+      let rate = baseRate;
+
+      if (index < remainder) {
+        rate += 1;
+      }
+
       return {
-        ...d,
-        ENG_Rate: Math.round((itemSpace / totalSize) * 1e4) / 100
+        ...item,
+        ENG_Rate: rate,
       };
     });
 
-    this.logger.debug(`onAutoCalculate3:`, [updated]);
-    queueMicrotask(() => this.tableDataSignal.set(updated));
+    this.totalPercent = 100;
+    this.errorMsg = false;
   }
 
-  public onDelete(event: ASS21020Detail | ASS21020Detail[]): void {
-    const itemsToDelete = Array.isArray(event) ? event : [event];
-    if (!itemsToDelete.length) return;
+  // 【保留】 fieldChange：處理手動輸入
+  public fieldChange(): void {
+    const rawTotal = this.data.reduce((total, item) => total + (item.ENG_Rate || 0), 0);
+    this.totalPercent = this.roundToTwoDecimals(rawTotal);
 
-    const deleteSet = new Set(itemsToDelete);
-    const currentData = this.tb()!.dt.value;
-    const filteredData = currentData.filter(item => !deleteSet.has(item));
-
-    this.tb()!.dt.value = filteredData;
-    queueMicrotask(() => this.tableDataSignal.set(filteredData));
-  }
-
-  private validateEngRate(v: string): { isValid: boolean; errorMessage: string[]; } {
-    return { isValid: !v || this.ratePtn.test(v), errorMessage: ['比率格式不正確'] };
+    this.errorMsg = this.totalPercent !== 100;
   }
 }

@@ -48,16 +48,16 @@ export class TLS12040Next2ColumnsConfig {
 
       },
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
-      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true },
-      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true },
+      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true, dateFormat: 'full-date' },
+      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true, dateFormat: 'full-date' },
       { field: 'cag_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
     ];
   }
 
   static getAnnualColumns(): ColumnDef[] {
     return [
-      { field: 'tlt_bdate', header: '帳務起', type: 'date', editable: true },
-      { field: 'tlt_edate', header: '帳務迄', type: 'date', editable: true },
+      { field: 'tlt_bdate', header: '帳務起', type: 'date', editable: true, dateFormat: 'full-date' },
+      { field: 'tlt_edate', header: '帳務迄', type: 'date', editable: true, dateFormat: 'full-date' },
       { field: 'year_amount', header: '業績超過金額含', type: 'number', editable: true },
       { field: 'extra_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
     ];
@@ -94,12 +94,13 @@ export class TLS12040Next2ColumnsConfig {
   static getCommissionColumns(): ColumnDef[] {
     return [
       { field: 'tlt_id', header: '抽成類別', editable: false },
-      { field: 'tlt_id_desc', header: '抽成類別名稱', editable: true },
+      { field: 'tlt_id_desc', header: '抽成類別名稱', editable: true, type: 'text' },
       { field: 'cag_taxtype', header: '稅別', editable: true, type: 'dropdown', options: SHARED_DROPDOWN_OPTIONS.cagTaxTypeOption },
       { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
       { field: 'sst_rate', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true, decimalPlaces: 3 },
-      { field: 'cap_saletype2', header: '全館消費滿額集點活動', editable: true, type: 'checkbox' },
-      { field: 'cap_saletype1', header: '滿件送佰', editable: true, type: 'checkbox' }
+      { field: 'cap_saletype2', header: '會員卡集點', editable: true, type: 'checkbox' },
+      { field: 'cap_saletype1', header: '滿件送佰', editable: true, type: 'checkbox' },
+      { field: 'cap_saletype5', header: '收取商品提貨單', editable: true, type: 'checkbox' }
     ];
   }
 }

@@ -2,13 +2,10 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-
   <p-accordion>
-    <!-- 查詢條件區塊 -->
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-        <!-- 查詢年月, 結帳方式(多選), 抽成方式(多選) -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateMonthRange" label="查詢年月"
@@ -26,8 +23,6 @@
               [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-
-        <!-- 廠商編號(單選), 專櫃編號(多選), 組織代號(多選) -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商編號/名稱" controlName="ven_no" [options]="ven_noOptions | async" optionLabel="label"
@@ -44,8 +39,6 @@
               [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-
-        <!-- 樓層(多選), 館別(多選), 大分類(多選) -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層" controlName="tlt_floorList" [options]="tlt_floorOptions | async"
@@ -63,13 +56,10 @@
               [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-
-        <!-- 中分類(多選/分組), 請款單據別(單選), 是否開立業主發票(單選Y/N) -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- 假設中分類資料是分組格式 (Grouped Multi-Select) -->
-            <app-multi-select label="中分類代碼/名稱" controlName="bus_classList" [options]="bus_classOptions"
-              optionLabel="label" [control]="queryForm.controls.bus_classList" [submitted]="submitted" [group]="true"
+            <app-multi-select label="中分類代碼/名稱" controlName="bus_class" [options]="bus_classOptions" optionLabel="label"
+              [control]="queryForm.controls.bus_classList" [submitted]="submitted" [group]="true"
               optionGroupLabel="label" optionGroupChildren="items"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -77,46 +67,37 @@
               optionValue="value" [control]="queryForm.controls.invoice_type" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- 使用 Radiobutton Y/N 元件替換舊的 MultiSelect -->
             <app-radiobutton-yn [showAll]="true" label="是否開立業主發票" controlName="rece_yn" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.rece_yn" [submitted]="submitted"></app-radiobutton-yn>
           </div>
         </div>
-
         <hr />
-
-        <!-- 篩選條件 Checkbox -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-4 lg:col-4">
-            <!-- acc_payableNeg: 只顯示應付帳款小於0 -->
             <p-checkbox label="只顯示應付帳款小於0" [binary]="true" controlName="acc_payableNeg"
               formControlName="acc_payableNeg"></p-checkbox>
           </div>
           <div class="col-12 md:col-4 lg:col-4">
-            <!-- sam_ap_amtNeg: 只顯示進貨總額小於0 -->
             <p-checkbox label="只顯示進貨總額小於0" [binary]="true" controlName="sam_ap_amtNeg"
               formControlName="sam_ap_amtNeg"></p-checkbox>
           </div>
           <div class="col-12 md:col-4 lg:col-4">
-            <!-- isUnderLimitAmt: 只顯示包底抽成不足 -->
             <p-checkbox label="只顯示包底抽成不足" [binary]="true" controlName="isUnderLimitAmt"
               formControlName="isUnderLimitAmt"></p-checkbox>
           </div>
         </div>
-
         <hr />
-
-        <!-- 結帳後幾日付款 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- check_day: 結帳後幾日付款 (從 Dropdown 改為 Input Number) -->
             <app-input-number label="結帳後幾日付款" controlName="check_day" [control]="queryForm.controls.check_day"
               [submitted]="submitted"></app-input-number>
           </div>
-          <!-- 舊有的「類別」和「排序方式」已移除 -->
+          <div class="col-12 md:col-6 lg:col-4" [hidden]="reportType === '1'">
+            <app-radiobutton label="是否含稅" controlName="is_tax" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.is_tax" [submitted]="submitted" [options]="taxOptions"
+              (valueChange)="onTaxChange($event)"></app-radiobutton>
+          </div>
         </div>
-
-        <!-- 清除 & 查詢按鈕 -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -125,11 +106,13 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-
-<!-- 查詢結果表格 -->
-<div class="card mt-3">
-  <app-table dataKey="ven_no" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
-    [showDelete]="false" [loading]="loading"></app-table>
+<div class="card">
+  <app-table-report tableKey="tls27090" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false" [footerData]="footerData"
+    [queryFunction]="getCurrentQueryFunction()" [showManage]="false" [loading]="loading">
+    <header>
+      <p-selectButton [options]="typeOptions" [(ngModel)]="reportType" (onChange)="switchReport($event.value)"
+        optionLabel="label" optionValue="value" [allowEmpty]="false" />
+    </header>
+  </app-table-report>
 </div>

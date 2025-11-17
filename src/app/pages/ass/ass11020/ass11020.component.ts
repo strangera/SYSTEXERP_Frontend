@@ -20,11 +20,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.1.2 中分類維護作業
 @Component({
-    selector: 'app-ass11020',
-    templateUrl: './ass11020.component.html',
-    styleUrl: './ass11020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
+  selector: 'app-ass11020',
+  templateUrl: './ass11020.component.html',
+  styleUrl: './ass11020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
 })
 export class ASS11020Component extends BasicQpageComponent implements OnInit {
   //
@@ -86,8 +86,7 @@ export class ASS11020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310002';
     this.cruPage = '/ASS1000/ASS11020CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

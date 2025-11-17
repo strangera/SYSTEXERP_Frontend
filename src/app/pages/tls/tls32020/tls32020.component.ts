@@ -29,7 +29,6 @@ import { Tls11010Service } from '@service/api/tls/tls11010.service';
 @Component({
   selector: 'app-tls32020',
   templateUrl: './tls32020.component.html',
-  styleUrl: './tls32020.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })

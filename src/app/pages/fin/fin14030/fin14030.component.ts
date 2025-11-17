@@ -20,24 +20,24 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 //1.1.4.3 形成申報書
 @Component({
-    selector: 'app-fin14030',
-    templateUrl: './fin14030.component.html',
-    styleUrl: './fin14030.component.scss',
-    standalone: true,
-    imports: [
-          MenubarComponent,
-          ButtonComponent,
-          Button, // dialog
-          JsonPipe, // dialog
-          DialogModule, // dialog
-          AccordionModule,
-          FormsModule,
-          ReactiveFormsModule,
-          CalendarComponent,
-          CommonModule,
-          DropdownComponent,
-          TableComponent,
-          TranslateModule]
+  selector: 'app-fin14030',
+  templateUrl: './fin14030.component.html',
+  styleUrl: './fin14030.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    Button, // dialog
+    JsonPipe, // dialog
+    DialogModule, // dialog
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    CommonModule,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule]
 })
 export class FIN14030Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -61,7 +61,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
   pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
 
   REP_TaxNo_Options: apiOption[] = []; //稅籍編號 選項
-  
+
   columns: Column[] = [
     { field: 'field', header: '欄位' }, // 欄位定義
   ];
@@ -81,19 +81,19 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       {
         "mid": this.queryForm.get("Mid")?.value,
         "STO_No": this.queryForm.get("STO_No")?.value
-      }).subscribe({
-      next: (response) => {
-        const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
-        this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string }) => ({
-          Label: item.STO_TaxNo + "/" + item.STO_TaxName,
-          No: item.STO_TaxNo
-        }));
-        console.log('稅籍編號 options', this.REP_TaxNo_Options);
-      },
-      error: (error) => {
-        console.error('Error loading options:', error);
-      }
-    });
+      }).pipe(untilDestroyed(this)).subscribe({
+        next: (response) => {
+          const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string }) => ({
+            Label: item.STO_TaxNo + "/" + item.STO_TaxName,
+            No: item.STO_TaxNo
+          }));
+          console.log('稅籍編號 options', this.REP_TaxNo_Options);
+        },
+        error: (error) => {
+          console.error('Error loading options:', error);
+        }
+      });
   }
 
   onSubmit(frm: FormGroup) {
@@ -104,7 +104,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
       }
       // 可以用 202406 , 703902231 測試
-      
+
       console.log('申報request', body);
 
       // 輸入申報年月和稅籍編號條件，按【申報書預覽】，即可預覽該申報年月的申報書，同時顯示「審核」
@@ -114,21 +114,23 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       this.dialogData = body;
       this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
       this.showDialog = true;
-      
-       this.fin14030Service.printFIN14030(body).pipe(untilDestroyed(this)).subscribe({
+
+      this.fin14030Service.printFIN14030(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000' && response.Data?.printURL) {
             // 補上 API 主機網址 (假設後端回傳的是相對路徑)
-            const rawUrl = response.Data.printURL.startsWith('http')
-            ? response.Data.printURL
-            : `${environment.BaseUrl}${response.Data.printURL}`;
+            let rawUrl = response.Data.printURL.startsWith('http')
+              ? response.Data.printURL
+              : `${environment.BaseUrl}${response.Data.printURL}`;
+
+            rawUrl = decodeURIComponent(rawUrl);  // 中文解碼
 
             // 直接在新分頁打開
             // window.open(rawUrl, '_blank');
 
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
-            this.loading = false; 
+            this.loading = false;
           }
         },
         error: () => { this.loading = false; },
@@ -137,7 +139,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   // 確認審核
-   confirmCheck(frm: FormGroup) {
+  confirmCheck(frm: FormGroup) {
     this.confirmationService.confirm({
       message: `是否執行審核?`,
       header: `確認審核`,
@@ -153,7 +155,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
           REP_AuditStatus: '1' // 0=未審核, 1=已審核
         }
         // 可以用 202406 , 703902231 測試
-            
+
         console.log('審核request', body);
 
         this.fin14030Service.ApproveFIN14030(body).pipe(untilDestroyed(this)).subscribe({
@@ -194,7 +196,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
           REP_AuditStatus: '0' // 0=未審核, 1=已審核
         }
         // 可以用 202406 , 703902231 測試
-            
+
         console.log('反審核request', body);
 
         this.fin14030Service.ApproveFIN14030(body).pipe(untilDestroyed(this)).subscribe({

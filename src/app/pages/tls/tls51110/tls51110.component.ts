@@ -19,6 +19,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { environment } from 'src/environments/environment';
 
 interface LogoOption {
   No: string;
@@ -63,17 +66,14 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]),
   });
 
-  BUD_StatusOptions: { label: string; value: string }[] = [
-    { label: '未審核', value: "0" },
-    { label: '已審核', value: "1" },
-  ];
+  BUD_StatusOptions = getSYS1000Options('BUD_Status');
 
   columns: Column[] = [
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'YYYYMM', header: '年月', visible: true },
-    { field: 'BUDGET', header: '預算', visible: true ,format:formatAmount},
-    { field: 'BUDGET_Cost', header: '預算成本', visible: true ,format:formatAmount},
+    { field: 'BUDGET', header: '預算', visible: true, format: formatAmount },
+    { field: 'BUDGET_Cost', header: '預算成本', visible: true, format: formatAmount },
     {
       field: 'BUD_Status',
       header: '審核狀態',
@@ -186,26 +186,37 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     });
   }
 
-  // 匯入 Excel
+  /** 匯入 Excel 並產生錯誤檔 */
   onImportExcel(event: FileSelectEvent) {
     const file = event.files[0];
-    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
 
-    this.apiService.uploadTLS51110(file).subscribe({
+    this.apiService.uploadTLS51110(formData).pipe(untilDestroyed(this)).subscribe({
       next: (res) => {
-        console.log('匯入成功', res);
+        const data = res?.Data;
 
-        // 檢查匯入結果
-        if (res.Data?.SuccessCount > 0) {
-          this.messageService.successBubble(`匯入成功，共${res.Data.SuccessCount}筆資料。請重新查詢以查看匯入結果。`);
-        }
-
-        if (res.Data?.ErrorCount > 0) {
-          this.messageService.warnBubble(`匯入完成，但有${res.Data.ErrorCount}筆資料失敗`);
+        if (data) {
+          if (data.ErrorFilePath) {
+            // 有錯誤檔：顯示錯誤提示
+            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+            // 自動下載錯誤檔
+            this.downloadErrorFile(data.ErrorFilePath);
+          } else {
+            // 沒有錯誤檔：顯示成功筆數
+            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+          }
         }
       },
     });
   }
+
+  /** 自動下載錯誤檔 */
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+  }
+
+
 
   // 下載範例檔案
   onExportExcel() {

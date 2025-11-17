@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -15,6 +15,8 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { FIN15050PrintRequest, FIN15050Service } from '@service/api/fin/fin15050.service';
 import { environment } from 'src/environments/environment';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DomSanitizer } from '@angular/platform-browser';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin15050',
@@ -24,7 +26,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextComponent, InputTextRangeComponent, DropdownComponent, TranslateModule,
-    CalendarComponent
+    CalendarComponent, CommonModule
   ]
 })
 export class FIN15050Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -37,11 +39,13 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
   });
 
   usageTypeOptions = getSYS1000Options('T205');
+  pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
 
   constructor(
     private readonly fin15050Service: FIN15050Service,
     private readonly validationService: ValidationService,
     private readonly datePipe: DatePipe,
+    private sanitizer: DomSanitizer
   ) {
     super();
   }
@@ -57,18 +61,25 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
       STO_No: '10',
       REP_GUIYM: this.datePipe.transform(frm.get('REP_GUIYM')?.value, 'yyyyMM') || '',
     }
+
     this.handleSubmit(frm, () => {
       this.fin15050Service.printFIN15050(payload)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.openDownloadWindow(response.Data.Print_URL);
+          if (response.Status === '0000' && response.Data?.Print_URL) {
+            let rawUrl = response.Data.Print_URL.startsWith('http')
+              ? response.Data.Print_URL
+              : `${environment.BaseUrl}${response.Data.Print_URL}`;
+            rawUrl = decodeURIComponent(rawUrl);
+            console.log('rawUrl', rawUrl);
+            // ⬇️ 用 sanitizer 包裝
+            this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+          }
+          else {
+            this.messageService.errorBubble(response.Message);
+          }
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
-  }
-
-  private openDownloadWindow(printUrl: string): void {
-    const downloadUrl = `${environment.ApiUrl}${printUrl}`;
-    window.open(downloadUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
   }
 }

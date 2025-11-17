@@ -25,11 +25,10 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-tls51010-cru',
-    templateUrl: './tls51010-cru.component.html',
-    styleUrl: './tls51010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-tls51010-cru',
+  templateUrl: './tls51010-cru.component.html',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextareaComponent, NgIf, TranslateModule]
 })
 export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

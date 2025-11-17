@@ -6,7 +6,7 @@
       >
         <label [for]="fieldConfig.fieldName">
           {{ fieldConfig.displayLabel }}
-          <span *ngIf="isRequired" class="required">*</span>
+          <span *ngIf="isRequired" class="text-red-500">*</span>
         </label>
 
         <!-- 主要輸入欄位 - 點擊時打開面板 -->
@@ -71,12 +71,12 @@
     <h4>選擇項目</h4>
     <button
       type="button"
-      pButton
-      pRipple
-      icon="pi pi-times"
-      class="p-button-rounded p-button-text p-button-sm"
+      class="close-button-fa"
       (click)="closeSelectorPanel()"
-    ></button>
+      aria-label="關閉"
+    >
+      <i class="far fa-times-circle"></i>
+    </button>
   </div>
 
   <form [formGroup]="searchForm" class="grid p-fluid selector-search-form">

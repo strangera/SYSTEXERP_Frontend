@@ -20,11 +20,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.3.2.2 應收帳款調整作業
 @Component({
-    selector: 'app-fin32020',
-    templateUrl: './fin32020.component.html',
-    styleUrl: './fin32020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-fin32020',
+  templateUrl: './fin32020.component.html',
+  styleUrl: './fin32020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN32020Component extends BasicQpageComponent implements OnInit {
   //
@@ -79,7 +79,6 @@ export class FIN32020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '130004';
     this.cruPage = '/FIN3000/FIN32020CRU';
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     //
     // ----------------------------------------------------------------

@@ -71,9 +71,7 @@ export class CommissionDataService {
       // 第一優先：嘗試載入暫存資料
       const savedResult = await this.tryLoadFromSavedData();
       if (savedResult.success) {
-        // 重要：即使是暫存資料，也要確保 cap_saletype 與 step1 同步
-        const syncedData = this.syncCapSaletypeWithStep1(savedResult.data);
-        return { ...savedResult, data: syncedData };
+        return savedResult;
       }
 
       // 第二優先：根據模式載入
@@ -88,50 +86,6 @@ export class CommissionDataService {
       return this.createErrorResult(error);
     }
   }
-
-  /**
-   * 新增：確保所有抽成項目的 cap_saletype 與 step1 同步
-   */
-  private syncCapSaletypeWithStep1(commissionData: CommissionItem[]): CommissionItem[] {
-    const step1Data = this.contractFlowService.getStep1Data();
-
-    if (!step1Data) {
-      console.warn('⚠️ 無法取得 Step1 資料，跳過 cap_saletype 同步');
-      return commissionData;
-    }
-
-    // 修正：統一轉換為 Y/N 字串格式
-    const step1CapSaletype1 = this.convertToYN(step1Data.cap_saletype1);
-    const step1CapSaletype2 = this.convertToYN(step1Data.cap_saletype2);
-
-    console.log('🔄 同步 cap_saletype 到所有抽成項目:', {
-      step1原始值: {
-        cap_saletype1: step1Data.cap_saletype1,
-        cap_saletype2: step1Data.cap_saletype2,
-        type1: typeof step1Data.cap_saletype1,
-        type2: typeof step1Data.cap_saletype2
-      },
-      轉換後YN值: {
-        step1CapSaletype1,
-        step1CapSaletype2
-      },
-      itemCount: commissionData.length
-    });
-
-    return commissionData.map(item => ({
-      ...item,
-      cap_saletype1: step1CapSaletype1,
-      cap_saletype2: step1CapSaletype2
-    }));
-  }
-
-  // 新增轉換方法到 commission-data.service.ts
-  private convertToYN(value: any): string {
-    if (value === true || value === 'true' || value === 'Y') return 'Y';
-    if (value === false || value === 'false' || value === 'N') return 'N';
-    return 'N'; // 預設為 N
-  }
-
   /**
    * 載入折扣選項 - 使用現代語法
    */
@@ -294,9 +248,6 @@ export class CommissionDataService {
     let commissionData: CommissionItem[] = [];
     if (response.Data?.ChargeSettings) {
       commissionData = this.convertChargeAPIData(response.Data, options);
-
-      // 重要：確保與 step1 同步
-      commissionData = this.syncCapSaletypeWithStep1(commissionData);
     }
 
     return {
@@ -318,19 +269,6 @@ export class CommissionDataService {
       return result;
     }
 
-    // 從 step1 取得最新的 cap_saletype 值（最高優先級）
-    const step1Data = this.contractFlowService.getStep1Data();
-    const finalCapSaletype1 = step1Data?.cap_saletype1 !== undefined ?
-      Boolean(step1Data.cap_saletype1) : false;
-    const finalCapSaletype2 = step1Data?.cap_saletype2 !== undefined ?
-      Boolean(step1Data.cap_saletype2) : false;
-
-    console.log('🎯 使用 Step1 的 cap_saletype 值:', {
-      cap_saletype1: finalCapSaletype1,
-      cap_saletype2: finalCapSaletype2,
-      step1HasData: !!step1Data
-    });
-
     apiData.ChargeSettings.forEach((chargeSetting: ChargeSettingApiItem, index: number) => {
       const commissionItem: CommissionItem = {
         id: chargeSetting.id || (index + 1),
@@ -342,8 +280,9 @@ export class CommissionDataService {
         sst_rate: chargeSetting.sst_rate || 0,
 
         // 關鍵修正：優先使用 step1 的值，確保同步
-        cap_saletype1: finalCapSaletype1,
-        cap_saletype2: finalCapSaletype2,
+        cap_saletype1: this.convertYNToBoolean(chargeSetting.cap_saletype1),
+        cap_saletype2: this.convertYNToBoolean(chargeSetting.cap_saletype2),
+        cap_saletype5: this.convertYNToBoolean(chargeSetting.cap_saletype5),
 
         selectedSettingOption: 'discount',
         currentTab: 'discount',
@@ -364,6 +303,16 @@ export class CommissionDataService {
   }
 
   /**
+   * 將 Y/N 字串轉換為 boolean
+   */
+  private convertYNToBoolean(value: any): boolean {
+    if (value === 'Y' || value === 'y' || value === true) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * 轉換折扣設定項目
    */
   private convertDiscountItems(chargeDetails: any[], options: CommissionDataLoadOptions): DiscountSettingItem[] {
@@ -375,6 +324,7 @@ export class CommissionDataService {
     // 否則只轉換現有資料
     return chargeDetails.map(detail => ({
       id: detail.id || this.generateTempId(),
+      _source: 'api',  // 🆕 標記為 API 來的資料
       selected: true,
       cag_barcode: detail.cag_barcode || '',
       tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
@@ -388,6 +338,7 @@ export class CommissionDataService {
 
   /**
    * 建立完整的折扣項目列表（包含所有選項）
+   * 為所有 8 種折扣別建立項目，但只有既有資料的會被勾選
    */
   private buildCompleteDiscountItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountSettingItem[] {
     const result: DiscountSettingItem[] = [];
@@ -397,38 +348,40 @@ export class CommissionDataService {
     const isNewContractWithoutData = existingDetails.length === 0;
 
     options.discountOptions?.forEach((option, index) => {
-      // 修改：使用 filter 而不是 find，處理同一折扣別的多筆資料
+      // 找出這個折扣別的所有既有資料
       const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
 
       if (existingItems.length > 0) {
-        // 為每個既有項目創建一筆記錄
+        // 有既有資料：為每筆既有資料建立項目（已勾選）
         existingItems.forEach(existingItem => {
           result.push({
             id: existingItem.id || this.generateTempId(),
+            _source: 'api',  // 🆕 API 來的資料
             selected: true,
             cag_barcode: existingItem.cag_barcode,
             tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
             tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
             cag_charge_rate: existingItem.cag_charge_rate || 0,
             _status: 'original',
-            is_configured: existingItem.is_configured || true,
-            is_enabled: existingItem.is_enabled || true
+            is_configured: true,
+            is_enabled: true
           });
         });
       } else {
-        // 未設定的項目處理邏輯保持不變
+        // 沒有既有資料：建立未勾選的項目（除了正品預設勾選）
         const isFirstOption = index === 0;
         const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
           (option.value === '000' || option.label?.includes('正品'));
 
         result.push({
           id: this.generateTempId(),
+          _source: 'new',  // 🆕 前端新增的資料
           selected: shouldSelectByDefault,
           cag_barcode: option.value,
           tlt_bdate: contractStartDate,
           tlt_edate: contractEndDate,
-          cag_charge_rate: shouldSelectByDefault ? 0 : 0,
-          _status: shouldSelectByDefault ? 'new' : 'new',
+          cag_charge_rate: 0,
+          _status: 'new',
           is_configured: shouldSelectByDefault,
           is_enabled: shouldSelectByDefault
         });
@@ -464,11 +417,14 @@ export class CommissionDataService {
       // 只轉換現有資料（保持原有邏輯）
       return levelDetails.map(detail => ({
         id: detail.id || this.generateTempId(),
+        _source: 'api',  // 🆕 API 來的資料
         selected: true,
         cag_barcode: detail.cag_barcode || '',
+        contract_period: '', // 🆕 稍後會由 component 填入
         level_bmount: detail.level_bmount || 0,
         level_eamount: detail.level_eamount || 0,
         level_charge_rate: detail.level_charge_rate || 0,
+        charged_id: detail.charged_id || undefined, // 🔑 加入 charged_id
         _status: 'original',
         is_configured: true,
         is_enabled: true
@@ -476,51 +432,32 @@ export class CommissionDataService {
     }
   }
 
+  /**
+   * 建立層級抽成項目
+   * 只載入既有的層級資料，不預先建立新項目
+   * 新項目由 syncDiscountToLevel 根據折扣設定動態產生
+   */
   private buildCompleteLevelItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
-    const result: DiscountLevelItem[] = [];
-    const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
-    const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
+    // 只處理既有資料，不預先建立新項目
+    if (existingDetails.length === 0) {
+      return [];  // 沒有既有資料，返回空陣列
+    }
 
-    const isNewContractWithoutData = existingDetails.length === 0;
-
-    options.discountOptions?.forEach((option, index) => {
-      // Use filter to handle multiple existing items for the same cag_barcode
-      const existingItems = existingDetails.filter(detail => detail.cag_barcode === option.value);
-
-      if (existingItems.length > 0) {
-        existingItems.forEach(existingItem => {
-          result.push({
-            id: existingItem.id || this.generateTempId(),
-            selected: true,
-            cag_barcode: existingItem.cag_barcode,
-            level_bmount: existingItem.level_bmount || 0,
-            level_eamount: existingItem.level_eamount || 0,
-            level_charge_rate: existingItem.level_charge_rate || 0,
-            _status: 'original',
-            is_configured: existingItem.is_configured ?? true,
-            is_enabled: existingItem.is_enabled ?? true
-          });
-        });
-      } else {
-        const isFirstOption = index === 0;
-        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
-          (option.value === '000' || option.label?.includes('正品'));
-
-        result.push({
-          id: this.generateTempId(),
-          selected: shouldSelectByDefault,
-          cag_barcode: option.value,
-          level_bmount: 0,
-          level_eamount: 0,
-          level_charge_rate: shouldSelectByDefault ? 0 : 0,
-          _status: shouldSelectByDefault ? 'new' : 'new',
-          is_configured: shouldSelectByDefault,
-          is_enabled: shouldSelectByDefault
-        });
-      }
-    });
-
-    return result;
+    // 只載入既有的層級資料
+    return existingDetails.map(existingItem => ({
+      id: existingItem.id || this.generateTempId(),
+      _source: 'api',  // 🆕 API 來的資料
+      selected: true,
+      cag_barcode: existingItem.cag_barcode,
+      contract_period: '', // 🆕 稍後會由 component 填入
+      level_bmount: existingItem.level_bmount || 0,
+      level_eamount: existingItem.level_eamount || 0,
+      level_charge_rate: existingItem.level_charge_rate || 0,
+      charged_id: existingItem.charged_id || undefined, // 🔑 加入 charged_id
+      _status: 'original',
+      is_configured: existingItem.is_configured ?? true,
+      is_enabled: existingItem.is_enabled ?? true
+    }));
   }
 
   // ============ 工具方法 ============

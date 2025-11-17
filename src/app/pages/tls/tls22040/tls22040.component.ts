@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, AddButton } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -15,6 +15,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-tls22040',
   templateUrl: './tls22040.component.html',
+  styleUrls: ['./tls22040.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -57,6 +58,22 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   constructor(private tls22040Service: Tls22040Service) {
     super();
   }
+
+  /** 判斷是否可以檢視明細 */
+  canShowDetail = (rowData: any): boolean => {
+    return !!rowData.DiffNum && rowData.DiffNum > 0;
+  };
+
+  addButton: AddButton[] = [
+    {
+      label: '查看明細',
+      icon: 'pi pi-eye',
+      action: (rowData: any) => {
+        this.onDetail(rowData);
+      },
+      disabled: (rowData: any) => !this.canShowDetail(rowData)
+    }
+  ];
 
   ngOnInit(): void {
     this.initializePage('TLS22040', 'TLS/TLS22040cru', this.queryForm, (form) => this.onSubmit(form));
@@ -106,49 +123,41 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
           this.data = (res?.Data ?? []).map((x: any) => ({
             ...x,
             TXN_Date: this.formatToYMD(x.TXN_Date),
+            canDetail: !!x.DiffNum && x.DiffNum > 0,
           }));
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.loading = false;
-        },
-        error: (err) => {
-          console.error('查詢 TLS22040 失敗:', err);
-          this.loading = false;
+          // 儲存查詢狀態
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         },
       });
     });
   }
 
   override onDetail(row: any): void {
-    console.log('電子發票上送筆數檢核表 被點擊:', row);
-
-    if (!row.DiffNum || row.DiffNum === 0) {
-      console.warn('DiffNum 為 0，不允許檢視明細');
+    if (!row.canDetail) {
+      this.messageService?.warnBubble?.('此筆差異為 0，無法查看明細');
       return;
     }
 
-    // 打明細 API
     const payload = {
       PageSize: 0,
       PageIndex: 0,
       OrderBy: 'TXN_Date',
       Offset: 0,
       SortBy: [],
-      TXN_Date: this.formatDate(row.TXN_Date), // yyyy/MM/dd
+      TXN_Date: this.formatDate(row.TXN_Date),
       MIG_Type: row.MIG_Type,
     };
 
     this.tls22040Service.queryTLS22040_Detail(payload).subscribe({
       next: (res) => {
         const detailData = res?.Data ?? [];
-        const rowdataWithDetail = {
-          ...row,
-          details: detailData,
-        };
-        this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
-      },
-      error: (err) => {
-        console.error('查詢 TLS22040 明細失敗:', err);
+        const rowdataWithDetail = { ...row, details: detailData };
+        // 傳遞當前的查詢條件，讓返回時能恢復狀態
+        this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail, this.queryForm.getRawValue());
       },
     });
   }
+
 }

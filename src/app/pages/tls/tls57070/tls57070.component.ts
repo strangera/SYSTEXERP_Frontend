@@ -1,196 +1,337 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { DisplayModeService } from '../../../service/basic/display-mode.service';
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Tls57070DataItem, Tls57070Service } from '@service/api/tls/tls57070.service';
+import { HttpResponse } from '@angular/common/http';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { ButtonModule } from 'primeng/button';
+import { ColumnGroup, ReportColumn, formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 @Component({
   selector: 'app-tls57070',
   templateUrl: './tls57070.component.html',
-  styleUrls: ['./tls57070.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
+    MultiSelectComponent,
     CalendarComponent,
-    InputNumberComponent,
     ButtonComponent,
-    TableComponent,
+    NgIf,
+    ButtonModule,
     TranslateModule,
+    AsyncPipe,
+    DropdownComponent,
+    CustomFooterTableComponent
   ],
 })
-export class TLS57070Component {
-  ProgNo: string = '250046';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
-  queryForm = this.formBuilder.group({
-    displayMode: [],
-    stockDate: [],
-    warehouseCode: [],
-    brandCode: [],
-    displayCount: [],
+export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    pageIndex: [1],
+    pageSize: [20],
+    SortBy: [[{ field: 'LOGO_No', order: 1 }]], // 預設排序
+    STK_YM: [new Date(), [Validators.required]], // 存貨年月
+    HOS_NOList: [null], // 倉別條件
+    LOGO_NoList: [null], // 品牌條件
+    ShowType: ['M', [Validators.required]], // 顯示方式(M:彙總，D:明細)
   });
-
-  // Dropdown options
-  displayModeOptions: any[] = [];
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-
-  // Table data
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'brand', header: '品牌', visible: true },
-    { field: 'beginningQuantity', header: '期初數量', visible: true },
-    { field: 'beginningCost', header: '期初成本', visible: true },
-    { field: 'purchaseQuantity', header: '進貨數量', visible: true },
-    { field: 'purchaseCost', header: '進貨成本', visible: true },
-    { field: 'adjustmentQuantity', header: '進退數量', visible: true },
-    { field: 'adjustmentCost', header: '進退成本', visible: true },
-    { field: 'salesQuantity', header: '銷貨數量', visible: true },
-    { field: 'salesCost', header: '銷貨成本', visible: true },
-    { field: 'salesPrice', header: '銷貨售價', visible: true },
-    { field: 'transferInQuantity', header: '撥入數量', visible: true },
-    { field: 'transferInCost', header: '撥入成本', visible: true },
-    { field: 'transferOutQuantity', header: '撥出數量', visible: true },
-    { field: 'transferOutCost', header: '撥出成本', visible: true },
-    { field: 'inventoryAdjustmentQuantity', header: '盤點數量', visible: true },
-    { field: 'inventoryAdjustmentCost', header: '盤點成本', visible: true },
-    { field: 'scrapQuantity', header: '報廢數量', visible: true },
-    { field: 'scrapCost', header: '報廢成本', visible: true },
-    { field: 'useQuantity', header: '領用數量', visible: true },
-    { field: 'useCost', header: '領用成本', visible: true },
-    { field: 'returnQuantity', header: '領用退回數量', visible: true },
-    { field: 'returnCost', header: '領用退回成本', visible: true },
-    { field: 'interCompanyTransferInQuantity', header: '同業調撥(入)數量', visible: true },
-    { field: 'interCompanyTransferInCost', header: '同業調撥(入)成本', visible: true },
-    { field: 'interCompanyTransferOutQuantity', header: '同業調撥(出)數量', visible: true },
-    { field: 'interCompanyTransferOutCost', header: '同業調撥(出)成本', visible: true },
-    { field: 'adjustmentCost', header: '調整成本', visible: true },
-    { field: 'endingQuantity', header: '期末數量', visible: true },
-    { field: 'endingCost', header: '期末成本', visible: true },
-    { field: 'averageCost', header: '平均成本', visible: true },
-    { field: 'totalSales', header: '銷售合計', visible: true },
-    { field: 'grossProfit', header: '銷售毛利', visible: true },
-    { field: 'profitMargin', header: '毛利率', visible: true },
-  ];
-
+  HOS_NOListOptions = this.dropdown.queryPos2034(); // 倉別選項
+  LOGO_NoListOptions = this.dropdown.queryPluLogo(); // 品牌選項
+  showTypeOptions = [
+    { label: '彙總', value: 'M' },
+    { label: '明細', value: 'D' },
+  ]
+  totalRecords = 0;
+  lastQueryBody: any
+  DetailSumData: any
+  footerData: any
+  data: Tls57070DataItem[] = [];
+  columns: ReportColumn[] = [];
+  columnGroup: ColumnGroup[] = [
+    { field: 'STK_PRIOR', header: '期初' },
+    { field: 'STK_STOCK', header: '進貨' },
+    { field: 'STK_REJECT', header: '退貨' },
+    { field: 'STK_SALE', header: '銷貨' },
+    { field: 'STK_MOVEIN', header: '調入' },
+    { field: 'STK_MOVEOUT', header: '調出' },
+    { field: 'STK_DIFF', header: '盤點' },
+    { field: 'STK_SCRAP', header: '報廢' },
+    { field: 'STK_TAKE', header: '領用' },
+    { field: 'STK_RETAKE', header: '領用退回' },
+    { field: 'STK_TRDIN', header: '同業調撥(入)' },
+    { field: 'STK_TRDOUT', header: '同業調撥(出)' },
+    { field: 'STK_CURRENT', header: '期末' },
+    { field: 'PLU_SALEPRC', header: '期末售價' },
+  ]
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private displayModeService: DisplayModeService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private authService: AuthService,
-  ) { }
+    public readonly tls57070Service: Tls57070Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));
-    this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
-    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
+    this.initializePage('TLS57070');
+    this.updateTableColumns('M');
+    this.queryForm.get('ShowType')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(val => {
+        setTimeout(() => {
+          this.updateTableColumns(val);
+          this.data = [];
+          this.footerData = [];
+          this.totalRecords = 0;
+          this.cdr.detectChanges();
+        });
+      });
   }
+  updateTableColumns(displayMode: string | null) {
+    if (displayMode === 'M') { // 彙總模式
+      this.columns = [
+        // 基本資訊
+        { field: 'LOGO_No', header: '品牌' },
+        { field: 'LOGO_CH_NAME', header: '品牌名稱' },
+        // 期初庫存
+        { field: 'STK_PRIORQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
 
-  canQuery(): boolean {
-    return true;
+        // 異動 - 進貨/退貨/銷貨
+        { field: 'STK_STOCKQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_STOCKCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_REJECTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_REJECTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_SALEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+
+        // 異動 - 調撥
+        { field: 'STK_MOVEINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
+
+        // 異動 - 盤點/報廢
+        { field: 'STK_DIFFQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_DIFFCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_SCRAPCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
+
+        // 異動 - 領用
+        { field: 'STK_TAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_TAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_RETAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_RETAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
+
+        // 異動 - 同業調撥
+        { field: 'STK_TRDINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
+
+        // 期末結算與利潤
+        { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true },
+        { field: 'STK_CURRENTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'STK_CURRENTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        // { field: 'PLU_SALEPRCNET', header: '未稅', format: formatAmount, isSubTotal: true, isTotal: true,  groupField: 'PLU_SALEPRC' },
+        // { field: 'PLU_SALEPRC', header: '含稅', format: formatAmount, isSubTotal: true, isTotal: true,  groupField: 'PLU_SALEPRC' },
+        { field: 'STK_UNITCOST', header: '平均成本', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true },
+        { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true, isTotal: true }, // (銷售金額 / 1.05)
+        { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true, isTotal: true },
+        { field: 'GROSSPROFITMARGIN', header: '毛利率', isSubTotal: true, isTotal: true }
+      ];
+      this.data = [];
+    } else if (displayMode === 'D') { // 明細模式
+      this.columns = [
+        // 基本資訊
+        { field: 'LOGO_No', header: '品牌' },
+        { field: 'LOGO_CH_NAME', header: '品牌名稱' },
+        { field: 'PLU_MagNo', header: '商品管理編號' },
+        { field: 'PLU_Name', header: '品名' },
+
+        // 期初庫存
+        { field: 'STK_PRIORQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
+        { field: 'STK_PRIORCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_PRIOR' },
+
+        // 異動 - 進貨/退貨/銷貨
+        { field: 'STK_STOCKQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_STOCKCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_STOCK' },
+        { field: 'STK_REJECTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_REJECTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_REJECT' },
+        { field: 'STK_SALEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+        { field: 'STK_SALENET', header: '售價', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SALE' },
+
+        // 異動 - 調撥
+        { field: 'STK_MOVEINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEIN' },
+        { field: 'STK_MOVEOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
+        { field: 'STK_MOVEOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_MOVEOUT' },
+
+        // 異動 - 盤點/報廢
+        { field: 'STK_DIFFQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_DIFFCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_DIFF' },
+        { field: 'STK_SCRAPQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
+        { field: 'STK_SCRAPCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_SCRAP' },
+
+        // 異動 - 領用
+        { field: 'STK_TAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_TAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TAKE' },
+        { field: 'STK_RETAKEQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
+        { field: 'STK_RETAKECOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_RETAKE' },
+
+        // 異動 - 同業調撥
+        { field: 'STK_TRDINQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDINCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDIN' },
+        { field: 'STK_TRDOUTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
+        { field: 'STK_TRDOUTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_TRDOUT' },
+
+        // 期末結算與利潤
+        { field: 'STK_SYSADJUSTCOST', header: '調整成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true },
+        { field: 'STK_CURRENTQTY', header: '數量', format: formatAmount, isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'STK_CURRENTCOST', header: '成本', format: (val) => formatAmountWithDecimals(val, 2), isSubTotal: true, isTotal: true, groupField: 'STK_CURRENT' },
+        { field: 'PLU_SALEPRCNET', header: '未稅', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true, groupField: 'PLU_SALEPRC' },
+        { field: 'PLU_SALEPRC', header: '含稅', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true, groupField: 'PLU_SALEPRC' },
+        { field: 'STK_UNITCOST', header: '平均成本', format: (val) => formatAmountCN(val), isSubTotal: true, isTotal: true },
+        { field: 'SALENET', header: '銷貨合計', format: formatAmount, isSubTotal: true, isTotal: true }, // (銷售金額 / 1.05)
+        { field: 'GROSSPROFIT', header: '銷貨毛利', format: formatAmount, isSubTotal: true, isTotal: true },
+        { field: 'GROSSPROFITMARGIN', header: '毛利率', isSubTotal: true, isTotal: true }
+      ];
+      this.data = [];
+    } else {
+      this.columns = [];
+      this.data = [];
+    }
   }
-
-  canAdd(): boolean {
-    return true;
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup) {
+    form.value.pageIndex = event.pageIndex;
+    form.value.pageSize = event.pageSize;
+    form.value.SortBy = event.SortBy;
+    this.onSubmit(form);
   }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+    this.updateTableColumns(frm.value.ShowType);
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        STK_YM: convertDateToYYYYMM(frm.value.STK_YM),
+        SortBy: frm.value.ShowType === 'M' ?
+          [
+            { field: 'LOGO_CH_NAME', order: 1 }] :
+          [
+            { field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 },
+          ]
+      }
+      this.tls57070Service.queryTLS57070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.DetailSumData = res.DetailSumData.map((item: any) => ({
+          ...item,
+          STK_UNITCOST: '--',
+          PLU_SALEPRCNET: '--',
+          PLU_SALEPRC: '--',
+        }));
+        this.lastQueryBody = body;
+        this.footerData = [
+          {
+            ...res.SumData,
+            STK_UNITCOST: '--',
+            PLU_SALEPRCNET: '--',
+            PLU_SALEPRC: '--',
+          }
+        ]
+        this.data = res.Data;
+        console.log(res.TotalCount);
+        this.totalRecords = res.TotalCount;
+      })
+    })
+  }
+  onExportPDF() {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
+    this.btnLoading = true;
+    this.tls57070Service.exportTLS57070PDF(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.pdf');
       },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    });
+  }
+  btnLoading = false;
+  onExportXLSX() {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls57070Service.exportTLS57070(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.xlsx');
+      },
+    });
+  }
+
+  // 處理檔案匯出的通用邏輯
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  // 輔助方法：從 header 獲取檔名
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
+    }
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch (error) {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
   }
 }

@@ -53,6 +53,29 @@ export class TLS13010Service {
     );
   }
 
+
+  /** 查詢契約書維護資料 */
+  queryTLS13010Detail(talent_id: any) {
+    // 🔥 確保 talent_id 轉換為字串格式再傳送給後端
+    const payload = {
+      talent_id: String(talent_id)
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Detail`, payload).pipe(
+      tap((res) => console.log('查詢結果:', res)),
+      map((response: { Status: string; Data: any[]; }) => {
+        // 如果查詢成功且有資料，就清理空格
+        if (response.Status === '0000' && response.Data && Array.isArray(response.Data)) {
+          response.Data = response.Data.map((item: any) => ({
+            ...item,
+            tlt_term_type: item.tlt_term_type?.trim() || ''
+          }));
+        }
+        return response;
+      })
+    );
+  }
+
   /** 查詢契約書維護地點資料 */
   queryTLS13010Location(talentId: string) {
     const payload = { TalentId: talentId };
@@ -85,12 +108,12 @@ export class TLS13010Service {
     );
   }
 
-  queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
-      tap((res) => console.log('統一抽成設定查詢結果:', res)),
-      catchError(this.errorHandler.handleError)
-    );
-  }
+  // queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
+  //   return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
+  //     tap((res) => console.log('統一抽成設定查詢結果:', res)),
+  //     catchError(this.errorHandler.handleError)
+  //   );
+  // }
 
   // 提交最終契約資料（清理後格式）
   /**
@@ -178,4 +201,15 @@ export class TLS13010Service {
       tap((res) => console.log('作廢結果:', res)),
     );
   }
+
+  /**
+ * 刷新使用者資料權限範圍
+ */
+  refreshUserDataPermissions(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/RefreshUserDataPermissions`, {}).pipe(
+      tap((res) => console.log('刷新權限結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
 }

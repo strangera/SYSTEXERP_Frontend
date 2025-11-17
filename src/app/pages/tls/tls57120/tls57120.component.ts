@@ -80,7 +80,7 @@ export class TLS57120Component {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));
     this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
     this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));

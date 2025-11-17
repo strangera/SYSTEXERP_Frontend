@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgIf, NgStyle } from '@angular/common';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { CalendarComponent } from '../calendar/calendar.component';
 
 @Component({
@@ -18,6 +18,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   @Input() override label = ''; // 標籤
   @Input() startLabel = ''; // 起始日期標籤
   @Input() endLabel = ''; // 結束日期標籤
+  @Input() descLabel = '(起迄)'; // 標籤說明
   @Input() startControlName = '';
   @Input() endControlName = '';
   @Input() startControl = new FormControl; // 起始日期

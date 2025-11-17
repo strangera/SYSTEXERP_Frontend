@@ -12,8 +12,10 @@ import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
-import { Button } from 'primeng/button';
+// until-destroy
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
+@UntilDestroy()
 @Component({
   selector: 'app-tls11010-cru',
   templateUrl: './tls11010-cru.component.html',
@@ -28,51 +30,24 @@ import { Button } from 'primeng/button';
     InputTextComponent,
     DropdownComponent,
     NgIf,
-    
     TranslateModule,
   ],
 })
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
-  // 建立表單欄位，並依據 POS2002 資料表設定欄位驗證規則
+  // 建立表單欄位
   dataForm = this.formBuilder.nonNullable.group({
-    // 店位說明 (LOCATION_Name) - 長度 30，可為 null
-    LOCATION_Name: ['', [Validators.maxLength(30)]],
-
-    // 組織代碼 (org_id) - 長度 20，可為 null
-    org_id: ['', [Validators.maxLength(20)]],
-
-    // 館別代碼 (building_no) - 長度 1，必填
-    building_no: ['', [Validators.required, Validators.maxLength(1)]],
-
-    // 樓層代碼 (FLOOR_NO) - 長度 2，必填
-    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],
-
-    // 區域代碼 (AREA_NO) - 長度 2，必填
-    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],
-
-    // 簽約坪數 (GROSS_SPACE) - 數值 7,3，可為 null
-    GROSS_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]], // 非必填，故移除 Validators.required
-
-    // 營業坪數 (NET_SPACE) - 數值 7,3，可為 null
-    NET_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]], // 非必填，故移除 Validators.required
-
-    // 使用狀態 (LOCATION_Status) - 長度 1，必填
-    LOCATION_Status: [0, [Validators.required, Validators.maxLength(1)]],
-
-    // 用途代碼 (Purpose_no) - 長度 2，必填
-    Purpose_no: [null, [Validators.required]],
-
-    // X 軸 (Draw_X) - 長度 255，可為 null
-    Draw_X: ['', [Validators.maxLength(255)]],
-
-    // Y 軸 (Draw_Y) - 長度 255，可為 null
-    Draw_Y: ['', [Validators.maxLength(255)]],
-
-    // 店位代碼 (LOCATION_No) - 長度 10，必填，由系統帶入
-    LOCATION_No: [
-      { value: '由系統帶入', disabled: true },
-      [Validators.required, Validators.maxLength(10)],
-    ],
+    LOCATION_Name: ['', [Validators.maxLength(30)]],         // 店位說明
+    org_id: ['', [Validators.maxLength(20)]],                 // 組織代碼
+    building_no: ['', [Validators.required, Validators.maxLength(1)]], // 館別代碼
+    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],    // 樓層代碼
+    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],     // 區域代碼
+    GROSS_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]],// 簽約坪數
+    NET_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]], // 營業坪數
+    LOCATION_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 使用狀態（字串 '0' 預設未使用）
+    Purpose_no: [null, [Validators.required]],                // 用途代碼
+    Draw_X: ['', [Validators.maxLength(255)]],                // X 座標
+    Draw_Y: ['', [Validators.maxLength(255)]],                // Y 座標
+    LOCATION_No: [{ value: '由系統帶入', disabled: true }, [Validators.required, Validators.maxLength(10)]], // 店位代碼
   });
 
   floorOptions: any[] = [];
@@ -81,7 +56,8 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   usageOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
 
-  LOCATION_Status_Options: any[] = []; // 實際綁定的下拉選單選項
+  // 下拉選單：一律以字串值 '0' | '1' | '2' | '3' 維持一致
+  LOCATION_Status_Options: any[] = [];
 
   constructor(
     private validationService: ValidationService,
@@ -95,178 +71,178 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS11010', this.dataForm);
 
-    // 建立或編輯時處理 LOCATION_Status 下拉選單
+    // --- 使用狀態選單邏輯 ---
     if (this.crudstatus === CRUDStatus.Create) {
-      // 建立時固定給兩個選項：空位、停用
+      // 新增畫面：固定四個選項，預設「未使用」
       this.LOCATION_Status_Options = [
-        { value: 0, label: '空位' },
-        { value: 2, label: '停用' },
+        { value: '0', label: '未使用' },
+        { value: '2', label: '保留中' },
+        { value: '1', label: '使用中' },
+        { value: '3', label: '停用' },
       ];
-      this.dataForm.patchValue({ LOCATION_Status: 0 });
+      this.dataForm.patchValue({ LOCATION_Status: '0' });
       this.dataForm.get('LOCATION_Status')?.enable();
     }
 
-    // 根據實際狀態決定選項
     if (this.crudstatus === CRUDStatus.Edit) {
-      const rawStatus = this.rowdata?.LOCATION_Status;
-      const status =
-        rawStatus !== undefined && rawStatus !== null ? Number(rawStatus) : -1;
+      // 編輯：依現有狀態決定可選項；維持字串型別
+      const statusStr = String(this.rowdata?.LOCATION_Status ?? '').trim();
+      this.dataForm.patchValue(this.rowdata);
 
-      this.dataForm.patchValue(this.rowdata); // 帶入整筆資料
-
-      console.log('🛬 CRU 接收到 AREA_NO：', this.rowdata?.AREA_NO);
-      console.log(
-        '📝 patch 完的 AREA_NO 值：',
-        this.dataForm.get('AREA_NO')?.value,
-      );
-
-      // 根據實際狀態決定選項
-      switch (status) {
-        case 0:
+      switch (statusStr) {
+        case '0': // 未使用
           this.LOCATION_Status_Options = [
-            { value: 0, label: '空位' },
-            { value: 2, label: '停用' },
+            { value: '0', label: '未使用' },
+            { value: '3', label: '停用' },
           ];
           break;
-        case 2:
+        case '2': // 保留中
           this.LOCATION_Status_Options = [
-            { value: 2, label: '停用' },
-            { value: 0, label: '空位' },
+            { value: '2', label: '保留中' },
+            { value: '3', label: '停用' },
+            { value: '0', label: '未使用' },
           ];
           break;
-        case 1:
+        case '1': // 使用中
         default:
-          this.LOCATION_Status_Options = [{ value: 1, label: '使用中' }];
+          // 使用中只能維持使用中（依你原本邏輯）
+          this.LOCATION_Status_Options = [{ value: '1', label: '使用中' }];
           this.dataForm.get('LOCATION_Status')?.disable();
           break;
       }
-
-      this.dataForm.patchValue({ LOCATION_Status: status });
+      this.dataForm.patchValue({ LOCATION_Status: statusStr });
     }
 
     if (this.crudstatus === CRUDStatus.Read) {
-      // 給定所有可選項
+      // 檢視：顯示全部選項，並 disable 表單
       this.LOCATION_Status_Options = [
-        { value: 0, label: '空位' },
-        { value: 1, label: '使用中' },
-        { value: 2, label: '停用' },
+        { value: '0', label: '未使用' },
+        { value: '1', label: '使用中' },
+        { value: '2', label: '保留中' },
+        { value: '3', label: '停用' },
       ];
-
-      const matched = this.LOCATION_Status_Options.find(
-        (opt) => String(opt.value) === String(this.rowdata?.LOCATION_Status),
-      );
-      const labelValue = matched ? matched.value : null;
-
-      this.dataForm.patchValue({
-        ...this.rowdata,
-        LOCATION_Status: labelValue,
-      });
-
+      const chosen = String(this.rowdata?.LOCATION_Status ?? '').trim();
+      this.dataForm.patchValue({ ...this.rowdata, LOCATION_Status: chosen });
       this.dataForm.disable();
     }
 
-    // 其餘選項初始化
+    // --- 其餘選項初始化（全部加上 untilDestroyed） ---
     this.tls11010Service
       .getFloorOptions()
+      .pipe(untilDestroyed(this))
       .subscribe((res) => (this.floorOptions = res));
-    this.tls11010Service.getRegionOptions().subscribe((res) => {
-      this.RegionCodeOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: String(x.value).trim(), // ✅ 這裡加 trim
-        })) || [];
 
-      // 👉 編輯狀態下，補 patch trimmed AREA_NO
-      if (this.crudstatus === CRUDStatus.Edit) {
-        const matchedRegion = this.RegionCodeOptions.find(
-          (opt) => String(opt.value) === String(this.rowdata?.AREA_NO).trim(),
-        );
-        if (matchedRegion) {
-          this.dataForm.patchValue({ AREA_NO: matchedRegion.value });
-        }
-      }
-    });
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
-    this.tls11010Service.getUsageOptions().subscribe((res) => {
-      this.usageOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: String(x.value).trim(), // 保險起見
-        })) || [];
+    this.tls11010Service
+      .getRegionOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.RegionCodeOptions =
+          res?.map((x: any) => ({
+            label: x.label,
+            formLabel: `${x.value} - ${x.label}`,
+            value: String(x.value).trim(),
+          })) || [];
 
-      // 👉 編輯狀態時，修正用途代碼
-      if (this.crudstatus === CRUDStatus.Edit) {
-        const matchedUsage = this.usageOptions.find(
-          (opt) =>
-            String(opt.value).trim() ===
-            String(this.rowdata?.Purpose_no).trim(),
-        );
-        if (matchedUsage) {
-          this.dataForm.patchValue({ Purpose_no: matchedUsage.value });
+        if (this.crudstatus === CRUDStatus.Edit) {
+          const matchedRegion = this.RegionCodeOptions.find(
+            (opt) => String(opt.value) === String(this.rowdata?.AREA_NO).trim(),
+          );
+          if (matchedRegion) {
+            this.dataForm.patchValue({ AREA_NO: matchedRegion.value });
+          }
         }
-      }
-    });
+      });
+
+    this.tls11010Service
+      .getOrgOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.OrganizationCodeOptions =
+          res?.map((x: any) => ({
+            label: x.label,
+            formLabel: `${x.value} - ${x.label}`,
+            value: x.value,
+          })) || [];
+      });
+
+    this.tls11010Service
+      .getUsageOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.usageOptions =
+          res?.map((x: any) => ({
+            label: x.label,
+            formLabel: `${x.value} - ${x.label}`,
+            value: String(x.value).trim(),
+          })) || [];
+
+        if (this.crudstatus === CRUDStatus.Edit) {
+          const matchedUsage = this.usageOptions.find(
+            (opt) => String(opt.value) === String(this.rowdata?.Purpose_no).trim(),
+          );
+          if (matchedUsage) {
+            this.dataForm.patchValue({ Purpose_no: matchedUsage.value });
+          }
+        }
+      });
+
     this.tls11010Service
       .getBuildingOptions()
+      .pipe(untilDestroyed(this))
       .subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const raw = this.dataForm.getRawValue();
+      const raw = this.dataForm.getRawValue() as any;
 
-      (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
-      (raw as any).NET_SPACE = Number(raw.NET_SPACE);
-      (raw as any).LOCATION_Status = String(raw.LOCATION_Status);
-      (raw as any).org_id = raw.org_id?.trim() === '' ? null : raw.org_id;
+      // 正規化 payload
+      raw.GROSS_SPACE = Number(raw.GROSS_SPACE);
+      raw.NET_SPACE = Number(raw.NET_SPACE);
+      raw.LOCATION_Status = String(raw.LOCATION_Status);
+      raw.org_id = raw.org_id?.trim() === '' ? null : raw.org_id;
+
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        console.log('📤 新增送出的 payload：', raw);
-
-        this.tls11010Service.insertData(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(
-              this.translate.instant('success_message'),
-            );
-            this.dataForm.reset(); // ✅ 清空整個表單
-            this.dataForm.markAsPristine(); // ✅ 標記為未修改狀態（防止髒表單警告）
-          },
-          error: () => {
-            this.messageService.errorBubble(
-              this.translate.instant('create_failed'),
-            );
-          },
-        });
+        // 新增
+        this.tls11010Service
+          .insertData(raw)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble(this.translate.instant('success_message'));
+              this.dataForm.reset();
+              this.dataForm.markAsPristine();
+              // 重設預設狀態為未使用
+              this.dataForm.patchValue({ LOCATION_Status: '0' });
+            },
+            error: () => {
+              this.messageService.errorBubble(this.translate.instant('create_failed'));
+            },
+          });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        (raw as any).id = this.rowdata?.id;
-        (raw as any).LOCATION_No = this.rowdata?.LOCATION_No;
+        // 編輯
+        raw.id = this.rowdata?.id;
+        raw.LOCATION_No = this.rowdata?.LOCATION_No;
 
-        this.tls11010Service.updateData(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(
-              this.translate.instant('updated-successfully'),
-            );
-            this.router.navigate(['account/tls', 'tls11010']); // ✅ 導回查詢頁
-          },
-          error: () => {
-            this.messageService.errorBubble(
-              this.translate.instant('update_failed'),
-            );
-          },
-        });
+        this.tls11010Service
+          .updateData(raw)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble(
+                this.translate.instant('updated-successfully'),
+              );
+              this.router.navigate(['account/tls', 'tls11010']);
+            },
+            error: () => {
+              this.messageService.errorBubble(this.translate.instant('update_failed'));
+            },
+          });
       }
     });
   }
 
-  // ✅ 新增刪除方法
+  // 刪除
   onDelete(): void {
     const id = this.rowdata?.id;
     if (!id) {
@@ -277,32 +253,37 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     const confirmDelete = window.confirm('是否確認刪除此筆資料？');
     if (!confirmDelete) return;
 
-    this.tls11010Service.deleteData([id]).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.router.navigate(['/tls', 'TLS11010']);
-      },
-      error: () => {
-        this.messageService.errorBubble('刪除失敗');
-      },
-    });
+    this.tls11010Service
+      .deleteData([id])
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('刪除成功');
+          this.router.navigate(['/tls', 'TLS11010']);
+        },
+        error: () => {
+          this.messageService.errorBubble('刪除失敗');
+        },
+      });
   }
+
+  // 清除
   onClear(): void {
     const keepValues = {
       LOCATION_No: this.dataForm.get('LOCATION_No')?.value,
       LOCATION_Status: this.dataForm.get('LOCATION_Status')?.value,
     };
-    // 重設表單
     this.dataForm.reset();
-    // 設回保留欄位的值
     this.dataForm.patchValue(keepValues);
     this.dataForm.markAsPristine();
   }
+
   clearBtnConfig = {
     label: '清除',
     class: 'button-clear',
     text: true,
   };
+
   fakeControlForDisplay(value: string) {
     return this.formBuilder.control({ value, disabled: true });
   }

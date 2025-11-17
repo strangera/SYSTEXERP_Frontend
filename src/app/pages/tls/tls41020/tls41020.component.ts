@@ -1,24 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
 
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
-// 本地儲存鍵：用於儲存查詢狀態
-const storageKey = 'TLS41020';
+import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { CounterNameService } from '@service/basic/counter-name.service';
 
-// 2.4.1.2 收銀機EDC資料維護
+// 與後端一致：order 用 1 / -1
+type ApiSort = { field: string; order: number };
+
 @Component({
   selector: 'app-tls41020',
   templateUrl: './tls41020.component.html',
@@ -30,12 +35,13 @@ const storageKey = 'TLS41020';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputNumberComponent,
+    // InputNumberComponent,
     CalendarRangeComponent,
     MultiSelectComponent,
     TableComponent,
     TranslateModule,
     DropdownComponent,
+    InputTextComponent
   ],
 })
 export class TLS41020Component
@@ -44,14 +50,19 @@ export class TLS41020Component
 {
   selectedItems: any[] = [];
   ECRNoOptions: any[] = [];
+
+  // 初次查詢預設排序（只送 API，不再回灌 table）
+  private readonly defaultSort: ApiSort[] = [{ field: 'ECR_No', order: 1 }];
+
   queryForm = this.formBuilder.group({
-    ECR_No: [],
+    ECR_No: [], // MultiSelect (可多台)
     EDC_No: [],
     EDC_BegDate_From: [],
     EDC_BegDate_To: [],
     EDC_EdnDate_From: [],
     EDC_EdnDate_To: [],
-    EDC_Status: [],
+    EDC_Status1: [], // Dropdown (單選)
+    EDC_Status2: [],
     ECR_TLT_No: [],
     EDC_IP1: [],
     EDC_IP2: [],
@@ -59,17 +70,15 @@ export class TLS41020Component
     EDC_TmID1: [],
     EDC_TmID2: [],
     EDC_TmID3: [],
-    ...createPaginationConfig,
+    ...createPaginationConfig, // 內含 PageIndex / PageSize
   });
 
   data: any[] = [];
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
+    // { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
-    { field: 'EDC_No', header: '信用卡刷卡機代碼', visible: true },
     {
       field: 'EDC_BegDate',
       header: '啟用日期',
@@ -82,19 +91,18 @@ export class TLS41020Component
       visible: true,
       format: this.formatDateTime,
     },
-    { field: 'EDC_Status', header: '信用卡刷卡機狀態', visible: true },
-    { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
-    { field: 'ECR_TLT_Name', header: '機台所屬櫃位名稱', visible: true },
-    { field: 'ECR_LocNo', header: '機台所屬地點代號', visible: true },
-    { field: 'LOCATION_Name', header: '機台所屬地點名稱', visible: true },
+    { field: 'EDC_Status1Name', header: '中信刷卡機狀態', visible: true },
+    { field: 'EDC_Status2Name', header: '聯合刷卡機狀態', visible: true },
+    { field: 'ECR_TLT_No', header: '專櫃編號', visible: true },
+    { field: 'ECR_TLT_Name', header: '櫃位名稱', visible: true },
+    { field: 'ECR_LocNo', header: '地點代號', visible: true },
+    { field: 'LOCATION_Name', header: '地點名稱', visible: true },
     { field: 'EDC_IP1', header: '中信刷卡機IP', visible: true },
-     { field: 'EDC_TmID1', header: '中信刷卡機端末機代碼', visible: true },
-     { field: 'EDC_IP12', header: '聯信刷卡機IP', visible: true },
-     { field: 'EDC_TmID2', header: '聯信刷卡機端末機代碼', visible: true },
-    //  { field: 'EDC_IP3', header: '第三台信用卡刷卡機IP', visible: true },
-    //  { field: 'EDC_TmID3', header: '第三台信用卡刷卡機端末機代碼', visible: true },
+    { field: 'EDC_TmID1', header: '中信刷卡機端末機號', visible: true },
+    { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true },
+    { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true },
   ];
-
+CounterOptions: any[] = [];
   EDC_Status_Option: any[] = [
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' },
@@ -102,14 +110,17 @@ export class TLS41020Component
 
   constructor(
     private tls41020Service: TLS41020Service,
-    private ECRNoService: ECRNoService,
+    private ECRNoSvc: ECRNoService,
+    private counterNameService: CounterNameService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS41020', '/tls/tls41020cru', this.queryForm);
-    this.ECRNoService.getECRNo().subscribe((res) => {
+
+    // 收銀機號下拉
+    this.ECRNoSvc.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x: any) => ({
           label: x.label,
@@ -117,8 +128,15 @@ export class TLS41020Component
           value: x.value,
         })) || [];
     });
+        this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = (res ?? []).map((x: any) => ({
+        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
+      }));
+    });
+  
   }
 
+  /** 查詢：回到第一頁，送出預設排序（1/-1），不回灌 table 排序狀態 */
   onSubmit(form: FormGroup): void {
     this.submitted = true;
     if (form.invalid) {
@@ -126,42 +144,20 @@ export class TLS41020Component
       return;
     }
 
-    // 🔸 讀取 localStorage 中的 SYS_StoreNo
-    const userInfo = localStorage.getItem('UserInfo');
-    const storeNo = userInfo ? JSON.parse(userInfo).SYS_StoreNo : null;
-
-    const raw = form.value;
-    const payload = {
-      ECR_No: raw.ECR_No,
-      EDC_No: raw.EDC_No,
-      EDC_BegDateStart: raw.EDC_BegDate_From,
-      EDC_BegDateEnd: raw.EDC_BegDate_To,
-      EDC_EndDateStart: raw.EDC_EdnDate_From,
-      EDC_EndDateEnd: raw.EDC_EdnDate_To,
-      EDC_Status: raw.EDC_Status?.length ? raw.EDC_Status[0] : null,
-      ECR_TLT_No: raw.ECR_TLT_No,
-      EDC_IP1: raw.EDC_IP1,
-      EDC_IP2: raw.EDC_IP2,
-      EDC_IP3: raw.EDC_IP3,
-      EDC_TmID1: raw.EDC_TmID1,
-      EDC_TmID2: raw.EDC_TmID2,
-      EDC_TmID3: raw.EDC_TmID3,
-    };
+    const payload = this.buildPayload(form, {
+      pageIndex: 1,
+      pageSize: form.value?.PageSize || 20,
+      sort: this.defaultSort,
+    });
 
     this.loading = true;
     this.messageService.blockUi();
-
     this.tls41020Service.queryTLS41020(payload).subscribe({
       next: (res) => {
-        this.data = res.Data || [];
-        this.totalRecords = res.TotalCount || this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-        
+        this.data = res?.Data || [];
+        this.totalRecords = res?.TotalCount ?? this.data.length ?? 0;
       },
-      error: () => {
-        
-        this.loading = false;
-      },
+      error: () => {this.loading = false;this.messageService.errorBubble('查詢失敗')},
       complete: () => {
         this.loading = false;
         this.messageService.unblockUi();
@@ -169,33 +165,134 @@ export class TLS41020Component
     });
   }
 
+  /**
+   * 懶載入（分頁/排序）：
+   * 僅「讀取」子元件丟出的參數，不再把排序/分頁回灌給子元件，避免循環。
+   */
+ override onLazyLoadData(event: any, form: FormGroup): void {
+  this.loading = true;
+
+  const pageIndex =
+    event?.pageIndex ??
+    ((event?.first ?? 0) / (event?.rows ?? (form.value?.PageSize || 20)) + 1);
+
+  const pageSize =
+    event?.pageSize ?? event?.rows ?? form.value?.PageSize ?? 20;
+
+  let sort: ApiSort[] = this.defaultSort;
+
+  if (Array.isArray(event?.SortBy) && event.SortBy.length) {
+    // TableComponent 丟出的 SortBy
+    sort = event.SortBy.map((m: any) => ({
+      field: this.mapSortField(m.field),
+      order: m.order === -1 ? -1 : 1,
+    }));
+  } else if (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length) {
+    // 兼容 PrimeNG 事件
+    sort = event.multiSortMeta.map((m: any) => ({
+      field: this.mapSortField(m.field),
+      order: m.order === -1 ? -1 : 1,
+    }));
+  } else if (event?.sortField) {
+    sort = [{
+      field: this.mapSortField(event.sortField),
+      order: event.sortOrder === -1 ? -1 : 1,
+    }];
+  }
+
+  const payload = this.buildPayload(form, { pageIndex, pageSize, sort });
+
+  this.tls41020Service.queryTLS41020(payload).subscribe({
+    next: (res) => {
+      this.data = res?.Data || [];
+      this.totalRecords = res?.TotalCount ?? 0;
+    },
+    error: () => {
+      this.messageService.errorBubble('資料載入失敗');
+      this.loading = false;
+    },
+    complete: () => (this.loading = false),
+  });
+}
+/** 將前端顯示欄位名稱轉成後端排序欄位名稱 */
+private mapSortField(field: string): string {
+  switch (field) {
+    case 'EDC_Status1Name':
+      return 'EDC_Status1';
+    case 'EDC_Status2Name':
+      return 'EDC_Status2';
+    default:
+      return field;
+  }
+}
+
   onClearForm(): void {
     this.queryForm.reset();
   }
 
+  /**
+   * 刪除：改用 id 作為鍵值（支援單筆或多筆）
+   */
   onDelete(data: any | any[]): void {
     const items = Array.isArray(data) ? data : [data];
-    const idList = items.filter((x) => x?.id).map((x) => x.id);
+    const idList = items
+      .map((x) => x?.id)
+      .filter((id) => id !== null && id !== undefined);
 
-    if (idList.length === 0) {
-      this.messageService.errorBubble('無法刪除：缺少有效 ID');
+    if (!idList.length) {
+      this.messageService.errorBubble('無法刪除：缺少有效鍵值 (id)');
       return;
     }
 
     const body = { idList };
-
     this.tls41020Service.deleteTLS41020(body).subscribe({
       next: (res) => {
-        if (res.Status === '0000') {
+        if (res?.Status === '0000') {
           this.messageService.successBubble('刪除成功');
-          this.onSubmit(this.queryForm);
+          this.onSubmit(this.queryForm); // 重新查詢
         } else {
-          this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+          this.messageService.errorBubble(`刪除失敗: ${res?.Message || ''}`);
         }
       },
       error: () => this.messageService.errorBubble('刪除發生錯誤'),
     });
   }
+
+  /** 組 API payload（SortBy 送 1/-1） */
+  private buildPayload(
+    form: FormGroup,
+    opts: { pageIndex: number; pageSize: number; sort: ApiSort[] }
+  ) {
+    const raw = form.value;
+
+    return {
+      ECR_No: raw.ECR_No, // MultiSelect 直接傳陣列
+      EDC_No: raw.EDC_No,
+      EDC_BegDateStart: raw.EDC_BegDate_From,
+      EDC_BegDateEnd: raw.EDC_BegDate_To,
+      EDC_EndDateStart: raw.EDC_EdnDate_From,
+      EDC_EndDateEnd: raw.EDC_EdnDate_To,
+
+      // Dropdown 單選
+      EDC_Status1: raw.EDC_Status1 ?? null,
+      EDC_Status2: raw.EDC_Status2 ?? null,
+
+      ECR_TLT_No: raw.ECR_TLT_No,
+
+      EDC_IP1: raw.EDC_IP1,
+      EDC_IP2: raw.EDC_IP2,
+      EDC_IP3: raw.EDC_IP3,
+      EDC_TmID1: raw.EDC_TmID1,
+      EDC_TmID2: raw.EDC_TmID2,
+      EDC_TmID3: raw.EDC_TmID3,
+
+      SortBy: opts.sort,          // [{ field, order: 1|-1 }]
+      PageIndex: opts.pageIndex,  // 1-based
+      PageSize: opts.pageSize,
+    };
+  }
+
+  /** 日期格式化 (yyyy/MM/dd) */
   formatDateTime(value: any): string {
     if (!value) return '';
     const date = new Date(value);

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { forkJoin, map } from 'rxjs';
+import { finalize, forkJoin, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -172,47 +172,62 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
 
       const payload = {
         ID: this.isFormCreateable ? 0 : Number(this.rowdata?.ID ?? 0),
-        ECR_GrpNo: (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') ? '' : raw.ECR_GrpNo, // 新增時送空字串
+        ECR_GrpNo: (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') ? '' : raw.ECR_GrpNo,
         ECR_GrpName: raw.ECR_GrpName,
         ECR_DtlLimit: raw.ECR_DtlLimit,
         ECR_GrpDesc: raw.ECR_GrpDesc,
-        Detail: this.data.map(item => ({
-          ID: isNaN(Number(item.ID)) ? 0 : Number(item.ID),   // "saved-xxxx" → 0
-          ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? 0,
-          ECR_No: item.ECR_No ?? '',
-          ECR_Type: item.ECR_Type ?? '',
-          TLT_No: item.TLT_No ?? '',
-          BUILDING_No: item.BUILDING_No ?? '',
-          FLOOR_No: item.FLOOR_No ?? '',
-          Area_No: item.Area_No ?? '',
-          status: item.status ?? 'A'  // 後端需要
-        }))
+        Detail: this.data.map((item, index) => {
+          let detailStatus = item.status;
+
+
+          if (typeof item.ID === 'string' || !item.ID) {
+            detailStatus = 'new';
+          } else if (item.status === 'deleted') {
+            detailStatus = 'deleted';
+          } else if (!item.status || item.status === 'original') {
+            detailStatus = 'modified';
+          }
+
+          return {
+            ID: (typeof item.ID === 'string' || item.ID == null) ? 0 : Number(item.ID),
+            ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? index,
+            ECR_No: item.ECR_No ?? '',
+            ECR_Type: item.ECR_Type ?? '',
+            TLT_No: item.TLT_No ?? '',
+            BUILDING_No: item.BUILDING_No ?? '',
+            FLOOR_No: item.FLOOR_No ?? '',
+            Area_No: item.Area_No ?? '',
+            status: detailStatus
+          };
+        })
+
+
       };
 
       console.log('送出的 payload:', payload);
 
       if (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') {
         // 新增
-        this.tls43040Service.insertTLS43040(payload).subscribe({
-          next: (res) => {
-            console.log('新增成功:', res);
-            this.onCancel(); // !!! 學習
-            this.messageService.successBubble(res.Message); // !!! 學習
-          },
-          error: (err) => {
-            console.error('新增失敗:', err);
-          }
-        });
+        this.tls43040Service
+          .insertTLS43040(payload)
+          .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.onCancel();
+            },
+          });
       } else {
         // 更新
-        this.tls43040Service.updateTLS43040(payload).subscribe({
-          next: (res) => {
-            console.log('更新成功:', res);
-          },
-          error: (err) => {
-            console.error('更新失敗:', err);
-          }
-        });
+        this.tls43040Service
+          .updateTLS43040(payload)
+          .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.onCancel();
+            },
+          });
       }
     } else {
       console.log('表單驗證未通過');
@@ -224,5 +239,45 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   resetTable() {
     this.data = [];
     this.selectedRows = [];
+  }
+  onInsertRow(newRow: any) {
+    newRow.status = 'new';
+    this.data.push(newRow);
+  }
+
+  onRowEdit(rowData: any) {
+    const target = this.data.find(d => d.ID === rowData.ID);
+    if (target) {
+      Object.assign(target, rowData);
+    }
+
+    if (rowData.status !== 'new' && rowData.status !== 'deleted') {
+      rowData.status = 'modified';
+    }
+
+    console.log('修改明細:', rowData);
+  }
+
+  onDeleteRow(selectedItems: any[]) {
+    for (const item of selectedItems) {
+      item.status = 'deleted';
+    }
+    this.data = this.data.filter(d => !selectedItems.includes(d));
+    this.data = [...this.data];
+    console.log('刪除的項目:', selectedItems);
+  }
+
+
+
+  onFieldChange(e: any) {
+    const row = e.rowData;
+    if (row.status !== 'new' && row.status !== 'deleted') {
+      row.status = 'modified';
+    }
+    console.log('欄位變更 → 自動設狀態 Modified:', row);
+  }
+
+  get visibleData() {
+    return this.data.filter((d) => d.status !== 'deleted');
   }
 }

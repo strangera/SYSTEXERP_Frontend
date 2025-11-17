@@ -2,20 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
-
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { FIN15030Data, FIN15030Service, FIN15030QueryRequest, FIN15030PrintRequest } from '@service/api/fin/fin15030.service';
 import { environment } from '../../../../environments/environment';
-
-// Components
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -24,6 +19,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 export interface Option {
   label: string;
@@ -33,18 +29,27 @@ export interface Option {
 @Component({
   selector: 'app-fin15030',
   templateUrl: './fin15030.component.html',
-  styleUrl: './fin15030.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent, CommonModule, MultiSelectComponent
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    InputTextRangeComponent,
+    CalendarRangeComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    DropdownComponent,
+    CalendarComponent,
+    MultiSelectComponent,
+    CommonModule,
+    CustomFooterTableComponent
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    INV_Remark_S: ['', [Validators.maxLength(10)]],             // 退出/折讓單號起 (string(10))
-    INV_Remark_E: ['', [Validators.maxLength(10)]],             // 退出/折讓單號訖 (string(20))
+    INV_Remark_S: ['', [Validators.maxLength(16)]],             // 退出/折讓單號起 (string(10))
+    INV_Remark_E: ['', [Validators.maxLength(16)]],             // 退出/折讓單號訖 (string(20))
     INV_GUIType: [null],                                        // 發票格式 (dropdown)
     GUI_Track: [null],                                          // 字軌 (string(2))
     TXN_GUINo_S: ['', [Validators.maxLength(8)]],               // 發票號碼起 (string(8))
@@ -53,8 +58,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     TXN_Date_E: [null],                                         // 退出/折讓日期訖 (date picker)
     Credit_Type: [null],                                        // 區別 (dropdown)
     INV_YM: [null, [Validators.required, this.validationService.evenMonthValidator]],                      // 申報年月 (必填, date picker)
-    INV_Data_YM_S: [null, [Validators.required]],                                      // 資料所屬年月起 (date picker)
-    INV_Data_YM_E: [null, [Validators.required]],                                      // 資料所屬年月訖 (date picker)
+    INV_Data_YM_S: [null],                                      // 資料所屬年月起 (date picker)
+    INV_Data_YM_E: [null],                                      // 資料所屬年月訖 (date picker)
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起 (string(16))
     Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號訖 (string(16))
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起 (string(16))
@@ -73,6 +78,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
   data: FIN15030Data[] = [];
   selectedItems: FIN15030Data[] = [];
   btnLoading = false;
+  footerData: any[] = [];
 
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
@@ -83,8 +89,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'TXN_Date', header: '退出/折讓日期', visible: true, format: formatDate },
     { field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'INV_YM', header: '申報年月', visible: true },
-    { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount },
-    { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount },
+    { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount, isTotal: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
@@ -92,7 +98,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'TXN_Uniform', header: '統一編號', visible: true }
   ];
 
-  //#region 
+  //#region
   // TDS1007
   invoiceFormatOptions: Option[] = [];   // 發票格式
   guiTrackOptions: Option[] = [];        // 字軌
@@ -143,6 +149,11 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
           this.data = res.Data.FIN15030s;
+          this.footerData = [{
+            group_name: '合計',
+            TXN_Net: res.Data.TotalNet,
+            TXN_Tax: res.Data.TotalTax,
+          }];
           this.totalRecords = res.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
@@ -179,7 +190,6 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     if (this.queryForm.invalid) {
       const errors: string[] = [];
       if (!this.queryForm.get('INV_YM')?.value) errors.push('請填寫申報年月');
-
       if (errors.length > 0) {
         this.messageService.errorBubble(errors.join('<br>'));
         return false;

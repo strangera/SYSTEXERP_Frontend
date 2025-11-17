@@ -25,11 +25,11 @@ import { NgIf } from '@angular/common';
 
 //3.1.3.9  資產攤提作業 CRU
 @Component({
-    selector: 'app-ass13090-cru',
-    templateUrl: './ass13090-cru.component.html',
-    styleUrl: './ass13090-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass13090-cru',
+  templateUrl: './ass13090-cru.component.html',
+  styleUrl: './ass13090-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS13090CRUComponent extends BasicCrupageComponent implements OnInit {
   itemCodeOptions: any[] = [];
@@ -113,8 +113,7 @@ export class ASS13090CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310024';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.itemCodeService.getSystemTypes().subscribe(data => {
       this.itemCodeOptions = data;

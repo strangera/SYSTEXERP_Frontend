@@ -17,7 +17,7 @@
                         controlName="pod_no"
                         [control]="df().pod_no"
                         [submitted]="submitted"
-                        [disabled]="true">
+                        [disabled]="!0">
         </app-input-text>
         <app-calendar-range class="col-12 md:col-6 lg:col-8"
                             calendarType="dateRange"
@@ -36,7 +36,7 @@
                         label="核准狀態"
                         controlName="pod_status"
                         [control]="df().pod_status"
-                        [disabled]="true">
+                        [disabled]="!0">
         </app-input-text>
       </div>
       <div *ngIf="!isFormReadable"
@@ -55,20 +55,23 @@
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增收銀機"
+                  [loading]="service.ecrLoading()"
                   (click)="onOpenDialog('ecr')"></app-button>
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="false"
-               [showEdit]="false"
-               [showDetail]="false"
-               [showDelete]="false"
-               [showManage]="false"
-               [showReportMode]="false"
+    <app-table [showCheckBox]="!0"
+               [showEdit]="!1"
+               [showDetail]="!1"
+               [showManage]="!1"
+               [showReportMode]="!1"
                [isRowSelectable]="service.isRowSelectable"
+               (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+               [lazy]="!0"
                [data]="ecrTableData()"
                [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
+               [loading]="service.tableLoading()"
                [columns]="columns">
     </app-table>
   </div>
@@ -79,20 +82,23 @@
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增專櫃"
+                  [loading]="service.tltLoading()"
                   (click)="onOpenDialog('tlt')"></app-button>
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="false"
-               [showEdit]="false"
-               [showDetail]="false"
-               [showDelete]="false"
-               [showManage]="false"
-               [showReportMode]="false"
+    <app-table [showCheckBox]="!0"
+               [showEdit]="!1"
+               [showDetail]="!1"
+               [showManage]="!1"
+               [showReportMode]="!1"
                [isRowSelectable]="service.isRowSelectable"
                [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
+               (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+               [lazy]="!0"
+               [loading]="service.tableLoading()"
                [data]="tltTableData()"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_TLT'"
@@ -103,49 +109,52 @@
 
 <app-dialog [visible]="!!dialogVisible()"
             [header]="dialogHeader()"
-            (visibleChange)="onVisibleChange($event)"
+            (visibleChange)="onVisibleChange($event); dt.dt.reset()"
             (save)="onDialogSubmit()"
-            [height]="'auto'">
+            [height]="'auto'"
+            [loading]="loading">
   <form [formGroup]="dataForm">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="館別"
                           controlName="sys3800"
-                          [options]="service.sys3800Data()"
+                          [options]="service.sys3800Options()"
                           optionLabel="Name"
                           optionValue="No"
                           appendTo="body"
                           [control]="df().sys3800"
-                          [loading]="service.sys3800Loading"
+                          [loading]="service.sys3800Loading()"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="樓層"
                           controlName="sys3900"
-                          [options]="service.sys3900Data()"
+                          [options]="service.sys3900Options()"
                           optionLabel="Name"
                           optionValue="No"
                           appendTo="body"
                           [control]="df().sys3900"
-                          [loading]="service.sys3900Loading"
+                          [loading]="service.sys3900Loading()"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="區域"
                           controlName="sys3A00"
-                          [options]="service.sys3A00Data()"
+                          [options]="service.sys3A00Options()"
                           optionLabel="Name"
                           optionValue="No"
                           appendTo="body"
                           [control]="df().sys3A00"
-                          [loading]="service.sys3A00Loading"
+                          [loading]="service.sys3A00Loading()"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12">
-        <app-table [showCheckBox]="true"
-                   [showManage]="false"
-                   [showDelete]="false"
-                   [showReportMode]="false"
+        <app-table #dt
+                   [showCheckBox]="!0"
+                   [showManage]="!1"
+                   [showDelete]="!1"
+                   [showReportMode]="!1"
+                   [rows]="10"
                    [selectedItems]="dialogSelectedData"
                    (selectionChange)="onSelectionChange($event)"
                    [data]="dialogData()"

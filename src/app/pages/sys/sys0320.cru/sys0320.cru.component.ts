@@ -392,7 +392,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     this.sys0230Service.updateUserPrivileges(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       console.log('Update Role Privileges Response:', res);
       this.messageService.successBubble(res.Message);
-      this.authService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe(() => {
+      this.systemDataService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe(() => {
         this.onCancel();
       });
     });

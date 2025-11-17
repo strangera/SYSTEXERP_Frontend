@@ -30,7 +30,6 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 @Component({
   selector: 'app-tls32030',
   templateUrl: './tls32030.component.html',
-  styleUrl: './tls32030.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })

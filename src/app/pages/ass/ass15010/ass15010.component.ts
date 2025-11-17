@@ -21,11 +21,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.5.1  財產標籤列印作業
 @Component({
-    selector: 'app-ass15010',
-    templateUrl: './ass15010.component.html',
-    styleUrl: './ass15010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TranslateModule]
+  selector: 'app-ass15010',
+  templateUrl: './ass15010.component.html',
+  styleUrl: './ass15010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TranslateModule]
 })
 export class ASS15010Component extends BasicQpageComponent implements OnInit {
   //
@@ -137,8 +137,7 @@ export class ASS15010Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310032';
     this.cruPage = '/ASS1000/ASS15010CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.purchaseTypeService.getPurchaseTypes().subscribe(data => {
       this.propertyTypeOptions = data;

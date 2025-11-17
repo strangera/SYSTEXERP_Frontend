@@ -92,7 +92,7 @@ export const APPLY_STATUS_OPTIONS = {
 export const TLT_CTYPE_MTOTAL_OPTIONS = {
   '1': '年包',
   '2': '月包',
-  '3': '期間包',
+  '0': '期間包',
 } as const;
 
 
@@ -113,7 +113,7 @@ export const TOTAL_AMT_VENDOR_UNIT_OPTIONS = {
 export const DEPOSIT_PAYMENT_OPTIONS = {
   '1': '現金',
   '2': '支票',
-  '3': '履約保證金',
+  '3': '匯款',
 } as const;
 
 export const OVERALL_STATUS_OPTIONS = {
@@ -233,6 +233,16 @@ export interface DropdownOption {
   value: string | number;
   label: string;
 }
+
+export interface Pos2013DropdownOption {
+  value: string | number;
+  label: string;
+  VEN_No: string;
+  No: string;
+  Name: string;
+  VEN_Address: string;
+}
+
 
 const convertToDropdownOptions = (options: Record<string, string>): DropdownOption[] => {
   return Object.entries(options).map(([value, label]) => ({ value, label }));

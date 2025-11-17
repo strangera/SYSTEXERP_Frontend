@@ -1,26 +1,26 @@
 <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
+  <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
 </div>
 <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
-        <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar calendarType="dateMonthOne" label="申報年月"
-                [control]="queryForm.controls.REP_GUIYM" [submitted]="submitted" />
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="稅籍編號" controlName="REP_TaxNo" [options]="REP_TaxNo_Options" optionLabel="Label"
-                  optionValue="No" [control]="queryForm.controls.REP_TaxNo" [submitted]="submitted"></app-dropdown>
-              </div>
-            </div>
-            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-                <app-button btnType="clear" [form]="queryForm"></app-button>
-                <app-button btnType="query" [loading]="loading"  label="{{ '申報書預覽' | translate }}"></app-button>
-            </div>
-        </form>
-    </p-accordionTab>
+  <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
+    <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.REP_GUIYM"
+            [submitted]="submitted" />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="稅籍編號" controlName="REP_TaxNo" [options]="REP_TaxNo_Options" optionLabel="Label"
+            optionValue="No" [control]="queryForm.controls.REP_TaxNo" [submitted]="submitted"></app-dropdown>
+        </div>
+      </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear" [form]="queryForm"></app-button>
+        <app-button btnType="query" [loading]="loading" label="{{ '申報書預覽' | translate }}"></app-button>
+      </div>
+    </form>
+  </p-accordionTab>
 </p-accordion>
 <div class="card" *ngIf="pdfUrl">
   <!-- PDF 預覽區 -->
@@ -30,13 +30,9 @@
 </div>
 
 <!-- 彈出視窗 -->
-<p-dialog 
-  header="{{auditMode}}確認" 
-  [(visible)]="showDialog" 
-  modal
-  [style]="{width: '50vw'}">
+<p-dialog header="{{auditMode}}確認" [(visible)]="showDialog" modal [style]="{width: '50vw'}">
 
-   <div class="p-3">
+  <div class="p-3">
     <h5>申報年月: {{ dialogData?.REP_GUIYM }}</h5>
     <h5>稅籍編號: {{ dialogData?.REP_TaxNo }}</h5>
   </div>

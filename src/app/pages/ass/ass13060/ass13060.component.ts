@@ -22,11 +22,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.6  固定資產重估作業
 @Component({
-    selector: 'app-ass13060',
-    templateUrl: './ass13060.component.html',
-    styleUrl: './ass13060.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13060',
+  templateUrl: './ass13060.component.html',
+  styleUrl: './ass13060.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class ASS13060Component extends BasicQpageComponent implements OnInit {
   //
@@ -116,8 +116,7 @@ export class ASS13060Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310021';
     this.cruPage = '/ASS1000/ASS13060CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.userCodeService.getUserCode().subscribe(data => {
       this.userCodeOptions = data;

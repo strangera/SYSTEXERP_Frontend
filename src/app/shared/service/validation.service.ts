@@ -46,10 +46,11 @@ export class ValidationService {
       invalidEnglishNumberSymbol: '只能輸入英文和數字和符號',
       invalidPhoneNumber: '電話號碼格式錯誤',
       warehouseMismatch: '調出倉別與調入倉別必需不同',
-      timeGreaterThan: `時間必須大於 ${(formatDate(validatorValue.requiredTime))}`,
+      timeGreaterThan: `時間必須大於等於 ${(formatDate(validatorValue.requiredTime))}`,
       max: `最大值為${validatorValue.max}`,
       min: `最小值為${validatorValue.min}`,
       textRange: '起號不可大於迄號',
+      invalidGuiVehicle: '格式錯誤：需以「/」為開頭，長度8碼，且第2碼後只能包含半形英數字+-.等符號',
     };
     return config[validatorName];
   }
@@ -417,6 +418,27 @@ export class ValidationService {
   }
 
   /**
+   * 只能輸入半形英文、數字和特殊符號（不含中文或全形字元） > 支援空字串
+   * @description 該驗證器同時檢查是否為純空白字串。
+   */
+  englishNumberSpaceSymbolValidator(control: { value: string | null }) {
+    const value = control.value;
+
+    // 如果值為 null 或 undefined，則不進行驗證。
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    // 檢查是否只包含半形英數字和半形特殊符號。
+    // 這個正則表達式會匹配所有 ASCII 字元（0-127），
+    // 這樣可以有效地排除所有全形字元和中文字。
+    const isValid = /^[\x20-\x7E]*$/.test(value);
+
+    // 如果驗證不通過，返回錯誤；否則返回 null。
+    return isValid ? null : { invalidEnglishNumberSymbol: true };
+  }
+
+  /**
    * 電話號碼驗證器
    * 只允許數字和連字號(-)
    */
@@ -437,14 +459,20 @@ export class ValidationService {
   }
 
   // 時間必須大於指定的時間
-  timeGreaterThanValidator(requiredTime: Date): ValidatorFn {
+  timeGreaterThanValidator(requiredDate: Date): ValidatorFn {
+    const requiredDateOnly = new Date(requiredDate.getFullYear(), requiredDate.getMonth(), requiredDate.getDate());
     return (control: AbstractControl): ValidationErrors | null => {
       const inputTime = control.value;
-      // 確保輸入值是有效日期
-      if (inputTime && inputTime instanceof Date && !isNaN(inputTime.getTime())) {
-        if (inputTime <= requiredTime) { // 使用 <= 以確保時間不能等於
-          return { timeGreaterThan: { requiredTime: requiredTime } };
-        }
+      if (!inputTime || !(inputTime instanceof Date) || isNaN(inputTime.getTime())) {
+        return null;
+      }
+      const inputDateOnly = new Date(inputTime.getFullYear(), inputTime.getMonth(), inputTime.getDate());
+      if (inputDateOnly < requiredDateOnly) {
+        return {
+          timeGreaterThan: {
+            requiredTime: requiredDate.toISOString().split('T')[0] // 傳回 YYYY-MM-DD 格式
+          }
+        };
       }
       return null;
     };

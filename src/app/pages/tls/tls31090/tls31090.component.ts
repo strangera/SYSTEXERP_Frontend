@@ -33,7 +33,6 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-tls31090',
   templateUrl: './tls31090.component.html',
-  styleUrl: './tls31090.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, RadiobuttonComponent, NgIf, CalendarRangeComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
 })
@@ -130,7 +129,7 @@ export class TLS31090Component {
   ngOnInit(): void {
 
 
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // Initialize dropdown options
     this.floorService.getFloors().subscribe(data => {

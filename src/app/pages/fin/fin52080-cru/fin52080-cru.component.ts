@@ -13,7 +13,6 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, LedgerMDType, VoucherType } from '../fin52080/fin52080.model';
 
 @Component({
@@ -93,6 +92,12 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     if (!match) this.df().AccNo.setValue('', { emitEvent: !1 });
   });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.classNoLoading()
+      || this.service.treeLoading();
+  });
+
   constructor(
     public readonly service: FIN52080Service,
     private readonly validationService: ValidationService,
@@ -118,9 +123,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
       this.logger.debug(`onSubmit:`, [payload]);
 
-      this.service.saveFIN52080(payload).pipe(
-        finalize(() => this.loading = !1),
-      ).subscribe(res => {
+      this.service.saveFIN52080(payload).subscribe(res => {
         if (res.Status !== '0000') return this.messageService.errorBubble('資料儲存失敗，請再次檢查欄位');
         this.messageService.successBubble('資料儲存成功');
         this.onCancel();

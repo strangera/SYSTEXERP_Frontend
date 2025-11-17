@@ -48,18 +48,19 @@
                 controlName="tlt_no"
                 [control]="dataForm.controls.tlt_no"
                 [submitted]="submitted"
-                [customPlaceholder]="'待確認自己填還是由系統產生'"
+                [customPlaceholder]="'審核過系統自動產生'"
                 [alwaysShowPlaceholder]="true"
+                [readonly]="true"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
                 label="廠商統一編號"
-                controlName="ven_uniform"
+                controlName="vendor_ven_no"
                 [options]="vendorOptions"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.ven_uniform"
+                [control]="dataForm.controls.vendor_ven_no"
                 [submitted]="submitted"
                 [readonly]="this.crudModeService.isReadOnlyMode"
               ></app-dropdown>
@@ -73,6 +74,7 @@
                 [control]="dataForm.controls.ven_no"
                 [submitted]="submitted"
                 [readonly]="true"
+                [customPlaceholder]="'選擇廠商統一編號自動帶入'"
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -339,10 +341,9 @@
             [data]="getDisplayLocationData()"
             [mainColumns]="locationColumns"
             [showCheckBox]="true"
-            [showPaginator]="false"
-            [showAddButton]="true"
-            [showBatchDelete]="true"
             [autoEditOnAdd]="true"
+            [forceEditMode]="!this.crudModeService.isReadOnlyMode"
+            [showActionColumn]="false"
             [loading]="loading"
             dataKey="id"
             [readonly]="false"
@@ -357,7 +358,7 @@
             [showPaginator]="false"
             [showAddButton]="!this.crudModeService.isReadOnlyMode"
             [showBatchDelete]="!this.crudModeService.isReadOnlyMode"
-            [showActionColumn]="!this.crudModeService.isReadOnlyMode"
+            [showActionColumn]="false"
             (dropdownChange)="onLocationDropdownChange($event)"
           ></app-expandable-edit-table>
         </div>
@@ -797,7 +798,7 @@
         </form>
       </p-accordionTab>
       <p-accordionTab
-        header="參加活動資訊"
+        header="參加資訊"
         [selected]="true"
         class="line-height-3 m-0"
         [headerStyleClass]="'query-accordionTab'"
@@ -821,7 +822,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype2">全館消費滿額集點活動</label>
+                  <label for="cap_saletype2">會員卡集點</label>
                 </div>
               </div>
 
@@ -849,7 +850,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype3">有價券</label>
+                  <label for="cap_saletype3">收取禮卷</label>
                 </div>
               </div>
 
@@ -863,7 +864,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype4">會員卡</label>
+                  <label for="cap_saletype4">累積消費歷程</label>
                 </div>
               </div>
 
@@ -877,7 +878,7 @@
                     trueValue="Y"
                     falseValue="N"
                   />
-                  <label for="cap_saletype5">參加提貨單</label>
+                  <label for="cap_saletype5">收取商品提貨單</label>
                 </div>
               </div>
             </div>
@@ -1042,9 +1043,17 @@
           <div
             class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
           >
-            <app-button btnType="back" label="上一步"></app-button>
-            <app-button btnType="next" label="下一步(代扣款)"></app-button>
-            <app-button btnType="back"></app-button>
+            <app-button
+              btnType="back"
+              label="上一步"
+              (click)="onCancel()"
+            ></app-button>
+            <app-button
+              btnType="next"
+              label="下一步(代扣款)"
+              (click)="onSubmitNext()"
+            ></app-button>
+            <app-button btnType="back" (click)="onCancel()"></app-button>
           </div>
         </form>
       </p-accordionTab>

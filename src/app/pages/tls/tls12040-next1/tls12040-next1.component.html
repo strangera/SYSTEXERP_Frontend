@@ -116,15 +116,14 @@
                 [dataKey]="'id'"
                 [detailKey]="''"
                 [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'"
+                [forceEditMode]="!isReadOnlyMode"
+                [showActionColumn]="false"
                 (save)="onFareTableSave($event, capType)"
                 (edit)="onFareTableEdit($event, capType)"
                 (cancel)="onFareTableCancel($event, capType)"
                 (beforeSave)="onBeforeSave($event, capType)"
-                [forceEditMode]="true"
-                [showActionColumn]="false"
               ></app-expandable-edit-table>
             </div>
-
             <!-- 底部操作按鈕 -->
             <div
               *ngIf="hasDataForType(capType)"

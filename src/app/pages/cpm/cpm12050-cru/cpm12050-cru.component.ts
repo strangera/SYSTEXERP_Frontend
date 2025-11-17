@@ -19,11 +19,11 @@ import { NgIf } from '@angular/common';
 
 //5.1.2.5 顧客意見管理作業 CRU
 @Component({
-    selector: 'app-cpm12050-cru',
-    templateUrl: './cpm12050-cru.component.html',
-    styleUrl: './cpm12050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-cpm12050-cru',
+  templateUrl: './cpm12050-cru.component.html',
+  styleUrl: './cpm12050-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class CPM12050CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
@@ -108,8 +108,7 @@ export class CPM12050CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '510012';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {

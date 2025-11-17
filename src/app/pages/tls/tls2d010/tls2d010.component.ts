@@ -17,7 +17,10 @@ import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
 import { DropDownListService, IDropdownItem, IAPS1003Item } from './../../../service/utility/dropDownList.service';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
 import { Button } from 'primeng/button';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { environment } from '../../../../environments/environment';
 
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -36,7 +39,7 @@ import { Button } from 'primeng/button';
     TableComponent,
     TranslateModule,
     Button,
-
+    FileUploadModule
   ]
 })
 export class TLS2D010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -118,7 +121,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.dropDownListService.queryAPS1003DropDownList({ cap_typeList: [] }) // 參數照 interface
+    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }) // 參數照 interface
       .subscribe((res) => {
         this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
           CAP_Item: item.CAP_Item, // 扣款項目代碼
@@ -198,31 +201,36 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       this.onSubmit(this.queryForm);
     });
   }
-  onFileSelected(event: any) {
-    const file: File = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-      console.log('選擇檔案:', file.name);
-      this.upload();
-    }
-  }
 
-  upload() {
-    if (!this.selectedFile) {
-      alert('請先選擇檔案');
-      return;
-    }
+  /** 匯入 Excel 並產生錯誤檔 */
+  onImportExcel(event: FileSelectEvent) {
+    const file = event.files[0];
     const formData = new FormData();
-    formData.append('file', this.selectedFile);
+    formData.append('file', file);
 
-    this.tls2d010Service.uploadExcel(formData).subscribe({
+    this.tls2d010Service.uploadExcel(formData).pipe(untilDestroyed(this)).subscribe({
       next: (res) => {
-        console.log('上傳成功:', res);
-        alert('上傳成功！');
-        this.selectedFile = undefined;
-        this.onSubmit(this.queryForm);
+        const data = res?.Data;
+
+        if (data) {
+          if (data.ErrorFilePath) {
+            // 有錯誤檔：顯示錯誤提示
+            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+            // 自動下載錯誤檔
+            this.downloadErrorFile(data.ErrorFilePath);
+          } else {
+            // 沒有錯誤檔：顯示成功筆數
+            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+          }
+        }
       },
     });
   }
+
+  /** 自動下載錯誤檔 */
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+  }
+
 }
 

@@ -14,15 +14,13 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-
 import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { environment } from '../../../../environments/environment';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { CustomFooterTableComponent } from "@shared/componentkit/custom-footer-table/customFooterTable.component";
 
 export interface Option {
   label: string;
@@ -34,7 +32,22 @@ export interface Option {
   templateUrl: './fin15010.component.html',
   styleUrl: './fin15010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent, TranslateModule, MultiSelectComponent, DropdownComponent, CalendarComponent, TableComponent, CommonModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextRangeComponent,
+    CalendarRangeComponent,
+    InputTextComponent,
+    TranslateModule,
+    MultiSelectComponent,
+    DropdownComponent,
+    CalendarComponent,
+    CommonModule,
+    CustomFooterTableComponent
+  ]
 })
 export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -57,7 +70,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼_起
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼_迄
     CRT_USR_Name: [null],                                       // 傳票建立者
-    SAL_Type: [null],                                           // 使用別
+    PUR_DirectType: [null],                                           // 直接扣抵法稅額分攤種類
     CRT_Date_S: [null],                                         // 建立日期_起
     CRT_Date_D: [null],                                         // 建立日期_迄
     SYS_ORIGIN: [null],                                         // 系統別
@@ -73,6 +86,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
   data: FIN15010Data[] = [];
   selectedItems: FIN15010Data[] = [];
   btnLoading = false;
+  footerData: any[] = [];
 
   columns: Column[] = [
     { field: 'No', header: '序號', hidden: true },
@@ -90,7 +104,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'PUR_DirectType', header: '直接扣抵法稅額分攤種類', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
   ];
 
   //#region 下拉選項
@@ -100,7 +114,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
 
   // SYS1000
   systemTypeOptions: Option[] = getSYS1000Options('SYS_ORIGIN');      // 系統別 (APS2002.SYS_ORIGIN, 下拉選單為SYS1000.SYS_ORIGIN)
-  salTypeOptions: Option[] = getSYS1000Options('T205');               // 使用別 (APS2002.SAL_Type, 下拉選單為SYS1000.T205)
+  salTypeOptions: Option[] = getSYS1000Options('PUR_DirectType');     // 直接扣抵法稅額分攤種類 (APS2002.PUR_DirectType, 下拉選單為SYS1000.PUR_DirectType)
   taxTypeOptions: Option[] = getSYS1000Options('PUR_TaxType');        // 課稅別 (APS2002.PUR_TaxType, 下拉選單為SYS1000.PUR_TaxType)
   discountOptions: Option[] = getSYS1000Options('PUR_DiscNo');        // 扣抵代號 (APS2002.PUR_DiscNo, 下拉選單為SYS1000.PUR_DiscNo)
   invoiceTypeOptions: Option[] = getSYS1000Options('PUR_Type');       // 類別區分 (APS2002.PUR_Type, 下拉選單為SYS1000.PUR_Type)
@@ -149,6 +163,12 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data.APS2002_FIN15010s;
+          this.footerData = [{
+            group_name: '合計',
+            PUR_Net: response.Data.TotalNet,
+            PUR_Tax: response.Data.TotalTax,
+            PUR_Amt: response.Data.TotalAmt
+          }];
           this.totalRecords = response.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
@@ -186,9 +206,6 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     if (this.queryForm.invalid) {
       const errors: string[] = [];
       if (!this.queryForm.get('PUR_RepYYYYMM')?.value) errors.push('請填寫申報年月');
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_S')?.value) errors.push('請填寫資料所屬年月_起');
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_E')?.value) errors.push('請填寫資料所屬年月_訖');
-
       if (errors.length > 0) {
         this.messageService.errorBubble(errors.join('<br>'));
         return false;

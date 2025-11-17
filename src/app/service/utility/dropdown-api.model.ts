@@ -128,6 +128,12 @@ export interface Pos20032Query {
   CAT_LNo: string[];
   CAT_MNo: string[];
 }
+/**
+ * 查詢專櫃主檔(TLTTALENT) (取最新契約，含對應資料)
+ */
+export interface TLTTALENTQuery {
+  tlt_noList?: string[];
+}
 
 /**
  * 查詢 TLTTALENT_Status_DropDownList 時的請求 body
@@ -211,6 +217,23 @@ export interface Pos2004Item {
  */
 export interface TalentChargeQuery {
   talent_id: number;
+}
+
+/**
+ * 查詢 queryTLTTALENTDropDownList 時的請求 body
+ */
+export interface TLTTALENTItem {
+  talent_id: string,
+  apply_no: string,
+  tlt_bdate: string,
+  tlt_edate: string,
+  tlt_no: string,
+  tlt_name: string,
+  org_id: string,
+  contract_no: string,
+  contract_subno: string,
+  tlt_contract_bdate: string,
+  tlt_contract_edate: string
 }
 
 /**
@@ -331,6 +354,7 @@ export interface Pos1008Item {
  */
 export interface Pos1006Item extends IDropdownItem {
   PAY_Type: string;
+  PAY_OverPay: string;
 }
 
 /**
@@ -376,4 +400,33 @@ export interface Pos2004LogoItem {
 export interface TALPORDERMQuery {
   pod_typeList: string[];
   pod_statusList: string[];
+}
+
+
+/**
+ * 查詢 queryENG1001_ENG_MeterNo_DropDownList 回傳的項目型別
+ */
+export interface ENG1001Item {
+  Id: number,
+  ENG_MeterNo: string,
+  Location_No: string,
+  Location_Name: string,
+  building_No: string,
+  building_DESC: string,
+  Floor_No: string,
+  Floor_Desc: string,
+  AREA_NO: string,
+  AREA_DESC: string,
+  Draw_X: string,
+  Draw_Y: string,
+  ENG_Type: string
+}
+// TLTTALENT_TLT_SPACE
+export interface TlttalentTltSpaceItem {
+  TalentId: number,
+  TltNo: string
+  TltName: string
+  ApplyNo: string
+  LocationNo: string
+  TltSpace: number
 }

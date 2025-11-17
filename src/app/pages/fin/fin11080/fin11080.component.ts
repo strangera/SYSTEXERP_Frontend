@@ -33,7 +33,7 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
   queryForm = this.formBuilder.group({
     TXN_Date_Start: ['', Validators.required], // 銷售日期_起
     TXN_Date_End: ['', Validators.required], // 銷售日期_訖
-    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }])
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
 
   totalRecords = 0;
@@ -42,13 +42,18 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
 
   columns: Column[] = [
     { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
-    { field: 'TxnCount_Normal_A', header: '一般交易(A)', visible: true },
-    { field: 'TxnCount_VoidOrReturn_B', header: '作廢退貨(B)', visible: true },
-    { field: 'TxnCount_Cancelled_C', header: '註銷(C)', visible: true },
-    { field: 'ActualInv_Normal_AD', header: '當日正負(A-D)', visible: true },
-    { field: 'ActualInv_CrossPeriodReturn_B', header: '跨期作廢退貨(B-D-E)', visible: true },
-    { field: 'ActualInv_Cancelled', header: '註銷', visible: true },
+    { field: 'TxnCount_Normal_A', header: '一般交易(A)', visible: true, groupField: 'group1' },
+    { field: 'TxnCount_VoidOrReturn_B', header: '作廢退貨(B)', visible: true, groupField: 'group1' },
+    { field: 'TxnCount_Cancelled_C', header: '註銷(C)', visible: true, groupField: 'group1' },
+    { field: 'ActualInv_Normal_AD', header: '一般交易(A)', visible: true, groupField: 'group2' },
+    { field: 'ActualInv_CrossPeriodReturn_B', header: '作廢退貨(B)', visible: true, groupField: 'group2' },
+    { field: 'ActualInv_Cancelled', header: '註銷(C)', visible: true, groupField: 'group2' },
     { field: 'CNT', header: '發票是否重號', visible: true }
+  ];
+
+  columnGroup = [
+    { field: 'group1', header: '交易筆數' },
+    { field: 'group2', header: '實際產生電子發票筆數' }
   ];
 
   expansionColumns: Column[] = [

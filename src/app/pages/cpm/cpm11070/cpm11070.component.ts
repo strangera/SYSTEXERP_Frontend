@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //5.1.1.7 全館店櫃資訊查詢
 @Component({
-    selector: 'app-cpm11070',
-    templateUrl: './cpm11070.component.html',
-    styleUrl: './cpm11070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-cpm11070',
+  templateUrl: './cpm11070.component.html',
+  styleUrl: './cpm11070.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class CPM11070Component extends BasicQpageComponent implements OnInit {
   //
@@ -97,8 +97,7 @@ export class CPM11070Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '510007';
     this.cruPage = '/CPM1000/CPM11070CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

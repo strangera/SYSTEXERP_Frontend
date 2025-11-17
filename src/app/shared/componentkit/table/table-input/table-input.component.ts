@@ -1,9 +1,9 @@
 // table-input.component.ts
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PrimeTemplate } from 'primeng/api';
-import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
+import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { ImageModule } from 'primeng/image';
@@ -75,11 +75,33 @@ export class TableInputComponent {
   /** 處理 Dropdown/AutoComplete 的選項來源 */
   public getOptions = computed(() => {
     const colOptions = this.col().options;
+    console.log(typeof colOptions === 'function' ? (colOptions(this.rowData()) || void 0) : colOptions || void 0);
+
     return typeof colOptions === 'function' ? (colOptions(this.rowData()) || void 0) : colOptions || void 0;
   });
-
+  @ViewChild('autoCompleteRef', { static: false }) autoComplete!: AutoComplete;
   constructor() {
     // effect(() => console.log(`init:`, [this.col(), this.rowData(), this.rowIndex(), this.alwaysEdit(), this.disabled()]));
+
+    effect(() => {
+      const options = this.getOptions();
+
+      // 只有當 options 陣列有內容時才嘗試顯示
+      if (options && options.length > 0) {
+        // 使用 setTimeout 確保 p-autoComplete 在接收到 suggestions 更新後再執行顯示
+        setTimeout(() => {
+          // 檢查 ViewChild 是否已初始化
+          if (this.autoComplete) {
+            // PrimeNG AutoComplete 元件的內部方法，用於顯示下拉選單
+            this.autoComplete.show();
+
+            // 另一個選項 (如果 show() 不行)，可以用 onInput 觸發
+            // 這是模擬用戶再次輸入，通常不需要
+            // this.autoComplete.onInput();
+          }
+        }, 0); // 使用 setTimeout(..., 0) 可以確保它在當前變動偵測週期結束後執行
+      }
+    });
   }
 
   /** 處理 ngModelChange 事件，並發送給父元件 */

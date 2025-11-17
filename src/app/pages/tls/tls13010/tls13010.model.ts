@@ -245,6 +245,7 @@ export interface CleanCommissionMaster {
   sst_rate?: number;
   cap_saletype1?: string;
   cap_saletype2?: string;
+  cap_saletype5?: string;
   cag_bdate: string;
   cag_edate: string;
 }
@@ -287,8 +288,8 @@ export interface CleanMetadata {
 // ========== 3. 保留原有的前端邏輯介面（基本不變） ==========
 
 export interface ContractDataStructure {
-  contractId: string | null;
-  queryRowData: ContractInfo | null;
+  contractId: string | number | null;
+  queryRowData: ContractRequest | null;
   step1: ContractInfo | null;
   step2: FareItem[];
   step3: CommissionItem[];
@@ -306,6 +307,16 @@ export interface ContractDataStructure {
   };
 }
 
+export interface ContractRequest {
+  talent_id: string;
+
+  apply_no: string;
+
+  tlt_term_type: string;
+  _isNewContract?: boolean;
+}
+
+
 export interface ContractInfo {
   [key: string]: any;
   id: string | number;
@@ -313,6 +324,7 @@ export interface ContractInfo {
   tlt_no: string;
   apply_no: string;
   tlt_name: string;
+  vendor_ven_no: string;
   VEN_Name: string;
   VEN_Address?: string;
   contract_subno?: string;
@@ -419,12 +431,16 @@ export interface LocationItem {
   area_desc: string;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
   _isNew?: boolean;
+  _isEmpty?: boolean;  // ✅ 新增
+  _hasDuplicateError?: boolean;  // ✅ 新增
+  _hasError?: boolean;  // ✅ 新增
+  _errorMessage?: string;  // ✅ 新增
 }
 
 export interface FareItem {
   id?: string | number;
   serialNumber?: number;
-  talent_id: number;
+  talent_id: string;
   cap_type: string;
   cap_item: string;
   cap_name: string;
@@ -433,12 +449,12 @@ export interface FareItem {
   tpy_type?: string;
   tpy_qty?: number;
   tpy_unitamt?: number;
-  tpy_amount?: number;
-  tpy_totalamt?: number;
+  tpy_amount?: number | null;
+  tpy_totalamt?: number | null;
   day_account?: string;
-  interval?: number;
-  down_payment?: number;
-  period_nos?: number;
+  interval?: number | null;
+  down_payment?: number | null;
+  period_nos?: number | null;
   cap_saletype?: string;
   edc_bank?: string;
   instms_type?: string;
@@ -472,6 +488,7 @@ export interface CommissionItem {
   sst_rate: number;
   cap_saletype2: boolean | string;
   cap_saletype1: boolean | string;
+  cap_saletype5: boolean | string;
   selectedSettingOption: string;
   discountSettingItems: DiscountSettingItem[];
   annualPerformanceItems: AnnualPerformanceItem[];
@@ -494,6 +511,7 @@ export interface DiscountSettingItem {
   tlt_edate: Date;
   cag_charge_rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+  _source?: 'api' | 'new';
 
   is_configured: boolean;
   is_enabled: boolean;
@@ -519,12 +537,15 @@ export interface AnnualPerformanceItem {
 
 export interface DiscountLevelItem {
   id?: number | string;
+  charged_id?: number | string;
   selected: boolean;
   cag_barcode: string;
   level_bmount: number;
   level_eamount: number;
   level_charge_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+  _source?: 'api' | 'new';
+  contract_period?: string;
 
   is_configured: boolean;
   is_enabled: boolean;
@@ -972,6 +993,7 @@ export class DataCleaner {
         sst_rate: this.parseNumber(commission.sst_rate),
         cap_saletype1: commission.cap_saletype1 === true || commission.cap_saletype1 === 'Y' ? 'Y' : 'N',
         cap_saletype2: commission.cap_saletype2 === true || commission.cap_saletype2 === 'Y' ? 'Y' : 'N',
+        cap_saletype5: commission.cap_saletype5 === true || commission.cap_saletype5 === 'Y' ? 'Y' : 'N',
 
         // 關鍵修正：確保使用有效的合約日期
         cag_bdate: validStartDate || defaultStartDate,
@@ -1103,7 +1125,8 @@ export class DataCleaner {
         cag_barcode: detail.cag_barcode || '',
         level_bmount: this.parseNumber(detail.level_bmount) || 0,
         level_eamount: this.parseNumber(detail.level_eamount) || 0,
-        level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0
+        level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0,
+        charged_id: detail.charged_id
       };
 
       switch (detail._status) {
@@ -1395,7 +1418,7 @@ export interface TalentChargeApiData {
 
 export interface ChargeSettingApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string;
@@ -1405,6 +1428,7 @@ export interface ChargeSettingApiItem {
   sst_rate: number | null;
   cap_saletype1: string | null | boolean;
   cap_saletype2: string | null | boolean;
+  cap_saletype5: string | null | boolean;
   cag_remark: string | null;
   ChargeDetails: ChargeDetailApiItem[];
   YearChargeDetails: YearChargeDetailApiItem[];
@@ -1413,7 +1437,7 @@ export interface ChargeSettingApiItem {
 
 export interface ChargeDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_barcode: string;
   tlt_bdate: string;
@@ -1424,7 +1448,7 @@ export interface ChargeDetailApiItem {
 
 export interface YearChargeDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_bdate: string;
   tlt_edate: string;
@@ -1434,7 +1458,8 @@ export interface YearChargeDetailApiItem {
 
 export interface LevelChargeDetailApiItem {
   id: number;
-  talent_id: number;
+  charged_id: number;
+  talent_id: string;
   tlt_id: string;
   seq_no: number;
   cag_barcode: string;
@@ -1455,7 +1480,7 @@ export interface RentSettingApiData {
 
 export interface CommissionMasterApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string;
@@ -1465,12 +1490,13 @@ export interface CommissionMasterApiItem {
   sst_rate: number | null;
   cap_saletype1: string | null;
   cap_saletype2: string | null;
+  cap_saletype5: string | null;
   cag_remark: string | null;
 }
 
 export interface RentDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1479,7 +1505,7 @@ export interface RentDetailApiItem {
 
 export interface LimitDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1489,7 +1515,7 @@ export interface LimitDetailApiItem {
 
 export interface LevelDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;
@@ -1501,7 +1527,7 @@ export interface LevelDetailApiItem {
 
 export interface BottomTierDetailApiItem {
   id: number;
-  talent_id: number;
+  talent_id: string;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;
@@ -1522,7 +1548,7 @@ export interface CommissionDataStructure {
 
 export interface CommissionMaster {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   tlt_id_desc: string;
   cag_bdate: string;
@@ -1532,12 +1558,13 @@ export interface CommissionMaster {
   sst_rate: number;
   cap_saletype1: string;
   cap_saletype2: string;
+  cap_saletype5: string;
   cag_remark: string;
 }
 
 export interface ChargedDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_barcode: string;
   tlt_bdate: string;
@@ -1547,7 +1574,7 @@ export interface ChargedDetail {
 
 export interface RentDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1556,7 +1583,7 @@ export interface RentDetail {
 
 export interface LimitDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   tlt_id: string;
   cag_bdate: string;
   cag_edate: string;
@@ -1566,7 +1593,7 @@ export interface LimitDetail {
 
 export interface LevelDetail {
   id: number;
-  talent_id: number;
+  talent_id: string;
   seq_no: number;
   cag_bdate: string;
   cag_edate: string;

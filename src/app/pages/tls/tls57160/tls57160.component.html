@@ -1,115 +1,72 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="倉別"
-              controlName="warehouseCode"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-calendar label="庫存基準日期" controlName="STK_Date" [control]="queryForm.controls.STK_Date"
+              [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品牌"
-              controlName="brandCode"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="倉別" controlName="HOS_NO" [options]="HOS_NOOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.HOS_NO" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="管理編號"
-              controlName="managementCode"
-              [options]="managementIDOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.managementCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品牌" controlName="LOGO_No" [options]="LOGO_NoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+          </div>
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" label="管理編號" controlName="PLU_MagNo"
+            [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted" optionLabel="PLU_MagNo"
+            optionValue="PLU_MagNo" templateLabel="label" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+            [totalRecords]="opTotalRecords">
+            <app-input-text class="col-12 md:col-6" label="商品管理編號" controlName="queryNo"
+              [control]="opForm.controls.queryNo" />
+            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name" />
+          </app-dropdown-table>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="國際條碼" controlName="PLU_NO" [control]="queryForm.controls.PLU_NO"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="國際條碼"
-              controlName="vendorCode"
-              [control]="queryForm.controls.vendorCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="queryForm.controls.PLU_OrgPLUNo"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商貨號"
-              controlName="productName"
-              [control]="queryForm.controls.productName"
-              [submitted]="submitted"
-            ></app-input-text>
+            <p-checkbox label="顯示庫存為0" formControlName="stockIsZero" [binary]="true"></p-checkbox>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="庫存基準日期"
-              [control]="queryForm.controls.inventoryDateFrom"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-input-number label="顯示行數" controlName="pageSize" [control]="queryForm.controls.pageSize"
+              [submitted]="submitted"></app-input-number>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="顯示庫存為零"
-              formControlName="displayEmptyStock"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="顯示行數"
-              controlName="displayCount"
-              [control]="queryForm.controls.displayCount"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report tableKey="tls57150" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false" [loading]="loading"
+    [columnGroup]="columnGroup" [queryFunction]="tls57160Service.queryTLS57160.bind(tls57160Service)"
+    [footerData]="footerTotal" [showSort]="false">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="產出庫齡分析表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+          [disabled]="data.length === 0"></p-button>
+        <p-button styleClass="p-2" label="產出庫齡分析表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportXLSX()" [disabled]="data.length === 0"></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

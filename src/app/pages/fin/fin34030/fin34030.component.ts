@@ -80,7 +80,6 @@ export class FIN34030Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '130009';
     // 初始化下拉選單選項
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.ifdisplayService.getOptions().subscribe((data) => (this.displayAmountOptions = data));
     this.ifdisplayService.getOptions().subscribe((data) => (this.showZeroBalanceOptions = data));
   }

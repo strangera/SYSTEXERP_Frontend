@@ -12,6 +12,7 @@ import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { FormLabelService } from '@shared/service/form-label.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { UserInfo } from '@shared/models/system/userInfo';
+import { SystemDataService } from '@service/system/system-data.service';
 @UntilDestroy()
 export abstract class BasicCruPageComponent<T> {
   // constructor
@@ -23,6 +24,7 @@ export abstract class BasicCruPageComponent<T> {
   confirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   formLabelService = inject(FormLabelService);
+  systemDataService = inject(SystemDataService);
   private valid = inject(ValidationService);
 
   protected useReadonlyInsteadOfDisable = false;
@@ -30,6 +32,7 @@ export abstract class BasicCruPageComponent<T> {
   ProgNo = '';
   funInfo?: FunsrightInfo;
   rowdata: T | null = null;
+  queryData: any;
   user: UserInfo = this.authService.currentUserValue!;
   // CRU----------------------------------------------------------------
   crudstatus: CRUDStatus = CRUDStatus.Read;
@@ -65,7 +68,7 @@ export abstract class BasicCruPageComponent<T> {
 
     this.ProgNo = progNo;
     this.currentPageService.setCurrentProgNo(this.ProgNo);
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.funInfo = this.systemDataService.getUserPermissions(this.ProgNo);
 
     // 設定是否使用 readonly 模式 搭配各共通元件的readonly參數 by bruce tls13010 && tls12040 會用到 我先用參數搭配[readonly] = 'XXX' 或是 [readonly] = 'true' 控
     if (options?.useReadonly) {
@@ -75,6 +78,7 @@ export abstract class BasicCruPageComponent<T> {
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
     this.rowdata = state?.['rowdata'];
+    this.queryData = state?.['queryConditions']
     console.log(state?.['rowdata'])
     switch (state?.['crudstatus']) {
       case CRUDStatus.Create:

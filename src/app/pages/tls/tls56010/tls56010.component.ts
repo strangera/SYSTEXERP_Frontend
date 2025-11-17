@@ -3,7 +3,7 @@ import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angula
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, IPOS20032Request } from '@service/utility/dropDownList.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -26,10 +26,6 @@ import { TableModule } from 'primeng/table';
 export interface IPOS20031Request {
   CAT_LNo: string[];
 }
-export interface IPOS20032Request {
-  CAT_LNo: string[];
-  CAT_MNo: string[];
-}
 interface IPLULOGOItem {
   No: string;
   Name: string;
@@ -39,7 +35,6 @@ interface IPLULOGOItem {
 @Component({
   selector: 'app-tls56010',
   templateUrl: './tls56010.component.html',
-  styleUrls: ['./tls56010.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -178,9 +173,13 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       const bigCode = this.queryForm.get('CAT_LNo')?.value;
       if (bigCode && midCode) {
         const params: IPOS20032Request = {
-          CAT_LNo: [bigCode],
-          CAT_MNo: [midCode]
-        };
+          CATList: [
+            {
+              CAT_LNo: bigCode,
+              CAT_MNo: midCode
+            }
+          ]
+        }
         this.dropDownListService.queryPOS20032_DropDownList(params).subscribe({
           next: (res) => {
             this.smallCategoryOptions = (res.Data ?? []).map(item => ({
@@ -267,61 +266,61 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    this.loading = true;
-    const v = form.getRawValue() as any;
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      this.loading = true;
+      const v = form.getRawValue() as any;
 
-    const toStr = (val: any) => Array.isArray(val) ? (val[0] ?? '') : (val ?? '');
-    const toArr = (val: any) =>
-      Array.isArray(val) ? val.filter((x) => x != null && x !== '') :
-      (val != null && val !== '' ? [val] : []);
-    const nonEmpty = (s?: string | null) => !!(s && s.trim().length);
+      const toStr = (val: any) => Array.isArray(val) ? (val[0] ?? '') : (val ?? '');
+      const toArr = (val: any) =>
+        Array.isArray(val) ? val.filter((x) => x != null && x !== '') :
+          (val != null && val !== '' ? [val] : []);
+      const nonEmpty = (s?: string | null) => !!(s && s.trim().length);
 
-    // 依你要的顯示順序建立物件，並且對空字串「不送欄位」
-    const body: any = {
-      PageSize:  Number(v.pageSize ?? 10),
-      PageIndex: Number(v.pageIndex ?? 1),
-      SortBy:    (Array.isArray(v.SortBy) && v.SortBy.length)
-                  ? v.SortBy
-                  : [{ field: 'PLU_MagNo', order: 1 }],
-      // 下面這些只在有值時才加入（避免空字串造成後端拋錯）
-      ...(nonEmpty(toStr(v.CAT_LNo))  ? { CAT_LNo:  toStr(v.CAT_LNo) } : {}),
-      ...(nonEmpty(toStr(v.CAT_MNo))  ? { CAT_MNo:  toStr(v.CAT_MNo) } : {}),
-      ...(nonEmpty(toStr(v.CAT_SNo))  ? { CAT_SNo:  toStr(v.CAT_SNo) } : {}),
-      ...(nonEmpty(v.PLU_MagNo)       ? { PLU_MagNo: v.PLU_MagNo.trim() } : {}),
-      ...(toArr(v.LOGO_No).length     ? { LOGO_No: toArr(v.LOGO_No) } : {}),
-      isSafetyStock: !!v.isSafetyStock,
-    };
+      // 依你要的顯示順序建立物件，並且對空字串「不送欄位」
+      const body: any = {
+        PageSize: Number(v.pageSize ?? 10),
+        PageIndex: Number(v.pageIndex ?? 1),
+        SortBy: (Array.isArray(v.SortBy) && v.SortBy.length)
+          ? v.SortBy
+          : [{ field: 'PLU_MagNo', order: 1 }],
+        // 下面這些只在有值時才加入（避免空字串造成後端拋錯）
+        ...(nonEmpty(toStr(v.CAT_LNo)) ? { CAT_LNo: toStr(v.CAT_LNo) } : {}),
+        ...(nonEmpty(toStr(v.CAT_MNo)) ? { CAT_MNo: toStr(v.CAT_MNo) } : {}),
+        ...(nonEmpty(toStr(v.CAT_SNo)) ? { CAT_SNo: toStr(v.CAT_SNo) } : {}),
+        ...(nonEmpty(v.PLU_MagNo) ? { PLU_MagNo: v.PLU_MagNo.trim() } : {}),
+        ...(toArr(v.LOGO_No).length ? { LOGO_No: toArr(v.LOGO_No) } : {}),
+        isSafetyStock: !!v.isSafetyStock,
+      };
 
-    // // 小防呆：若所有條件都空，避免打到後端直接噴錯
-    // if (!body.PLU_MagNo && !body.CAT_LNo && !body.CAT_MNo && !body.CAT_SNo && !body.LOGO_No) {
-    //   this.messageService.errorBubble('請至少輸入一個查詢條件（例如：管理編號或分類/品牌）');
-    //   this.loading = false;
-    //   this.messageService.unblockUi();
-    //   return;
-    // }
+      // // 小防呆：若所有條件都空，避免打到後端直接噴錯
+      // if (!body.PLU_MagNo && !body.CAT_LNo && !body.CAT_MNo && !body.CAT_SNo && !body.LOGO_No) {
+      //   this.messageService.errorBubble('請至少輸入一個查詢條件（例如：管理編號或分類/品牌）');
+      //   this.loading = false;
+      //   this.messageService.unblockUi();
+      //   return;
+      // }
 
-    // console.log('payload =', JSON.stringify(body));  // 會是你要的順序
+      // console.log('payload =', JSON.stringify(body));  // 會是你要的順序
 
-    this.tls56010Service.queryTLS56010(body).subscribe({
-      next: (res: { Data: any[]; TotalCount: number }) => {
-        this.data = res?.Data ?? [];
-        this.filteredData = [...this.data];
-        this.totalRecords = res?.TotalCount ?? this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, body);
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-      error: (err) => {
-        console.error('TLS56010 查詢失敗:', err);
-        this.messageService.errorBubble('查詢失敗，請稍後再試');
-        this.loading = false;
-        this.messageService.unblockUi();
-      }
+      this.tls56010Service.queryTLS56010(body).subscribe({
+        next: (res: { Data: any[]; TotalCount: number }) => {
+          this.data = res?.Data ?? [];
+          this.filteredData = [...this.data];
+          this.totalRecords = res?.TotalCount ?? this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, body);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err) => {
+          console.error('TLS56010 查詢失敗:', err);
+          this.messageService.errorBubble('查詢失敗，請稍後再試');
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
     });
-  });
-}
+  }
 
 
 }

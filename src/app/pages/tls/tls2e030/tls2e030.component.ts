@@ -1,174 +1,160 @@
-import { CounterCodeService } from './../../../service/basic/counter-code.service';
-import { SettlementMethodService } from './../../../service/basic/settlement-method.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { Tls2e030Data, Tls2e030EstBody, Tls2e030QueryBody, Tls2e030Service } from '@service/api/tls/tls2e030.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { AsyncPipe } from '@angular/common';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { finalize } from 'rxjs';
+import { formatDate, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
 // 2.2.14.3 專櫃帳款試算作業
 @Component({
-    selector: 'app-tls2e030',
-    templateUrl: './tls2e030.component.html',
-    styleUrl: './tls2e030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
+  selector: 'app-tls2e030',
+  templateUrl: './tls2e030.component.html',
+  standalone: true,
+  imports: [TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
-export class TLS2E030Component {
-  ProgNo: string = '220072';
-  // 權限
-  funInfo?: FunsrightInfo;
+export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> implements OnInit {
+  // 定義查詢結果欄位配置
+  private readonly QUERY_COLUMNS: ReportColumn[] = [
+    { field: 'CRT_Date', header: '試算日期', visible: true, format: formatDate },
+    { field: 'sam_yyymm', header: '試算年月', visible: true, format: formatYYYYMM },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'remarks', header: '試算說明', visible: true },
+    { field: 'CRT_USR_No', header: '執行者', visible: true },
+  ];
 
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    onedatemm: [, [Validators.required]], // 結帳年月
-    checkout: [], // 結帳方式/帳次
-    counterName: [], // 櫃位名稱
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+  // 定義試算 Log 欄位配置
+  private readonly LOG_COLUMNS: ReportColumn[] = [
+    { field: 'step_num', header: '檢查順序', visible: true },
+    { field: 'step_desc', header: '檢查步驟', visible: true },
+    // { field: 'master_key', header: '主鍵/關鍵碼', visible: true },
+    { field: 'isPass', header: '是否通過', visible: true },
+    { field: 'check_result', header: '檢查明細', visible: true },
+  ];
+
+  // 完整的期別選項（基於您的描述）
+  private readonly SAM_TERMNO_MAP = {
+    '10': [1, 2, 3],
+    '15': [1, 2],
+    '30': [1]
+  };
+  totalRecords = 0;
+  money_typeOptions = getSYS1000Options('money_type');
+  sam_termnoOptions: { value: number, label: string }[] = []; // 期別選項
+  // 將 data 型別改為 any[] 以容納兩種不同結構的資料
+  data: any[] = [];
+
+  // 新增：當前使用的欄位配置
+  currentColumns: ReportColumn[] = [];
+
+  queryForm = this.formBuilder.nonNullable.group({
+    PageSize: [30],
+    PageIndex: [1],
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
+    sam_yyymm: [new Date(), [Validators.required]],
+    money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]],
+    sam_termno: [1, [Validators.required]],
+    tlt_no: [null],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '洽談者', visible: true },
-    { field: 'contactDate', header: '洽談日', visible: true },
-    { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '大分類', visible: true },
-    { field: 'category', header: '類型', visible: true },
-    { field: 'version', header: '版本', visible: true },
-    { field: 'rentNumber', header: '位置租賃數', visible: true },
-    { field: 'progress', header: '進度', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  checkoutOptions: any[] = [];
-  counterNameOptions: any[] = [];
+  tlt_noOptions = this.dropdown.queryTltTalent();
+  tlt_floorOptions = this.dropdown.querySys3900();
+  historyRequestBody: any | null = null;
 
+  // 注入 FormBuilder 和 MessageService 以確保功能完整
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private settlementMethodService: SettlementMethodService,
-    private counterCodeService: CounterCodeService,
+    public readonly tls2e030Service: Tls2e030Service,
+    private readonly dropdown: DropdownApiService,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.settlementMethodService.getSettlementMethods().subscribe(data => {
-      this.checkoutOptions = data;
+    this.initializePage('TLS2E030');
+    this.setupFormLinkage(); // 設定表單聯動
+    // 預設使用查詢欄位
+    this.currentColumns = this.QUERY_COLUMNS;
+  }
+  /**
+     * 設定 money_type 與 sam_termno 的聯動邏輯
+     */
+  private setupFormLinkage(): void {
+    this.queryForm.controls.money_type.valueChanges.pipe(untilDestroyed(this)).subscribe(moneyType => {
+      this.updateSamTermnoOptions(moneyType);
+      // 重設 sam_termno，避免選了不合法的組合
+      this.queryForm.controls.sam_termno.setValue(1);
     });
-    //
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterNameOptions = data;
-    });
+
+    // 初始載入時，如果 money_type 有預設值，也要更新 sam_termno 選項
+    const initialMoneyType = this.queryForm.controls.money_type.value;
+    if (initialMoneyType) {
+      this.updateSamTermnoOptions(initialMoneyType);
+    }
   }
 
-  canQuery(): boolean {
-    return true;
-  }
+  /**
+   * 根據 money_type 更新 sam_termno 的選項
+   * @param moneyType 結帳方式的值 (e.g., "10", "15", "30")
+   */
+  private updateSamTermnoOptions(moneyType: string | null): void {
+    if (moneyType && this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP]) {
+      // 根據 money_type 取得對應的期數陣列 (e.g., [1, 2, 3])
+      const termNumbers = this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP];
 
-  canAdd(): boolean {
-    return true;
+      // 轉換成 Dropdown 需要的格式 { label: string, value: number }
+      this.sam_termnoOptions = termNumbers.map(num => ({
+        label: `${num}`,
+        value: num
+      }));
+    } else {
+      this.sam_termnoOptions = [];
+    }
   }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    const body = {
+      ...frm.value,
+      sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+      sam_termno: frm.value.sam_termno as number, // 確保型別是 number
+      money_type: frm.value.money_type
+    } as Tls2e030QueryBody; // 轉換為正確的 Request Body 型別
+    this.handleSubmit(frm, () => {
+      // 1. 切換顯示查詢欄位
+      this.currentColumns = this.QUERY_COLUMNS;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+      // 2. 執行查詢
+      this.tls2e030Service.queryTls2e030(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data; // 這裡的資料型別是 Tls2e030Data[]
+        this.totalRecords = res.TotalCount;
+        this.historyRequestBody = body;
+      })
+    });
   }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2E030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2E030CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2E030CRU'], extras);
+  loading2 = false;
+  onSam(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_termno: frm.value.sam_termno as number, // 確保型別是 number
+        money_type: frm.value.money_type
+      } as Tls2e030EstBody; // 轉換為正確的 Request Body 型別
+      this.loading2 = true;
+      this.tls2e030Service.estTls2e030(body).pipe(finalize(() => { this.loading = false; this.loading2 = false }), untilDestroyed(this)).subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        this.currentColumns = this.LOG_COLUMNS;
+        this.data = res.Data;
+      })
+    });
   }
 }

@@ -120,7 +120,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2A040', '/TLS/TLS2A040cru', this.queryForm, (form) => this.onSubmit(form));
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     this.whetherService.getWhetherOptions().subscribe((data) => {
       this.listZeroDifferenceOptions = data;

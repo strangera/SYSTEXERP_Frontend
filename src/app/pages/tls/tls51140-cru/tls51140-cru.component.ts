@@ -26,7 +26,7 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
     TLT_NO: [null, [Validators.required]], // 專櫃編號
     HOS_No: [null, [Validators.required]], // 倉庫代碼
   });
-  TLT_NoOptions$ = this.dropdown.queryTltTalent();
+  TLT_NoOptions$ = this.dropdown.queryTltTalentStoreWay2Approve();
   warehouseOptions$ = this.dropdown.queryPos2034();
   buildingOptions$ = this.dropdown.querySys3800();
   floorOptions$ = this.dropdown.querySys3900();
@@ -51,7 +51,7 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
     this.initializePage('TLS51140', this.dataForm);
     if (!this.isFormCreateable && this.rowdata) {
       this.dataForm.disable();
-      this.tls51140Service.queryTLS51140ByTltNo(this.rowdata?.TLT_NO).pipe(untilDestroyed(this)).subscribe(res => {
+      this.tls51140Service.queryTLS51140ByTltNo(this.rowdata?.TLT_NO, this.rowdata?.HOS_No).pipe(untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.map(item => ({
           ...item,
           ID: item.id,
@@ -63,18 +63,49 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
         }));
       })
     }
+    this.setupDialogQuerySubscription();
+  }
+
+  onOpenDialog(): void {
+    this.dialogVisible = true;
+
+    // 由於 ngOnInit 已經設置了 valueChanges 訂閱，
+    // 只要我們呼叫一次 this.dialogQueryForm.updateValueAndValidity()，
+    // 就能觸發首次查詢，並且使用當前 Form 的預設值（null/空字串）。
+    // 這樣可以避免重複寫查詢邏輯。
+
+    // 觸發首次查詢 (使用當前的表單值)
+    this.dialogQueryForm.updateValueAndValidity({ emitEvent: true });
+  }
+
+  // ----------------------------------------------------
+  // 處理 Dialog 查詢表單變動 (從 ngOnInit 中移出)
+  // ----------------------------------------------------
+  setupDialogQuerySubscription(): void {
     this.dialogQueryForm.valueChanges
-      .pipe(untilDestroyed(this), tap(() => this.dialogLoading = true), debounceTime(500), finalize(() => this.dialogLoading = false))
+      .pipe(
+        untilDestroyed(this),
+        tap(() => this.dialogLoading = true),
+        debounceTime(500),
+        // finalize 必須在 subscribe 之前，否則 loading 狀態會出錯
+      )
       .subscribe(formValues => {
         const request: { building_no: string; floor_no: string; area_no: string; } = {
+          // trim().toLowerCase() 應在查詢 API 呼叫前處理
           building_no: formValues.building_no?.trim().toLowerCase() || '',
           floor_no: formValues.floor_no?.trim().toLowerCase() || '',
           area_no: formValues.area_no?.trim().toLowerCase() || '',
         };
 
-        this.dropDownListService.queryPOS1002Group_SubGroup_AreaNo_DropDownList(request).pipe(untilDestroyed(this), tap(() => this.dialogLoading = true), finalize(() => this.dialogLoading = false)).subscribe(res => {
-          this.dialogData = res.Data;
-        });
+        this.dropDownListService.queryPOS1002Group_SubGroup_AreaNo_DropDownList(request)
+          .pipe(
+            untilDestroyed(this),
+            // 將 finalize 移至此處，確保 API 完成後才關閉 loading
+            finalize(() => this.dialogLoading = false)
+          )
+          .subscribe(res => {
+            this.dialogData = res.Data;
+          });
       });
   }
 

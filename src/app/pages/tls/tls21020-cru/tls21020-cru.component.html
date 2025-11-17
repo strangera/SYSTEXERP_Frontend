@@ -25,15 +25,15 @@
                         title="會計科目明細"
                         tableKey="TLS21020Detail"
                         [columns]="columns"
-                        [data]="service.TLS21020Data()"
-                        (selectionChange)="selectedItems = $event"
-                        [selectedItems]="selectedItems"
-                        (dataChange)="service.TLS21020Data.set($event)"
+                        [data]="tableData()"
+                        [selectedItems]="selectedItems()"
+                        (selectionChange)="selectedItems.set($event)"
+                        (dataChange)="tableData.set($event)"
                         [rowValidate]="validateEntireRow"
                         [tableRequired]="true"
                         [showReorder]="false"
                         [insertDisabled]="!df().ENTRY_TYPE.value"
-                        [loading]="service.tableLoading"
+                        [loading]="service.tableLoading()"
                         [defaultInsertData]="defaultInsertData"
                         [isRowSelectable]="rowEditValid"></app-table-edit>
       </div>
@@ -43,7 +43,7 @@
         <app-button btnType="submit"
                     [label]="'存檔'"
                     [disabled]="canSave()"
-                    [loading]="service.tableLoading"></app-button>
+                    [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>

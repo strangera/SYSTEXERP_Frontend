@@ -5,7 +5,7 @@ import { HttpResponse } from '@angular/common/http';
 import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig} from '../../../shared/componentkit/table/table.model';
 
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
@@ -45,7 +45,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    TableReportComponent, // ✅ 使用 app-table-report
+    TableReportComponent,
   ]
 })
 export class TLS23080Component extends BasicQueryPageComponent<any> {
@@ -54,7 +54,10 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
   // 匯出用
   btnLoading = false;
-  historyRequestBody: any | null = null; // 也供 app-table-report 的 [lastQueryBody]
+  historyRequestBody: any | null = null;
+
+  // 總計列來源（由 query 回來的 GrandTotal 同步）
+  private grandTotal: Record<string, number> = {};
 
   // 下拉來源
   WhetherOptions: any[] = [];
@@ -64,10 +67,10 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
 
-  // 預設排序（若 table-report 會回傳 SortBy 也會帶入）
+  // 預設排序
   readonly defaultSort: any[] = [{ field: 'TXN_Date', order: 1 }];
 
-  // 後端 Total* 欄位對應到前端欄位（用於組 GrandTotal）
+  // 後端 Total* 欄位對應到前端欄位（用於組 GrandTotal/表尾）
   private detailTotalFieldMap: Record<string, string> = {
     // 現金
     ACT_PayAmt10: 'TotalPayAmt10',
@@ -182,8 +185,8 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
       const val = this.queryForm.getRawValue() as any;
 
       const payload: any = {
-        TXN_DateStart: this.toIso(val?.TXN_DateStart),
-        TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
+TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
         tlt_openflag:  val?.tlt_openflag ?? undefined,
         ECR_No:        Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
         tlt_building:  Array.isArray(val?.tlt_building) && val.tlt_building.length ? val.tlt_building : undefined,
@@ -210,37 +213,47 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
           const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
           const rows = this.extractRows(wrappers);
 
+          // 同步總計列（用第一包的 Total* 欄位）
+          const first = wrappers[0] ?? {};
+          this.grandTotal = this.mapTotalsFromWrapper(first);
+
           this.data = rows;
           this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
+          this.grandTotal = {};
         }
       });
     });
   }
 
-  // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30
-  public queryTLS23080ForReport = (body: any) =>
-    this.tls23080Service
-      .queryTLS23080({ ...(body || {}), pageSize: 30 }) // 強制 30
-      .pipe(
-        map((res: any) => {
-          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-          const rows = this.extractRows(wrappers);
-          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+  // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，並帶回 GrandTotal
+public queryTLS23080ForReport = (body: any) =>
+  this.tls23080Service
+    .queryTLS23080({
+      ...(body || {}),
+      pageSize: 30,
+      // ★ 強制 DateOnly（若 body 沒有就抓表單值）
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+    })
+    .pipe(
+      map((res: any) => {
+        const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+        const rows = this.extractRows(wrappers);
+        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          // GrandTotal（用第一包的 Total* 欄位）
-          const first = wrappers[0] ?? {};
-          const grand: Record<string, number> = {};
-          Object.entries(this.detailTotalFieldMap).forEach(([field, apiKey]) => {
-            grand[field] = Number(first?.[apiKey] ?? 0);
-          });
+        // GrandTotal
+        const first = wrappers[0] ?? {};
+        const grand = this.mapTotalsFromWrapper(first);
+        this.grandTotal = { ...grand };
 
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        })
-      );
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      })
+    );
+
 
   // ========= 匯出 =========
   private buildExportBody() {
@@ -278,6 +291,99 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
       });
   }
+
+  // ======= 總計列 Footer 組裝 =======
+  /** 把 wrapper 內的 Total* 欄位轉成表尾需要的 GrandTotal 結構（用 columns 的 field 名） */
+  private mapTotalsFromWrapper(wrapper: any): Record<string, number> {
+    const grand: Record<string, number> = {};
+    Object.entries(this.detailTotalFieldMap).forEach(([field, apiKey]) => {
+      grand[field] = Number(wrapper?.[apiKey] ?? 0);
+    });
+    return grand;
+  }
+
+  /** 提供給 [footerData]，只吐需要的合計欄位鍵值 */
+  buildFooterFromGrandTotal(): Record<string, any> | undefined {
+    if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
+    // 只回傳在欄位上標記 isTotal 的欄位，以免多餘鍵值干擾
+    const footer: Record<string, any> = {};
+    for (const col of this.columns) {
+      if (col?.isTotal) {
+        footer[col.field] = this.grandTotal[col.field] ?? 0;
+      }
+    }
+    return footer;
+  }
+
+  // ===== 工具 =====
+  moneyFormat(value: number): string {
+    return value != null ? Number(value || 0).toLocaleString('en-US') : '0';
+  }
+
+  private toIso(dateLike: any): string | undefined {
+    if (!dateLike) return undefined;
+    const d = new Date(dateLike);
+    if (isNaN(d.getTime())) return undefined;
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+  }
+
+  private extractRows(wrappers: any[]): any[] {
+    return wrappers
+      .flatMap((g: any) => (Array.isArray(g?.tLS23080_Details) ? g.tLS23080_Details : []))
+      .map((d: any, i: number) => ({
+        ...d,
+        TXN_Date: d?.TXN_Date ? this.toDateOnly(d.TXN_Date) : d?.TXN_Date,
+        _rowKey: `${d?.TXN_Date ?? ''}|${i}`,
+      }));
+  }
+
+  // 詳細（若未使用可移除）
+
+  onViewTLS23080(row: any) {
+    const dateOnly = this.toDateOnly(row?.TXN_Date);
+    this.router.navigate(['/account/tls/tls23080cru'], {
+      state: { criteria: { TXN_Date: dateOnly  } }
+    });
+  }
+
+  // 下載工具
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
+    if (filenameStarMatch?.[1]) {
+      const encoded = filenameStarMatch[1].trim();
+      try { return decodeURIComponent(encoded.replace(/^UTF-8''/, '')); } catch { return encoded; }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
+    if (filenameMatch?.[1]) {
+      try { return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' ')); } catch { return filenameMatch[1]; }
+    }
+
+    return `download${defaultExtension}`;
+  }
+
+  // ===== 欄位（加上 isTotal 以顯示總計列）=====
   formatDate = (val: string | Date | number): string => {
     if (!val) return '';
     const d = val instanceof Date ? val : new Date(val);
@@ -288,7 +394,6 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     return `${y}/${m}/${day}`;
   };
 
-  // ===== 欄位（加上 isTotal 以顯示總計列）=====
   columns = [
     { field: 'TXN_Date', header: '日期', visible: true, style: 'text-left', format: this.formatDate },
 
@@ -343,77 +448,15 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     // 總金額
     { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
-
-  // ===== 工具 =====
-  moneyFormat(value: number): string {
-    return value != null ? Number(value || 0).toLocaleString('en-US') : '0';
-  }
-
-
-  private toIso(dateLike: any): string | undefined {
-    if (!dateLike) return undefined;
-    const d = new Date(dateLike);
-    if (isNaN(d.getTime())) return undefined;
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
-  }
-
-  private extractRows(wrappers: any[]): any[] {
-    return wrappers
-      .flatMap((g: any) => (Array.isArray(g?.tLS23080_Details) ? g.tLS23080_Details : []))
-      .map((d: any, i: number) => ({
-        ...d,
-        TXN_Date: d?.TXN_Date ? formatDateToYYYY_MM_DD(d.TXN_Date) : d?.TXN_Date,
-        _rowKey: `${d?.TXN_Date ?? ''}|${i}`,
-      }));
-  }
-
-  // 詳細（若未使用可移除）
-  private toIsoForDetail(dateLike: any): string {
-    const d = new Date(dateLike);
-    if (isNaN(d.getTime())) return '';
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
-  }
-  onViewTLS23080(row: any) {
-    const iso = this.toIsoForDetail(row?.TXN_Date);
-    this.router.navigate(['/account/tls/tls23080cru'], {
-      state: { criteria: { TXN_Date: iso } }
-    });
-  }
-
-  // 下載工具
-  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
-    const blob = response.body;
-
-    if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } else {
-      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
-    }
-  }
-
-  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-    if (!contentDisposition) return `download${defaultExtension}`;
-
-    const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
-    if (filenameStarMatch?.[1]) {
-      const encoded = filenameStarMatch[1].trim();
-      try { return decodeURIComponent(encoded.replace(/^UTF-8''/, '')); } catch { return encoded; }
-    }
-
-    const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
-    if (filenameMatch?.[1]) {
-      try { return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' ')); } catch { return filenameMatch[1]; }
-    }
-
-    return `download${defaultExtension}`;
-  }
+  // 1) 新增這個工具函式（放在 component 裡即可）
+private toDateOnly(x: any): string | undefined {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 }

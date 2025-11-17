@@ -1,54 +1,37 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="大分類" controlName="industry" [options]="industryOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.industry" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <!---->
-            <hr>
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1;">
-                            <h5>品項 {{i+1}}</h5>
-                        </div>
-                        <div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
 
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="品項名稱" controlName="name" [control]="getFormControl(i, 'name')"
-                                [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="稅別" controlName="tax" [options]="taxOptions" optionLabel="label"
-                                optionValue="value" [control]="getFormControl(i, 'tax')" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                    </div>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
+  <p-panel [header]="formTitle" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
 
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
+      <!-- 新增模式：顯示大分類選擇和載入品項按鈕 -->
+      <div *ngIf="mode === 'Create'">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="大分類" controlName="bus_type" [control]="dataForm.controls.bus_type"
+              [options]="busTypeOptions" optionLabel="Name" optionValue="No" [submitted]="submitted">
+            </app-dropdown>
+          </div>
         </div>
-    </p-panel>
+        <!-- <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="dataForm"></app-button>
+          <app-button btnType="query" label="查詢" [loading]="loading" (click)="onQuery()"></app-button>
+        </div> -->
+      </div>
+      <!--  動態 table-edit -->
+      <app-table-edit class="col-12" tableKey="TLS2J020Detail" [columns]="columns" [data]="data" [showDelete]="false"
+        (dataChange)="data = $event" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+        [disabled]="isFormReadable" [showExcel]="false" [canInsert]="false" [showCheckBox]="mode === 'Create'">
+      </app-table-edit>
+
+      <div *ngIf="mode !== 'Read'" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" [label]="mode === 'Create' ? '確定新增' : '確定'" [loading]="loading"></app-button>
+      </div>
+
+    </form>
+  </p-panel>
 </div>

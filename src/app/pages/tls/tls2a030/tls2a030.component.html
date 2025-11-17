@@ -4,43 +4,23 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              label="銷售日期"
-              [startControl]="queryForm.controls.SaleDateStart"
-              [endControl]="queryForm.controls.SaleDateEnd"
-              [submitted]="submitted"
-            />
+            <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.SaleDateStart"
+              [endControl]="queryForm.controls.SaleDateEnd" [submitted]="submitted" />
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
-              label="收銀機號"
-              controlName="dropdownRange"
-              [startControl]="queryForm.controls.ECR_No_Start"
-              [endControl]="queryForm.controls.ECR_No_End"
-              [submitted]="submitted"
-              [options]="ECRNoOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown-range>
+            <app-dropdown-range label="收銀機號" controlName="dropdownRange"
+              [startControl]="queryForm.controls.ECR_No_Start" [endControl]="queryForm.controls.ECR_No_End"
+              [submitted]="submitted" [options]="ECRNoOptions" optionLabel="label"
+              optionValue="value"></app-dropdown-range>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -50,24 +30,16 @@
 </div>
 
 <div class="card">
-  <app-customFooter-table
-    [data]="data"
-    [columns]="columns"
-    [selectedItems]="selectedItems"
-    apiUrl="queryTLS2A030"
-    (selectionChange)="selectedItems = $event"
-    [showCheckBox]="false"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'PAY_NO', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="false"
-    [showDelete]="false"
-    [showReportMode]="true"
-    (onSubmit)="onSubmit(queryForm)"
-    [footerData]="footerData"
-    [showTotal]="true"
-  ></app-customFooter-table>
+  <app-customFooter-table [data]="data" [columns]="columns" [selectedItems]="selectedItems" apiUrl="queryTLS2A030"
+    (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="PAY_NO" tableKey="tls2a030"
+    [multiSortMeta]="[{ field: 'PAY_NO', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)" [showManage]="false" [showDelete]="false"
+    [showReportMode]="false" [footerData]="footerData" [showTotal]="true">
+    <header>
+      <div class="flex justify-content-between align-items-center gap-2">
+        <p-button styleClass="p-2" label="匯出溢欠彙總表.XLSX" [loading]="btnLoading2" icon="pi pi-file-excel"
+          (click)="onExportExcel()" [disabled]="data.length === 0"></p-button>
+      </div>
+    </header>
+  </app-customFooter-table>
 </div>

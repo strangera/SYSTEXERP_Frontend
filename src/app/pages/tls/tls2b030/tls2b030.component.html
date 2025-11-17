@@ -4,110 +4,63 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
 
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 月份（選了會同步把日期設成整月） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="銷售月份"
-              [calendarType]="'dateMonthOne'"
-              [control]="queryForm.controls.TXN_Month"
+            <app-calendar label="銷售月份" [calendarType]="'dateMonthOne'" [control]="queryForm.controls.TXN_Month"
               [submitted]="submitted">
             </app-calendar>
           </div>
 
           <!-- 日期區間 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="銷售日期"
-              [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd"
-              [submitted]="submitted">
+            <app-calendar-range label="銷售日期" [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd" [submitted]="submitted">
             </app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀機號"
-              controlName="ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="value"
-              optionValue="value"
-              [control]="queryForm.controls.ECR_No_List"
-              [submitted]="submitted">
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="value"
+              optionValue="value" [control]="queryForm.controls.ECR_No_List" [submitted]="submitted">
             </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號"
-              controlName="TLT_No"
-              [options]="CounterOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.TLT_No_List"
-              [submitted]="submitted">
+            <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
+              optionValue="value" [control]="queryForm.controls.TLT_No_List" [submitted]="submitted">
             </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="收銀機類型"
-              controlName="ECR_Type"
-              [options]="cahserTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ECR_Type"
-              [submitted]="submitted">
+            <app-dropdown label="收銀機類型" controlName="ECR_Type" [options]="cahserTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_Type" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="館別"
-              [options]="BUILDING_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted">
+            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_building" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted">
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floor" [submitted]="submitted">
             </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="區域"
-              controlName="area_no"
-              [options]="regionOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.area_no"
-              [submitted]="submitted">
+            <app-multi-select label="區域" controlName="area_no" [options]="regionOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.area_no" [submitted]="submitted">
             </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4 align-items-center flex">
-            <p-checkbox
-              binary="true"
-              [inputId]="'onlyOver'"
-              formControlName="OnlyShowOverAmount"
-              label="僅顯示溢欠">
+            <p-checkbox binary="true" [inputId]="'onlyOver'" formControlName="OnlyShowOverAmount" label="僅顯示溢欠">
             </p-checkbox>
           </div>
         </div>
@@ -122,27 +75,37 @@
 </div>
 
 <div class="card">
- <app-table-report
-  [tableKey]="'tls2b030'"
-  [dataKey]="'_rowKey'"              
-  [columns]="columns"
-  [data]="data"
-  [totalRecords]="totalRecords"     
-  [loading]="loading"
-  [showManage]="false"
-  [showHeader]="true"
-  [showFilter]="true"
-  [showReportMode]="true"
-  [showExcel]="false"
-  [footerData]="footerData"
+  <app-table-report
+    [tableKey]="'tls2b030_' + tableVer"
+    [dataKey]="'_rowKey'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="viewTotalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showFilter]="true"
+    [showExcel]="false"
+    [footerData]="footerData"
+    [queryFunction]="queryTLS2B030ForReport"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="false"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event">
+    
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            styleClass="p-2"
+            label="匯出專櫃機台溢欠表 Excel"
+            icon="pi pi-file-excel"
+            [loading]="btnExportLoading"
+            (click)="downloadTLS2B030Excel()"
+            [disabled]="btnExportLoading">
+          </p-button>
 
-  [queryFunction]="queryTLS2B030ForReport"  
-  [lastQueryBody]="lastQueryBody"          
-
-  [showCheckBox]="false"
-  [selectedItems]="selectedItems"
-  (selectionChange)="selectedItems = $event"
->
-  
-</app-table-report>
+        </div>
+      </header>
+  </app-table-report>
 </div>

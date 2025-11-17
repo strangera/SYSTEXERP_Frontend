@@ -21,6 +21,7 @@
                         [options]="service.UsrNos()"
                         optionLabel="Keep_UsrName"
                         optionValue="Keep_UsrNo"
+                        [loading]="service.usrLoading()"
                         [control]="qf().usrNo"
                         [submitted]="submitted"></app-dropdown>
 
@@ -38,6 +39,7 @@
                         [options]="service.OrgIds()"
                         optionLabel="Org_Name"
                         optionValue="Org_No"
+                        [loading]="service.orgLoading()"
                         [control]="qf().orgId"
                         [submitted]="submitted"></app-dropdown>
 
@@ -54,7 +56,7 @@
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      [loading]="service.tableLoading"></app-button>
+                      [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -69,11 +71,10 @@
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading"
                [tableKey]="'FIN71020'"
                [dataKey]="'id'"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
-               [loading]="service.tableLoading"></app-table>
+               [loading]="service.tableLoading()"></app-table>
   </div>
 </div>

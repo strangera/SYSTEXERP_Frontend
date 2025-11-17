@@ -1,24 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-
-import {
-  salTypeOptions,
-  sernoTypeOptions,
-  settleDDOptions,
-  statusOptions,
-  typeOptions,
-  yesNoOptions,
-  ECR_GUI_Type_Option,
-} from './tls41010-cru.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -29,7 +17,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-tls41010-cru',
@@ -72,11 +60,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_USR_No: ['', [Validators.maxLength(8)]],
     ECR_USR_Name: ['', [Validators.maxLength(20)]],
     ECR_Status: ['A'],
-    ECR_ActiveDate: [null],
+    ECR_ActiveDate: [null as Date | null],
     ECR_Group: [''],
     ECR_AreaNo: [''],
     ECR_SubGroup: [''],
-    ECR_CloseDate: [null],
+    ECR_CloseDate: [null as Date | null],
     ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_ComName: ['', [Validators.maxLength(64)]],
     ECR_IP: ['', [Validators.maxLength(20)]],
@@ -166,13 +154,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_RestoreVoid: ['N', [Validators.required, Validators.maxLength(1)]],
   });
 
-  typeOptions = typeOptions;
-  statusOptions = statusOptions;
-  salTypeOptions = salTypeOptions;
-  sernoTypeOptions = sernoTypeOptions;
-  settleDDOptions = settleDDOptions;
-  yesNoOptions = yesNoOptions;
-  ECR_GUI_Type_Option = ECR_GUI_Type_Option;
+  typeOptions = getSYS1000Options('ECR_Type');
+  statusOptions = getSYS1000Options('ECR_Status').filter(item => item.value === 'A' || item.value === 'C');
+  salTypeOptions = getSYS1000Options('ECR_SAL_Type');
+  sernoTypeOptions = getSYS1000Options('ECR_SernoType');
+  settleDDOptions = getSYS1000Options('ECR_SettleDD');
+  yesNoOptions = getSYS1000Options('YES_NO');
+  ECR_GUI_Type_Option = getSYS1000Options('ECR_GUI_Type');
   ECR_TmplNo_Option: IDropdownItem[] = [];
   ECR_SrvIP_Option: IDropdownItem[] = [];
   CounterOptions: any[] = [];
@@ -182,13 +170,9 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
   constructor(
     public override formBuilder: FormBuilder,
-    private tls46110Service: Tls46010Service,
-    private tls46020Service: TLS46020Service,
     private dropDownListService: DropDownListService,
     private tls41010Service: TLS41010Service,
     private counterNameService: CounterNameService,
-
-    private route: ActivatedRoute
   ) {
     super();
   }
@@ -210,8 +194,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       this.dataForm.get('ECR_No')?.reset('');
       this.dataForm.get('ECR_Status')?.setValue('A');
       this.dataForm.get('ECR_Status')?.disable();
-      this.dataForm.get('ECR_Type')?.setValue('2');
-      this.dataForm.get('ECR_Type')?.disable();
+      this.dataForm.get('ECR_Type')?.setValue('2'); // 預設為專櫃機台(自收)，但保持可選
     } else if (this.isFormEditable) {
       this.dataForm.get('ECR_No')?.disable();
     }
@@ -224,14 +207,18 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           No: item.ECR_TmplNo ?? '',
           Name: item.ECR_TmplDesc,
         }));
-         this.tmplDetailList = res.Data;
+        this.tmplDetailList = res.Data;
       }
     });
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
-        ...item, label: `${item.No} ${item.Name}`,
+        label: `${item.Name}`, // 顯示用
+        value: item.Name,
+        No: item.No,
+        Name: item.Name
       }));
     });
+
     //收銀員下拉選單
     this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
       if (res?.Data) {
@@ -267,35 +254,75 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         }));
       }
     });
-    // 綁定位置編號選取 → 自動帶出名稱
-    this.dataForm.get('ECR_LocNo')?.valueChanges.subscribe(selectedNo => {
-      const selected = this.LocOptions.find(c => c.value === selectedNo);
-      if (selected) {
-        this.dataForm.patchValue({
-          ECR_TLT_Name: selected.Name,
+
+    this.dataForm.get('ECR_LocNo')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(selectedNo => {
+        const selected = this.LocOptions.find(c => c.value === selectedNo);
+        if (!selected) return;
+
+        const patch: any = {
           ECR_Group: selected.tlt_building,
           ECR_SubGroup: selected.tlt_floor,
-          ECR_AreaNo: selected.area_no
-        }, { emitEvent: false });
-      }
-    });
+          ECR_AreaNo: selected.area_no,
+        };
+
+        if (this.isFormCreateable && !this.dataForm.get('ECR_TLT_Name')?.value) {
+          patch.ECR_TLT_Name = selected.Name;
+        }
+
+        this.dataForm.patchValue(patch, { emitEvent: false });
+      });
+
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-    if (tmplNo) {
-      const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
-      if (detail) {
-        const patchObj: any = {};
-        Object.keys(this.dataForm.controls).forEach(key => {
-          if (detail[key] !== undefined) patchObj[key] = detail[key];
-        });
-        this.dataForm.patchValue(patchObj);
+      if (tmplNo) {
+        const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
+        if (detail) {
+          const patchObj: any = {};
+          Object.keys(this.dataForm.controls).forEach(key => {
+            if (detail[key] !== undefined) patchObj[key] = detail[key];
+          });
+          this.dataForm.patchValue(patchObj);
+        }
       }
-    }
-  });
+    });
     this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
       this.checkTltNoRequired(value);
     });
     this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+
+    this.dataForm.get('ECR_TLT_No')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((selectedNo) => {
+        if (!selectedNo) return;
+
+        this.tls41010Service.queryTLT_NoInfo(selectedNo).subscribe({
+          next: (res) => {
+            if (res?.Status === '0000' && res.Data) {
+              const info = res.Data;
+              console.log('自動帶入櫃位資訊:', info);
+
+              //  無論新增或編輯，都可 patch，但限定特定欄位
+              const patch: any = {};
+
+              // 只要櫃位查詢回來有值，就覆蓋（不動沒給值的欄位）
+              if (info.ECR_LocNo) patch.ECR_LocNo = info.ECR_LocNo;
+              if (info.ECR_Group) patch.ECR_Group = info.ECR_Group;
+              if (info.ECR_SubGroup) patch.ECR_SubGroup = info.ECR_SubGroup;
+              if (info.ECR_AreaNo) patch.ECR_AreaNo = info.ECR_AreaNo;
+              if (info.tlt_bdate) patch.ECR_ActiveDate = new Date(info.tlt_bdate);
+              if (info.tlt_edate) patch.ECR_CloseDate = new Date(info.tlt_edate);
+              this.dataForm.patchValue(patch, { emitEvent: false });
+            } else {
+              console.warn('查詢櫃位資訊失敗:', res?.Message);
+            }
+          },
+          error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err),
+        });
+      });
+
+
   }
 
   /** 套用範本資料 */
@@ -326,7 +353,6 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
         }
       },
-      error: (err) => console.error('查詢 TLS41010 失敗', err),
     });
   }
 

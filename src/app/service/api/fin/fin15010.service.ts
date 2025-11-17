@@ -27,7 +27,7 @@ export interface FIN15010QueryRequest extends BaseQueryRequest {
   Voucher_No_S?: string;              // 傳票號碼起
   Voucher_No_E?: string;              // 傳票號碼訖
   CRT_USR_Name?: string;              // 傳票建立者
-  SAL_Type?: string[];                // 使用別
+  PUR_DirectType?: string[];                // 直接扣抵法稅額分攤種類
   CRT_Date_S?: string;                // 建立日期起
   CRT_Date_D?: string;                // 建立日期訖
   SYS_ORIGIN?: string[];              // 系統別
@@ -55,7 +55,7 @@ export interface FIN15010Data {
   PUR_TaxType: string;          // 課稅別
   Source_Doc_No: string;        // 憑證單號
   Voucher_No: string;           // 傳票號碼
-  SAL_Type: string;             // 系統別
+  PUR_DirectType: string;             // 系統別
 }
 
 // --- 列印回應 Model 定義 ---

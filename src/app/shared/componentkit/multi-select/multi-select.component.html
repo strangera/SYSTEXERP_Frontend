@@ -1,32 +1,15 @@
 <label [for]="controlName">
   {{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
 </label>
 <ng-container *ngIf="!readonly; else readonlyMode">
-  <p-multiSelect
-    #multiSelect
-    [id]="controlName"
-    [options]="options"
-    [optionLabel]="optionLabel"
-    [optionValue]="optionValue"
-    [formControl]="control"
-    [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
-    [showToggleAll]="true"
-    placeholder="全部"
-    [variant]="variant"
-    [group]="group"
-    [optionGroupLabel]="optionGroupLabel"
-    [appendTo]="appendTo"
-    [optionGroupChildren]="optionGroupChildren"
-    [resetFilterOnHide]="true"
-    [selectedItemsLabel]="selectedItemsLabel"
-    [maxSelectedLabels]="maxSelectedLabels"
-    [virtualScroll]="true"
-    [virtualScrollItemSize]="40"
-    [dataKey]="dataKey"
-    [filter]="filter"
-    [loading]="loading"
-  >
+  <p-multiSelect #multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel"
+    [optionValue]="optionValue" [formControl]="control"
+    [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" [showToggleAll]="true" placeholder="全部"
+    [variant]="variant" [group]="group" [optionGroupLabel]="optionGroupLabel" [appendTo]="appendTo"
+    [optionGroupChildren]="optionGroupChildren" [resetFilterOnHide]="true" [selectedItemsLabel]="selectedItemsLabel"
+    [maxSelectedLabels]="maxSelectedLabels" [virtualScroll]="true" [virtualScrollItemSize]="40" [dataKey]="dataKey"
+    [filter]="filter" [loading]="loading" [showClear]="showClear">
     <!--  簡潔的分組標題模板 -->
     <ng-template let-group pTemplate="group" *ngIf="group">
       <div class="multiSelect-group-header">
@@ -39,19 +22,9 @@
 <!-- 唯讀模式 -->
 <ng-template #readonlyMode>
   <div class="readonly-multiselect">
-    <input
-      type="text"
-      [id]="controlName"
-      [value]="selectedItemsDisplayText"
-      [class]="multiSelectClasses"
-      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
-      placeholder="無選擇項目"
-      readonly
-    />
+    <input type="text" [id]="controlName" [value]="selectedItemsDisplayText" [class]="multiSelectClasses"
+      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" placeholder="無選擇項目" readonly />
   </div>
 </ng-template>
 
-<app-control-messages
-  [onerror]="submitted"
-  [control]="control"
-></app-control-messages>
+<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

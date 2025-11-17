@@ -1,0 +1,87 @@
+/* 主要外框 */
+.sheet {
+  border: 2px solid #000;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* 頂端抬頭 */
+.head {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.brand { display:flex; align-items:center; gap:10px; }
+.logo {
+  width: 56px; height: 56px; border: 2px solid #000; border-radius: 50%;
+  display:flex; align-items:center; justify-content:center; font-weight:700;
+}
+.mall-name { font-size: 22px; font-weight: 700; }
+.mall-en   { color:#555; margin-top:2px; }
+
+.docbox { border:1px solid #000; padding:8px; }
+.doc-title { text-align:center; font-weight:700; margin-bottom:4px; }
+.docbox .row { display:flex; justify-content:space-between; }
+
+/* 發票資料區 */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  border: 1px solid #000;
+}
+.grid-2 > div { padding: 6px 8px; border-right:1px solid #000; border-bottom:1px solid #000; }
+.grid-2 > div:nth-child(2n) { border-right:0; }
+.grid-2 .label { background:#f8f8f8; text-align:center; white-space:nowrap; }
+
+/* 貼立發票 */
+.affix-area {
+  display:flex; gap:10px; margin:8px 0;
+}
+.affix-title {
+  width: 120px; border:1px solid #000; display:flex; align-items:center; justify-content:center;
+}
+.datebox {
+  display:grid;
+  grid-template-columns: 36px 120px 80px 80px 40px 120px 40px 160px;
+  border:1px solid #000;
+}
+.datebox .cell { border-right:1px solid #000; padding:6px; display:flex; align-items:center; justify-content:center; }
+.datebox .cell:last-child { border-right:0; }
+.datebox .label { background:#f8f8f8; writing-mode: vertical-rl; text-orientation: mixed; }
+
+/* 主表標題 */
+.table-title {
+  text-align:center; margin:6px 0; letter-spacing: 0.3em; font-weight:700;
+}
+
+/* p-table 印刷樣式 */
+:host ::ng-deep table.print-table {
+  border: 1px solid #000;
+}
+:host ::ng-deep .print-table th,
+:host ::ng-deep .print-table td {
+  border: 1px solid #000 !important;
+  padding: 6px 8px !important;
+}
+.w-100 { width: 100%; }
+.num { text-align: right; }
+.right { text-align: right; }
+
+/* 下方工具列 */
+.toolbar { margin-top: 8px; }
+
+/* 備註與簽名區 */
+.footer-area {
+  display:grid;
+  grid-template-columns: 1fr 360px;
+  gap: 10px;
+  margin-top: 10px;
+}
+.note {
+  border:1px solid #000; padding:8px; min-height:90px;
+}
+.sign .title { text-align:center; border:1px solid #000; padding:4px; }
+.sign .box { border:1px solid #000; height:120px; }

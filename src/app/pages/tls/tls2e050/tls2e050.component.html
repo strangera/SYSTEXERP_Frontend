@@ -92,6 +92,11 @@
             <app-input-number label="結帳後幾日付款" controlName="check_day" [control]="queryForm.controls.check_day"
               [submitted]="submitted"></app-input-number>
           </div>
+          <div class="col-12 md:col-6 lg:col-4" [hidden]="reportType === '1'">
+            <app-radiobutton label="是否含稅" controlName="is_tax" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.is_tax" [submitted]="submitted" [options]="taxOptions"
+              (valueChange)="onTaxChange($event)"></app-radiobutton>
+          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -102,8 +107,12 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="INV_ItemNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
-    [showDelete]="false" [loading]="loading"></app-table>
+  <app-table-report tableKey="tls27050" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false" [footerData]="footerData"
+    [queryFunction]="getCurrentQueryFunction()" [showManage]="false" [loading]="loading">
+    <header>
+      <p-selectButton [options]="typeOptions" [(ngModel)]="reportType" (onChange)="switchReport($event.value)"
+        optionLabel="label" optionValue="value" [allowEmpty]="false" />
+    </header>
+  </app-table-report>
 </div>

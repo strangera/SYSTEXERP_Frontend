@@ -8,8 +8,8 @@
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing" [scrollable]="scrollable"
   [scrollHeight]="scrollHeight" [showCurrentPageReport]="IsPrint && showPaginator" [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions" [(rows)]="rows" [(first)]="first" (onLazyLoad)="loadDataLazy($event)"
-  [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)" tableStyleClass="h-full"
-  [styleClass]="
+  [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
+  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full" [styleClass]="
     'p-datatable-sm' +
     (IsPrint ? ' p-datatable-gridlines' : ' ') +
     (!disabled ? ' p-datatable-striped' : ' ')
@@ -26,22 +26,22 @@
       [selectedItems]="selectedItems" [tableKey]="tableKey" [expansionColumns]="expansionColumns"
       [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showReportMode]="showReportMode"
       [showReportPDF]="showReportPDF" [showReportExcel]="showReportExcel" [showInsert]="showInsert"
-      [insertDisabled]="insertDisabled" [deleteData]="deleteData" [showDelete]="showDelete" [deleteIcon]="deleteIcon"
-      [deletepTooltip]="deletepTooltip" [showExcel]="showExcel" [disabled]="disabled"
-      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport"
-      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="showPage"
-      [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows" [first]="first"
-      (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
-      (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
+      [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting" [insertDisabled]="insertDisabled"
+      [deleteData]="deleteData" [showDelete]="showDelete" [deleteIcon]="deleteIcon" [deletepTooltip]="deletepTooltip"
+      [showExcel]="showExcel" [disabled]="disabled" [showExcelExport]="showExcelExport"
+      [showExcelImport]="showExcelImport" [showCustomExcelImport]="showCustomExcelImport"
+      [exportExcelLoading]="exportExcelLoading" [showPage]="showPage" [totalPages]="totalPages" [pages]="pages"
+      [selectedPage]="selectedPage" [rows]="rows" [first]="first" (insert)="insertRow()" (delete)="deleteRow($event)"
+      (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)"
+      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"
-          rowspan="2"></th>
+        <th *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)" class="w-1rem" rowspan="2"></th>
         <th *ngIf="showSerialNo" class="w-1rem" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2"
           *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
@@ -124,7 +124,7 @@
           " class="text-center wrap-header" pFrozenColumn [frozen]="IsPrint && col.frozen"
           [alignFrozen]="col.alignFrozen || 'right'">
           {{ col.header }}
-          <span *ngIf="col.required" class="required">*</span>
+          <span *ngIf="col.required" class="text-red-500">*</span>
           <p-sortIcon *ngIf="
               showSort && !rowEditing && col.showSort !== false && data.length
             " [field]="col.sortField ?? col.field" />
@@ -161,38 +161,23 @@
     let-editing="editing" let-ri="rowIndex" let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 40.8px"
       [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pReorderableRow]="index"
-      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData" [pSelectableRow]="rowData"
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <ng-container *ngIf="!loading; else loadingTemplate">
-        <td *ngIf="
-            !showSubTotal &&
-            data.length &&
-            (showReorder || showRowEdit)
-          ">
+        <td *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)">
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td *ngIf="showSerialNo" class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngIf="
-            IsPrint &&
-            showCheckBox &&
-            !rowEditing &&
-            selectionMode === 'multiple'
-          ">
+        <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
             [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
         </td>
         <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
           <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
             [raised]="!expandedRows[rowData[dataKey]]" [icon]="
-              rowData.expansionLoading
-                ? 'pi pi-spin pi-spinner'
-                : expandedRows[rowData[dataKey]]
-                  ? 'pi pi-chevron-down'
-                  : 'pi pi-chevron-right'
-            " pButton (click)="toggleRowExpansion(rowData)" [disabled]="
-              rowData.expansionLoading ||
-              (!expansionLoadFn && !rowData[expansionDataKey]?.length)
-            " />
+              rowData.expansionLoading ? 'pi pi-spin pi-spinner' : expandedRows[rowData[dataKey]]
+                  ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton (click)="toggleRowExpansion(rowData)"
+            [disabled]="rowData.expansionLoading || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
         </td>
         <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
           (click)="editing ? $event.stopPropagation() : null" (dblclick)="detailRow(rowData)" [ngClass]="col.style"
@@ -200,34 +185,18 @@
           <p-cellEditor *ngIf="showRowEdit">
             <ng-template pTemplate="input">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"
-                (dpTableSelected)="rowData[col.field] = $event" (fieldChange)="
-                  onFieldChange(
-                    rowData,
-                    $event.field,
-                    $event.value,
-                    $event.rowIndex
-                  )
-                " [disabled]="
-                  disabled
-                    ? true
-                    : (col.disabled && col.disabled(rowData)) || false
-                " (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
+                (dpTableSelected)="rowData[col.field] = $event"
+                (fieldChange)="onFieldChange( rowData, $event.field, $event.value, $event.rowIndex)"
+                [disabled]="disabled ? true : (col.disabled && col.disabled(rowData)) || false"
+                (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
                 (filterChange)="filterOptions($event)"></app-table-input>
             </ng-template>
             <ng-template pTemplate="output">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit"
-                (dpTableSelected)="rowData[col.field] = $event" (fieldChange)="
-                  onFieldChange(
-                    rowData,
-                    $event.field,
-                    $event.value,
-                    $event.rowIndex
-                  )
-                " [disabled]="
-                  disabled
-                    ? true
-                    : (col.disabled && col.disabled(rowData)) || !alwaysEdit
-                " (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
+                (dpTableSelected)="rowData[col.field] = $event"
+                (fieldChange)="onFieldChange(rowData, $event.field, $event.value, $event.rowIndex)"
+                [disabled]="disabled? true: (col.disabled && col.disabled(rowData)) || !alwaysEdit"
+                (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
                 (filterChange)="filterOptions($event)"></app-table-input>
             </ng-template>
           </p-cellEditor>
@@ -242,27 +211,16 @@
             <div [innerHTML]="sanitizeHtml(rowData[col.field])" class="html-cell"></div>
           </ng-container>
           <span *ngIf="!col.type && !col.htmlFormat">
-            {{
-            col.format
-            ? col.format(rowData[col.field], rowIndex, rowData)
-            : rowData[col.field]
-            }}
+            {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
           </span>
-
-          <span *ngIf="col.htmlFormat" [innerHTML]="
-              col.format
-                ? col.format(rowData[col.field], rowIndex, rowData)
-                : rowData[col.field]
-            "></span>
+          <span *ngIf="col.htmlFormat"
+            [innerHTML]="col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field]"></span>
         </td>
-        <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage" [ngClass]="{
-            'flex justify-content-center gap-2': IsPrint && showManage,
-          }" class="no-wrap icon-button" alignFrozen="right" pFrozenColumn [frozen]="IsPrint"
-          [style.text-align]="'center'">
-          <div *ngIf="
-              (showRowEdit && !alwaysEdit) ||
-              (showRowEdit && alwaysEdit && rowEditing)
-            " class="flex align-items-center justify-content-center gap-2">
+        <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"
+          [ngClass]="{'flex justify-content-center gap-2': IsPrint && showManage}" class="no-wrap icon-button"
+          alignFrozen="right" pFrozenColumn [frozen]="IsPrint" [style.text-align]="'center'">
+          <div *ngIf="(showRowEdit && !alwaysEdit) || (showRowEdit && alwaysEdit && rowEditing)"
+            class="flex align-items-center justify-content-center gap-2">
             <p-button *ngIf="!editing" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pen-to-square"
               (click)="onRowEditInit(rowData)" [text]="true" [disabled]="rowEditing || rowEditDisabled(rowData)" />
             <p-button *ngIf="editing" icon="pi pi-check text-green-500" [disabled]="!rowEditCanSave"
@@ -274,13 +232,11 @@
           <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)"
             *ngIf="showDetail && !showRowEdit" />
           <ng-container *ngIf="addButton.length">
-            <div [ngStyle]="{
-                border: '1px solid var(--surface-border)',
-                'border-left': '0',
-              }"></div>
+            <div [ngStyle]="{ border: '1px solid var(--surface-border)', 'border-left': '0'}"></div>
             <p-button *ngFor="let btn of addButton" [label]="btn.displayText" pTooltip="{{ btn.label }}"
               tooltipPosition="top" [icon]="btn.icon" (click)="btn.action(rowData, $event)"
-              [disabled]="btn.disabled ? btn.disabled(rowData) : false" [loading]="buttonsLoading" />
+              [disabled]="btn.disabled ? btn.disabled(rowData) : false"
+              [loading]="btn.loading ? btn.loading(rowData) : buttonsLoading" />
           </ng-container>
         </td>
       </ng-container>

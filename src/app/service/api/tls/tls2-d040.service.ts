@@ -21,6 +21,7 @@ export interface QueryTLS2D040Request extends BaseQueryRequest {
   store_way?: string;          // 專櫃/自營櫃(1=專櫃 2=自營)
   building_no?: string[];      // 館別 (陣列)
   FLOOR_NO?: string[];         // 樓層 (陣列)
+  ShowNeg?: boolean;          // 只顯示負值
 }
 
 @Injectable({
@@ -32,8 +33,8 @@ export class TLS2D040Service {
   constructor(private http: HttpClient) { }
 
   // 查詢依會計科目彙總資料
-  queryTLS2D040_Detail(req: QueryTLS2D040Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Detail`, req);
+  queryTLS2D040_Acct(req: QueryTLS2D040Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Acct`, req);
   }
 
   // 查詢依專櫃彙總資料
@@ -49,5 +50,10 @@ export class TLS2D040Service {
   // 查詢依部門彙總資料
   queryTLS2D040_Department(req: QueryTLS2D040Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Department`, req);
+  }
+
+  // 查詢明細資料
+  queryTLS2D040_Detail(req: QueryTLS2D040Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Detail`, req);
   }
 }

@@ -67,7 +67,7 @@ export class FIN24020CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '120015';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.vendorService.getVendors().subscribe(data => {
       this.factoryIDOptions = data;

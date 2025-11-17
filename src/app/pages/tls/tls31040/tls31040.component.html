@@ -131,8 +131,8 @@
               optionValue="No" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="銷售金額是否含稅" controlName="TaxType" [control]="queryForm.controls.TaxType" [options]="TaxType_Option"
-              [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton label="銷售金額是否含稅" controlName="TaxType" [control]="queryForm.controls.TaxType"
+              [options]="TaxType_Option" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton-yn label="是否開立業主發票" controlName="IsRece_Yn" [control]="queryForm.controls.IsRece_Yn"
@@ -148,17 +148,18 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showReportMode]="true"
-    [multiSortMeta]="[{ field: 'tlt_kind', order: 1 }]" [columnGroup]="columnGroup" (detail)="onDetail1($event)"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="true" [showEdit]="false" [showDelete]="false" [showExcel]="false">
+  <app-table-report tableKey="tls31040" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+    [columnGroup]="columnGroup" [totalRecords]="totalRecords" (detail)="onDetail1($event)" [showDelete]="false"
+    [showEdit]="false" [loading]="loading" [showManage]="true" [showReportMode]="false"
+    [queryFunction]="tls31040Service.queryTLS31040.bind(tls31040Service)" [footerData]="footershowTotal"
+    [footerPercentData]="footershowPercent">
     <header>
-      <div class="flex justify-content-end gap-2">
-        <p-button styleClass="p-2" label="各櫃別之營業報表 Excel" [loading]="btnLoading" icon="pi pi-file"
-          (click)="onReport(queryForm, true)" [disabled]="data.length === 0"></p-button>
-          <!-- <p-button styleClass="p-2" label="各櫃別之營業報表 Pdf" [loading]="btnLoading" icon="pi pi-file"
-          (click)="onReport(queryForm, false)" [disabled]="data.length === 0"></p-button> -->
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="各櫃別之營業報表.PDF" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onReport(queryForm, false)" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+        <p-button styleClass="p-2" label="各櫃別之營業報表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onReport(queryForm, true)" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>

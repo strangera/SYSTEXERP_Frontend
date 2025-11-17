@@ -180,14 +180,12 @@ export class FareColumnDefinitions {
         editable: true,
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1,
-
         allowDecimal: true, // 是否允許小數點
         decimalPlaces: 3  // 小數位數，預設2位
       },
       {
         field: 'tpy_amount',
-        header: '扣款金額',
+        header: '扣款金額(未稅)',
         type: 'number',
         editable: false,
         autoWidth: true,
@@ -200,8 +198,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',
@@ -214,8 +212,6 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
-
       }
     ];
   }
@@ -314,8 +310,6 @@ export class FareColumnDefinitions {
         editable: true,
         required: true,
         validators: [TableValidators.positive('單價必須大於0')],
-        defaultValue: 0,
-
       },
       {
         field: 'tpy_qty',
@@ -325,16 +319,12 @@ export class FareColumnDefinitions {
         editable: true,
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1,
-
       },
       {
         field: 'tpy_amount',
         header: '扣款金額(未稅)',
         type: 'number',
         editable: false,
-        defaultValue: 0,
-
       },
       {
         field: 'gui_flag',
@@ -346,8 +336,6 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
-
       },
       {
         field: 'day_account',
@@ -359,8 +347,6 @@ export class FareColumnDefinitions {
           { label: '否', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
-
       },
       {
         field: 'interval',
@@ -368,8 +354,6 @@ export class FareColumnDefinitions {
         type: 'number',
         editable: true,
         required: true,
-        defaultValue: 1,
-
       }
     ];
   }
@@ -536,8 +520,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',
@@ -549,8 +533,6 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
-
       }
     ];
   }
@@ -718,8 +700,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',
@@ -731,8 +713,6 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
-
       }
     ];
   }
@@ -848,8 +828,8 @@ export class FareColumnDefinitions {
         type: 'dropdown',
         editable: true,
         options: [], // 需要動態設定
-        required: true,
-
+        required: false,
+        hidden: true,
       },
       {
         field: 'gui_flag',
@@ -861,8 +841,6 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y',
-
       }
     ];
   }

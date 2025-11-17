@@ -11,10 +11,11 @@ export interface LocationDetails {
   area_desc: string;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
   _isNew?: boolean;
+  _isEmpty?: boolean
 }
 
 export interface TLS12040RequestModel {
-  id: number | string;
+  id: number | string | undefined | null;
   apply_no: string;
 }
 
@@ -26,7 +27,7 @@ export interface Tls12040SelectorTableColumn {
 
 
 export interface TLS12040DetailModel {
-  id: number | string;
+  id?: string | null;
   // ========== 基本資訊 ==========
   talent_id: string;
   apply_no: string;     // 專櫃招募編號
@@ -34,8 +35,12 @@ export interface TLS12040DetailModel {
   tlt_name: string;     // 櫃位名稱
   ven_uniform: string;  // 廠商編號
   ven_no: string;
+  vendor_ven_no?: string;
+  vendor_no?: string;
+
   VEN_Name: string;
   contract_subno?: string;
+  contract_no?: string;
   apply_type: string; // 申請案件內容
   apply_date: string; // 申請日期
   contract_type?: string; // 合約類型
@@ -61,12 +66,13 @@ export interface TLS12040DetailModel {
   // ========== 組織與人員 ==========
   org_id?: string;          // 組織代碼
   contact_USR_No?: string;  // 洽談者代號
-  contact_USR_Name?: string; //TODO:需要傳送值到後端存取 洽談者姓名
+  contact_USR_Name?: string; // 洽談者姓名
 
   // ========== 其他條件 ==========
   deco_type?: string;             // 裝潢方式
   money_type?: string;            // 結帳方式
   check_typeList?: string[];      // 支票類型
+  check_type?: string;      // 支票類型
   edc_yn?: string;                // 是否支援EDC
   tlt_openflag?: string;          // 營運狀況
   comm_yn?: string;

@@ -23,11 +23,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.5.3  財產目錄
 @Component({
-    selector: 'app-ass15030',
-    templateUrl: './ass15030.component.html',
-    styleUrl: './ass15030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, DropdownComponent, CalendarRangeComponent, CalendarComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass15030',
+  templateUrl: './ass15030.component.html',
+  styleUrl: './ass15030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, DropdownComponent, CalendarRangeComponent, CalendarComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS15030Component extends BasicQpageComponent implements OnInit {
   //
@@ -173,8 +173,7 @@ export class ASS15030Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310034';
     this.cruPage = '/ASS1000/ASS15030CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
       this.organizationOptions = data;

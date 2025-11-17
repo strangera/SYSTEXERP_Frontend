@@ -21,11 +21,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.7.1 產生開票付款資料
 @Component({
-    selector: 'app-fin27010',
-    templateUrl: './fin27010.component.html',
-    styleUrl: './fin27010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberComponent, TableComponent, TranslateModule]
+  selector: 'app-fin27010',
+  templateUrl: './fin27010.component.html',
+  styleUrl: './fin27010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberComponent, TableComponent, TranslateModule]
 })
 export class FIN27010Component extends BasicQpageComponent implements OnInit {
   //
@@ -88,7 +88,6 @@ export class FIN27010Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/FIN2000/FIN27010CRU';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.whetherService.getWhetherOptions().subscribe(data => {
       this.whetherOptions = data;

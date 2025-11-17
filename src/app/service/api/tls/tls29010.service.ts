@@ -36,17 +36,40 @@ export class Tls29010Service {
     return this.http.post<any>(`${this.apiUrl}/updateTLS29010`, body);
   }
 
-  // 刪除 TALPORDERD_OPENDisc 資料表
+  // 刪除 TALPORDERD_OPENDisc 資料表 (明細都用update處理，先掛著)
   deleteTLS29010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS29010`, body);
   }
 
+  // 刪除 主檔 TALPORDERM 資料表
+  deleteTLS29010M(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS29010M`, body);
+  }
+
+  // ---20251017 SA新增需求---
+  // 查詢 TLTTALENT 資料表，作為明細下拉選單
+  queryTLTTALENT_Data(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_Data`, body);
+  }
+
+  // 核准 主檔
+  apprTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/apprTLS29010`, body);
+  }
+
   // ---dropDown下拉---
 
-  // 查詢 專櫃編號
+  // 查詢 專櫃編號 (舊版)
   queryTLTTALENT_Status_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
   }
+
+
+  // 查詢 專櫃編號 (新版)
+  queryTLTTALENT_Status_DropDownList_new(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
+  }
+
 
   // 查詢 部門編號(SYS3100)
   querySYS3100_DropDownList(body: any): Observable<any> {

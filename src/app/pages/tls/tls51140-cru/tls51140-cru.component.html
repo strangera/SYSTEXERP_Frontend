@@ -16,9 +16,9 @@
           [control]="dataForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
         <app-table title="收銀機清單" dataKey="ECR_No" class="col-12" [columns]="columns" [data]="data" [showFilter]="false"
           [deleteData]="true" (dataChange)="data = $event" [showInsert]="true" [showManage]="false"
-          (insert)="dialogVisible = true" [insertDisabled]="dataForm.controls.TLT_NO.value === null"
-          [showCheckBox]="true" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-          [showReportMode]="false" [showRowEdit]="true" [alwaysEdit]="true" [disabled]="isFormReadable"></app-table>
+          (insert)="onOpenDialog()" [insertDisabled]="dataForm.controls.TLT_NO.value === null" [showCheckBox]="true"
+          [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showReportMode]="false"
+          [showRowEdit]="true" [alwaysEdit]="true" [disabled]="isFormReadable"></app-table>
       </div>
       <div *ngIf=" !isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

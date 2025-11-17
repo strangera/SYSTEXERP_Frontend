@@ -146,6 +146,7 @@ export interface ContractItem {
 
   /** 是否可編輯 */
   CanEdit: boolean;
+  CanVoid: boolean;
 }
 
 /**

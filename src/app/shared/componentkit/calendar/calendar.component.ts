@@ -5,6 +5,7 @@ import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } fro
 import { NgIf, NgClass } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-calendar',
@@ -15,17 +16,14 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit {
-
-  @Input() readonly = false;  // 新增：唯讀模式
-  // 必填
+  private valueChangeSubscription?: Subscription;
+  @Input() readonly = false;
   @Input() override label = '';
   @Input() showLabel = true;
   @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
-  // 日期類型
   @Input() calendarType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';
-  // Primeng 相關屬性
   @Input() timeOnly = true;
   @Input() showTime = true;
   @Input() hourFormat = '24';
@@ -34,10 +32,8 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   @Input() showSeconds = false;
   @Input() minDate: Date | undefined | null = null;
   @Input() maxDate: Date | undefined | null = null;
-  // 自訂屬性
   @Input() disabled = false;
   @Input() customPlaceholder = '請選擇';
-  // 觸發事件
   @Output() calendarEvent = new EventEmitter<any>();
   @Output() inputChange = new EventEmitter<string>();
   @Output() monthChangeEvent = new EventEmitter<CalendarMonthChangeEvent>();
@@ -53,9 +49,14 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
 
   ngOnInit() {
     this.initControl(this.control);
-    if (this.disabled || this.readonly) {
+
+    // 關鍵修改:區分 readonly 和 disabled
+    // readonly 模式下不要 disable control,只設置視覺樣式
+    if (this.disabled) {
       this.control.disable();
     }
+    // readonly 模式下保持 control 啟用,但禁止用戶互動
+
     const config = this.calendarConfig[this.calendarType];
     if (config) {
       this.timeOnly = config.timeOnly;
@@ -65,17 +66,38 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
       this.placeholder = config.customPlaceholder;
     }
 
+    // 🔧 改進:處理字串格式的日期
     if (this.control.value && typeof this.control.value === 'string') {
-      this.control.setValue(new Date(this.control.value));
+      try {
+        const dateValue = new Date(this.control.value);
+        if (!isNaN(dateValue.getTime())) {
+          this.control.setValue(dateValue, { emitEvent: false });
+        }
+      } catch (error) {
+        console.warn('日期格式轉換失敗:', this.control.value);
+      }
     }
+
+    // 監聽 control 值變化
+    this.valueChangeSubscription = this.control.valueChanges.subscribe(() => {
+      this.cdr.markForCheck();
+    });
+
+    this.cdr.markForCheck();
   }
+
   onClose() {
-    if (this.readonly) return; // 唯讀模式下不處理事件
+    //readonly 模式下也允許觸發事件(用於初始化載入)
     this.calendarEvent.emit(this.control.value);
   }
-  // dateTimeOne
+
   onInput(event: any) {
-    if (this.readonly) return; // 唯讀模式下不處理事件
+    // 只有在用戶手動輸入時才阻止 readonly
+    if (this.readonly) {
+      event.preventDefault();
+      return;
+    }
+
     if (this.calendarType === 'timeOne') {
       if (event.target.value.length === 2 && event.data && event.target.value.indexOf(':') === -1) {
         event.target.value = event.target.value + ':';
@@ -111,16 +133,13 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     const date = this.control.value;
     if (!(date instanceof Date)) return date.toString();
 
-    // 輔助函數：補零
     const padZero = (num: number): string => num.toString().padStart(2, '0');
 
     switch (this.calendarType) {
       case 'dateOne':
-        // 使用手動格式化確保補零：2025/09/01
         return `${date.getFullYear()}/${padZero(date.getMonth() + 1)}/${padZero(date.getDate())}`;
 
       case 'timeOne':
-        // 確保時間格式補零：14:30 或 14:30:00
         {
           const hours = padZero(date.getHours());
           const minutes = padZero(date.getMinutes());
@@ -129,7 +148,6 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
         }
 
       case 'dateTimeOne':
-        // 日期時間組合：2025/09/01 14:30:00
         {
           const dateStr = `${date.getFullYear()}/${padZero(date.getMonth() + 1)}/${padZero(date.getDate())}`;
           const timeStr = this.showSeconds
@@ -139,11 +157,9 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
         }
 
       case 'dateMonthOne':
-        // 年月格式：2025/09
         return `${date.getFullYear()}/${padZero(date.getMonth() + 1)}`;
 
       case 'dateYearOne':
-        // 年份格式：2025
         return date.getFullYear().toString();
 
       default:
@@ -151,8 +167,6 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     }
   }
 
-
-  // 新增：取得 calendar 的 CSS 類別
   get calendarClasses(): string {
     const classes = ['w-full'];
 
@@ -165,5 +179,11 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     }
 
     return classes.join(' ');
+  }
+
+  ngOnDestroy() {
+    if (this.valueChangeSubscription) {
+      this.valueChangeSubscription.unsubscribe();
+    }
   }
 }

@@ -20,6 +20,7 @@ import { NgStyle } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { getCurrentPeriodCode } from '@shared/models/system/query-form.model';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-fin11200',
@@ -48,12 +49,14 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   queryForm = this.formBuilder.group({
     GUI_YY: [new Date(), [Validators.required]], // 發票年月
     GUI_MM: [getCurrentPeriodCode, [Validators.required]], // 發票年月
-    ECR_No: [null], // 收銀機號
+    ECR_NoList: [null], // 收銀機號
+    GUI_StatusList: [null], // 發票狀態
     ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   monthOptions = monthOptions;
   POS_NOSOptions: { value: string; label: string; }[] = [];
+  GUI_StatusOptions = getSYS1000Options('GUI_Status');
   data: Pos1018[] = [];
   selectedRows: Pos1018[] = [];
   columns: Column[] = columns;

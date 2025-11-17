@@ -46,14 +46,25 @@
         </div>
 
         <div class="grid p-fluid">
-          <!-- 狀況(For匯總) -->
-          <div style="padding: 0.5rem;width: auto;">
-            <app-radiobutton groupname="status" label="狀況(For匯總)" controlName="status" [options]="statusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted">
+          <!-- 狀況 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton groupname="status" label="狀況" controlName="status" [options]="statusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted"
+              (valueChange)="queryForm.controls.report_type.setValue('0')">
+            </app-radiobutton>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <!-- 彙總報表類型 -->
+          <div style="padding: 0.5rem;width: auto;" *ngIf="queryForm.controls.status.value === '1'">
+            <app-radiobutton groupname="report_type" label="彙總報表類型" controlName="report_type"
+              [options]="reportTypeOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.report_type" [submitted]="submitted">
             </app-radiobutton>
           </div>
           <!-- 會計科目 -->
-          <div class="col-12 md:col-6 lg:col-4" *ngIf="queryForm.controls.status.value === '3'">
+          <div class="col-12 md:col-6 lg:col-4"
+            *ngIf="queryForm.controls.status.value === '1' && queryForm.controls.report_type.value === '3'">
             <app-multi-select label="會計科目" controlName="AccNo" [control]="queryForm.controls.AccNo"
               [submitted]="submitted" [options]="accNoOptions" optionLabel="Name" optionValue="No">
             </app-multi-select>
@@ -108,6 +119,16 @@
             </app-multi-select>
           </div>
         </div>
+
+        <div class="grid p-fluid">
+          <span class="col-12 m-0 mt-2 border-top-1 surface-border"></span>
+          <div class="col-12">
+            <p-checkbox class="mr-2" [binary]="true" label="只顯示負值(只適用於專櫃統計)" formControlName="ShowNeg1">
+            </p-checkbox>
+            <p-checkbox [binary]="true" label="只顯示當月應收為負值" formControlName="ShowNeg2">
+            </p-checkbox>
+          </div>
+        </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -117,9 +138,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS2D040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
+  <app-customFooter-table tableKey="TLS2D040" [data]="data" [columns]="columns" [showCheckBox]="false"
+    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showManage]="false">
-  </app-table>
+    [loading]="loading" [showManage]="false" [apiUrl]="'queryTLS2D040_Detail'" [footerData]="footerData"
+    [showTotal]="true">
+  </app-customFooter-table>
 </div>

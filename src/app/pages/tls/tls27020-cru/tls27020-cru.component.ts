@@ -9,7 +9,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InsertTLS27020, TLS27020Data, TLS27020Service, UpdateTLS27020 } from '@service/api/tls/tls27020.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropDownListService, ITalentOption } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { combineLatest, distinctUntilChanged, filter, finalize } from 'rxjs';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -28,12 +28,11 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     TLT_NO: [''], // 專櫃編號
     TLT_Name: [{ value: '', disabled: true }], // 櫃位名稱
     magneticCard: [''], // 磁卡編號 目前資料庫沒有
-    ACT_PayAmt_ori: [{ value: '', disabled: true }], /*顯示用金額*/
-    ACT_PayAmt: [null, [Validators.max(99999999), Validators.required]], /*實際金額*/
-    MOD_PayAmt: [null],
+    PayAmt: [{ value: '', disabled: true }], /*顯示用金額*/
+    MOD_PayAmt: [null, [Validators.max(99999999), Validators.required]], /*實際金額*/
   });
   now = new Date();
-  TLTTALENT_DropDownList: { No: string, Name: string, label: string }[] = [];
+  TLTTALENT_DropDownList: ITalentOption[] = [];
   ECR_NoOptions: { No: string, Name: string, label: string }[] = [];
   IsExist = false;
   constructor(
@@ -47,16 +46,18 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    this.dropDownList.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+    this.dropDownList.queryTLTTALENTDropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.TLTTALENT_DropDownList = res.Data.map(item => ({
-        ...item, label: `${item.No} - ${item.Name}`
+        ...item,
+        label: `${item.tlt_no}-${item.tlt_name}`,
+        No: item.tlt_no,
+        Name: item.tlt_name
       }));
       const selectedItem = this.TLTTALENT_DropDownList.find(item => item.No === this.rowdata?.TLT_NO)?.Name ?? '';
       this.dataForm.controls.TLT_Name.setValue(selectedItem);
       this.dataForm.controls.TLT_Name.disable({ emitEvent: false });
       this.dataForm.controls.TLT_NO.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
         const selectedItem = this.TLTTALENT_DropDownList.find(item => item.No === value)?.Name ?? '';
-
         this.dataForm.controls.TLT_Name.setValue(selectedItem);
         this.dataForm.controls.TLT_Name.disable({ emitEvent: false });
       });
@@ -95,11 +96,16 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
         : this.tLS27020Service.updateTLS27020(this.updateTLS27020(frm));
       serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
         next: (res) => {
-          this.messageService.successBubble(res.Message);
-          if (this.isFormCreateable) {
-            this.dataForm.reset();
-          } else if (this.isFormEditable) {
-            this.onCancel();
+          if(res.Data){
+            this.messageService.successBubble(res.Message);
+            if (this.isFormCreateable) {
+              this.dataForm.reset();
+            } else if (this.isFormEditable) {
+              this.onCancel();
+            }
+          }
+          else{
+            this.messageService.warnBubble(res.Message);
           }
         },
       });
@@ -109,19 +115,18 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     return {
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
       ...frm.value,
-      ACT_PayAmt_ori: this.isFormCreateable ? undefined : frm.getRawValue().ACT_PayAmt_ori,
-      MOD_PayAmt: this.isFormCreateable ? undefined : frm.getRawValue().MOD_PayAmt,
-      magneticCard: undefined,
+      ACT_PayAmt: frm.getRawValue().MOD_PayAmt,
+      magneticCard: undefined, //! 磁卡編號 目前資料庫沒有
+      Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || null,
     }
   }
   updateTLS27020(frm: FormGroup): UpdateTLS27020 {
     return {
       id: this.rowdata?.id ?? 0,
       ...frm.value,
-      ACT_PayAmt_ori: this.rowdata?.ACT_PayAmt_ori ?? 0,
-      BOOK_PayAmt: this.rowdata?.BOOK_PayAmt ?? 0,
-      ACT_PayAmt: frm.getRawValue().ACT_PayAmt,
       MOD_PayAmt: frm.getRawValue().MOD_PayAmt,
+      BOOK_PayAmt: this.rowdata?.BOOK_PayAmt,
+      Talent_ID: this.TLTTALENT_DropDownList.find(item => item.No === frm.getRawValue().TLT_NO)?.talent_id || null,
     };
   }
 }

@@ -60,8 +60,7 @@ export class CPM11020CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '510002';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {

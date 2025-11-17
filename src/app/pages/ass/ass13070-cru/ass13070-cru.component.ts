@@ -18,11 +18,11 @@ import { NgIf } from '@angular/common';
 
 //3.1.3.7  財產保管單位設定作業 CRU
 @Component({
-    selector: 'app-ass13070-cru',
-    templateUrl: './ass13070-cru.component.html',
-    styleUrl: './ass13070-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass13070-cru',
+  templateUrl: './ass13070-cru.component.html',
+  styleUrl: './ass13070-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS13070CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
@@ -61,8 +61,7 @@ export class ASS13070CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310022';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.userCodeService.getUserCode().subscribe(data => {
       this.userCodeOptions = data;

@@ -98,7 +98,7 @@ export class TLS55040CRUComponent {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.warehouseService.getWarehouseOptions().subscribe(data => this.warehouseOptions = data);
     this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
     this.saleslistStatusService.getSalesStatusOptions().subscribe(data => this.salesStatusOptions = data);

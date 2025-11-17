@@ -11,10 +11,8 @@ import { apiOption } from '@shared/models/sys/sysb000.model';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer } from '@angular/platform-browser';
 import { Fin14040Service } from '@service/api/fin/fin14040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 // 形成媒體申報檔
@@ -72,7 +70,7 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
       {
         "mid": this.queryForm.get("Mid")?.value,
         "STO_No": this.queryForm.get("STO_No")?.value
-      }).subscribe({
+      }).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
           this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string }) => ({
@@ -104,8 +102,7 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
       // TDS1001沒資料所以txt都是空的
 
       this.fin14040Service.printFIN14040(body)
-        .pipe(untilDestroyed(this))
-        .subscribe({
+        .pipe(untilDestroyed(this)).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
             console.log('形成媒體申報檔 response', response.Data);
@@ -113,7 +110,6 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
             // 下載壓縮檔
             if (response.Data.ZipUrl) {
               window.open(environment.BaseUrl + response.Data.ZipUrl, '_blank');
-
               this.loading = false; 
             }
             }

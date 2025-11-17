@@ -20,30 +20,27 @@
                           controlName="pod_no"
                           [control]="qf().pod_no"
                           [disabled]="false"
-                          [submitted]="submitted">
-          </app-input-text>
+                          [submitted]="submitted"></app-input-text>
           <app-input-text class="col-12 md:col-6 lg:col-8"
                           label="活動名稱"
                           controlName="pod_desc"
                           [control]="qf().pod_desc"
                           [disabled]="false"
-                          [submitted]="submitted">
-          </app-input-text>
+                          [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="grid p-fluid">
           <app-calendar-range class="col-12 md:col-6 lg:col-4"
                               calendarType="dateRange"
                               label="活動起始日期"
+                              controlName="pod_date"
                               [startControl]="qf().pod_sdate"
                               [endControl]="qf().pod_edate"
-                              [submitted]="submitted">
-          </app-calendar-range>
+                              [submitted]="submitted"></app-calendar-range>
           <app-calendar class="col-12 md:col-6 lg:col-4"
                         label="活動正檔日期"
                         controlName="pod_busdate"
                         [control]="qf().pod_busdate"
-                        [disabled]="false"
                         [submitted]="submitted"></app-calendar>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -58,20 +55,20 @@
 </div>
 
 <div class="card">
-  <app-table [showCheckBox]="true"
+  <app-table [showCheckBox]="!0"
              [editDisabled]="editDisabled"
              [isRowSelectable]="isRowSelectable"
              (edit)="onEdit($event)"
              (detail)="onDetail($event)"
              (delete)="onDelete($event)"
-             [selectedItems]="selectedItems"
-             (selectionChange)="selectedItems = $event"
+             [selectedItems]="selectedItems()"
+             (selectionChange)="selectedItems.set($event)"
              [tableKey]="'TLS26080'"
-             [data]="service.TLS26080Data()"
+             [data]="tableData()"
              [dataKey]="'pod_no'"
              [columns]="columns"
              [totalRecords]="totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-             [lazy]="true"
-             [loading]="service.tableLoading"></app-table>
+             [lazy]="!0"
+             [loading]="service.tableLoading()"></app-table>
 </div>

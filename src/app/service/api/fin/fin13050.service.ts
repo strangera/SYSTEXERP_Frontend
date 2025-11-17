@@ -37,6 +37,13 @@ export interface VendorItem {
   Uniform?: string;
 }
 
+export interface VendorNoOption {
+  label: string;     // ex: "000123 台灣某某股份有限公司"
+  value: string;     // VEN_No
+  venName?: string;  // VEN_Name
+  venUniform?: string; // VEN_Uniform
+}
+
 /** 統一編號下拉用（可直接回填 VenNo/VenName） */
 export interface VendorOption {
   label: string;     // 顯示「統編 名稱」
@@ -174,4 +181,28 @@ export class FIN13050Service {
         })
       );
   }
+  queryVendorNoOptions(keyword = ''): Observable<VendorNoOption[]> {
+  return this.queryVendorList(keyword ? { keyword } : {})
+    .pipe(
+      map(res => {
+        const list = Array.isArray(res?.Data) ? res.Data : [];
+        const seen = new Set<string>();
+        const options: VendorNoOption[] = [];
+        for (const v of list) {
+          const no = (v.VEN_No ?? '').toString().trim();
+          const name = (v.VEN_Name ?? '').toString().trim();
+          const uni = (v.VEN_Uniform ?? '').toString().trim();
+          if (!no || seen.has(no)) continue;
+          seen.add(no);
+          options.push({
+            label: name ? `${no} ${name}` : no,
+            value: no,
+            venName: name,
+            venUniform: uni,
+          });
+        }
+        options.sort((a, b) => a.label.localeCompare(b.label));
+        return options;
+      })
+    );}
 }

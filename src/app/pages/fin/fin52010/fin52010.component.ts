@@ -1,253 +1,128 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ChangeDetectionStrategy, Component, computed, effect, OnInit } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN52010Service } from '@service/api/fin/fin52010.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { NGXLogger } from 'ngx-logger';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize, tap } from 'rxjs';
+import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 
 @Component({
   selector: 'app-fin52010',
   templateUrl: './fin52010.component.html',
   styleUrl: './fin52010.component.scss',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
-    CalendarComponent,
-    DropdownComponent,
-    CalendarRangeComponent,
-    ButtonComponent,
-    TableComponent,
     TranslateModule,
+    ButtonComponent,
+    CalendarComponent,
+    CalendarRangeComponent,
+    DropdownComponent,
+    InputTextComponent,
+    MenubarComponent,
   ],
 })
-export class FIN52010Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
-  queryForm = this.formBuilder.group({
-    systemYear: [], // 系統年結年度
-    accountingStartMonth: [], // 系統開帳年月
-    accountingEndMonth: [], // 系統關帳年月
-    defaultVoucherDate: [], // 傳票日期預設
-    defaultOrganization: [, Validators.required], // 預設組織
-    accumulatedProfitLossAccount: [], // 累積盈虧科目
-    currentProfitLossAccount: [], // 本期損益科目
-    cashAccount: [], // 現金科目
-    accountsReceivableAccount: [], // 應收帳款科目
-    accountsPayableAccount: [], // 應付帳款科目
-    inputTaxAccount: [], // 進項稅額科目
-    outputTaxAccount: [], // 銷項稅額科目
-    postAndTelecomFeeAccount: [], // 郵電費科目
-    discountRate: [], // 貼現日利率
-    discountFeeRevenueAccount: [], // 貼現手續費收入科目
-    discountOutputTaxAccount: [], // 貼現銷項稅額科目
-    startdate: [], // 貼現銷項稅額科目起始日
-    enddate: [], // 貼現銷項稅額科目結束日
-    bankTransferFeeAccount: [], // 銀行匯款手續費科目
-    advanceExpenseAccount: [], // 預支費用科目
-    billTransferCondition: [], // 應付票據是否需領用才拋轉傳票
+export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> implements OnInit {
+
+  public readonly dataForm = this.formBuilder.nonNullable.group({
+    AccYear: new FormControl<string | void>(void 0, [Validators.required]),
+    OpenDate: new FormControl<Date | void>(void 0, [Validators.required]),
+    OriOpenDate: new FormControl<string | void>(void 0),
+    CloseDate: new FormControl<Date | void>(void 0, [Validators.required]),
+    OriCloseDate: new FormControl<string | void>(void 0),
+    DefaultVouDate: new FormControl<Date | void>(void 0),
+    ORG_ID: new FormControl<string | void>(void 0, [Validators.required]),
+    AccNoTotPL: new FormControl<string | void>(void 0, [Validators.required]),
+    AccNoCurPL: new FormControl<string | void>(void 0, [Validators.required]),
+    CashAccNo: new FormControl<string | void>(void 0),
+    AccNoAR: new FormControl<string | void>(void 0),
+    AccNoAP: new FormControl<string | void>(void 0),
+    AccNoInTax: new FormControl<string | void>(void 0),
+    AccNoOutTax: new FormControl<string | void>(void 0),
+    AccNoPost: new FormControl<string | void>(void 0),
+    AccNoRemitFee: new FormControl<string | void>(void 0),
+    advanceExpenseAccNo: new FormControl<string | void>(void 0),
+    billTransferCon: new FormControl<'N' | 'Y'>('N'),
+  });
+  public readonly df = computed(() => this.dataForm.controls);
+
+  public readonly canSave = computed(() => {
+    return this.dataForm.valid;
   });
 
+  public readonly dataEffect = effect(() => {
+    const orgUsr = this.service.orgUsrList();
+    const gls1005 = this.service.gls1005List();
+    const { OpenDate, CloseDate, ...rest } = this.service.FIN52010Data();
 
-  // Dropdown options
+    if (!orgUsr.length || !gls1005.length) return;
+    const orgLoading = this.service.orgUsrLoading();
+    const gls1005Loading = this.service.gls1005Loading();
 
-  departmentOptions: any[] = [
+    if (orgLoading || gls1005Loading) return;
+    this.dataForm.patchValue({
+      ...rest,
+      OpenDate: OpenDate ? new Date(+OpenDate.slice(0, 4), +OpenDate.slice(4, 6) - 1, 1) : void 0,
+      CloseDate: CloseDate ? new Date(+CloseDate.slice(0, 4), +CloseDate.slice(4, 6) - 1, 1) : void 0,
+      OriOpenDate: OpenDate,
+      OriCloseDate: CloseDate,
+      // advanceExpenseAccNo: res.advanceExpenseAccNo,
+      // billTransferCon: res.billTransferCon as 'N' | 'Y',
+    });
+  }, { allowSignalWrites: !0 });
 
-  ];
-
-  accountOptions: any[] = [
-    { value: '1101', label: '1101_累積盈虧科目1' },
-    { value: '1102', label: '1102_累積盈虧科目2' },
-    { value: '1103', label: '1103_累積盈虧科目3' }
-  ];
-
-  accountingaccountOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' }
-  ];
-
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' }
-  ];
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' }
-  ];
-
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' }
-  ];
-
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: 'EC暫估應付供應商貨款' },
-    { value: 2, label: 'EC應收供應商扣款' },
-    { value: 3, label: 'EC應付供應商貨款' },
-    { value: 4, label: 'EC成本結轉' }
-  ];
-
-  SubpoenastatusOptions: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' }
-  ];
-
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' }
-  ];
-
-  // Table data
-  data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
-    // Other data
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'name', header: 'Name', visible: true },
-    { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
-    // Other columns
-  ];
-  // TypeScript Options
-
-
-
-
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.dataLoading()
+      || this.service.orgUsrLoading()
+      || this.service.gls1005Loading();
+  });
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService
+    public readonly service: FIN52010Service,
+    private readonly logger: NGXLogger,
   ) {
-    super(); // 呼叫父類建構子
+    super();
+    this.user = this.authService.getUserInfo();
   }
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  ngOnInit(): void {
-    this.ProgNo = '150007';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
+  public ngOnInit(): void {
+    this.initializePage('FIN52010', void 0, this.dataForm);
+
+    this.service.getTblUsrOrgList();
+    this.service.getGLS1005DropDownList();
+    this.service.loadFIN52010(this.user!.CompNo);
+
+    this.logger.debug(`init:`, [this.user]);
+  }
+
+  onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
+      const { OriOpenDate, OriCloseDate, ...rest } = this.dataForm.value;
+      const payload = <FIN52010UpdatePayload>{
+        ...rest,
+        AccYear: this.df().AccYear.value,
+        OpenDate: OriOpenDate,
+        CloseDate: OriCloseDate,
+        CompNo: this.user!.CompNo,
+      };
+
+      this.logger.debug(`onSubmit:`, [rest, payload]);
+
+      this.service.updateFIN52010Data(payload).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
       });
-    // this.accountingaccountService.getOptions().subscribe((data) => {
-    //   this.accountingaccountOptions = data;
-    // });
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
+    });
+  };
 }

@@ -92,7 +92,6 @@ export class TLS21050Component {
   ) { }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.floorService.getFloors().subscribe((data) => {
       this.floorOptions = data;
     });

@@ -1,155 +1,200 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+
 import { TranslateModule } from '@ngx-translate/core';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
+import { finalize, Observable } from 'rxjs';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 2.2.18.2 大分類換開品項維護作業
 @Component({
-    selector: 'app-tls2j020',
-    templateUrl: './tls2j020.component.html',
-    styleUrl: './tls2j020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2j020',
+  templateUrl: './tls2j020.component.html',
+  styleUrl: './tls2j020.component.scss',
+  standalone: true,
+  imports: [DropdownComponent, MultiSelectComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableReportComponent, TranslateModule]
 })
-export class TLS2J020Component {
-  ProgNo: string = '220091';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    industry: ['', [Validators.maxLength(5)]], // 大分類
-    name: ['', [Validators.maxLength(5)]], // 品項名稱
-    tax: ['', [Validators.maxLength(1)]], // 稅別
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+export class TLS2J020Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    CHG_ItemName: ['', [Validators.maxLength(10)]],
+    bus_type: [[]],
+    Item_TaxType: [['1']],
+    ...createPaginationConfig([{ field: 'id', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+
+  selectedItems: any[] = [];
+  totalRecords = 0;
+  data: any[] = [];
+  deleteLoading = false;
+  busTypeOptions: any[] = [];
+  Item_TaxType_Option = [
+    { label: '免稅', value: '0' },
+    { label: '應稅', value: '1' }
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '大分類', visible: true },
-    { field: 'contactDate', header: '品項名稱', visible: true },
-    { field: 'UID', header: '稅別', visible: true },
+  columns: ReportColumn[] = [
+    { field: 'id', header: 'ID', visible: false },
+    {
+      field: 'bus_type',
+      header: '大分類',
+      visible: true,
+      format: (value: any, index?: number, rowData?: any) => {
+        return rowData?.bus_type && rowData?.bus_type_name
+          ? `${rowData.bus_type}-${rowData.bus_type_name}`
+          : value || '';
+      }
+    },
+    { field: 'CHG_ItemName', header: '品項名稱', visible: true },
+    { field: 'Item_TaxType_Desc', header: '稅別', visible: true },
     // 其他欄位
   ];
-  // ----------------------------------------------------------------
+
+  lastQueryBody: any = {};
+
+  queryFunction = (body: any): Observable<any> => {
+    return this.tls2j020Service.queryTLS2J020(body);
+  };
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private dropDownListService: DropDownListService,
+    private tls2j020Service: TLS2J020Service
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS2J020', '/TLS/TLS2J020CRU', this.queryForm, (frm) => this.onSubmit(frm));
+    this.loadOptions();
+  }
+  loadOptions() {
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.busTypeOptions = response.Data.map((item: any) => ({ Name: `${item.No}-${item.Name}`, No: item.No }));
+      });
+  }
+  /** 查詢 */
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const v = frm.value;
+      const payload = {
+        bus_type: v.bus_type?.length ? v.bus_type : [],
+        CHG_ItemName: v.CHG_ItemName?.trim() || '',
+        Item_TaxType: v.Item_TaxType?.length ? v.Item_TaxType : [],
+        pageSize: 30,
+        pageIndex: 1,
+      };
+
+      this.lastQueryBody = {
+        bus_type: v.bus_type?.length ? v.bus_type : [],
+        CHG_ItemName: v.CHG_ItemName?.trim() || '',
+        Item_TaxType: v.Item_TaxType?.length ? v.Item_TaxType : [],
+        pageSize: 30,
+        pageIndex: 1,
+      };
+
+      this.loading = true;
+      this.tls2j020Service
+        .queryTLS2J020(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.data = res.Data || [];
+              this.totalRecords = res.TotalCount || this.data.length;
+              // 儲存查詢狀態
+              this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+            } else {
+              this.messageService.errorBubble(res.Message || '查詢失敗');
+              this.data = [];
+              this.totalRecords = 0;
+            }
+          },
+        });
+    });
   }
 
-  canQuery(): boolean {
-    return true;
+  /** 詳細查看 */
+  override onDetail(data: any) {
+    this.navigateWithState(CRUDStatus.Read, data);
   }
 
-  canAdd(): boolean {
-    return true;
+  /** 刪除功能 */
+  onDelete(): void {
+    if (this.selectedItems.length === 0) {
+      this.messageService.warnBubble('請先選擇要刪除的資料');
+      return;
+    }
+    const selectedIds = this.selectedItems.map(item => item.id);
+    const confirmMessage = `確定要刪除所選的 ${this.selectedItems.length} 筆資料嗎？`;
+
+    this.confirmationService.confirm({
+      message: confirmMessage,
+      header: '確認刪除',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        this.executeDelete(selectedIds);
+      }
+    });
+  }
+  /** 執行刪除 */
+  private executeDelete(idList: number[]): void {
+    const body = { idList };
+    this.deleteLoading = true;
+    this.tls2j020Service.deleteTLS2J020(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.deleteLoading = false)
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.messageService.successBubble('刪除成功');
+            this.selectedItems = [];
+            // 刪除成功後重新查詢資料
+            if (this.lastQueryBody && Object.keys(this.lastQueryBody).length > 0) {
+              this.refreshData();
+            }
+          } else {
+            this.messageService.errorBubble(`刪除失敗：${response.Message || '系統錯誤'}`);
+          }
+        },
+      });
   }
 
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
+  /** 重新整理資料 */
+  private refreshData(): void {
     this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
+    this.tls2j020Service
+      .queryTLS2J020(this.lastQueryBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+          } else {
+            this.messageService.errorBubble(res.Message || '重新查詢失敗');
+          }
         },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2J020CRU'], extras);
-    }
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2J020CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2J020CRU'], extras);
-  }
 }

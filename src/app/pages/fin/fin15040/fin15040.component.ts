@@ -2,28 +2,25 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
-
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { FIN15040Service, FIN15040QueryRequest, FIN15040PrintRequest, FIN15040Data } from '@service/api/fin/fin15040.service';
 import { environment } from '../../../../environments/environment';
-
-// Components
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 export interface Option {
   label: string;
@@ -36,9 +33,20 @@ export interface Option {
   styleUrl: './fin15040.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent, CommonModule, MultiSelectComponent
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextRangeComponent,
+    CalendarRangeComponent,
+    InputTextComponent,
+    TranslateModule,
+    DropdownComponent,
+    CalendarComponent,
+    CommonModule,
+    MultiSelectComponent,
+    CustomFooterTableComponent
   ]
 })
 export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> implements OnInit {
@@ -76,6 +84,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   data: FIN15040Data[] = [];
   selectedItems: FIN15040Data[] = [];
   btnLoading = false;
+  footerData: any[] = [];
 
   columns: Column[] = [
     { field: 'INV_GUIType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
@@ -85,16 +94,17 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { field: 'INV_YM1', header: '資料所屬年月', visible: true },
     { field: 'INV_YM2', header: '申報年月', visible: true },
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
-    { field: 'TXN_Net', header: '發票金額', visible: true, format: formatAmount },
-    { field: 'TXN_Tax', header: '發票稅額', visible: true, format: formatAmount },
-    { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: formatAmount },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'TXN_Net', header: '發票金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_Tax', header: '發票稅額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PLU_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'AssetType', header: '資產註記', visible: true, format: v => getSYS1000('AssetType', v) },
   ];
 
-  //#region 
+  //#region
   // TDS1007
   invoiceFormatOptions: Option[] = [];   // 發票格式
   guiTrackOptions: Option[] = [];        // 字軌
@@ -153,6 +163,12 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
           this.data = res.Data.QueryData;
+          this.footerData = [{
+            group_name: '合計',
+            TXN_Net: res.Data.TotalNet,
+            TXN_Tax: res.Data.TotalTax,
+            TXN_SaleAmt: res.Data.TotalAmt
+          }];
           this.totalRecords = res.Data.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });

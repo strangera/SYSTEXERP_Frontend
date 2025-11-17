@@ -25,11 +25,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.4.2 保留款沖款維護
 @Component({
-    selector: 'app-fin24020',
-    templateUrl: './fin24020.component.html',
-    styleUrl: './fin24020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, CalendarRangeComponent, InputNumberRangeComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-fin24020',
+  templateUrl: './fin24020.component.html',
+  styleUrl: './fin24020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, CalendarRangeComponent, InputNumberRangeComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class FIN24020Component extends BasicQpageComponent implements OnInit {
   //
@@ -93,7 +93,6 @@ export class FIN24020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '120015';
     this.cruPage = '/FIN2000/FIN24020CRU';
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     //
     this.vendorService.getVendors().subscribe(data => {

@@ -2,18 +2,17 @@ import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
+import { ASS21010Service } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
-import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
+import { tap } from 'rxjs';
+import { ASS21010Data, ASS21010Payload, EngType } from '../ass21010/ass21010.model';
 
 @Component({
   selector: 'app-ass21010-cru',
@@ -35,18 +34,15 @@ import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
 export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> implements OnInit {
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENG_Type: new FormControl<EngType | undefined>(void 0, [Validators.required]),
-    ENG_MeterNo: new FormControl<string | undefined>(void 0, [Validators.required, Validators.minLength(5), Validators.maxLength(5)]),
-    Location_No: new FormControl<string | undefined>(void 0, [Validators.required]),
-    ENG_Remark: new FormControl<string>('', [Validators.maxLength(500)]),
+    ENG_Type: new FormControl<EngType>(EngType.水, [Validators.required]),
+    ENG_MeterNo: new FormControl<string | void>(void 0, [Validators.required, Validators.minLength(5), Validators.maxLength(5)]),
+    Location_No: new FormControl<string | void>(void 0, [Validators.required]),
+    ENG_Remark: new FormControl<string | void>(void 0, [Validators.maxLength(500)]),
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  // 變化追蹤
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly locationSignal = toSignal(this.df().Location_No.valueChanges);
-
-  public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
 
   /** 能源類型變更處理 */
   public readonly engTypeEffect = effect(() => {
@@ -62,6 +58,12 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
     this.logger.debug(`Location changes:`, [locations]);
   });
 
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.engMeterNoLoading()
+      || this.service.locationLoading();
+  });
+
   constructor(
     public readonly service: ASS21010Service,
     private readonly logger: NGXLogger,
@@ -72,14 +74,12 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
   ngOnInit(): void {
     this.initializePage('ASS21010', this.dataForm);
 
-    this.service.loadEngType();
     this.service.loadLocationNo();
 
     this.logger.debug(`init:`, [this.user, this.rowdata, this.crudstatus]);
 
-    if (this.crudstatus !== CRUDStatus.Create && this.rowdata) {
+    if (this.isFormCreateable && this.rowdata)
       Reflect.has(this.rowdata, 'Location_No') && this.df().Location_No.setValue(this.rowdata.Location_No);
-    }
   }
 
   public onSubmit(): void {
@@ -96,11 +96,11 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
       };
 
       this.service.updateASS21010(payload).pipe(
-        tap(() => this.isFormCreateable ? this.dataForm.reset() : this.onCancel()),
-        finalize(() => {
-          this.loading = !1;
-          this.logger.debug(`onSubmit:`, [d, payload]);
-        })).subscribe();
+        tap(({ Status }) => Status === '0000' && this.onCancel())
+      ).subscribe({
+        next: () => this.messageService.successBubble('更新成功'),
+        error: () => this.messageService.errorBubble('更新失敗'),
+      });
     });
   }
 }

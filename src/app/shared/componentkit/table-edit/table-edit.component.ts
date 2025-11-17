@@ -1,29 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { v4 as uuidv4 } from 'uuid';
-import { ChangeDetectionStrategy, AfterContentInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent } from 'primeng/table';
-import { TableUtilityService } from './table-edit-utility.service';
-import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 import { CommonModule } from '@angular/common';
+import { AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { SortMeta } from 'primeng/api';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextModule } from 'primeng/inputtext';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { TableModule } from 'primeng/table';
-import { TooltipModule } from 'primeng/tooltip';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { BreadcrumbModule } from "primeng/breadcrumb";
-import { validateRequired } from './validate-field.model';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { KeyFilterModule } from 'primeng/keyfilter';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
-import { SortMeta } from 'primeng/api';
-import { CalendarModule } from 'primeng/calendar';
+import { Table, TableColumnReorderEvent, TableModule, TableRowReorderEvent } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { v4 as uuidv4 } from 'uuid';
+import { TableUtilityService } from './table-edit-utility.service';
+import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
+import { validateRequired } from './validate-field.model';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -31,23 +32,25 @@ import { CalendarModule } from 'primeng/calendar';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
+    AutoCompleteModule,
+    BreadcrumbModule,
+    ButtonModule,
+    CalendarModule,
     CommonModule,
     DividerModule,
-    TableModule,
-    MultiSelectModule,
-    TooltipModule,
-    FormsModule,
-    ButtonModule,
     DropdownModule,
-    InputTextModule,
-    InputNumberModule,
-    AutoCompleteModule,
+    FileUploadModule,
+    FormsModule,
     IconFieldModule,
     InputIconModule,
-    BreadcrumbModule,
+    InputNumberModule,
+    InputTextModule,
+    KeyFilterModule,
+    MultiSelectModule,
+    OverlayPanelModule,
     SkeletonModule,
-    FileUploadModule,
-    CalendarModule
+    TableModule,
+    TooltipModule,
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
@@ -106,9 +109,15 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   //   }
   //   return { isValid: true, errorMessage: '' };
   // }
-  @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string }) | undefined = undefined;
+  @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string; }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
+  @Output() rowReorderData = new EventEmitter<TableRowReorderEvent>();      // row reorder 事件
   @Input() errorMessage = '至少輸入一筆資料'; // 錯誤訊息
+  // 總計
+  @Input() footerData: any;                  // (總計)頁尾資料
+
+  public readonly percentKeyFilter = /^(100(\.0{1,2})?|(\d{1,2})(\.\d*)?)$/; // 驗證百分比
+
   constructor(
     private readonly tableUtilityService: TableUtilityService,
     private readonly cdr: ChangeDetectorRef,
@@ -138,6 +147,11 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         this.insertRow();
       }
     }
+    // 處理 defaultInsertData 改變的邏輯：更新現有的新增候選行
+    if (changes['defaultInsertData']) {
+      // 確保在資料載入和初始化之後執行
+      this.updateCandidateRowDefaults();
+    }
   }
   // 輔助方法：計算單一列的欄位值
   private calculateRow(rowData: any): void {
@@ -158,6 +172,29 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     });
     this.dataChange.emit(this.data);
   }
+  /**
+   * 當 defaultInsertData 改變時，更新現有的「自動新增候選行」的預設值。
+   */
+  private updateCandidateRowDefaults(): void {
+    const candidateRow = this.data.find(item => item['_isAutoInsertCandidate'] === true);
+
+    if (candidateRow && this.defaultInsertData) {
+      const newDefaults = this.defaultInsertData;
+
+      // 遍歷新的 defaultInsertData，將其值覆蓋到候選行中
+      for (const key in newDefaults) {
+        if (Object.prototype.hasOwnProperty.call(newDefaults, key)) {
+          // 避免覆蓋內部關鍵狀態欄位，例如：
+          // dataKey, dataStatusField, _isAutoInsertCandidate
+          if (key !== this.dataKey && key !== this.dataStatusField && key !== '_isAutoInsertCandidate') {
+            candidateRow[key] = newDefaults[key];
+          }
+        }
+      }
+      // 由於是直接修改 this.data 裡的物件，需要手動觸發變更偵測
+      this.cdr.detectChanges();
+    }
+  }
   ngAfterContentInit(): void {
     // setTimeout(() => {
     //   if (!this.disabled && this.canInsert) {
@@ -169,7 +206,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
     event = event.filter((item: any) => !item._isAutoInsertCandidate);
-    this.selectionChange.emit(event)
+    this.selectionChange.emit(event);
   }
   // Insert 按鈕
   insertRow() {
@@ -183,30 +220,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
-  }
-  // Delete 按鈕
-  deleteRow(selectedItems: any) {
-    if (this.disabled) { return; }
-    const itemsToDelete = new Set(selectedItems.map((item: any) => item[this.dataKey])); // 取得所有要刪除的 ID
-    const updatedData = this.data.map(item => {
-      if (itemsToDelete.has(item[this.dataKey])) {
-        // 刪除時資料若為Original要將資料狀態改為Deleted
-        if (item[this.dataStatusField] === this.dataStatusValue.Original) {
-          return { ...item, [this.dataStatusField]: this.dataStatusValue.Deleted };
-        }
-        return null; // 刪除時資料若為New 直接刪除
-      }
-      return item;
-    }).filter(item => item !== null);
-    // data不包含狀態為已刪除資料
-    this.data = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
-    this.delete.emit(updatedData);
-    this.dataChange.emit(this.data);
-    this.selectedItems = [];
-    // 如果表格資料為空，自動插入一筆新資料
-    if (this.data.length === 0 && this.canInsert) {
-      this.insertRow();
-    }
+
   }
   // 處理 ngModelChange 事件，並發送給父元件
   onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
@@ -260,6 +274,54 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     // 由於數據綁定和驗證已經更新了 `this.data`，再次發送 `dataChange`
     this.dataChange.emit(this.data);
+  }
+  onDropdownHide(rowData: any, col: any) {
+    const currentValue = rowData[col.field];
+    if (col.type === 'dropdown') {
+      const options = this.getOptions(rowData, col) || [];
+      let isValidOption = false;
+      if (currentValue === null || currentValue === undefined) {
+        isValidOption = true;
+      } else {
+        const valueKey = col.optionValue || col.optionLabel; // 如果沒有 optionValue，可能 PrimeNG 會用 Label 來綁定
+        isValidOption = options.some((option: any) => {
+          if (valueKey && option[valueKey] === currentValue) {
+            return true;
+          }
+          if (!col.optionValue && typeof currentValue === 'object' && option === currentValue) {
+            return true;
+          }
+          return false;
+        });
+      }
+      if (!isValidOption) {
+        rowData[col.field] = null;
+      }
+    }
+  }
+  // Delete 按鈕
+  deleteRow(selectedItems: any) {
+    if (this.disabled) { return; }
+    const itemsToDelete = new Set(selectedItems.map((item: any) => item[this.dataKey])); // 取得所有要刪除的 ID
+    const updatedData = this.data.map(item => {
+      if (itemsToDelete.has(item[this.dataKey])) {
+        // 刪除時資料若為Original要將資料狀態改為Deleted
+        if (item[this.dataStatusField] === this.dataStatusValue.Original) {
+          return { ...item, [this.dataStatusField]: this.dataStatusValue.Deleted };
+        }
+        return null; // 刪除時資料若為New 直接刪除
+      }
+      return item;
+    }).filter(item => item !== null);
+    // data不包含狀態為已刪除資料
+    this.data = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
+    this.delete.emit(updatedData);
+    this.dataChange.emit(this.data);
+    this.selectedItems = [];
+    // 如果表格資料為空，自動插入一筆新資料
+    if (this.data.length === 0 && this.canInsert) {
+      this.insertRow();
+    }
   }
 
   validateAllRows(): boolean {
@@ -433,4 +495,16 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
+
+  /** 回傳完整data並去除最後一行新增的 */
+  get reorderData(): any[] {
+    return this.data.slice(0, -1);
+  }
+  /** 處理 Template input 顯示的值 */
+  public templateDisplayValue(rowData: any, col: EditColumn): string {
+    const displayField = col.templateDisplayField;
+    // console.log(`templateDisplayValue:`, [rowData, displayField]);
+
+    return displayField ? rowData[displayField] : rowData[col.field] || '';
+  };
 }

@@ -41,10 +41,11 @@ export class VendorCategoryOptionsService {
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({
           label: `${x.No} - ${x.Name} - ${x.VEN_No}`,
-          value: x.No,
-          Name: x.Name,                    // 廠商名稱
-          VEN_Address: x.VEN_Address,     // 廠商地址
-          ven_no: x.VEN_No                 // 廠商編號
+          value: x.VEN_No,        //  value 用 VEN_No (唯一識別)
+          VEN_No: x.VEN_No,
+          No: x.No,               //  統編
+          Name: x.Name,
+          VEN_Address: x.VEN_Address
         })) ?? [])
       );
   }

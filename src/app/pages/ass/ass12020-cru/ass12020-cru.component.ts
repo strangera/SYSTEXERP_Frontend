@@ -67,8 +67,7 @@ export class ASS12020CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310012';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.itemCodeService.getSystemTypes().subscribe(data => {
       this.itemCodeOptions = data;

@@ -9,7 +9,7 @@ export interface TLS26030QueryRequest extends BaseQueryRequest {
   Sale_DateStart?: string;      // 銷售日期(起) - ISO 8601 格式
   Sale_DateEnd?: string;        // 銷售日期(訖) - ISO 8601 格式
   tlt_building?: string[];      // 館別
-  Org_ID?: string[];            // 組織代號
+  Org_ID?: string[];            // 組織代碼
   Org_Name?: string;            // 組織名稱
   tlt_floor?: string[];         // 樓層
   SYS_StoreNo?: string;         // 店號
@@ -28,7 +28,7 @@ export interface TLS26030Data {
   CANCEL_TXN_No: string;        // 作廢交易序號
   TLT_No: string;               // 專櫃編號
   tlt_name: string;             // 專櫃名稱
-  ORG_ID: string;               // 組織代號
+  ORG_ID: string;               // 組織代碼
   Org_Name: string;             // 組織名稱
   Preorder_status: string;      // 預售狀態
   Recog_Amt: number;            // 認列金額

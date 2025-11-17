@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
+import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31070Request {
   TXN_DateS: string | Date;
@@ -11,9 +12,9 @@ export interface TLS31070Request {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
-  tlt_kind: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
+  tlt_kind: string[][]
   tlt_term_type: string[]
   org_id: string[]
   TaxType: string
@@ -33,8 +34,8 @@ export interface TLS31070DetailRequest {
   tlt_floor: string[]
   area_no: string[]
   bus_type: string[]
-  bus_class: string[]
-  bus_sclass: string[]
+  bus_class: string[][]
+  bus_sclass: string[][]
   tlt_kind: string[]
   tlt_term_type: string[]
   org_id: string[]
@@ -48,7 +49,7 @@ export interface TLS31070PrintDetailRequest extends TLS31070DetailRequest {
   IsExcel: boolean;
 }
 
-export interface TLS31070Response {
+export interface TLS31070Item {
   paper_type: string;
   paper_type_desc: string;
   
@@ -70,7 +71,7 @@ export interface TLS31070Response {
   CompletionRate: number;
 }
 
-export interface TLS31070DetailResponse {
+export interface TLS31070DetailItem {
   tlt_no: string;
   tlt_name: string;
 
@@ -89,6 +90,16 @@ export interface TLS31070DetailResponse {
   CompletionRate: number;
 }
 
+export interface TLS31070Response {
+  Data: TLS31070Item[];
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31070DetailResponse {
+  Data: TLS31070DetailItem[];
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -97,13 +108,31 @@ export class Tls31070Service {
   constructor(private http: HttpClient) { }
         
   // 查詢各組織之營業報表
-  queryTLS31070(body: TLS31070Request): Observable<ApiResponse<TLS31070Response[]>> {
-    return this.http.post<ApiResponse<TLS31070Response[]>>(`${this.apiUrl}/queryTLS31070`, body);
+  queryTLS31070(body: TLS31070Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31070`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.Data,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData 
+        };
+      })
+    );
   }
     
   // 查詢單組織展開之營業報表
-  queryTLS31070Detail(body: TLS31070DetailRequest): Observable<ApiResponse<TLS31070DetailResponse[]>> {
-    return this.http.post<ApiResponse<TLS31070DetailResponse[]>>(`${this.apiUrl}/queryTLS31070Detail`, body);
+  queryTLS31070Detail(body: TLS31070DetailRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31070Detail`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.Data,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData,
+        };
+      })
+    );
   }
       
   // 產出各組織之營業報表

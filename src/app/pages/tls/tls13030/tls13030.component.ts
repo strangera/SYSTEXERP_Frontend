@@ -1,12 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+  FormGroup,
+} from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { finalize, map } from 'rxjs/operators';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import {
+  createPaginationConfig,
+  LazyLoadEvent,
+} from '../../../shared/componentkit/table/table.model';
+
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
-import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
-import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
+
+// UI
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -15,9 +30,13 @@ import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { finalize, map } from 'rxjs/operators';
 
+// ✅ 自動取消訂閱
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { CounterNameService } from '@service/basic/counter-name.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+
+@UntilDestroy()
 @Component({
   selector: 'app-tls13030',
   templateUrl: './tls13030.component.html',
@@ -28,25 +47,32 @@ import { finalize, map } from 'rxjs/operators';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
+    // InputTextComponent,
     MultiSelectComponent,
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    DropdownComponent,
   ],
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
   // ===== 排序 / lazy 相關 =====
   sortMeta: any[] = [];
-  readonly defaultSort: any[] = [
-    // 與 createPaginationConfig 一致
-    { field: 'tlt_no', order: 1 },
-  ];
+  readonly defaultSort: any[] = [{ field: 'tlt_no', order: 1 }]; // 與 createPaginationConfig 一致
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
   private readonly includePagingAndSorting = true;
+
+  // ✅ 後端支援的排序欄位白名單（防止 groupKey 等未知欄位流入）
+  private readonly allowedSortFields = new Set<string>([
+    'tlt_no', 'tlt_name', 'tlt_building', 'location_no',
+    'floor_desc', 'area_desc', 'bus_type', 'bus_type_name',
+    'tlt_bdate', 'tlt_edate', 'cap_type', 'CAP_Name',
+    'tpy_bdate', 'tpy_edate', 'tpy_totalamt', 'down_payment',
+    'period_nos', 'tpy_amount', 'tpy_rate', 'org_id', 'org_name'
+  ]);
 
   isPrint = true;
   readonly yesterday: Date = (() => {
@@ -60,32 +86,32 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
   selectedItems: any[] = [];
 
-queryForm = this.formBuilder.group({
-  tlt_no: ['', [Validators.maxLength(10)]],
-  tlt_name: ['', [Validators.maxLength(50)]],
-  floor_noList: [[] as string[]],
-  area_noList: [[] as string[]],
-  tlt_openflagList: [[] as string[]],
-  tlt_bdate_start: [],
-  tlt_bdate_end: [],
-  tlt_edate_start: [null],
-  tlt_edate_end: [null],
-  cap_typeList: [[] as string[]],
-  cap_itemList: [[] as string[]],
-  tpy_bdate_start: [null],
-  tpy_bdate_end: [null],
-  tpy_edate_start: [null],
-  tpy_edate_end: [null],
-  bus_typeList: [[] as string[]],
-  tlt_building: ['', [Validators.maxLength(1)]],
-  SortBy: [[]],
-  org_idList: [[]],
-  // ✅ 統一用大寫分頁鍵（若你要初始為 0，就把 20/1 改成 0/0）
-  PageSize: [20],
-  PageIndex: [1],
-});
+  // ===== 表單 =====
+  queryForm = this.formBuilder.group({
+    tlt_no: ['', [Validators.maxLength(10)]],
+    tlt_name: ['', [Validators.maxLength(50)]],
+    floor_noList: [[] as string[]],
+    area_noList: [[] as string[]],
+    tlt_openflagList: [[] as string[]],
+    tlt_bdate_start: [],
+    tlt_bdate_end: [],
+    tlt_edate_start: [null],
+    tlt_edate_end: [null],
+    cap_typeList: [[] as string[]],
+    cap_itemList: [[] as string[]],
+    tpy_bdate_start: [null],
+    tpy_bdate_end: [null],
+    tpy_edate_start: [null],
+    tpy_edate_end: [null],
+    bus_typeList: [[] as string[]],
+    tlt_building: ['', [Validators.maxLength(1)]],
+    SortBy: [[]],
+    org_idList: [[]],
+    PageSize: [20],
+    PageIndex: [1],
+  });
 
-
+  // ===== 下拉選項 =====
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   operationStatusOptions: any[] = [];
@@ -94,9 +120,11 @@ queryForm = this.formBuilder.group({
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   organizationOptions: any[] = [];
+  CounterOptions: any[] = [];
 
+  // ===== 表格欄位 =====
   columns: any[] = [
-     {
+    {
       field: 'tlt_building',
       header: '館別',
       visible: true,
@@ -104,13 +132,10 @@ queryForm = this.formBuilder.group({
     },
     { field: 'floor_desc', header: '樓層', visible: true },
     { field: 'area_desc', header: '區域', visible: true, style: 'text-left' },
-     { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'org_name', header: '組織名稱', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-     { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'location_no', header: '位置編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-   
-    
-    
     { field: 'bus_type', header: '大分類代碼', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'tlt_bdate', header: '合約起始日', visible: true },
@@ -129,89 +154,114 @@ queryForm = this.formBuilder.group({
   ];
 
   constructor(
-
     private operationStatusService: OperationStatusService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
     private tls13030Service: TLS13030Service,
-
+    private counterNameService: CounterNameService,
   ) {
     super();
   }
 
+  // ===== 初始化 =====
   ngOnInit(): void {
     this.initializePage('TLS13030', '', this.queryForm);
-    // 初始化排序 UI 狀態
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
 
-    this.operationStatusService.getOperationStatuses().subscribe(data => this.operationStatusOptions = data);
-    this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
-    this.deductionService.getDeductionCategories().subscribe(data => this.deductionCategoryOptions = data);
-    this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
+    this.operationStatusService
+      .getOperationStatuses()
+      .pipe(untilDestroyed(this))
+      .subscribe(data => this.operationStatusOptions = data);
 
-    this.queryForm.controls.cap_typeList.valueChanges.subscribe((selectedCapTypes: string[] | null) => {
-      if (selectedCapTypes?.length) {
-        const payload = { cap_typeList: selectedCapTypes };
-        this.deductionService.getAPS1003DropDownList(payload).subscribe(res => {
-          this.deductionCodeNameServOptions = res?.map((x: any) => ({
-            label: `${x.value} - ${x.label}`,
-            value: x.value
-          })) || [];
+    this.bigCategoryCodeService
+      .getSystemTypes()
+      .pipe(untilDestroyed(this))
+      .subscribe(data => this.bus_typeOptions = data);
+
+    this.deductionService
+      .getDeductionCategories()
+      .pipe(untilDestroyed(this))
+      .subscribe(data => this.deductionCategoryOptions = data);
+
+    this.tls11010Service
+      .getBuildingOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => (this.BUILDING_NO_Options = res));
+
+    // 扣款類別 → 扣款代碼/名稱連動
+    this.queryForm.controls.cap_typeList.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((selectedCapTypes: string[] | null) => {
+        if (selectedCapTypes?.length) {
+          const payload = { cap_typeList: selectedCapTypes };
+          this.deductionService
+            .getAPS1003DropDownList(payload)
+            .pipe(untilDestroyed(this))
+            .subscribe(res => {
+              this.deductionCodeNameServOptions = res?.map((x: any) => ({
+                label: `${x.value} - ${x.label}`,
+                value: x.value
+              })) || [];
+              this.queryForm.controls.cap_itemList.setValue([]);
+            });
+        } else {
+          this.deductionCodeNameServOptions = [];
           this.queryForm.controls.cap_itemList.setValue([]);
-        });
-      } else {
-        this.deductionCodeNameServOptions = [];
-        this.queryForm.controls.cap_itemList.setValue([]);
-      }
-    });
-this.tls13030Service.getSYS3100DropDownList()
-  .pipe(
-    // 轉成 value-label 顯示
-    map(opts => opts.map(o => ({
-      value: o.value,
-      label: [o.value, o.label].filter(Boolean).join('-')  // 代碼-名稱
-    })))
-  )
-  .subscribe(opts => {
-    this.organizationOptions = opts;
-  });
+        }
+      });
+
+    // 組織下拉
+    this.tls13030Service
+      .getSYS3100DropDownList()
+      .pipe(
+        map(opts => opts.map(o => ({
+          value: o.value,
+          label: [o.value, o.label].filter(Boolean).join('-')
+        }))),
+        untilDestroyed(this)
+      )
+      .subscribe(opts => {
+        this.organizationOptions = opts;
+      });
+          this.counterNameService.getCounters().subscribe(v => this.CounterOptions = (v || []).map((x) => ({
+      label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
+    })));
   }
 
   // ===== lazy 事件（分頁/排序）=====
-override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-  // 1) 讀 event 的小寫
-  const evPageIndex = Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
-  const evPageSize  = Number.isFinite(event.pageSize)  ? Number(event.pageSize)  : undefined;
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    // 1) 讀 event 的 pageIndex/pageSize
+    const evPageIndex = Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
+    const evPageSize  = Number.isFinite(event.pageSize)  ? Number(event.pageSize)  : undefined;
 
-  // 2) 排序判斷：你的 LazyLoadEvent 若有 SortBy（大寫）就保留，否則讀 form 的 SortBy
-  const currSort = JSON.stringify(form.value?.SortBy ?? []);
-  const nextSort = JSON.stringify(event.SortBy ?? form.value.SortBy ?? []);
-  const nextPageIndex = currSort !== nextSort ? 1 : (evPageIndex ?? form.value.PageIndex ?? 1);
+    // 2) 排序：沿用現有或表單內
+    const currSort = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSort = JSON.stringify(event.SortBy ?? form.value.SortBy ?? []);
+    const nextPageIndex = currSort !== nextSort ? 1 : (evPageIndex ?? form.value.PageIndex ?? 1);
 
-  // 3) 只 patch 到表單中的「大寫」分頁鍵
-  form.patchValue({
-    SortBy: event.SortBy ?? form.value.SortBy ?? [],
-    PageIndex: nextPageIndex,
-    PageSize: evPageSize ?? form.value.PageSize ?? 20,
-  }, { emitEvent: false });
+    // 3) 只 patch 大寫分頁鍵
+    form.patchValue({
+      SortBy: event.SortBy ?? form.value.SortBy ?? [],
+      PageIndex: nextPageIndex,
+      PageSize: evPageSize ?? form.value.PageSize ?? 20,
+    }, { emitEvent: false });
 
-  // 4) 更新排序 UI 狀態（沿用你原本的結構）
-  this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+    // 4) 更新排序 UI 狀態
+    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
 
-  // 5) 去重簽章（使用大寫鍵，確保和 payload 一致）
-  const sig = JSON.stringify({
-    PageIndex: form.value.PageIndex,
-    PageSize: form.value.PageSize,
-    SortBy: form.value.SortBy,
-  });
-  if (sig === this.lastQuerySig) return;
-  this.lastQuerySig = sig;
+    // 5) 去重簽章
+    const sig = JSON.stringify({
+      PageIndex: form.value.PageIndex,
+      PageSize: form.value.PageSize,
+      SortBy: form.value.SortBy,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
 
-  if (this.lazyTimer) clearTimeout(this.lazyTimer);
-  this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-}
-
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+  }
 
   // ===== 查詢 =====
   onSubmit(form: FormGroup): void {
@@ -255,13 +305,14 @@ override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
     raw.tlt_floorList = raw.floor_noList;
     raw.area_noList = raw.area_noList;
 
-    // 產生 payload（含分頁/排序）
+    // 產生 payload（含分頁/排序 + 白名單過濾）
     const payload = this.buildPayload({ ...raw });
 
     this.loading = true;
     this.messageService.blockUi();
 
     this.tls13030Service.queryTLS13030(payload).pipe(
+      untilDestroyed(this),
       finalize(() => {
         this.loading = false;
         this.messageService.unblockUi();
@@ -286,40 +337,40 @@ override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
     });
   }
 
-  /** 組查詢 payload（含排序＆分頁鍵） */
-private buildPayload(val: any) {
-  const pageSize = Number.isFinite(val?.PageSize) ? Number(val.PageSize) : 10;
-  const pageIndex = Number.isFinite(val?.PageIndex) ? Number(val.PageIndex) : 1;
+  /** 組查詢 payload（含排序＆分頁鍵，且會過濾未知排序欄位例如 groupKey） */
+  private buildPayload(val: any) {
+    const pageSize = Number.isFinite(val?.PageSize) ? Number(val.PageSize) : 10;
+    const pageIndex = Number.isFinite(val?.PageIndex) ? Number(val.PageIndex) : 1;
 
-  const sortByArr = Array.isArray(val?.SortBy) && val.SortBy.length
-    ? val.SortBy
-    : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+    const rawSortBy = Array.isArray(val?.SortBy) ? val.SortBy : [];
+    const sortByArr = rawSortBy.length ? rawSortBy : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
-  const o: any = { ...val };
+    // ✅ 過濾不在白名單的排序欄位（擋掉 groupKey 等）
+    const filteredSortBy = (sortByArr || []).filter((s: any) => this.allowedSortFields.has(String(s?.field || '')));
 
-  if (this.includePagingAndSorting) {
-    Object.assign(o, {
-      PageSize: pageSize,
-      PageIndex: pageIndex,
-      SortBy: sortByArr,
+    const o: any = { ...val };
+
+    if (this.includePagingAndSorting) {
+      Object.assign(o, {
+        PageSize: pageSize,
+        PageIndex: pageIndex,
+        SortBy: filteredSortBy,
+      });
+    }
+
+    // 🔎 主動移除小寫分頁鍵，避免後端看到兩份
+    delete o.pageSize;
+    delete o.pageIndex;
+
+    // 一般清理
+    Object.keys(o).forEach(k => {
+      const v = o[k];
+      if (v === undefined || v === '') delete o[k];
+      if (Array.isArray(v) && v.length === 0) delete o[k];
     });
+
+    return o;
   }
-
-  // 🔎 主動移除小寫分頁鍵，避免後端看到兩份
-  delete o.pageSize;
-  delete o.pageIndex;
-
-  // 一般清理
-  Object.keys(o).forEach(k => {
-    const v = o[k];
-    if (v === undefined || v === '') delete o[k];
-    if (Array.isArray(v) && v.length === 0) delete o[k];
-  });
-
-  return o;
-}
-
-
 
   // ===== 後端回傳資料格式化 =====
   processResultData(resData: any[]): any[] {
@@ -327,17 +378,20 @@ private buildPayload(val: any) {
       if (value && value.length === 6) return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
       return value;
     };
-    return (resData || []).map((item: any) => ({
+    return (resData || []).map((item: any) => ([
+      'defSalesAmt',
+      'commRate',
+    ].reduce((acc, k) => ({ ...acc, [k]: item[k] ?? 0 }), {
       ...item,
-      defSalesAmt: item.defSalesAmt ?? 0,
-      commRate: item.commRate ?? 0,
       tpy_bdate: formatYYYYMM(item.tpy_bdate),
       tpy_edate: formatYYYYMM(item.tpy_edate),
-    }));
+    })));
   }
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
+  moneyFormat(value: number | string): string {
+    if (value == null) return '0';
+    const num = typeof value === 'string' ? Number(value.toString().replace(/,/g, '')) : value;
+    return Number.isFinite(num) ? (num as number).toLocaleString('en-US') : String(value ?? '0');
   }
 
   getLabelFromOptions(value: any, options: any[]): string {
@@ -351,14 +405,16 @@ private buildPayload(val: any) {
     if (!confirmDel) return;
 
     const idList = selectedItems.map((item) => item.id);
-    this.tls13030Service.deleteTLS13030(idList).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.onSubmit(this.queryForm);
-      },
-      error: () => {
-        this.messageService.errorBubble('刪除失敗');
-      },
-    });
+    this.tls13030Service.deleteTLS13030(idList)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('刪除成功');
+          this.onSubmit(this.queryForm);
+        },
+        error: () => {
+          this.messageService.errorBubble('刪除失敗');
+        },
+      });
   }
 }

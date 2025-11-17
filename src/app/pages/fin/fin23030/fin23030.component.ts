@@ -19,11 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.3.3 暫付款申請單列印
 @Component({
-    selector: 'app-fin23030',
-    templateUrl: './fin23030.component.html',
-    styleUrl: './fin23030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, DropdownComponent, ButtonComponent, TranslateModule]
+  selector: 'app-fin23030',
+  templateUrl: './fin23030.component.html',
+  styleUrl: './fin23030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, DropdownComponent, ButtonComponent, TranslateModule]
 })
 export class FIN23030Component extends BasicQpageComponent implements OnInit {
   //
@@ -83,7 +83,6 @@ export class FIN23030Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '120009';
     this.cruPage = '/FIN2000/FIN23030CRU';
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.vendorService.getVendors().subscribe(data => {
       this.requsetEmployeeOptions = data;

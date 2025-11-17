@@ -1,16 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { TLS41010Item } from './tls41010.model';
-import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, TLS41010Data, typeOptions } from './tls41010.model';
+import { columns, TLS41010Data } from './tls41010.model';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { HttpClient } from '@angular/common/http';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
@@ -21,13 +17,16 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { QueryTLS41010Request } from '../../../service/api/tls/tls41010.service';
 import { NgIf } from '@angular/common';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { Tls46010Service } from '@service/api/tls/tls46010.service';
+import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+
 @Component({
   selector: 'app-tls41010',
   templateUrl: './tls41010.component.html',
@@ -41,7 +40,6 @@ import { Tls46010Service } from '@service/api/tls/tls46010.service';
     InputTextComponent,
     CalendarRangeComponent,
     DropdownComponent,
-    MultiSelectComponent,
     TranslateModule,
     DialogComponent,
     NgIf,
@@ -56,11 +54,11 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_Name: ['', [Validators.maxLength(20)]],
     ECR_TLT_No: ['', [Validators.maxLength(20)]],
     ECR_TLT_Name: ['', [Validators.maxLength(60)]],
-    ECR_ActiveDateStart: [null],
-    ECR_ActiveDateEnd: [null],
+    ECR_ActiveDateStart: [null as Date | null],
+    ECR_ActiveDateEnd: [null as Date | null],
     ECR_CloseDateStart: [null],
     ECR_CloseDateEnd: [null],
-    ECR_Status: [''],
+    ECR_Status: ['A'],
     ECR_Group: [''],
     ECR_SubGroup: [''],
     ECR_AreaNo: [''],
@@ -76,15 +74,14 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
-  statusOptions = statusOptions;
-  typeOptions = typeOptions;
-  guiTypeOptions = guiTypeOptions;
-  salTypeOptions = salTypeOptions;
-  sernoTypeOptions = sernoTypeOptions;
+  statusOptions = getSYS1000Options('ECR_Status');
+  typeOptions = getSYS1000Options('ECR_Type');
+  guiTypeOptions = getSYS1000Options('ECR_GUI_Type');
+  salTypeOptions = getSYS1000Options('ECR_SAL_Type');
   data: TLS41010Data[] = [];
   selectedItems: TLS41010Data[] = [];
   totalRecords = 0;
-  floorOptions: any[] = [];
+  floorOption: apiOption[] = []; //樓層
   ECR_TmplNo_Option: IDropdownItem[] = [];
   // 複製設定 Dialog 相關
   dialogVisible = false;
@@ -115,14 +112,11 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   constructor(
     public tls41010Service: TLS41010Service,
-    private locationOptionsService: LocationOptionsService,
-    private tls46020Service: TLS46020Service,
     private tls46010Service: Tls46010Service,
     private tls11010Service: Tls11010Service,
     private dropDownListService: DropDownListService,
     private counterNameService: CounterNameService,
-    private Router: Router,
-    private http: HttpClient
+    private tls14030Service: Tls14030Service,
   ) {
     super();
   }
@@ -156,15 +150,12 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
         console.log('查詢 TLS11010 成功', res.Data);
-
       },
-      error: (err) => {
-        console.error('查詢 TLS11010 失敗', err);
-      }
     });
   }
 
   ngOnInit(): void {
+
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
@@ -175,15 +166,51 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
           value: x.value            // 存值
         })) || [];
     });
-    this.queryForm.get('ECR_TLT_No')?.valueChanges.subscribe((selectedNo) => {
-      const selected = this.CounterOptions.find((c) => c.value === selectedNo);
-      this.queryForm.patchValue(
-        {
-          ECR_TLT_Name: selected ? selected.Name : ''
-        },
-        { emitEvent: false }
-      );
-    });
+    this.queryForm.get('ECR_TLT_No')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((selectedNo) => {
+        if (!selectedNo) return;
+
+        const selected = this.CounterOptions.find((c) => c.value === selectedNo);
+        this.queryForm.patchValue(
+          {
+            ECR_TLT_Name: selected ? selected.Name : ''
+          },
+          { emitEvent: false }
+        );
+
+        this.tls41010Service.queryTLT_NoInfo(selectedNo).subscribe({
+          next: (res) => {
+            if (res?.Status === '0000' && res.Data) {
+              const info = res.Data;
+
+              // 對應樓層
+              const matchedFloor = this.floorOption.find((f: apiOption) =>
+                (f as any).value === info.ECR_SubGroup ||
+                (f as any).label === info.ECR_SubGroup ||
+                ((f as any).label?.includes?.(info.ECR_SubGroup))
+              );
+
+              this.queryForm.patchValue({
+                ECR_LocNo: info.ECR_LocNo ?? '',
+                ECR_Status: info.ECR_Status ?? '',
+                ECR_Group: info.ECR_Group ?? '',
+                ECR_SubGroup: matchedFloor ? ((matchedFloor as any).value ?? matchedFloor.No) : '',
+                ECR_AreaNo: info.ECR_AreaNo ?? '',
+                ECR_ActiveDateStart: info.tlt_bdate ? new Date(info.tlt_bdate) : null,
+                ECR_ActiveDateEnd: info.tlt_edate ? new Date(info.tlt_edate) : null,
+              }, { emitEvent: false });
+
+
+            } else {
+              console.warn('查詢櫃位資料失敗:', res?.Message);
+            }
+          },
+          error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err)
+        });
+      });
+
+
 
     //後台主機ip
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
@@ -223,15 +250,18 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       }
     });
-    this.locationOptionsService.getFloorOptions().subscribe({
-      next: (res) => {
-        this.floorOptions = res.map((item: any) => ({
-          label: item.name || item.FLOOR_NAME || item.label,
-          value: item.code || item.FLOOR_NO || item.value
+    // 樓層下拉
+    this.tls14030Service
+      .querySYS3900_DropDownList({})
+      .subscribe((response) => {
+        this.floorOption = response.Data.map((item: apiOption) => ({
+          ...item,
+          label: item.Name,
+          value: item.No
         }));
-      },
-      error: () => this.messageService.errorBubble('載入樓層選單失敗')
-    });
+      });
+
+
 
     this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
       if (locNo) {

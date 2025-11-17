@@ -28,11 +28,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.1 資產維護作業
 @Component({
-    selector: 'app-ass13010',
-    templateUrl: './ass13010.component.html',
-    styleUrl: './ass13010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, MultiSelectComponent, CalendarRangeComponent, InputNumberRangeComponent, EditorTextComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13010',
+  templateUrl: './ass13010.component.html',
+  styleUrl: './ass13010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, MultiSelectComponent, CalendarRangeComponent, InputNumberRangeComponent, EditorTextComponent, TableComponent, TranslateModule]
 })
 export class ASS13010Component extends BasicQpageComponent implements OnInit {
   //
@@ -183,8 +183,7 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310016';
     this.cruPage = '/ASS1000/ASS13010CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.itemCodeService.getSystemTypes().subscribe(data => {
       this.itemCodeOptions = data;

@@ -55,6 +55,60 @@
             falseValue="N" />
         </div>
       </div>
+      <!-- <div *ngIf="exportStatus === 'PDF'" class="card col-12 p-0">
+        <div class="col-12 flex justify-content-between align-items-center">
+          <label for="page_orientation">頁面方向</label>
+          <p-radioButton formControlName="page_orientation" value="Portrait" label="直向"></p-radioButton>
+          <p-radioButton formControlName="page_orientation" value="Landscape" label="橫向"></p-radioButton>
+        </div>
+      </div>
+      <div *ngIf="exportStatus === 'PDF'" class="card col-12 p-0">
+        <div class="col-12 flex justify-content-between align-items-center">
+    <label for="page_size_setting">頁面大小</label>
+    <p-dropdown
+      id="page_size_setting"
+      formControlName="page_size_setting"
+      [options]="[
+        { label: 'A0', value: 'A0' },
+        { label: 'A1', value: 'A1' },
+        { label: 'A2', value: 'A2' },
+        { label: 'A3', value: 'A3' },
+        { label: 'A4', value: 'A4' },
+        { label: 'A5', value: 'A5' },
+        { label: 'A6', value: 'A6' },
+        { label: 'A7', value: 'A7' },
+        { label: 'A8', value: 'A8' },
+        { label: 'A9', value: 'A9' },
+        { label: 'B0', value: 'B0' },
+        { label: 'B1', value: 'B1' },
+        { label: 'B2', value: 'B2' },
+        { label: 'B3', value: 'B3' },
+        { label: 'B4', value: 'B4' },
+        { label: 'B5', value: 'B5' },
+        { label: 'B6', value: 'B6' },
+        { label: 'B7', value: 'B7' },
+        { label: 'B8', value: 'B8' },
+        { label: 'B9', value: 'B9' },
+        { label: 'B10', value: 'B10' },
+        { label: 'C0', value: 'C0' },
+        { label: 'C1', value: 'C1' },
+        { label: 'C2', value: 'C2' },
+        { label: 'C3', value: 'C3' },
+        { label: 'C4', value: 'C4' },
+        { label: 'C5', value: 'C5' },
+        { label: 'C6', value: 'C6' },
+        { label: 'C7', value: 'C7' },
+        { label: 'C8', value: 'C8' },
+        { label: 'C9', value: 'C9' },
+        { label: 'C10', value: 'C10' },
+        { label: 'Letter', value: 'LETTER' },
+        { label: 'Legal', value: 'LEGAL' },
+        { label: 'Tabloid', value: 'TABLOID' }
+      ]"
+      placeholder="選擇頁面大小"
+    ></p-dropdown>
+        </div>
+      </div> -->
       <div class="flex justify-content-end gap-2 w-full mb-3">
         <p-button label="取消" [outlined]="true" severity="secondary" (click)="visibleChange.emit(false)" />
         <p-button label="確定" type="submit" (onClick)="visible = false" [disabled]="disable" />

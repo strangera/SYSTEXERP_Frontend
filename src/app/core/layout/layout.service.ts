@@ -22,12 +22,20 @@ export class LayoutService {
 
   // 在這裡保留一份初始配置，用於 effect 內部判斷是否主題發生了變化
   private initialConfig: AppConfig = { ...this.config() }; // 深拷貝初始值
-  isStaticMenuDesktopInactive = signal(false); // 桌機靜態模式下側邊欄是否不活躍
-  isOverlayMenuActive = signal(false);         // 覆蓋模式下側邊欄是否活躍
-  isStaticMenuMobileActive = signal(false);    // 手機模式下側邊欄是否活躍
-  isProfileSidebarVisible = signal(false);     // 個人資料側邊欄是否可見 (你原先的 profileSidebarVisible)
-  isConfigSidebarVisible = signal(false);      // 配置側邊欄是否可見 (你原先的 configSidebarVisible)
-  isMenuHoverActive = signal(false);           // 菜單懸停是否活躍 (你原先的 menuHoverActive)
+  // 從 localStorage 載入預設值
+  isStaticMenuDesktopInactive = signal(
+    localStorage.getItem('app-menu-desktop-inactive') === 'true'
+  ); // 桌機靜態模式下側邊欄是否不活躍 (true: 關閉/收合)
+  isOverlayMenuActive = signal(
+    localStorage.getItem('app-menu-overlay-active') === 'true'
+  );     // 覆蓋模式下側邊欄是否活躍 (true: 開啟)
+  isStaticMenuMobileActive = signal(
+    localStorage.getItem('app-menu-mobile-active') === 'true'
+  );  // 手機模式下側邊欄是否活躍 (true: 開啟)
+
+  isProfileSidebarVisible = signal(false);   // 個人資料側邊欄是否可見 (你原先的 profileSidebarVisible)
+  isConfigSidebarVisible = signal(false);   // 配置側邊欄是否可見 (你原先的 configSidebarVisible)
+  isMenuHoverActive = signal(false);      // 菜單懸停是否活躍 (你原先的 menuHoverActive)
 
   private readonly configUpdate = new Subject<AppConfig>();
   private readonly overlayOpen = new Subject<void>();
@@ -35,6 +43,8 @@ export class LayoutService {
   overlayOpen$ = this.overlayOpen.asObservable();
 
   constructor() {
+    // **重要**：由於信號已在宣告時從 localStorage 載入，這裡無需額外處理
+
     effect(() => {
       const config = this.config();
       this.updateThemeClass(config.colorScheme);
@@ -51,6 +61,7 @@ export class LayoutService {
       this.changeScale(config.scale);
       this.onConfigUpdate();
     }, { allowSignalWrites: true });
+
     // 監聽 overlayOpen$ 以在側邊欄打開時強制關閉其他側邊欄
     this.overlayOpen$.subscribe(() => {
       // 當任何一個 overlay (例如 menu 或 profile sidebar) 打開時，
@@ -72,16 +83,26 @@ export class LayoutService {
       themeLink.href = `lara-${colorScheme}-${themeName}.css`;
     }
   }
+
   onMenuToggle() {
     if (this.isOverlay()) {
       this.isOverlayMenuActive.update(val => !val);
+      // **ADDED**: Save overlay state
+      localStorage.setItem('app-menu-overlay-active', this.isOverlayMenuActive().toString());
+
       if (this.isOverlayMenuActive()) {
         this.overlayOpen.next();
       }
     } else if (this.isDesktop()) {// Static menu mode
       this.isStaticMenuDesktopInactive.update(val => !val);
+      // **ADDED**: Save desktop inactive state
+      localStorage.setItem('app-menu-desktop-inactive', this.isStaticMenuDesktopInactive().toString());
+
     } else { // Mobile mode
       this.isStaticMenuMobileActive.update(val => !val);
+      // **ADDED**: Save mobile active state
+      localStorage.setItem('app-menu-mobile-active', this.isStaticMenuMobileActive().toString());
+
       if (this.isStaticMenuMobileActive()) {
         this.overlayOpen.next();
       }
@@ -98,7 +119,12 @@ export class LayoutService {
     this.isProfileSidebarVisible.set(false); // 也關閉個人資料側邊欄
     this.isMenuHoverActive.set(false); // 關閉 hover 狀態
     this.isConfigSidebarVisible.set(false); // 根據需求決定是否關閉配置側邊欄
+
+    // **ADDED**: When closed by outside click, save the closed state
+    localStorage.setItem('app-menu-overlay-active', 'false');
+    localStorage.setItem('app-menu-mobile-active', 'false');
   }
+
   showProfileSidebar() {
     this.isProfileSidebarVisible.update(val => !val); // 切換顯示狀態
     if (this.isProfileSidebarVisible()) {

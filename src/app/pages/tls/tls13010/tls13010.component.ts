@@ -103,6 +103,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_no: [, [Validators.maxLength(50)]],
     bus_typeList: [[]],
     ven_no: [, [Validators.maxLength(50)]],
+    vendor_ven_no: [, [Validators.maxLength(16)]],
     ven_uniformList: [[]],
     paper_typeList: [[]],
 
@@ -256,7 +257,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   ngOnInit(): void {
     this.initializePage('TLS13010', '/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.checkExistingWorkflow();
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadPOS2013Options();
   }
 
@@ -276,7 +276,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     }
   }
   /**
-   * 載入 POS2013 選項
+   * 載入 POS2013 選項 TODO:因為好像有點壞掉了
    */
   private loadPOS2013Options(): void {
     console.log('📍 開始載入 POS2013 選項');
@@ -298,15 +298,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
         clearInterval(checkInterval);
       }
     }, 200); // 每 200ms 檢查一次
-
-    // 設置 5 秒超時，避免無限等待
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      if (this.pos2013Options.length === 0) {
-        console.warn('⚠️ POS2013 選項載入超時');
-        this.messageService.warnBubble('載入廠商選項失敗，請重新整理頁面');
-      }
-    }, 5000);
   }
 
   /**
@@ -418,21 +409,30 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     this.contractFlowService.setViewMode(false);
     this.contractFlowService.startWorkflow(rowData);
 
-    this.router.navigate(['account/tls/tls13010cru']); // 不帶參數
-    this.messageService.infoBubble('進入編輯模式');
+    // 根據 contract_type 決定導向哪個頁面
+    if (rowData.contract_type === '要約書') {
+      this.router.navigate(['account/tls/tls12040cru']);
+      this.messageService.infoBubble('進入要約書編輯模式');
+    } else {
+      this.router.navigate(['account/tls/tls13010cru']);
+      this.messageService.infoBubble('進入契約書編輯模式');
+    }
   }
 
   /**
    * 詳細檢視功能
    */
   override onDetail(rowData: ContractItem): void {
-    // 使用 startViewWorkflow 會自動持久化檢視模式
     this.contractFlowService.startViewWorkflow(rowData);
 
-    // 不帶任何 URL 參數，依賴持久化狀態
-    this.router.navigate(['account/tls/tls13010cru']);
-
-    this.messageService.infoBubble('進入檢視模式');
+    // 根據 contract_type 決定導向哪個頁面
+    if (rowData.contract_type === '要約書') {
+      this.router.navigate(['account/tls/tls12040cru']);
+      this.messageService.infoBubble('進入要約書檢視模式');
+    } else {
+      this.router.navigate(['account/tls/tls13010cru']);
+      this.messageService.infoBubble('進入契約書檢視模式');
+    }
   }
 
   /**

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
@@ -38,7 +39,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
     // 20251014: 新增專櫃編號欄位
-    // TLT_NO: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
+    // TLT_No: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]), // 分頁和排序參數
@@ -57,6 +58,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     { field: 'PLU_OrderPrcRate', header: '標準進貨折數', visible: false },
     { field: 'HOS_No', header: '建議倉別代碼', visible: true },
     { field: 'HOS_NAME', header: '建議倉別名稱', visible: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'VEN_No', header: '廠商編號', visible: false },
     { field: 'LOGO_Remark', header: '備註說明', visible: true }
   ];
@@ -78,7 +80,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query', JSON.stringify(frm.value, null, 2));
-      this.tls51060Service.queryTLS51060(frm.value).subscribe({
+      this.tls51060Service.queryTLS51060(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
@@ -141,7 +143,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
     };
-    this.tls51060Service.deleteTLS51060(deleteBody).subscribe({
+    this.tls51060Service.deleteTLS51060(deleteBody).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
@@ -166,7 +168,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     {
       //倉別 下拉選單
       this.tls51060Service
-        .queryPOS2034_DropDownList({})
+        .queryPOS2034_DropDownList({}).pipe(untilDestroyed(this))
         .subscribe((response) => {
           this.storageOptions = response.Data.map((item: apiOption) => ({
             No: item.No,
@@ -182,4 +184,5 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   isRowSelectable(rowData: PluLogo): boolean {
     return rowData.CanDel
   }
+
 }

@@ -1,7 +1,7 @@
 // src/app/app.routing.ts
 import { Routes } from '@angular/router';
-import { AuthGuard } from './guards/auth.guard';
-import { PublicGuard } from './guards/public.guard'; // 引入 PublicGuard
+import { PublicGuard } from './core/guards/public.guard';
+import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'account', pathMatch: 'full', },

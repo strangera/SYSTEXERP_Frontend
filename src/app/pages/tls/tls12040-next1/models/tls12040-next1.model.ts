@@ -14,8 +14,8 @@ export interface TLS12040FareItem {
   cap_name: string;          // 扣款項目名稱
 
   // 日期欄位
-  tpy_bdate?: string | null;     // 開始日期
-  tpy_edate?: string | null;     // 結束日期
+  tpy_bdate?: string | null | Date;     // 開始日期
+  tpy_edate?: string | null | Date;     // 結束日期
 
   // 金額相關
   tpy_type?: string | null;      // 扣款方式

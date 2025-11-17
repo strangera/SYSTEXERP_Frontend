@@ -26,6 +26,7 @@ import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 @Component({
   selector: 'app-tls23060',
@@ -44,21 +45,19 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    TableReportComponent, // ✅ 使用 app-table-report
+    TableReportComponent,
+    DialogComponent,
   ],
 })
 export class TLS23060Component extends BasicQueryPageComponent<any> {
+  // ===== 主表 =====
   data: any[] = [];
   totalRecords = 0;
   btnLoading = false;
 
-  // 匯出時沿用的最後查詢參數（送出查詢時會更新）
-  historyRequestBody: any | null = null;
+  historyRequestBody: any | null = null; // 匯出用 last query
+  footerData: Record<string, number> = {}; // 主表 Footer
 
-  // 表尾總計（直接用欄位名對應值）
-  footerData: Record<string, number> = {};
-
-  // 排序
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [{ field: 'ECR_No', order: 1 }];
 
@@ -69,7 +68,6 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  // ✅ 陣列型欄位使用空陣列，避免 undefined
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd:   [this.yesterday, [Validators.required]],
@@ -82,7 +80,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
-  // 下拉資料
+  // ===== 下拉 =====
   typeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   floorOptions: any[] = [];
@@ -94,6 +92,15 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     { value: 'N', label: '非使用業主發票' },
     { value: null, label: '全部' },
   ];
+
+  // ===== 明細 Dialog 狀態 =====
+  dialogVisible = false;
+  dialogLoading = false;
+  dialogData: any[] = [];
+  dialogTotalRecords = 0;
+  dialogFooterData: Record<string, number> = {};
+  dialogHistoryRequestBody: any | null = null; // 給明細 table 的 lastQueryBody
+  selectedMainRow: any | null = null;
 
   constructor(
     private tls23060Service: TLS23060Service,
@@ -140,14 +147,14 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  // === 送出查詢：固定 pageSize=30；保存 historyRequestBody ===
+  // ===== 主表查詢（按查詢按鈕）=====
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const val = this.queryForm.getRawValue() as any;
 
       const payload: any = {
-        TXN_DateStart: this.toIso(val?.TXN_DateStart, false),
-        TXN_DateEnd:   this.toIso(val?.TXN_DateEnd, true),
+        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
         rece_yn:       val?.rece_yn ?? undefined,
         ECR_No:        Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
         tlt_no:        Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
@@ -155,16 +162,13 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         tlt_floor:     Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
         org_id:        Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
 
-        // 固定 30（且保留 pageIndex / SortBy）
         pageSize : 30,
         pageIndex: Number(val?.pageIndex) || 1,
         SortBy   : Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
       };
 
-      // 給 app-table-report 的 lastQueryBody 以及匯出沿用
       this.historyRequestBody = { ...payload };
 
-      // UI 狀態
       this.loading = true;
       this.messageService?.blockUi();
 
@@ -175,17 +179,14 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
           next: (res: any) => {
             const wrapper = this.pickWrapper(res?.Data);
 
-            // 明細
             const details = this.pickDetails(wrapper);
             this.data = details.map((r: any, i: number) => ({
               ...r,
               _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
             }));
 
-            // 總筆數
             this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
 
-            // 表尾總計
             this.footerData = this.buildFooterFromPack(wrapper);
           },
           error: () => {
@@ -197,10 +198,15 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  // === 提供給 app-table-report 的查詢函式：強制 pageSize=30 ===
+  // ===== 主表：提供給 app-table-report 的查詢函式 =====
   public queryTLS23060ForReport = (body: any) =>
     this.tls23060Service
-      .queryTLS23060({ ...body, pageSize: 30 })
+      .queryTLS23060({
+        ...body,
+        pageSize: 30,
+        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+        TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+      })
       .pipe(
         map((res: any) => {
           const wrapper = this.pickWrapper(res?.Data);
@@ -213,7 +219,6 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
           const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          // 同步總計到 footerData，同時回傳給 table 當 GrandTotal
           const grand = this.buildFooterFromPack(wrapper);
           this.footerData = grand;
 
@@ -221,7 +226,116 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         })
       );
 
-  // === 匯出（PDF / Excel）— 會移除 pageSize / pageIndex ===
+  // ===== 明細：提供給 Dialog 內 app-table-report 的查詢函式 → 打 /queryTLS23060_Detail，以日期為主 =====
+
+
+override onDetail(row: any): void {
+  if (!row) return;
+
+  this.selectedMainRow = row;
+  this.dialogVisible = true;
+
+  const formVal = this.queryForm.getRawValue() as any;
+
+  // 依你給的 Request 規格組 body
+  const body: any = {
+    PageSize: 0,
+    PageIndex: 0,
+    SortBy: [{ field: 'TXN_Date', order: 1 as 1 }],
+
+    TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
+    TXN_DateEnd:   this.toDateOnly(formVal?.TXN_DateEnd),
+    rece_yn:       formVal?.rece_yn ?? undefined,
+
+    // 用被點那列的值
+    ECR_No:  row?.ECR_No ?? undefined,
+    tlt_no:  row?.tlt_no ?? undefined,
+
+    // 下面三個是陣列型別
+    tlt_building: formVal?.tlt_building ?? [],
+    tlt_floor:    Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
+    org_id:       Array.isArray(formVal?.org_id) ? formVal.org_id : [],
+  };
+
+  // 給 app-table-report 的 lastQueryBody 用
+  this.dialogHistoryRequestBody = body;
+
+  // 先查一次明細，開 Dialog 就有資料
+  this.dialogLoading = true;
+  this.queryTLS23060DetailForReport(body)
+    .pipe(finalize(() => (this.dialogLoading = false)))
+    .subscribe({
+      error: () => {
+        this.dialogData = [];
+        this.dialogTotalRecords = 0;
+        this.dialogFooterData = {};
+      },
+    });
+}
+
+public queryTLS23060DetailForReport = (body: any) =>
+  this.tls23060Service
+    .queryTLS23060Detail({
+      ...(this.dialogHistoryRequestBody ?? {}),
+      ...body,
+      // 保底 pageIndex / pageSize / SortBy
+      pageSize: Number(body?.pageSize) || 30,
+      pageIndex: Number(body?.pageIndex) || 1,
+      SortBy: Array.isArray(body?.SortBy) && body.SortBy.length
+        ? body.SortBy
+        : [{ field: 'TXN_Date', order: 1 as 1 }],
+      TXN_DateStart: this.toDateOnly(
+        body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart
+      ),
+      TXN_DateEnd: this.toDateOnly(
+        body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd
+      ),
+    })
+    .pipe(
+      map((res: any) => {
+        const wrapper = this.pickWrapper(res?.Data);
+        const details = this.pickDetails(wrapper);
+
+        const rows = details.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${
+            r?.tlt_no ?? ''
+          }|${i}`,
+        }));
+
+        // 以日期排序
+        rows.sort((a, b) => {
+          const ad = a.TXN_Date ?? '';
+          const bd = b.TXN_Date ?? '';
+          return ad > bd ? 1 : ad < bd ? -1 : 0;
+        });
+
+        const totalCount =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+        const grand = this.buildFooterFromPack(wrapper);
+
+        // 給 dialog 綁定用
+        this.dialogFooterData = grand;
+        this.dialogTotalRecords = totalCount;
+        this.dialogData = rows;
+
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      })
+    );
+
+
+  onDialogClose(v: boolean): void {
+    this.dialogVisible = v;
+    if (!v) {
+      this.selectedMainRow = null;
+      this.dialogData = [];
+      this.dialogTotalRecords = 0;
+      this.dialogFooterData = {};
+      this.dialogHistoryRequestBody = null;
+    }
+  }
+
+  // ===== 匯出 =====
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
     const { pageSize, pageIndex, ...rest } = this.historyRequestBody;
@@ -258,7 +372,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  // === 下載工具：補上這兩個方法，解決 handleFileExport 未定義 ===
+  // ===== 下載工具 =====
   private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
     const contentDisposition = response.headers.get('Content-Disposition');
     const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
@@ -303,7 +417,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     return `download${defaultExtension}`;
   }
 
-  // === 工具 ===
+  // ===== 工具 =====
   private pickWrapper(data: any): any {
     return Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
   }
@@ -377,23 +491,48 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       TXN_OverAmt:   n(first?.totalOverAmt),
       TXN_ReturnAmt: n(first?.totalReturnAmt),
       TXN_CancelAmt: n(first?.totalCancelAmt),
+      TXN_ExchgAmt:  n(first?.totalExchgAmt),
     };
   }
 
-  /** 轉換日期：以本地時間作 offset 校正；endOfDay=true -> 23:59:59.999 */
-  private toIso(val: any, endOfDay = false): string | undefined {
-    if (!val) return undefined;
-    const d = typeof val === 'string' ? new Date(val) : (val as Date);
+  /** 轉成 yyyy-MM-dd（DateOnly） */
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
     if (isNaN(d.getTime())) return undefined;
-    if (endOfDay) d.setHours(23, 59, 59, 999);
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /** 日期顯示 yyyy/MM/dd（如果你要在欄位 format 用到） */
+  private formatYMD(val: unknown): string {
+    if (val == null) return '';
+    if (val instanceof Date && !isNaN(val.getTime())) {
+      const y = val.getFullYear();
+      const m = String(val.getMonth() + 1).padStart(2, '0');
+      const d = String(val.getDate()).padStart(2, '0');
+      return `${y}/${m}/${d}`;
+    }
+    const s = String(val);
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return `${m[1]}/${m[2]}/${m[3]}`;
+    const dt = new Date(s);
+    if (!isNaN(dt.getTime())) {
+      const y = dt.getFullYear();
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getDate()).padStart(2, '0');
+      return `${y}/${mm}/${dd}`;
+    }
+    return s;
   }
 
   // 金額格式
   moneyFormat = (value: number): string =>
     value != null ? Number(value || 0).toLocaleString('en-US') : '0';
 
-  // 欄位（isTotal 會用在 footerData）
+  // 主表欄位
   columns = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -451,9 +590,76 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
-    { field: 'TXN_PrePayAmt', header: '預售訂金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_OverAmt', header: '溢收', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_ReturnAmt', header: '退貨', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_CancelAmt', header: '作廢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  ];
+
+  // Dialog 明細欄位（以日期為主）
+  detailColumns = [
+    { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: any) => this.formatYMD(v) },
+    { field: 'ECR_No',   header: '收銀機號', visible: true },
+    { field: 'tlt_no',   header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+
+    { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt41', header: '聯合連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt42', header: '聯合離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt12', header: '聯合紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt81', header: '中信-停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+    { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
 }

@@ -17,6 +17,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 
 @Component({
   selector: 'app-tls12020',
@@ -32,6 +33,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
     InputTextComponent,
     CalendarRangeComponent,
     TableComponent,
+    MultiSelectComponent
   ],
 })
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -41,7 +43,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     ven_uniform: ['', [Validators.required]], // 原本 vendorUID, 廠商統一編號（必填）
     VEN_Name: ['', Validators.maxLength(60)], // 原本 ven_name
     VEN_EngName: ['', Validators.maxLength(60)],
-    building_no: ['', [Validators.required]],
+    building_no: ['', [Validators.required]], // 館別（必填）
     InterviewDateStart: [yesterday], // 原本 contact_Datestart
     InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
     contact_USR_No: [''],
@@ -97,7 +99,6 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
       }
     });
     this.initializePage('TLS12020', 'TLS/TLS12020cru', this.queryForm, (form) => this.onSubmit(form));
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadDropdownOptions();
 
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {

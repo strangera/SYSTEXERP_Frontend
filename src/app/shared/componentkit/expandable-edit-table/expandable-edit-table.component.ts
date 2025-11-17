@@ -20,6 +20,7 @@ import { Observable } from 'rxjs';
 import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
 import { TableValidationService } from './table-validation.service';
 import { TableWidthCalculatorService } from './services/table-width-calculator.service';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 
 export interface DisplayFieldConfig {
   fieldName: string;
@@ -654,7 +655,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       rowData[column.field] = null;
       this.userInputValues.delete(fieldKey);
       this.triggerFieldChangeEvent(column.field, null, rowData, oldValue);
-      console.log(`✅ 日期已清空`);
+      console.log(`日期已清空`);
       return;
     }
 
@@ -662,12 +663,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const parsedDate = this.parseUserDateInput(userInput.trim(), formatType);
 
     if (parsedDate && this.isValidDateRange(parsedDate)) {
-      // ✅ 解析成功且合理
+      // 解析成功且合理
       const oldValue = rowData[column.field];
       rowData[column.field] = parsedDate;
       this.userInputValues.delete(fieldKey);
 
-      console.log(`✅ 日期解析成功: "${userInput}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
+      console.log(`日期解析成功: "${userInput}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
 
       this.triggerFieldChangeEvent(column.field, parsedDate, rowData, oldValue);
       this.triggerSaveIfNeeded(rowData, column, parsedDate, isDetail, detailIndex);
@@ -727,7 +728,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     });
   }
 
-  // ✅ 這個方法和實作都要保留
+  // 這個方法和實作都要保留
   private getFieldKey(rowData: any, field: string, isDetail: boolean = false, detailIndex?: number): string {
     const mainKey = `${rowData[this.dataKey]}_${field}`;
     return isDetail ? `${mainKey}_detail_${detailIndex}` : mainKey;
@@ -1084,17 +1085,38 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onRowEditCancel(rowData: any, rowIndex: number) {
     try {
-      // 關鍵：完整還原包括詳細資料
       const originalData = this.clonedItems[rowData[this.dataKey]];
 
-      // 還原主資料
+      // 加這段：檢查是否為新增且未填寫的空資料
+      if (rowData._isNew && rowData._isEmpty && !rowData.location_no) {
+        console.log('🗑️ 偵測到空資料（未選擇位置），自動刪除');
+
+        // 從資料陣列中移除
+        const index = this.data.findIndex(item => item[this.dataKey] === rowData[this.dataKey]);
+        if (index > -1) {
+          this.data.splice(index, 1);
+          this.data = [...this.data]; // 觸發變更檢測
+          console.log(`已從索引 ${index} 移除空資料`);
+        }
+
+        // 清理備份
+        delete this.clonedItems[rowData[this.dataKey]];
+        this.editingRow = null;
+
+        // 顯示提示訊息
+        this.messageService.infoBubble('已取消新增');
+
+        this.cdr.detectChanges();
+        return; // ⚠️ 重要：這裡要 return，不執行後面的邏輯
+      }
+
+      // 下面是原本的程式碼，保持不變
       Object.keys(originalData).forEach(key => {
         if (key !== this.detailKey) {
           rowData[key] = originalData[key];
         }
       });
 
-      // 重要：還原詳細資料
       if (originalData[this.detailKey]) {
         rowData[this.detailKey] = JSON.parse(JSON.stringify(originalData[this.detailKey]));
       }
@@ -1265,21 +1287,31 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.currentDateField && this.temporaryDate) {
       const column = this.getCurrentEditingColumn();
       const oldValue = this.currentDateField.data[this.currentDateField.field];
-      let finalDate: Date;
+
+      //  關鍵修正：使用日期工具，返回字串格式
+      let finalDateString: string;
 
       // 根據格式處理日期
       if (column?.dateFormat?.includes('year-month')) {
         const year = this.temporaryDate.getFullYear();
-        const month = this.temporaryDate.getMonth();
-        finalDate = new Date(year, month, 1);
+        const month = String(this.temporaryDate.getMonth() + 1).padStart(2, '0');
+        finalDateString = `${year}-${month}-01`;
       } else {
-        finalDate = new Date(this.temporaryDate);
+        //  使用 DateUtils 處理，避免時區問題
+        finalDateString = DateUtils.toDateString(this.temporaryDate);
       }
 
-      // 更新資料
-      this.currentDateField.data[this.currentDateField.field] = finalDate;
+      console.log('📅 日期選擇確認:', {
+        欄位: this.currentDateField.field,
+        選擇的日期: this.temporaryDate,
+        最終字串: finalDateString,
+        舊值: oldValue
+      });
 
-      // 關鍵：清理用戶輸入狀態
+      //  儲存為字串格式
+      this.currentDateField.data[this.currentDateField.field] = finalDateString;
+
+      // 清理用戶輸入狀態
       const fieldKey = this.getFieldKey(
         this.currentDateField.data,
         this.currentDateField.field,
@@ -1288,10 +1320,10 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       );
       this.userInputValues.delete(fieldKey);
 
-      // 觸發 fieldChange 事件讓業務層處理
+      // 觸發 fieldChange 事件
       this.triggerFieldChangeEvent(
         this.currentDateField.field,
-        finalDate,
+        finalDateString,  //  傳遞字串
         this.currentDateField.data,
         oldValue
       );
@@ -1301,7 +1333,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         this.triggerSaveIfNeeded(
           this.currentDateField.data,
           column,
-          finalDate,
+          finalDateString,  //  傳遞字串
           this.currentDateField.isDetail,
           this.currentDateField.detailIndex
         );
@@ -1310,7 +1342,6 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.cdr.detectChanges();
     }
 
-    // 關閉對話框
     this.datePickerVisible = false;
     this.currentDateField = null;
     this.temporaryDate = null;
@@ -1654,7 +1685,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const oldValue = rowData[field];
     rowData[field] = newValue;
 
-    console.log(`✅ 直接編輯變更: ${field} = ${newValue} (第${(rowIndex || 0) + 1}行)`);
+    console.log(`直接編輯變更: ${field} = ${newValue} (第${(rowIndex || 0) + 1}行)`);
 
     // 觸發和編輯保存一樣的事件，讓外部組件知道資料已更新
     this.save.emit({
@@ -1668,7 +1699,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const oldValue = detailData[field];
     detailData[field] = newValue;
 
-    console.log(`✅ 詳細資料直接編輯變更: ${field} = ${newValue} (主行${(rowIndex || 0) + 1}, 詳細行${(detailIndex || 0) + 1})`);
+    console.log(`詳細資料直接編輯變更: ${field} = ${newValue} (主行${(rowIndex || 0) + 1}, 詳細行${(detailIndex || 0) + 1})`);
 
     // 觸發詳細資料保存事件
     this.detailSave.emit({
@@ -1794,7 +1825,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
       column.selectorConfig.searchMethod(formValue).subscribe({
         next: (results) => {
-          console.log('✅ 搜尋成功，結果數量:', results.length);
+          console.log('搜尋成功，結果數量:', results.length);
 
           if (column.selectorConfig) {
             column.selectorConfig.panelDataSource = results;
@@ -1919,7 +1950,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       selectedOption: selectedItem // 這裡傳遞完整的選擇項目資料
     });
 
-    console.log('✅ 表格發出 dropdownChange 事件，包含 selectedOption');
+    console.log('表格發出 dropdownChange 事件，包含 selectedOption');
   }
 
   /**
@@ -2362,7 +2393,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   onCheckboxChange(rowData: any, field: string, newValue: any, rowIndex: number, column: ColumnDef): void {
-    console.log(`✅ Checkbox 變更: ${field} = ${newValue} (第${rowIndex + 1}行)`);
+    console.log(`Checkbox 變更: ${field} = ${newValue} (第${rowIndex + 1}行)`);
 
     // 勾選時：立即更新 + 進入編輯模式
     if (newValue === true) {

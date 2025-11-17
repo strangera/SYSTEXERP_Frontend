@@ -1,8 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- TODO: 等待規格中 -->
-    <!-- <app-button btnType="report" (click)="onExport()" label="匯出申報資料"></app-button> -->
+    <app-button btnType="report" (click)="onExport()" label="匯出申報資料" [disabled]="data.length === 0"
+      [loading]="exportLoading"></app-button>
     <app-button btnType="create" (click)="onCreate()" label="新增"></app-button>
   </div>
   <p-accordion>
@@ -21,12 +21,12 @@
             [control]="queryForm.controls.STO_Addr" [submitted]="submitted" placeholder="最長100個字"></app-input-text>
           <!-- 總繳代號 -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="總繳代號" controlName="REP_OrgCodeList"
-            [options]="orgCodeOptions" optionLabel="Name" optionValue="No"
+            [options]="orgCodeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.REP_OrgCodeList" [submitted]="submitted"
             placeholder="各單位(分支機構)分別申報, 單一機構報總"></app-multi-select>
           <!-- 狀態 -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="狀態" controlName="STO_StatusList"
-            [options]="reviewStatusOptions" optionLabel="Name" optionValue="No"
+            [options]="reviewStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.STO_StatusList" [submitted]="submitted" placeholder="是, 否"></app-multi-select>
           <!-- 申報年月起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateMonthRange" label="申報年月"
@@ -44,8 +44,8 @@
 <div class="card">
   <app-table tableKey="FIN11010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
-    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled">
+    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{field: 'REP_BegGUIYM', order: 1}]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled">
   </app-table>
 </div>

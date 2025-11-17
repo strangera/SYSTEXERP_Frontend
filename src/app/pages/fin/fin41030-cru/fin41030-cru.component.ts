@@ -13,11 +13,11 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-fin41030-cru',
-    templateUrl: './fin41030-cru.component.html',
-    styleUrl: './fin41030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin41030-cru',
+  templateUrl: './fin41030-cru.component.html',
+  styleUrl: './fin41030-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN41030CRUComponent extends BasicCrupageComponent implements OnInit {
 
@@ -50,7 +50,6 @@ export class FIN41030CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '140003';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {

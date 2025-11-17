@@ -21,11 +21,11 @@ import { NgIf } from '@angular/common';
 
 //1.2.7.1 產生開票付款資料 CRU
 @Component({
-    selector: 'app-fin27010-cru',
-    templateUrl: './fin27010-cru.component.html',
-    styleUrl: './fin27010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberRangeComponent, InputNumberComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin27010-cru',
+  templateUrl: './fin27010-cru.component.html',
+  styleUrl: './fin27010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberRangeComponent, InputNumberComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN27010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
@@ -64,7 +64,6 @@ export class FIN27010CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '120020';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     // ----------------------------------------------------------------
     //

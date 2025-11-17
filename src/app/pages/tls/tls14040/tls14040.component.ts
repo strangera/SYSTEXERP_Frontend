@@ -10,7 +10,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
@@ -20,7 +19,6 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-tls14040',
   templateUrl: './tls14040.component.html',
-  styleUrl: './tls14040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -31,7 +29,6 @@ yesterday.setDate(yesterday.getDate() - 1);
     InputTextComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    ReportTableGroupComponent,
     TableComponent,
     TranslateModule]
 })
@@ -50,7 +47,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     bus_typeList: [[]], // 大分類
 
     tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
-    
+
     contract_subno_start: [''], // 合約附號_起
     contract_subno_end: [''], // 合約附號_迄
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)
@@ -63,7 +60,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     approve_statusList: [[]], // 審核狀態 1=未審核  2=已審核
 
     // get_ticket_status_List: [[]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
-    // ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
+    // ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿"
     // ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
 
     // ...createPaginationConfig([{ field: 'talent_id', order: 1 }]), // 分頁和排序參數
@@ -84,7 +81,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     { field: 'org_name', header: '組織別', visible: true },
     { field: 'open_fees', header: '準時開業保證票', visible: true },
     { field: 'construct_fees', header: '施工保證票', visible: true },
-    { field: 'expiration_fees', header: '契約屆滿保證票', visible: true },
+    { field: 'expiration_fees', header: '契約屆滿', visible: true },
     { field: 'remark', header: '保證票備註', visible: true },
   ];
   selectedItems: Garantee_Ticket[] = [];// 多選項目
@@ -126,7 +123,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   ticket_typeOption: option[] = [ //保證票型態
     { value: '1', label: '準時開業保證票' },
     { value: '2', label: '施工保證票' },
-    { value: '3', label: '契約屆滿保證票' },
+    { value: '3', label: '契約屆滿' },
   ];
 
   ticket_kindOption: option[] = [ //票據種類

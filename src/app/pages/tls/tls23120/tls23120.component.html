@@ -173,20 +173,4 @@
   </p-accordion>
 </div>
 
-<!-- ✅ 改用 app-table-report；提供 lastQueryBody + queryFunction -->
-<div class="card">
-  <app-table-report
-    tableKey="TLS23120"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    dataKey="_rowKey"
-              [showManage]="false"
-  [showDelete]="false"
-    [lastQueryBody]="historyRequestBody"
-    [queryFunction]="queryTLS23120ForReport">
 
-   
-  </app-table-report>
-</div>

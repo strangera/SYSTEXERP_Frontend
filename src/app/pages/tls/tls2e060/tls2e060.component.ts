@@ -1,182 +1,93 @@
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { CounterCodeService } from './../../../service/basic/counter-code.service';
-import { SettlementMethodService } from './../../../service/basic/settlement-method.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, convertDateToYYYYMM, createPaginationConfig, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { Tls2e060Data, Tls2e060Service } from '@service/api/tls/tls2e060.service';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 // 2.2.14.6 專櫃結帳前調整作業
 @Component({
-    selector: 'app-tls2e060',
-    templateUrl: './tls2e060.component.html',
-    styleUrl: './tls2e060.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
+  selector: 'app-tls2e060',
+  templateUrl: './tls2e060.component.html',
+  standalone: true,
+  imports: [InputTextComponent, TableComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
-export class TLS2E060Component {
-  ProgNo: string = '220075';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    onedatemm: [], // 查詢年月
-    checkout: [], // 結帳方式
-    tax: [], // 應免稅
-    counterName: [], // 櫃位名稱
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    adj_no: [null, [Validators.maxLength(12)]],
+    adj_date: [null],
+    sam_yyymm: [null],
+    ...createPaginationConfig([{ field: 'adj_no', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+  adj_taxtypeOptions = getSYS1000Options('adj_taxtype'); // 調整稅別選項
+  totalRecords = 0;
+  data: Tls2e060Data[] = [];
+  columns: Column[] = [
+    { field: 'adj_no', header: '調整單號', visible: true },
+    { field: 'adj_date', header: '調整日期', visible: true },
+    { field: 'sam_yyymm', header: '調整年月', visible: true, format: formatYYYYMM },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'contract_no', header: '契約編號', visible: true },
+    { field: 'contract_subno', header: '版次', visible: true },
+    { field: 'adj_taxtype', header: '調整稅別', visible: true, format: (v) => getSYS1000('PLU_TaxType', v) }, // 0=免稅, 1=應稅
+    { field: 'adj_amount', header: '調整金額', visible: true },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '洽談者', visible: true },
-    { field: 'contactDate', header: '洽談日', visible: true },
-    { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '大分類', visible: true },
-    { field: 'category', header: '類型', visible: true },
-    { field: 'version', header: '版本', visible: true },
-    { field: 'rentNumber', header: '位置租賃數', visible: true },
-    { field: 'progress', header: '進度', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  checkoutOptions: any[] = [];
-  counterNameOptions: any[] = [];
-  taxOptions: any[] = [];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private settlementMethodService: SettlementMethodService,
-    private taxableService: TaxableService,
-    private counterCodeService: CounterCodeService,
+    private readonly tls2e060Service: Tls2e060Service,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.settlementMethodService.getSettlementMethods().subscribe(data => {
-      this.checkoutOptions = data;
-    });
-    //
-    this.taxableService.getSystemTypes().subscribe(data => {
-      this.taxOptions = data;
-    });
-    //
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterNameOptions = data;
-    });
+    this.initializePage('TLS2E060', '/tls/tls2e060cru', this.queryForm, () => this.onSubmit(this.queryForm));
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+      // 提取日期值，確保它是有效的 Date 物件
+      const originalDateValue = frm.get('adj_date')?.value;
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+      const adjDateValue = ((): string | null => {
+        // 檢查值是否存在，且是一個有效的 Date 實例
+        if (originalDateValue instanceof Date && !isNaN(originalDateValue.getTime())) {
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+          // 1. 複製原始日期物件（確保不修改原有的表單值）
+          const dateToAdd = new Date(originalDateValue.getTime());
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+          // 2. 增加一天
+          dateToAdd.setDate(dateToAdd.getDate() + 1);
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
+          // 3. 轉換為 'YYYY-MM-DD' 格式
+          return dateToAdd.toISOString().split('T')[0];
+        }
+        // 如果日期無效、為 null 或不是 Date 實例，則返回 null
+        return null;
+      })(); // IIFE 結束
+
+
+      const body = {
+        ...frm.getRawValue(),
+        // 由於 adj_date 已經處理完畢，這裡直接使用
+        sam_yyymm: convertDateToYYYYMM(frm.get('sam_yyymm')?.value),
+        adj_date: adjDateValue, // 使用經過有效性檢查的值
       };
 
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2E060CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2E060CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2E060CRU'], extras);
+      this.tls2e060Service.queryTls2e060(body).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(response => {
+        this.data = response.Data || [];
+        this.totalRecords = response.TotalCount || 0;
+      });
+    });
   }
 }

@@ -21,9 +21,7 @@ export interface TLS2B030Row {
   TLT_Name: string | null;
 
   /** 後端帶回的動態付款欄位（巢狀） */
-  PayDiffs?: Record<`Pay_Dif_${string}`, number>;
-
-  /** 為了 table 直接吃，把 PayDiffs 攤平成同層（仍保留索引型別） */
+  PayDiffs?: Record<`Pay_Dif_${string}`, number | string | null | undefined>;
   [k: `Pay_Dif_${string}`]: number | any;
 
   PPay_Dif_sum: number;

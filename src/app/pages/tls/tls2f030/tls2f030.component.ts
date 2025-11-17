@@ -80,7 +80,7 @@ export class TLS2F030Component {
 
   ngOnInit(): void {
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.floorService.getFloors().subscribe(data => {
       this.floorOptions = data;

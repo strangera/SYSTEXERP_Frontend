@@ -1,24 +1,21 @@
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate, ColumnGroup } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { apiOption } from '@shared/models/tls/tls000.model';
-import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { CommonModule } from '@angular/common';
 import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface Customer_interview {
   id: number; // ID
@@ -69,9 +66,8 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-tls12070',
   templateUrl: './tls12070.component.html',
-  styleUrl: './tls12070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, CommonModule, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, ReportTableGroupComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, ReportTableGroupComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, CommonModule, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS12070Component extends BasicQueryPageComponent<Customer_interview> implements OnInit {
   activeReport: 'query' | 'willing' = 'query';
@@ -106,7 +102,6 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
       visible: true,
       format: (val: string) => getSYS1000Options('T116').find(item => item.value === val)?.label || val,
       exportFormat: transformOptionsForExport(getSYS1000Options('T116'), 'value', 'label')
-      // exportFormat: [{'1':'廠商1'},{'2':'廠商2'},{'3':'廠商3'}]
     },
     // SYS1000.T116 //中
     { field: 'ven_uniform', header: '廠商統一編號', visible: true }, // POS2013
@@ -143,7 +138,10 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   selectedItems: Customer_interview[] = [];// 多選項目
   // ----------------------------------------------------------------
-  constructor(private tls12070Service: Tls12070Service) {
+  constructor(
+    private tls12070Service: Tls12070Service,
+    private dropDownListService: DropDownListService,
+  ) {
     super();
   }
 
@@ -155,7 +153,8 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   onSubmit(frm: FormGroup) {
     this.activeReport = 'query';
     this.handleSubmit(frm, () => {
-      this.tls12070Service.queryTLS12070(frm.value).subscribe({
+      // 查詢 Customer_interview資料表
+      this.tls12070Service.queryTLS12070(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.interview_data = response.Data || [];
@@ -185,11 +184,10 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   // 查詢 意願報表
   onWillingClick(frm: FormGroup) {
-    // TODO: 呼叫意願報表查詢 API
     this.activeReport = 'willing';
     console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      this.tls12070Service.queryTLS12070_Summary(frm.value).subscribe({
+      this.tls12070Service.queryTLS12070_Summary(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.willing_data = response.Data || [];
@@ -212,39 +210,9 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   }
 
-  // 刪除項目
-  onDelete(data: Customer_interview | Customer_interview[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    this.selectedItems = [];
-  }
-
-  isRowSelectable(): boolean {
-    // return rowData.CanDel ?? false;
-    return true;
-  }
-
   loadOptions() {
     // 查詢 接待人員
-    this.tls12070Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 名稱
         Name: item.Name, // 接待人員 名稱
@@ -252,11 +220,5 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
-
-    // // 查詢 意願等級
-    // this.tls12070Service.querySYS1000_DropDownList({ SYS_Type: 'T116' })
-    //   .subscribe((response) => {
-    //     this.willingLevelMap = response.Data;
-    //   });
   }
 }

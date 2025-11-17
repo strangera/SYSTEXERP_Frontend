@@ -12,7 +12,7 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { CRUDStatus, ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
@@ -61,6 +61,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     sys3A00: new FormControl<string[]>([]), // 區域
   });
   public readonly df = computed(() => this.dataForm.controls);
+
+  public readonly tableData = signal<TLS26010Data[]>([]);
+  public readonly tableDetailedData = signal<TLS26010Detail>(Object.create(null));
+  public readonly totalRecords = signal(0);
 
   // 變化追蹤
   private readonly sys3800Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3800.valueChanges);
@@ -127,7 +131,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     const dialog = this.dialogVisible();
     if (!dialog) return;
 
-    const incoming = dialog === 'ecr' ? this.service.ecrData() : this.service.tltData();
+    const incoming = dialog === 'ecr' ? this.service.ecrOptions() : this.service.tltOptions();
     if (!incoming?.length) return;
 
     const filtered = dialog === 'ecr' ? this.ecrTableFiltered() : this.tltTableFiltered();
@@ -146,7 +150,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   });
   /** 初始化 ECR & TLT Table資料 */
   public readonly TLS26010DetailEffect = effect(() => {
-    const detail = this.service.TLS26010Detail();
+    const detail = this.tableDetailedData();
     if (!detail) return;
     this.dataForm.patchValue({
       ecr_nos: detail.ecr_list,
@@ -160,8 +164,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly dialogData = computed(() =>
-    this.dialogVisible() === 'ecr' ? this.service.ecrData() :
-      this.dialogVisible() === 'tlt' ? this.service.tltData() : []
+    this.dialogVisible() === 'ecr' ? this.service.ecrOptions() :
+      this.dialogVisible() === 'tlt' ? this.service.tltOptions() : []
   );
   public readonly dialogColumn = computed(() =>
     this.dialogVisible() === 'ecr' ? this.columns3 :
@@ -196,10 +200,17 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     new Map((this.tltNosSignal() || []).map(item => [item.tlt_no, item] as const))
   );
 
-  public dialogLoading() {
-    return this.dialogVisible() === 'ecr' ? this.service.ecrLoading :
-      this.dialogVisible() === 'tlt' ? this.service.tltLoading : !1;
-  }
+  public readonly dialogLoading = computed(() => {
+    return this.dialogVisible() === 'ecr' ? this.service.ecrLoading() :
+      this.dialogVisible() === 'tlt' ? this.service.tltLoading() : !1;
+  });
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.sys3800Loading()
+      || this.service.sys3900Loading()
+      || this.service.sys3A00Loading()
+      || this.service.tableLoading();
+  });
 
   public readonly columns: Column[] = [
     { field: 'ecr_no', header: '收銀機號' },
@@ -241,7 +252,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26010', this.dataForm);
-    this.isFormCreateable && this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
 
     this.dependencyChangeSubject.pipe(
       debounceTime(400),
@@ -261,12 +271,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.service.loadSYS3A00();
 
     // 使用 map + 結構賦值，避免在迴圈中建立暫時物件
-    const ecrInit = this.service.ecrData();
+    const ecrInit = this.service.ecrOptions();
     this.ecrTableFiltered.set(ecrInit.map(({ ecr_no, ecr_name, tlt_no, tlt_name }): EcrItem => (
       { ecr_no, ecr_name, tlt_no, tlt_name, Status: ItemOperationStatus.Original }
     )));
 
-    const tltInit = this.service.tltData();
+    const tltInit = this.service.tltOptions();
     this.tltTableFiltered.set(tltInit.map((item): TltItem => ({
       tlt_no: item.tlt_no,
       tlt_name: item.tlt_name,
@@ -339,12 +349,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      this.loading = !0;
       const d = this.dataForm.getRawValue();
       const payload: PodRequest = {
         ecr_list: this.ecrTableFiltered(),
         talent_list: this.tltTableFiltered(),
         pod_info: {
+          ...createPaginationConfig(),
           ...(this.isFormCreateable ? {} : { pod_no: this.rowdata?.pod_no }),
           ...(this.isFormCreateable ? {} : { id: this.rowdata?.id }),
           pod_desc: d.pod_desc || '',
@@ -355,17 +365,17 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       };
 
       this.logger.debug(`submit:`, [d, payload]);
-      (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload))
+      (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload, this.tableData))
         .pipe(
           tap(() => { if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel(); }),
           finalize(() => {
-            this.loading = !1;
-            if (this.dialogVisible()) {
-              this.dialogVisible.set(!1);
-              this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
-            }
-          }))
-        .subscribe();
+            if (!this.dialogVisible()) return;
+            this.dialogVisible.set(!1);
+            this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+          })).subscribe({
+            next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+            error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+          });
     });
   };
 
@@ -417,7 +427,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public onSelectionChange(event: (EcrItem | TltItem)[]): void {
     const dialog = this.dialogVisible();
-    if (!dialog || this.service.ecrLoading || this.service.tltLoading) return;
+    if (!dialog || this.service.ecrLoading() || this.service.tltLoading()) return;
     dialog === 'ecr' && this.df().ecr_nos.patchValue(<EcrItem[]>event);
     dialog === 'tlt' && this.df().tlt_nos.patchValue(<TltItem[]>event);
     this.logger.debug(`onSelectionChange:`, [dialog, event, this.dataForm.value]);
@@ -466,7 +476,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   };
 
   public ngOnDestroy(): void {
-    this.service.TLS26010Detail.set(void 0);
     this.dependencyChangeSubject.complete();
     this.destroy$.next();
     this.destroy$.complete();

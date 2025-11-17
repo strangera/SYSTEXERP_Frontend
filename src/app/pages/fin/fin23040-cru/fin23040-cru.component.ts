@@ -96,7 +96,6 @@ export class FIN23040CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '120010';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.needPayTicketService.getNeedPayTickets().subscribe(data => {
       this.accountingCodeOptions = data;

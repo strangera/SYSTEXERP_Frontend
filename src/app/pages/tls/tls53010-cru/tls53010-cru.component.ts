@@ -56,7 +56,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   }
 
   dataForm = this.formBuilder.nonNullable.group({
-    PST_No: [''], // 盤點單編號
+    PST_No: ['系統自動產生'], // 盤點單編號
     HOS_No: [null, Validators.required], // 倉別代碼 - 必填
     LOGO_No: [null, Validators.required], // 品牌代碼 - 必填
     PST_Date: [this.yesterday.toString(), Validators.required], // 盤點基準日期 - 必填
@@ -77,6 +77,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
 
   data: POS2004Info[] = [];
   selectedItems: POS2004Info[] = [];
+  detailLoading = false;
 
   constructor(
     private tls53010Service: TLS53010Service,
@@ -93,14 +94,10 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     this.loadOptions();
     this.setReadOnlyFields();
 
-    if (this.crudstatus === 'Create') {
-      // 新增時產生盤點單編號
-      this.dataForm.patchValue({ PST_No: '系統自動產生' });
-    }
-
     // 編輯跟檢視時 帶回明細資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       if (this.rowdata) {
+        this.detailLoading = true;
         const payload: TLS53010DetailQueryRequest = {
           MID: 0,
           PST_No: this.rowdata.PST_No,
@@ -108,7 +105,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
           HOS_No: this.rowdata.HOS_No
         };
         this.tls53010Service.queryTLS53010Detail(payload)
-          .pipe(untilDestroyed(this))
+          .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
           .subscribe(response => {
             this.data = response.Data;
           });
@@ -189,8 +186,15 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     });
     // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
-      if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+      if (value && this.dialogQueryForm.controls.CAT_LNo.value) {
+        this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.dialogQueryForm.controls.CAT_LNo.value,
+              CAT_MNo: value
+            }
+          ]
+        }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
         });
         this.dialogQueryForm.controls.CAT_SNo.enable();
@@ -210,8 +214,12 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   insertTLS53010(form: FormGroup) {
     this.handleSubmit(form, () => {
       if (this.canAdd()) {
-        this.tls53010Service.insertTLS53010(form.getRawValue())
-          .pipe(untilDestroyed(this))
+        const payload = {
+          ...form.getRawValue(),
+          PST_Date: this.datePipe.transform(form.get('PST_Date')?.value, 'yyyy-MM-dd') || null
+        }
+        this.tls53010Service.insertTLS53010(payload)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
           .subscribe(() => {
             this.messageService.successBubble('新增全品項完成');
             this.resetForm();
@@ -250,7 +258,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位', format: (v, i, r) => r.UNIT_NAME },
+    { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_PageNum', header: '棚割編號' },
     { field: 'PLU_LocNo', header: '棚割序號' },
@@ -294,7 +302,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     return {
       HOS_No: this.dataForm.get('HOS_No')?.value || '',
       LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
-      PST_Date: this.dataForm.get('PST_Date')?.value || '',
+      PST_Date: this.datePipe.transform(this.dataForm.get('PST_Date')?.value, 'yyyy-MM-dd')!,
       PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
       POS2004List: this.data.map(item => ({
         PLU_MagNo: item.PLU_MagNo,
@@ -330,7 +338,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     return {
       POS2033M_ID: this.rowdata!.id,
       PST_No: this.dataForm.get('PST_No')?.value || '',
-      PST_Date: this.dataForm.get('PST_Date')?.value || '',
+      PST_Date: this.datePipe.transform(this.dataForm.get('PST_Date')?.value, 'yyyy-MM-dd')!,
       PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
       POS2004List: this.data.map(item => ({
         POS2033_ID: item.id || 0,

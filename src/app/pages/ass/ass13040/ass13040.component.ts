@@ -23,11 +23,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.4  批次報廢作業
 @Component({
-    selector: 'app-ass13040',
-    templateUrl: './ass13040.component.html',
-    styleUrl: './ass13040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13040',
+  templateUrl: './ass13040.component.html',
+  styleUrl: './ass13040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class ASS13040Component extends BasicQpageComponent implements OnInit {
   //
@@ -118,8 +118,7 @@ export class ASS13040Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310019';
     this.cruPage = '/ASS1000/ASS13040CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.itemCodeService.getSystemTypes().subscribe(data => {
       this.manageCodeOptions = data;

@@ -128,6 +128,9 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_no: [, []], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(50)]], // 櫃位名稱
     ven_uniform: [], // 廠商統一編號
+    ven_uniformList: [[]],
+    ven_no: [, [Validators.maxLength(50)]],
+    vendor_ven_no: [, [Validators.maxLength(16)]],
     location_no: [], // 位置編號
     contract_subno_from: [, [Validators.max(12)]], // 版本編號
     contract_subno_to: [, [Validators.max(12)]], // 版本編號
@@ -605,27 +608,31 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
  * 判斷作廢按鈕是否應該被禁用
  */
   private isVoidDisabled(rowData: ContractItem): boolean {
+    // 方法1: 使用後端傳來的 CanVoid 屬性(推薦)
+    if (rowData.CanVoid !== undefined) {
+      return !rowData.CanVoid; // CanVoid = 1 表示可作廢,所以要反轉
+    }
+
+    // 方法2: 前端自行判斷(備用方案,如果後端沒有傳 CanVoid)
     // 已作廢的不能再作廢
     if (rowData.approve_status === '3') {
       return true;
     }
 
-    // 未審核的可以作廢
-    if (rowData.approve_status === '1') {
-      return false;
-    }
+    // // 未審核的可以作廢
+    // if (rowData.approve_status === '1') {
+    //   return false;
+    // }
 
-    // 已審核的需要檢查契約是否已生效
-    if (rowData.approve_status === '2') {
-      const today = new Date();
-      const contractStart = new Date(rowData.tlt_contract_bdate);
-      // 契約已生效就不能作廢
-      return contractStart < today;
-    }
+    // // 已審核的需要檢查契約是否已生效
+    // if (rowData.approve_status === '2') {
+    //   const today = new Date();
+    //   const contractStart = new Date(rowData.tlt_contract_bdate);
+    //   return contractStart < today;
+    // }
 
-    return true; // 其他情況都禁用
+    return true;
   }
-
 
   /**
    * 作廢功能

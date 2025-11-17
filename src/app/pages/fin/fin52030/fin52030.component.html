@@ -28,25 +28,27 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="傳票種類"
                         controlName="VouType"
-                        [options]="service.subpoenaTypes()"
-                        optionLabel="Name"
-                        optionValue="No"
+                        [options]="service.vouTypeOptions()"
+                        optionLabel="label"
+                        optionValue="value"
                         [control]="qf().VouType"
                         [submitted]="submitted"></app-dropdown>
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="建立者"
                         controlName="CRT_USR_No"
                         [options]="service.usrList()"
-                        optionLabel="Name"
-                        optionValue="No"
+                        optionLabel="label"
+                        optionValue="value"
+                        [loading]="service.usrLoading()"
                         [control]="qf().CRT_USR_No"
                         [submitted]="submitted"></app-dropdown>
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="修改者"
                         controlName="UPD_USR_No"
                         [options]="service.usrList()"
-                        optionLabel="Name"
-                        optionValue="No"
+                        optionLabel="label"
+                        optionValue="value"
+                        [loading]="service.usrLoading()"
                         [control]="qf().UPD_USR_No"
                         [submitted]="submitted"></app-dropdown>
         </div>
@@ -54,7 +56,7 @@
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      [loading]="service.tableLoading"></app-button>
+                      [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -64,12 +66,14 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="filteredData()"
+    <app-table [data]="tableData()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+               [lazy]="true"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading"
+               [loading]="service.tableLoading()"
                [dataKey]="'id'"
                [tableKey]="'FIN52030'"></app-table>
   </div>

@@ -32,6 +32,8 @@ import { Tls12040FareCalculationService } from './services/tls12040-fare-calcula
 import { Tls12040FareValidationService } from './services/tls12040-fare-validation.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Tls12040FareDataService } from './services/tls12040-fare-data.service';
+import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
+import { CrudModeService } from '../tls12040/Workflow/crud-mode.service';
 
 interface CategoryItem {
   id: number;
@@ -55,6 +57,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   showCalculationDialog: boolean = false;
 
   orgOptions: any[] = [];
+  payNoOptions: any[] = [];
 
 
   fareData: { [key: string]: TLS12040FareItem[] } = {
@@ -80,6 +83,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private _cachedDeductionEColumns: ColumnDef[] | null = null;
 
   private _lastOrgOptionsLength = 0;
+  private _lastPayNoOptionsLength = 0;
   private _lastViewMode: boolean | null = null;
   private _lastContractInfoLength = 0;
   // 檢視模式用 要換方式
@@ -98,6 +102,10 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     return this.crudstatus === CRUDStatus.Create;
   }
 
+  get canToEdit(): boolean {
+    return this.isReadOnlyMode; // 檢視模式時不允許編輯，其他模式允許
+  }
+
   constructor(
     private route: ActivatedRoute,
     private tls12040Service: TLS12040Service,
@@ -110,6 +118,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     private fareCalculationService: Tls12040FareCalculationService,
 
     private locationOptionsService: LocationOptionsService,
+    private negotiatorService: NegotiatorOptionsService,
+    private crudModeService: CrudModeService,
 
   ) {
     super();
@@ -122,43 +132,103 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   ngOnInit(): void {
     window.scrollTo(0, 0);
 
-    // 先調用父類的初始化，這會設置正確的 crudstatus
+    // 優先從 CrudModeService 獲取 crudstatus
+    this.crudstatus = this.crudModeService.getCrudStatus();
+    console.log('從 CrudModeService 獲取初始 crudstatus:', this.crudstatus);
+
+    // 處理路由狀態
+    this.handleRouterState();
+
+    // 初始化頁面
     this.initializePage('TLS12040', this.dataForm);
 
-    // 🔥 保護和驗證 CRUD 狀態
+    // 驗證和保護狀態
     this.validateAndProtectCrudStatus();
 
     console.log('=== CRUD 狀態調試 ===');
     console.log('當前 CRUD 狀態:', this.crudstatus);
-    console.log('路由狀態:', this.router.lastSuccessfulNavigation?.extras?.state);
     console.log('isReadOnlyMode:', this.isReadOnlyMode);
     console.log('isEditMode:', this.isEditMode);
     console.log('isCreateMode:', this.isCreateMode);
 
+    // 其他初始化
     this.initializeDataStructure();
     this.contractInfoColumns = TLS12040FareColumnDefinitions.getContractInfoColumns();
-
-    // 其他初始化邏輯...
     this.loadOrgOptions();
+    this.loadPayNoOptions();
+    this.loadApplyNo();
     this.loadWorkflowDataWithRetry();
+
   }
 
-  // 🔥 新增方法：驗證和保護 CRUD 狀態
-  private validateAndProtectCrudStatus(): void {
-    const routeState = this.router.lastSuccessfulNavigation?.extras?.state;
+  private loadApplyNo(): void {
     const flowState = this.flowService.getCurrentState();
-    // 🔥 如果狀態不一致，以工作流程狀態為準
-    if (flowState.isNewContract !== undefined) {
-      const expectedStatus = flowState.isNewContract ? CRUDStatus.Create :
-        (flowState.applyNo ? CRUDStatus.Edit : CRUDStatus.Create);
+    const cruData = this.flowService.getCruData();
 
-      if (this.crudstatus !== expectedStatus) {
-        console.warn(`⚠️ 狀態不一致！修正 ${this.crudstatus} -> ${expectedStatus}`);
-        this.crudstatus = expectedStatus;
-        // this.formTitle = this.getFormTitleForNext1(this.crudstatus);
-      }
+    this.currentApplyNo = flowState?.applyNo || cruData?.apply_no || '';
+
+    console.log('📋 當前 apply_no:', this.currentApplyNo);
+
+    if (!this.currentApplyNo) {
+      console.warn('⚠️ 未找到 apply_no');
     }
   }
+
+  //  新增：處理路由狀態的方法
+  private handleRouterState(): void {
+    const state = this.router.lastSuccessfulNavigation?.extras?.state;
+    console.log('=== Next1 路由狀態接收 ===', state);
+
+    if (state && state['crudstatus']) {
+      this.crudstatus = state['crudstatus'];
+      this.crudModeService.setCrudStatus(this.crudstatus);
+      this.flowService.setCurrentState({ crudstatus: this.crudstatus }); // 同步到 flowService
+      console.log('從路由接收到 CRUD 狀態:', this.crudstatus);
+    } else {
+      const flowState = this.flowService.getCurrentState();
+      this.crudstatus = flowState.crudstatus || this.crudModeService.getCrudStatus() || CRUDStatus.Read;
+      console.warn('路由未提供 crudstatus，使用 flowService 或 CrudModeService 狀態:', this.crudstatus);
+      this.crudModeService.setCrudStatus(this.crudstatus);
+      this.flowService.setCurrentState({ crudstatus: this.crudstatus }); // 確保儲存
+    }
+  }
+  //  新增方法：驗證和保護 CRUD 狀態
+  private validateAndProtectCrudStatus(): void {
+    const flowState = this.flowService.getCurrentState();
+    console.log('flowService 狀態:', flowState);
+
+    // 檢查有效的 CRUD 狀態
+    const validStatuses = [CRUDStatus.Create, CRUDStatus.Edit, CRUDStatus.Read];
+
+    // 優先使用已定義的 crudstatus（來自路由或 CrudModeService）
+    if (this.crudstatus && validStatuses.includes(this.crudstatus)) {
+      console.log('crudstatus 已定義，無需修正:', this.crudstatus);
+      this.crudModeService.setCrudStatus(this.crudstatus);
+      this.flowService.setCurrentState({ crudstatus: this.crudstatus });
+      return;
+    }
+
+    // 如果 crudstatus 未定義或無效，從 flowService 恢復
+    if (flowState.crudstatus && validStatuses.includes(flowState.crudstatus)) {
+      this.crudstatus = flowState.crudstatus;
+      console.log('從 flowService 恢復 crudstatus:', this.crudstatus);
+    } else if (flowState.isNewContract !== undefined) {
+      // 僅在無有效 crudstatus 時推斷
+      this.crudstatus = flowState.isNewContract ? CRUDStatus.Create :
+        (flowState.applyNo ? CRUDStatus.Edit : CRUDStatus.Create);
+      console.warn(`⚠️ crudstatus 未定義，根據 flowService 推斷為 ${this.crudstatus}`);
+    } else {
+      // 最終 fallback 為 Read
+      this.crudstatus = CRUDStatus.Read;
+      console.warn('flowService 未提供有效狀態，預設為 Read');
+    }
+
+    this.crudModeService.setCrudStatus(this.crudstatus);
+    this.flowService.setCurrentState({ crudstatus: this.crudstatus });
+    console.log('最終 CRUD 狀態:', this.crudstatus, 'isReadOnlyMode:', this.crudModeService.isReadOnlyMode);
+  }
+
+
   private initializeDataStructure(): void {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     capTypes.forEach(capType => {
@@ -177,16 +247,38 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       next: (options) => {
         this.orgOptions = options;
 
-        // 🔥 強制清除所有快取，確保重新生成欄位定義
+        //  強制清除所有快取，確保重新生成欄位定義
         this.clearColumnCache();
 
-        // 🔥 觸發變更檢測
+        //  觸發變更檢測
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('載入組織選項失敗:', error);
         this.messageService.warnBubble('載入組織選項失敗');
         this.orgOptions = [];
+      }
+    });
+
+    this.subscriptions.push(subscription);
+  }
+
+  private loadPayNoOptions(): void {
+    const subscription = this.negotiatorService.getPOS1006Options().subscribe({
+      next: (response: any[]) => {
+        this.payNoOptions = response;
+        console.log(' 支付編號選項載入完成:', this.payNoOptions.length);
+
+        //  強制清除所有快取，確保重新生成欄位定義
+        this.clearColumnCache();
+
+        //  觸發變更檢測
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error('❌ 載入支付編號選項失敗:', error);
+        this.messageService.warnBubble('載入支付編號選項失敗');
+        this.payNoOptions = [];
       }
     });
 
@@ -202,69 +294,107 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 重置快取標記
     this._lastOrgOptionsLength = -1;
+    this._lastPayNoOptionsLength = -1;
   }
 
   private loadWorkflowDataWithRetry(retryCount: number = 0): void {
+    // 1. 先取得 apply_no
+    const cruData = this.flowService.getCruData();
+    this.currentApplyNo = cruData?.apply_no || '';
+    console.log('📋 從 CRU 載入 apply_no:', this.currentApplyNo);
 
-    // 從 SessionStorage 獲得正確的 applyNo
-    const saved = sessionStorage.getItem('TLS12040_FLOW');
-    let realApplyNo = '';
-
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.stepData && Array.isArray(parsed.stepData)) {
-          const cruEntry = parsed.stepData.find(([key]: [string, any]) => key === 'cru');
-          if (cruEntry && cruEntry[1]?.data?.apply_no) {
-            realApplyNo = cruEntry[1].data.apply_no;
-          }
-        }
-      } catch (error) {
-        console.error('解析 SessionStorage 失敗:', error);
-      }
-    }
-
-    // 檢查工作流程服務狀態
-    const currentState = this.flowService.getCurrentState();
-
-    if (realApplyNo) {
-      this.currentApplyNo = realApplyNo;
-    } else if (currentState.applyNo) {
-      this.currentApplyNo = currentState.applyNo;
-    } else {
-      this.currentApplyNo = '';
-    }
-
-    // 載入合約資訊
+    // 2. 載入合約資訊
     this.loadContractInfo();
 
-    //  修正：優先載入暫存資料
-    this.loadFareDataWithPriority();
+    // ✅ 3. 優先載入暫存，沒有才打 API
+    const next1Data = this.flowService.getNext1Data<Next1Data>();
+
+    if (next1Data && next1Data.fareData) {
+      console.log('✅ 使用 workflow 暫存的費用資料');
+      this.fareData = next1Data.fareData;
+      this.originalFareData = JSON.parse(JSON.stringify(next1Data.fareData)); // 深拷貝
+    } else if (this.currentApplyNo) {
+      console.log('📡 暫存無資料，從 API 載入');
+      this.loadFareDataFromAPI();
+    } else {
+      console.warn('⚠️ 沒有 apply_no 也沒有暫存資料');
+    }
   }
 
+
   private loadFareDataWithPriority(): void {
-    // 1. 優先檢查 Next1 步驟的暫存資料
+    console.log('📊 根據模式載入資料:', {
+      模式: this.crudstatus,
+      apply_no: this.currentApplyNo
+    });
+
+    // 🔴 檢視模式：一律從 API 載入最新資料
+    if (this.isReadOnlyMode) {
+      console.log('👁️ 檢視模式：強制從 API 載入');
+      this.loadFareDataFromAPI();
+      return;
+    }
+
+    // 🟡 編輯/新增模式：優先使用暫存（保留用戶修改）
     const savedNext1Data = this.flowService.getNext1Data<Next1Data>();
 
-    //  放寬暫存載入條件
     if (savedNext1Data?.fareData) {
-      // 檢查暫存資料是否有意義
-      const hasAnyFareData = Object.keys(savedNext1Data.fareData).some(capType =>
-        Array.isArray(savedNext1Data.fareData[capType]) &&
-        savedNext1Data.fareData[capType].length > 0
-      );
+      const hasValidCache = this.validateCacheData(savedNext1Data);
 
-      if (hasAnyFareData) {
+      if (hasValidCache) {
+        console.log('💾 使用暫存資料（編輯模式）');
         this.originalFareData = this.deepCloneFareData(savedNext1Data.fareData);
         this.filterData();
         this.verifyDataIntegrity();
-        //  載入暫存後，檢查是否需要同步最新的 API 資料
-        this.checkAndSyncWithAPI();
         return;
+      } else {
+        console.warn('⚠️ 暫存資料無效，重新載入');
       }
     }
-    // 2. 沒有有效暫存才從 API 載入
+
+    // 🟢 沒有有效暫存：從 API 載入
     this.loadFareDataFromAPI();
+  }
+
+  /**
+ * 驗證暫存資料是否有效
+ */
+  private validateCacheData(cacheData: Next1Data): boolean {
+    // 1. 檢查 apply_no 是否一致
+    if (cacheData.applyNo !== this.currentApplyNo) {
+      console.warn('⚠️ apply_no 不一致:', {
+        暫存: cacheData.applyNo,
+        當前: this.currentApplyNo
+      });
+      return false;
+    }
+
+    // 2. 檢查時間戳（超過 30 分鐘視為過期）
+    if (cacheData.timestamp) {
+      const cacheAge = Date.now() - cacheData.timestamp;
+      const maxAge = 30 * 60 * 1000; // 30 分鐘
+
+      if (cacheAge > maxAge) {
+        console.warn('⚠️ 暫存資料已過期:', {
+          經過時間: Math.round(cacheAge / 60000) + ' 分鐘'
+        });
+        return false;
+      }
+    }
+
+    // 3. 檢查是否有資料
+    const hasFareData = Object.keys(cacheData.fareData || {}).some(capType =>
+      Array.isArray(cacheData.fareData[capType]) &&
+      cacheData.fareData[capType].length > 0
+    );
+
+    if (!hasFareData) {
+      console.warn('⚠️ 暫存無扣款資料');
+      return false;
+    }
+
+    console.log('✅ 暫存資料驗證通過');
+    return true;
   }
 
   /**
@@ -405,7 +535,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('載入合約資訊...');
 
     // 指定型別
-    const cruData = this.flowService.getCruData<SimpleContractInfo>();
+    const cruData = this.flowService.getCruData();
     console.log('CRU 資料:', cruData);
 
     if (cruData) {
@@ -567,36 +697,30 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 儲存到工作流程
   private saveFareDataToWorkflow(): void {
-    try {
-      console.log('準備儲存 Next1 資料到工作流程...');
+    console.log('儲存 next1 資料前檢查 cru:');
+    const cruBefore = this.flowService.getStepData('cru');
+    // console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
 
-      if (!this.hasAnyData()) {
-        console.log('沒有資料需要儲存');
-        return;
+    const next1Data = {
+      fareData: this.fareData,
+      selectedItems: Object.values(this.fareData).flat().filter(item => item.is_selected),
+      contractInfo: this.contractInfoData
+    };
+
+    const saveResult = this.flowService.setStepData('next1', next1Data);
+
+    if (saveResult) {
+      // console.log('✅ next1 資料儲存成功');
+      const cruAfter = this.flowService.getStepData('cru');
+      // console.log('儲存 next1 後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
+      if (
+        cruBefore?.data?.locationInfo?.length > 0 &&
+        (!cruAfter?.data?.locationInfo || cruAfter.data.locationInfo.length === 0)
+      ) {
+        console.error('🚨 next1 儲存導致 cru locationInfo 清空！');
       }
-
-      const next1Data: Next1Data = {
-        fareData: { ...this.originalFareData },
-        selectedItems: this.getSelectedItems(),
-        contractInfo: this.currentContractData,
-        timestamp: new Date().getTime(),
-        applyNo: this.currentApplyNo
-      };
-
-      // 儲存到工作流程服務
-      const saveResult = this.flowService.setNext1Data(next1Data);
-
-      if (saveResult) {
-        console.log('✅ Next1 資料已儲存到工作流程:', {
-          扣款項目總數: this.getTotalItemCount(),
-          已選項目數: this.getTotalSelectedCount(),
-          時間戳: new Date(next1Data.timestamp).toLocaleString()
-        });
-      }
-
-    } catch (error) {
-      console.error('儲存 Next1 資料失敗:', error);
-      this.messageService.warnBubble('儲存扣款資料失敗');
+    } else {
+      console.error('❌ next1 資料儲存失敗');
     }
   }
 
@@ -639,9 +763,26 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 模式切換
   toggleCommonMode(): void {
-    this.showMode = this.showMode === 'common' ? 'all' : 'common';
-    console.log('切換顯示模式到:', this.showMode);
-    this.filterData();
+    console.log('切換顯示模式，當前模式:', this.showMode);
+
+    // 顯示載入提示
+    this.loading = true;
+    this.messageService.blockUi();
+
+    // 延遲執行，讓載入提示先顯示
+    setTimeout(() => {
+      if (this.showMode === 'common') {
+        this.showMode = 'all';
+      } else {
+        this.showMode = 'common';
+      }
+
+      console.log('已切換到:', this.showMode);
+      this.filterData();
+
+      this.loading = false;
+      this.messageService.unblockUi();
+    }, 500); // 給予 500ms 的延遲，讓畫面有時間顯示 loading
   }
 
   getCommonModeText(): string {
@@ -683,39 +824,40 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   override onCancel(): void {
-    console.log('⬅️ 返回上一步');
-    console.log('當前 CRUD 狀態:', this.crudstatus);
+    console.log('⬅️ 返回上一步 (CRU)');
+    console.log('當前狀態:', {
+      crudstatus: this.crudstatus,
+      apply_no: this.currentApplyNo,
+      hasChanges: this.hasUserModifications()
+    });
 
-    // 先儲存資料到工作流程
+    // 🟢 儲存資料到工作流程
     try {
       this.saveFareDataToWorkflow();
-      console.log('✅ 資料已儲存到工作流程');
+      console.log('✅ Next1 資料已儲存');
     } catch (error) {
-      console.error('❌ 儲存資料到工作流程失敗:', error);
-      // 繼續導航，不要因為儲存失敗而阻止返回
+      console.error('❌ 儲存失敗:', error);
     }
 
-    // 準備導航狀態
+    // 🔴 關鍵：確保狀態正確傳遞
     const navigationExtras: NavigationExtras = {
       state: {
-        crudstatus: this.crudstatus,
+        crudstatus: this.crudstatus,  // 保持原狀態
         fromRoute: this.router.url,
+        fromNext1: true,  // 標記來自 Next1
+        returnToEdit: true  // 標記要保持編輯狀態
       }
     };
 
-    console.log('🚀 準備導航回上一步，攜帶狀態:', navigationExtras.state);
+    console.log('🚀 導航參數:', navigationExtras.state);
 
-    // 直接導航，不需要 setTimeout
     this.router.navigate(['account/tls/tls12040cru'], navigationExtras)
       .then(success => {
         if (success) {
-          console.log('✅ 成功導航回上一步');
+          console.log('✅ 成功返回 CRU');
         } else {
           console.error('❌ 導航失敗');
         }
-      })
-      .catch(error => {
-        console.error('❌ 導航時發生錯誤:', error);
       });
   }
 
@@ -831,7 +973,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionAColumns');
+      // console.log('🔄 重新生成 deductionAColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionAColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       if (this.isReadOnlyMode) {
@@ -848,7 +990,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionBColumns');
+      // console.log('🔄 重新生成 deductionBColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionBColumns(this.contractInfoData);
       if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
@@ -865,7 +1007,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionCColumns');
+      // console.log('🔄 重新生成 deductionCColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionCColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       if (this.isReadOnlyMode) {
@@ -880,12 +1022,14 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionDColumns(): ColumnDef[] {
     if (!this._cachedDeductionDColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastPayNoOptionsLength !== this.payNoOptions.length ||
       this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionDColumns');
+      // console.log('🔄 重新生成 deductionDColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      columns = TLS12040FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions);
       if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
@@ -901,9 +1045,10 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionEColumns');
+      // console.log('🔄 重新生成 deductionEColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      columns = TLS12040FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions);
       if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
@@ -915,6 +1060,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private _updateCacheFlags(): void {
     this._lastOrgOptionsLength = this.orgOptions.length;
+    this._lastPayNoOptionsLength = this.payNoOptions.length;
     this._lastViewMode = this.isReadOnlyMode;
     this._lastContractInfoLength = this.contractInfoData.length;
   }
@@ -998,7 +1144,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       // 觸發您現有的狀態更新
       this.updateRowDataState(this.currentRowData, this.currentCapType);
-      this.messageService.successBubble('✅ 自動計算完成！');
+      this.messageService.successBubble(' 自動計算完成！');
     }
 
     // 關閉對話框
@@ -1015,7 +1161,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 儲存到工作流
     this.saveFareDataToWorkflow();
 
-    console.log(`✅ ${capType}類型資料狀態更新完成`);
+    // console.log(` ${capType}類型資料狀態更新完成`);
   }
 
   private updateOriginalDataItem(updatedItem: any, capType: string): void {
@@ -1025,7 +1171,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         ...this.originalFareData[capType][originalIndex],
         ...updatedItem
       };
-      console.log(`🔄 已更新原始資料: ${capType}[${originalIndex}]`);
+      // console.log(`🔄 已更新原始資料: ${capType}[${originalIndex}]`);
     }
   }
 
@@ -1182,7 +1328,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
+    // console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
 
     // 根據 capType 進行對應的計算處理
     switch (capType) {
@@ -1242,7 +1388,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // A類型金額計算 - 任何相關欄位變更都觸發
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
-      // 🔥 關鍵：確保預設值存在
+      //  關鍵：確保預設值存在
       if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
         rowData.tpy_qty = 1;
         console.log('A類型計算：自動設定數量預設值為 1');
@@ -1276,7 +1422,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
-      // 🔥 同樣確保預設值
+      //  同樣確保預設值
       if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
         rowData.tpy_qty = 1;
       }
@@ -1294,7 +1440,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // C類型計算優化 - 最重要的優化
   private handleTypeCCalculation(fieldName: string, newValue: any, rowData: any): void {
-    console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
+    // console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
 
     // 日期變更時重新計算期數
     if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
@@ -1325,7 +1471,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       // 驗證計算結果
       const isValid = this.fareCalculationService.isCalculationValid(rowData, 'C');
       if (isValid) {
-        console.log(`✅ C類型計算成功: 總額=${rowData.tpy_totalamt}, 期數=${rowData.period_nos}, 月額=${rowData.tpy_amount}, 首期=${rowData.down_payment}`);
+        console.log(` C類型計算成功: 總額=${rowData.tpy_totalamt}, 期數=${rowData.period_nos}, 月額=${rowData.tpy_amount}, 首期=${rowData.down_payment}`);
       } else {
         console.warn(`⚠️ C類型計算結果可能有誤`);
       }
@@ -1383,7 +1529,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
           rowData.period_nos = calculatedPeriods;
 
-          console.log(`✅ 期數更新: ${oldPeriods} → ${calculatedPeriods}`);
+          console.log(` 期數更新: ${oldPeriods} → ${calculatedPeriods}`);
 
           // 如果期數變化，觸發C類型重新計算
           if (oldPeriods !== calculatedPeriods) {
@@ -1488,12 +1634,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         ...newData
       };
     }
-
+    this.crudModeService.setCrudStatus(this.crudstatus);
     this.saveFareDataToWorkflow();
   }
   onFareTableEdit(rowData: any, capType: string): void {
     console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
     this.ensureDefaultValues(rowData, capType);
+    this.saveFareDataToWorkflow();
   }
 
   private ensureDefaultValues(item: any, capType: string): void {
@@ -1534,15 +1681,15 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private getTotalLocationSpace(): number {
     // 從工作流程服務取得 CRU 資料
-    const cruData = this.flowService.getCruData<any>();
+    const cruData = this.flowService.getCruData();
 
-    if (!cruData || !cruData.locationData || !Array.isArray(cruData.locationData)) {
+    if (!cruData || !cruData.locationInfo || !Array.isArray(cruData.locationInfo)) {
       console.log('沒有位置資料可計算坪數');
       return 0;
     }
 
     // 計算所有有效位置的坪數總和
-    const totalSpace = cruData.locationData
+    const totalSpace = cruData.locationInfo
       .filter((item: any) =>
         item._status !== 'deleted' && // 排除已刪除的項目
         item.location_no && // 確保有位置編號
@@ -1554,8 +1701,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       }, 0);
 
     console.log('計算位置總坪數:', {
-      位置數量: cruData.locationData.length,
-      有效位置: cruData.locationData.filter((item: any) =>
+      位置數量: cruData.locationInfo.length,
+      有效位置: cruData.locationInfo.filter((item: any) =>
         item._status !== 'deleted' && item.location_no && item.location_no.trim() !== ''
       ).length,
       總坪數: totalSpace
@@ -1565,10 +1712,16 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnDestroy(): void {
-    console.log('TLS12040Next1Component 銷毀');
+    console.log('next1 銷毀前檢查 cru:');
+    const cruBefore = this.flowService.getStepData('cru');
+    console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
+
     this.saveFareDataToWorkflow();
+
+    const cruAfter = this.flowService.getStepData('cru');
+    console.log('next1 銷毀後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
+
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
-
 }
 

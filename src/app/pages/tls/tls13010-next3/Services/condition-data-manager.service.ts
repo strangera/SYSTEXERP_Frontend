@@ -442,14 +442,21 @@ export class ConditionDataManager {
   }
 
   private mapBaseTierData(data: RentSettingApiData): BaseTierCondition[] {
-    // 優先使用 BottomTierDetails，如果沒有才使用舊的組合邏輯
+    console.log('🔍 mapBaseTierData - 開始處理包底加層級資料');
+    console.log('📦 API 資料結構:', {
+      hasBottomTierDetails: !!data.BottomTierDetails?.length,
+      hasLevelDetails: !!data.LevelDetails?.length,
+      hasLimitDetails: !!data.LimitDetails?.length
+    });
+
+    // 第一優先：使用新的 BottomTierDetails（如果存在）
     if (data.BottomTierDetails?.length) {
-      console.log('🎯 使用新的 BottomTierDetails 資料');
+      console.log('✅ 使用 BottomTierDetails 資料，項目數量:', data.BottomTierDetails.length);
       return data.BottomTierDetails.map((item: BottomTierDetailApiItem) => ({
         id: item.id,
         talent_id: item.talent_id.toString(),
         seq_no: item.seq_no || 0,
-        tlt_id: '', // BottomTierDetails 中沒有 tlt_id
+        tlt_id: '',
         cag_bdate: this.formatDate(item.cag_bdate),
         cag_edate: this.formatDate(item.cag_edate),
         limit_amt: item.limit_amt || 0,
@@ -460,23 +467,37 @@ export class ConditionDataManager {
       }));
     }
 
-    // 保留原本的邏輯作為備用
-    if (!data.LimitDetails?.length || !data.LevelDetails?.length) return [];
+    if (!data.LevelDetails?.length) {
+      console.log('⚠️ 沒有可用的包底加層級資料');
+      return [];
+    }
 
-    console.log('🎯 使用舊的 LimitDetails + LevelDetails 組合邏輯');
-    return data.LevelDetails.map((levelItem: any) => ({
-      id: levelItem.id,
-      talent_id: levelItem.talent_id.toString(),
-      seq_no: levelItem.seq_no || 0,
-      tlt_id: '',
-      cag_bdate: this.formatDate(levelItem.cag_bdate),
-      cag_edate: this.formatDate(levelItem.cag_edate),
-      limit_amt: levelItem.limit_amt || data.LimitDetails?.[0]?.limit_amt || 0,
-      start_number: levelItem.start_number || 0,
-      end_number: levelItem.end_number || 0,
-      charge_rate: levelItem.charge_rate || 0,
-      _status: 'original'
-    }));
+    console.log('✅ 使用 LevelDetails 資料（可能包含 limit_amt），項目數量:', data.LevelDetails.length);
+
+    return data.LevelDetails.map((levelItem: any) => {
+      const baseTierItem: BaseTierCondition = {
+        id: levelItem.id,
+        talent_id: levelItem.talent_id.toString(),
+        seq_no: levelItem.seq_no || 0,
+        tlt_id: '',
+        cag_bdate: this.formatDate(levelItem.cag_bdate),
+        cag_edate: this.formatDate(levelItem.cag_edate),
+        // 優先從 levelItem 讀取 limit_amt，如果沒有再從 LimitDetails 取，最後才用 0
+        limit_amt: levelItem.limit_amt || data.LimitDetails?.[0]?.limit_amt || 0,
+        start_number: levelItem.start_number || 0,
+        end_number: levelItem.end_number || 0,
+        charge_rate: levelItem.charge_rate || 0,
+        _status: 'original'
+      };
+
+      console.log(`📋 項目 ${baseTierItem.seq_no} 資料:`, {
+        limit_amt: baseTierItem.limit_amt,
+        start_number: baseTierItem.start_number,
+        end_number: baseTierItem.end_number
+      });
+
+      return baseTierItem;
+    });
   }
 
   // 類型判斷方法

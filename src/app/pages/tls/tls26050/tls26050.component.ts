@@ -10,8 +10,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { FloorService } from '@service/basic/floor.service';
-import { RegionService } from '@service/basic/region-code.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -22,15 +20,27 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { DropdownOption } from '@shared/constants/business.constants';
 import { CounterNameService } from '@service/basic/counter-name.service';
-import { BusinessClassificationService } from '../tls12040-cru/services/business-classification.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls26050',
   templateUrl: './tls26050.component.html',
-  styleUrl: './tls26050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TranslateModule,
+    RadiobuttonComponent,
+    CalendarComponent,
+    DropdownComponent,
+    NgIf,
+    MultiSelectComponent,
+    CalendarRangeQuickComponent,
+    CustomFooterTableComponent,
     DropdownComponent
   ]
 })
@@ -50,14 +60,14 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
 
   queryForm = this.formBuilder.group({
     reportType: ['1'], // 報表類型
-    floor: [[]], // 樓層 string[]
-    region: [[]], // 區域 string[]
-    bus_type: [[] as string[]],//大分類
-    bus_class: [[] as IDropdownItem[]],//中分類
-    tlt_kind: [[]], // 櫃別 string[]
-    tlt_term_type: [[]], // 抽成別 string[]
-    org_id: [[]], // 組織代號 string[]
-    tlt_no: [[]], // 專櫃編號 string[]
+    floor: [null], // 樓層 string[]
+    region: [null], // 區域 string[]
+    bus_type: [null],//大分類
+    bus_class: [null],//中分類
+    tlt_kind: [null], // 櫃別 string[]
+    tlt_term_type: [null], // 抽成別 string[]
+    org_id: [null], // 組織代號 string[]
+    tlt_no: [null], // 專櫃編號 string[]
     tax: [true], // 是否含稅 boolean
 
     onedatedd: [this.today], // 日期（日報表）
@@ -99,23 +109,6 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   columns: Column[] = [];
 
   //#region 下拉選項定義
-  // 2. 合約查詢條件相關下拉選項
-  // 櫃別選項
-  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
-  // 抽成別選項
-  commissionTypeOptions: DropdownOption[] = this.sharedDropdownService.tltTermTypeOptions;
-  counterCodeOptions: any[] = []; // 專櫃編號選項
-  tlt_floor_Option: IDropdownItem[] = []; // 樓層
-  area_no_Option: IDropdownItem[] = []; // 區域
-  bus_type_Option: IDropdownItem[] = []; // 大分類
-  bus_class_Option: IDropdownItem[] = []; // 中分類
-  org_id_Option: IDropdownItem[] = []; // 組織
-  // 稅別選項（含稅/未稅）
-  taxOptions: any[] = [
-    { value: true, label: '含稅' },
-    { value: false, label: '未稅' }
-  ];
-
   // 1. 日期查詢條件相關下拉選項
   // 報表類型選項（日/週/月/半年/年/區間/活動區間營業報表）
   reportTypeOptions: any[] = [
@@ -134,16 +127,30 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     { value: '1', label: '上半年' },
     { value: '2', label: '下半年' },
   ];
+
+  // 2. 合約查詢條件相關下拉選項
+  // 櫃別選項
+  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
+  // 抽成別選項
+  commissionTypeOptions: DropdownOption[] = this.sharedDropdownService.tltTermTypeOptions;
+  counterCodeOptions: any[] = []; // 專櫃編號選項
+  tlt_floor_Option: IDropdownItem[] = []; // 樓層
+  area_no_Option: IDropdownItem[] = []; // 區域
+  bus_type_Option: IDropdownItem[] = []; // 大分類
+  bus_class_Option: IDropdownItem[] = []; // 中分類
+  org_id_Option: IDropdownItem[] = []; // 組織
+  // 稅別選項（含稅/未稅）
+  taxOptions: any[] = [
+    { value: true, label: '含稅' },
+    { value: false, label: '未稅' }
+  ];
   //#endregion
 
   constructor(
     private tls26050Service: TLS26050Service,
     private datePipe: DatePipe,
-    private floorService: FloorService,
-    private regionService: RegionService,
     private sharedDropdownService: SharedDropdownService,
     private counterNameService: CounterNameService,
-    private businessClassificationService: BusinessClassificationService,
     private dropDownListService: DropDownListService,
   ) {
     super();
@@ -173,8 +180,8 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
       // 年營業報表 - 年度格式化 (yyyy)
       year_onedateyy: this.datePipe.transform(formValue.year_onedateyy, 'yyyy'),
       year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy'),
-      // 中分類 TODO: 待修改
-      bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+      // 中分類處理：將物件陣列轉換成 [[CAT_LNo, No]] 格式
+      bus_class: formValue.bus_class ? formValue.bus_class.map((item: any) => [item.CAT_LNo, item.No]) : null
     };
 
     this.handleSubmit(frm, () => {
@@ -237,13 +244,29 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         });
       } else {
         this.bus_class_Option = [];
-        this.queryForm.controls.bus_class.setValue([]);
+        this.queryForm.controls.bus_class.setValue(null);
       }
     });
     // 獲取組織下拉選項
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+
+    // 獲取活動ID選項
+    this.dropDownListService.getActivityOptions({
+      mid: 0,
+      str_no: '10',
+      pod_type: ['1', '2', '8'],
+      pod_status: '1',
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.EventIDOptions = response?.Data?.map((item: any) => ({
+          ...item,
+          label: `${item.pod_no} - ${item.pod_desc}`,
+          value: item.pod_no,
+        })) ?? [];
+      });
   }
 
   // 根據銷售金額是否含稅設定顯示Header
@@ -281,6 +304,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     ]
   }
 
+  // 週報表週數改變
   queryWeek(event: string, baseOrCompare: 'base' | 'compare') {
     const control = this.queryForm.controls[baseOrCompare === 'base' ? 'onedateyy' : 'onedateyy_c'];
     if (!control.value) return;
@@ -302,17 +326,15 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     });
   }
 
+  // 根據報表類型設定欄位驗證
   onReportTypeChange(event: any) {
-    // 根據報表類型設定欄位驗證
     const reportType = event;
-
     // 清除所有驗證器
     Object.keys(this.queryForm.controls).forEach(key => {
       if (key !== 'reportType') {
         this.queryForm.get(key)?.clearValidators();
       }
     });
-
     // 根據報表類型設定必要欄位驗證
     switch (reportType) {
       case '1': // 日營業報表
@@ -374,8 +396,6 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
 
   // 活動下拉改變
   queryEvent(event: any, baseOrCompare: 'base' | 'compare') {
-    console.log(event);
-    console.log(this.EventIDOptions);
     switch (baseOrCompare) {
       case 'base':
         this.queryForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_sdate ?? null);

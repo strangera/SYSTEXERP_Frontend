@@ -3,9 +3,7 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -17,6 +15,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CommonModule, DatePipe } from '@angular/common';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CheckboxModule } from 'primeng/checkbox';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 @Component({
   selector: 'app-tls2d040',
@@ -28,14 +28,14 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     MultiSelectComponent,
-    TableComponent,
     TranslateModule,
     CalendarRangeComponent,
     DropdownComponent,
     RadiobuttonComponent,
-    CommonModule
+    CommonModule,
+    CheckboxModule,
+    CustomFooterTableComponent
   ]
 })
 export class TLS2D040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -44,8 +44,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     source_type: [[]],        // 來源系統別
     CAP_Item: [[]],           // 扣款代碼
     AccNo: [[]],              // 會計科目
-    tpy_bdate: ['', Validators.required],          // 扣款年月(起)
-    tpy_edate: ['', Validators.required],          // 扣款年月(訖)
+    tpy_bdate: [new Date(), Validators.required],          // 扣款年月(起)
+    tpy_edate: [new Date(), Validators.required],          // 扣款年月(訖)
     VEN_No: [null],             // 廠商編號
     pod_no: [null],             // 活動代碼/名稱
     GUI_FLAG: [null],           // 開立發票
@@ -55,13 +55,17 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     store_way: [null],          // 專櫃/自營櫃
     building_no: [[]],        // 館別
     FLOOR_NO: [[]],           // 樓層
-    status: ['0'],        // 狀況(For匯總) 0=依專櫃 1=依扣款項目 2=依部門
+    status: ['0'],            // 狀況 (明細/彙總)
+    report_type: ['0'],      // 彙總報表類型
+    ShowNeg1: [false],          // 只顯示負值(只適用於專櫃統計)
+    ShowNeg2: [false],          // 只顯示當月應收為負值
     ...createPaginationConfig([])
   });
 
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
+  footerData: any[] = [];
 
   //#region 下拉選單資料
   // 專櫃編號
@@ -96,17 +100,23 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     { Name: '開立發票', No: 'Y' },
     { Name: '不開立發票', No: 'N' }
   ];
-  // 狀況(For匯總)
+  // 狀況
   statusOptions: any[] = [
-    { label: '依專櫃', value: '0' },
-    { label: '依扣款項目', value: '1' },
-    { label: '依部門', value: '2' },
-    { label: '依會計科目', value: '3' }
+    { label: '明細', value: '0' },
+    { label: '彙總', value: '1' },
   ];
+  // 彙總報表類型
+  reportTypeOptions: any[] =
+    [
+      { label: '依專櫃', value: '0' },
+      { label: '依扣款項目', value: '1' },
+      { label: '依部門', value: '2' },
+      { label: '依會計科目', value: '3' }
+    ];
   // 類型
   closeFlagOptions: any[] = [
-    { label: '試算', value: 'N' },
-    { label: '結算', value: 'Y' }
+    { label: '未結帳', value: 'N' },
+    { label: '已結帳', value: 'Y' }
   ];
   // 專櫃/自營櫃
   storeWayOptions: any[] = [
@@ -128,7 +138,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS2D040', 'tls/tls2d040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
-    this.setColumns('0');
+    this.setColumns('detail');
   }
 
   loadOptions() {
@@ -157,7 +167,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
         this.orgIdOptions = response.Data.map((item: any) => ({ Name: `${item.No}-${item.Name}`, No: item.No }));
       });
     // 載入大分類代碼下拉選單
-    this.dropDownListService.queryPOS2003_DropDownList()
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.busTypeOptions = response.Data.map((item: any) => ({ Name: `${item.No}-${item.Name}`, No: item.No }));
@@ -193,66 +203,106 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
       const payload = {
         ...form.getRawValue(),
         tpy_bdate: form.value.tpy_bdate ? this.datepipe.transform(form.value.tpy_bdate, 'yyyyMM') : '',
-        tpy_edate: form.value.tpy_edate ? this.datepipe.transform(form.value.tpy_edate, 'yyyyMM') : ''
+        tpy_edate: form.value.tpy_edate ? this.datepipe.transform(form.value.tpy_edate, 'yyyyMM') : '',
+        ShowNeg: (form.value.status === '1' && form.value.report_type === '0') ? form.value.ShowNeg1 : form.value.ShowNeg2,
       }
 
-      switch (form.value.status) {
-        case '0':
-          this.tls2d040Service.queryTLS2D040_TLT(payload)
-            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-            .subscribe(response => {
-              this.setColumns(form.value.status);
-              this.data = response.Data.mainData;
-              this.totalRecords = response.TotalCount;
-              this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-            });
-          break;
-        case '1':
-          this.tls2d040Service.queryTLS2D040_ChargeItem(payload)
-            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-            .subscribe(response => {
-              this.setColumns(form.value.status);
-              this.data = response.Data.mainData;
-              this.totalRecords = response.TotalCount;
-              this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-            });
-          break;
-        case '2':
-          this.tls2d040Service.queryTLS2D040_Department(payload)
-            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-            .subscribe(response => {
-              this.setColumns(form.value.status);
-              this.data = response.Data.mainData;
-              this.totalRecords = response.TotalCount;
-              this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-            }
-            );
-          break;
-        case '3':
-          this.tls2d040Service.queryTLS2D040_Detail(payload)
-            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-            .subscribe(response => {
-              this.setColumns(form.value.status);
-              this.data = response.Data.mainData;
-              this.totalRecords = response.TotalCount;
-              this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-            });
-          break;
+      // 明細查詢
+      if (form.value.status === '0') {
+        this.tls2d040Service.queryTLS2D040_Detail(payload)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(response => {
+            this.setColumns('detail');
+            this.data = response.Data.mainData;
+            this.footerData = [{
+              group_name: '合計',
+              tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
+            }];
+            this.totalRecords = response.TotalCount;
+            this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          });
+      }
+      // 彙總查詢
+      else {
+        switch (form.value.report_type) {
+          // 依專櫃
+          case '0':
+            this.tls2d040Service.queryTLS2D040_TLT(payload)
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+              .subscribe(response => {
+                this.setColumns('0');
+                this.data = response.Data.mainData;
+                this.footerData = [{
+                  group_name: '合計',
+                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
+                }];
+                this.totalRecords = response.TotalCount;
+                this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+              });
+            break;
+          // 依扣款項目
+          case '1':
+            this.tls2d040Service.queryTLS2D040_ChargeItem(payload)
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+              .subscribe(response => {
+                this.setColumns('1');
+                this.data = response.Data.mainData;
+                this.footerData = [{
+                  group_name: '合計',
+                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
+                }];
+                this.totalRecords = response.TotalCount;
+                this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+              });
+            break;
+          // 依部門
+          case '2':
+            this.tls2d040Service.queryTLS2D040_Department(payload)
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+              .subscribe(response => {
+                this.setColumns('2');
+                this.data = response.Data.mainData;
+                this.footerData = [{
+                  group_name: '合計',
+                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
+                }];
+                this.totalRecords = response.TotalCount;
+                this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+              }
+              );
+            break;
+          // 依會計科目
+          case '3':
+            this.tls2d040Service.queryTLS2D040_Acct(payload)
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+              .subscribe(response => {
+                this.setColumns('3');
+                this.data = response.Data.mainData;
+                this.footerData = [{
+                  group_name: '合計',
+                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
+                }];
+                this.totalRecords = response.TotalCount;
+                this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+              });
+            break;
+        }
       }
     });
   }
 
-  setColumns(status: string) {
-    // 根據 status 設定不同的欄位
-    switch (status) {
+  // 根據 report_type 設定不同的欄位
+  setColumns(report_type: string) {
+    switch (report_type) {
       case '0': // 依專櫃
         this.columns = [
           { field: 'tlt_no', header: '專櫃編號' },
           { field: 'tlt_name', header: '專櫃名稱' },
-          { field: 'VEN_Name', header: '廠商' },
+          { field: 'ven_no', header: '廠商編號' },
+          { field: 'VEN_Name', header: '廠商名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount }
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '1': // 依扣款項目
@@ -261,7 +311,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'CAP_Name', header: '扣款名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount }
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '2': // 依部門
@@ -272,24 +322,33 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'Org_Name', header: '組織名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount }
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '3': // 依會計科目
         this.columns = [
+          { field: 'CAP_Item', header: '扣款代碼' },
+          { field: 'CAP_Name', header: '扣款名稱' },
+          { field: 'AccNo', header: '會計科目' },
+          { field: 'AccCName', header: '科目中文名稱' },
+          { field: 'sam_yyymm', header: '扣款年月' },
+          { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+        ];
+        break;
+      case 'detail': // 明細
+        this.columns = [
           { field: 'tlt_no', header: '專櫃編號' },
           { field: 'tlt_name', header: '專櫃名稱' },
-          {
-            field: 'source_type', header: '來源系統別', format: (value: any) => this.sourceTypeOptions.find(opt => opt.No === value)?.Name || value
-          },
+          { field: 'source_type', header: '來源系統別', format: (value: any) => this.sourceTypeOptions.find(item => item.No === value)?.Name || value },
           { field: 'CAP_Item', header: '扣款代碼' },
           { field: 'CAP_Name', header: '扣款名稱' },
           { field: 'org_id', header: '組織代碼' },
           { field: 'pod_no', header: '活動代碼' },
-          { field: 'AccNo', header: '會計科目代碼' },
+          { field: 'AccNo', header: '會計科目' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount },
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true },
           { field: 'remarks', header: '備註' }
         ];
         break;

@@ -1,4 +1,3 @@
-// tls13010-next3.component.ts - 重構版本：清晰的結構和職責分離
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { catchError, firstValueFrom } from 'rxjs';
 import { FormGroup } from '@angular/forms';
@@ -42,6 +41,7 @@ import { EventHandlerManager } from './Services/event-handler-manager.service';
 import { TABLE_CONFIGURATIONS, TableConfiguration } from './models/tls13010-next3.model';
 import { SmartDateSegmentationService } from './Services/smart-date-manager.service';
 import { UpConditionDataManager } from './Services/updated-condition-data-manager.service';
+import { ContractSubmitService } from './SubmitService/contract-submit.service';
 
 @Component({
   selector: 'app-tls13010-next3',
@@ -119,7 +119,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     private tableConfigManager: TableConfigManager,
     private eventHandlerManager: EventHandlerManager,
-    private smartDateService: SmartDateSegmentationService
+    private smartDateService: SmartDateSegmentationService,
+    private contractSubmitService: ContractSubmitService,
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -270,6 +271,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
       tlt_no: step1Data?.tlt_no || this.currentContractData?.tlt_no || '',
+      vendor_ven_no: step1Data?.vendor_ven_no || this.currentContractData?.vendor_ven_no || '',
       apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
       tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
       VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
@@ -1096,38 +1098,43 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   // ===== 提交相關方法 =====
 
-  onSubmitNext(): void {
-    if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010']);
-      this.notificationService.infoBubble('已結束檢視');
+  async onSubmitNext(): Promise<void> {
+    console.log('Next3: 準備提交契約資料');
+
+    // 先保存當前的條件設定到工作流程
+    this.saveConditionDataToWorkflow();
+
+    // 使用統一的提交服務驗證
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    const validation = this.contractSubmitService.validateBeforeSubmit(commissionType);
+    if (!validation.valid) {
+      this.notificationService.errorBubble(validation.message ?? '資料驗證失敗');
       return;
     }
 
-    // 提交前最後一次強制保存
-    this.forceSyncAllData();
+    try {
+      this.loading = true;
 
-    // 驗證數據
-    const commissionType = this.contractInfoData[0]?.tlt_term_type ?? '3';
-    const currentItems = this.getCurrentConditionItems();
+      // 使用統一的提交服務
+      const result = await this.contractSubmitService.submitContract({
+        isNext2Flow: false, // 標記為 Next3 流程
+        onSuccess: (response) => {
+          // Next3 特殊的成功處理（如果需要）
+          console.log('Next3 提交成功，額外處理:', response);
+        },
+        onError: (error) => {
+          // Next3 特殊的錯誤處理（如果需要）
+          console.error('Next3 提交失敗，額外處理:', error);
+        }
+      });
 
-    // console.log('🔍 最終驗證數據:', {
-    //   commissionType,
-    //   itemCount: currentItems.length,
-    //   detailItems: currentItems.map(item => ({
-    //     id: item.id,
-    //     charge_rate: item.charge_rate || item.cag_charge_rate || 'N/A'
-    //   }))
-    // });
+      if (!result.success) {
+        console.error('Next3: 提交流程失敗');
+      }
 
-    const validation = this.conditionDataManager.validateConditions(currentItems, commissionType);
-
-    if (!validation.isValid) {
-      console.error('❌ 驗證失敗:', validation.errors);
-      this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
-      return;
+    } finally {
+      this.loading = false;
     }
-
-    this.showConfirmDialog = true;
   }
 
   onConfirmDialogResult(confirmed: boolean): void {
@@ -1431,15 +1438,20 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   // ===== 導航方法 =====
 
   override onCancel(): void {
-    if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010next2']);
-      return;
-    }
+    const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
 
-    console.log('Next3 返回前一頁，先暫存資料');
+    // 檢視模式：根據合約類型決定導航目標
+    if (contractTermType === '1') {
+      console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next1');
+      this.router.navigate(['account/tls/tls13010next1']);
+    } else {
+      console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
+      this.router.navigate(['account/tls/tls13010next2']);
+
+    }
     this.saveConditionDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010next2']);
   }
+
 
   onClearAndExit(): void {
     this.contractFlowService.clearTempData();

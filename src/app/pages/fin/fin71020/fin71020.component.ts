@@ -1,4 +1,4 @@
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, effect } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71020Service } from '@service/api/fin/fin71020.service';
@@ -12,7 +12,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
 import { FIN71020Data } from './fin71020.model';
 
 @Component({
@@ -50,6 +49,12 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
   });
 
   public readonly totalRecords = computed(() => this.filteredData().length);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.service.tableLoading()
+      || this.service.usrLoading()
+      || this.service.orgLoading();
+  });
 
   public readonly columns: Column[] = [
     { field: 'Keep_UsrNo', header: '保管人代碼' },
@@ -116,55 +121,19 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
 
   public ngOnInit(): void {
     this.initializePage('FIN71020', '/FIN/FIN71020CRU', this.queryForm, this.onSubmit.bind(this));
-    const store = this.queryStateService.getQueryState(this.ProgNo);
-    if (store?.value) this.queryForm.setValue(store.value);
 
     this.service.getKeepUsrNo();
     this.service.getKeepOrgId();
 
     this.logger.debug(`init:`, []);
-
-
-    // this.ProgNo = '170002';
-    // // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // this.IfdisplayService.getOptions().subscribe(
-    //   (data) => (this.displayOptions = data)
-    // );
-    // this.IfdisplayService.getOptions().subscribe(
-    //   (data) => (this.displayOptions2 = data)
-    // );
-    // this.vendorService.getVendors().subscribe((data) => {
-    //   this.vendorOptions = data;
-    // });
-    // this.userCodeService
-    //   .getUserCode()
-    //   .subscribe((data) => (this.usercode = data));
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
 
-      this.service.loadFIN71020({
-        ...this.queryForm.getRawValue(),
-      }).pipe(
-        finalize(() => this.loading = !1),
-      ).subscribe();
+      this.service.loadFIN71020({ ...this.queryForm.getRawValue() }).subscribe();
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
-
-
-    // console.log(frm.value);
-    // this.submitted = true;
-    // this.loading = true;
-    // this.notificationService.blockUi();
-
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
-
-    // this.loading = false;
-    // this.notificationService.unblockUi();
   }
 }

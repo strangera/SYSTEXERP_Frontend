@@ -21,6 +21,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { DialogComponent } from "@shared/componentkit/dialog/dialog.component";
 import { FareValidationService } from './Services/fare-validation.service';
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
+import { FareDefaultsService } from './Services/fare-defaults.service';
 
 
 // 介面定義
@@ -74,6 +75,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 顯示模式控制
   showMode: 'common' | 'all' = 'common';
 
+  showModeByType: { [key: string]: 'common' | 'all' } = {
+    'A': 'common',
+    'B': 'common',
+    'C': 'common',
+    'D': 'common',
+    'E': 'common'
+  };
+
   // 當前合約資料
   currentTalentId: string = '';
   currentContractData: any = null;
@@ -101,7 +110,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     private fareStatusService: FareStatusService,
     private cdr: ChangeDetectorRef,
     private fareValidationService: FareValidationService,
-    private tls13010DropdownService: TLS13010DropdownService
+    private tls13010DropdownService: TLS13010DropdownService,
+    private fareDefaultsService: FareDefaultsService
   ) {
     super();
   }
@@ -245,20 +255,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     } catch (error) {
       console.error('❌ loadWorkflowData 失敗:', error);
     }
-    this.routerSubscription = this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.loadWorkflowData();
-      });
+    // this.routerSubscription = this.router.events
+    //   .pipe(filter(event => event instanceof NavigationEnd))
+    //   .subscribe(() => {
+    //     this.loadWorkflowData();
+    //   });
   }
 
   ngOnDestroy(): void {
     // console.log('📄 NEXT1 組件銷毀，確保資料儲存');
     this.saveFareDataToWorkflow();
 
-    if (this.routerSubscription) {
-      this.routerSubscription.unsubscribe();
-    }
+    // if (this.routerSubscription) {
+    //   this.routerSubscription.unsubscribe();
+    // }
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -396,6 +406,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
       tlt_no: step1Data?.tlt_no || this.currentContractData?.tlt_no || '',
+      vendor_ven_no: step1Data?.vendor_ven_no || this.currentContractData?.vendor_ven_no || '',
       apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
       tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
       VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
@@ -443,7 +454,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     try {
       //  使用服務驗證和修復資料
-      this.originalFareData = this.fareDataService.validateAndFixData(savedData);
+      this.originalFareData = this.fareDataService.validateAndFixData(
+        savedData,
+        this.contractInfoData[0],  //傳入合約資訊
+        this.fareCalculationService.getTotalLocationSpace()  //傳入總坪數
+      );
       this.filterData();
 
       // console.log('✅ 暫存扣款資料載入完成');
@@ -474,7 +489,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
         if (response && response.Data && response.Data.FaresByType) {
           //  使用服務處理新增模式資料
-          this.originalFareData = this.fareDataService.processNewContractAPIData(response.Data.FaresByType);
+          this.originalFareData = this.fareDataService.processNewContractAPIData(
+            response.Data.FaresByType,
+            this.contractInfoData[0],  //傳入合約資訊
+            this.fareCalculationService.getTotalLocationSpace()  //傳入總坪數
+          );
           this.filterData();
           this.saveFareDataToWorkflow();
 
@@ -517,7 +536,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           //  使用服務處理 API 資料
           this.originalFareData = this.fareDataService.processAPIData(
             response.Data.FaresByType,
-            this.contractFlowService.isNewContractMode()
+            this.contractFlowService.isNewContractMode(),
+            this.contractInfoData[0],  // 傳入合約資訊
+            this.fareCalculationService.getTotalLocationSpace()  //傳入總坪數
           );
           this.filterData();
           this.saveFareDataToWorkflow();
@@ -572,10 +593,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   filterData(): void {
     this.initializeDataStructure();
 
-    //  使用資料服務進行過濾
-    this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
+    // 一次性處理所有群組，每個群組使用各自的模式
+    this.fareData = this.fareDataService.filterDataByModePerType(
+      this.originalFareData,
+      this.showModeByType
+    );
   }
-
   private saveFareDataToWorkflow(): void {
     try {
       // console.log('💾 準備儲存暫存資料...');
@@ -1164,11 +1187,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 導航相關 ==========
   onSubmitNext(): void {
-    if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010next2']);
-      return;
-    }
+    // 取得合約類型
+    const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
 
+    // 檢視模式：根據合約類型決定導航目標
+    if (contractTermType === '1') {
+      console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next3');
+      this.router.navigate(['account/tls/tls13010next3']);
+    } else {
+      console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
+      this.router.navigate(['account/tls/tls13010next2']);
+
+    }
     console.log('🔍 開始進行完整驗證...');
 
     // 儲存當前資料
@@ -1183,8 +1213,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    console.log('✅ 驗證通過，跳轉到下一步');
-    this.router.navigate(['account/tls/tls13010next2']);
+    console.log('✅ 驗證通過，準備跳轉到下一步');
+
+    // 根據合約類型決定導航目標
+    if (contractTermType === '1') {
+      console.log('🔍 合約類型為1，直接跳轉到 next3');
+      this.router.navigate(['account/tls/tls13010next3']);
+    } else {
+      console.log('🔍 合約類型非1，跳轉到 next2');
+      this.router.navigate(['account/tls/tls13010next2']);
+    }
   }
 
   override onCancel(): void {
@@ -1519,4 +1557,80 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.messageService.warnBubble(errorMessage);
   }
 
+  /**
+ * 切換特定群組的顯示模式
+ */
+  // 切換特定群組的顯示模式（不顯示全域 loading）
+  toggleCommonModeByType(capType: string): void {
+    // 直接切換模式，不顯示 loading
+    if (this.showModeByType[capType] === 'common') {
+      this.showModeByType[capType] = 'all';
+    } else {
+      this.showModeByType[capType] = 'common';
+    }
+
+    // 只更新資料，不顯示 loading
+    this.filterData();
+    this.cdr.detectChanges();
+  }
+
+  // 全域切換所有群組（顯示 loading）
+  toggleAllCommonMode(): void {
+    this.loading = true;
+
+    setTimeout(() => {
+      // 判斷當前是否全部都是 common
+      const allCommon = Object.values(this.showModeByType).every(mode => mode === 'common');
+
+      // 如果全部都是 common，切換為 all；否則切換為 common
+      const newMode = allCommon ? 'all' : 'common';
+
+      this.capTypes.forEach(capType => {
+        this.showModeByType[capType] = newMode;
+      });
+
+      this.filterData();
+      this.loading = false;
+    }, 300);
+  }
+
+  // 取得全域按鈕文字
+  getAllCommonModeText(): string {
+    const allCommon = Object.values(this.showModeByType).every(mode => mode === 'common');
+    return allCommon ? '全部展開' : '全部收合';
+  }
+
+  // 取得全域顯示狀態
+  getAllDisplayMode(): string {
+    const commonCount = Object.values(this.showModeByType).filter(mode => mode === 'common').length;
+    const allCount = Object.values(this.showModeByType).filter(mode => mode === 'all').length;
+
+    if (commonCount === 5) return '全部顯示：常用項目';
+    if (allCount === 5) return '全部顯示：完整項目';
+    return `混合模式 (常用:${commonCount} 全部:${allCount})`;
+  }
+
+  /**
+   * 取得特定群組的顯示模式文字
+   */
+  getCurrentDisplayModeByType(capType: string): string {
+    if (this.showModeByType[capType] === 'common') {
+      return '合約項目 + 常用項目 + 已勾選項目';
+    } else {
+      return '全部項目';
+    }
+  }
+
+  /**
+   * 取得特定群組的按鈕文字
+   */
+  getCommonModeTextByType(capType: string): string {
+    return this.showModeByType[capType] === 'common'
+      ? '顯示全部項目'
+      : '顯示常用項目';
+  }
+
+  isOutlinedMode(capType: string): boolean {
+    return this.showModeByType[capType] !== 'common';
+  }
 }

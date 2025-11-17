@@ -9,18 +9,12 @@
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="年月"
             controlName="budget_yymm" [control]="queryForm.controls.budget_yymm" [submitted]="submitted"></app-calendar>
-          <app-input-group class="col-12 md:col-6 lg:col-4" label="大分類代碼/名稱" controlName="bus_type"
-            [control]="queryForm.controls.bus_type" [value]="bus_type_name" [submitted]="submitted"
-            [options]="bus_typeOptions | async" optionLabel="Name" optionValue="value" templateLabel="label"
-            [columns]="bus_typeColumns" />
-          <app-input-group class="col-12 md:col-6 lg:col-4" label="中分類代碼/名稱" controlName="bus_class"
-            [control]="queryForm.controls.bus_class" [value]="bus_class_name" [submitted]="submitted"
-            [options]="bus_classOptions || []" optionLabel="Name" templateLabel="label" customLabel="No"
-            [columns]="bus_classColumns" />
-          <app-input-group class="col-12 md:col-6 lg:col-4" label="小分類代碼/名稱" controlName="bus_sclass"
-            [control]="queryForm.controls.bus_sclass" [value]="bus_sclass_name" [submitted]="submitted"
-            [options]="bus_sclassOptions || []" optionLabel="Name" templateLabel="label" customLabel="No"
-            [columns]="bus_sclassColumns"></app-input-group>
+          <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼/名稱" controlName="bus_type"
+            [control]="queryForm.controls.bus_type" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
+          <app-dropdown class="col-12 col-6 lg:col-4" label="中分類代碼/名稱" controlName="bus_class"
+            [control]="queryForm.controls.bus_class" [options]="CAT_MNoOptions" optionLabel="label" optionValue="No" />
+          <app-dropdown class="col-12 col-6 lg:col-4" label="小分類代碼/名稱" controlName="bus_sclass"
+            [control]="queryForm.controls.bus_sclass" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織代號/名稱" controlName="org_ids"
             [options]="org_idOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.org_ids" [submitted]="submitted"></app-multi-select>
@@ -42,7 +36,7 @@
 <div class="card">
   <app-table-report tableKey="TLS2G040" dataKey="tlt_no" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"
-    [lastQueryBody]="lastQueryForm" [footerData]="footerTotal"
+    [lastQueryBody]="lastQueryForm" [footerData]="footerTotal" [loading]="loading"
     [queryFunction]="tls2g040Service.queryTLS2G040.bind(tls2g040Service)">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">

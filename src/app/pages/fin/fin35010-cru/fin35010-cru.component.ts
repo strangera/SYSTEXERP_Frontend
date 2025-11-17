@@ -15,11 +15,11 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-fin35010-cru',
-    templateUrl: './fin35010-cru.component.html',
-    styleUrl: './fin35010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, NgIf, TranslateModule]
+  selector: 'app-fin35010-cru',
+  templateUrl: './fin35010-cru.component.html',
+  styleUrl: './fin35010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, NgIf, TranslateModule]
 })
 export class FIN35010CRUComponent extends BasicCrupageComponent implements OnInit {
   CashRegisterTypeItems: any[] = [
@@ -168,7 +168,6 @@ export class FIN35010CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '130011';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {

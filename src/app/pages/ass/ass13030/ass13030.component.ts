@@ -30,11 +30,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.3 資產報廢作業
 @Component({
-    selector: 'app-ass13030',
-    templateUrl: './ass13030.component.html',
-    styleUrl: './ass13030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, InputNumberComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13030',
+  templateUrl: './ass13030.component.html',
+  styleUrl: './ass13030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, InputNumberComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS13030Component extends BasicQpageComponent implements OnInit {
   //
@@ -143,8 +143,7 @@ export class ASS13030Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310018';
     this.cruPage = '/ASS1000/ASS13030CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.sharedCodeService.getSharedCode().subscribe(data => {
       this.shareCodeOptions = data;

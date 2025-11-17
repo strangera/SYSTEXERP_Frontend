@@ -70,6 +70,14 @@ export class Tls24010Pos5007Component implements OnChanges {
       }))];
       this.calculateLastYearTotal();
     }
+    if (changes['TXN_Date']) {
+      if (this.TXN_Date) {
+        this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(this.TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {
+          this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+          console.log(this.TLT_NoOptions);
+        });
+      }
+    }
     if (changes['store_way']) {
       switch (this.store_way) {
         case STORE_WAY.自營:// 自營櫃位
@@ -96,14 +104,21 @@ export class Tls24010Pos5007Component implements OnChanges {
             }
           ];
           this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
-            this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
-            this.insertRow();
+            // 1. 先進行去重處理
+            const uniqueData = data.Data.reduce((acc: TltTalentChargeData[], current) => {
+              if (!acc.find((item: TltTalentChargeData) => item.tlt_id === current.tlt_id)) {
+                acc.push(current);
+              }
+              return acc;
+            }, []);
+            this.tlt_idOptions = uniqueData.map((item) => ({
+              ...item,
+              label: `${item.tlt_id} - ${item.tlt_id_desc}`
+            }));
+            if (this.isFormCreateable) {
+              this.insertRow();
+            }
           })
-          if (this.TXN_Date) {
-            this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(this.TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {
-              this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-            });
-          }
           break;
         default: break;
       }
@@ -126,7 +141,7 @@ export class Tls24010Pos5007Component implements OnChanges {
       TXN_Disc: 0,
       TXN_SaleAmt: 0,
       tlt_id: this.tlt_idOptions[0]?.tlt_id,
-      PLU_TaxType: this.tlt_idOptions[0]?.cag_taxtype,
+      PLU_TaxType: this.tlt_idOptions[0]?.cag_taxtype ?? '0',
       TXN_DiscCode: this.tlt_idOptions[0]?.cag_barcode,
       TXN_DiscCode_Name: this.tlt_idOptions[0]?.cag_barcode_name
     });

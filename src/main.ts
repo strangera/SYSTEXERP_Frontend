@@ -1,8 +1,8 @@
 /// <reference types="@angular/localize" />
 import { DatePipe } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { importProvidersFrom } from '@angular/core';
-import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
+import { importProvidersFrom, isDevMode } from '@angular/core';
+import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, UrlSerializer } from '@angular/router';
 import { JwtModule } from '@auth0/angular-jwt';
@@ -16,9 +16,11 @@ import { AuthinterceptorService } from './app/core/interceptors/authinterceptor.
 import { CustomheaderinterceptorService } from './app/core/interceptors/customheaderinterceptor.service';
 import { DateToISOStringInterceptor } from './app/core/interceptors/dateToISOStringInterceptor.interceptor';
 import { ErrorinterceptorService } from './app/core/interceptors/errorinterceptor.service';
+import { HTTPRequestInterceptorService } from './app/core/interceptors/httpRequest.interceptor';
+import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
 import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
-import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
+import { provideServiceWorker } from '@angular/service-worker';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -34,7 +36,9 @@ export function tokenGetter() {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(BrowserModule,
+    provideClientHydration(),
+    provideAnimations(),
+    importProvidersFrom(
       TranslateModule.forRoot({
         loader: {
           provide: TranslateLoader,
@@ -64,12 +68,12 @@ bootstrapApplication(AppComponent, {
     PrimeNGConfig,
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: CustomheaderinterceptorService, // 添加自定義頭部
+      useClass: AuthinterceptorService, // 再處理認證
       multi: true
     },
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: AuthinterceptorService, // 再處理認證
+      useClass: CustomheaderinterceptorService, // 添加自定義頭部
       multi: true
     },
     {
@@ -87,9 +91,17 @@ bootstrapApplication(AppComponent, {
       useClass: QueryCacheInterceptorService, // 查詢快取攔截器
       multi: true
     },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: HTTPRequestInterceptorService, // 路由變更時取消請求攔截器
+      multi: true
+    },
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
-    provideAnimations(),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
   ]
 })
   .catch((err) => console.error(err));

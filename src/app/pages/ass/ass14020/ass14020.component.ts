@@ -17,11 +17,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.4.2  請款關帳作業
 @Component({
-    selector: 'app-ass14020',
-    templateUrl: './ass14020.component.html',
-    styleUrl: './ass14020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, ButtonComponent, TranslateModule]
+  selector: 'app-ass14020',
+  templateUrl: './ass14020.component.html',
+  styleUrl: './ass14020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, ButtonComponent, TranslateModule]
 })
 export class ASS14020Component extends BasicQpageComponent implements OnInit {
   //
@@ -106,8 +106,7 @@ export class ASS14020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310029';
     this.cruPage = '/ASS1000/ASS14020CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // this.vendorService.getVendors().subscribe(data => {
     //   this.supplierCodeOptions = data;

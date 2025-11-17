@@ -55,7 +55,6 @@ export class FIN32020CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '130004';
     //
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {

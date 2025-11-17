@@ -1,7 +1,4 @@
 $gutter: 1rem; //for primeflex grid system
-// primeNg editor quill
-// @import "../node_modules/quill/dist/quill.core.css";
-// @import "../node_modules/quill/dist/quill.snow.css";
 // import fortawesome
 @import "@fortawesome/fontawesome-free/scss/fontawesome";
 @import "@fortawesome/fontawesome-free/scss/regular";
@@ -9,43 +6,16 @@ $gutter: 1rem; //for primeflex grid system
 body {
   font-family: var(--font-family);
 }
-.no-wrap {
-  white-space: nowrap;
-}
-
-.no-wrap div {
-  display: inline;
-}
 
 .button-opacity {
   opacity: 0.25;
 }
 
-// Shared styles
-.required {
-  color: red;
-}
-
-.create-accordionTab {
-  background-color: #a2e7c6;
-  color: black;
-  font-weight: bold;
-}
-
+.create-accordionTab,
 .edit-accordionTab {
   background-color: #a2e7c6;
   color: black;
   font-weight: bold;
-}
-
-.createblock-accordionTab {
-  background-color: #f3cc9d;
-  color: black;
-  font-weight: bold;
-}
-
-.red-text {
-  color: red;
 }
 
 @media (max-width: 991px) {
@@ -59,10 +29,6 @@ body {
 .p-placeholder {
   color: var(--surface-900);
   opacity: 0.35; /* Firefox */
-}
-
-.p-datepicker {
-  min-width: 170px;
 }
 
 input[disabled],
@@ -87,13 +53,6 @@ input[disabled],
 
 .p-inputswitch {
   border-radius: 30px;
-}
-
-.p-overlaypanel {
-  box-shadow:
-    0 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0 4px 5px 0 rgba(0, 0, 0, 0.14),
-    0 1px 10px 0 rgba(0, 0, 0, 0.12) !important;
 }
 
 // 以下用來調整暗黑明亮模式(需要用var()來調整)
@@ -150,6 +109,17 @@ input[disabled],
     top;
 }
 
+.p-button.p-fileupload-choose {
+  border: 1px solid var(--surface-border);
+  padding: 1rem;
+  height: 100%;
+  width: max-content;
+}
+.break-word {
+  word-break: break-word;
+  white-space: normal;
+}
+
 //!! 客戶要求，先全域
 .p-datatable {
   .p-datatable-thead > tr > th,
@@ -158,7 +128,8 @@ input[disabled],
   }
   &.p-datatable-sm {
     .p-datatable-thead > tr > th,
-    .p-datatable-tbody > tr > td {
+    .p-datatable-tbody > tr > td,
+    .p-datatable-tfoot > tr > td {
       padding: 0.2rem;
     }
   }
@@ -170,15 +141,4 @@ input[disabled],
   .p-inputtext {
     padding: 0.5rem;
   }
-}
-
-.p-button.p-fileupload-choose {
-  border: 1px solid var(--surface-border);
-  padding: 1rem;
-  height: 100%;
-  width: max-content;
-}
-.break-word {
-  word-break: break-word;
-  white-space: normal;
 }

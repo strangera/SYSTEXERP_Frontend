@@ -33,13 +33,13 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 })
 export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    LOGO_No: [''], // 品牌代碼 (下拉式選單)
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號 (下拉式表格選單)
-    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 (文字輸入)
-    PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 (文字輸入)
-    CAT_LNo: [''], // 大分類代碼 (下拉式選單)
-    CAT_MNo: [''], // 中分類代碼 (下拉式選單)
-    CAT_SNo: [''], // 小分類代碼 (下拉式選單)
+    LOGO_No: [null], // 品牌代碼 (下拉式選單)
+    PLU_MagNo: [null, [Validators.maxLength(20)]], // 商品管理編號 (下拉式表格選單)
+    PLU_No: [null, [Validators.maxLength(20)]], // 國際條碼 (文字輸入)
+    PLU_OrgPLUNo: [null, [Validators.maxLength(30)]], // 廠商貨號 (文字輸入)
+    CAT_LNo: [null], // 大分類代碼 (下拉式選單)
+    CAT_MNo: [null], // 中分類代碼 (下拉式選單)
+    CAT_SNo: [null], // 小分類代碼 (下拉式選單)
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列 (文字輸入，SQL中是模糊查詢)
     ShowCurrentQty: [false], // 顯示庫存為零 (核取方塊)
     ShowOrderPrc: [false], // 顯示標準進價
@@ -124,8 +124,15 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
     });
     // 監聽中分類變化
     this.queryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
-      if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.queryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+      if (value && this.queryForm.controls.CAT_LNo.value) {
+        this.dropDownListService.queryPOS20032_DropDownList({
+          CATList: [
+            {
+              CAT_LNo: this.queryForm.controls.CAT_LNo.value,
+              CAT_MNo: value
+            }
+          ]
+        }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
         });
       }

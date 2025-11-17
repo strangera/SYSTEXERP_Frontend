@@ -1,4 +1,3 @@
-<!-- src/app/pages/fin/fin13060/fin13060-cru.component.html -->
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
@@ -8,10 +7,10 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 基本欄位 -->
+        <!-- 發票字軌/號碼 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="字軌 "
+            label="發票字軌"
             [control]="dataForm.controls.INV_GUITrack"
             [submitted]="submitted"
           ></app-input-text>
@@ -24,6 +23,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <!-- 發票日期/申報年月 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
@@ -43,6 +43,7 @@
             [submitted]="submitted"
           ></app-calenderone>
         </div>
+
         <!-- 專櫃/廠商 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -55,17 +56,19 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="廠客代號"
+            label="廠商編號"
             [control]="dataForm.controls.Ven_No"
             [submitted]="submitted"
           ></app-input-text>
         </div>
-        <!-- 發票格式/字軌/號碼 -->
+
+        <!-- 發票格式 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="發票格式"
+            label="格式代號"
             controlName="INV_GUIType"
             [options]="INV_GUITypeOptions"
             optionLabel="label"
@@ -74,6 +77,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <!-- 金額/稅別 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -82,6 +86,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="課稅別"
@@ -101,6 +106,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="稅額"
@@ -116,6 +122,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="傳票號碼"
@@ -123,6 +130,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="資產註記"
@@ -143,8 +151,7 @@
           ></app-input-text>
         </div>
 
-        <!-- 收銀機號 -->
-
+        <!-- 收銀機號/交易序號/發票種類 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="收銀機號"
@@ -187,6 +194,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="是否作廢"
@@ -197,21 +205,13 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="使用別"
-            [control]="dataForm.controls.SAL_Type"
-            [options]="SAL_TypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
+
+        <!-- 系統別（T205） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="系統別"
-            [control]="dataForm.controls.SYS_ORIGIN"
-            [options]="SYS_ORIGINOptions"
+            [control]="dataForm.controls.SAL_Type"
+            [options]="SAL_TypeOptions"
             optionLabel="label"
             optionValue="value"
             [submitted]="submitted"

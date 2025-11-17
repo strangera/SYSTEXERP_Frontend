@@ -13,20 +13,15 @@ export interface TLS22020Data {
 export const payNoDataList = [
   { Pay_No: "10", Pay_Name: "現金" },
   { Pay_No: "07", Pay_Name: "會員折抵" },
-  { Pay_No: "12", Pay_Name: "聯信紅利" },
-  { Pay_No: "14", Pay_Name: "中信紅利" },
-  { Pay_No: "22", Pay_Name: "外來提貨單-高夢" },
+  { Pay_No: "41", Pay_Name: "聯合信用卡" },
+  { Pay_No: "43", Pay_Name: "中信信用卡" },
+  { Pay_No: "22", Pay_Name: "外來提貨單-高夢/北阪" },
   { Pay_No: "23", Pay_Name: "外來禮券-高夢" },
   { Pay_No: "24", Pay_Name: "禮券餘代卡" },
   { Pay_No: "25", Pay_Name: "提貨單餘代卡" },
   { Pay_No: "26", Pay_Name: "品牌已開票券" },
   { Pay_No: "27", Pay_Name: "品牌未開票券" },
-  { Pay_No: "28", Pay_Name: "折價券-高夢" },
   { Pay_No: "30", Pay_Name: "貴賓提貨單(應收帳款)" },
-  { Pay_No: "41", Pay_Name: "聯信連線" },
-  { Pay_No: "42", Pay_Name: "聯信離線" },
-  { Pay_No: "43", Pay_Name: "中信連線" },
-  { Pay_No: "44", Pay_Name: "中信離線" },
   { Pay_No: "52", Pay_Name: "一卡通" },
   { Pay_No: "55", Pay_Name: "LINE Pay" },
   { Pay_No: "56", Pay_Name: "iPASS MONEY" },
@@ -67,8 +62,8 @@ const baseColumns: Column[] = [
 // 每個付款別的「三個子欄位」
 const paymentColumns: Column[] = payNoDataList.flatMap((item) => [
   { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
-  { header: '帳單', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
-  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount,},
+  { header: 'Z帳', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
+  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
 ]);
 
 // 固定欄位

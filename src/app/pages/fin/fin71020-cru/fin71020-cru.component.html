@@ -16,8 +16,9 @@
                       label="保管人代碼"
                       controlName="usrNo"
                       [options]="service.UsrNos()"
-                        optionLabel="Keep_UsrName"
-                        optionValue="Keep_UsrNo"
+                      optionLabel="Keep_UsrName"
+                      optionValue="Keep_UsrNo"
+                      [loading]="service.usrLoading()"
                       [control]="df().usrNo"
                       [submitted]="submitted"></app-dropdown>
 
@@ -35,6 +36,7 @@
                       [options]="service.OrgIds()"
                       optionLabel="org_Name"
                       optionValue="org_No"
+                      [loading]="service.orgLoading()"
                       [control]="df().orgId"
                       [submitted]="submitted"></app-dropdown>
 
@@ -52,7 +54,7 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [loading]="service.tableLoading"></app-button>
+                    [loading]="loading"></app-button>
       </div>
       }
     </form>

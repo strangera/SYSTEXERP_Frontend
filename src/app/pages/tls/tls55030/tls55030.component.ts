@@ -1,17 +1,7 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { DiscountStatusService } from '../../../service/basic/discount-status.service';
-import { PaperTypeService } from '../../../service/basic/paper-type.service';
-import { TaxableService } from '../../../service/basic/taxable.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { VendorService } from '../../../service/basic/vendor.service';
+import { Tls55030ListData, Tls55030QueryBody, Tls55030Service } from './../../../service/api/tls/tls55030.service';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -19,164 +9,81 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { AsyncPipe } from '@angular/common';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls55030',
   templateUrl: './tls55030.component.html',
-  styleUrls: ['./tls55030.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  imports: [TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
 })
-export class TLS55030Component {
-
-  ProgNo: string = '250028';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
+export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData> implements OnInit {
   queryForm = this.formBuilder.group({
-    paperType: [],
-    invoiceCode: [],
-    documentDate: [],
-    billingYearMonth: [],
-    billingMethod: [],
-    billingCount: [],
-    reportYearMonth: [],
-    vendorCode: [],
-    taxCategory: [],
+    TABTYPE: [],
+    PUR_GUINo: [],
+    PUR_GUIDate: [],
+    ACP_YYYYMM: [],
+    PUR_RepYYYYMM: [],
+    PUR_VenUniform: [],
+    PUR_TaxType: [],
+
     amountFrom: [],
     amountTo: [],
     unTaxAmountFrom: [],
     unTaxAmountTo: [],
     taxAmountFrom: [],
     taxAmountTo: [],
-    format: [],
-    discountStatus: [],
+
+    PUR_VoucherType: [],
+    DIS_Status: [],
+
     sendDateFrom: [],
     sendDateTo: [],
-    creator: [],
-    discountMaintenanceCode: [],
-    // Add more form controls as needed
+
+    CRT_USR_No: [],
+    DIS_No: [],
   });
-
-  // Dropdown options
-  paperTypeOptions: any[] = [];
-  discountStatusOptions: any[] = [];
-  taxCategoryOptions: any[] = [];
-  vendorOptions: any[] = [];
-
-  // Table data
-  data: any[] = [
-
+  TABTYPEOptions = getSYS1000Options('TABTYPE');
+  DIS_StatusOptions = getSYS1000Options('DIS_Status');
+  PUR_TaxTypeOptions = getSYS1000Options('PUR_TaxType');
+  PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType');
+  tblUserOptions = this.dropdown.queryTblUser();
+  data: Tls55030ListData[] = [];
+  totalRecords = 0;
+  lastQueryBody: Tls55030QueryBody | null = null;
+  columns: Column[] = [
+    { field: 'DIS_No', header: '折讓單維護編號' },
+    { field: 'ACP_YYYYMM', header: '結帳年月', format: formatYYYYMM },
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'TABTYPE', header: '單據種類', format: (v) => getSYS1000('TABTYPE', v) },
+    { field: 'PUR_VoucherType', header: '格式' },
+    { field: 'DIS_Status', header: '狀況', format: (v) => getSYS1000('DIS_Status', v) },
+    { field: 'Rebate_Amt', header: '總折讓金額' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'billingMonth', header: '結帳年月', visible: true },
-    { field: 'storeCode', header: '廠商編號', visible: true },
-    { field: 'documentType', header: '單據種類', visible: true },
-    { field: 'format', header: '格式', visible: true },
-    { field: 'status', header: '狀況', visible: true },
-    { field: 'totalDiscountAmount', header: '總折讓金額', visible: true },
-  ];
-
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private discountStatusService: DiscountStatusService,
-    private paperTypeService: PaperTypeService,
-    private taxableService: TaxableService,
-    private authService: AuthService,
-
-
-  ) { }
+    private readonly dropdown: DropdownApiService,
+    public readonly tls55030Service: Tls55030Service
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.discountStatusService.getDiscountStatusOptions().subscribe(data => this.discountStatusOptions = data);
-    this.paperTypeService.getSystemTypes().subscribe(data => this.paperTypeOptions = data);
-    this.taxableService.getSystemTypes().subscribe(data => this.taxCategoryOptions = data);
-
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS55030', '/tls/tls55030cru', this.queryForm, (form) => this.onSubmit(form),);
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS5000/TLS55030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      this.tls55030Service.queryTLS55030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQueryBody = frm.value;
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      })
+    });
   }
 }

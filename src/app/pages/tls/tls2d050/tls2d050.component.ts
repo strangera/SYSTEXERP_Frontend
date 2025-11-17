@@ -71,7 +71,7 @@ export class TLS2D050Component {
 
   ngOnInit(): void {
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.announcementUserService.getSystemTypes().subscribe(data => {
       this.departmentOptions = data;

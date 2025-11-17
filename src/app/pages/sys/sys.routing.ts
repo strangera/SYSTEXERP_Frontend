@@ -1,7 +1,13 @@
 import { Routes } from '@angular/router';
 
 export const sysRoutes: Routes = [
-  { path: 'sys0110', loadComponent: () => import('./sys0110/sys0110.component').then(m => m.SYS0110Component) }, // 使用者基本資料維護
+  {
+    path: 'sys0110', loadComponent: () => import('./sys0110/sys0110.component').then(m => m.SYS0110Component),
+    data: {
+      reuse: true,        // 標記該路由需要復用
+      reuseKey: 'SYS0110' // 復用時的唯一 Key (使用 prog_No)
+    }
+  }, // 使用者基本資料維護
   { path: 'sys0210', loadComponent: () => import('./sys0210/sys0210.component').then(m => m.SYS0210Component) }, // 角色基本資料維護
   { path: 'sys0220', loadComponent: () => import('./sys0220/sys0220.component').then(m => m.SYS0220Component) }, // 角色之使用者設定維護
   { path: 'sys0230', loadComponent: () => import('./sys0230/sys0230.component').then(m => m.SYS0230Component) }, // 角色複製

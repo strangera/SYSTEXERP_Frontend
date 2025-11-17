@@ -18,8 +18,10 @@ import { QueryStateService } from '@shared/service/query-state.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS31040DetailRequest, TLS31040DetailResponse, TLS31040PrintDetailRequest, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
+import { TLS31040DetailItem, TLS31040DetailRequest, TLS31040DetailResponse, TLS31040PrintDetailRequest, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
 import { formatDate } from '@angular/common';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls31040-cru',
@@ -33,6 +35,7 @@ import { formatDate } from '@angular/common';
     CalendarRangeQuickComponent,
     ButtonComponent,
     TableModule,
+    TableReportComponent,
     RadiobuttonYNComponent,
     TranslateModule,
     TableComponent,
@@ -66,7 +69,12 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
 
   });
   totalRecords = 0;
-  data: TLS31040DetailResponse[] = [];
+  data: TLS31040DetailItem[] = [];
+  footerTotal: TLS31020Total | null = null; // 總計
+  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
+  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
+  historyRequestBody: TLS31040DetailRequest | null = null; //歷史查詢條件
+
   columns: Column[] = [
     { field: 'building_desc', header: '館別', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
@@ -129,7 +137,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly tls31040Service: Tls31040Service,
+    public readonly tls31040Service: Tls31040Service,
     private readonly queryStateService: QueryStateService
   ) {
     super(); // 呼叫父類建構子
@@ -191,7 +199,33 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
 
     this.tls31040Service.queryTLS31040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單櫃別之營業報表response', res.Data);
-      this.data = res.Data;
+      this.data = res.Data ?? [];               // 查詢資料
+      this.footerTotal = res.TotalData ?? null;;    // 總計資料
+      this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
+          budget: this.footerTotal.TotalBudget,
+          AVN_TotSaleAmt: this.footerTotal.TotalSales,
+          TxnCount: this.footerTotal.TotalTxnCount,
+          AvgTicket: this.footerTotal.AvgTicket,
+          tlt_space: this.footerTotal.TotalSpace,
+          MonthlyPSM: this.footerTotal.AvgPSM,
+          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+          // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+
+          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+
+          AchievementRate: this.footerTotal.AvgAchievementRate,
+          CompletionRate: this.footerTotal.AvgCompletionRate,
+        } : null;
+        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+          
+        // } : null;
+
+      this.historyRequestBody = request;                 // 查詢條件
+      console.log('明細資料',this.data)
+      console.log('明細總計',this.footerTotal);
+      console.log('明細總計(轉換後)', this.footershowTotal);
+      // console.log('明細條件',this.historyRequestBody);
       this.totalRecords = res.TotalCount;
     })
   }

@@ -2,12 +2,14 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
+
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
 
@@ -84,21 +86,23 @@
   </p-accordion>
 </div>
 
+<!-- 主表：不含「銷售日期」欄位，顯示專櫃 + 收銀機彙總，保留 Grand Total -->
 <div class="card">
-  <!-- ✅ 改用 app-table-report；補上必填的 lastQueryBody / queryFunction -->
   <app-table-report
-    tableKey="TLS23070"
+    tableKey="TLS23070_MAIN"
     [columns]="columns"
     [data]="data"
     [totalRecords]="totalRecords"
     [loading]="loading"
     dataKey="_rowKey"
     [lastQueryBody]="historyRequestBody"
-    [queryFunction]="queryTLS23070ForReport"
-      [showManage]="false"
-  [showDelete]="false"
-     [groupRowsBy]="'TXN_Date'"
-     >
+    [queryFunction]="tls23070Service.queryTLS23070.bind(tls23070Service)"
+    [showManage]="false"
+    [showDelete]="false"
+    [showDetail]="true"
+    (detail)="onDetail($event)"
+    [footerData]="footerData"
+    [showReportMode]="false">
 
     <header>
       <div class="flex justify-content-end gap-2">
@@ -114,3 +118,28 @@
     </header>
   </app-table-report>
 </div>
+
+<!-- 明細 Dialog：含銷售日期 + 金額欄位，並有總計 -->
+<app-dialog
+  [visible]="dialogVisible"
+  header="專櫃/機台明細"
+  (visibleChange)="onDialogClose($event)"
+  [showFooter]="false"
+  width="95vw">
+
+  <app-table-report
+    tableKey="TLS23070_DETAIL"
+    [columns]="detailColumns"
+    [data]="dialogData"
+    [totalRecords]="dialogTotalRecords"
+    [loading]="dialogLoading"
+    dataKey="_rowKey"
+    [lastQueryBody]="dialogHistoryRequestBody"
+    [queryFunction]="queryTLS23070DetailForReport"
+    [showManage]="false"
+    [showDelete]="false"
+    [showDetail]="false"
+    [footerData]="dialogFooterData"
+    [showReportMode]="false">
+  </app-table-report>
+</app-dialog>

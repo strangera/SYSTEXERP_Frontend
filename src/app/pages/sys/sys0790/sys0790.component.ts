@@ -90,7 +90,6 @@ export class SYS0790Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '420018';
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     this.organizationNumber.getOrganizationNumbers().subscribe((data) => {
       this.organizationNumberOptions = data;

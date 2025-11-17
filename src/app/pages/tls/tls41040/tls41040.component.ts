@@ -14,6 +14,34 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
+
+// 定義資料項目介面
+interface TLS41040Item {
+  NOT_SeqNo: string;
+  NOT_DateTime: string;
+  NOT_BegDateTime: string;
+  NOT_EndDateTime: string;
+  NOT_Desc: string;
+  NOT_Status: string;
+  NOT_Remark: string;
+  TLT_No: string;
+  ECR_Type: string;
+  ECR_GrpNo: string;
+  BUILDING_No: string;
+  FLOOR_No: string;
+  Area_No: string;
+  ID?: number;
+  id?: number;
+  NOT_DispRt: string;
+  NOT_DispSpd: string;
+  NOT_DispBtn: string;
+  NOT_DispCd: string;
+  NOT_Prn: string;
+  NOT_DtlLimit: string;
+}
 
 @Component({
   selector: 'app-tls41040',
@@ -33,7 +61,7 @@ import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 
     InputTextareaComponent
   ],
 })
-export class TLS41040Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> implements OnInit {
 
   // ---- 表單 ----
   queryForm = this.formBuilder.nonNullable.group({
@@ -45,7 +73,7 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'NOT_SeqNo', order: 1 }]),
   });
 
-  ECRNoOptions: any[] = [];
+  ECRNoOptions: { label: string; value: string }[] = [];
 
   NOT_Status_Options = [
     { label: '已生效', value: 'A' },
@@ -85,8 +113,9 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
     { field: 'Area_No', header: '區域', visible: true },
   ];
 
-  data: any[] = [];
+  data: TLS41040Item[] = [];
   totalRecords = 0;
+  selectedItems: TLS41040Item[] = [];
 
   constructor(
     private ECRNoService: ECRNoService,
@@ -105,7 +134,6 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
   }
 
 
-  // ---- 查詢 ----
   onSubmit(frm: FormGroup) {
     const frmValue = frm.value;
     this.handleSubmit(frm, () => {
@@ -113,6 +141,7 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
         PageSize: frmValue?.pageSize || 10,
         PageIndex: (frmValue?.pageIndex ?? 1),
         SortBy: frmValue?.SortBy || [{ field: 'NOT_SeqNo', order: 1 }],
+        STO_No: '10',
         ECR_No: frmValue.ECR_No || '',
         NOT_BegDateTime: frmValue.NOT_BegDateTime,
         NOT_EndDateTime: frmValue.NOT_EndDateTime,
@@ -120,23 +149,34 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
         NOT_Remark: frmValue.NOT_Remark || ''
       };
 
-
       this.loading = true;
-      this.tls41040Service.queryTLS41040(payload).subscribe({
-        next: (res) => {
-          this.data = res?.Data ?? [];
-          this.totalRecords = res?.TotalCount ?? 0;   // 分頁必填
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('TLS41040 查詢失敗:', err);
-          this.loading = false;
-        }
-      });
+      this.tls41040Service.queryTLS41040(payload)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe({
+          next: (res) => {
+            this.data = res?.Data ?? [];
+            this.totalRecords = res?.TotalCount ?? 0;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            console.log('查詢結果', this.data.find(x => x.ID === 69));
+          },
+          error: (err) => console.error('TLS41040 查詢失敗:', err)
+        });
     });
   }
 
+
+  // ---- 刪除 ----
+  onDelete(selectedRows: TLS41040Item[]): void {
+    const idList = selectedRows.map(row => row.ID || row.id).filter((id): id is number => typeof id === 'number');
+    const deletePayload = { idList };
+    this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this)).subscribe({
+      next: () => {
+        this.onSubmit(this.queryForm);
+        this.selectedItems = [];
+      },
+      error: () => { this.loading = false; },
+    });
+  }
 
 
 }

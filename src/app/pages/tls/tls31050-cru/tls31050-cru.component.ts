@@ -17,8 +17,10 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS31050DetailRequest, TLS31050DetailResponse, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { TLS31050DetailItem, TLS31050DetailRequest, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
 import { formatDate } from '@angular/common';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls31050-cru',
@@ -35,6 +37,7 @@ import { formatDate } from '@angular/common';
     RadiobuttonYNComponent,
     TranslateModule,
     TableComponent,
+    TableReportComponent,
     MultiSelectComponent,
     ButtonModule
   ],
@@ -65,7 +68,11 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
   });
   totalRecords = 0;
-  data: TLS31050DetailResponse[] = [];
+  data: TLS31050DetailItem[] = [];
+  footerTotal: TLS31020Total | null = null; // 總計
+  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
+  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
+  historyRequestBody: TLS31050DetailRequest | null = null; //歷史查詢條件
   columns: Column[] = [
     { field: 'building_desc', header: '館別', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
@@ -77,12 +84,12 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
     
-    { field: 'NormalSales', header: '正品', groupField: 'budgetAmt', visible: true }, // 正品 (來源尚未提供)
-    { field: 'SpecialSales', header: '特價 ', groupField: 'budgetAmt', visible: true }, // 特價 (來源尚未提供)
-    { field: 'Discount95Sales', header: '95折 ', groupField: 'budgetAmt', visible: true }, // 95折 (來源尚未提供)
-    { field: 'Discount90Sales', header: '9折 ', groupField: 'budgetAmt', visible: true }, // 9折 (來源尚未提供)
-    { field: 'Discount80Sales', header: '8折 ', groupField: 'budgetAmt', visible: true }, // 8折 (來源尚未提供)
-    { field: 'Discount70Sales', header: '7折 ', groupField: 'budgetAmt', visible: true }, // 7折 (來源尚未提供)
+    { field: 'NormalSales', header: '正品', groupField: 'budgetAmt', visible: true }, // 正品
+    { field: 'SpecialSales', header: '特價 ', groupField: 'budgetAmt', visible: true }, // 特價
+    { field: 'Discount95Sales', header: '95折 ', groupField: 'budgetAmt', visible: true }, // 95折
+    { field: 'Discount90Sales', header: '9折 ', groupField: 'budgetAmt', visible: true }, // 9折
+    { field: 'Discount80Sales', header: '8折 ', groupField: 'budgetAmt', visible: true }, // 8折
+    { field: 'Discount70Sales', header: '7折 ', groupField: 'budgetAmt', visible: true }, // 7折
     { field: 'AchievementRate', header: '達成率', groupField: 'budgetAmt', visible: true, format: (value) => formatPercentage(value, 2) },
     
     { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
@@ -135,7 +142,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly tls31050Service: Tls31050Service  ) {
+    public readonly tls31050Service: Tls31050Service  ) {
     super(); // 呼叫父類建構子
   }
 
@@ -171,8 +178,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
     console.log('單抽成別之營業報表print請求', JSON.stringify(formValue, null, 2));
 
     this.btnLoading = true;
-    this.tls31050Service.printTLS31050Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
+    this.tls31050Service.printTLS31050Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
         this.messageService.successBubble(res.Message);
         if (res.Data && res.Data.Print_URL) {
           const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
@@ -197,6 +203,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
       console.log('單抽成別之營業報表response', res.Data);
       this.data = res.Data;
       this.totalRecords = res.TotalCount;
+      this.historyRequestBody = request;
     })
   }
 }

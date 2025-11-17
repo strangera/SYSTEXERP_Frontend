@@ -4,7 +4,8 @@ export const TXN_GUIPaperOptions = [
   { label: '補原機台', value: 'E' },
   { label: '手開二聯式發票', value: '2' },
   { label: '交易作廢', value: 'R' },
-  { label: '折讓單', value: 'C' }
+  { label: '折讓單', value: 'C' },
+  { label: '交易修正', value: 'M' }// 非P  modify
 ]
 export const txnStatusOptions = [
   { label: '一般交易', value: 'N' },

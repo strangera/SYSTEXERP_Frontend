@@ -156,7 +156,7 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
         if (this.canEdit()) {
           console.log('update', formValue);
           this.tls41030Service.updateTLS41030(formValue).subscribe(() => {
-            // this.messageService.successBubble('更新成功');
+            this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });
         }

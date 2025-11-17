@@ -211,7 +211,6 @@ export interface IPOS2017Data {
   POD_BuyAmt: number,
   PLU_TaxType: string,
   POD_SalePrc: number,
-  POD_SaleTax: number,
   POD_SaleAmt: number,
   POD_Remark: string,
   UNIT_NAME: string,
@@ -288,7 +287,16 @@ export class Tls52010Service {
    * @param data 包含要更新的採購單 ID 列表及目標狀態
    * @returns API 響應
    */
-  updateStatusTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
+  updateStatusTLS52010(rowData: ITLS52010Data[], status: string): Observable<ApiResponse<any>> {
+    const data: ISetCloseTLS52010Request = {
+      _DetailList: rowData.map(item => {
+        return {
+          PO_No: item.PO_No,
+          PO_Status: status,
+          PO_Status_Ori: item.PO_Status
+        };
+      })
+    }
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52010`, data);
   }
   /**

@@ -24,7 +24,6 @@ const now = new Date();
 @Component({
   selector: 'app-tls57170',
   templateUrl: './tls57170.component.html',
-  styleUrl: './tls57170.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
 })
@@ -90,7 +89,7 @@ export class TLS57170Component {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
     this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
     this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));

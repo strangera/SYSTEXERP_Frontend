@@ -1,201 +1,75 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="單據種類"
-              controlName="paperType"
-              [options]="paperTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.paperType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票/收據號碼"
-              controlName="invoiceCode"
-              [control]="queryForm.controls.invoiceCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="單據日期"
-              controlName="documentDate"
-              [control]="queryForm.controls.documentDate"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="結帳年月"
-              controlName="billingYearMonth"
-              [control]="queryForm.controls.billingYearMonth"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="結帳方式"
-              controlName="billingMethod"
-              [control]="queryForm.controls.billingMethod"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="帳次"
-              controlName="billingCount"
-              [control]="queryForm.controls.billingCount"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="申報年月"
-              controlName="reportYearMonth"
-              [control]="queryForm.controls.reportYearMonth"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商統一編號"
-              controlName="vendorCode"
-              [control]="queryForm.controls.vendorCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="課稅別"
-              controlName="taxCategory"
-              [options]="taxCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.taxCategory"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="發票總額"
-              [startControl]="queryForm.controls.amountFrom"
-              [endControl]="queryForm.controls.amountTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="未稅金額"
-              [startControl]="queryForm.controls.unTaxAmountFrom"
-              [endControl]="queryForm.controls.unTaxAmountTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="稅額"
-              [startControl]="queryForm.controls.taxAmountFrom"
-              [endControl]="queryForm.controls.taxAmountTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="格式"
-              controlName="format"
-              [control]="queryForm.controls.format"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="狀況"
-              controlName="discountStatus"
-              [options]="discountStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.discountStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳送日期"
-              [startControl]="queryForm.controls.sendDateFrom"
-              [endControl]="queryForm.controls.sendDateTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="建立者"
-              controlName="creator"
-              [control]="queryForm.controls.creator"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="折讓維護單號"
-              controlName="discountMaintenanceCode"
-              [control]="queryForm.controls.discountMaintenanceCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+          <!-- 單據種類 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="單據種類" controlName="TABTYPE" [options]="TABTYPEOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.TABTYPE"
+            [submitted]="submitted"></app-dropdown>
+          <!-- 發票/收據號碼 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="發票/收據號碼" controlName="PUR_GUINo"
+            [control]="queryForm.controls.PUR_GUINo" [submitted]="submitted"></app-input-text>
+          <!-- 單據日期 -->
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="發票/收據日期"
+            controlName="PUR_GUIDate" [control]="queryForm.controls.PUR_GUIDate" [submitted]="submitted"></app-calendar>
+          <!-- 結帳年月 -->
+          <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="結帳年月"
+            controlName="ACP_YYYYMM" [control]="queryForm.controls.ACP_YYYYMM" [submitted]="submitted" />
+          <!-- 申報年月 -->
+          <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="申報年月"
+            controlName="PUR_RepYYYYMM" [control]="queryForm.controls.PUR_RepYYYYMM" [submitted]="submitted" />
+          <!-- 廠商統一編號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="PUR_VenUniform"
+            [control]="queryForm.controls.PUR_VenUniform" [submitted]="submitted"></app-input-text>
+          <!-- 課稅別 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
+            [options]="PUR_TaxTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.PUR_TaxType" [submitted]="submitted"></app-dropdown>
+          <!-- 發票總額 -->
+          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="發票總額"
+            [startControl]="queryForm.controls.amountFrom" [endControl]="queryForm.controls.amountTo"
+            [submitted]="submitted"></app-input-number-range>
+          <!-- 未稅金額 -->
+          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折讓未稅金額"
+            [startControl]="queryForm.controls.unTaxAmountFrom" [endControl]="queryForm.controls.unTaxAmountTo"
+            [submitted]="submitted"></app-input-number-range>
+          <!-- 稅額 -->
+          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折讓稅額"
+            [startControl]="queryForm.controls.taxAmountFrom" [endControl]="queryForm.controls.taxAmountTo"
+            [submitted]="submitted"></app-input-number-range>
+          <!-- 格式 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="格式" controlName="PUR_VoucherType"
+            [control]="queryForm.controls.PUR_VoucherType" [options]="PUR_VoucherTypeOptions" optionLabel="label"
+            optionValue="value" [submitted]="submitted"></app-dropdown>
+          <!-- 狀況 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="狀況" controlName="DIS_Status"
+            [options]="DIS_StatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.DIS_Status" [submitted]="submitted" />
+          <!-- 建立者 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="建立者" controlName="CRT_USR_No"
+            [control]="queryForm.controls.CRT_USR_No" [options]="tblUserOptions | async" optionLabel="label"
+            optionValue="value" [submitted]="submitted"></app-dropdown>
+          <!-- 折讓維護單號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="折讓維護單號" controlName="DIS_No"
+            [control]="queryForm.controls.DIS_No" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls55030Service.queryTLS55030.bind(tls55030Service)" [loading]="loading" [showDelete]="false">
+  </app-table-report>
 </div>

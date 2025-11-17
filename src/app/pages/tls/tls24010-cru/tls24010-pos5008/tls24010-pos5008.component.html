@@ -36,8 +36,7 @@
       <td class="text-right">
         <app-input-number *ngIf="isFormCreateable" controlName="TXN_PayAmt"
           [control]="getFormControl(posFormArrayControls[i], 'TXN_PayAmt')" [submitted]="submitted && rowData.selected"
-          [showLabel]="false" [showErrorMessage]="false" [max]="9999999999.9999" [maxFractionDigits]="4"
-          customPlaceholder="請輸入金額" />
+          [showLabel]="false" [showErrorMessage]="false" [max]="9999999999" customPlaceholder="請輸入金額" />
         <span *ngIf="!isFormCreateable">
           $ {{ rowData.TXN_PayAmt }}
         </span>

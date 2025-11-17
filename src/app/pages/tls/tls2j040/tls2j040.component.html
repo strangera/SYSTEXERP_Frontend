@@ -1,95 +1,49 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab header="{{ 'create-conditions' | translate }}" [selected]="true" class="line-height-3 m-0">
-          <form [formGroup]="cruForm" id="cruForm" (ngSubmit)="onSubmit(cruForm)">
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="統一編號" controlName="uID" [control]="cruForm.controls.uID" [submitted]="submitted">
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="買受人" controlName="buyer" [control]="cruForm.controls.buyer"
-                  [submitted]="submitted">
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="地址" controlName="address" [control]="cruForm.controls.address"
-                  [submitted]="submitted">
-                </app-input-text>
-              </div>
-            </div>
-            <hr>
-            <ng-container formArrayName="items">
-              <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                <div class="grid p-fluid">
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar-range calendarType="dateRange" label="銷售日期"
-                      [startControl]="getFormControl(i, 'startdate')" [endControl]="getFormControl(i, 'enddate')"
-                      [submitted]="submitted">
-                    </app-calendar-range>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="收銀機號" controlName="registerID"
-                      [control]="getFormControl(i, 'registerID')" [submitted]="submitted">
-                    </app-input-number>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="交易流水號" controlName="transferID"
-                      [control]="getFormControl(i, 'transferID')" [submitted]="submitted">
-                    </app-input-number>
-                  </div>
-                </div>
-                <div class="grid p-fluid">
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="專櫃編號" controlName="counterID"
-                      [control]="getFormControl(i, 'counterID')" [submitted]="submitted">
-                    </app-input-number>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number-range [useGrouping]="false" label="二聯發票號碼"
-                      [startControl]="getFormControl(i, 'startserialticket')"
-                      [endControl]="getFormControl(i, 'endserialticket')" [submitted]="submitted">
-                    </app-input-number-range>
-                  </div>
-                </div>
-                <div class="grid p-fluid">
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="應稅金額" controlName="taxPrice" [control]="getFormControl(i, 'taxPrice')"
-                      [submitted]="submitted">
-                    </app-input-number>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="免稅金額" controlName="notaxPrice" [control]="getFormControl(i, 'notaxPrice')"
-                      [submitted]="submitted">
-                    </app-input-number>
-                  </div>
-                </div>
-                <div class="grid pt-3" style="justify-content: flex-end;">
-                  <div style="margin-right: 5px;padding: 3px;">
-                    <p-button (click)="onRemoveItem(i)" label="{{ 'delete' | translate }}" icon="pi pi-trash"
-                      severity="danger"></p-button>
-                  </div>
-                </div>
-                <hr>
-              </ng-container>
-            </ng-container>
-            <div class="pt-1">
-            </div>
-            <div class="grid pt-3" style="justify-content: flex-end;">
-              <div style="margin-right: 5px;padding: 3px;">
-                <p-button (click)="submitForm(cruForm)" label="確認" icon="pi pi-check" severity="info"></p-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+  
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          
+          <!-- 換開日期 (TxnDate) -->
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="換開日期" controlName="TxnDate" [control]="queryForm.controls.TxnDate" [submitted]="submitted"></app-calendar>
+                     
+          <!-- 三聯式發票號碼 (TxnGUINo) -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="三聯式發票號碼" controlName="TxnGUINo" [control]="queryForm.controls.TxnGUINo" [submitted]="submitted"></app-input-text>
+          
+          <!-- 買受人統一編號 (TxnUniform) -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="買受人統一編號" controlName="TxnUniform" [control]="queryForm.controls.TxnUniform" [submitted]="submitted"></app-input-text>
+          
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>
+<div class="card">
+    <app-table tableKey="TLS2J040" dataKey="TxnGUINo" [data]="data" [columns]="columns"
+        [showCheckBox]="false" [showEdit]="false" [showDetail]="false" [showManage]="false" [showDelete]="false"
+        [multiSortMeta]="[{ field: 'TxnGUINo', order: 1 }]" apiUrl="queryTLS2J040"
+        [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+        [lazy]="true" [loading]="loading"
+        (selectionChange)="selectedRows = $event"
+        [selectedItems]="selectedRows"
+        (itemClick)="onRowClick($event)"
+        >
+    </app-table>
+</div>
+
+
+<!-- PDF Viewer -->
+ <!--<div class="card" *ngIf="pdfUrl">
+  <div style="height: 90vh;">
+   <iframe [src]="pdfUrl" width="100%" height="100%" style="border:none;"></iframe>
+  </div>
+</div>-->

@@ -80,3 +80,54 @@
     margin-right: auto !important;
   }
 }
+
+:host ::ng-deep {
+  /* ================================================= */
+  /* 1. 內容區塊和導航欄的基礎背景色 */
+  /* 確保 Tab 導航區與內容區塊的背景一致，看起來像一個整體 */
+  .p-tabview .p-tabview-panels {
+    background-color: transparent;
+    padding: 0;
+    padding-top: 1rem;
+  }
+  .p-tabview .p-tabview-nav {
+    background-color: transparent;
+  }
+
+  /* ================================================= */
+  /* 2. 未被點選的 Tab (基礎/非活躍狀態) */
+  .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+    /* 使用較暗或不同的背景色，使其看起來像「被推到後面」 */
+    background-color: var(--surface-d);
+    color: var(--text-color-secondary); /* 顏色較淡 */
+    border: 1px solid var(--surface-border);
+    margin-right: 0.25rem; /* 增加間距 */
+    border-radius: var(--border-radius) var(--border-radius) 0 0; /* 圓角 */
+    padding: 0.75rem;
+  }
+
+  /* ================================================= */
+  /* 3. 被點選的 Tab (活躍狀態 - .p-highlight) */
+  .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+    /* 使用更亮的背景色，使其看起來與內容區塊連續 */
+    background-color: var(--surface-a);
+    color: var(--primary-color); /* 使用主題色或主文字色 */
+    border: 1px solid var(--surface-border);
+    font-weight: bold; /* 加粗文字 */
+    border-bottom-color: transparent;
+    /* 視覺技巧：在底部疊加一個與 Tab 內容背景色相同的邊框，來「遮蓋」導航欄的底線 */
+    position: relative;
+    z-index: 1; /* 確保活躍 Tab 在最上層 */
+  }
+
+  /* 額外優化：讓活躍 Tab 的底部邊緣與內容連貫 */
+  .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: -1px; /* 向上微調以蓋住 .p-tabview-nav 的 border-bottom */
+    left: 0;
+    right: 0;
+    height: 1px; /* 覆蓋的高度 */
+    background-color: var(--surface-a); /* 必須與內容區塊的背景色一致 */
+  }
+}

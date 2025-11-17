@@ -19,11 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.4.3  傳票審核傳送作業
 @Component({
-    selector: 'app-ass14030',
-    templateUrl: './ass14030.component.html',
-    styleUrl: './ass14030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, CalendarRangeComponent, InputNumberComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass14030',
+  templateUrl: './ass14030.component.html',
+  styleUrl: './ass14030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, CalendarRangeComponent, InputNumberComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS14030Component extends BasicQpageComponent implements OnInit {
   //
@@ -96,8 +96,7 @@ export class ASS14030Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310030';
     this.cruPage = '/ASS1000/ASS14030CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //5.1.1.2 客服設備資料維護作業
 @Component({
-    selector: 'app-cpm11020',
-    templateUrl: './cpm11020.component.html',
-    styleUrl: './cpm11020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-cpm11020',
+  templateUrl: './cpm11020.component.html',
+  styleUrl: './cpm11020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class CPM11020Component extends BasicQpageComponent implements OnInit {
   //
@@ -74,8 +74,7 @@ export class CPM11020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '510002';
     this.cruPage = '/CPM1000/CPM11020CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     // ----------------------------------------------------------------
   }

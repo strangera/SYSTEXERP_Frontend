@@ -16,6 +16,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
@@ -163,7 +164,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
   onSubmit(frm: FormGroup) {
     console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      this.tls12010Service.queryTLS12010(frm.value).subscribe({
+      this.tls12010Service.queryTLS12010(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
@@ -213,7 +214,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
 
     console.log('deleteBody', deleteBody);
 
-    this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
+    this.tls12010Service.deleteTLS12010(deleteBody).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
@@ -252,7 +253,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
 
   loadOptions() {
     // 查 大分類(專櫃)
-    this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+    this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.bus_type_Option = response.Data.map((item: any) => ({
         No: item.No, // 大分類(專櫃) 號
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
@@ -260,7 +261,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       console.log('大分類代號:', this.bus_type_Option);
     });
     // 查 品牌
-    this.tls12010Service.queryPLULOGO_DropDownList({}).subscribe((response) => {
+    this.tls12010Service.queryPLULOGO_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.tlt_name_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃主代碼
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
@@ -268,7 +269,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       console.log('品牌代碼:', this.tlt_name_Option);
     });
     // 查 統編
-    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).subscribe((response) => {
+    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).pipe(untilDestroyed(this)).subscribe((response) => {
       // 去除重複的 No，只保留第一筆
       const uniqueMap = new Map<string, any>();
       response.Data.forEach((item: any) => {
@@ -290,7 +291,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       console.log('統編代號(去重):', this.cus_uniform_Option);
     });
     // 查 經營方式
-    this.tls12010Service.querySYS1000_DropDownList({ "SYS_Type": 'T117' }).subscribe((response) => {
+    this.tls12010Service.querySYS1000_DropDownList({ "SYS_Type": 'T117' }).pipe(untilDestroyed(this)).subscribe((response) => {
       this.business_type_Option = response.Data.map((item: any) => ({
         No: item.No, // 經營方式 代碼
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
@@ -299,7 +300,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     });
 
     // 查詢 接待人員
-    this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+    this.tls12010Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 名稱
         Name: item.Name, // 接待人員 名稱

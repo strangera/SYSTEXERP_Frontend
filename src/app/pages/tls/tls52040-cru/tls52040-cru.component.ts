@@ -2,10 +2,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize } from 'rxjs';
+import { debounceTime, finalize, withLatestFrom } from 'rxjs';
 import { TLS52040Request, ITLS52040Data, ITLS52040Detail, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import { POStatus } from '../tls52040/tls52040.component';
@@ -18,12 +16,13 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { getSYS1000 } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 @Component({
   selector: 'app-tls52040-cru',
   templateUrl: './tls52040-cru.component.html',
@@ -43,7 +42,8 @@ import { getSYS1000 } from '@service/system/sys1000.service';
     NgIf,
     DialogComponent,
     TranslateModule,
-    TableEditComponent
+    TableEditComponent,
+    AsyncPipe
   ],
 })
 export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> implements OnInit {
@@ -56,15 +56,16 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     RJM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
     RJM_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
     RJM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
-    APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
+    APPLY_USR_No: [{ value: this.user?.user_No, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
+    APPLY_USR_Name: [{ value: this.user?.user_Name, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期
     RJM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
-  vendorOptions: IDropdownItem[] = []; // 廠商下拉選單選項
-  brandOptions: IDropdownItem[] = []; // 品牌下拉選單選項
-  warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
-  userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
+  brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
+  warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
+  originalData: ITLS52040Detail[] = [];
   data: ITLS52040Detail[] = [];
   selectedItems: ITLS52040Detail[] = [];
   editColumns: EditColumn[] = [
@@ -115,8 +116,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   ];
   constructor(
     private tls52040Service: Tls52040Service,
-    private dropDownListService: DropDownListService,
-    private sys0110Service: Sys0110Service
+    private readonly dropdown: DropdownApiService
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS52040', this.dataForm);
@@ -125,51 +125,40 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       this.dataForm.controls.LOGO_No.disable();
     }
     this.loadDropdownOptions();
-    if (this.isFormCreateable) {
-      this.dataForm.controls.APPLY_Date.setValue(new Date());
-      this.userOptions = [{ user_No: this.user?.user_No || '', user_Name: this.user?.user_Name || '' }];
-      this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
-    } else {
+    if (!this.isFormCreateable) {
       this.tls52040Service.GetPOS2032({ RJM_No: this.rowdata?.RJM_No }).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data.Data;
+        this.originalData = JSON.parse(JSON.stringify(response.Data.Data));
       });
-      this.sys0110Service.queryUser({ user_No: this.rowdata?.APPLY_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
-        this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
-      })
     }
   }
   loadDropdownOptions() {
-    // 專門清空資料的共用方法
-    const resetFormData = () => {
-      this.data = [];
-      this.selectedItems = [];
-      this.dialogData = [];
-      this.calculateTotals();
-    };
-    // 1. 供應商下拉選單
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(vendor => ({ ...vendor, label: `${vendor.VEN_No} - ${vendor.Name}` }));
+    if (this.isFormCreateable) {
+      const resetFormData = () => { this.data = []; this.selectedItems = []; this.dialogData = []; this.calculateTotals(); };
       this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
-    });
-    // 2. 品牌下拉選單
-    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data.map(brand => ({ ...brand, label: `${brand.No} - ${brand.Name}` }));// 品牌
-      this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
-        const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
-        this.dataForm.controls.HOS_No.setValue(HOS_No);
-        this.dataForm.controls.HOS_No.enable();
-        resetFormData();
-      });
-    });
-    // 3. 倉別下拉選單
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 倉別
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
-    });
+      this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
+        this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
+          const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
+          const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
+          let finalHOSNo: string | null = null;
+          if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
+            finalHOSNo = suggestedHOSNo;
+          }
+          this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
+          resetFormData();
+        });
+      });
+    }
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (this.data && this.data.length === 0) {
+        this.messageService.errorBubble('明細至少要有一筆');
+        this.loading = false
+        return;
+      }
       const valid = this.tableEditComponent.validateAndShowErrors()
       if (!valid) {
         this.loading = false
@@ -320,6 +309,9 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       RJM_TotalBuyAmt: Math.round(totalBuyAmt),
       RJM_TotalSaleAmt: Math.round(totalSaleAmt),
     });
+  }
+  onReset() {
+    this.data = JSON.parse(JSON.stringify(this.originalData));
   }
 }
 // 預設0，(驗收數量+已驗數量)不可大於 應驗數量

@@ -20,20 +20,20 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sys0792',
-    templateUrl: './sys0792.component.html',
-    styleUrl: './sys0792.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0792',
+  templateUrl: './sys0792.component.html',
+  styleUrl: './sys0792.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 // 在線人員查詢作業
 export class SYS0792Component {
@@ -77,7 +77,6 @@ export class SYS0792Component {
 
   ngOnInit(): void {
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     this.userCodeService.getUserCode().subscribe((data) => {
       this.UserCodeOptions = data;

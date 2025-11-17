@@ -1,7 +1,8 @@
+import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Option } from 'src/app/service/utility/dropdown-api.model';
 
-export interface TLS21020Data {
+export interface TLS21020Data extends Partial<EditColumnExtend> {
   ABAT_YN: string;
   AccDC: string;
   AccNo: string;

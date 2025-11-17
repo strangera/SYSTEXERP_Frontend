@@ -1,320 +1,347 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { SaleslistStatusService } from '../../../service/basic/saleslist-status.service';
-import { SalesLocationService } from '../../../service/basic/sales-location.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { VendorService } from '../../../service/basic/vendor.service';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { IInvoiceDetail, IReturnDetailData, ReturnNotRebateQueryBody, Tls55030ListData, Tls55030Service } from '@service/api/tls/tls55030.service';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
+import { TLS55030DialogComponent } from './tls55030-dialog.component'; // 引入新的 Dialog 子元件
+import { columns, columns2 } from './tls55030-cru.model';
+import { ButtonModule } from 'primeng/button';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { combineLatest, finalize, startWith } from 'rxjs';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { Option } from '@service/utility/dropdown-api.model';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { DividerModule } from "primeng/divider";
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+
+// =================================================================================
+// 應用層計算欄位擴展介面 (繼承自 IInvoiceDetail，確保類型安全)
+// 這是用來儲存前端表格資料，包含後端沒有的計算/輸入欄位
+// =================================================================================
+export interface IRebateDetailForCRU extends IInvoiceDetail {
+  Rebate_Amt_New?: number; // 新增/輸入的折讓金額
+  Rebate_Net?: number;    // 計算後的折讓淨額
+  Rebate_Tax?: number;    // 計算後的折讓稅額
+}
+
 
 @Component({
   selector: 'app-tls55030-cru',
   templateUrl: './tls55030-cru.component.html',
-  styleUrl: './tls55030-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, TableComponent, ButtonComponent, NgIf]
+  imports: [
+    TableEditComponent, AsyncPipe, RadiobuttonComponent, TranslateModule,
+    MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent,
+    InputTextComponent, TableReportComponent, DialogComponent, ButtonComponent, NgIf, InputNumberComponent, TLS55030DialogComponent, ButtonModule,
+    CalendarRangeQuickComponent, RadioButtonModule,
+    DividerModule, DividerModule
+  ]
 })
-export class TLS55030CRUComponent {
-
-  ProgNo: string = '250028';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData> implements OnInit {
+  @ViewChild('dialogs') dialogComponent!: TLS55030DialogComponent;
 
   dataForm = this.formBuilder.group({
-    salesCode: [{ value: '自動編號', disabled: true }],
-    machineCode: [],
-    transactionCodeFrom: [],
-    transactionCodeTo: [],
-    invoiceNumberFrom: [],
-    invoiceNumberTo: [],
-    brandCode: [],
-    warehouseCode: [],
-    salesLocation: [],
-    salesPerson: [],
-    salesStatus: [],
-    transactionType: [],
-    salesDateFrom: [],
-    salesDateTo: [],
-    barcodeNumber: [],
-    counterCode: [],
-    Description: [],
-    vendorCode: [],
+    ACP_YYYYMM: [new Date('2025-01'), [Validators.required]],
+    VEN_No: ['84445301-1', [Validators.required]],
+    DIS_EntryType: ['1', [Validators.required]],
+    RJM_TotalBuyAmt: [{ value: 0, disabled: true }], 			    // 退貨總金額
+    invoiceTotalAmount: [{ value: 0, disabled: true }], 			  // 發票總金額(自取) - 彙總所有選取的發票金額
+    invoiceRemainingRebateAmount: [{ value: 0, disabled: true }], 	// 發票剩餘可折總金額(自取) - 彙總所有選取的發票剩餘可折金額
+    totalRebateAmount: [{ value: 0, disabled: true }], 			    // 折讓總金額(自取) - 彙總所有折讓明細的金額 (APS30231.Rebate_Amt)
+    balanceAmount: [{ value: 0, disabled: true }], 				      // 餘額(自取) - 計算結果 (RJM_TotalBuyAmt - totalRebateAmount)
+
+    // 折讓單開立金額
+    Rebate_Amt: [{ value: 0, disabled: true }], // 折讓金額
+    Rebate_Name: [null as string | null], // 品名
+    radioOption: ['1'], // 品名選項
   });
 
   // Dropdown options
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  salesStatusOptions: any[] = [];
-  salesLocationOptions: any[] = [];
-  salesPersonOptions: any[] = [];
-  transactionTypeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  userCodeOptions: any[] = [];
-  formTitle: string = '';   //CRU
-  showConfirm: boolean = false;//CRU
-  crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
-  vendorOptions: any[] = [];
-  // 表格資料2
-  data2: any[] = [
-    {
-      sequenceNumber: 1,
-      isNew: '是',
-      transactionType: '單據別1',
-      documentNumber: 'DOC123456',
-      vendorCode: 'VND001',
-      warehouseCode: 'WHS01',
-      amountBeforeTax: 900,
-      taxAmount: 100,
-      totalAmount: 1000
-    },
-    {
-      sequenceNumber: 2,
-      isNew: '否',
-      transactionType: '單據別2',
-      documentNumber: 'DOC654321',
-      vendorCode: 'VND002',
-      warehouseCode: 'WHS02',
-      amountBeforeTax: 1800,
-      taxAmount: 200,
-      totalAmount: 2000
-    },
-    // 其他資料
-  ];
+  DIS_EntryTypeOptions = getSYS1000Options('DIS_EntryType');
+  VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
+  HOS_NoOptions = this.dropdown.queryPos2034();
+  // <-- 新增屬性：用於儲存選中廠商的統一編號 (No, 即 API 所需的 VEN_No 參數)
+  venUniformNo: string | null = null;
+  // 退貨明細 =======================================================
+  data2: IReturnDetailData[] = [];
+  selectedItems2: IReturnDetailData[] = [];
+  columns2 = columns2;
 
-  filteredData2: any[] = [...this.data2];
+  // 折讓單明細 (使用擴展後的介面 IRebateDetailForCRU) =======================================================
+  data: IRebateDetailForCRU[] = []; // <--- 介面已更新
+  selectedItems: IRebateDetailForCRU[] = []; // <--- 介面已更新
+  columns = columns;
 
-  columns2: any[] = [
-    { field: 'sequenceNumber', header: '序號', visible: true },
-    { field: 'isNew', header: '新舊', visible: true },
-    { field: 'transactionType', header: '單據別', visible: true },
-    { field: 'documentNumber', header: '單號', visible: true },
-    { field: 'vendorCode', header: '廠商編號', visible: true },
-    { field: 'warehouseCode', header: '倉別', visible: true },
-    { field: 'amountBeforeTax', header: '未稅金額', visible: true },
-    { field: 'taxAmount', header: '稅額', visible: true },
-    { field: 'totalAmount', header: '應稅金額', visible: true }
-  ];
-
-
-  // 表格資料
-  data: any[] = [
-    {
-      sequenceNumber: 1,
-      isNew: '是',
-      transactionType: '單據別1',
-      invoiceNumber: 'INV123456',
-      invoiceDate: '2023-08-01',
-      taxType: '課稅別1',
-      invoicePurpose: '用途1',
-      invoiceAmount: 1000,
-      invoiceFormat: '格式1',
-      discountAmount: 100,
-      totalDiscountAmount: 200,
-      amountBeforeTax: 900,
-      taxAmount: 100
-    },
-    {
-      sequenceNumber: 2,
-      isNew: '否',
-      transactionType: '單據別2',
-      invoiceNumber: 'INV654321',
-      invoiceDate: '2023-08-02',
-      taxType: '課稅別2',
-      invoicePurpose: '用途2',
-      invoiceAmount: 2000,
-      invoiceFormat: '格式2',
-      discountAmount: 200,
-      totalDiscountAmount: 300,
-      amountBeforeTax: 1800,
-      taxAmount: 200
-    },
-    // 其他資料
-  ];
-
-
-
-  filteredData: any[] = [...this.data];
-
-  columns: any[] = [
-    { field: 'sequenceNumber', header: '序號', visible: true },
-    { field: 'isNew', header: '新舊', visible: true },
-    { field: 'transactionType', header: '單據別', visible: true },
-    { field: 'invoiceNumber', header: '發票/收據編號', visible: true },
-    { field: 'invoiceDate', header: '發票/收據日期', visible: true },
-    { field: 'taxType', header: '課稅別', visible: true },
-    { field: 'invoicePurpose', header: '發票用途', visible: true },
-    { field: 'invoiceAmount', header: '發票金額', visible: true },
-    { field: 'invoiceFormat', header: '發票格式', visible: true },
-    { field: 'discountAmount', header: '已折扣金額', visible: true },
-    { field: 'totalDiscountAmount', header: '折扣金額', visible: true },
-    { field: 'amountBeforeTax', header: '未稅金額', visible: true },
-    { field: 'taxAmount', header: '稅額', visible: true }
-  ];
-
+  // 修正 validateRow 的型別以使用擴展介面
+  validateRow = (rowData: IRebateDetailForCRU): { isValid: boolean, errorMessage: string } => {
+    // 由於 rowData 現在是 IRebateDetailForCRU 類型，存取 Rebate_Amt_New 是安全的
+    if ((rowData.Rebate_Amt_New || 0) > rowData.PUR_Amt - rowData.Rebate_Amt) {
+      return { isValid: false, errorMessage: '此張進項發票已超折，請確認折讓單內容' };
+    }
+    return { isValid: true, errorMessage: '' };
+  };
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private saleslistStatusService: SaleslistStatusService,
-    private salesLocationService: SalesLocationService,
-    private counterCodeService: CounterCodeService,
-    private transactionTypeService: TransactionTypeService,
-    private authService: AuthService,
-    private userCodeService: UserCodeService,
-    private vendorService: VendorService,
-
-  ) { }
+    public readonly tls55030Service: Tls55030Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe,
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe(data => this.warehouseOptions = data);
-    this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
-    this.saleslistStatusService.getSalesStatusOptions().subscribe(data => this.salesStatusOptions = data);
-    this.salesLocationService.getSalesLocationOptions().subscribe(data => this.salesLocationOptions = data);
-    this.counterCodeService.getCounterCodes().subscribe(data => this.counterCodeOptions = data);
-    this.transactionTypeService.getTransactionTypes().subscribe(data => this.transactionTypeOptions = data);
-    this.vendorService.getVendors().subscribe((data) => (this.vendorOptions = data));
-    this.userCodeService.getUserCode().subscribe(data => this.userCodeOptions = data);
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };//CRU
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }//CRU
-  }
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+    this.initializePage('TLS55030', this.dataForm);
+    this.setupVendorUniformNoListener();
+    this.setupRebateNameValidator();
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  // <-- 新增方法：監聽 VEN_No 變化並找出對應的廠商統一編號 (No)
+  setupVendorUniformNoListener(): void {
+    // 監聽廠商編號變動，並結合廠商下拉選單資料，找出對應的 Uniform No (No)
+    combineLatest([
+      this.dataForm.controls.VEN_No.valueChanges.pipe(startWith(this.dataForm.controls.VEN_No.value)),
+      this.VEN_NoOptions // Observable<Pos2013Item[] | null>
+    ]).pipe(untilDestroyed(this)).subscribe(([selectedVenNo, options]) => {
+      // 確保 options 是陣列且選取值存在
+      if (selectedVenNo && Array.isArray(options)) {
+        // 尋找選中的項目，並取得其 'No' 欄位作為統一編號
+        const selectedOption: Option | undefined = options.find((opt: Option) => opt['VEN_No'] === selectedVenNo);
+        this.venUniformNo = selectedOption ? selectedOption['No'] : null;
+      } else {
+        this.venUniformNo = null;
+      }
+    });
   }
 
-  canQuery(): boolean {
-    return true;
+  /**
+   * 設置 Rebate_Name 的動態驗證器。
+   * 當 DIS_EntryType 不等於 '1' 時，Rebate_Name 必填。
+   */
+  setupRebateNameValidator(): void {
+    const disEntryTypeControl = this.dataForm.controls.DIS_EntryType;
+    const rebateNameControl = this.dataForm.controls.Rebate_Name;
+
+    // 立即執行一次，以確保初始狀態的驗證正確
+    this.applyRebateNameValidation(disEntryTypeControl.value, rebateNameControl);
+
+    // 監聽 DIS_EntryType 的變化
+    disEntryTypeControl.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      this.applyRebateNameValidation(value, rebateNameControl);
+    });
   }
 
-  canAdd(): boolean {
-    return true;
+  /**
+   * 根據 DIS_EntryType 的值設定 Rebate_Name 的驗證器。
+   */
+  private applyRebateNameValidation(disEntryType: string | null | undefined, rebateNameControl: any): void {
+    // 當 DIS_EntryType 不等於 '1' 時， Rebate_Name 必填
+    if (disEntryType !== '1') {
+      rebateNameControl.setValidators([Validators.required]);
+    } else {
+      rebateNameControl.setValidators(null);
+    }
+    // 更新控制項的驗證狀態
+    rebateNameControl.updateValueAndValidity();
   }
 
-  canEdit(): boolean {
-    return true;
+  // 處理子元件回傳的退貨明細資料
+  handleReturnSelection(selectedReturns: IReturnDetailData[]) {
+    this.data2 = [...this.data2, ...selectedReturns];
+    this.selectedItems2 = [];
+    this.updateReturnSummaryAmounts(); // <--- 使用新的方法來更新金額和狀態
   }
 
+  // 處理子元件回傳的折讓單明細資料
+  handleInvoiceSelection(selectedInvoices: IInvoiceDetail[]) {
+    const newItems: IRebateDetailForCRU[] = selectedInvoices.map(item => ({
+      ...item,
+      Rebate_Amt_New: 0,
+      Rebate_Net: 0,
+      Rebate_Tax: 0
+    }));
+    this.data = [...this.data, ...newItems];
+    this.selectedItems = [];
+
+    // 統一呼叫新的方法
+    this.updateInvoiceSummaryAndFormState();
+  }
+  // **核心修正點：統一處理主表單禁用/啟用和彙總欄位恆禁用邏輯**
+  updateFormDisableState(): void {
+    if (this.data2.length || this.data.length) {
+      // 有明細資料時，禁用主表單 (防止修改 ACP_YYYYMM, VEN_No, DIS_EntryType)
+      this.dataForm.controls.ACP_YYYYMM.disable();
+      this.dataForm.controls.VEN_No.disable();
+      this.dataForm.controls.DIS_EntryType.disable();
+    } else {
+      // 沒有明細資料時，啟用主表單
+      this.dataForm.enable();
+
+      // **重點:** 雖然 dataForm.enable() 啟用了所有欄位，但彙總欄位必須保持禁用！
+      this.dataForm.controls.RJM_TotalBuyAmt.disable();
+      this.dataForm.controls.invoiceTotalAmount.disable();
+      this.dataForm.controls.invoiceRemainingRebateAmount.disable();
+      this.dataForm.controls.totalRebateAmount.disable();
+      this.dataForm.controls.balanceAmount.disable();
+      this.dataForm.controls.Rebate_Amt.disable();
+    }
+  }
+  // 彙總發票/折讓單明細相關欄位並處理主表單狀態
+  updateInvoiceSummaryAndFormState(newData?: IRebateDetailForCRU[]): void {
+    // 如果是 dataChange 觸發，則更新 data
+    if (newData) {
+      this.data = newData;
+    }
+
+    // 1. 重新計算彙總欄位
+    this.updateSummaryAmounts();
+    this.updateFormDisableState();
+  }
+  // 彙總欄位更新函數
+  updateSummaryAmounts(): void {
+    let totalInvoiceAmt = 0;
+    let totalRemainingRebateAmt = 0;
+    let positiveTotalRebateAmt = 0;
+
+    this.data.forEach(item => {
+      totalInvoiceAmt += item.PUR_Amt;
+      totalRemainingRebateAmt += item.PUR_Amt - item.Rebate_Amt;
+      positiveTotalRebateAmt += item.Rebate_Amt_New || 0;
+    });
+    const negativeTotalRebateAmt = positiveTotalRebateAmt != 0 ? -positiveTotalRebateAmt : 0;
+    const balance = totalInvoiceAmt - totalRemainingRebateAmt + negativeTotalRebateAmt;
+
+    // 更新 FormControls
+    this.dataForm.controls.invoiceTotalAmount.setValue(totalInvoiceAmt);
+    this.dataForm.controls.invoiceRemainingRebateAmount.setValue(totalRemainingRebateAmt);
+    this.dataForm.controls.totalRebateAmount.setValue(negativeTotalRebateAmt);
+    this.dataForm.controls.Rebate_Amt.setValue(positiveTotalRebateAmt);
+    this.dataForm.controls.balanceAmount.setValue(balance);
+  }
+  // 彙總退貨明細相關欄位 (主要是 RJM_TotalBuyAmt)
+  updateReturnSummaryAmounts(newData2?: IReturnDetailData[]): void {
+    // 如果是 dataChange 觸發，則更新 data2
+    if (newData2) {
+      this.data2 = newData2;
+    }
+
+    // 重新計算退貨總金額
+    const totalBuyAmt = this.data2.reduce((total, item) => total + item.RJM_TotalBuyAmt, 0);
+    this.dataForm.controls.RJM_TotalBuyAmt.setValue(totalBuyAmt);
+
+    // 同步處理表單的 disable/enable 狀態
+    this.updateFormDisableState();
+  }
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+    this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
+      const acpDateValue = formValue.ACP_YYYYMM;
+      let rebateGUIDate = '';
+      if (acpDateValue) {
+        const inputDate = acpDateValue instanceof Date ? acpDateValue : new Date(acpDateValue);
+        if (!isNaN(inputDate.getTime())) {
+          const year = inputDate.getFullYear();// 2. 獲取當前的年份
+          const month = inputDate.getMonth();// 3. 獲取當前的月份 (JavaScript 月份是 0-11)
+          const lastDay = new Date(year, month + 1, 0);// 4. 計算該月的最後一天：設置下一個月 (month + 1) 的第 0 天
+          rebateGUIDate = this.datePipe.transform(lastDay, 'yyyy-MM-dd') || '';// 5. 格式化為 YYYY-MM-dd
+        }
+      }
+      const paramBody = {
+        ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',
+        VEN_No: formValue.VEN_No,
+        DIS_EntryType: formValue.DIS_EntryType,
+        rebateDetails: this.data.map(item => ({
+          PUR_GUINo: item.PUR_GUINo,
+          PUR_GUIDate: item.PUR_GUIDate,
+          TABTYPE: item.TABTYPE,
+          PUR_TaxType: item.PUR_TaxType,
+          GUI_Amt: item.PUR_Amt,
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
+          Rebate_GUIDate: rebateGUIDate,
 
-    this.loading = false;
-    this.notificationService.unblockUi();
+          Rebate_Amt: item.Rebate_Amt_New || 0,
+          Rebate_Net: item.Rebate_Net || 0,
+          Rebate_Tax: item.Rebate_Tax || 0,
+          Rebate_Name: formValue.DIS_EntryType === '1' ? '退貨' : formValue.Rebate_Name || '',
+        })),
+        // ... (後續的 returnDetails 和 switch 邏輯不變)
+        returnDetails: this.data2.map(item => ({
+          EVENT_ID: item.RJM_No,
+          Rebate_Amt: item.RJM_TotalBuyAmt,
+          Rebate_Net: item.RJM_TotalBuyNet,
+          Rebate_Tax: item.RJM_TotalBuyTax
+        }))
+      }
+
+      // ... (switch 邏輯不變)
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          this.tls55030Service.insertTLS55030(paramBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message || '新增成功');
+            this.dataForm.reset();
+            this.data = [];
+            this.data2 = [];
+            this.updateFormDisableState();
+          });
+          break;
+        case CRUDStatus.Edit:
+          break;
+        default:
+          return;
+      }
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+  dialogVisible = false;
+  dialogQueryForm = this.formBuilder.group({
+    APRV_Date_Start: [null],
+    APRV_Date_End: [null],
+    VEN_No: [null],
+    HOS_No: [null],
+  });
+  dialogData: IReturnDetailData[] = [];
+  dialogColumns: ReportColumn[] = [
+    { field: 'RJM_No', header: '退貨單號' },
+    { field: 'APRV_Date', header: '退貨日期' },
+    { field: 'HOS_No', header: '倉別代號' },
+    { field: 'HOS_NAME', header: '倉別名稱' },
+    { field: 'VEN_NO', header: '廠商編號' },
+    { field: 'RJM_TotalBuyNet', header: '未稅金額', format: formatAmount },
+    { field: 'RJM_TotalBuyTax', header: '稅額', format: formatAmount },
+    { field: 'RJM_TotalBuyAmt', header: '含稅金額', format: formatAmount },
+  ];
+  dialoglastQueryBody: ReturnNotRebateQueryBody | null = null;
+  dialogLoading = false;
+  dialogtotalRecords = 0;
 
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          dataForm: this.dataForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS5000/TLS55030'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          dataForm: this.dataForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        dataForm: this.dataForm,
-      },
-      skipLocationChange: true,
+  onQuery(frm: FormGroup) {
+    this.dialogLoading = true;
+    const formValue = frm.getRawValue();
+    const paramBody = {
+      ...formValue,
+      // 使用 DatePipe 轉換日期格式
+      APRV_Date_Start: this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd'),
+      APRV_Date_End: this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd'),
+      PageIndex: 1,
+      PageSize: 30,
+      SortBy: [{ field: 'RJM_No', order: 1 }]
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.tls55030Service.queryTLS55030ReturnNotRebate(paramBody as ReturnNotRebateQueryBody).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe((res) => {
+      this.dialogData = res.Data;
+      this.dialogtotalRecords = res.TotalCount || res.Data.length;
+      this.dialoglastQueryBody = paramBody as ReturnNotRebateQueryBody;
+    })
   }
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  }//CRU
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['TLS5000/TLS55030']);
-  }//CRU
 }

@@ -1,0 +1,238 @@
+<p-divider align="left" type="solid" *ngIf="title" styleClass="pb-2">
+  <span class="text-center text-xl font-bold text-primary">
+    {{ title }}
+  </span>
+</p-divider>
+<p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems"
+  [selectionMode]="showCheckBox ? 'multiple' : undefined" sortMode="multiple" [dataKey]="dataKey"
+  [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
+  (onRowReorder)="onRowReorder($event); rowReorderData.emit($event)" [multiSortMeta]="multiSortMeta"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
+  [rowSelectable]="rowSelectableWrapper" [loading]="loading">
+  <ng-template pTemplate="caption">
+    <div class="grid align-items-center justify-content-between mx-0">
+      <div class="caption-left button-group flex gap-2 py-2">
+        <p-button *ngIf="showInsert && !disabled" (click)="insert.emit()" pTooltip="新增" tooltipPosition="top" pButton
+          icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text" [disabled]="insertDisabled" />
+        <p-button *ngIf="showDelete && !disabled" (click)="deleteRow(selectedItems)" pTooltip="刪除" tooltipPosition="top"
+          pButton icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
+          [disabled]="selectedItems?.length <= 0" />
+      </div>
+      <div class="flex-grow-1 p-2">
+        <ng-content select="header"></ng-content>
+      </div>
+      <div class="flex gap-2 py-2">
+        <div *ngIf="showExcel" class="flex gap-2 align-items-center">
+          <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
+              exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" (click)="onExportExcel()" />
+          <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic"
+            [chooseIcon]=" exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-import'"
+            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" severity="info"
+            (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+      <tr>
+        <th *ngIf="data.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
+        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
+          class="w-1rem text-center">序號
+        </th>
+        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate" rowspan="2"
+          class="w-1rem text-center">
+          <p-tableHeaderCheckbox [disabled]="disabled" />
+        </th>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <!-- 如果是第一次出現這個群組 -->
+          <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
+            <th [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
+              class="group-header" pReorderableColumn pResizableColumn>
+              {{ getGroupHeader(col.groupField!) }}
+            </th>
+          </ng-container>
+          <!-- 如果是沒群組的欄位 -->
+          <ng-container *ngIf="!col.groupField">
+            <th *ngIf="!col.hidden" rowspan="2" class="text-center" pResizableColumn>
+              {{ col.header }}
+            </th>
+          </ng-container>
+        </ng-container>
+      </tr>
+      <!-- 第二層：實際欄位標題 -->
+      <tr>
+        <ng-container *ngFor="let col of columns">
+          <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn>
+            {{ col.header }}
+            <span *ngIf="isRequired(col)" class="text-red-500">*</span>
+          </th>
+        </ng-container>
+      </tr>
+    </ng-container>
+    <!-- 非群組表頭 -->
+    <ng-container *ngIf="!columnGroup?.length">
+      <tr>
+        <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
+        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
+        </th>
+        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate"
+          class="w-1rem text-center">
+          <p-tableHeaderCheckbox [disabled]="disabled" />
+        </th>
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
+          {{ col.header }}
+          <span *ngIf="isRequired(col)" class="text-red-500">*</span>
+        </th>
+      </tr>
+    </ng-container>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+    <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
+      [pSelectableRowDisabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" [pSelectableRow]="rowData"
+      [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
+        'invalid-row': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
+        'insert-row': rowData._isAutoInsertCandidate ,
+      }">
+      <td *ngIf="data.length && showReorder" class="w-1rem text-center">
+        <span *ngIf="!rowData._isAutoInsertCandidate && data.length > 1" class="pi pi-bars w-1rem text-center"
+          pReorderableRowHandle></span>
+        <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus w-1rem text-center" [ngClass]="{
+            'text-blue-500': rowData._isAutoInsertCandidate
+          }"></span>
+      </td>
+      <td class="text-center w-1rem" [attr.colspan]="rowData._isAutoInsertCandidate ? 2 : 1"
+        [pTooltip]="rowData._rowValidationError?.errorMessage ? rowData._rowValidationError.errorMessage : ''"
+        tooltipPosition="bottom">
+        <span [ngClass]="{
+            'pi pi-exclamation-circle': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
+            'text-blue-500': rowData._isAutoInsertCandidate
+          }" class="w-1rem text-center">
+          {{ rowData._isAutoInsertCandidate ? (disabled ? '' : '新增資料') :
+          rowData._rowValidationError?.isValid === false ? '' : rowIndex + 1 }}
+        </span>
+      </td>
+      <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
+        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
+          [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" />
+      </td>
+      <td *ngFor="let col of columns" class="text-center" (click)="col.type ? $event.stopPropagation() : null"
+        (keydown)="$event.stopPropagation()" [style]="{'width':col.width, 'text-align': col.textAlign}">
+        <ng-container [ngSwitch]="col.type">
+          <p-iconField iconPosition="right">
+            <input *ngSwitchCase="'input'" pInputText class="min-w-max" [placeholder]="'請輸入' + col.header"
+              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              (ngModelChange)="onValueChange(rowData,$event, col, index)" [maxlength]="col.maxLength"
+              [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
+              [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+              (blur)="onValueChange(rowData,rowData[col.field], col, index)"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
+            <p-inputNumber *ngSwitchCase="'inputNumber'" class="min-w-max" mode="decimal"
+              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'請輸入' + col.header" [min]="col.min" [max]="col.max"
+              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              (onInput)="onValueChange(rowData,$event.value, col, index)" [minlength]="col.minLength"
+              [maxlength]="col.maxLength" [minFractionDigits]="col.minFractionDigits"
+              [maxFractionDigits]="col.maxFractionDigits"
+              (onFocus)="col.onFocus?.(rowData, rowData[col.field], col, index)"
+              (onBlur)="col.onBlur?.(rowData, rowData[col.field], col, index); onValueChange(rowData,rowData[col.field], col, index)"
+              [style]="{'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
+              [inputStyle]="{'width': col.width}" [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
+            <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" appendTo="body"
+              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'請輸入' + col.header" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
+              [optionValue]="col.optionValue"
+              [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
+              [disabled]=" (col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              [editable]="true" (onChange)="onValueChange(rowData,$event.value, col, index)"
+              (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
+              [virtualScrollItemSize]="40" [showClear]="col.showClear ?? true"
+              [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }">
+              <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
+                <div class="flex align-items-center gap-2">
+                  <span>{{ item[col.templateLabel] }}</span>
+                </div>
+              </ng-template>
+            </p-dropdown>
+            <p-calendar *ngSwitchCase="'date'" class="min-w-max" [(ngModel)]="rowData[col.field]"
+              [ngModelOptions]="{ standalone: true }" [placeholder]="'請輸入' + col.header"
+              [timeOnly]="col.timeOnly || false" [showTime]="col.showTime || false" [hourFormat]="col.hourFormat"
+              [showSeconds]="col.showSeconds" [view]="col.view || 'date'" [dateFormat]="col.dateFormat || 'yy/mm/dd'"
+              iconDisplay="input" [minDate]="col.minDate" [maxDate]="col.maxDate" [appendTo]="'body'"
+              [showIcon]="!((col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled)"
+              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              (onInput)="onValueChange(rowData,$event.value, col, index)"
+              (onFocus)="col.onFocus?.(rowData, rowData[col.field], col, index)"
+              (onBlur)="col.onBlur?.(rowData, rowData[col.field], col, index); onValueChange(rowData,rowData[col.field], col, index)"
+              [style]="{'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
+              [inputStyle]="{'width': col.width}" [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }">
+              <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                <i *ngIf="col.timeOnly || false" class="pi pi-clock pointer-events-none"></i>
+                <i *ngIf="!col.timeOnly || false" class="pi pi-calendar pointer-events-none"></i>
+              </ng-template>
+            </p-calendar>
+            <p-inputIcon *ngIf="rowData._validationErrors?.[col.field]"
+              styleClass="pi pi-exclamation-circle text-red-500" [pTooltip]="rowData._validationErrors?.[col.field]"
+              tooltipPosition="bottom" />
+          </p-iconField>
+          <ng-container *ngIf="col.type === 'template'">
+            <div class="input-wrapper" [attr.data-suffix]="col.suffix">
+              <input pInputText readonly class="w-full min-w-max" [placeholder]="'請選擇' + (col.header || '')"
+                [value]="templateDisplayValue(rowData, col)" [disabled]="disabled" (click)="overlayPanel.show($event)" />
+              <p-overlayPanel #overlayPanel [dismissable]="true" [showCloseIcon]="false"
+                [ngStyle]="{'max-width': '50vw', 'min-width': '300px'}" [appendTo]="'body'">
+                <div class="grid p-fluid">
+                  <ng-container *ngIf="col.templateRef">
+                    <ng-container *ngTemplateOutlet="col.templateRef!; context: { $implicit: rowData, col, overlayPanel }"></ng-container>
+                  </ng-container>
+                </div>
+              </p-overlayPanel>
+            </div>
+          </ng-container>
+        </ng-container>
+        <span *ngIf="!col.type">
+          {{ col.format ? col.format(rowData[col.field], index, rowData) : rowData[col.field]}}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
+      <td class="text-center" [colSpan]="1 + (showCheckBox ? 1 : 0) + (showReorder ? 1 : 0)" pFrozenColumn>
+        <span class="font-bold">總計</span>
+      </td>
+      <ng-container *ngFor="let col of columns">
+        <td class="text-center">
+          <span class="font-bold">
+            {{
+            col.format
+            ? col.format(footerData[col.field])
+            : footerData[col.field]
+            }}
+          </span>
+        </td>
+      </ng-container>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
+    <div class="flex align-items-center justify-content-end p-2">
+      總筆數: {{ data.length - (canInsert ? 1 : 0) }} 筆
+    </div>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="columns.length + 2">
+        <div>
+          <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+            查無資料
+          </div>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+<span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">{{ errorMessage }}</span>

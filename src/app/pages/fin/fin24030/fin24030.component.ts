@@ -19,11 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.4.3 帳款貼現沖帳維護
 @Component({
-    selector: 'app-fin24030',
-    templateUrl: './fin24030.component.html',
-    styleUrl: './fin24030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-fin24030',
+  templateUrl: './fin24030.component.html',
+  styleUrl: './fin24030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN24030Component extends BasicQpageComponent implements OnInit {
   //
@@ -82,7 +82,6 @@ export class FIN24030Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '120016';
     this.cruPage = '/FIN2000/FIN24030CRU';
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
     //
     // ----------------------------------------------------------------

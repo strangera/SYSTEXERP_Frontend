@@ -3,7 +3,7 @@
     <div class="col pb-0">
       <ng-container *ngIf="field.mainDataField; else elseBlock">
         <label [for]="field.field">{{ field.header }}
-          <span *ngIf="isRequired" class="required">*</span>
+          <span *ngIf="isRequired" class="text-red-500">*</span>
         </label>
         <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
           (click)="op.toggle($event)" (input)="onInputChange();op.hide()" (onFocus)="op.toggle($event)"
@@ -31,7 +31,7 @@
     <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
       (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
       [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading"
-      [multiSortMeta]="[{ field: optionValue, order: -1 }]" [totalRecords]="totalRecords"
+      [multiSortMeta]="formGroup.controls['SortBy'].value" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy" [showCaption]="false" />
   </form>
 </p-overlayPanel>

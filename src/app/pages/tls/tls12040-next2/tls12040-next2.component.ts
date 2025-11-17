@@ -21,6 +21,7 @@ import { LocationOptionsService } from '@service/api/dropdownservice/location-op
 import { TLS12040DataFlowService } from './services/tls12040-data-flow.service';
 import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
 import { Button } from "primeng/button";
+import { DateUtils } from 'src/app/core/utils/date-utils';
 interface CategoryItem {
   id: number;
 }
@@ -133,7 +134,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   get currentCommissionType(): string {
     // 1. 優先從 flowService 的 CRU 資料取得（最可靠的來源）
-    const step1Data = this.flowService.getCruData<TLS12040DetailModel>();
+    const step1Data = this.flowService.getCruData();
     if (step1Data?.tlt_term_type) {
       // console.log('從 flowService CRU 資料取得 tlt_term_type:', step1Data.tlt_term_type);
       return step1Data.tlt_term_type.toString();
@@ -142,7 +143,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 2. 如果 CRU 資料沒有，才檢查 contractInfoData
     if (this.contractInfoData && this.contractInfoData.length > 0) {
       const termType = this.contractInfoData[0].tlt_term_type;
-      console.log('從 contractInfoData 取得 tlt_term_type:', termType);
+      // console.log('從 contractInfoData 取得 tlt_term_type:', termType);
       return termType || '3';
     }
 
@@ -165,7 +166,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       if (this.discountOptions.length === 0) {
         console.warn('⚠️ 沒有載入到折扣選項');
       }
-
+      console.log('=== CRUD 狀態調試 ===');
+      console.log('當前 CRUD 狀態:', this.crudstatus);
+      console.log('isReadOnlyMode:', this.isReadOnlyMode);
+      console.log('isEditMode:', this.isEditMode);
+      console.log('isCreateMode:', this.isCreateMode);
       //  第三步:初始化欄位配置
       this.initializeColumns();
       this.updateDiscountColumnOptions();
@@ -217,7 +222,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 4. 同步全域標籤狀態
     this.selectedSettingTab = 'discount';
 
-    console.log('✅ 資料一致性確保完成');
+    console.log(' 資料一致性確保完成');
   }
 
   /**
@@ -268,21 +273,32 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   /**
    *  改進:統一的抽成資料載入方法
    */
-  private async loadCommissionData(): Promise<void> {
-    console.log('🔍 開始載入抽成資料...');
+  async loadCommissionData(): Promise<void> {
+    // 先檢查是否有暫存資料
+    const savedData = this.flowService.getStepData('next2');
 
-    // 1. 優先檢查是否有暫存的 Next2 資料
-    const savedNext2Data = this.flowService.getNext2Data();
-
-    if (savedNext2Data && this.isValidSavedData(savedNext2Data)) {
-      console.log('📦 發現有效的暫存 Next2 資料');
-      await this.loadFromSavedData(savedNext2Data);
+    if (savedData?.data?.commissionData && savedData.data.commissionData.length > 0) {
+      //  有暫存，直接用暫存資料
+      console.log('📦 從暫存載入抽成資料');
+      this.commissionData = savedData.data.commissionData;
+      this.dataLoaded = true;
+      this.commissionDataLoaded = true;
       return;
     }
 
-    // 2. 沒有暫存資料,從工作流程載入
-    console.log('🔄 沒有暫存資料,從工作流程載入');
-    await this.loadWorkflowData();
+    // ❌ 沒有暫存，才打 API
+    console.log('🌐 從 API 載入抽成資料');
+    await this.dataFlowService.loadData(
+      this.currentApplyNo,
+      this.discountOptions,
+      this.getContractDate('start'),
+      this.getContractDate('end')
+    );
+
+    // 從 dataFlowService 取得資料
+    this.commissionData = this.dataFlowService.getVisibleData();
+    this.dataLoaded = true;
+    this.commissionDataLoaded = true;
   }
 
 
@@ -291,8 +307,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private loadContractInfo(): void {
     console.log('載入合約資訊...');
 
-    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
-
+    const cruData = this.flowService.getCruData();
+    console.log('🔍 完整 CRU 資料:', cruData);
+    console.log('🔍 apply_no:', cruData?.apply_no);
+    console.log('🔍 flowService 狀態:', this.flowService.getCurrentState());
+    this.currentApplyNo = cruData?.apply_no || null;
     if (cruData) {
       this.prepareContractInfoDisplay(cruData);
       console.log(' 合約資訊載入完成:', this.contractInfoData);
@@ -325,83 +344,6 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('是否為唯讀模式:', this.isReadOnlyMode);
   }
 
-  // 4. 新增檢查暫存資料有效性的方法
-  private isValidSavedData(savedData: any): boolean {
-    if (!savedData) {
-      console.log('❌ savedData 為空');
-      return false;
-    }
-
-    const hasCommissionData = savedData.commissionData &&
-      Array.isArray(savedData.commissionData);
-
-    const hasApplyNo = savedData.currentApplyNo !== undefined; // 允許 null
-
-    console.log('🔍 檢查暫存資料有效性:', {
-      hasCommissionData,
-      hasApplyNo,
-      commissionDataLength: savedData.commissionData?.length || 0,
-      applyNo: savedData.currentApplyNo
-    });
-
-    //  修正:即使 commissionData 為空陣列也是有效的(新增模式)
-    return hasCommissionData && hasApplyNo !== undefined;
-  }
-
-
-  /**
-   * 改進:從暫存資料載入
-   */
-  private async loadFromSavedData(savedData: any): Promise<void> {
-    try {
-      console.log('📄 開始從暫存資料載入...');
-
-      // 恢復基本狀態
-      this.currentApplyNo = savedData.currentApplyNo || '';
-      this.selectedSettingTab = savedData.selectedSettingTab || 'discount';
-      this.contractInfoData = savedData.contractInfoData || [];
-
-      //  關鍵修正:直接更新 dataFlowService 的狀態
-      if (savedData.commissionData && Array.isArray(savedData.commissionData)) {
-        console.log('📊 恢復抽成資料:', savedData.commissionData.length, '筆');
-
-        // 確保每個項目都有完整的子資料結構
-        const validatedData = savedData.commissionData.map((item: any) => ({
-          ...item,
-          ChargeDetails: item.ChargeDetails || [],
-          YearChargeDetails: item.YearChargeDetails || [],
-          LevelChargeDetails: item.LevelChargeDetails || []
-        }));
-
-        // 直接設定到 dataFlowService
-        this.dataFlowService['stateManager'].currentEditData = validatedData;
-        this.dataFlowService['stateManager'].uiState.dataLoaded = true;
-        this.dataFlowService['stateManager'].uiState.hasUnsavedChanges = false;
-
-        // 通知狀態變更
-        this.dataFlowService['notifyStateChange']();
-
-        // 同步到組件
-        this.commissionData = validatedData;
-        this.dataLoaded = true;
-        this.commissionDataLoaded = true;
-      }
-
-      // 恢復額外設定
-      if (savedData.additionalSettings) {
-        this.hasUnsavedChanges = savedData.additionalSettings.hasUnsavedChanges || false;
-      }
-
-      console.log(' 暫存資料載入完成');
-      this.cdr.detectChanges();
-
-    } catch (error) {
-      console.error('❌ 從暫存資料載入失敗:', error);
-      // 如果載入失敗,回退到正常流程
-      await this.loadWorkflowData();
-    }
-  }
-
 
   private initializeColumns(): void {
     this.contractInfoColumns = TLS12040Next2ColumnsConfig.getContractInfoColumns();
@@ -412,11 +354,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private async loadWorkflowData(): Promise<void> {
     console.log('🔄 開始載入工作流程資料...');
 
-    const cruData = this.flowService.getCruData<TLS12040DetailModel>();
+    const cruData = this.flowService.getCruData();
     console.log('📋 CRU 資料:', cruData);
 
     // 設定 apply_no
-    this.currentApplyNo = this.isCreateMode ? null : (cruData?.apply_no || null);
+    this.currentApplyNo = cruData?.apply_no || null;
     console.log('🔖 當前申請編號:', this.currentApplyNo);
 
     // 準備合約資訊顯示
@@ -639,7 +581,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    console.log('🎯 建立預設折扣項目');
+    console.log(' 建立預設折扣項目');
     const contractStartDate = this.getContractDate('start');
     const contractEndDate = this.getContractDate('end');
 
@@ -678,7 +620,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return [];
     }
 
-    console.log('🎯 建立預設層級項目');
+    console.log(' 建立預設層級項目');
 
     return this.discountOptions.map((option, index) => {
       //  更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
@@ -877,7 +819,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     // 準備要儲存的資料 - 使用與 Next2DataCleaner 相匹配的格式
     const dataToSave = {
       // 主要資料
-      commissionData: this.commissionData || [],
+      commissionData: JSON.parse(JSON.stringify(this.commissionData || [])),  // 🔥 深拷貝
 
       // UI 狀態
       selectedSettingTab: this.selectedSettingTab,
@@ -945,9 +887,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    if (!confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
-      return;
-    }
+    // if (!confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
+    //   return;
+    // }
 
     selectedItems.forEach(item => {
       if (this.hasValidId(item)) {
@@ -975,9 +917,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     const { selectedDetails, parentData } = event;
 
-    if (!confirm(`確定要刪除選取的 ${selectedDetails.length} 個明細項目嗎？`)) {
-      return;
-    }
+    // if (!confirm(`確定要刪除選取的 ${selectedDetails.length} 個明細項目嗎？`)) {
+    //   return;
+    // }
 
     // 處理刪除邏輯
     selectedDetails.forEach(detail => {
@@ -1021,10 +963,13 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    const cruData = this.flowService.getCruData<SimpleContractInfo>();
+    const cruData = this.flowService.getCruData();
 
     // 修正：新增模式下 apply_no 可以是空的，後端會生成
     const applyNo = cruData?.apply_no || '';  // 允許空字串
+    const defaultCapSaletype1 = cruData?.cap_saletype1 || 'N';
+    const defaultCapSaletype2 = cruData?.cap_saletype2 || 'N';
+    const defaultCapSaletype5 = cruData?.cap_saletype5 || 'N';
 
     const newItem: ChargeSettingBusinessModel = {
       id: this.generateTempId(),
@@ -1036,8 +981,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       cag_taxtype: '1',
       sst_amount: null,
       sst_rate: null,
-      cap_saletype1: 'N',
-      cap_saletype2: 'N',
+      // 使用從 CRU 資料讀取的預設值
+      cap_saletype1: defaultCapSaletype1,
+      cap_saletype2: defaultCapSaletype2,
+      cap_saletype5: defaultCapSaletype5,
       cag_remark: '',
       _status: 'new',
       ChargeDetails: this.createDefaultDiscountItems({
@@ -1053,7 +1000,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     this.commissionData = [...this.commissionData, newItem];
     this.saveToWorkflow();
-    this.notificationService.infoBubble('新增完成');
+    // this.notificationService.infoBubble('新增完成');
   }
 
   private generateNewTltId(): string {
@@ -1365,43 +1312,63 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   onFieldChange(event: { fieldName: string, newValue: any, rowData: any }): void {
     const { fieldName, newValue, rowData } = event;
+    console.log('🚨 onFieldChange 被觸發！', { fieldName, newValue, itemId: rowData?.id });
 
-    //  新增：保護 cag_barcode 不被意外修改
-    if (fieldName === 'cag_barcode' && rowData.cag_barcode && rowData.cag_barcode !== newValue) {
-      console.warn('⚠️ 嘗試修改 cag_barcode，這可能不是預期的行為:', {
-        itemId: rowData.id,
-        originalValue: rowData.cag_barcode,
-        newValue: newValue,
-        stackTrace: new Error().stack
+    //  新增：日期欄位的特殊處理
+    const isDateField = fieldName === 'tlt_bdate' || fieldName === 'tlt_edate';
+    let processedValue = newValue;
+
+    if (isDateField) {
+      // 正規化日期格式
+      processedValue = DateUtils.toDateString(newValue);
+      console.log('📅 日期欄位正規化:', {
+        欄位: fieldName,
+        原始值: newValue,
+        原始類型: typeof newValue,
+        正規化後: processedValue
       });
-
-      // 如果不是明確的用戶操作，則阻止修改
-      if (fieldName === 'cag_barcode' && this.selectedSettingTab !== 'annual') {
-        console.log('阻止 cag_barcode 的意外修改');
-        return;
-      }
     }
 
     // 判斷是主檔還是明細
-    const isDetail = this.isDetailItem(event.rowData);
+    const isDetail = this.isDetailItem(rowData);
 
     if (isDetail) {
-      this.handleDetailFieldChange(event);
+      // 更新 event 物件
+      this.handleDetailFieldChange({ ...event, newValue: processedValue });
     } else {
-      this.dataFlowService.updateField(
-        rowData.id,
-        'master',
-        fieldName,
-        newValue
-      );
+      const index = this.commissionData.findIndex(item => item.id === rowData.id);
+      if (index === -1) {
+        console.error(`找不到 commission item: ${rowData.id}`);
+        return;
+      }
+
+      // 處理 master 項目的欄位變更
+      if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype5') {
+        const ynValue = newValue ? 'Y' : 'N';
+        (this.commissionData[index] as any)[fieldName] = ynValue;
+      } else {
+        //  使用處理過的值
+        (this.commissionData[index] as any)[fieldName] = processedValue;
+      }
+
+      // 標記狀態為已修改（除非是新項目）
+      if (this.commissionData[index]._status !== 'new') {
+        this.commissionData[index]._status = 'modified';
+      }
+
+      this.cdr.detectChanges();
     }
 
-    setTimeout(() => {
-      if (this.commissionData.length > 0) {
-        this.saveToWorkflow();
-      }
-    }, 200);
+    console.log('💾 準備儲存:', {
+      fieldName,
+      原始值: newValue,
+      處理後值: processedValue,
+      最終儲存值: (this.commissionData.find(x => x.id === rowData.id) as any)?.[fieldName]
+    });
+
+    setTimeout(() => this.saveToWorkflow(), 200);
   }
+
 
   /**
  * 處理明細資料的欄位變更
@@ -1416,8 +1383,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       currentStatus: rowData._status
     });
 
+    //  新增：日期欄位的特殊處理
+    const isDateField = fieldName === 'tlt_bdate' || fieldName === 'tlt_edate';
+    const processedValue = isDateField ? DateUtils.toDateString(newValue) : newValue;
+
     // 更新明細項目的欄位值
-    rowData[fieldName] = newValue;
+    rowData[fieldName] = processedValue;
 
     // 特殊處理：selected 欄位的狀態變更
     if (fieldName === 'is_selected' || fieldName === 'selected') {
@@ -1548,7 +1519,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     return this.visibleCommissionData.map(item => {
       // 建立新物件,包含動態的 detailItems
       const processedItem = { ...item };
-
+      (processedItem as any).cap_saletype1 = item.cap_saletype1 === 'Y';
+      (processedItem as any).cap_saletype2 = item.cap_saletype2 === 'Y';
+      (processedItem as any).cap_saletype5 = item.cap_saletype5 === 'Y';
       // 根據當前選中的標籤,設定對應的資料到統一的屬性名稱
       switch (this.selectedSettingTab) {
         case 'discount':
@@ -1799,21 +1772,23 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private getContractDate(type: 'start' | 'end'): string {
-    const cruData = this.flowService.getCruData<SimpleContractInfo>();
+    const cruData = this.flowService.getCruData();
     const fieldName = type === 'start' ? 'tlt_bdate' : 'tlt_edate';
 
     if (cruData?.[fieldName]) {
-      return this.formatDateString(cruData[fieldName]);
+      //  使用日期工具正規化
+      return DateUtils.toDateString(cruData[fieldName]);
     }
 
     // 修正預設日期計算
     const defaultDate = new Date();
     if (type === 'end') {
-      // 使用更精確的日期計算，避免月份邊界問題
       defaultDate.setFullYear(defaultDate.getFullYear() + 1);
-      defaultDate.setDate(defaultDate.getDate() - 1); // 確保是前一天
+      defaultDate.setDate(defaultDate.getDate() - 1);
     }
-    return this.formatLocalDateString(defaultDate);
+
+    // 使用日期工具返回字串格式
+    return DateUtils.toDateString(defaultDate);
   }
 
   private formatLocalDateString(date: Date): string {
@@ -1825,23 +1800,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private formatDateString(dateInput: any): string {
-    if (!dateInput) return this.formatLocalDateString(new Date());
-
-    if (typeof dateInput === 'string' && dateInput.includes('T')) {
-      return dateInput.split('T')[0];
-    }
-
-    try {
-      // 修正：使用本地時間而非 UTC 時間
-      if (dateInput instanceof Date) {
-        return this.formatLocalDateString(dateInput);
-      }
-
-      const date = new Date(dateInput);
-      return this.formatLocalDateString(date);
-    } catch {
-      return this.formatLocalDateString(new Date());
-    }
+    //  直接使用日期工具類
+    return DateUtils.toDateString(dateInput) || DateUtils.toDateString(new Date());
   }
 
   hasCommissionData(): boolean {
@@ -1940,30 +1900,29 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private createCopiedItem(sourceItem: any, itemType: string, parentData: ChargeSettingBusinessModel): any {
     const tempId = this.generateTempId();
 
-    // 基礎複製物件
     const copiedItem: any = {
       id: tempId,
       apply_no: parentData.apply_no,
       tlt_id: parentData.tlt_id,
       _status: 'new',
-      is_selected: false,  // 複製的項目預設不勾選
+      is_selected: false,
       is_configured: false,
       is_enabled: false
     };
 
-    // 根據類型處理特定欄位
     switch (itemType) {
       case 'discount':
-        // 折扣設定複製
         copiedItem.cag_barcode = sourceItem.cag_barcode || '';
         copiedItem.cag_charge_rate = sourceItem.cag_charge_rate || 0;
-        copiedItem.tlt_bdate = sourceItem.tlt_bdate ? new Date(sourceItem.tlt_bdate) : new Date();
-        copiedItem.tlt_edate = sourceItem.tlt_edate ? new Date(sourceItem.tlt_edate) : new Date();
+
+        //  關鍵修正：使用日期工具，保持字串格式
+        copiedItem.tlt_bdate = DateUtils.toDateString(sourceItem.tlt_bdate) || this.getContractDate('start');
+        copiedItem.tlt_edate = DateUtils.toDateString(sourceItem.tlt_edate) || this.getContractDate('end');
+
         copiedItem.barcode_desc = sourceItem.barcode_desc || '';
         break;
 
       case 'level':
-        // 層級抽成複製
         copiedItem.cag_barcode = sourceItem.cag_barcode || '';
         copiedItem.level_bmount = sourceItem.level_bmount || 0;
         copiedItem.level_eamount = sourceItem.level_eamount || 0;
@@ -1973,7 +1932,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         break;
     }
 
-    console.log('複製完成的項目:', copiedItem);
+    console.log(' 複製完成的項目:', {
+      id: copiedItem.id,
+      類型: itemType,
+      起始日: copiedItem.tlt_bdate,
+      結束日: copiedItem.tlt_edate,
+      折扣別: copiedItem.cag_barcode
+    });
+
     return copiedItem;
   }
 }

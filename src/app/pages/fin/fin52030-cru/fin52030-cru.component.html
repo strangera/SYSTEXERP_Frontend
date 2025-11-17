@@ -25,7 +25,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="傳票種類"
                       controlName="VouType"
-                      [options]="service.subpoenaTypes()"
+                      [options]="service.vouTypeOptions()"
                       optionLabel="label"
                       optionValue="value"
                       [showClear]="false"
@@ -35,25 +35,25 @@
                         label="建立者"
                         controlName="CRT_USR_No"
                         [control]="df().CRT_USR_No"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       label="建立日"
-                      controlName="createDate"
-                      [control]="df().createDate"
-                      [disabled]="true"
+                      controlName="CRT_Date"
+                      [control]="df().CRT_Date"
+                      [disabled]="!0"
                       [submitted]="submitted"></app-calendar>
         <app-input-text class="col-12 md:col-6 lg:col-4"
                         label="修改者"
                         controlName="UPD_USR_No"
                         [control]="df().UPD_USR_No"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4"
                       label="修改日"
-                      controlName="modifyDate"
-                      [control]="df().modifyDate"
-                      [disabled]="true"
+                      controlName="UPD_Date"
+                      [control]="df().UPD_Date"
+                      [disabled]="!0"
                       [submitted]="submitted"></app-calendar>
       </div>
 
@@ -63,8 +63,8 @@
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [disabled]="!dataForm.valid || this.onEditing"
-                    [loading]="service.tableLoading"></app-button>
+                    [disabled]="!dataForm.valid || !isBalanced()"
+                    [loading]="loading"></app-button>
       </div>
       }
     </form>
@@ -77,27 +77,18 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <app-table #tb
-                   [showManage]="!isFormReadable"
-                   [showCheckBox]="!isFormReadable"
-                   [showRowEdit]="!isFormReadable"
-                   [showInsert]="!isFormReadable"
-                   [showReorder]="!isFormReadable"
-                   [insertRowData]="!isFormReadable"
-                   (fieldChange)="onFieldChange($event)"
-                   (delete)="onDelete($event)"
-                   (rowEditInit)="onRowEditInit($event)"
-                   (rowEditSave)="onRowEditSave($event)"
-                   (rowEditCancel)="onRowEditCancel($event)"
-                   [showTotal]="!0"
-                   [showSerialNo]="!1"
-                   [rowEditCanSave]="rowEditCanSave"
-                   [data]="tableData()"
-                   [totalRecords]="totalRecords()"
-                   [loading]="service.tableLoading"
-                   [dataKey]="'index'"
-                   [tableKey]="'FIN52030_detail'"
-                   [columns]="columns()"></app-table>
+        <app-table-edit [showCheckBox]="!isFormReadable"
+                        [showInsert]="!isFormReadable"
+                        [showReorder]="!isFormReadable"
+                        (fieldChange)="onFieldChange($event)"
+                        (delete)="onDelete($event)"
+                        (rowReorderData)="onRowReorder($event)"
+                        [data]="tableData()"
+                        [defaultInsertData]="defaultNewRow()"
+                        [footerData]="footerData()"
+                        [loading]="service.tableLoading()"
+                        [tableKey]="'FIN52030_detail'"
+                        [columns]="columns()"></app-table-edit>
       </p-panel>
     </div>
   </div>
@@ -140,7 +131,7 @@
                [rows]="10"
                [showCurrentPageReport]="!0"
                currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆"
-               [loading]="service.venUsrLoading">
+               [loading]="service.venLoading() || service.usrLoading()">
         <ng-template pTemplate="header">
           <tr>
             <th>代號</th>
@@ -157,7 +148,8 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="2" class="text-center p-3">無符合條件的資料</td>
+            <td colspan="2"
+                class="text-center p-3">無符合條件的資料</td>
           </tr>
         </ng-template>
       </p-table>

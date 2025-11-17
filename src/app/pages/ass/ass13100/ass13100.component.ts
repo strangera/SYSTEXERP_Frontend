@@ -23,11 +23,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.10  資產清點作業
 @Component({
-    selector: 'app-ass13100',
-    templateUrl: './ass13100.component.html',
-    styleUrl: './ass13100.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, EditorTextComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13100',
+  templateUrl: './ass13100.component.html',
+  styleUrl: './ass13100.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, EditorTextComponent, TableComponent, TranslateModule]
 })
 export class ASS13100Component extends BasicQpageComponent implements OnInit {
   //
@@ -126,8 +126,7 @@ export class ASS13100Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310025';
     this.cruPage = '/ASS1000/ASS13100CRU';
     //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     //
     this.userCodeService.getUserCode().subscribe(data => {
       this.userCodeOptions = data;

@@ -1,31 +1,34 @@
-import { LocationCodeService } from './../../../service/basic/locationcode.service';
-import { FloorService } from './../../../service/basic/floor.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { BigCategoryService } from '../../../service/basic/big-category.service';
-import { MidCategoryService } from '../../../service/basic/mid-category.service';
-import { SmallCategoryService } from '../../../service/basic/small-category.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { apiOption } from '@shared/models/tls/tls000.model';
+import { ASS21030Service } from '@service/api/ass/ass21030.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ASS21050Service } from '@service/api/ass/ass21050.service';
+import { finalize } from 'rxjs/operators';
+import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+
+interface ASS21050Item {
+  id?: number;
+  LOCATION_No?: string;
+  [key: string]: unknown;
+}
 
 @Component({
   selector: 'app-ass21050',
   templateUrl: './ass21050.component.html',
-  styleUrl: './ass21050.component.scss',
+  styleUrls: ['./ass21050.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -35,250 +38,158 @@ import { TranslateModule } from '@ngx-translate/core';
     ReactiveFormsModule,
     DropdownComponent,
     InputTextComponent,
-    TableComponent,
     TranslateModule,
+    TableReportComponent,
+    MultiSelectComponent,
   ],
 })
-export class ASS21050Component extends BasicQpageComponent implements OnInit {
-  ngOnInit(): void {
-    this.ProgNo = '320005';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.organizationNumberService.getOrganizationNumbers()
-      .subscribe((data) => (this.Departmentcode = data));
-    this.floorService.getFloors()
-      .subscribe((data) => (this.floor = data));
-    this.locationCodeService.getSystemTypes()
-      .subscribe((data) => (this.location = data));
-  }
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Sdate: [],
-    Edate: [],
-    Departmentcode: [],
-    Kurabe: [],
-    code: [],
-    floor: [],
-    location: [],
-    illustrate: [],
-    Placementinstructions: [],
-    Energytype: [],
-    equipmentLocationOptions: [],
-    ironNumberOptions: [],
-    remark: [],
-    Counternumber: [],
-    Counterclassification: [],
+export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    LOCATION_No: [''],
+    FLOOR_NO: [''],
+    AREA_NO: [''],
+    LOCATION_Name: ['',[Validators.maxLength(30)]],
+    LOCATION_Remark: ['',[Validators.maxLength(200)]],
+    SortBy: [[{ field: 'LOCATION_No', order: 1 }]],
   });
-  // Table data
-  Energytype: any[] = [{ value: 1, label: '水費' },
-  { value: 2, label: '電費' },
-  { value: 3, label: '瓦斯費' },];
-  Counternumber: any[] = [{ value: 1, label: '000001' },
-  { value: 2, label: '000002' },
-  { value: 3, label: '000003' },];
-  Counterclassification: any[] = [{ value: 1, label: '商場' },
-  ];
-  data: any[] = [];
-  equipmentLocationOptions: any[] = [
-    { value: 1, label: '010A000001' },
-    { value: 2, label: '010A000002' },
-    { value: 3, label: '010A000003' },
-    { value: 4, label: '010A000004' },
-    { value: 5, label: '010B000001' },
-    { value: 6, label: '010B000002' },
-    { value: 7, label: '010B000003' },
-  ];
-  ironNumberOptions: any[] = [
-    { value: 1, label: 'EB102' },
-    { value: 2, label: 'EB103' },
-    { value: 3, label: 'EB105' },
-    { value: 4, label: 'EB106' },
-    { value: 5, label: 'EB107' },
-    { value: 6, label: 'EB108' },
-    { value: 7, label: 'EB109' },
-    { value: 8, label: 'EB110' },
-    { value: 9, label: 'EB111' },
-    { value: 10, label: 'EB112' },
-  ];
-
-  location: any[] = [];
-  filteredData: any[] = [...this.data];
+  floorNoOptions: IDropdownItem[] = [];
+  areaNoOptions: IDropdownItem[] = [];
+  ENG_MeterNo_Option: apiOption[] = [];
+  data: ASS21050Item[] = [];
+  totalRecords = 0;
+  selectedItems: ASS21050Item[] = [];
+  lastQueryBody: Record<string, unknown> = {};
   columns: any[] = [
-    { field: 'gasCourseCode', header: '瓦斯錶編號', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'areaRatio', header: '面積比率(%)', visible: true },
-    { field: 'counterCategory', header: '專櫃分類', visible: true },
-    { field: 'remarks', header: '備註', visible: true },
+    { field: 'LOCATION_No', header: '設備位置編號', visible: true },
+    // { field: 'building_no', header: '館別代碼', visible: true },
+    { field: 'building_desc', header: '館別名稱', visible: true },
+    // { field: 'FLOOR_NO', header: '樓層代碼', visible: true },
+    { field: 'floor_desc', header: '樓層名稱', visible: true },
+    // { field: 'AREA_NO', header: '區域代碼', visible: true },
+    { field: 'area_desc', header: '區域名稱', visible: true },
+    { field: 'Draw_X', header: 'X 軸', visible: true },
+    { field: 'Draw_Y', header: 'Y 軸', visible: true },
+    { field: 'LOCATION_Name', header: '設備位置名稱', visible: true },
+    { field: 'LOCATION_Remark', header: '設備位置說明', visible: true },
+    { field: 'CRT_Date', header: '日期', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'CRT_USR_No', header: '變更人員編號', visible: true },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
+    { field: 'UPD_Date', header: '變更日期（最後修改時間）', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
-
-
-
-
-
-
-  // Dropdown options
-  floor: any[] = [];
-  Kurabe: any[] = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-  ];
-  Departmentcode: any[] = [];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-  ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '只顯示低於安全庫存' },
-
-
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype
-    : any[] = [
-      { value: 1, label: '資產' },
-      { value: 2, label: '列管品' },
-    ];
-  Itemnumber
-    : any[] = [
-
-      { value: 1, label: '3A24210000001' },
-      { value: 2, label: '3A24210000002' },
-      { value: 3, label: '3A24210000003' },
-      { value: 4, label: '3A24210000004' },
-      { value: 5, label: '3A24210000005' },
-      { value: 6, label: '3A24210000006' },
-      { value: 7, label: '3A24210000007' },
-      { value: 8, label: '3A24210000008' },
-      { value: 9, label: '3A24210000009' },
-      { value: 10, label: '3A24210000010' },
-    ];
-
 
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private bigCategoryService: BigCategoryService,
-    private midCategoryService: MidCategoryService,
-    private smallCategoryService: SmallCategoryService,
-    private organizationNumberService: OrganizationNumberService,
-    private floorService: FloorService,
-    private locationCodeService: LocationCodeService
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
+    private ass21030Service: ASS21030Service,
+    public ass21050Service: ASS21050Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
-
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+  ngOnInit(): void {
+    this.initializePage('ASS21050', '/ASS/ASS21050CRU', this.queryForm, (frm) => this.onSubmit(frm));
+    this.loadOptions();
   }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
+  loadOptions() {
+    // 查 取得能源表號
+    this.ass21030Service.queryENG1001_ENG_MeterNo_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+      this.ENG_MeterNo_Option = response.Data.map((item: any) => ({
+        No: item.ENG_MeterNo,
+        Name: item.ENG_MeterNo,
+      }));
+    });
+    // 載入營業樓層選項
+    this.dropdownApiService.querySys3900().subscribe(options => {
+      this.floorNoOptions = options ?? [];
+    });
+    // 載入營業區域選項
+    this.dropdownApiService.querySys3A00().subscribe(options => {
+      this.areaNoOptions = options ?? [];
+    });
   }
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const formValue = frm.value;
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
+      // 建構查詢參數，符合後端 API 格式
+      const queryBody = {
+        PageSize: formValue?.pageSize || 30,
+        PageIndex: formValue?.pageIndex || 1,
+        OrderBy: "",
+        Offset: 0,
+        SortBy: formValue?.SortBy || [{ field: 'LOCATION_No', order: 1 }],
+        LOCATION_No: formValue.LOCATION_No || "",
+        FLOOR_NO: Array.isArray(formValue.FLOOR_NO) ? formValue.FLOOR_NO.join(',') : (formValue.FLOOR_NO || ""),
+        AREA_NO: Array.isArray(formValue.AREA_NO) ? formValue.AREA_NO.join(',') : (formValue.AREA_NO || ""),
+        LOCATION_Name: formValue.LOCATION_Name || "",
+        LOCATION_Remark: formValue.LOCATION_Remark || ""
       };
-      this.router.navigate(['ASS2000/ASS21050CRU'], extras);
-    }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
+      // 儲存最後查詢條件供 table-report 使用
+      this.lastQueryBody = queryBody;
+
+      // 呼叫查詢 API
+      this.ass21050Service.queryASS21050(queryBody).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe({
+        next: (response: any) => {
+          if (response && response.Status === '0000') {
+            this.data = response.Data || [];
+            this.totalRecords = response.TotalCount || 0;
+            // 儲存查詢狀態
+            this.queryStateService.setQueryState(this.ProgNo, formValue);
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+          }
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
+      });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+  onDelete(event: ASS21050Item | ASS21050Item[]): void {
+    // 取得選中的項目或傳入的單一項目
+    const itemsToDelete = Array.isArray(event) ? event : [event];
+
+    if (!itemsToDelete || itemsToDelete.length === 0) {
+      this.messageService.warnBubble('請選擇要刪除的項目');
+      return;
+    }
+
+    // 顯示確認對話框
+    this.confirmationService.confirm({
+      message: `確定要刪除選取的 ${itemsToDelete.length} 筆資料嗎？`,
+      header: '確認刪除',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        // 建構刪除請求的參數，提取 id 組成 idList
+        const deleteBody = {
+          idList: itemsToDelete.map(item => item?.id || item?.LOCATION_No || 0)
+        };
+
+        this.loading = true;
+        this.ass21050Service.deleteASS21050(deleteBody).pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        ).subscribe({
+          next: (response: { Status: string; Message?: string }) => {
+            if (response && response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              // 清空選中項目
+              this.selectedItems = [];
+              // 重新查詢資料
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(response?.Message || '刪除失敗');
+            }
+          },
+        });
+      }
+    });
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
+
 }
