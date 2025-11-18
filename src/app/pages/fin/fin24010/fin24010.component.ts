@@ -1,15 +1,6 @@
-import { ViolationStatusService } from './../../../service/basic/violation-status.service';
-import { NeedPayTicketService } from './../../../service/basic/need-pay-ticket.service';
-import { VendorService } from './../../../service/basic/vendor.service';
-import { WhetherService } from './../../../service/basic/whether.service';
-import { BankAccountCodeService } from './../../../service/basic/bank-account-code.service';
-import { PaymentMethodService } from './../../../service/basic/payment-method.service';
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -30,11 +21,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.4.1 應付帳款維護
 @Component({
-    selector: 'app-fin24010',
-    templateUrl: './fin24010.component.html',
-    styleUrl: './fin24010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, MultiSelectComponent, InputTextComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin24010',
+  templateUrl: './fin24010.component.html',
+  styleUrl: './fin24010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, MultiSelectComponent, InputTextComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN24010Component extends BasicQpageComponent implements OnInit {
   //
@@ -132,16 +123,7 @@ export class FIN24010Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
-    private organizationNumberService: OrganizationNumberService,
-    private paymentMethodService: PaymentMethodService,
-    private bankAccountCodeService: BankAccountCodeService,
-    private whetherService: WhetherService,
-    private vendorService: VendorService,
-    private needPayTicketService: NeedPayTicketService,
-    private violationStatusService: ViolationStatusService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -151,50 +133,6 @@ export class FIN24010Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '120014';
     this.cruPage = '/FIN2000/FIN24010CRU';
     //
-    // ----------------------------------------------------------------
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationCodeOptions = data;
-    });
-    //
-    this.paymentMethodService.getSystemTypes().subscribe(data => {
-      this.paymentMethodOptions = data;
-      // 全選填入
-      // let allSystemValues = this.paymentMethodOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   paymentMethod: allSystemValues
-      // });
-    });
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   ticketTransfer: allSystemValues
-      // });
-    });
-    //
-    this.violationStatusService.getViolationStatuses().subscribe(data => {
-      this.statusOptions = data;
-      // 全選填入
-      // let allSystemValues = this.statusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   status: allSystemValues
-      // });
-    });
-    //
-    this.bankAccountCodeService.getSystemTypes().subscribe(data => {
-      this.bankAccountOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.factoryIDOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.accountingCodeOptions = data;
-    });
     // ----------------------------------------------------------------
   }
 

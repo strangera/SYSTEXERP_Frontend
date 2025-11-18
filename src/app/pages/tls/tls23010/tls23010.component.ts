@@ -7,7 +7,6 @@ import {
   FormGroup,
 } from '@angular/forms';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
-import { WhetherService } from '../../../service/basic/whether.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
 import {
@@ -151,7 +150,11 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   OrganizationCodeOptions: any[] = [];
   TXN_SubtypeOptions: any[] = [];
   statusFlagOptions: any[] = [];
-  whetherOptions: any[] = [];
+  whetherOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+    { value: null, label: '全部' },
+  ];
   carrierTypeOptions: any[] = [];
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
@@ -165,7 +168,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private tls23010Service: TLS23010Service,
     private statusFlagService: StatusFlagService,
-    private whetherService: WhetherService,
     private TXN_SubtypeSvc: TXN_SubtypeService,
     private carrierTypeService: CarrierTypeService,
     private tls11010Service: Tls11010Service,
@@ -187,7 +189,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       this.dropdownInit$ = forkJoin({
         floors: this.floorService.getFloors(),
         flags: this.statusFlagService.getStatusFlags(),
-        whether: this.whetherService.getWhetherOptions(),
         subtype: this.TXN_SubtypeSvc.getTXNSubtype(),
         carriers: this.carrierTypeService.getCarrierType(),
         buildings: this.tls11010Service.getBuildingOptions(),
@@ -202,7 +203,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       .subscribe((res) => {
         this.floorOptions = res.floors || [];
         this.statusFlagOptions = res.flags || [];
-        this.whetherOptions = res.whether || [];
         this.TXN_SubtypeOptions = res.subtype || [];
         this.carrierTypeOptions = res.carriers || [];
         this.BUILDING_NO_Options = res.buildings || [];
@@ -223,7 +223,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   }
 
   private dropdownInit$?: import('rxjs').Observable<{
-    floors: any[]; flags: any[]; whether: any[]; subtype: any[];
+    floors: any[]; flags: any[]; subtype: any[];
     carriers: any[]; buildings: any[]; orgs: any[]; counters: any[];
     ecrs: any[]; cashiers: any[];
   }>;
@@ -244,7 +244,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       const payload: any = {
         ...val,
         TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
       };
       delete payload.showSummary;
 
@@ -276,8 +276,8 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
               const head = dataArr[0] ?? {};
               const details =
                 Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-                Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-                [];
+                  Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+                    [];
 
               this.summaryData = details.map((row: any) => ({ ...row }));
               this.data = [];
@@ -334,7 +334,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     this.tls23010Service.queryTLS23010({
       ...body,
       TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
     }).pipe(
       map((res: any) => ({
         Data: Array.isArray(res?.Data?.QueryData)
@@ -350,15 +350,15 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     this.tls23010Service.queryTLS23010Summary({
       ...body,
       TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
     }).pipe(
       map((resp: any) => {
         const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
         const head = dataArr[0] ?? {};
         const all =
           Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-          Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-          [];
+            Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+              [];
         const pageIndex = Number(body?.pageIndex ?? 1);
         const pageSize = Number(body?.pageSize ?? 30);
         const slice = all.slice((pageIndex - 1) * pageSize, pageIndex * pageSize);
@@ -697,9 +697,9 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
 
-    { field: 'TXN_TotGUI', header: '發票金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
-    { field: 'TXN_TotSaleAmt', header: '銷售金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
-    { field: 'TXN_TotOver', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_TotSaleAmt', header: '銷售金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_TotOver', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
     { field: 'TXN_VIP', header: '外交官零稅', visible: true, format: this.nyToYesNo },
     { field: 'TXN_Mode', header: '事後登錄', visible: true, format: this.pToYesNoSafe, noTotal: true },
@@ -719,7 +719,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_PkngUID', header: '停車車牌', visible: true },
     { field: 'TXN_MemID', header: '會員卡號', visible: true },
 
-    { field: 'TXN_TotDisc', header: '折扣/讓金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
+    { field: 'TXN_TotDisc', header: '折扣/讓金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
     { field: 'GUILoveStatus', header: '捐贈狀態', visible: true, format: this.nyToYesNo },
     { field: 'TXN_GUILoveCode', header: '捐贈社福團體代碼', visible: true },
@@ -735,7 +735,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     { field: 'CRD_No', header: '號碼', visible: true },
     { field: 'TERM_No', header: '分期期數', visible: true, style: 'text-right' },
 
-    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
+    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
 
   detailcolumns = [

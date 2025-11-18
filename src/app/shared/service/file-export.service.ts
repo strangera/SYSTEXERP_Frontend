@@ -1,0 +1,100 @@
+import { HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { Observable, Subscription, tap } from 'rxjs'; // 引入必要的 RxJS 相關
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FileExportService {
+
+  constructor(private messageService: NotificationService) { }
+
+  /**
+   * 執行檔案匯出 Observable 的通用方法。
+   * 它負責處理加載狀態、訂閱、錯誤提示和檔案下載的實際操作。
+   * * @param exportObservable 呼叫後端 API 並回傳 HttpResponse<Blob> 的 Observable。
+   * @param fileExtension 預期的檔案副檔名 (例如: '.pdf', '.xlsx')。
+   * @param btnLoadingSetter 設定 Component 中 btnLoading 狀態的函數。
+   * @returns Subscription 物件，用於手動管理訂閱 (如果需要)。
+   */
+  public executeFileExport(
+    exportObservable: Observable<HttpResponse<Blob>>,
+    fileExtension: string,
+    btnLoadingSetter: (isLoading: boolean) => void // 使用函數來設定元件的狀態
+  ): Subscription {
+
+    btnLoadingSetter(true); // 開始加載
+
+    return exportObservable
+      .pipe(
+        // Finalize 應該在 service 中處理，確保無論成功失敗都會關閉 loading
+        tap({
+          // 這裡沒有 untilDestroyed，因為 Service 不依賴 Component 生命周期，
+          // 但 Component 調用時必須自行處理取消訂閱 (例如: 使用 untilDestroyed(this))
+          finalize: () => btnLoadingSetter(false)
+        })
+      )
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          this.handleFileExport(response, fileExtension);
+        },
+        error: (err) => {
+          // 可以在此處加入更詳細的錯誤處理邏ary
+          this.messageService.errorBubble('檔案匯出失敗，請重試或聯繫管理員。');
+          console.error('File export error:', err);
+        }
+      });
+  }
+
+  // 處理檔案匯出的通用邏輯
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      // 下載邏輯
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  // 輔助方法：從 header 獲取檔名 (邏輯不變)
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
+    }
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
+}

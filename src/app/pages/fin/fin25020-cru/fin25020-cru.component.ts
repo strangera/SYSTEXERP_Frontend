@@ -1,16 +1,10 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
+import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-//
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
-import { ValidationService } from '../../../shared/service/validation.service';
-import { WhetherService } from '../../../service/basic/whether.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -49,11 +43,7 @@ export class FIN25020CRUComponent extends BasicCrupageComponent implements OnIni
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private whetherService: WhetherService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -65,16 +55,6 @@ export class FIN25020CRUComponent extends BasicCrupageComponent implements OnIni
     // ----------------------------------------------------------------
     //
     // ----------------------------------------------------------------
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   tossSummon: allSystemValues
-      // });
-    });
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,

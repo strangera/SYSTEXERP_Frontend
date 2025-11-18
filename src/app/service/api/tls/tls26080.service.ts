@@ -23,14 +23,14 @@ export class TLS26080Service {
 
   // 儲存資料
   public readonly tltTalentOptions = signal<Option[]>([]);
+  public readonly tltTalentChargeOptions = signal<Option[]>([]);
 
   public readonly tltTalentMap = computed(() => {
-    const map = new Map<string, string>();
-    this.tltTalentOptions().forEach(item => map.set(item.value, item.label));
-    return map;
+    return new Map<string, string>(this.tltTalentOptions().map(item => [item.value, item.label]));
   });
-
-  public tltTalentChargeMap = new Map<string, Option[]>();
+  public tltTalentChargeMap = computed(() => {
+    return new Map<string, Option>(this.tltTalentChargeOptions().map(item => [item.value, item]));
+  });
 
   // 讀取狀態
   public readonly tableLoading = signal<boolean>(!1);
@@ -41,6 +41,8 @@ export class TLS26080Service {
   public readonly exampleDownLoading = signal<boolean>(!1);
   public readonly tltTalentOptionsLoading = signal<boolean>(!1);
   public readonly tltTalentChargeOptionsLoading = signal<boolean>(!1);
+
+  private readonly tltTalentOptionsDebounce = signal<boolean>(!1);
 
   // 下拉選單資料
   public departmentItems = signal<Option[]>([]);
@@ -74,10 +76,10 @@ export class TLS26080Service {
   }
 
   constructor(
-    private http: HttpClient,
-    private messageService: NotificationService,
-    private logger: NGXLogger,
-    private dropdown: DropdownApiService,
+    private readonly http: HttpClient,
+    private readonly messageService: NotificationService,
+    private readonly logger: NGXLogger,
+    private readonly dropdown: DropdownApiService,
   ) { }
 
   public loadAPS1003(cap_typeList: string[]): void {
@@ -230,30 +232,35 @@ export class TLS26080Service {
   }
 
   public getTLTTalentOptions(): void {
+    this.tltTalentOptionsLoading.set(!0);
     this.dropdown.queryTltTalent().pipe(
       take(1),
       tap(options => {
         this.tltTalentOptions.set(options?.map(d => ({
-          label: d['Name'],
+          label: `${d['No']} - ${d['Name']}`,
           value: d['No'],
-          templateLabel: `${d['No']} - ${d['Name']}`,
         })) ?? []);
         this.logger.debug(`getTLTTalentOptions:`, [options]);
-      })
+      }),
+      finalize(() => this.tltTalentOptionsLoading.set(!1))
     ).subscribe();
   }
 
   public getTLTTalentChargeOptions(talent_id: string): void {
+    if (this.tltTalentOptionsDebounce()) return;
+    this.tltTalentOptionsLoading.set(!0);
+    this.tltTalentOptionsDebounce.set(!0);
+    setTimeout(() => this.tltTalentOptionsDebounce.set(!1));
     this.dropdown.queryTltTalentCharge({ talent_id: Number(talent_id) }).pipe(
       take(1),
-      tap(options => {
-        this.tltTalentChargeMap.set(talent_id, options?.map(d => ({
-          label: d.tlt_id_desc,
+      tap(res => {
+        this.tltTalentChargeOptions.set(res?.map(d => ({
+          label: `${d.tlt_id} - ${d.tlt_id_desc}`,
           value: d.tlt_id,
-          templateLabel: `${d.tlt_id} - ${d.tlt_id_desc}`,
         })) ?? []);
-        this.logger.debug(`getTLTTalentChargeOptions:`, [options]);
-      })
+        this.logger.debug(`getTLTTalentChargeOptions:`, [res]);
+      }),
+      finalize(() => this.tltTalentOptionsLoading.set(!1))
     ).subscribe();
   }
 

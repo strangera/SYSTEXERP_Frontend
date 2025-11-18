@@ -1,8 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { ManagementIDService } from '../../../service/basic/management-id.service';
 import { StockRangeService } from './../../../service/basic/stock-range.service';
 import { TLS57030Service } from '../../../service/api/tls/tls57030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -80,9 +77,6 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private managementIDService: ManagementIDService,
     private stockRangeService: StockRangeService,
     public readonly tls57030Service: TLS57030Service
   ) {
@@ -91,10 +85,6 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS57030');
-
-    this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
-    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
-    this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
     this.stockRangeService.getStockRangeOptions().subscribe((data) => (this.stockRangeOptions = data));
 
     this.queryForm.get('DisplayRowNumber')?.valueChanges.subscribe(value => {

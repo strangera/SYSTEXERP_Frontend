@@ -91,6 +91,8 @@
                         [insertDisabled]="isFormReadable"
                         [defaultInsertData]="defaultInsertData"
                         (fieldChange)="onFieldChange($event)"
+                        [showReorder]="!isFormReadable"
+                        [disabled]="isFormReadable"
                         [loading]="service.tableLoading()"></app-table-edit>
       </p-panel>
     </div>

@@ -31,7 +31,7 @@ export class TLS23060Service {
     );
   }
 
-  /** 匯出 Excel（不分頁） */
+  /** 匯出 Excel（不分頁） - 目前此頁面已不使用，但保留給其他地方共用 */
   exporttls23060Excel(body: any): Observable<HttpResponse<Blob>> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/exporttls23060`;
     const payload = this.stripPaging(body);
@@ -41,9 +41,19 @@ export class TLS23060Service {
     }) as Observable<HttpResponse<Blob>>;
   }
 
-  /** 匯出 PDF（不分頁） */
+  /** 總表匯出 PDF（不分頁） */
   exporttls23060PDF(body: any): Observable<HttpResponse<Blob>> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/exporttls23060PDF`;
+    const payload = this.stripPaging(body);
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** 明細表匯出 PDF（不分頁） */
+  exportTLS23060DetailPDF(body: any): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23060DetailPDF`;
     const payload = this.stripPaging(body);
     return this.http.post(url, payload, {
       observe: 'response',

@@ -1,13 +1,8 @@
-import { NeedPayTicketService } from './../../../service/basic/need-pay-ticket.service';
-import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -93,7 +88,6 @@ export class ASS11080Component extends BasicQpageComponent implements OnInit {
   ];
   // ----------------------------------------------------------------
   //
-  WhetherOptions: any[] = [];
   payOptions: any[] = [];
 
   //
@@ -101,11 +95,6 @@ export class ASS11080Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private whetherService: WhetherService,
-    private needPayTicketService: NeedPayTicketService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -114,17 +103,6 @@ export class ASS11080Component extends BasicQpageComponent implements OnInit {
     // 初始化
     this.ProgNo = '310008';
     this.cruPage = '/ASS1000/ASS11080CRU';
-    //
-
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.WhetherOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.payOptions = data;
-    });
-    // ----------------------------------------------------------------
   }
 
   // ----------------------------------------------------------------
