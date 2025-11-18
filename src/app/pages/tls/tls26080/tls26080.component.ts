@@ -1,6 +1,6 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, OnInit, Signal, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';

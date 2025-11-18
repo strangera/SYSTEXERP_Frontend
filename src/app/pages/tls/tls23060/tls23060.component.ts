@@ -224,9 +224,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         })
       );
 
-  // ===== 明細：提供給 Dialog 內 app-table-report 的查詢函式 → 打 /queryTLS23060_Detail，以日期為主 =====
-
-
+  // ===== 點主表「明細」→ 組明細查詢 body，打 /queryTLS23060_Detail =====
   override onDetail(row: any): void {
     if (!row) return;
 
@@ -242,17 +240,17 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       SortBy: [{ field: 'TXN_Date', order: 1 as 1 }],
 
       TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
-      TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
-      rece_yn: formVal?.rece_yn ?? undefined,
+      TXN_DateEnd:   this.toDateOnly(formVal?.TXN_DateEnd),
+      rece_yn:       formVal?.rece_yn ?? undefined,
 
       // 用被點那列的值
-      ECR_No: row?.ECR_No ?? undefined,
-      tlt_no: row?.tlt_no ?? undefined,
+      ECR_No:  row?.ECR_No ?? undefined,
+      tlt_no:  row?.tlt_no ?? undefined,
 
       // 下面三個是陣列型別
       tlt_building: formVal?.tlt_building ?? [],
-      tlt_floor: Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
-      org_id: Array.isArray(formVal?.org_id) ? formVal.org_id : [],
+      tlt_floor:    Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
+      org_id:       Array.isArray(formVal?.org_id) ? formVal.org_id : [],
     };
 
     // 給 app-table-report 的 lastQueryBody 用
@@ -271,6 +269,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       });
   }
 
+  // ===== 明細：提供給 Dialog 內 app-table-report 的查詢函式 → 打 /queryTLS23060_Detail，以日期為主 =====
   public queryTLS23060DetailForReport = (body: any) =>
     this.tls23060Service
       .queryTLS23060Detail({
@@ -296,8 +295,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
           const rows = details.map((r: any, i: number) => ({
             ...r,
-            _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''
-              }|${i}`,
+            _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
           }));
 
           // 以日期排序
@@ -320,7 +318,6 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         })
       );
 
-
   onDialogClose(v: boolean): void {
     this.dialogVisible = v;
     if (!v) {
@@ -332,7 +329,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     }
   }
 
-  // ===== 匯出 =====
+  // ===== 匯出：主表 PDF =====
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
     const { pageSize, pageIndex, ...rest } = this.historyRequestBody;
@@ -354,18 +351,19 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  onExportXLSX(): void {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+  // ===== 匯出：明細表 PDF =====
+  onExportDetailPDF(): void {
+    if (!this.dialogHistoryRequestBody) {
+      this.messageService?.warnBubble?.('請先點選主表資料開啟明細。');
       return;
     }
     this.btnLoading = true;
-    const body = this.buildExportBody();
+    const body = this.dialogHistoryRequestBody;
     this.tls23060Service
-      .exporttls23060Excel(body)
+      .exportTLS23060DetailPDF(body)
       .pipe(finalize(() => (this.btnLoading = false)))
       .subscribe({
-        next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+        next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.pdf'),
       });
   }
 

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,7 +14,6 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { Column, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
@@ -67,29 +66,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { label: '正檔日至截止日', value: 'N' }
   ];
 
-  private readonly fileSignal = signal<FormData>(Object.create(null));
   private readonly podDescSignal = toSignal(this.df().pod_desc.valueChanges);
 
   private readonly selectedCampaign = computed(() => {
     const podDesc = this.podDescSignal();
     return this.campaignData().find(d => d.CampaignId === podDesc);
   });
-
-  public readonly fileUploadEffect = effect(() => {
-    const file = this.fileSignal();
-    if (!file) return;
-    this.service.uploadFile(file, this.tableData);
-    this.logger.debug(`fileUploadEffect:`, [file]);
-  }, { allowSignalWrites: !0 });
-
-  /** 抓取全部podNos */
-  public readonly podNosEffect = effect(() => {
-    const data = this.tableData();
-    if (!data?.length) return;
-    this.podNos.clear();
-    for (const item of data) this.podNos.add(item.pod_no);
-    this.logger.debug(`podNos:`, [data, Array.from(this.podNos)]);
-  }, { allowSignalWrites: !0 });
 
   /** 根據選擇的活動名稱更新表單 */
   public readonly campaignEffect = effect(() => {
@@ -128,37 +110,45 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   // 專櫃資料表
   public readonly counterColumns = computed<EditColumn[]>(() => [
-    {
-      field: 'talent_id',
-      header: '專櫃編號',
-      type: 'inputNumber',
-      // type: this.isFormReadable ? void 0 : 'dropdown',
-      // showClear: !1,
-      // options: this.service.tltTalentOptions(),
-      // optionLabel: 'value',
-      // optionValue: 'value',
-      // templateLabel: 'templateLabel',
-    },
+    // {
+    //   field: 'talent_id',
+    //   header: '專櫃編號',
+    //   // type: 'inputNumber',
+    //   type: this.isFormReadable ? void 0 : 'dropdown',
+    //   showClear: !1,
+    //   options: this.service.tltTalentOptions,
+    //   optionLabel: 'label',
+    //   optionValue: 'value',
+    // },
     {
       field: 'tlt_name',
       header: '櫃位名稱',
-      type: 'input',
+      // type: input,
+      type: this.isFormReadable ? void 0 : 'dropdown',
+      showClear: !1,
+      options: this.service.tltTalentOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
     },
-    {
-      field: 'tlt_id',
-      header: '抽成類別',
-      type: 'inputNumber',
-      // type: this.isFormReadable ? void 0 : 'dropdown',
-      // options: (rowData: TLS26080Detail) => this.service.tltTalentChargeMap.get(rowData.talent_id as string) || [],
-      // showClear: !1,
-      // optionLabel: 'value',
-      // optionValue: 'value',
-      // templateLabel: 'templateLabel',
-    },
+    // {
+    //   field: 'tlt_id',
+    //   header: '抽成類別',
+    //   // type: 'inputNumber',
+    //   type: this.isFormReadable ? void 0 : 'dropdown',
+    //   options: (rowData: TLS26080Detail) => this.service.tltTalentChargeMap().get(rowData.talent_id as string) || [],
+    //   showClear: !1,
+    //   optionLabel: 'label',
+    //   optionValue: 'value',
+    // },
     {
       field: 'tlt_id_desc',
-      header: '抽成類別名稱',
-      type: 'input',
+      header: '抽成類別',
+      // type: input,
+      type: this.isFormReadable ? void 0 : 'dropdown',
+      options: (rowData: TLS26080Detail) => this.service.tltTalentChargeMap().get(rowData.talent_id as string) || [],
+      showClear: !1,
+      optionLabel: 'label',
+      optionValue: 'value',
     },
     {
       field: 'calc_date_type',
@@ -174,17 +164,19 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       field: 'tpy_rate_D16',
       header: 'D16',
       groupField: 'groupField1',
-      type: 'percent',
+      type: this.isFormReadable ? void 0 : 'percent',
       validate: [this.numVal],
       maxFractionDigits: 2,
+      format: v => this.isFormReadable ? String(v) + '%' : v,
     },
     {
       field: 'tpy_rate_D17',
       header: 'D17',
       groupField: 'groupField1',
-      type: 'percent',
+      type: this.isFormReadable ? void 0 : 'percent',
       validate: [this.numVal],
       maxFractionDigits: 2,
+      format: v => this.isFormReadable ? String(v) + '%' : v,
     },
     { field: 'tpy_rate_3', header: 'D16', groupField: 'groupField2', },
     { field: 'tpy_rate_4', header: 'D17', groupField: 'groupField2', },
@@ -198,15 +190,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'groupField2', header: '合約建檔' },
   ];
 
-  // 扣款項目資料表
-  // deductionColumns: Column[] = [
-  //   { field: 'itemCode', header: '扣款項目編號' },
-  //   { field: 'itemName', header: '扣款項目名稱' },
-  //   { field: 'amountOrRate', header: '金額/比率' }
-  // ];
-
-  private podNos = new Set<string>();
-
   constructor(
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
@@ -217,19 +200,21 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-    const podNo = this.rowdata?.pod_no || '';
-    if (!this.isFormCreateable) {
-      this.service.loadTLS26080({ pod_no: podNo }).pipe(
-        tap(res => this.tls26080Data.set(res.Data)),
-      ).subscribe();
-      this.service.loadTLS26080Detail(podNo).pipe(
-        tap(res => {
-          this.tableData.set(res.Data);
-          this.totalRecords.set(res.TotalCount || 0);
-        }),
-      ).subscribe();
-    };
+    if (!this.rowdata?.pod_no && !this.isFormCreateable) this.onCancel();
 
+    if (!this.isFormCreateable) this.service.loadTLS26080Detail(this.rowdata!.pod_no).pipe(
+      tap(res => {
+        const data = res.Data;
+        this.tableData.set(data.map(v => ({
+          ...v,
+          tpy_rate_D16: Number(v.tpy_rate_D16),
+          tpy_rate_D17: Number(v.tpy_rate_D17),
+        })));
+        this.totalRecords.set(res.TotalCount || 0);
+      }),
+    ).subscribe();
+
+    this.service.getTLTTalentOptions();
     this.service.loadAPS1003(['E']);
     this.service.loadCampaignData().pipe(
       tap(res => this.campaignData.set(res.Data)),
@@ -252,7 +237,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.logger.debug(`onInsert:`, [d, event]);
   }
 
-  // 表單提交
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = Object.fromEntries(
@@ -278,49 +262,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       });
     });
   }
-
   public onFieldChange(event: FieldChangeEvent<TLS26080Detail>): void {
     this.logger.debug(`onFieldChange:`, [event]);
     const { field, value, index, rowData } = event;
-    const isIndex = Number.isInteger(index) && index !== -1;
+    const valueStr = String(value);
+    if (!valueStr?.length) return;
 
-    if (field === 'talent_id') {
-      const valueStr = String(value);
-      if (!valueStr?.length) return;
-      const selected = this.service.tltTalentMap().get(valueStr);
-      this.service.getTLTTalentChargeOptions(valueStr);
-
-      this.tableData.update((current: TLS26080Detail[]) => {
-        if (!isIndex) return current;
-        const data = [...current];
-        let rowD = data[index!];
-
-        rowD = {
-          ...rowD,
-          talent_id: rowData.talent_id,
-          tlt_name: selected || '',
-        };
-        return data;
-      });
-    }
-
-    if (field === 'tlt_id') {
-      const valueStr = String(value);
-      if (!valueStr?.length) return;
-      const selected = this.service.tltTalentChargeMap.get(rowData.talent_id as string);
-      this.tableData.update((current: TLS26080Detail[]) => {
-        if (!isIndex) return current;
-        const data = [...current];
-        let rowD = data[index!];
-
-        rowD = {
-          ...rowD,
-          tlt_id: rowData.tlt_id,
-          tlt_id_desc: selected?.find(item => item.value === valueStr)?.label || '',
-        };
-        return data;
-      });
-    }
+    // 根據櫃位名稱取得專櫃編號及抽成類別選項
+    if (field === 'tlt_name') this.service.getTLTTalentChargeOptions(valueStr);
   }
 
   private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
@@ -332,9 +281,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public async handleUpload(event: FileUploadHandlerEvent): Promise<void> {
     const formData = new FormData();
+    if (!formData) return;
     formData.append('file', event.files[0]);
-    this.fileSignal.set(formData);
+    this.service.uploadFile(formData, this.tableData);
     this.fileUpload().clear();
+    this.logger.debug(`fileUploadEffect:`, [formData]);
   }
 
   public onExportExcelTemplate(): void {
@@ -342,7 +293,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     const exampleByApi = !0;
     const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null, '合約建檔'];
     const headerRow2 = [null, null, null, null, null, 'D16', 'D17', 'D16', 'D17'];
-    const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1.00%', '50.00%'];
+    const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1', '5'];
     if (exampleByApi) return void this.service.downloadXLSXExample();
 
     // 生成工作表

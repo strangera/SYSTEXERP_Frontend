@@ -73,10 +73,20 @@
         </div>
       </div>
 
-      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-        <app-button btnType="cancel" [form]="dataForm" />
-        <app-button btnType="submit"></app-button>
-      </div>
+<div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+  <!-- 🔹 取消：由 component 自己控，只還原表單 -->
+  <button
+    pButton
+    type="button"
+    label="取消"
+    icon="pi pi-undo"
+    class="p-button-outlined p-button-secondary"
+    (click)="onCancelForm()">
+  </button>
+
+  <!-- 🔹 送出：仍用共用的 app-button -->
+  <app-button btnType="submit"></app-button>
+</div>
     </form>
   </p-panel>
 </div>
