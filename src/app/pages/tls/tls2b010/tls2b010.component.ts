@@ -327,7 +327,6 @@ handleLazyLoad(
   e: { pageIndex: number; pageSize: number; SortBy: any[] },
   form: FormGroup
 ) {
-  const groupSize = this.queryForm.get('pageSize')?.value ?? 20;
   const reporttype = this.queryForm.controls.reporttype.value;
 
   let sortBy = e.SortBy || [];
@@ -343,11 +342,13 @@ handleLazyLoad(
   }
 
   form.patchValue(
-    { pageIndex: e.pageIndex, pageSize: groupSize, SortBy: sortBy },
+    { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: sortBy },
     { emitEvent: false }
   );
+
   this.onSubmit(form);
 }
+
 
   get formattedTXNDate(): string {
     const date = this.queryForm?.controls?.TXN_Date?.value;

@@ -76,7 +76,7 @@
           </p-button>
         </div>
 
-        <p-dropdown *ngIf="showPage && IsPrint && dt.totalRecords > 0" [options]="pages" [ngModel]="selectedPage"
+        <p-dropdown *ngIf="showPage && IsPrint && dt.totalRecords > 0" [options]="pages"  [(ngModel)]="selectedPage" 
           optionValue="value" (onChange)="goToPage($event.value)" appendTo="body" [virtualScroll]="true"
           [virtualScrollItemSize]="40" [filter]="true" [style]="{ minWidth: '10rem' }" />
       </div>
