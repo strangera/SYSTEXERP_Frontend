@@ -1,26 +1,26 @@
+import { NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
+import { getCurrentPeriodCode } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { Button, ButtonDirective } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { finalize } from 'rxjs';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
-import { columns, monthOptions, Pos1018 } from './fin11200.model';
-import { AddButton, convertDateToYYYYMM, Column, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Button, ButtonDirective } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
-import { getCurrentPeriodCode } from '@shared/models/system/query-form.model';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { AddButton, Column, convertDateToYYYYMM, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
+import { columns, monthOptions, Pos1018 } from './fin11200.model';
 
 @Component({
   selector: 'app-fin11200',
@@ -86,7 +86,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       const body = {
         ...frm.value,
         GUI_YYMM: this.convertDateToYYYYMM2(frm),
-        ECR_NoList: frm.get('ECR_No')?.value
+        ECR_NoList: frm.get('ECR_NoList')?.value
       }
       this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
         this.data = response.Data.map((item: Pos1018) => ({
