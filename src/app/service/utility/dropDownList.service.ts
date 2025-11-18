@@ -521,8 +521,6 @@ export class DropDownListService {
     const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
     const body = { KB_Func: [] }; return this.http.post<any>(url, body);
   }
-
-
   // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
     return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);
