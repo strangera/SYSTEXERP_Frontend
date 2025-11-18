@@ -17,22 +17,6 @@
                       optionValue="value"
                       [control]="qf().ENTRY_TYPE"
                       [submitted]="submitted"></app-dropdown>
-
-        <app-table-edit #dt
-                        class="col-12"
-                        title="會計科目明細"
-                        tableKey="TLS21020Detail"
-                        [columns]="columns"
-                        [data]="tableData()"
-                        [selectedItems]="selectedItems()"
-                        (selectionChange)="selectedItems.set($event)"
-                        (dataChange)="dataChange($event, dt.validateAndShowErrors())"
-                        [rowValidate]="validateRow"
-                        [tableRequired]="!0"
-                        [showReorder]="!1"
-                        [canInsert]="!!qf().ENTRY_TYPE.value"
-                        [loading]="service.tableLoading()"
-                        [defaultInsertData]="defaultInsertData"></app-table-edit>
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear"
@@ -45,3 +29,21 @@
     </form>
   </p-accordionTab>
 </p-accordion>
+
+
+<div class="card">
+  <app-table-edit #dt
+                  class="col-12"
+                  tableKey="TLS21020Detail"
+                  [columns]="columns"
+                  [data]="tableData()"
+                  [selectedItems]="selectedItems()"
+                  (selectionChange)="selectedItems.set($event)"
+                  (dataChange)="dataChange($event, dt.validateAndShowErrors())"
+                  [rowValidate]="validateRow"
+                  [tableRequired]="!0"
+                  [showReorder]="!1"
+                  [canInsert]="!1"
+                  [loading]="service.tableLoading()"
+                  [defaultInsertData]="defaultInsertData"></app-table-edit>
+</div>
