@@ -190,7 +190,7 @@ export class tls2b010tableComponent
   // 分頁
   @Input() showPaginator = true;
   @Input() totalRecords = 0;
-  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];
+  @Input() rowsPerPageOptions: number[] = [20, 40, 60, 80, 100];
   totalPages = 0;
   @Input() rows = 20;
   first = 0;

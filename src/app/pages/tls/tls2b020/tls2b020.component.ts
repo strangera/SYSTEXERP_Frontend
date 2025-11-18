@@ -49,6 +49,7 @@ import { Table2Component } from '../../../shared/componentkit/table2/table2.comp
   ],
 })
 export class TLS2B020Component extends BasicQueryPageComponent<any> {
+    private fromLazy = false;
   // 預設上個月 yyyy/MM
   readonly lastMonth: string = (() => {
     const d = new Date();
@@ -177,38 +178,55 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   }
 
   // 查詢主程式（給查詢按鈕 + lazy 分頁共用）
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
+onSubmit(form: FormGroup): void {
+  this.submitted = true;
 
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    this.fromLazy = false; // 保險
+    return;
+  }
+
+  // ✅ 如果不是從 lazy 來的（= 使用者按查詢），就強制回第 1 頁、pageSize=20
+  if (!this.fromLazy) {
+    this.queryForm.patchValue(
+      {
+        pageIndex: 1,
+        pageSize: 20,
+        // 也可以順便把 SortBy 歸回預設，有需要再加
+        SortBy: [{ field: 'cashier', order: 1 }],
+      } as any,
+      { emitEvent: false },
+    );
+  }
+
+  // 用完旗標後記得清掉
+  this.fromLazy = false;
+
+  const payload: any = { ...this.queryForm.value };
+
+  // string trim
+  Object.keys(payload).forEach((k) => {
+    if (typeof payload[k] === 'string') {
+      payload[k] = payload[k].trim() || null;
     }
+  });
 
-    const payload: any = { ...form.value };
+  // TXN_YYYYMM 可留著給後端用
+  if (payload.TXN_Date) {
+    const raw = payload.TXN_Date;
+    const yyyymm =
+      typeof raw === 'string'
+        ? raw.substring(0, 7).replace('-', '')
+        : `${raw.getFullYear()}${(raw.getMonth() + 1).toString().padStart(2, '0')}`;
+    payload.TXN_YYYYMM = yyyymm;
+  }
 
-    // string trim
-    Object.keys(payload).forEach((k) => {
-      if (typeof payload[k] === 'string') {
-        payload[k] = payload[k].trim() || null;
-      }
-    });
+  this.loading = true;
+  this.messageService.blockUi();
 
-    // TXN_YYYYMM 可留著給後端用
-    if (payload.TXN_Date) {
-      const raw = payload.TXN_Date;
-      const yyyymm =
-        typeof raw === 'string'
-          ? raw.substring(0, 7).replace('-', '')
-          : `${raw.getFullYear()}${(raw.getMonth() + 1).toString().padStart(2, '0')}`;
-      payload.TXN_YYYYMM = yyyymm;
-    }
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls2b020Service.queryTLS2B020(payload).subscribe({
-      next: (resp) => {
+  this.tls2b020Service.queryTLS2B020(payload).subscribe({
+    next: (resp) => {
         // 依你的 API 回傳結構調整，如果是 { Data:{Items,Totals}, TotalCount }
         const core = resp?.Data ?? {};
         const items = core.Items ?? core.items ?? resp?.Data ?? [];
@@ -314,18 +332,19 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   }
 
   // Table2 的 lazy 分頁事件
-  override onLazyLoadData(ev: { pageIndex: number; pageSize: number; SortBy: any[] }): void {
-    this.queryForm.patchValue(
-      {
-        pageIndex: ev.pageIndex,
-        pageSize: ev.pageSize,
-        SortBy: ev.SortBy,
-      } as any,
-      { emitEvent: false },
-    );
-    this.onSubmit(this.queryForm);
-  }
+override onLazyLoadData(ev: { pageIndex: number; pageSize: number; SortBy: any[] }): void {
+  this.fromLazy = true;  // ✅ 告訴 onSubmit 這次是「分頁」，不要重設頁碼
 
+  this.queryForm.patchValue(
+    {
+      pageIndex: ev.pageIndex,
+      pageSize: ev.pageSize,
+      SortBy: ev.SortBy,
+    } as any,
+    { emitEvent: false },
+  );
+  this.onSubmit(this.queryForm);
+}
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
@@ -368,7 +387,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
       cashierDistinction: null,
       overflowStatus: null,
       pageIndex: 1,
-      pageSize: 30,
+      pageSize: 20,
       SortBy: [{ field: 'cashier', order: 1 }],
     } as any);
   }
