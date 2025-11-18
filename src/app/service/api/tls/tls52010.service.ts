@@ -330,7 +330,7 @@ export class Tls52010Service {
      * @param params 查詢條件 (PO_No)
      * @returns API 響應
      */
-  exportTLS52010(params: { PO_No: string }): Observable<HttpResponse<Blob>> {
+  exportTLS52010(params: { PO_NoList: string[] }): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS52010`, params,
       {
         observe: 'response',
@@ -342,7 +342,7 @@ export class Tls52010Service {
    * @param params 查詢條件 (PO_No)
    * @returns API 響應
   */
-  exportTLS52010PDF(params: { PO_No: string }): Observable<HttpResponse<Blob>> {
+  exportTLS52010PDF(params: { PO_NoList: string[] }): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS52010PDF`, params,
       {
         observe: 'response',

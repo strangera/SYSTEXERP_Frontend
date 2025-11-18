@@ -240,7 +240,7 @@ export class Tls52020Service {
        * @param params 查詢條件 (CRN_No)
        * @returns API 響應
        */
-  exportTLS52020(params: { CRN_No: string }): Observable<HttpResponse<Blob>> {
+  exportTLS52020(params: { CRN_NoList: string[] }): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS52020`, params,
       {
         observe: 'response',
@@ -252,7 +252,7 @@ export class Tls52020Service {
    * @param params 查詢條件 (CRN_No)
    * @returns API 響應
   */
-  exportTLS52020PDF(params: { CRN_No: string }): Observable<HttpResponse<Blob>> {
+  exportTLS52020PDF(params: { CRN_NoList: string[] }): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS52020PDF`, params,
       {
         observe: 'response',
