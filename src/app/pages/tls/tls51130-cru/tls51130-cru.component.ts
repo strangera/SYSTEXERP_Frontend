@@ -17,6 +17,7 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 // 只在這個 component 內直接呼叫小分類 API（不動 service 型別）
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-tls51130-cru',
@@ -33,6 +34,7 @@ import { environment } from '../../../../environments/environment';
     InputTextComponent,
     NgIf,
     TranslateModule,
+    ButtonModule,  
     InputNumberComponent
   ],
 })
@@ -41,7 +43,8 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
   CAT_LOptions: any[] = [];
   CAT_MOptions: any[] = [];
   CAT_SOptions: any[] = [];
-
+  private isRestoring = false;  
+  private initialFormValue: any;
   private readonly apiUrl = environment.ApiUrl;
 
   dataForm = this.formBuilder.nonNullable.group({
@@ -123,6 +126,8 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 大分類改變 → 查中分類
     this.dataForm.controls.CAT_LNo.valueChanges.subscribe((catLNo: string) => {
+      if (this.isRestoring) return; // 🔹 取消還原時不要跑這段
+
       catLNo = (catLNo ?? '').toString().trim();
       if (catLNo) {
         this.loadMOptions(catLNo).subscribe(() => {
@@ -140,6 +145,8 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 中分類改變 → 查小分類
     this.dataForm.controls.CAT_MNo.valueChanges.subscribe((catMNo: string) => {
+      if (this.isRestoring) return; // 🔹 一樣 guard
+
       const catLNo = (this.dataForm.controls.CAT_LNo.value ?? '').toString().trim();
       catMNo = (catMNo ?? '').toString().trim();
       if (catLNo && catMNo) {
@@ -152,7 +159,7 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
 
-    // 編輯/檢視模式：預載中/小分類
+   // 編輯/檢視模式：預載中/小分類
     setTimeout(() => {
       if (this.crudstatus !== CRUDStatus.Create) {
         const incomingId =
@@ -169,14 +176,35 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
         if (catLNo) {
           this.loadMOptions(catLNo).subscribe(() => {
             if (catMNo) {
-              this.loadSOptions(catLNo, catMNo).subscribe();
+              this.loadSOptions(catLNo, catMNo).subscribe(() => {
+                // 🔹 所有資料與下拉都載完之後再記錄初始值
+                this.initialFormValue = this.dataForm.getRawValue();
+              });
+            } else {
+              this.initialFormValue = this.dataForm.getRawValue();
             }
           });
+        } else {
+          this.initialFormValue = this.dataForm.getRawValue();
         }
+      } else {
+        // 新增模式：一開始就是初始值
+        this.initialFormValue = this.dataForm.getRawValue();
       }
     }, 0);
   }
+  // 🔹 PrimeNG 取消按鈕要呼叫這裡
+  onCancelForm(): void {
+    if (!this.initialFormValue) {
+      // 沒有初始值就當普通 reset 用
+      this.dataForm.reset();
+      return;
+    }
 
+    this.isRestoring = true;
+    this.dataForm.reset(this.initialFormValue); // 這裡會觸發 valueChanges，但有 guard
+    this.isRestoring = false;
+  }
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();

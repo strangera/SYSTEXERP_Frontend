@@ -226,103 +226,99 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         })
       );
 
+  // ===== 點主表「明細」→ 組明細查詢 body，打 /queryTLS23060_Detail =====
+  override onDetail(row: any): void {
+    if (!row) return;
+
+    this.selectedMainRow = row;
+    this.dialogVisible = true;
+
+    const formVal = this.queryForm.getRawValue() as any;
+
+    // 依你給的 Request 規格組 body
+    const body: any = {
+      PageSize: 0,
+      PageIndex: 0,
+      SortBy: [{ field: 'TXN_Date', order: 1 as 1 }],
+
+      TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
+      TXN_DateEnd:   this.toDateOnly(formVal?.TXN_DateEnd),
+      rece_yn:       formVal?.rece_yn ?? undefined,
+
+      // 用被點那列的值
+      ECR_No:  row?.ECR_No ?? undefined,
+      tlt_no:  row?.tlt_no ?? undefined,
+
+      // 下面三個是陣列型別
+      tlt_building: formVal?.tlt_building ?? [],
+      tlt_floor:    Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
+      org_id:       Array.isArray(formVal?.org_id) ? formVal.org_id : [],
+    };
+
+    // 給 app-table-report 的 lastQueryBody 用
+    this.dialogHistoryRequestBody = body;
+
+    // 先查一次明細，開 Dialog 就有資料
+    this.dialogLoading = true;
+    this.queryTLS23060DetailForReport(body)
+      .pipe(finalize(() => (this.dialogLoading = false)))
+      .subscribe({
+        error: () => {
+          this.dialogData = [];
+          this.dialogTotalRecords = 0;
+          this.dialogFooterData = {};
+        },
+      });
+  }
+
   // ===== 明細：提供給 Dialog 內 app-table-report 的查詢函式 → 打 /queryTLS23060_Detail，以日期為主 =====
-
-
-override onDetail(row: any): void {
-  if (!row) return;
-
-  this.selectedMainRow = row;
-  this.dialogVisible = true;
-
-  const formVal = this.queryForm.getRawValue() as any;
-
-  // 依你給的 Request 規格組 body
-  const body: any = {
-    PageSize: 0,
-    PageIndex: 0,
-    SortBy: [{ field: 'TXN_Date', order: 1 as 1 }],
-
-    TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(formVal?.TXN_DateEnd),
-    rece_yn:       formVal?.rece_yn ?? undefined,
-
-    // 用被點那列的值
-    ECR_No:  row?.ECR_No ?? undefined,
-    tlt_no:  row?.tlt_no ?? undefined,
-
-    // 下面三個是陣列型別
-    tlt_building: formVal?.tlt_building ?? [],
-    tlt_floor:    Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
-    org_id:       Array.isArray(formVal?.org_id) ? formVal.org_id : [],
-  };
-
-  // 給 app-table-report 的 lastQueryBody 用
-  this.dialogHistoryRequestBody = body;
-
-  // 先查一次明細，開 Dialog 就有資料
-  this.dialogLoading = true;
-  this.queryTLS23060DetailForReport(body)
-    .pipe(finalize(() => (this.dialogLoading = false)))
-    .subscribe({
-      error: () => {
-        this.dialogData = [];
-        this.dialogTotalRecords = 0;
-        this.dialogFooterData = {};
-      },
-    });
-}
-
-public queryTLS23060DetailForReport = (body: any) =>
-  this.tls23060Service
-    .queryTLS23060Detail({
-      ...(this.dialogHistoryRequestBody ?? {}),
-      ...body,
-      // 保底 pageIndex / pageSize / SortBy
-      pageSize: Number(body?.pageSize) || 30,
-      pageIndex: Number(body?.pageIndex) || 1,
-      SortBy: Array.isArray(body?.SortBy) && body.SortBy.length
-        ? body.SortBy
-        : [{ field: 'TXN_Date', order: 1 as 1 }],
-      TXN_DateStart: this.toDateOnly(
-        body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart
-      ),
-      TXN_DateEnd: this.toDateOnly(
-        body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd
-      ),
-    })
-    .pipe(
-      map((res: any) => {
-        const wrapper = this.pickWrapper(res?.Data);
-        const details = this.pickDetails(wrapper);
-
-        const rows = details.map((r: any, i: number) => ({
-          ...r,
-          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${
-            r?.tlt_no ?? ''
-          }|${i}`,
-        }));
-
-        // 以日期排序
-        rows.sort((a, b) => {
-          const ad = a.TXN_Date ?? '';
-          const bd = b.TXN_Date ?? '';
-          return ad > bd ? 1 : ad < bd ? -1 : 0;
-        });
-
-        const totalCount =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-        const grand = this.buildFooterFromPack(wrapper);
-
-        // 給 dialog 綁定用
-        this.dialogFooterData = grand;
-        this.dialogTotalRecords = totalCount;
-        this.dialogData = rows;
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+  public queryTLS23060DetailForReport = (body: any) =>
+    this.tls23060Service
+      .queryTLS23060Detail({
+        ...(this.dialogHistoryRequestBody ?? {}),
+        ...body,
+        // 保底 pageIndex / pageSize / SortBy
+        pageSize: Number(body?.pageSize) || 30,
+        pageIndex: Number(body?.pageIndex) || 1,
+        SortBy: Array.isArray(body?.SortBy) && body.SortBy.length
+          ? body.SortBy
+          : [{ field: 'TXN_Date', order: 1 as 1 }],
+        TXN_DateStart: this.toDateOnly(
+          body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart
+        ),
+        TXN_DateEnd: this.toDateOnly(
+          body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd
+        ),
       })
-    );
+      .pipe(
+        map((res: any) => {
+          const wrapper = this.pickWrapper(res?.Data);
+          const details = this.pickDetails(wrapper);
 
+          const rows = details.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+          }));
+
+          // 以日期排序
+          rows.sort((a, b) => {
+            const ad = a.TXN_Date ?? '';
+            const bd = b.TXN_Date ?? '';
+            return ad > bd ? 1 : ad < bd ? -1 : 0;
+          });
+
+          const totalCount =
+            typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+          const grand = this.buildFooterFromPack(wrapper);
+
+          // 給 dialog 綁定用
+          this.dialogFooterData = grand;
+          this.dialogTotalRecords = totalCount;
+          this.dialogData = rows;
+
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
 
   onDialogClose(v: boolean): void {
     this.dialogVisible = v;
@@ -335,7 +331,7 @@ public queryTLS23060DetailForReport = (body: any) =>
     }
   }
 
-  // ===== 匯出 =====
+  // ===== 匯出：主表 PDF =====
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
     const { pageSize, pageIndex, ...rest } = this.historyRequestBody;
@@ -357,18 +353,19 @@ public queryTLS23060DetailForReport = (body: any) =>
       });
   }
 
-  onExportXLSX(): void {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+  // ===== 匯出：明細表 PDF =====
+  onExportDetailPDF(): void {
+    if (!this.dialogHistoryRequestBody) {
+      this.messageService?.warnBubble?.('請先點選主表資料開啟明細。');
       return;
     }
     this.btnLoading = true;
-    const body = this.buildExportBody();
+    const body = this.dialogHistoryRequestBody;
     this.tls23060Service
-      .exporttls23060Excel(body)
+      .exportTLS23060DetailPDF(body)
       .pipe(finalize(() => (this.btnLoading = false)))
       .subscribe({
-        next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+        next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.pdf'),
       });
   }
 
