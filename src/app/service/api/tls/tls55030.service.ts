@@ -1,16 +1,16 @@
-import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@service/system/auth.service';
-import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment'; // 假設您使用此方式導入環境變數
+import { ApiResponse } from '@service/system/auth.service'; // 假設此路徑正確
+import { SortMeta } from 'primeng/api';
+import { map, Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 // =================================================================
 // 1. queryTLS55030 (主查詢介面)
 // =================================================================
 
 /**
- * queryTLS55030 請求參數
+ * queryTLS55030 請求參數 (更新: 新增 OrderBy, Offset)
  */
 export interface Tls55030QueryBody {
   PageSize?: number;
@@ -18,7 +18,7 @@ export interface Tls55030QueryBody {
   SortBy?: { field: string; order: number }[];
   TABTYPE?: string; // 單據別
   PUR_GUINo?: string; // 發票號碼
-  PUR_GUIDate?: string; // 發票日期
+  PUR_GUIDate?: string; // 發票日期 (格式: yyyy-MM-dd)
   ACP_YYYYMM?: string; // 結帳年月
   PUR_RepYYYYMM?: string;
   VEN_Uniform?: string;
@@ -35,7 +35,7 @@ export interface Tls55030QueryBody {
 }
 
 /**
- * queryTLS55030 回應資料項
+ * queryTLS55030 回應資料項 (更新: 新增 PUR_VoucherType, Rebate_Amt)
  */
 export interface Tls55030ListData {
   id: number;
@@ -43,18 +43,20 @@ export interface Tls55030ListData {
   ACP_YYYYMM: string; // 結帳年月
   VEN_No: string; // 廠商編號
   TABTYPE: string; // 單據別
+  PUR_VoucherType: string; // 發票格式代碼 (新增)
   DIS_Status: string; // 狀態
+  Rebate_Amt: number; // 折讓金額 (新增)
   // 這裡應加入其他需要的欄位
 }
 
 // =================================================================
-// 2. queryTLS55030ReturnDetail (退貨明細查詢介面)
+// 2. queryTLS55030ReturnDetailOption (退貨明細-選項查詢介面)
 // =================================================================
 
 /**
- * queryTLS55030ReturnDetail 請求參數
+ * queryTLS55030ReturnDetailOption 請求參數 (更新: 新增 OrderBy, Offset)
  */
-export interface ReturnDetailQueryBody {
+export interface ReturnDetailOptionQueryBody {
   PageSize: number;
   PageIndex: number;
   SortBy?: { field: string; order: number }[];
@@ -62,65 +64,106 @@ export interface ReturnDetailQueryBody {
   VEN_No: string; // 廠商編號
 }
 
-
-export interface ReturnNotRebateQueryBody {
-  APRV_Date_Start: string,
-  APRV_Date_End: string,
-  VEN_NO: string,
-  HOS_No: string
+/**
+ * queryTLS55030ReturnDetail (基於 DIS_No 查詢折讓單退貨明細) 請求參數
+ */
+export interface ReturnDetailByDisNoQueryBody {
+  PageSize?: number;
+  PageIndex?: number;
+  SortBy?: { field: string; order: number }[];
+  DIS_No: string; // 折讓單號
 }
 
 /**
- * queryTLS55030ReturnDetail 回應資料項 (對應原 IReturnDetailData)
- * 假設 RJM_TotalBuyAmt 等金額欄位在應用中仍應為 number 類型。
+ * IReturnDetailData (用於 Option 或 NotRebate 查詢)
+ * 注意：部分 API (如 Option) 回傳金額可能是 string，應用層需處理轉換。
+ * 另，NotRebate API 回傳中包含 VEN_NO 和 HOS_No。
  */
 export interface IReturnDetailData {
-  RJM_No: string;    // 退貨單號
-  APRV_Date: string;   // 審核日期
-  VEN_NO: string;    // 廠商編號 (Swagger 似乎漏了此欄位，但邏輯需要，故保留)
-  HOS_NAME: string;   // 醫院/門市名稱
-  RJM_TotalBuyNet: number; // 總進貨淨額 (原 Swagger 範例為 string，但使用 number 以利計算)
+  RJM_No: string; // 退貨單號
+  APRV_Date: string; // 審核日期
+  HOS_NAME: string; // 醫院/門市名稱
+  // 以下欄位在不同 API 回應中型別可能不一致，暫以 number 處理以利計算，若遇到 string 需在 service 或元件中轉型
+  RJM_TotalBuyNet: number; // 總進貨淨額
   RJM_TotalBuyTax: number; // 總進貨稅額
   RJM_TotalBuyAmt: number; // 總進貨總額
-  // 額外的欄位，用於處理邏輯
+  // 僅在 queryTLS55030ReturnNotRebate 回應中出現
+  VEN_NO?: string; // 廠商編號 (NotRebate 回應中的欄位名為 VEN_NO)
+  HOS_No?: string; // 門市編號
   [key: string]: string | number | undefined;
 }
 
 
+/**
+ * IReturnDetailByDisNoData (用於 基於 DIS_No 查詢折讓單退貨明細)
+ * 注意：此 API 回傳的 Rebate 金額欄位是 string 型別。
+ */
+export interface IReturnDetailByDisNoData {
+  RJM_No: string; // 退貨單號
+  APRV_Date: string; // 審核日期
+  HOS_NAME: string; // 醫院/門市名稱
+  Rebate_Net: string; // 折讓淨額 (回傳型別為 string)
+  Rebate_Tax: string; // 折讓稅額 (回傳型別為 string)
+  Rebate_Amt: string; // 折讓總額 (回傳型別為 string)
+}
+
 // =================================================================
-// 3. queryTLS55030RebateDetail (發票/收據明細查詢介面)
+// 3. queryTLS55030RebateDetailOption (發票/收據明細-選項查詢介面)
 // =================================================================
 
 /**
- * queryTLS55030RebateDetail 請求參數
+ * queryTLS55030RebateDetailOption 請求參數
  */
-export interface RebateDetailQueryBody {
-  VEN_No: string; // 廠商編號
+export interface RebateDetailOptionQueryBody {
+  VEN_No: string; // 廠商編號\
+  PageSize: number;
+  PageIndex: number;
+  SortBy: SortMeta[];
 }
 
 /**
- * queryTLS55030RebateDetail 回應資料項 (對應原 IInvoiceDetail)
+ * IInvoiceDetail (用於 Option 查詢)
  */
 export interface IInvoiceDetail {
-  SeqNo: number;     // 序號
-  PUR_GUINo: string;   // 發票/收據號碼
-  PUR_GUIDate: string;  // 發票日期
-  PUR_VenNo?: string;   // 廠商編號 (Swagger 範例中未見，但原始程式碼有，故設為可選或在 service 內處理)
-  TABTYPE: string;    // 單據別 ('收據' 或 '發票')
-  PUR_TaxType: string;  // 稅別
+  SeqNo: number; // 序號
+  PUR_GUINo: string; // 發票/收據號碼
+  PUR_GUIDate: string; // 發票日期
+  TABTYPE: string; // 單據別
+  TABTYPE_TEXT: string; // 單據別說明 (新增)
+  PUR_TaxType: string; // 稅別
+  PUR_TaxType_TEXT: string; // 稅別說明 (新增)
   PUR_DirectType: string; // 發票用途
   PUR_VoucherType: string; // 發票格式代碼
-  PUR_Amt: number;    // 發票金額
-  Rebate_Amt: number;  // 已折讓金額
+  PUR_Amt: number; // 發票金額
+  Rebate_Amt: number; // 已折讓金額
 
-  // 應用層計算欄位
-  Rebate_Amt_New?: number;
-  Rebate_Net?: number;
-  Rebate_Tax?: number;
+  // 應用層計算欄位 (從介面中移除，改在應用層定義或元件中計算)
+  // Rebate_Amt_New?: number;
+  // Rebate_Net?: number;
+  // Rebate_Tax?: number;
 }
 
+
+/**
+ * IInvoiceDetailByDisNo (用於 基於 DIS_No 查詢折讓單發票明細)
+ */
+export interface IInvoiceDetailByDisNo {
+  SeqNo: number; // 序號
+  PUR_GUINo: string; // 發票/收據號碼
+  PUR_GUIDate: string; // 發票日期
+  TABTYPE: string; // 單據別
+  TABTYPE_TEXT: string; // 單據別說明
+  PUR_TaxType: string; // 稅別
+  PUR_TaxType_TEXT: string; // 稅別說明
+  PUR_DirectType: string; // 發票用途
+  PUR_VoucherType: string; // 發票格式代碼
+  Rebate_Amt: number; // 折讓金額
+  // 注意: 此 API 回傳不包含 PUR_Amt
+}
+
+
 // =================================================================
-// 4. insertTLS55030 (新增/更新介面)
+// 4. insertTLS55030 (新增介面)
 // =================================================================
 
 /**
@@ -160,16 +203,61 @@ export interface Tls55030InsertBody {
   returnDetails: ReturnDetailPayload[]; // 退貨明細
 }
 
+/**
+ * insertTLS55030 回應資料 (更新: 回傳包含 DIS_No 的物件)
+ */
+export interface Tls55030InsertResponse {
+  DIS_No: string;
+}
+
+// =================================================================
+// 5. updateTLS55030 (更新介面)
+// =================================================================
+
+/**
+ * updateTLS55030 - 明細
+ */
+export interface Tls55030UpdateDetail {
+  DIS_No: string;
+  PUR_GUINo: string;
+  Rebate_Amt: number;
+  Rebate_Net: number;
+  Rebate_Tax: number;
+}
+
+/**
+ * updateTLS55030 請求參數
+ */
+export interface Tls55030UpdateBody {
+  details: Tls55030UpdateDetail[];
+}
+
+// =================================================================
+// 6. queryTLS55030ReturnNotRebate (退貨未折讓查詢介面)
+// =================================================================
+
+/**
+ * queryTLS55030ReturnNotRebate 請求參數
+ */
+export interface ReturnNotRebateQueryBody {
+  APRV_Date_Start: string; // 格式: yyyy-MM-dd
+  APRV_Date_End: string; // 格式: yyyy-MM-dd
+  VEN_NO: string; // 廠商編號
+  HOS_No: string; // 門市編號
+  PageSize: number;
+  PageIndex: number;
+  SortBy?: SortMeta[];
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
 export class Tls55030Service {
-  // 將 apiUrl 定義為新的 API 基礎路徑
   private readonly apiUrl = `${environment.ApiUrl}/TLS0000/TLS5000`;
 
   constructor(
     private readonly http: HttpClient,
-    private readonly datePipe: DatePipe
   ) { }
 
   /**
@@ -183,57 +271,111 @@ export class Tls55030Service {
   }
 
   /**
-   * @method queryTLS55030ReturnDetail
+   * @method queryTLS55030ReturnDetail (更新：改為 Option 介面)
    * 帶入已審核且未開立折讓單的退貨驗收資料 (根據結帳年月和廠商編號)
-   * POST /TLS0000/TLS5000/queryTLS55030ReturnDetail
+   * POST /TLS0000/TLS5000/queryTLS55030ReturnDetailOption
    * @param body 包含 ACP_YYYYMM 和 VEN_No 的查詢參數
    * @returns Observable<ApiResponse<IReturnDetailData[]>> 退貨明細資料陣列
    */
-  queryTLS55030ReturnDetail(body: ReturnDetailQueryBody): Observable<ApiResponse<IReturnDetailData[]>> {
+  queryTLS55030ReturnDetailOption(body: ReturnDetailOptionQueryBody): Observable<ApiResponse<IReturnDetailData[]>> {
     return this.http.post<ApiResponse<IReturnDetailData[]>>(
-      `${this.apiUrl}/queryTLS55030ReturnDetail`,
+      `${this.apiUrl}/queryTLS55030ReturnDetailOption`, // API 名稱更新
       body
-    );
+    ).pipe(
+      map(response => {
+        // 將回傳的金額欄位從 string 轉換為 number
+        const convertedData = response.Data.map(item => ({
+          ...item,
+          RJM_TotalBuyNet: Number(item.RJM_TotalBuyNet),
+          RJM_TotalBuyTax: Number(item.RJM_TotalBuyTax),
+          RJM_TotalBuyAmt: Number(item.RJM_TotalBuyAmt),
+        }));
+        return { ...response, Data: convertedData };
+      })
+    )
   }
 
   /**
-   * @method queryTLS55030RebateDetail
-   * 查詢該廠商可開立折讓單的發票/收據明細 (發票金額– 已折讓金額 > 0 的近兩年資料)
-   * POST /TLS0000/TLS5000/queryTLS55030RebateDetail
+   * @method queryTLS55030RebateDetail (更新：改為 Option 介面)
+   * 查詢該廠商可開立折讓單的發票/收據明細
+   * POST /TLS0000/TLS5000/queryTLS55030RebateDetailOption
    * @param body 包含 VEN_No 的查詢參數
    * @returns Observable<ApiResponse<IInvoiceDetail[]>> 發票明細資料陣列
    */
-  queryTLS55030RebateDetail(body: RebateDetailQueryBody): Observable<ApiResponse<IInvoiceDetail[]>> {
+  queryTLS55030RebateDetailOption(body: RebateDetailOptionQueryBody): Observable<ApiResponse<IInvoiceDetail[]>> {
     return this.http.post<ApiResponse<IInvoiceDetail[]>>(
-      `${this.apiUrl}/queryTLS55030RebateDetail`,
+      `${this.apiUrl}/queryTLS55030RebateDetailOption`, // API 名稱更新
       body
     );
   }
 
   /**
    * @method insertTLS55030
-   * 執行發票折讓單的新增/更新操作
+   * 執行發票折讓單的新增操作
    * POST /TLS0000/TLS5000/insertTLS55030
    * @param body 包含折讓與退貨明細的更新資料
-   * @returns Observable<ApiResponse<number>> 回傳 Id 或其他狀態碼
+   * @returns Observable<ApiResponse<Tls55030InsertResponse>> 回傳包含 DIS_No 的物件
    */
-  insertTLS55030(body: Tls55030InsertBody): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(
+  insertTLS55030(body: Tls55030InsertBody): Observable<ApiResponse<Tls55030InsertResponse>> {
+    return this.http.post<ApiResponse<Tls55030InsertResponse>>( // 回傳型別更新
       `${this.apiUrl}/insertTLS55030`,
       body
     );
   }
 
-  // 如果未來需要用到 /queryTLS55030ReturnNotRebate，可以添加以下方法：
+  /**
+   * @method updateTLS55030 (新增方法)
+   * 執行折讓單的更新操作
+   * POST /TLS0000/TLS5000/updateTLS55030
+   * @param body 包含要更新的折讓單明細
+   * @returns Observable<ApiResponse<number>> 回傳狀態碼 (0 代表成功)
+   */
+  updateTLS55030(body: Tls55030UpdateBody): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(
+      `${this.apiUrl}/updateTLS55030`,
+      body
+    );
+  }
+
+  /**
+   * @method queryTLS55030ReturnNotRebate
+   * 查詢指定時間範圍內未開立折讓單的退貨驗收資料
+   * POST /TLS0000/TLS5000/queryTLS55030ReturnNotRebate
+   * @param body 包含日期範圍、廠商編號和門市編號
+   * @returns Observable<ApiResponse<IReturnDetailData[]>>
+   */
   queryTLS55030ReturnNotRebate(body: ReturnNotRebateQueryBody): Observable<ApiResponse<IReturnDetailData[]>> {
-    const paramBody = {
-      ...body,
-      APRV_Date_Start: this.datePipe.transform(body.APRV_Date_Start, 'yyyy-MM-dd'),
-      APRV_Date_End: this.datePipe.transform(body.APRV_Date_End, 'yyyy-MM-dd'),
-    };
     return this.http.post<ApiResponse<IReturnDetailData[]>>(
       `${this.apiUrl}/queryTLS55030ReturnNotRebate`,
-      paramBody
+      body
+    );
+  }
+
+  /**
+   * @method queryTLS55030ReturnDetailByDisNo (新增方法)
+   * 查詢單一折讓單的退貨明細 (基於 DIS_No)
+   * POST /TLS0000/TLS5000/queryTLS55030ReturnDetail
+   * @param body 包含 DIS_No 的查詢參數
+   * @returns Observable<ApiResponse<IReturnDetailByDisNoData[]>> 退貨明細資料陣列
+   */
+  queryTLS55030ReturnDetailByDisNo(body: ReturnDetailByDisNoQueryBody): Observable<ApiResponse<IReturnDetailByDisNoData[]>> {
+    return this.http.post<ApiResponse<IReturnDetailByDisNoData[]>>(
+      `${this.apiUrl}/queryTLS55030ReturnDetail`,
+      body
+    );
+  }
+
+  /**
+   * @method queryTLS55030RebateDetailByDisNo (新增方法)
+   * 查詢單一折讓單的發票/收據明細 (基於 DIS_No)
+   * POST /TLS0000/TLS5000/queryTLS55030RebateDetail
+   * @param body 包含 DIS_No 的查詢參數
+   * @returns Observable<ApiResponse<IInvoiceDetailByDisNo[]>> 發票明細資料陣列
+   */
+  queryTLS55030RebateDetailByDisNo(body: { DIS_No: string }): Observable<ApiResponse<IInvoiceDetailByDisNo[]>> {
+    return this.http.post<ApiResponse<IInvoiceDetailByDisNo[]>>(
+      `${this.apiUrl}/queryTLS55030RebateDetail`,
+      body
     );
   }
 }

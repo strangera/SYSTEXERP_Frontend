@@ -4,7 +4,8 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { IInvoiceDetail, IReturnDetailData, RebateDetailQueryBody, ReturnDetailQueryBody, Tls55030Service } from '@service/api/tls/tls55030.service';
+import { IInvoiceDetail, IReturnDetailData, RebateDetailOptionQueryBody, ReturnDetailOptionQueryBody, Tls55030Service } from '@service/api/tls/tls55030.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
 
 /**
  * 處理 TLS55030 頁面中所有彈跳視窗 (Dialog) 邏輯的元件。
@@ -21,7 +22,7 @@ import { IInvoiceDetail, IReturnDetailData, RebateDetailQueryBody, ReturnDetailQ
         [columns]="dialogColumns2" [showDelete]="false" [selectedItems]="selectedItemsDialog2" [showCaption]="false"
         (selectionChange)="selectedItemsDialog2 = $event" [showManage]="false" [showCheckBox]="true"
         [isRowSelectable]="isRowSelectable2.bind(this)" [lastQueryBody]="lastQueryBody2"
-        [queryFunction]="tls55030Service.queryTLS55030ReturnDetail.bind(tls55030Service)" [totalRecords]="totalRecords2"
+        [queryFunction]="tls55030Service.queryTLS55030ReturnDetailOption.bind(tls55030Service)" [totalRecords]="totalRecords2"
         [loading]="dialogLoading2">
       </app-table-report>
     </app-dialog>
@@ -33,7 +34,7 @@ import { IInvoiceDetail, IReturnDetailData, RebateDetailQueryBody, ReturnDetailQ
         [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
         (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
         [isRowSelectable]="isRowSelectable.bind(this)" [lastQueryBody]="lastQueryBody" [showReorder]="false"
-        [queryFunction]="tls55030Service.queryTLS55030RebateDetail.bind(tls55030Service)" [totalRecords]="totalRecords"
+        [queryFunction]="tls55030Service.queryTLS55030RebateDetailOption.bind(tls55030Service)" [totalRecords]="totalRecords"
         [loading]="dialogLoading">
       </app-table-report>
     </app-dialog>
@@ -45,6 +46,8 @@ export class TLS55030DialogComponent {
   // --- Inputs from Parent ---
   /** 廠商編號 */
   @Input() venNo: string | null = null;
+  /** <-- 新增：廠商統一編號 (即 VEN_Uniform 或 No, 供 API 查詢用) --> */
+  @Input() venUniformNo: string | null = null;
   /** 結帳年月 */
   @Input() acpYyyyMm: Date | null = null;
   /** 已存在於主表格的折讓單明細，用於判斷是否可選 */
@@ -67,14 +70,14 @@ export class TLS55030DialogComponent {
   selectedItemsDialog: IInvoiceDetail[] = [];
   dialogLoading = false;
   totalRecords = 0;
-  lastQueryBody: RebateDetailQueryBody | null = null;
+  lastQueryBody: RebateDetailOptionQueryBody | null = null;
 
   dialogColumns: ReportColumn[] = [
     { field: 'SeqNo', header: '序號' },
-    { field: 'TABTYPE', header: '單據別' },
+    { field: 'TABTYPE', header: '單據別', format: (v) => getSYS1000('TABTYPE', v) },
     { field: 'PUR_GUINo', header: '發票號碼' },
     { field: 'PUR_GUIDate', header: '發票日期' },
-    { field: 'PUR_TaxType', header: '稅別' },
+    { field: 'PUR_TaxType', header: '稅別', format: (v) => getSYS1000('PUR_TaxType', v) },
     { field: 'PUR_DirectType', header: '發票用途' },
     { field: 'PUR_VoucherType', header: '發票格式' },
     { field: 'PUR_Amt', header: '發票金額', format: formatAmount },
@@ -83,14 +86,26 @@ export class TLS55030DialogComponent {
 
   /** 開啟折讓單明細選擇彈窗並載入資料 */
   openInvoiceDialog() {
-    if (!this.venNo) return;
+    // <-- 修正：檢查並使用 venUniformNo (廠商統一編號)
+    if (!this.venUniformNo) return;
+
     this.dialogVisible = true;
     this.dialogLoading = true;
     this.selectedItemsDialog = []; // 清空上次的選擇
-    this.tls55030Service.queryTLS55030RebateDetail({ VEN_No: this.venNo }).pipe(untilDestroyed(this)).subscribe(res => {
+
+    const body: RebateDetailOptionQueryBody = {
+      VEN_No: this.venUniformNo,
+      PageSize: 30,
+      PageIndex: 1,
+      SortBy: [{ field: 'SeqNo', order: 1 }]
+    };
+
+    // 使用 venUniformNo (即 No) 作為 VEN_No 參數進行 API 查詢
+    this.tls55030Service.queryTLS55030RebateDetailOption(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogData = res.Data;
       this.dialogLoading = false;
       this.totalRecords = res.TotalCount || res.Data.length;
+      this.lastQueryBody = body;
     });
   }
 
@@ -106,7 +121,7 @@ export class TLS55030DialogComponent {
   /** 判斷折讓單明細行是否可選 (已存在的不能再選) */
   isRowSelectable(event: IInvoiceDetail): boolean {
     // 使用 SeqNo 作為唯一鍵
-    return !this.existingInvoiceData || !this.existingInvoiceData.some((item: IInvoiceDetail) => item.SeqNo === event.SeqNo);
+    return !this.existingInvoiceData || !this.existingInvoiceData.some((item: IInvoiceDetail) => item.PUR_GUINo === event.PUR_GUINo);
   }
 
   // --- Return Detail Dialog (退貨明細) 相關屬性 ---
@@ -115,7 +130,7 @@ export class TLS55030DialogComponent {
   selectedItemsDialog2: IReturnDetailData[] = [];
   dialogLoading2 = false;
   totalRecords2 = 0;
-  lastQueryBody2: ReturnDetailQueryBody | null = null;
+  lastQueryBody2: ReturnDetailOptionQueryBody | null = null;
 
   dialogColumns2: ReportColumn[] = [
     { field: 'RJM_No', header: '退貨單號' },
@@ -132,13 +147,13 @@ export class TLS55030DialogComponent {
     this.dialogVisible2 = true;
     this.dialogLoading2 = true;
     this.selectedItemsDialog2 = []; // 清空上次的選擇
-    const body: ReturnDetailQueryBody = {
+    const body: ReturnDetailOptionQueryBody = {
       VEN_No: this.venNo,
       ACP_YYYYMM: this.datePipe.transform(this.acpYyyyMm, 'yyyyMM') as string,
       PageSize: 30,
       PageIndex: 1
     };
-    this.tls55030Service.queryTLS55030ReturnDetail(body).pipe(untilDestroyed(this)).subscribe(res => {
+    this.tls55030Service.queryTLS55030ReturnDetailOption(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogData2 = res.Data;
       this.lastQueryBody2 = body;
       this.dialogLoading2 = false;

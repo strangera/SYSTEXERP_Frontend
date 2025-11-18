@@ -152,10 +152,10 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   // OverlayPanel 裡面的 Table Columns
   tltNoOpColumns: Column[] = [
     { field: 'TltNo', header: '專櫃編號', sortField: 'tlt_no' },
-    { field: 'TltName', header: '專櫃名稱' },
-    { field: 'ApplyNo', header: '申請編號' },
-    { field: 'LocationNo', header: '位置編號' },
-    { field: 'TltSpace', header: '面積' },
+    { field: 'TltName', header: '專櫃名稱', sortField: 'tlt_name' },
+    { field: 'ApplyNo', header: '申請編號', sortField: 'apply_no' },
+    { field: 'LocationNo', header: '位置編號', sortField: 'location_no' },
+    { field: 'TltSpace', header: '面積', sortField: 'tlt_space' },
   ];
 
   tltNoOpTotalRecords = 0; // 總筆數 (初始為全部資料筆數)
@@ -180,6 +180,9 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const body = {
       ...event,
       TltNo: event['TltNo'] || '',
+      pageSize: event['pageSize'] ? Number(event['pageSize']) : 30,
+      pageIndex: event['pageIndex'] ? Number(event['pageIndex']) : 1,
+      SortBy: [{ field: 'tlt_no', order: 1 }],
     };
     this.dropDownListService.queryTLTTALENT_TLT_SPACE(body).pipe(untilDestroyed(this), finalize(() => this.tltNoLoading = false)).subscribe((results) => {
       this.tltNoOpData = results.Data;

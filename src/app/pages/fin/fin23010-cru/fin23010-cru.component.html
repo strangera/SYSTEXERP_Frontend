@@ -1,101 +1,97 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1;">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="預支單號" controlName="advanceSheetNumber"
-                        [control]="dataForm.controls.advanceSheetNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="申請日期" controlName="requestDate"
-                        [control]="dataForm.controls.requestDate" [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="預支金額" controlName="advanceAmount"
-                        [control]="dataForm.controls.advanceAmount" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="預計核銷日" controlName="writeOffDate"
-                        [control]="dataForm.controls.writeOffDate" [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="申請廠商/員工" controlName="requsetEmployee" [options]="requsetEmployeeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.requsetEmployee"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="付款方式" controlName="payoutMethod" [options]="payoutMethodOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.payoutMethod"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="匯款銀行代號" controlName="transferAccount"
-                        [control]="dataForm.controls.transferAccount" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="銀行帳號" controlName="bankAccount"
-                        [control]="dataForm.controls.bankAccount" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="帳戶名稱" controlName="accountName" [control]="dataForm.controls.accountName"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="票據禁止背書轉讓" controlName="ticketTransfer" [options]="whetherOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.ticketTransfer"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="票據抬頭" controlName="ticketTitle" [control]="dataForm.controls.ticketTitle"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="預計付款日" controlName="eExpectPayDate"
-                        [control]="dataForm.controls.eExpectPayDate" [submitted]="submitted">
-                    </app-calendar>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="費用組織" controlName="organization" [options]="organizationOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organization"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="摘要" controlName="summary" [control]="dataForm.controls.summary"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number [useGrouping]="false" label="預支單號" controlName="advanceSheetNumber"
+            [control]="dataForm.controls.advanceSheetNumber" [submitted]="submitted">
+          </app-input-number>
         </div>
-    </p-panel>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateOne" label="申請日期" controlName="requestDate"
+            [control]="dataForm.controls.requestDate" [submitted]="submitted">
+          </app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number [useGrouping]="false" label="預支金額" controlName="advanceAmount"
+            [control]="dataForm.controls.advanceAmount" [submitted]="submitted">
+          </app-input-number>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateOne" label="預計核銷日" controlName="writeOffDate"
+            [control]="dataForm.controls.writeOffDate" [submitted]="submitted">
+          </app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="申請廠商/員工" controlName="requsetEmployee" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.requsetEmployee" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="付款方式" controlName="payoutMethod" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.payoutMethod" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number [useGrouping]="false" label="匯款銀行代號" controlName="transferAccount"
+            [control]="dataForm.controls.transferAccount" [submitted]="submitted">
+          </app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number [useGrouping]="false" label="銀行帳號" controlName="bankAccount"
+            [control]="dataForm.controls.bankAccount" [submitted]="submitted">
+          </app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="帳戶名稱" controlName="accountName" [control]="dataForm.controls.accountName"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="票據禁止背書轉讓" controlName="ticketTransfer" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.ticketTransfer" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="票據抬頭" controlName="ticketTitle" [control]="dataForm.controls.ticketTitle"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateOne" label="預計付款日" controlName="eExpectPayDate"
+            [control]="dataForm.controls.eExpectPayDate" [submitted]="submitted">
+          </app-calendar>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="費用組織" controlName="organization" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.organization" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="摘要" controlName="summary" [control]="dataForm.controls.summary"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+      </div>
+    </div>
+  </p-panel>
 </div>

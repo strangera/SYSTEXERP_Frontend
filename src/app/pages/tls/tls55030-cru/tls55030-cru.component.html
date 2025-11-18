@@ -15,29 +15,30 @@
             optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton label="折讓項目" controlName="DIS_EntryType" [options]="DIS_EntryTypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.DIS_EntryType" [submitted]="submitted" />
+          <app-radiobutton label="折讓項目" controlName="DIS_EntryType" groupname="DIS_EntryType"
+            [options]="DIS_EntryTypeOptions" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.DIS_EntryType" [submitted]="submitted" />
         </div>
       </div>
       <app-table-edit title="折讓單明細" [data]="data" [columns]="columns"
-        (dataChange)="data = $event;data.length || data2.length ? dataForm.disable() : dataForm.enable()"
-        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true" [disabled]="
-        isFormReadable" (insert)="dialogComponent.openInvoiceDialog()" [showInsert]="!isFormReadable"
-        [canInsert]="false" [rowValidate]="validateRow" (delete)="updateSummaryAmounts()"
+        (dataChange)="updateInvoiceSummaryAndFormState($event)" (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems" [tableRequired]="true" [disabled]="isFormReadable"
+        (insert)="dialogComponent.openInvoiceDialog()" [showInsert]="!isFormReadable" [canInsert]="false"
+        [rowValidate]="validateRow" (delete)="updateInvoiceSummaryAndFormState()"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.ACP_YYYYMM.value ? false : true"
         (fieldChange)="updateSummaryAmounts()">
         <header>
           <div class="flex flex-wrap align-items-end">
-            <app-input-number class="col-12 md:col-6 lg:col-3 p-0" label="發票總金額" controlName="invoiceTotalAmount"
+            <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="發票總金額" controlName="invoiceTotalAmount"
               [control]="dataForm.controls.invoiceTotalAmount" [submitted]="submitted"
               [disabled]="true"></app-input-number>
-            <app-input-number class="col-12 md:col-6 lg:col-3 p-0" label="發票剩餘可折總金額"
+            <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="發票剩餘可折總金額"
               controlName="invoiceRemainingRebateAmount" [control]="dataForm.controls.invoiceRemainingRebateAmount"
               [submitted]="submitted" [disabled]="true"></app-input-number>
-            <app-input-number class="col-12 md:col-6 lg:col-3 p-0" label="折讓總金額" controlName="totalRebateAmount"
+            <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="折讓總金額" controlName="totalRebateAmount"
               [control]="dataForm.controls.totalRebateAmount" [submitted]="submitted"
               [disabled]="true"></app-input-number>
-            <app-input-number class="col-12 md:col-6 lg:col-3 p-0" label="餘額" controlName="balanceAmount"
+            <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="餘額" controlName="balanceAmount"
               [control]="dataForm.controls.balanceAmount" [submitted]="submitted" [disabled]="true"></app-input-number>
           </div>
         </header>
@@ -45,17 +46,39 @@
       <app-table-edit [hidden]="dataForm.controls.DIS_EntryType.value !== '1'" title="退貨明細" [data]="data2"
         [columns]="columns2" (selectionChange)="selectedItems2 = $event" [selectedItems]="selectedItems2"
         [tableRequired]="true" [disabled]="isFormReadable" (insert)="dialogComponent.openReturnDialog()"
-        [showInsert]="!isFormReadable" [canInsert]="false" (delete)="updateSummaryAmounts()"
-        (dataChange)="data2 = $event;data.length || data2.length ? dataForm.disable() : dataForm.enable()"
+        [showInsert]="!isFormReadable" [canInsert]="false" (delete)="updateReturnSummaryAmounts()"
+        (dataChange)="updateReturnSummaryAmounts($event)"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.ACP_YYYYMM.value ? false : true">
         <header>
           <div class="flex flex-wrap align-items-end justify-content-between">
-            <app-input-number class="col-12 md:col-6 lg:col-3 p-0" label="退貨總金額" controlName="RJM_TotalBuyAmt"
+            <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="退貨總金額" controlName="RJM_TotalBuyAmt"
               [control]="dataForm.controls.RJM_TotalBuyAmt" [submitted]="submitted" [disabled]="true" />
             <p-button styleClass="p-2" label="查詢已退貨未開立折讓" icon="pi pi-search" (click)="dialogVisible = true"></p-button>
           </div>
         </header>
       </app-table-edit>
+      <div [hidden]="dataForm.controls.DIS_EntryType.value === '1'">
+        <p-divider align="left" type="solid" styleClass="pb-2">
+          <!-- <span class="text-center text-xl font-bold text-primary">
+            開立折讓單類別
+          </span> -->
+        </p-divider>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number label="折讓單開立金額" controlName="Rebate_Amt" [control]="dataForm.controls.Rebate_Amt" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="品名" controlName="Rebate_Name" [control]="dataForm.controls.Rebate_Name"
+              [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="品名選項" controlName="radioOption" groupname="radioOption"
+              [options]="[{ value: '1', label: '獎勵金' }, { value: '2', label: '化妝品' }, { value: '3', label: '內衣' }]"
+              optionLabel="label" optionValue="value" [control]="dataForm.controls.radioOption"
+              (labelChange)="dataForm.controls.Rebate_Name.value ? '' : dataForm.controls.Rebate_Name.setValue($event) " />
+          </div>
+        </div>
+      </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit" [loading]="loading" />
@@ -64,13 +87,13 @@
   </p-panel>
 </div>
 
-<app-tls55030-dialog #dialogs [venNo]="dataForm.controls.VEN_No.value" [acpYyyyMm]="dataForm.controls.ACP_YYYYMM.value"
-  [existingInvoiceData]="data" [existingReturnData]="data2" (invoicesSelected)="handleInvoiceSelection($event)"
-  (returnsSelected)="handleReturnSelection($event)">
+<app-tls55030-dialog #dialogs [venNo]="dataForm.controls.VEN_No.value" [venUniformNo]="venUniformNo"
+  [acpYyyyMm]="dataForm.controls.ACP_YYYYMM.value" [existingInvoiceData]="data" [existingReturnData]="data2"
+  (invoicesSelected)="handleInvoiceSelection($event)" (returnsSelected)="handleReturnSelection($event)">
 </app-tls55030-dialog>
 
 
-<app-dialog [visible]="dialogVisible" header="折讓單明細" (visibleChange)="dialogVisible = $event" [showFooter]="false">
+<app-dialog [visible]="dialogVisible" header="查詢已退貨未開立折讓" (visibleChange)="dialogVisible = $event" [showFooter]="false">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-calendar-range-quick class="col-12" label="退貨日期" [startControl]="dialogQueryForm.controls.APRV_Date_Start"

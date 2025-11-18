@@ -148,7 +148,11 @@ export class AuthService {
         let userInfo = response.Data;
 
         // 1. 確保 client_ip 更新到儲存和 Subject
-        userInfo = { ...userInfo, client_ip: this.client_ip };
+        userInfo = {
+          ...userInfo,
+          client_ip: this.client_ip,
+          mid: Number(userInfo.mid)
+        };
         localStorage.setItem('UserInfo', JSON.stringify(userInfo));
         this.userSubject.next(userInfo);
 

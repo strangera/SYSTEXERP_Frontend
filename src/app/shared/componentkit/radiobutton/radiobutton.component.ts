@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, OnInit, output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RadioButtonModule } from 'primeng/radiobutton';
+import { RadioButtonClickEvent, RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
@@ -24,12 +24,14 @@ export class RadiobuttonComponent extends BasicKitComponent implements OnInit {
   public submitted = input<boolean>(!1); // 檢查欄位是否標準
   public disabled = input<boolean>(!1); // 是否禁用
   public valueChange = output<any>(); // 用於發送所選的值
+  public labelChange = output<string>(); // 用於發送選擇事件
 
   ngOnInit(): void {
     this.initControl(this.control());
   }
 
-  onSelectionChange(value: any): void {
+  onSelectionChange(value: any, label: string): void {
     this.valueChange.emit(value); // 當選擇改變時發送事件
+    this.labelChange.emit(label); // 發送選擇事件
   }
 }

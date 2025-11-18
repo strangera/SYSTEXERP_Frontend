@@ -1,12 +1,8 @@
-import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -22,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.6.1 匯款銀行
 @Component({
-    selector: 'app-fin26010',
-    templateUrl: './fin26010.component.html',
-    styleUrl: './fin26010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin26010',
+  templateUrl: './fin26010.component.html',
+  styleUrl: './fin26010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN26010Component extends BasicQpageComponent implements OnInit {
   //
@@ -82,10 +78,6 @@ export class FIN26010Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private whetherService: WhetherService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -94,18 +86,6 @@ export class FIN26010Component extends BasicQpageComponent implements OnInit {
     // 初始化
     this.ProgNo = '120019';
     this.cruPage = '/FIN2000/FIN26010CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   tossSummon: allSystemValues
-      // });
-    });
     // ----------------------------------------------------------------
   }
 

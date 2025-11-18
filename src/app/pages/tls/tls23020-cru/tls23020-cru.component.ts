@@ -1,10 +1,7 @@
 import { Component } from '@angular/core';
-import { WhetherService } from '../../../service/basic/whether.service';
 import { finalize } from 'rxjs/operators';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-
-
 import { TaxableService } from '../../../service/basic/taxable.service';
 import { DiscountService } from '../../../service/basic/discount.service';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
@@ -19,12 +16,6 @@ import { PdfService } from '../../../service/basic/pdf.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 type DisplayMode = 'Detail' | 'Summary';
-interface ReportColumn {
-  header: string;
-  field: string;
-  format?: (value: any) => string | number | null;
-  style?: string;
-}
 
 @Component({
   selector: 'app-tls23020-cru',
@@ -52,7 +43,11 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   commissionTypeOptions: any[] = [];
-  whetherOptions: any[] = [];
+  whetherOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+    { value: null, label: '全部' },
+  ];
   txnStatusOptions: any[] = [];
   checkTotalAmount = [
     { value: 1, label: '是' },
@@ -163,7 +158,6 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     private tls11010Service: Tls11010Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private whetherService: WhetherService,
     private txnStatusService: TxnStatusService,
     private location: Location,
     private pdfService: PdfService,
@@ -174,7 +168,6 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     this.taxableService.getSystemTypes().subscribe(data => this.taxableOptions = data);
     this.discountService.getLocalDiscountOptions().subscribe(data => this.discountOptions = data);
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.deductionbigCategoryOptions = data);
-    this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
     this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {

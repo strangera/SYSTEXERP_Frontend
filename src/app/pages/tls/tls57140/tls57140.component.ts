@@ -1,17 +1,11 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { ManagementIDService } from '../../../service/basic/management-id.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { DisplayModeService } from '../../../service/basic/display-mode.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -73,20 +67,9 @@ export class TLS57140Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private warehouseService: WarehouseService,
-    private managementIDService: ManagementIDService,
-    private authService: AuthService,
-    private brandCodeService: BrandCodeService,
-    private displayModeService: DisplayModeService,
   ) { }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
-    this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
-    this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));
-    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
   }
 
   canQuery(): boolean {

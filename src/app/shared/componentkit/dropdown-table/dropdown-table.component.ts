@@ -145,7 +145,5 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
       pageIndex: event.pageIndex,
       SortBy: event.SortBy
     });
-    console.log(dataForm.value);
-
   }
 }

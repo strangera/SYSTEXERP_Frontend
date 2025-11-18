@@ -20,11 +20,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.9.1 保留款彙總表
 @Component({
-    selector: 'app-fin29010',
-    templateUrl: './fin29010.component.html',
-    styleUrl: './fin29010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin29010',
+  templateUrl: './fin29010.component.html',
+  styleUrl: './fin29010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN29010Component extends BasicQpageComponent implements OnInit {
   //
