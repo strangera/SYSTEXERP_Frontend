@@ -76,10 +76,10 @@ export class TLS26080Service {
   }
 
   constructor(
-    private http: HttpClient,
-    private messageService: NotificationService,
-    private logger: NGXLogger,
-    private dropdown: DropdownApiService,
+    private readonly http: HttpClient,
+    private readonly messageService: NotificationService,
+    private readonly logger: NGXLogger,
+    private readonly dropdown: DropdownApiService,
   ) { }
 
   public loadAPS1003(cap_typeList: string[]): void {

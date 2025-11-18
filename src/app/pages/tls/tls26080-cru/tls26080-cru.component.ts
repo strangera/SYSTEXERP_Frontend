@@ -293,7 +293,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     const exampleByApi = !0;
     const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null, '合約建檔'];
     const headerRow2 = [null, null, null, null, null, 'D16', 'D17', 'D16', 'D17'];
-    const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1.00%', '50.00%'];
+    const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1', '5'];
     if (exampleByApi) return void this.service.downloadXLSXExample();
 
     // 生成工作表
