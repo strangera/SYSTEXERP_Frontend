@@ -15,6 +15,7 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
+import { finalize } from 'rxjs';
 
 
 
@@ -52,17 +53,15 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     VEN_BossMobile: ['', [Validators.maxLength(15)]], // 聯絡人手機
     VEN_BossEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
-
-    contact_Date: [null], // 訪談日期（必填）
-    contact_Time: [null], // 訪談時間(24H)（必填）
-    building_no: [''], // 館別
+    VEN_BossFax: ['', [Validators.maxLength(18)]], // 聯絡人傳真
+    contact_Date: [null, [Validators.required]], // 訪談日期（必填）
+    contact_Time: [null, [Validators.required]], // 訪談時間(24H)（必填）
+    building_no: ['', [Validators.required]], // 館別
     willing_level: ['', [Validators.required]], //
     FLOOR_NO: [''], // 樓層編號
     LOCATION_No: [null, [Validators.maxLength(60)]], // 擬洽位置編號
-
     contact_record: [''], // 洽談重點及洽談紀錄
     contact_remarks: [''], // 備註
-
     contact_USR_Name: ['admin', [Validators.required]], // 訪談人員（必填）
   });
 
@@ -76,7 +75,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   contact_USR_NameOptions: IDropdownItem[] = [];
   LOCATION_Options: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
-
+  btnLoading = false;
   constructor(
     private fb: FormBuilder,
     private dropDownListService: DropDownListService,
@@ -248,26 +247,29 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         contact_remarks: formValue.contact_remarks,
         contact_USR_Name: formValue.contact_USR_Name,
       };
-      console.log('送出 contact_Time:', formValue.contact_Time);
-      console.log('轉換後 contact_Time:', this.formatTime(formValue.contact_Time));
 
-      this.tls12020Service.insertTLS12020(body).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.messageService.successBubble(this.translate.instant('新增成功'));
-            this.dataForm.reset();
-          } else {
-            this.messageService.errorBubble(this.translate.instant('新增失敗') + '：' + (res.Message || ''));
-          }
-        },
-        error: (err) => {
-          console.error('API 錯誤', err);
-          this.messageService.errorBubble(this.translate.instant('API 發生錯誤'));
-        }
-      });
+      this.tls12020Service
+        .insertTLS12020(body)
+        .pipe(finalize(() => (this.btnLoading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble(this.translate.instant('新增成功'));
+              this.dataForm.reset();
+            } else {
+              this.messageService.errorBubble(this.translate.instant('新增失敗') + '：' + (res.Message || ''));
+            }
+            this.onCancel();
+          },
+
+        });
     });
   }
-
-
+override onCancel(): void {
+  this.router.navigate(
+    ['/account/tls/tls12020'],
+    { state: { fromRoute: '' } }
+  );
+}
 
 };

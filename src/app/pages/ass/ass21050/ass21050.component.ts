@@ -8,7 +8,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { apiOption } from '@shared/models/tls/tls000.model';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -46,15 +45,17 @@ interface ASS21050Item {
 export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     LOCATION_No: [''],
-    FLOOR_NO: [''],
-    AREA_NO: [''],
-    LOCATION_Name: ['',[Validators.maxLength(30)]],
-    LOCATION_Remark: ['',[Validators.maxLength(200)]],
+    FLOOR_NO: [[]],
+    AREA_NO: [[]],
+    building_no: [[]],
+    LOCATION_Name: ['', [Validators.maxLength(30)]],
+    LOCATION_Remark: ['', [Validators.maxLength(200)]],
     SortBy: [[{ field: 'LOCATION_No', order: 1 }]],
   });
   floorNoOptions: IDropdownItem[] = [];
   areaNoOptions: IDropdownItem[] = [];
-  ENG_MeterNo_Option: apiOption[] = [];
+  LOCATION_No_Option: IDropdownItem[] = [];
+  ECR_Group_Options: any[] = [];
   data: ASS21050Item[] = [];
   totalRecords = 0;
   selectedItems: ASS21050Item[] = [];
@@ -95,12 +96,14 @@ export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> imp
   }
   loadOptions() {
     // 查 取得能源表號
-    this.ass21030Service.queryENG1001_ENG_MeterNo_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.ENG_MeterNo_Option = response.Data.map((item: any) => ({
-        No: item.ENG_MeterNo,
-        Name: item.ENG_MeterNo,
-      }));
-    });
+    this.dropDownListService
+      .queryENG1002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.LOCATION_No_Option = res?.Data ?? [];
+        }
+      });
     // 載入營業樓層選項
     this.dropdownApiService.querySys3900().subscribe(options => {
       this.floorNoOptions = options ?? [];
@@ -109,6 +112,16 @@ export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> imp
     this.dropdownApiService.querySys3A00().subscribe(options => {
       this.areaNoOptions = options ?? [];
     });
+    this.dropDownListService.querySYS3800_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.ECR_Group_Options = res.Data.map(x => ({
+          label: x.Name,
+          value: x.No,
+          Name: x.Name,
+          No: x.No
+        }));
+      });
   }
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -122,8 +135,9 @@ export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> imp
         Offset: 0,
         SortBy: formValue?.SortBy || [{ field: 'LOCATION_No', order: 1 }],
         LOCATION_No: formValue.LOCATION_No || "",
-        FLOOR_NO: Array.isArray(formValue.FLOOR_NO) ? formValue.FLOOR_NO.join(',') : (formValue.FLOOR_NO || ""),
-        AREA_NO: Array.isArray(formValue.AREA_NO) ? formValue.AREA_NO.join(',') : (formValue.AREA_NO || ""),
+        FLOOR_NO: Array.isArray(formValue.FLOOR_NO) ? formValue.FLOOR_NO : [],
+        AREA_NO: Array.isArray(formValue.AREA_NO) ? formValue.AREA_NO : [],
+        building_no: Array.isArray(formValue.building_no) ? formValue.building_no : [],
         LOCATION_Name: formValue.LOCATION_Name || "",
         LOCATION_Remark: formValue.LOCATION_Remark || ""
       };

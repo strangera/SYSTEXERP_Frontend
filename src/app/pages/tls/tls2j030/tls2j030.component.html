@@ -61,6 +61,6 @@
     (detail)="onDetail($event)" [queryFunction]="tls2j030Service.queryTLS2J030.bind(tls2j030Service)"
     [selectedItems]="selectedItems" [showEdit]="false" (selectionChange)="selectedItems = $event"
     [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true" [showExcel]="false" [showReportMode]="false"
-    [showManage]="true" [showDelete]="true" [dataKey]="'CHG_No'">
+    [showManage]="true" [showDelete]="true" [dataKey]="'CHG_No'" (delete)="onDelete($event)">
   </app-table-report>
 </div>
