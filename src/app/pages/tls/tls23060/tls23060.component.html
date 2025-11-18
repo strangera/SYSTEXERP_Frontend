@@ -120,6 +120,7 @@
 
     <header>
       <div class="flex justify-content-end gap-2">
+        <!-- 只保留主表 PDF 匯出 -->
         <p-button
           styleClass="p-2"
           label="匯出收銀機區間報表.PDF"
@@ -128,20 +129,10 @@
           [disabled]="data.length === 0"
           (click)="onExportPDF()">
         </p-button>
-
-        <p-button
-          styleClass="p-2 p-button-success"
-          label="匯出收銀機區間報表.XSLX"
-          icon="pi pi-file-excel"
-          [loading]="btnLoading"
-          [disabled]="data.length === 0"
-          (click)="onExportXLSX()">
-        </p-button>
       </div>
     </header>
   </app-table-report>
 </div>
-
 
 <!-- 明細 Dialog：以日期為主 -->
 <app-dialog
@@ -165,5 +156,19 @@
     [showDetail]="false"
     [footerData]="dialogFooterData"
     [showReportMode]="false">
+
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <!-- 新增：明細表 PDF 匯出 -->
+        <p-button
+          styleClass="p-2"
+          label="匯出明細表.PDF"
+          icon="pi pi-file"
+          [loading]="btnLoading"
+          [disabled]="dialogData.length === 0"
+          (click)="onExportDetailPDF()">
+        </p-button>
+      </div>
+    </header>
   </app-table-report>
 </app-dialog>
