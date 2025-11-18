@@ -1,24 +1,23 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin55070Service } from '@service/api/fin/fin55070.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
+import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { Fin55070Service } from '@service/api/fin/fin55070.service';
-import { AsyncPipe } from '@angular/common';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 @Component({
   selector: 'app-fin55030',
   templateUrl: './fin55030.component.html',
@@ -42,7 +41,7 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
   ]
 })
 
-// 立沖科目餘額表
+// FIN55030 立沖科目餘額表
 export class FIN55030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     SVOUDATE: [new Date(), [Validators.required]], // 日期 GLS3001.VOUDATE
@@ -73,8 +72,8 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   ];
   data: any[] = [];
   totalRecords = 0;
-  AccNo_Options: any[] = []; 
-  ORG_IDOptions: any[] = []; 
+  AccNo_Options: any[] = [];
+  ORG_IDOptions: any[] = [];
   VenNoOptions: any[] = [];
   TargetNoListOptions: any[] = [];
   VouTypeListOptions: any[] = [];
@@ -127,8 +126,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-
+      console.log('api尚未提供')
     });
   }
-
 }
