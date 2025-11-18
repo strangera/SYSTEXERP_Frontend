@@ -1,4 +1,3 @@
-import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -144,13 +143,10 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
         finalize(() => this.loading = false)
       ).subscribe({
         next: (response) => {
-
-          // 檢查 API 回應狀態
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || 0;
             this.lastQueryBody = req;
-            // 儲存查詢狀態
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           } else {
             // API 回傳錯誤狀態
@@ -166,5 +162,50 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   }
   override onDetail(row: any) {
     super.onDetail(row);
+  }
+
+  /** 刪除資料 */
+  onDelete(deleteItems: any[]) {
+    if (!deleteItems || deleteItems.length === 0) {
+      this.messageService.warnBubble('請先選擇要刪除的資料', '警告');
+      return;
+    }
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `確定要刪除選取的 ${deleteItems.length} 筆資料嗎？`,
+      accept: () => {
+        this.executeDelete(deleteItems);
+      }
+    });
+  }
+  private executeDelete(deleteItems: any[]) {
+    const payload = {
+      selectList: deleteItems.map(item => ({
+        CHG_No: item.CHG_No,
+        TXN_Date: item.TXN_Date,
+        ECR_No: item.ECR_No,
+        TXN_No: item.TXN_No,
+        TXN_GUINo: item.TXN_GUINo
+      }))
+    };
+
+    this.loading = true;
+    this.tls2j030Service.deleteTLS2J030(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          console.log('Delete API Response:', res);
+          if (res?.Success) {
+            this.messageService.successBubble(`成功刪除 ${deleteItems.length} 筆資料`, '刪除成功');
+            this.onSubmit(this.queryForm);
+            this.selectedItems = [];
+          }
+        },
+      });
   }
 }
