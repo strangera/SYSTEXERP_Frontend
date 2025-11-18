@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
@@ -234,5 +234,29 @@ export class Tls52020Service {
    */
   updateTLS52020(data: TLS52020Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52020`, data);
+  }
+  /**
+       * 匯出退貨單Excel
+       * @param params 查詢條件 (CRN_No)
+       * @returns API 響應
+       */
+  exportTLS52020(params: { CRN_No: string }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52020`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
+  }
+  /**
+   * 匯出退貨單PDF
+   * @param params 查詢條件 (CRN_No)
+   * @returns API 響應
+  */
+  exportTLS52020PDF(params: { CRN_No: string }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52020PDF`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
   }
 }
