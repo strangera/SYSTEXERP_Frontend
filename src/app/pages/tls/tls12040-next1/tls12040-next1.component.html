@@ -1,7 +1,11 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <app-button
+      btnType="back"
+      label="上一步"
+      (click)="onClearAndExit()"
+    ></app-button>
     <app-button
       btnType="create"
       label="下一步(抽成設定)"
@@ -25,13 +29,13 @@
     <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
       <div class="flex align-items-center gap-2">
         <app-button
-          [label]="getCommonModeText()"
-          icon="pi pi-filter"
-          (click)="toggleCommonMode()"
-          [outlined]="showMode !== 'common'"
+          [label]="getAllCommonModeText()"
+          icon="pi pi-arrows-v"
+          (click)="toggleAllCommonMode()"
+          styleClass="p-button-info"
         ></app-button>
         <span class="text-sm text-gray-600 ml-2">
-          目前模式: {{ getCurrentDisplayMode() }}
+          {{ getAllDisplayMode() }}
         </span>
       </div>
     </div>
@@ -82,6 +86,21 @@
       <div *ngFor="let capType of capTypes" [hidden]="!hasDataForType(capType)">
         <p-accordion>
           <p-accordionTab [header]="getCapTypeName(capType)" [selected]="true">
+            <!-- 每個群組獨立的模式控制按鈕 -->
+            <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
+              <div class="flex align-items-center gap-2">
+                <app-button
+                  [label]="getCommonModeTextByType(capType)"
+                  icon="pi pi-filter"
+                  (click)="toggleCommonModeByType(capType)"
+                  [outlined]="isOutlinedMode(capType)"
+                ></app-button>
+                <span class="text-sm text-gray-600 ml-2">
+                  目前模式: {{ getCurrentDisplayModeByType(capType) }}
+                </span>
+              </div>
+            </div>
+
             <!-- 特殊說明（針對特定類型） -->
             <!-- <div *ngIf="capType === 'D' || capType === 'E'" class="mb-3 p-2 bg-gray-50 border-round">
             </div> -->
@@ -101,6 +120,7 @@
                 [mainColumns]="getColumnsForType(capType)"
                 (buttonClick)="onButtonClick($event, capType)"
                 [showCheckBox]="false"
+                (selectionChange)="onItemSelectionChange(capType)"
                 (fieldChange)="
                   onFieldChange(
                     $event.fieldName,
@@ -116,8 +136,10 @@
                 [dataKey]="'id'"
                 [detailKey]="''"
                 [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'"
-                [forceEditMode]="!isReadOnlyMode"
+                [forceEditMode]="shouldForceEdit"
                 [showActionColumn]="false"
+                [minColumnWidth]="80"
+                [maxColumnWidth]="350"
                 (save)="onFareTableSave($event, capType)"
                 (edit)="onFareTableEdit($event, capType)"
                 (cancel)="onFareTableCancel($event, capType)"
@@ -161,6 +183,7 @@
           btnType="create"
           label="下一步(抽成設定)"
           (click)="onSubmitNext()"
+          [disabled]="getTotalSelectedCount() === 0"
         ></app-button>
         <app-button btnType="back" (click)="onClearAndExit()"></app-button>
       </div>
