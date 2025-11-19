@@ -1,7 +1,7 @@
 import { NgIf } from '@angular/common';
 import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -266,15 +266,35 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       })
     ).subscribe();
 
+    // 2025/11/09 eugene:
+    // 新增時如果變動 上面日期 專櫃資料清掉 tltTableData
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.controls.pod_sdate.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.tltTableFiltered.set([]);
+        });
+
+      this.dataForm.controls.pod_edate.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.tltTableFiltered.set([]);
+        });
+    }
+
     this.service.loadSYS3800();
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
 
-    // 使用 map + 結構賦值，避免在迴圈中建立暫時物件
-    const ecrInit = this.service.ecrOptions();
-    this.ecrTableFiltered.set(ecrInit.map(({ ecr_no, ecr_name, tlt_no, tlt_name }): EcrItem => (
-      { ecr_no, ecr_name, tlt_no, tlt_name, Status: ItemOperationStatus.Original }
-    )));
+    // 2025/11/09 eugene: 
+    // 新增模式時，不要初始化  tltTableFiltered
+    if (this.crudstatus !== CRUDStatus.Create) {
+      // 使用 map + 結構賦值，避免在迴圈中建立暫時物件
+      const ecrInit = this.service.ecrOptions();
+      this.ecrTableFiltered.set(ecrInit.map(({ ecr_no, ecr_name, tlt_no, tlt_name }): EcrItem => (
+        { ecr_no, ecr_name, tlt_no, tlt_name, Status: ItemOperationStatus.Original }
+      )));
+    }
 
     const tltInit = this.service.tltOptions();
     this.tltTableFiltered.set(tltInit.map((item): TltItem => ({

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal, WritableSignal } from '@angular/core';
-import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
+import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -130,7 +130,8 @@ export class TLS26010Service {
       take(1),
       tap(res => {
         this.tltOptions.set(res.Data);
-        this.logger.debug(`專櫃編號查詢結果:`, [res]);
+        console.log('專櫃編號查詢 request 💡:', query);
+        console.log('專櫃編號查詢 response:', res.Data);
       }),
       finalize(() => this.tltLoading.set(!1))
     ).subscribe();
