@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { ExportLabelService } from '@service/utility/exportLabel.service';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { FIN11010Data, FIN11010QueryRequest, FIN11010Service, FIN11010UpdateStatusRequest } from '../../../service/api/fin/fin11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -162,8 +162,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     this.exportLabelService.ExportDXT(body)
       .pipe(
         finalize(() => this.exportLoading = false),
-        untilDestroyed(this),
-        tap((response) => this.exportLabelService.handleFileDownload(response, 'export_default.dxt'))
+        untilDestroyed(this)
       )
       .subscribe();
   }
