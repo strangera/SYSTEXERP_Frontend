@@ -7,7 +7,7 @@ export const columns: EditColumn[] = [
   { field: 'TABTYPE', header: '單據別', format: (value) => getSYS1000('TABTYPE', value) },
   { field: 'PUR_GUINo', header: '發票/收據編號' },
   { field: 'PUR_TaxType', header: '課稅別', format: (value) => getSYS1000('PUR_TaxType', value) },
-  { field: 'PUR_DirectType', header: '發票用途' },
+  { field: 'PUR_DirectType', header: '發票用途', format: (value) => getSYS1000('PUR_DirectType', value) },
   { field: 'PUR_Amt', header: '發票金額', format: formatAmount },
   { field: 'PUR_VoucherType', header: '發票格式' },
   { field: 'Rebate_Amt', header: '已折讓金額', format: formatAmount },

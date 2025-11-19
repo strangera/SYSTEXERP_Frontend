@@ -1,6 +1,8 @@
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service'; // 假設此路徑正確
+import { convertYYYYMMToDate } from '@shared/componentkit/table/table.model';
 import { SortMeta } from 'primeng/api';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -80,6 +82,7 @@ export interface ReturnDetailByDisNoQueryBody {
  * 另，NotRebate API 回傳中包含 VEN_NO 和 HOS_No。
  */
 export interface IReturnDetailData {
+  id: number;
   RJM_No: string; // 退貨單號
   APRV_Date: string; // 審核日期
   HOS_NAME: string; // 醫院/門市名稱
@@ -99,6 +102,7 @@ export interface IReturnDetailData {
  * 注意：此 API 回傳的 Rebate 金額欄位是 string 型別。
  */
 export interface IReturnDetailByDisNoData {
+  id: number;
   RJM_No: string; // 退貨單號
   APRV_Date: string; // 審核日期
   HOS_NAME: string; // 醫院/門市名稱
@@ -126,6 +130,7 @@ export interface RebateDetailOptionQueryBody {
  */
 export interface IInvoiceDetail {
   SeqNo: number; // 序號
+  id: number;
   PUR_GUINo: string; // 發票/收據號碼
   PUR_GUIDate: string; // 發票日期
   TABTYPE: string; // 單據別
@@ -136,6 +141,7 @@ export interface IInvoiceDetail {
   PUR_VoucherType: string; // 發票格式代碼
   PUR_Amt: number; // 發票金額
   Rebate_Amt: number; // 已折讓金額
+  Rebate_Name: string | null;    // 新增/輸入的折讓名稱
 
   // 應用層計算欄位 (從介面中移除，改在應用層定義或元件中計算)
   // Rebate_Amt_New?: number;
@@ -148,6 +154,7 @@ export interface IInvoiceDetail {
  * IInvoiceDetailByDisNo (用於 基於 DIS_No 查詢折讓單發票明細)
  */
 export interface IInvoiceDetailByDisNo {
+  id: number;
   SeqNo: number; // 序號
   PUR_GUINo: string; // 發票/收據號碼
   PUR_GUIDate: string; // 發票日期
@@ -156,8 +163,13 @@ export interface IInvoiceDetailByDisNo {
   PUR_TaxType: string; // 稅別
   PUR_TaxType_TEXT: string; // 稅別說明
   PUR_DirectType: string; // 發票用途
+  PUR_Amt: number; // 發票金額
   PUR_VoucherType: string; // 發票格式代碼
+  Rebate_Amt_Existed: number; // 已折讓金額
   Rebate_Amt: number; // 折讓金額
+  Rebate_Net: number;
+  Rebate_Tax: number;
+  Rebate_Name: string | null;    // 新增/輸入的折讓名稱
   // 注意: 此 API 回傳不包含 PUR_Amt
 }
 
@@ -170,6 +182,7 @@ export interface IInvoiceDetailByDisNo {
  * insertTLS55030 - 折讓單明細
  */
 export interface RebateDetailPayload {
+  id: number;
   PUR_GUINo: string;
   PUR_GUIDate: string;
   TABTYPE: string;
@@ -186,6 +199,7 @@ export interface RebateDetailPayload {
  * insertTLS55030 - 退貨明細
  */
 export interface ReturnDetailPayload {
+  id: number;
   EVENT_ID: string; // 應為 RJM_No 或是其他唯一識別碼
   Rebate_Amt: number;
   Rebate_Net: number;
@@ -258,6 +272,7 @@ export class Tls55030Service {
 
   constructor(
     private readonly http: HttpClient,
+    private readonly datePipe: DatePipe
   ) { }
 
   /**
@@ -267,7 +282,16 @@ export class Tls55030Service {
    * @param body 查詢參數
    */
   queryTLS55030(body: Tls55030QueryBody): Observable<ApiResponse<Tls55030ListData[]>> {
-    return this.http.post<ApiResponse<Tls55030ListData[]>>(`${this.apiUrl}/queryTLS55030`, body);
+    return this.http.post<ApiResponse<Tls55030ListData[]>>(`${this.apiUrl}/queryTLS55030`, body).pipe(
+      map(response => {
+        // 將回傳的金額欄位從 string 轉換為 number
+        const convertedData = response.Data.map(item => ({
+          ...item,
+          ACP_YYYYMM: this.datePipe.transform(convertYYYYMMToDate(item.ACP_YYYYMM), 'yyyy/MM') || '',
+        }));
+        return { ...response, Data: convertedData };
+      })
+    )
   }
 
   /**
@@ -324,15 +348,28 @@ export class Tls55030Service {
   }
 
   /**
-   * @method updateTLS55030 (新增方法)
-   * 執行折讓單的更新操作
-   * POST /TLS0000/TLS5000/updateTLS55030
-   * @param body 包含要更新的折讓單明細
-   * @returns Observable<ApiResponse<number>> 回傳狀態碼 (0 代表成功)
+   * @method updateTLS55030
+   * 執行發票折讓單的新增操作
+   * POST /TLS0000/TLS5000/insertTLS55030
+   * @param body 包含折讓與退貨明細的更新資料
+   * @returns Observable<ApiResponse<Tls55030InsertResponse>> 回傳包含 DIS_No 的物件
    */
-  updateTLS55030(body: Tls55030UpdateBody): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(
+  updateTLS55030(body: Tls55030InsertBody): Observable<ApiResponse<Tls55030InsertResponse>> {
+    return this.http.post<ApiResponse<Tls55030InsertResponse>>( // 回傳型別更新
       `${this.apiUrl}/updateTLS55030`,
+      body
+    );
+  }
+
+  /**
+   * @method deleteTLS55030
+   * 執行發票折讓單的新增操作
+   * POST /TLS0000/TLS5000/deleteTLS55030
+   * @param body 包含折讓與退貨明細的更新資料
+   */
+  deleteTLS55030(body: { DIS_Nos: string[] }): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>( // 回傳型別更新
+      `${this.apiUrl}/deleteTLS55030`,
       body
     );
   }

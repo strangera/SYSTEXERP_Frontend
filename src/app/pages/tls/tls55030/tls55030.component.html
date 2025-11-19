@@ -69,7 +69,8 @@
 </div>
 <div class="card">
   <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
-    [queryFunction]="tls55030Service.queryTLS55030.bind(tls55030Service)" [loading]="loading" [showDelete]="false">
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" (delete)="onDelete($event)" [showCheckBox]="true"
+    [queryFunction]="tls55030Service.queryTLS55030.bind(tls55030Service)" [loading]="loading"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
   </app-table-report>
 </div>

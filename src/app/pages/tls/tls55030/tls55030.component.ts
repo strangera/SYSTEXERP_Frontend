@@ -1,29 +1,28 @@
-import { Tls55030ListData, Tls55030QueryBody, Tls55030Service } from './../../../service/api/tls/tls55030.service';
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
+import { Column } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
-import { AsyncPipe } from '@angular/common';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { Tls55030ListData, Tls55030QueryBody, Tls55030Service } from './../../../service/api/tls/tls55030.service';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 
 @Component({
   selector: 'app-tls55030',
   templateUrl: './tls55030.component.html',
   standalone: true,
-  imports: [TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
+  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
 })
 export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -51,11 +50,12 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
   PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType');
   tblUserOptions = this.dropdown.queryTblUser();
   data: Tls55030ListData[] = [];
+  selectedItems: Tls55030ListData[] = [];
   totalRecords = 0;
   lastQueryBody: Tls55030QueryBody | null = null;
   columns: Column[] = [
     { field: 'DIS_No', header: '折讓單維護編號' },
-    { field: 'ACP_YYYYMM', header: '結帳年月', format: formatYYYYMM },
+    { field: 'ACP_YYYYMM', header: '結帳年月' },
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'TABTYPE', header: '單據種類', format: (v) => getSYS1000('TABTYPE', v) },
     { field: 'PUR_VoucherType', header: '格式' },
@@ -79,6 +79,15 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
         this.lastQueryBody = frm.value;
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       })
+    });
+  }
+  onDelete(event: Tls55030ListData[]) {
+    // "DIS_Nos":string[]
+    const DIS_Nos = event.map(v => v.DIS_No);
+    this.tls55030Service.deleteTLS55030({ DIS_Nos }).subscribe(() => {
+      this.messageService.successBubble('刪除成功');
+      this.onSubmit(this.queryForm);
+      this.selectedItems = [];
     });
   }
 }
