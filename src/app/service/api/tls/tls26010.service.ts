@@ -12,6 +12,7 @@ import { environment } from 'src/environments/environment';
 const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
+// 預購活動檔期設定
 export class TLS26010Service {
   private readonly d = (() => {
     const n = new Date(), y = n.getFullYear(), m = n.getMonth();
@@ -117,6 +118,7 @@ export class TLS26010Service {
       take(1),
       tap(res => {
         this.ecrOptions.set(res.Data);
+        console.log('收銀機號查詢 request 💡:', query);
         this.logger.debug(`收銀機號查詢結果:`, [res]);
       }),
       finalize(() => this.ecrLoading.set(!1)),
