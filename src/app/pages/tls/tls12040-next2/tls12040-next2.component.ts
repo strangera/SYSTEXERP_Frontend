@@ -1396,6 +1396,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     } else {
       // 其他欄位變更的狀態處理
       this.updateItemStatus(rowData);
+
+      // 關鍵新增：如果是 discount 項目的日期欄位變更，需要同步到 level 的 contract_period
+      const originalType = rowData._originalType || this.selectedSettingTab;
+      if (originalType === 'discount' && isDateField) {
+        this.syncDiscountDateToLevel(rowData);
+      }
     }
 
     // 找到父項目並同步數據
@@ -1410,7 +1416,42 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
-   * 同步 Discount 的選擇狀態到 Level
+   * 同步 Discount 的日期到 Level 的 contract_period
+   * 當 Discount 中的日期欄位變更時，更新 Level 中對應項目的合約期間顯示
+   */
+  private syncDiscountDateToLevel(discountItem: ChargeDetailBusinessModel): void {
+    console.log('📅 同步 Discount 日期到 Level contract_period:', {
+      cag_barcode: discountItem.cag_barcode,
+      tlt_bdate: discountItem.tlt_bdate,
+      tlt_edate: discountItem.tlt_edate
+    });
+
+    // 找到該 discount 項目所屬的父項目
+    const parentItem = this.findParentOfDetailItem(discountItem);
+    if (!parentItem) {
+      console.warn('找不到父項目，無法同步日期到 Level');
+      return;
+    }
+
+    // 在 LevelChargeDetails 中找到對應的項目（相同 cag_barcode）
+    if (parentItem.LevelChargeDetails) {
+      parentItem.LevelChargeDetails.forEach((levelItem: LevelChargeDetailBusinessModel) => {
+        if (levelItem.cag_barcode === discountItem.cag_barcode) {
+          // 同步合約期間（從 Discount 的日期計算）
+          const contractPeriod = this.formatContractPeriod(discountItem.tlt_bdate, discountItem.tlt_edate);
+          (levelItem as any).contract_period = contractPeriod;
+
+          console.log(`  ✓ 更新 Level 項目的 contract_period: ${levelItem.cag_barcode} -> ${contractPeriod}`);
+        }
+      });
+    }
+
+    // 觸發變更檢測，讓 UI 即時更新
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * 同步 Discount 的資料到 Level
    * 當 Discount 中的項目被勾選/取消勾選時，Level 中對應的項目也要同步
    */
   private syncDiscountSelectionToLevel(discountItem: ChargeDetailBusinessModel, isSelected: boolean): void {
@@ -1433,6 +1474,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           // 同步選擇狀態
           levelItem.is_selected = isSelected;
 
+          // 同步合約期間（從 Discount 的日期計算）
+          const contractPeriod = this.formatContractPeriod(discountItem.tlt_bdate, discountItem.tlt_edate);
+          (levelItem as any).contract_period = contractPeriod;
+
           // 更新狀態
           if (isSelected && levelItem._status === 'deleted') {
             // 如果重新勾選，恢復狀態
@@ -1442,7 +1487,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
             // Level 項目只有在 Discount 中勾選時才顯示，所以取消勾選就隱藏了
           }
 
-          console.log(`  ✓ 同步 Level 項目: ${levelItem.cag_barcode}, is_selected=${levelItem.is_selected}`);
+          console.log(`  ✓ 同步 Level 項目: ${levelItem.cag_barcode}, is_selected=${levelItem.is_selected}, contract_period=${contractPeriod}`);
         }
       });
     }
@@ -1592,9 +1637,17 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
             processedItem.LevelChargeDetails = this.createDefaultLevelItems(processedItem);
           }
 
+          // 建立 Discount 項目的對應關係（cag_barcode -> discount item）
+          const discountMap = new Map<string, ChargeDetailBusinessModel>();
+          (processedItem.ChargeDetails || [])
+            .filter(discount => discount._status !== 'deleted')
+            .forEach(discount => {
+              discountMap.set(discount.cag_barcode, discount);
+            });
+
           // 取得 Discount 中已勾選的折扣代碼
-          const selectedDiscountBarcodes = (processedItem.ChargeDetails || [])
-            .filter(discount => discount.is_selected && discount._status !== 'deleted')
+          const selectedDiscountBarcodes = Array.from(discountMap.values())
+            .filter(discount => discount.is_selected)
             .map(discount => discount.cag_barcode);
 
           console.log('📊 Discount 中已勾選的折扣代碼:', selectedDiscountBarcodes);
@@ -1608,17 +1661,27 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
               return isNotDeleted && isSelectedInDiscount;
             })
             .map(detail => {
-              // 自動勾選這些項目
+              // 從 Discount 中找到對應的項目，取得日期資訊
+              const correspondingDiscount = discountMap.get(detail.cag_barcode);
+              const contractPeriod = this.formatContractPeriod(
+                correspondingDiscount?.tlt_bdate,
+                correspondingDiscount?.tlt_edate
+              );
+
+              // 自動勾選這些項目，並加入 contract_period
               const mappedDetail = {
                 ...detail,
                 _originalType: 'level',
-                is_selected: true  // 關鍵: 自動勾選
+                is_selected: true,  // 關鍵: 自動勾選
+                contract_period: contractPeriod  // 新增: 合約期間
               };
 
               // 同步回 LevelChargeDetails
               const levelIndex = processedItem.LevelChargeDetails.findIndex((item: LevelChargeDetailBusinessModel) => item.id === detail.id);
               if (levelIndex !== -1) {
                 processedItem.LevelChargeDetails[levelIndex].is_selected = true;
+                // 也將 contract_period 同步回去
+                (processedItem.LevelChargeDetails[levelIndex] as any).contract_period = contractPeriod;
               }
 
               return mappedDetail;
@@ -1876,6 +1939,23 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private formatDateString(dateInput: any): string {
     //  直接使用日期工具類
     return DateUtils.toDateString(dateInput) || DateUtils.toDateString(new Date());
+  }
+
+  /**
+   * 格式化合約期間顯示
+   * @param startDate 起始日期
+   * @param endDate 結束日期
+   * @returns 格式化的合約期間字串，例如: "2025-10-28 ~ 2025-10-31"
+   */
+  private formatContractPeriod(startDate: string | Date | null | undefined, endDate: string | Date | null | undefined): string {
+    const start = DateUtils.toDateString(startDate);
+    const end = DateUtils.toDateString(endDate);
+
+    if (!start || !end) {
+      return '';
+    }
+
+    return `${start} ~ ${end}`;
   }
 
   hasCommissionData(): boolean {
