@@ -94,7 +94,7 @@ export const formatYN = (value: string): string => {
 // 000,000,000 但 如果非數字 就回傳自己本身
 export const formatAmount2 = (val: number | string | null | undefined): string => {
   // 1. 檢查是否為 null 或 undefined，如果是，則回傳空字串 ' ' 或您希望顯示的值（例如 '-'）
-  if (val === null || val === undefined) {
+  if (val === null || val === undefined || val === '') {
     return ''; // 或 return '-'; 顯示破折號
   }
 

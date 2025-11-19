@@ -8,8 +8,6 @@ import { Fin55090Service, QueryFIN55090Request, QueryFIN55090Response } from '@s
 import { DropdownApiService } from '@service/utility/dropdown-api.service'; // 假設路徑
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component'; // 假設路徑
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component'; // 假設路徑
-import { formatAmount2 } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -18,23 +16,24 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component'; // 假設路徑
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component'; // 假設路徑
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component'; // 假設路徑
-import { EditColumn } from './../../../shared/componentkit/table-edit/table-edit.model'; // 假設路徑
 import { FileExportService } from './../../../shared/service/file-export.service'; // 假設路徑
+import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table.component';
 
 @Component({
   selector: 'app-fin55090',
   templateUrl: './fin55090.component.html',
   standalone: true,
   imports: [
-    ButtonModule, TableReportComponent, MenubarComponent, AccordionModule, AsyncPipe,
+    TableSubheaderGroupingComponent,
+    ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, RadiobuttonComponent,
     DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
   ]
 })
 export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    DateFrom: this.formBuilder.nonNullable.control('', [Validators.required]),
-    DateTo: this.formBuilder.nonNullable.control('', [Validators.required]),
+    DateFrom: this.formBuilder.nonNullable.control(new Date('2025-10-01'), [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(new Date('2025-10-31'), [Validators.required]),
     // 類別預設為 '0' (統制)
     Ledger_MD: this.formBuilder.nonNullable.control('0' as '0' | '1', [Validators.required]),
     // 部門/活動代碼為選填
@@ -46,27 +45,14 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
   });
   // 類別選項: '0'=統制(4碼), '1'=明細(全碼)
   Ledger_MDOptions = [
-    { label: '統制 (4碼)', value: '0' },
-    { label: '明細 (全碼)', value: '1' },
+    { label: '統制', value: '0' },
+    { label: '明細', value: '1' },
   ];
   // 部門選項 (Sys3100)
   OrgIdOptions = this.dropdownApi.querySys3100();
   // 活動代碼選項 (假設 API 為 querySys4001)
   ProjectNoOptions = this.dropdownApi.queryTALPORDERM_DropDownList();
-
   data: QueryFIN55090Response[] = [];
-
-  // 修正欄位映射，使用後端 API 回傳的實際欄位名稱 (QueryFIN55090Response)
-  columns: EditColumn[] = [
-    { field: 'STYPE_NAME', header: '科目名稱' },
-    { field: 'Cur_AMT', header: '本期交易金額', format: formatAmount2 },
-    { field: 'Cur_LTYPE_SUM', header: '合計', format: formatAmount2 },
-    { field: 'Cur_PERCENT', header: '百分比 (%)' },
-    { field: 'YTD_AMT', header: '累計交易金額', format: formatAmount2 },
-    { field: 'YTD_LTYPE_SUM', header: '累計合計', format: formatAmount2 },
-    { field: 'YTD_PERCENT', header: '累計百分比 (%)' }
-  ];
-
   historyRequestBody: QueryFIN55090Request = {} as QueryFIN55090Request;
   totalRecords = 0;
   footerData: QueryFIN55090Response | null = null;
@@ -100,7 +86,14 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
 
       this.fin55090Service.queryFIN55090(requestBody).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         // 資料最後一筆不要放進data
-        this.data = response.Data.slice(0, response.Data.length - 1);
+        this.data = response.Data.slice(0, response.Data.length - 1).map((item: any) => ({
+          ...item,
+          STYPE_NAME: (item.STYPE_ID || '') + ' ' + item.STYPE_NAME,
+          Cur_AMT: item.STYPE_ID ? (item.Cur_AMT ?? null) : '',
+          YTD_AMT: item.STYPE_ID ? (item.YTD_AMT ?? null) : '',
+          Cur_LTYPE_SUM: item.STYPE_ID ? '' : (item.Cur_LTYPE_SUM ?? null),
+          YTD_LTYPE_SUM: item.STYPE_ID ? '' : (item.YTD_LTYPE_SUM ?? null)
+        }));
         this.totalRecords = response.TotalCount - 1;
         // 資料最後一筆放進footerDate
         this.footerData = response.Data[response.Data.length - 1];
@@ -121,7 +114,7 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
     // 使用 fileExportService 統一處理檔案下載和 loading 狀態
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
-      '.' + 'pdf',              // 傳遞檔案副檔名
+      '.' + 'pdf', 			 // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     );
   }

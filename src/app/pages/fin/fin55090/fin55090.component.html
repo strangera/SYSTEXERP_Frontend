@@ -56,16 +56,18 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- Table Key: 使用程式編號，例如 'FIN55090' -->
+  <app-table-subheader-grouping [data]="data" [footerData]="footerData">
+  </app-table-subheader-grouping>
+</div>
+<!-- <div class="card">
   <app-table-report tableKey="FIN55090" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
     [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false" [loading]="loading"
     [queryFunction]="fin55090Service.queryFIN55090.bind(fin55090Service)" [footerData]="footerData">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <!-- 匯出 PDF 按鈕 -->
         <p-button styleClass="p-2" label="產出損益比較表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
           [disabled]="data.length === 0"></p-button>
       </div>
     </header>
   </app-table-report>
-</div>
+</div> -->
