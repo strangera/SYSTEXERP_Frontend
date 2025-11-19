@@ -136,6 +136,17 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: 'All_Counts', header: '小計', visible: true },
   ];
 
+  // 數量table
+  countData: any[] = [];
+  count_columns: Column[] = [ //數量table欄位
+    { field: 'contact_USR_No', header: '接洽人員代碼', visible: false },
+    { field: 'contact_USR_Name', header: '接洽人員', visible: true },
+    { field: 'count', header: '潛在客戶總數', visible: true },
+    { field: 'count2', header: '拜訪記錄次數', visible: true },
+  ];
+  count_totalRecords = 0;// 分頁和排序參數 // 排序需要
+
+
   selectedItems: Customer_interview[] = [];// 多選項目
   // ----------------------------------------------------------------
   constructor(
@@ -159,6 +170,39 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
           if (response.Status === '0000') {
             this.interview_data = response.Data || [];
             console.log('Result', response.Data);
+            // ---計算筆數---
+            // 原本資料
+            const data = response.Data || [];
+
+            // Map: key = contact_USR_No, value = { count, contact_USR_Name }
+            const groupMap = new Map<string, { count: number; name: string }>();
+
+            data.forEach((item: { contact_USR_No: string; contact_USR_Name: string; }) => {
+              const key = item.contact_USR_No;
+              const name = item.contact_USR_Name;
+
+              if (!groupMap.has(key)) {
+                // 第一次出現 → 建立
+                groupMap.set(key, { count: 1, name });
+              } else {
+                // 之後出現 → count++
+                const entry = groupMap.get(key)!;
+                entry.count++;
+              }
+            });
+
+            // 轉成 table 需要的陣列格式
+            this.countData = Array.from(groupMap.entries()).map(([contact_USR_No, info]) => ({
+              contact_USR_No,
+              contact_USR_Name: info.name,
+              count: info.count,
+              count2: 0,
+            }));
+
+            this.count_totalRecords = this.countData.length;
+
+            console.log("countData:", this.countData);
+            // ---計算筆數---
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

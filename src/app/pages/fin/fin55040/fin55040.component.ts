@@ -126,7 +126,8 @@ export class FIN55040Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      console.log('api尚未提供')
+      console.log('api尚未提供');
+      this.loading = false;
     });
   }
 }
