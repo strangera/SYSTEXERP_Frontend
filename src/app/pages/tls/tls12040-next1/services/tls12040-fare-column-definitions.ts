@@ -133,10 +133,8 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_bdate',
         header: '起始年月',
         type: 'date',
-
         dateFormat: 'year-month',
         required: true,
-
         // defaultValueFunction: () => {
         //   if ((this as any)?._isCopiedItem) {
         //     return null; // 保持現有值
@@ -191,7 +189,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-
+        hidden: true,
         options: [], // 需要動態設定
         required: true,
 
@@ -274,10 +272,8 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_edate',
         header: '扣款結束年月',
         type: 'date',
-
         dateFormat: 'year-month',
         required: true,
-
         // defaultValueFunction: () => {
         //   if ((this as any)?._isCopiedItem) {
         //     return null; // 保持現有值
@@ -520,7 +516,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-
+        hidden: true,
         options: [], // 需要動態設定
         required: true,
 
@@ -703,7 +699,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-
+        hidden: true,
         options: [], // 需要動態設定
         required: true,
 
@@ -763,10 +759,8 @@ export class TLS12040FareColumnDefinitions {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
-
         dateFormat: 'year-month',
         required: true,
-
         // defaultValueFunction: () => {
         //   const contractInfo = contractInfoData[0];
         //   if (contractInfo?.tlt_contract_bdate) {
@@ -829,7 +823,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
-
+        hidden: true,
         options: [], // 需要動態設定
         required: true,
 
