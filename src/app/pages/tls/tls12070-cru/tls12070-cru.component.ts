@@ -1,18 +1,31 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { Customer_interview, Willing_data } from '../tls12070/tls12070.component';
+import { Customer_interview } from '../tls12070/tls12070.component';
+
+interface WillingDetail {
+  id: number; // 主鍵ID
+  VEN_Name: string; // 廠商名稱
+  contact_Date: string; // 訪談日期
+  contact_USR_Name: string; // 接洽人員
+  contact_record: string; // 洽談重點
+  contact_remarks: string; // 備註
+  willing_level: string; // 意願等級
+}
 
 @Component({
   selector: 'app-tls12070-cru',
@@ -38,6 +51,7 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
   dataForm = this.formBuilder.nonNullable.group({
     id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
     // Customer_interview
+    contact_USR_No: [''], // 訪談人員代號
     contact_USR_Name: [''], // 訪談人員姓名
     VEN_Name: [''], // 廠商名稱
     contact_Date: [''], // 訪談日期
@@ -46,20 +60,37 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
     contact_remarks: [''], // 備註
   });
   //
-  willing_data: Willing_data[] = [];
+  willing_data: WillingDetail[] = [];
   willing_columns: Column[] = [ //意願報表欄位
     { field: 'contact_USR_Name', header: '接洽人員', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'contact_Time', header: '訪談時間', visible: true },
-    { field: 'willing_level', header: '意願等級', visible: true },
+    { field: 'contact_Date', header: '訪談時間', visible: true, format: formatDate },
     { field: 'contact_record', header: '洽談重點', visible: true },
     { field: 'contact_remarks', header: '備註', visible: true },
+    {
+      field: 'willing_level', header: '意願等級', visible: true,
+      format: (value: string) =>
+        this.willing_options.find((option) => option.value === value)?.label ||
+        value
+    },
   ];
+
+  willing_options: option[] = [
+    { label: '?/未確認', value: 'N' },
+    { label: 'A/交涉中(基本合意)', value: 'A' },
+    { label: 'B/交涉中(反應良好)', value: 'B' },
+    { label: 'C/交涉中(反應不好)', value: 'C' },
+    { label: 'D/保留', value: 'D' },
+    { label: 'F/無意進駐', value: 'F' }
+  ]; // 意願等級下拉選單資料
+
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   selectedItems: Customer_interview[] = [];// 多選項目
   // ----------------------------------------------------------------
   constructor(
     private readonly dropDownListService: DropDownListService,
+    private readonly tls12070Service: Tls12070Service,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -69,10 +100,32 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
     console.log('讀取資料', this.dataForm.value);
 
     // 進來就用id讀取資料
-    const readID = this.dataForm.get('id')?.value
-    if (readID) {
-      console.log('取得id', readID);
+    const contact_USR_No = this.dataForm.get('contact_USR_No')?.value
+    if (contact_USR_No) {
+      console.log('取得contact_USR_No', contact_USR_No);
+      this.loadDetail(contact_USR_No);
     }
+  }
+
+  loadDetail(contact_USR_No: string) {
+    this.tls12070Service.queryTLS12070_Detail({ 'contact_USR_No': contact_USR_No }).pipe(untilDestroyed(this)).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.willing_data = response.Data || [];
+          console.log('意願明細Result', response.Data);
+          this.totalRecords = response.TotalCount || response.Data.length;
+        } else {
+          console.error('API error:', response.Status, response.Message);
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
   }
 
   onSubmit(frm: FormGroup) {
@@ -83,8 +136,6 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
       this.messageService.unblockUi();
       return;
     }
-
-
 
     const formValue = frm.getRawValue();
     switch (this.crudstatus) {

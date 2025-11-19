@@ -172,7 +172,12 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
       this.tls23060Service
         .queryTLS23060(payload)
-        .pipe(finalize(() => { this.loading = false; this.messageService?.unblockUi(); }))
+        .pipe(
+          finalize(() => {
+            this.loading = false;
+            this.messageService?.unblockUi();
+          }),
+        )
         .subscribe({
           next: (res: any) => {
             const wrapper = this.pickWrapper(res?.Data);
@@ -183,9 +188,20 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
               _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
             }));
 
-            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+            this.totalRecords =
+              typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
 
             this.footerData = this.buildFooterFromPack(wrapper);
+
+            // ⭐ 調整 historyRequestBody.pageSize：讓 TableReport 的排序/虛擬捲動判斷用「實際筆數」
+            if (this.historyRequestBody) {
+              const realPageSize =
+                this.data.length || this.historyRequestBody.pageSize || 30;
+              this.historyRequestBody = {
+                ...this.historyRequestBody,
+                pageSize: realPageSize,
+              };
+            }
           },
           error: () => {
             this.data = [];
@@ -197,13 +213,55 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   // ===== 主表：提供給 app-table-report 的查詢函式 =====
-  public queryTLS23060ForReport = (body: any) =>
-    this.tls23060Service
+  public queryTLS23060ForReport = (body: any) => {
+    const formVal = this.queryForm.getRawValue() as any;
+
+    // 1. 固定從表單取查詢條件（避免 body 裡殘留舊條件）
+    const basePayload: any = {
+      TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
+      rece_yn: formVal?.rece_yn ?? undefined,
+      ECR_No:
+        Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length
+          ? formVal.ECR_No
+          : undefined,
+      tlt_no:
+        Array.isArray(formVal?.tlt_no) && formVal.tlt_no.length
+          ? formVal.tlt_no
+          : undefined,
+      tlt_building: formVal?.tlt_building ?? undefined,
+      tlt_floor:
+        Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length
+          ? formVal.tlt_floor
+          : undefined,
+      org_id:
+        Array.isArray(formVal?.org_id) && formVal.org_id.length
+          ? formVal.org_id
+          : undefined,
+    };
+
+    // 2. pageIndex / SortBy（優先 body，其次 form，再來 default）
+    const formPageIndex = Number(formVal?.pageIndex) || 1;
+    const pageIndex =
+      body?.pageIndex != null ? Number(body.pageIndex) : formPageIndex;
+
+    const sortBy =
+      body?.SortBy && body.SortBy.length
+        ? body.SortBy
+        : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
+        ? formVal.SortBy
+        : this.defaultSort;
+
+    const pagingAndSort = {
+      pageSize: 30,
+      pageIndex,
+      SortBy: sortBy,
+    };
+
+    return this.tls23060Service
       .queryTLS23060({
-        ...body,
-        pageSize: 30,
-        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+        ...basePayload,
+        ...pagingAndSort,
       })
       .pipe(
         map((res: any) => {
@@ -215,14 +273,22 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
             _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
           }));
 
-          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+          let totalCount =
+            typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+          // ⭐ 如果是第二頁以上，但這一頁一筆都沒有，視為「到底了」
+          //   把 totalCount 壓成目前已載入的筆數，避免一直打 pageIndex=2
+          if (pageIndex > 1 && rows.length === 0) {
+            totalCount = this.data.length;
+          }
 
           const grand = this.buildFooterFromPack(wrapper);
           this.footerData = grand;
 
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        })
+        }),
       );
+  };
 
   // ===== 點主表「明細」→ 組明細查詢 body，打 /queryTLS23060_Detail =====
   override onDetail(row: any): void {
@@ -240,17 +306,17 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       SortBy: [{ field: 'TXN_Date', order: 1 as 1 }],
 
       TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(formVal?.TXN_DateEnd),
-      rece_yn:       formVal?.rece_yn ?? undefined,
+      TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
+      rece_yn: formVal?.rece_yn ?? undefined,
 
       // 用被點那列的值
-      ECR_No:  row?.ECR_No ?? undefined,
-      tlt_no:  row?.tlt_no ?? undefined,
+      ECR_No: row?.ECR_No ?? undefined,
+      tlt_no: row?.tlt_no ?? undefined,
 
       // 下面三個是陣列型別
       tlt_building: formVal?.tlt_building ?? [],
-      tlt_floor:    Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
-      org_id:       Array.isArray(formVal?.org_id) ? formVal.org_id : [],
+      tlt_floor: Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
+      org_id: Array.isArray(formVal?.org_id) ? formVal.org_id : [],
     };
 
     // 給 app-table-report 的 lastQueryBody 用
@@ -278,14 +344,15 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         // 保底 pageIndex / pageSize / SortBy
         pageSize: Number(body?.pageSize) || 30,
         pageIndex: Number(body?.pageIndex) || 1,
-        SortBy: Array.isArray(body?.SortBy) && body.SortBy.length
-          ? body.SortBy
-          : [{ field: 'TXN_Date', order: 1 as 1 }],
+        SortBy:
+          Array.isArray(body?.SortBy) && body.SortBy.length
+            ? body.SortBy
+            : [{ field: 'TXN_Date', order: 1 as 1 }],
         TXN_DateStart: this.toDateOnly(
-          body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart
+          body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart,
         ),
         TXN_DateEnd: this.toDateOnly(
-          body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd
+          body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd,
         ),
       })
       .pipe(
@@ -315,7 +382,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
           this.dialogData = rows;
 
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        })
+        }),
       );
 
   onDialogClose(v: boolean): void {
@@ -507,7 +574,8 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     if (val instanceof Date && !isNaN(val.getTime())) {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
-      const d = String(val.getDate()).padStart(2, '0');
+      const d = String(val.getDate()).
+      padStart(2, '0');
       return `${y}/${m}/${d}`;
     }
     const s = String(val);

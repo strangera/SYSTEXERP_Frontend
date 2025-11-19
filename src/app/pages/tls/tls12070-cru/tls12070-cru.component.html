@@ -7,7 +7,7 @@
         <div class="col-13">
             <app-table tableKey="TLS12070" [data]="willing_data" [columns]="willing_columns"
                 [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCheckBox]="false"
-                [showManage]="false" [showEdit]="false" [showDelete]="false" dataKey="id"
+                [showManage]="false" [showEdit]="false" [showDelete]="false" dataKey="id" [totalRecords]="totalRecords"
                 [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"></app-table>
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">
