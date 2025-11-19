@@ -1,8 +1,8 @@
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
-import { HttpClient, HttpResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
 
 // --- TLS2C010 查詢參數 Model 定義 ---
 export interface TLS2C010QueryRequest extends BaseQueryRequest {
@@ -14,6 +14,11 @@ export interface TLS2C010ExportRequest {
   FileName: string;
   ReportTitle: string;
   queryTLS2C010Request: TLS2C010QueryRequest;
+}
+
+// --- TLS2C010 鎖定/反鎖定請求參數 Model 定義 ---
+export interface TLS2C010LockRequest {
+  TXN_Date: string;               // 銷售日期
 }
 
 @Injectable({
@@ -61,5 +66,15 @@ export class TLS2C010Service {
         responseType: 'blob'
       }
     );
+  }
+
+  // 執行收銀確認(暫存傳票)鎖定
+  lockTLS2C010(params: TLS2C010LockRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/LockTLS2C010`, params);
+  }
+
+  // 執行收銀確認(暫存傳票)反鎖定
+  unlockTLS2C010(params: TLS2C010LockRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/UnLockTLS2C010`, params);
   }
 }

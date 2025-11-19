@@ -7,16 +7,16 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { ExportLabelService } from '@service/utility/exportLabel.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN11010Data, FIN11010QueryRequest, FIN11010Service, FIN11010UpdateStatusRequest } from '../../../service/api/fin/fin11010.service';
+import { FIN11010Data, FIN11010Service, FIN11010UpdateStatusRequest } from '../../../service/api/fin/fin11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AddButton, Column, createPaginationConfig, formatYN } from '../../../shared/componentkit/table/table.model';
 import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin11010',
@@ -30,9 +30,9 @@ import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface
     ReactiveFormsModule,
     InputTextComponent,
     MultiSelectComponent,
-    CalendarRangeComponent,
     TableComponent,
     TranslateModule,
+    YearMonthComponent
   ]
 })
 export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> implements OnInit {
@@ -109,14 +109,8 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    const queryRequest: FIN11010QueryRequest = {
-      ...frm.value,
-      // 年月格式處理
-      REP_GUIYM_start: frm.value.REP_GUIYM_start ? this.datePipe.transform(frm.value.REP_GUIYM_start, 'yyyyMM') : '',
-      REP_GUIYM_end: frm.value.REP_GUIYM_end ? this.datePipe.transform(frm.value.REP_GUIYM_end, 'yyyyMM') : '',
-    };
     this.handleSubmit(frm, () => {
-      this.fin11010Service.queryFIN11010(queryRequest)
+      this.fin11010Service.queryFIN11010(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;

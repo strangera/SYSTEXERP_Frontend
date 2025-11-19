@@ -1,11 +1,11 @@
+import { NgClass, NgIf } from '@angular/common'; // 使用 NgClass 替代原始的 class.ng-invalid 綁定
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgClass, NgIf } from '@angular/common'; // 使用 NgClass 替代原始的 class.ng-invalid 綁定
+import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
+import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
-import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 
 @Component({
   selector: 'app-year-month',
@@ -25,6 +25,8 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
   @Input() submitted = false;
   // 主控項預期接收和輸出 'YYYYMM' 字串
   @Input() control!: FormControl;
+  // 偶數月模式
+  @Input() evenMonth = false;
 
   // 子控項，yearControl 最好設定為 Date 物件以符合 p-calendar 的行為
   yearControl = new FormControl<Date | string | null>(null);
@@ -41,6 +43,16 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
 
   ngOnInit(): void {
     this.initControl(this.control);
+    if (this.evenMonth) {
+      this.months = [
+        { label: '01月~02月', value: '02' },
+        { label: '03月~04月', value: '04' },
+        { label: '05月~06月', value: '06' },
+        { label: '07月~08月', value: '08' },
+        { label: '09月~10月', value: '10' },
+        { label: '11月~12月', value: '12' },
+      ];
+    }
     const yyyymm = this.control.value;
     if (typeof yyyymm === 'string' && yyyymm.length === 6) {
       const yearString = yyyymm.substring(0, 4);
