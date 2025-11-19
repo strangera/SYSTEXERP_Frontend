@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal, WritableSignal } from '@angular/core';
-import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
+import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -12,6 +12,7 @@ import { environment } from 'src/environments/environment';
 const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
+// 預購活動檔期設定
 export class TLS26010Service {
   private readonly d = (() => {
     const n = new Date(), y = n.getFullYear(), m = n.getMonth();
@@ -117,6 +118,7 @@ export class TLS26010Service {
       take(1),
       tap(res => {
         this.ecrOptions.set(res.Data);
+        console.log('收銀機號查詢 request 💡:', query);
         this.logger.debug(`收銀機號查詢結果:`, [res]);
       }),
       finalize(() => this.ecrLoading.set(!1)),
@@ -130,7 +132,8 @@ export class TLS26010Service {
       take(1),
       tap(res => {
         this.tltOptions.set(res.Data);
-        this.logger.debug(`專櫃編號查詢結果:`, [res]);
+        console.log('專櫃編號查詢 request 💡:', query);
+        console.log('專櫃編號查詢 response:', res.Data);
       }),
       finalize(() => this.tltLoading.set(!1))
     ).subscribe();

@@ -1,7 +1,7 @@
 import { NgIf } from '@angular/common';
 import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -28,7 +28,7 @@ import { EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TltItem } from '../t
   selector: 'app-tls26010-cru',
   templateUrl: './tls26010-cru.component.html',
   styleUrl: './tls26010-cru.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     NgIf,
     FileUploadModule,
@@ -77,7 +77,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public readonly ecrTableFiltered = signal<EcrItem[]>([]);
   public readonly tltTableFiltered = signal<TltItem[]>([]);
-  public readonly dialogVisible = signal<'ecr' | 'tlt' | false>(!1);
+  public readonly dialogVisible = signal<'ecr' | 'tlt' | false>(false);
   public readonly originalDetailData = signal<TLS26010Detail | undefined>(void 0);
   public dialogSelectedData: (EcrItem | TltItem)[] = [];
 
@@ -161,7 +161,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.tltTableFiltered.set(detail.talent_list.map(item => ({ ...item, Status: item.Status || ItemOperationStatus.Original })));
     this.logger.debug(`TLS26010DetailEffect:`, [this.ecrTableFiltered(), this.tltTableFiltered(), this.dataForm.value]);
     this.TLS26010DetailEffect.destroy(); // 只需執行一次
-  }, { allowSignalWrites: !0 });
+  }, { allowSignalWrites: true });
 
   public readonly dialogData = computed(() =>
     this.dialogVisible() === 'ecr' ? this.service.ecrOptions() :
@@ -202,7 +202,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public readonly dialogLoading = computed(() => {
     return this.dialogVisible() === 'ecr' ? this.service.ecrLoading() :
-      this.dialogVisible() === 'tlt' ? this.service.tltLoading() : !1;
+      this.dialogVisible() === 'tlt' ? this.service.tltLoading() : false;
   });
 
   public readonly loadingEffect = effect(() => {
@@ -266,15 +266,35 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       })
     ).subscribe();
 
+    // 2025/11/09 eugene:
+    // 新增時如果變動 上面日期 專櫃資料清掉 tltTableData
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.controls.pod_sdate.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.tltTableFiltered.set([]);
+        });
+
+      this.dataForm.controls.pod_edate.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.tltTableFiltered.set([]);
+        });
+    }
+
     this.service.loadSYS3800();
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
 
-    // 使用 map + 結構賦值，避免在迴圈中建立暫時物件
-    const ecrInit = this.service.ecrOptions();
-    this.ecrTableFiltered.set(ecrInit.map(({ ecr_no, ecr_name, tlt_no, tlt_name }): EcrItem => (
-      { ecr_no, ecr_name, tlt_no, tlt_name, Status: ItemOperationStatus.Original }
-    )));
+    // 2025/11/09 eugene: 
+    // 新增模式時，不要初始化  tltTableFiltered
+    if (this.crudstatus !== CRUDStatus.Create) {
+      // 使用 map + 結構賦值，避免在迴圈中建立暫時物件
+      const ecrInit = this.service.ecrOptions();
+      this.ecrTableFiltered.set(ecrInit.map(({ ecr_no, ecr_name, tlt_no, tlt_name }): EcrItem => (
+        { ecr_no, ecr_name, tlt_no, tlt_name, Status: ItemOperationStatus.Original }
+      )));
+    }
 
     const tltInit = this.service.tltOptions();
     this.tltTableFiltered.set(tltInit.map((item): TltItem => ({
@@ -365,12 +385,15 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       };
 
       this.logger.debug(`submit:`, [d, payload]);
+      // eugene:
+      // SA需求更新: 編輯/查看模式用可編輯單筆向下table
+      // 唯一條件是 活動設定時需大於今日
       (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload, this.tableData))
         .pipe(
           tap(() => { if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel(); }),
           finalize(() => {
             if (!this.dialogVisible()) return;
-            this.dialogVisible.set(!1);
+            this.dialogVisible.set(false);
             this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
           })).subscribe({
             next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
@@ -387,7 +410,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     if (this.crudstatus === CRUDStatus.Create) {
       this.ecrTableFiltered.set((this.df().ecr_nos.value || []).map(item => <EcrItem>{ ...item, Status: ItemOperationStatus.New }));
       this.tltTableFiltered.set((this.df().tlt_nos.value || []).map(item => <TltItem>{ ...item, Status: ItemOperationStatus.New }));
-      return void this.onVisibleChange(!1); // 關閉對話框並清除資料;
+      return void this.onVisibleChange(false); // 關閉對話框並清除資料;
     }
 
     if (dialog === 'ecr') {
@@ -404,19 +427,19 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.logger.debug(`TLT Dialog Submit:`, [originalData, changedData, this.tltTableData()]);
     }
 
-    this.onVisibleChange(!1); // 關閉對話框並清除資料
+    this.onVisibleChange(false); // 關閉對話框並清除資料
   }
 
   /** 開啟對話框 */
   public onOpenDialog(type: 'ecr' | 'tlt'): void {
     this.logger.debug(`onOpenDialog:`, [type, this.dataForm.value]);
     this.dialogVisible.set(type);
-    this.submitted = !1;
+    this.submitted = false;
   };
 
   /** 對話框顯示狀態變更處理 */
   public onVisibleChange(visible: boolean | 'ecr' | 'tlt'): void {
-    if (this.dialogVisible()) return void this.dialogVisible.set(!1);
+    if (this.dialogVisible()) return void this.dialogVisible.set(false);
     this.dataForm.patchValue({
       sys3800: [],
       sys3900: [],
@@ -479,5 +502,37 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.dependencyChangeSubject.complete();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  //eugene: 新增刪除控制(新增模式全部勾選刪除，編輯維持舊的模式)
+  public readonly isRowSelectableWrapper = (rowData: TLS26010Data) =>
+    this.crudstatus === CRUDStatus.Create ? true : this.service.isRowSelectable(rowData);
+
+  //eugene: 刪除子項目table
+  // 刪除項目(到處都有倉別的資料，先不允許刪除)
+  public onDelete(data: any, tableType: 'ecr' | 'tlt'): void {
+    if (tableType === 'ecr') {
+      // 刪除 ecr Table 對應資料
+      const updatedEcrList = this.ecrTableFiltered().map(item => {
+        if (Array.isArray(data)) {
+          return data.some(d => d.ecr_no === item.ecr_no)
+            ? { ...item, Status: ItemOperationStatus.Deleted }
+            : item;
+        }
+        return item;
+      });
+      this.ecrTableFiltered.set(updatedEcrList);
+    } else if (tableType === 'tlt') {
+      // 刪除 tlt Table 對應資料
+      const updatedTltList = this.tltTableFiltered().map(item => {
+        if (Array.isArray(data)) {
+          return data.some(d => d.tlt_no === item.tlt_no)
+            ? { ...item, Status: ItemOperationStatus.Deleted }
+            : item;
+        }
+        return item;
+      });
+      this.tltTableFiltered.set(updatedTltList);
+    }
   }
 }
