@@ -1,18 +1,21 @@
+import { DatePipe, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin11200Service } from '@service/api/fin/fin11200.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { Button, ButtonDirective } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { FIN11210Service, FIN11210Data } from '../../../service/api/fin/fin11210.service';
+import { FIN11210Data, FIN11210Service } from '../../../service/api/fin/fin11210.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-fin11210',
@@ -27,7 +30,11 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     InputTextComponent,
     TableComponent,
     TranslateModule,
-    MultiSelectComponent
+    MultiSelectComponent,
+    ButtonComponent,
+    Button,
+    ButtonDirective,
+    NgStyle
   ]
 })
 export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> implements OnInit {
@@ -63,7 +70,9 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
 
   constructor(
     private fin11210Service: FIN11210Service,
-    private dropDownListService: DropDownListService
+    private fin11200Service: Fin11200Service,
+    private dropDownListService: DropDownListService,
+    private datePipe: DatePipe
   ) {
     super();
   }
@@ -117,5 +126,26 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
             Name: `${item.No} - ${item.Name}`
           }));
       });
+  }
+
+  // 下傳
+  btnLoading = false;
+  onUpload() {
+    // TODO: 待調整
+    // const params = {
+    //   ExportDetails: this.selectedItems.map((item) => ({
+    //     ID: item.ID,
+    //     STO_No: '10',
+    //     GUI_YYMM: this.datePipe.transform(item.GUI_YYMM, 'yyyyMM'),
+    //     SER_NOS: item.SER_NOS,
+    //     ECR_No: item.ECR_No
+    //   }))
+    // }
+    // this.btnLoading = true;
+    // this.fin11200Service.execProcExport(params).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe((response) => {
+    //   this.messageService.successBubble(response.Message);
+    //   this.selectedItems = [];
+    //   this.onSubmit(this.queryForm);
+    // });
   }
 }
