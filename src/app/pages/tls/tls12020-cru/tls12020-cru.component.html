@@ -74,15 +74,14 @@
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
+            <app-input-text
               label="聯絡人電話(O)"
               controlName="VEN_BossTel"
               [control]="dataForm.controls.VEN_BossTel"
               [submitted]="submitted"
-              [useGrouping]="false"
+              keyFilter="pnum"
             >
-              >
-            </app-input-number>
+            </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -95,27 +94,26 @@
             </app-input-text>
           </div>
             <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
+            <app-input-text
               label="聯絡人電話(F)"
-              controlName="VEN_BossTel"
-              [control]="dataForm.controls.VEN_BossTel"
-              [submitted]="submitted"[useGrouping]="false"
+              controlName="VEN_BossFax"
+              [control]="dataForm.controls.VEN_BossFax"
+              [submitted]="submitted"
+              keyFilter="pnum"
             >
-              >
-            </app-input-number>
+            </app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
+            <app-input-text
               label="聯絡人行動電話"
               controlName="VEN_BossMobile"
               [control]="dataForm.controls.VEN_BossMobile"
               [submitted]="submitted"
-              [useGrouping]="false"
+              keyFilter="pnum"
             >
-              >
-            </app-input-number>
+            </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text

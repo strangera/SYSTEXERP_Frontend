@@ -18,33 +18,18 @@
               optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
-              label="科目代號"
-              controlName="dropdownRange"
-              [startControl]="queryForm.controls.SACCNO"
-              [endControl]="queryForm.controls.EACCNO"
-              [submitted]="submitted"
-              [options]="AccNo_Options"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown-range>  
+            <app-dropdown-range label="科目代號" controlName="dropdownRange" [startControl]="queryForm.controls.SACCNO"
+              [endControl]="queryForm.controls.EACCNO" [submitted]="submitted" [options]="AccNo_Options"
+              optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
-              label="廠商編號"
-              controlName="dropdownRange"
-              [startControl]="queryForm.controls.SDetailNo"
-              [endControl]="queryForm.controls.EDetailNo"
-              [submitted]="submitted"
-              [options]="ORG_IDOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown-range>  
+            <app-dropdown-range label="廠商編號" controlName="dropdownRange" [startControl]="queryForm.controls.SDetailNo"
+              [endControl]="queryForm.controls.EDetailNo" [submitted]="submitted" [options]="ORG_IDOptions"
+              optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="立沖代號"
-              [startControl]="queryForm.controls.SPTA" [endControl]="queryForm.controls.EPTA"
-              [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="立沖代號" [startControl]="queryForm.controls.SPTA"
+              [endControl]="queryForm.controls.EPTA" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="對象別編號" controlName=" SubDetailNo" [control]="queryForm.controls.SubDetailNo"
@@ -70,7 +55,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS2a050" [showManage]="true" [data]="data" [columns]="columns"
+    <app-table tableKey="FIN55030" [showManage]="true" [data]="data" [columns]="columns"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showReportMode]="false"
       [showDelete]="false" [showEdit]="false" (detail)="onDetail($event)">

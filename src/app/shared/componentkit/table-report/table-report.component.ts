@@ -1,24 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
-import { finalize, Observable } from 'rxjs';
-import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
-import { TableReportUtilityService } from './table-report-utility.service';
-import { ImageModule } from 'primeng/image';
-import { DomSanitizer } from '@angular/platform-browser';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { FormsModule } from '@angular/forms';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
-import { FileSelectEvent } from 'primeng/fileupload';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { trigger, style, transition, animate } from '@angular/animations'; // 1. 引入動畫相關函式
+import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { ButtonModule } from 'primeng/button';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { SkeletonModule } from 'primeng/skeleton';
+import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize, Observable } from 'rxjs';
+import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
+import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
+import { TableReportUtilityService } from './table-report-utility.service';
+import { AddButton, ColumnGroup, ReportColumn } from './table-report.model';
 @Component({
   selector: 'app-table-report',
   standalone: true,
@@ -198,7 +198,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       pageSize: pageSize, // 使用 pageSize 變數
       SortBy: this.dt.multiSortMeta // 這裡現在只包含最新的單一排序
     };
-    this.queryFunction(body).pipe(untilDestroyed(this)).subscribe(res => {
+    this.loading = true;
+    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;

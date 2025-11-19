@@ -1,22 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize, tap } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, AddButton, formatYN } from '../../../shared/componentkit/table/table.model';
-import { FIN11010Data, FIN11010QueryRequest, FIN11010Service, FIN11010UpdateStatusRequest } from '../../../service/api/fin/fin11010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
 import { DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { ExportLabelService } from '@service/utility/exportLabel.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { FIN11010Data, FIN11010QueryRequest, FIN11010Service, FIN11010UpdateStatusRequest } from '../../../service/api/fin/fin11010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatYN } from '../../../shared/componentkit/table/table.model';
+import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
 
 @Component({
   selector: 'app-fin11010',
@@ -157,13 +157,12 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
       STO_Type: "1", //固定為 1
       STO_MergeFlag: "N", // 固定為 N
       STO_ModifyTime: this.datePipe.transform(new Date(), 'yyyyMMdd'), // 改成當下時間年月日 (民國)1141031
-    }));
+    })).filter(item => item.STO_Status === '1');
     this.exportLoading = true;
     this.exportLabelService.ExportDXT(body)
       .pipe(
         finalize(() => this.exportLoading = false),
-        untilDestroyed(this),
-        tap((response) => this.exportLabelService.handleFileDownload(response, 'export_default.dxt'))
+        untilDestroyed(this)
       )
       .subscribe();
   }

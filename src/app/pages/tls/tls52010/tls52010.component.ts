@@ -144,7 +144,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   }
   printLoading = false;
   print(rowData: ITLS52010Data[], type: 'pdf' | 'excel') {
-    const params = { PO_No: rowData[0].PO_No };
+    const params = { PO_NoList: rowData.map(item => item.PO_No) };
     let export$: Observable<HttpResponse<Blob>>;
     // 2. 決定要呼叫哪個 API 服務方法
     switch (type) {
@@ -160,7 +160,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     // 3. 呼叫通用服務執行匯出流程
     this.printLoading = true
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this), finalize(() => this.printLoading = false)),
+      export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })),
       '.' + type,
       (isLoading) => this.btnLoading = isLoading
     );

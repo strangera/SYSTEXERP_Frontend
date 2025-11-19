@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { SystemDataService } from '@service/system/system-data.service';
 import { ConfirmationService } from 'primeng/api';
 import { take } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
@@ -12,7 +13,6 @@ import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
 import { QueryStateService } from '../../service/query-state.service';
-import { SystemDataService } from '@service/system/system-data.service';
 @UntilDestroy()
 export abstract class BasicQueryPageComponent<T> {
   protected readonly now: Date = new Date();
@@ -105,7 +105,6 @@ export abstract class BasicQueryPageComponent<T> {
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
-
     if (queryForm.valid) {
       this.submitted = false;
       callback(); // 執行傳入的回調函數

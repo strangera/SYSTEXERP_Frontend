@@ -136,7 +136,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   }
   printLoading = false;
   print(rowData: ITLS52020Data[], type: 'pdf' | 'excel') {
-    const params = { CRN_No: rowData[0].CRN_No };
+    const params = { CRN_NoList: rowData.map(item => item.CRN_No) };
     let export$: Observable<HttpResponse<Blob>>;
     // 2. 決定要呼叫哪個 API 服務方法
     switch (type) {
@@ -153,7 +153,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     // 3. 呼叫通用服務執行匯出流程
     this.printLoading = true
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this), finalize(() => this.printLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })), // 傳遞 Observable 並加入銷毀處理
       '.' + type,                            // 傳遞檔案副檔名 (.pdf 或 .excel)
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     );

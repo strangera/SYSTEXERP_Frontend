@@ -126,7 +126,7 @@ jobs:
     - name: Build Production Environment
       run: |
         echo "=== Building Production (無DEV後綴) ==="
-        npx ng build --configuration production --base-href /TSRDWEB/
+        npx ng build --configuration production --base-href /TSRDWEB/ --output-hashing=all
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei
@@ -149,7 +149,7 @@ jobs:
     - name: Build Staging Environment
       run: |
         echo "=== Building Staging (有DEV後綴) ==="
-        npx ng build --configuration staging --base-href /tsrdwebdev/
+        npx ng build --configuration staging --base-href /tsrdwebdev/ --output-hashing=all
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei

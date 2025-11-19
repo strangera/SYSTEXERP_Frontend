@@ -1,18 +1,18 @@
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS21040Service } from '@service/api/ass/ass21040.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { ASS21040Service } from '@service/api/ass/ass21040.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-ass21040',
@@ -49,10 +49,10 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
   onSubmit(frm: FormGroup) {
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
     const mid = this.authService.currentUserValue?.mid;
-    if (storeNo && mid) {
+    if (storeNo && mid !== null && mid !== undefined) {
       const body = {
         SYS_StoreNo: storeNo,
-        Mid: Number(mid),
+        Mid: mid,
         EngTypes: frm.value.ENG_Type,
         ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
       };
@@ -74,7 +74,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
   onCancelClearing(frm: FormGroup) {
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
     const mid = this.authService.currentUserValue?.mid;
-    if (storeNo && mid) {
+    if (storeNo && mid !== null && mid !== undefined) {
       const body = {
         SYS_StoreNo: storeNo,
         Mid: Number(mid),
@@ -97,13 +97,15 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
     this.handleSubmit(frm, () => {
       const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
       const mid = this.authService.currentUserValue?.mid;
-      if (storeNo && mid) {
+      if (storeNo && mid !== null && mid !== undefined) {
         const body = {
           SYS_StoreNo: storeNo,
-          Mid: Number(mid),
+          Mid: mid,
           EngTypes: frm.value.ENG_Type,
           ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
         };
+        console.log(body);
+
         this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
           if (response.Data.Print_URL) {
             this.messageService.successBubble('列印成功');

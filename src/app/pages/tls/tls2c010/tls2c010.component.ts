@@ -1,23 +1,23 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { saveAs } from 'file-saver';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
-import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
 import { TabViewModule } from 'primeng/tabview';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { ButtonModule } from 'primeng/button';
-import { saveAs } from 'file-saver';
-import { HttpResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2c010',
@@ -207,5 +207,35 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
           this.messageService.errorBubble('匯出PDF失敗');
         }
       });
+  }
+
+  /**
+   * TODO: 執行鎖定
+   */
+  onLock(): void {
+    this.handleSubmit(this.queryForm, () => {
+      // const date = this.queryForm.controls.cls_date.value;
+      // if (date) {
+      //   const dateStr = formatDateToYYYY_MM_DD(date);
+      //   if (dateStr) {
+      //     this.executeApi(this.tls2c050Service.lockTLS2C050(dateStr));
+      //   }
+      // }
+    });
+  }
+
+  /**
+   * TODO: 執行反鎖定
+   */
+  onUnLock(): void {
+    this.handleSubmit(this.queryForm, () => {
+      // const date = this.queryForm.controls.cls_date.value;
+      // if (date) {
+      //   const dateStr = formatDateToYYYY_MM_DD(date);
+      //   if (dateStr) {
+      //     this.executeApi(this.tls2c050Service.unLockTLS2C050(dateStr));
+      //   }
+      // }
+    });
   }
 }
