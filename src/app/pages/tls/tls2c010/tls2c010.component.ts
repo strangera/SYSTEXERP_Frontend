@@ -12,12 +12,12 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { TabViewModule } from 'primeng/tabview';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2c010',
@@ -60,16 +60,7 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2C010', 'tls/tls2c010cru', this.queryForm, (form) => this.onSubmit(form));
-    // 取得最近關帳日期
-    this.tls2c010Service.getTLS2C010Date()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.closeDate = response.Data.CLS_DATE || '';
-        // TXN_Date 為 closeDate - 1 天
-        const nextDate = new Date(this.closeDate);
-        nextDate.setDate(nextDate.getDate() - 1);
-        this.queryForm.patchValue({ TXN_Date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
-      });
+    this.fetchDates();
   }
 
   onSubmit(frm: FormGroup) {
@@ -210,32 +201,61 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
   }
 
   /**
-   * TODO: 執行鎖定
+   * 執行鎖定
    */
   onLock(): void {
     this.handleSubmit(this.queryForm, () => {
-      // const date = this.queryForm.controls.cls_date.value;
-      // if (date) {
-      //   const dateStr = formatDateToYYYY_MM_DD(date);
-      //   if (dateStr) {
-      //     this.executeApi(this.tls2c050Service.lockTLS2C050(dateStr));
-      //   }
-      // }
+      const date = this.queryForm.controls.TXN_Date.value;
+      if (date) {
+        const dateStr = formatDateToYYYY_MM_DD(date);
+        if (dateStr) {
+          this.executeApi(this.tls2c010Service.lockTLS2C010({
+            TXN_Date: dateStr
+          }));
+        }
+      }
     });
   }
 
   /**
-   * TODO: 執行反鎖定
+   * 執行反鎖定
    */
   onUnLock(): void {
     this.handleSubmit(this.queryForm, () => {
-      // const date = this.queryForm.controls.cls_date.value;
-      // if (date) {
-      //   const dateStr = formatDateToYYYY_MM_DD(date);
-      //   if (dateStr) {
-      //     this.executeApi(this.tls2c050Service.unLockTLS2C050(dateStr));
-      //   }
-      // }
+      const date = this.queryForm.controls.TXN_Date.value;
+      if (date) {
+        const dateStr = formatDateToYYYY_MM_DD(date);
+        if (dateStr) {
+          this.executeApi(this.tls2c010Service.unlockTLS2C010({
+            TXN_Date: dateStr
+          }));
+        }
+      }
     });
+  }
+
+  /**
+     * 統一處理 API 呼叫和結果
+     * @param api$ 待執行的 Observable
+     */
+  private executeApi(api$: Observable<any>): void {
+    this.loading = true;
+    api$.pipe(finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Message || '操作成功');
+      this.fetchDates(); // 操作成功後重新取得日期
+    });
+  }
+
+  // 取得最近關帳日期
+  private fetchDates() {
+    this.tls2c010Service.getTLS2C010Date()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.closeDate = response.Data.CLS_DATE || '';
+        // TXN_Date 為 closeDate - 1 天
+        const nextDate = new Date(this.closeDate);
+        nextDate.setDate(nextDate.getDate() - 1);
+        this.queryForm.patchValue({ TXN_Date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
+      });
   }
 }
