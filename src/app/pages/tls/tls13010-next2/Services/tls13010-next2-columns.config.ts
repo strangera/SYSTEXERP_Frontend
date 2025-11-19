@@ -32,7 +32,7 @@ export class TLS13010Next2ColumnsConfig {
         header: '是否新增',
         type: 'checkbox',
         editable: true,
-        directEdit: true,
+        // directEdit: true,
       },
       {
         field: 'copy_button',
@@ -68,7 +68,7 @@ export class TLS13010Next2ColumnsConfig {
         header: '是否新增',
         type: 'checkbox',
         editable: false,
-        directEdit: true,
+        // directEdit: true,
       },
       // {
       //   field: 'copy_button',

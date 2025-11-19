@@ -69,10 +69,10 @@ export class TLS12040Next2ColumnsConfig {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: false,
-        directEdit: true,
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
+        editable: false,  // 關鍵：Level 的 checkbox 不可編輯，由 Discount 控制
+        directEdit: false,  // 禁用直接編輯
+        autoEditOnSelect: false,
+        autoSaveOnUnselect: false,
       },
       // {
       //   field: 'copy_button',
