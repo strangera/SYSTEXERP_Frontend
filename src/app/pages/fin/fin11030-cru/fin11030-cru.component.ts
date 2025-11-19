@@ -1,23 +1,22 @@
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
-import { APS2001Data } from '../fin11030/fin11030.model';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { finalize } from 'rxjs';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { finalize } from 'rxjs';
+import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { APS2001Data } from '../fin11030/fin11030.model';
 // 1.1.3 銷項品項資料設定 CRU
 @Component({
   selector: 'app-fin11030-cru',
@@ -29,19 +28,19 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
     InputTextComponent,
     InputTextRangeComponent,
     DropdownComponent,
     InputNumberComponent,
     NgIf,
     TranslateModule,
+    YearMonthComponent
   ],
 })
 export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> implements OnInit {
   dataForm = this.formBuilder.group({
     id: [0], // 編輯模式下的 ID
-    SAL_GUIYYYYMM: [null],                          // 發票年月
+    SAL_GUIYYYYMM: [null as null | string],                          // 發票年月
     SAL_GUITrack: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]],  // 發票字軌
     SAL_GUIBegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 發票起始號碼
     SAL_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiEndNoValidator]], // 發票起始號碼
@@ -55,7 +54,8 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
 
   constructor(
     private fin11030Service: Fin11030Service,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private datePipe: DatePipe
   ) {
     super();
   }
@@ -64,7 +64,7 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
     this.initializePage('FIN11030', this.dataForm);
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
-      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator]);
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required]);
     }
     this.dataForm.get('SAL_GUIEndNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(endNoValue => {
       const begNoValue = this.dataForm.get('SAL_GUIBegNo')?.value;
@@ -112,6 +112,13 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
         }
       }
     }
+
+    // 發票年月顯示格式設定
+    if (this.rowdata && this.rowdata.SAL_GUIYYYYMM) {
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValue(
+        this.datePipe.transform(this.rowdata.SAL_GUIYYYYMM, 'yyyyMM')
+      );
+    }
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -120,7 +127,6 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
         ...frm.value,
         id: this.dataForm.get('id')?.value ?? 0, // 如果是編輯模式，則包含 ID
         GUI_Qty: undefined,
-        SAL_GUIYYYYMM: convertDateToYYYYMM(frm.value.SAL_GUIYYYYMM), // 將日期轉換為 YYYYMM 格式
       }
       const serviceCall = this.isFormCreateable
         ? this.fin11030Service.insertFIN11030(body)
