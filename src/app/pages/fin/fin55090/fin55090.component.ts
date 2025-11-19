@@ -96,7 +96,11 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
         }));
         this.totalRecords = response.TotalCount - 1;
         // 資料最後一筆放進footerDate
-        this.footerData = response.Data[response.Data.length - 1];
+        this.footerData = {
+          ...response.Data[response.Data.length - 1],
+          Cur_AMT: "",
+          YTD_AMT: "",
+        }
         // 儲存最新的查詢參數用於匯出
         this.historyRequestBody = requestBody;
       });
