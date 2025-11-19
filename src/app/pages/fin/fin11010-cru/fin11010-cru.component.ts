@@ -140,11 +140,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
       this.fin11010Service.getFIN11010PreviousData().subscribe(res => {
         // 填入資料，指定狀態與申報年月起
         if (res) {
-          this.dataForm.patchValue({
-            ...res.Data,
-            REP_BegGUIYM: res.Data.REP_BegGUIYM ? `${res.Data.REP_BegGUIYM.substring(0, 4)}/${res.Data.REP_BegGUIYM.substring(4, 6)}` : '',
-            REP_EndGUIYM: res.Data.REP_EndGUIYM ? `${res.Data.REP_EndGUIYM.substring(0, 4)}/${res.Data.REP_EndGUIYM.substring(4, 6)}` : ''
-          });
+          this.dataForm.patchValue(res.Data);
         }
       });
     }
