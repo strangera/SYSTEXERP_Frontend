@@ -144,7 +144,12 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
       this.tls23050Service
         .queryTLS23050(payload)
-        .pipe(finalize(() => { this.loading = false; this.messageService?.unblockUi(); }))
+        .pipe(
+          finalize(() => {
+            this.loading = false;
+            this.messageService?.unblockUi();
+          }),
+        )
         .subscribe({
           next: (res: any) => {
             const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : (res?.Data ?? null);
@@ -159,6 +164,16 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
             // 表尾總計（依欄位名稱直接餵值）
             this.footerData = this.buildFooterFromPack(first);
+
+            // ⭐ 調整 historyRequestBody.pageSize（解決「N 排序不打 API」問題）
+            if (this.historyRequestBody) {
+              const realPageSize =
+                this.data.length || this.historyRequestBody.pageSize || 30;
+              this.historyRequestBody = {
+                ...this.historyRequestBody,
+                pageSize: realPageSize,
+              };
+            }
           },
           error: () => {
             this.data = [];
@@ -170,35 +185,88 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   }
 
   // === 提供給 app-table-report 的查詢函式（支援分頁/排序；固定 pageSize:30）===
-public queryTLS23050ForReport = (body: any) =>
-  this.tls23050Service
-    .queryTLS23050({
-      ...body,
+  public queryTLS23050ForReport = (body: any) => {
+    console.log('=== TLS23050 lazy query body ===', body);
+    console.log('form rece_yn = ', this.queryForm.value.rece_yn);
+
+    const formVal = this.queryForm.value as any;
+
+    // 1. 固定從表單取查詢條件
+    const basePayload: any = {
+      TXN_Date: this.toDateOnly(formVal?.TXN_Date),
+      rece_yn: formVal?.rece_yn ?? undefined,
+      tlt_building: formVal?.tlt_building ?? undefined,
+      tlt_floor:
+        Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length
+          ? formVal.tlt_floor
+          : undefined,
+      org_id:
+        Array.isArray(formVal?.org_id) && formVal.org_id.length
+          ? formVal.org_id
+          : undefined,
+      ECR_No:
+        Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length
+          ? formVal.ECR_No
+          : undefined,
+    };
+
+    // ⭐ 先把 pageIndex 算好，避免在同一行混用 ?? 和 ||
+    const formPageIndex = Number(formVal?.pageIndex) || 1;
+    const pageIndex =
+      body?.pageIndex != null ? body.pageIndex : formPageIndex;
+
+    const sortBy =
+      body?.SortBy && body.SortBy.length
+        ? body.SortBy
+        : formVal?.SortBy && formVal.SortBy.length
+        ? formVal.SortBy
+        : [{ field: 'ECR_No', order: 1 }];
+
+    const pagingAndSort = {
       pageSize: 30,
-      // ✅ 確保 TXN_Date 一定是 yyyy-MM-dd
-      TXN_Date: this.toDateOnly(
-        body?.TXN_Date ?? this.queryForm.value?.TXN_Date
-      ),
-    })
-    .pipe(
-      map((res: any) => {
-        const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : (res?.Data ?? null);
-        const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
+      pageIndex,
+      SortBy: sortBy,
+    };
 
-        const rows = details.map((r: any, i: number) => ({
-          ...r,
-          _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-        }));
-
-        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-        const grand = this.buildFooterFromPack(first);
-        this.footerData = grand;
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+    return this.tls23050Service
+      .queryTLS23050({
+        ...basePayload,
+        ...pagingAndSort,
       })
-    );
+      .pipe(
+        map((res: any) => {
+          const first =
+            Array.isArray(res?.Data) && res.Data.length > 0
+              ? res.Data[0]
+              : res?.Data ?? null;
 
+          const details = Array.isArray(first?.tLS23050Details)
+            ? first.tLS23050Details
+            : [];
+
+          const rows = details.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+          }));
+
+          let totalCount =
+            typeof res?.TotalCount === 'number'
+              ? res.TotalCount
+              : rows.length;
+
+          // ⭐ 如果是第二頁以上，卻已經沒有任何資料，視為「到底了」
+          //    把 totalCount 壓成目前已載入的筆數，避免 loadMoreData 一直打 pageIndex=2
+          if (pageIndex > 1 && rows.length === 0) {
+            totalCount = this.data.length;
+          }
+
+          const grand = first ? this.buildFooterFromPack(first) : this.footerData ?? {};
+          this.footerData = grand;
+
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        }),
+      );
+  };
 
   // === 匯出（PDF / Excel）— 不傳 pageSize / pageIndex ===
   private buildExportBody() {
@@ -405,11 +473,11 @@ public queryTLS23050ForReport = (body: any) =>
       TXN_PayAmt22: n(first?.totalPayAmt22),
       TXN_PayAmt23: n(first?.totalPayAmt23),
 
-      TXN_PrePayAmt:  n(first?.totalPrePayAmt),
-      TXN_OverAmt:    n(first?.totalOverAmt),
-      TXN_ReturnAmt:  n(first?.totalReturnAmt),
-      TXN_CancelAmt:  n(first?.totalCancelAmt),
-      TXN_ExchgAmt:  n(first?.totalExchgAmt),
+      TXN_PrePayAmt: n(first?.totalPrePayAmt),
+      TXN_OverAmt: n(first?.totalOverAmt),
+      TXN_ReturnAmt: n(first?.totalReturnAmt),
+      TXN_CancelAmt: n(first?.totalCancelAmt),
+      TXN_ExchgAmt: n(first?.totalExchgAmt),
     };
   }
 
@@ -423,6 +491,4 @@ public queryTLS23050ForReport = (body: any) =>
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
-// 1) 新增這個工具函式（放在 component 裡即可）
-
 }
