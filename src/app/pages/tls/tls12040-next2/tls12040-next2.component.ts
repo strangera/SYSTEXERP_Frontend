@@ -1409,6 +1409,48 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     this.saveToWorkflow();
   }
 
+  /**
+   * 同步 Discount 的選擇狀態到 Level
+   * 當 Discount 中的項目被勾選/取消勾選時，Level 中對應的項目也要同步
+   */
+  private syncDiscountSelectionToLevel(discountItem: ChargeDetailBusinessModel, isSelected: boolean): void {
+    console.log('🔄 同步 Discount 選擇狀態到 Level:', {
+      cag_barcode: discountItem.cag_barcode,
+      isSelected
+    });
+
+    // 找到該 discount 項目所屬的父項目
+    const parentItem = this.findParentOfDetailItem(discountItem);
+    if (!parentItem) {
+      console.warn('找不到父項目，無法同步到 Level');
+      return;
+    }
+
+    // 在 LevelChargeDetails 中找到對應的項目（相同 cag_barcode）
+    if (parentItem.LevelChargeDetails) {
+      parentItem.LevelChargeDetails.forEach((levelItem: LevelChargeDetailBusinessModel) => {
+        if (levelItem.cag_barcode === discountItem.cag_barcode) {
+          // 同步選擇狀態
+          levelItem.is_selected = isSelected;
+
+          // 更新狀態
+          if (isSelected && levelItem._status === 'deleted') {
+            // 如果重新勾選，恢復狀態
+            levelItem._status = this.hasValidId(levelItem) ? 'original' : 'new';
+          } else if (!isSelected && levelItem._status !== 'deleted') {
+            // 如果取消勾選，不要刪除，只是取消勾選
+            // Level 項目只有在 Discount 中勾選時才顯示，所以取消勾選就隱藏了
+          }
+
+          console.log(`  ✓ 同步 Level 項目: ${levelItem.cag_barcode}, is_selected=${levelItem.is_selected}`);
+        }
+      });
+    }
+
+    // 觸發變更檢測，讓 UI 即時更新
+    this.cdr.detectChanges();
+  }
+
   private handleSelectedFieldChange(rowData: any, newValue: boolean): void {
     const originalType = rowData._originalType || this.selectedSettingTab;
 
@@ -1423,6 +1465,11 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     //  修正：在處理選擇狀態變更時，確保不會意外修改 cag_barcode
     const originalCagBarcode = rowData.cag_barcode;
+
+    // 關鍵新增：如果是 discount 項目的選擇變更，需要同步到 level
+    if (originalType === 'discount') {
+      this.syncDiscountSelectionToLevel(rowData, newValue);
+    }
 
     if (newValue === false) {
       // 取消勾選的處理邏輯
@@ -1539,20 +1586,47 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
             }));
           break;
 
-        case 'level':
-          //  確保有 8 個層級選項
+        case 'level': {
+          //  關鍵修正: Level 只顯示在 Discount 中被勾選的項目
           if (!processedItem.LevelChargeDetails || processedItem.LevelChargeDetails.length === 0) {
             processedItem.LevelChargeDetails = this.createDefaultLevelItems(processedItem);
           }
 
-          //  過濾掉已刪除的項目
+          // 取得 Discount 中已勾選的折扣代碼
+          const selectedDiscountBarcodes = (processedItem.ChargeDetails || [])
+            .filter(discount => discount.is_selected && discount._status !== 'deleted')
+            .map(discount => discount.cag_barcode);
+
+          console.log('📊 Discount 中已勾選的折扣代碼:', selectedDiscountBarcodes);
+
+          //  只顯示 Discount 中已勾選的項目,並且自動勾選
           processedItem.detailItems = processedItem.LevelChargeDetails
-            .filter(detail => detail._status !== 'deleted')
-            .map(detail => ({
-              ...detail,
-              _originalType: 'level'
-            }));
+            .filter(detail => {
+              // 過濾條件: 1) 未刪除 2) 在 Discount 中被勾選
+              const isNotDeleted = detail._status !== 'deleted';
+              const isSelectedInDiscount = selectedDiscountBarcodes.includes(detail.cag_barcode);
+              return isNotDeleted && isSelectedInDiscount;
+            })
+            .map(detail => {
+              // 自動勾選這些項目
+              const mappedDetail = {
+                ...detail,
+                _originalType: 'level',
+                is_selected: true  // 關鍵: 自動勾選
+              };
+
+              // 同步回 LevelChargeDetails
+              const levelIndex = processedItem.LevelChargeDetails.findIndex((item: LevelChargeDetailBusinessModel) => item.id === detail.id);
+              if (levelIndex !== -1) {
+                processedItem.LevelChargeDetails[levelIndex].is_selected = true;
+              }
+
+              return mappedDetail;
+            });
+
+          console.log('📋 Level 最終顯示項目數:', processedItem.detailItems.length);
           break;
+        }
 
         case 'annual':
           if (!processedItem.YearChargeDetails) {
