@@ -16,7 +16,7 @@
                         label="活動編號"
                         controlName="pod_no"
                         [control]="df().pod_no"
-                        [disabled]="true"
+                        [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-8"
                       label="活動名稱"
@@ -71,7 +71,8 @@
                     (click)="onExportExcelTemplate()"></app-button>
         <app-button btnType="submit"
                     label="存檔"
-                    [loading]="loading"></app-button>
+                    [loading]="loading"
+                    [disabled]="isSubmitDisabled()"></app-button>
       </div>
       }
     </form>
@@ -85,6 +86,7 @@
       <p-panel header="專櫃資料"
                class="line-height-3 m-0 mb-3">
         <app-table-edit [data]="tableData()"
+                        (dataChange)="tableData.set($event)"
                         [tableKey]="'TLS26080_Counter'"
                         [columns]="counterColumns()"
                         [columnGroup]="counterColumnsGroup"
@@ -93,7 +95,7 @@
                         (fieldChange)="onFieldChange($event)"
                         [showReorder]="!isFormReadable"
                         [disabled]="isFormReadable"
-                        [loading]="service.tableLoading()"></app-table-edit>
+                        [loading]="tableLoading()"></app-table-edit>
       </p-panel>
     </div>
   </div>
