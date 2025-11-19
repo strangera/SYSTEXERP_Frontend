@@ -281,6 +281,16 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       //  有暫存，直接用暫存資料
       console.log('📦 從暫存載入抽成資料');
       this.commissionData = savedData.data.commissionData;
+
+      // 🔍 檢查載入的資料中 is_selected 的初始狀態
+      this.commissionData.forEach((item, index) => {
+        console.log(`📊 Commission Item ${index + 1}:`, {
+          tlt_id: item.tlt_id,
+          ChargeDetails_count: item.ChargeDetails?.length,
+          ChargeDetails_selected: item.ChargeDetails?.filter(d => d.is_selected).map(d => d.cag_barcode)
+        });
+      });
+
       this.dataLoaded = true;
       this.commissionDataLoaded = true;
       return;
@@ -297,6 +307,16 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     // 從 dataFlowService 取得資料
     this.commissionData = this.dataFlowService.getVisibleData();
+
+    // 🔍 檢查載入的資料中 is_selected 的初始狀態
+    this.commissionData.forEach((item, index) => {
+      console.log(`📊 Commission Item ${index + 1}:`, {
+        tlt_id: item.tlt_id,
+        ChargeDetails_count: item.ChargeDetails?.length,
+        ChargeDetails_selected: item.ChargeDetails?.filter(d => d.is_selected).map(d => d.cag_barcode)
+      });
+    });
+
     this.dataLoaded = true;
     this.commissionDataLoaded = true;
   }
@@ -883,42 +903,45 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     const { newDetail } = event;
 
-    // 關鍵：處理 directEdit 模式下的欄位變更（特別是 checkbox）
-    // 這些變更不會觸發 onFieldChange，所以要在這裡手動處理
+    // 關鍵發現：directEdit 模式下，oldDetail 和 newDetail 的值可能已經相同
+    // 因為 expandable-edit-table 會先更新內部資料，再觸發事件
+    // 所以我們需要直接處理，而不是比對舊值和新值
 
-    // 檢查 is_selected 是否有變更
-    if (newDetail.is_selected !== event.oldDetail?.is_selected) {
-      console.log('🔘 偵測到 is_selected 變更:', {
-        舊值: event.oldDetail?.is_selected,
-        新值: newDetail.is_selected,
-        項目ID: newDetail.id,
-        折扣代碼: newDetail.cag_barcode
-      });
+    console.log('🔍 檢查 newDetail 的完整狀態:', {
+      id: newDetail.id,
+      cag_barcode: newDetail.cag_barcode,
+      is_selected: newDetail.is_selected,
+      _originalType: newDetail._originalType
+    });
 
-      // 手動觸發欄位變更處理
-      this.onFieldChange({
-        fieldName: 'is_selected',
-        newValue: newDetail.is_selected,
-        rowData: newDetail
-      });
+    // 找到父項目
+    const parentItem = this.findParentOfDetailItem(newDetail);
+    if (!parentItem) {
+      console.warn('⚠️ 找不到父項目，無法同步');
+      return;
     }
 
-    // 檢查其他可能的欄位變更
-    const fieldsToCheck = ['tlt_bdate', 'tlt_edate', 'cag_charge_rate'];
-    fieldsToCheck.forEach(fieldName => {
-      if (newDetail[fieldName] !== event.oldDetail?.[fieldName]) {
-        console.log(`📝 偵測到 ${fieldName} 變更:`, {
-          舊值: event.oldDetail?.[fieldName],
-          新值: newDetail[fieldName]
-        });
+    // 關鍵修正：直接同步 newDetail 的所有資料到父項目的陣列
+    // 不管舊值是什麼，直接以 newDetail 為準
+    console.log('📤 直接同步 newDetail 到父項目陣列');
+    this.syncDetailToParentArray(newDetail, parentItem);
 
-        this.onFieldChange({
-          fieldName,
-          newValue: newDetail[fieldName],
-          rowData: newDetail
-        });
-      }
-    });
+    // 特別處理 discount 的 is_selected 變更，需要同步到 Level
+    const originalType = newDetail._originalType || this.selectedSettingTab;
+    if (originalType === 'discount') {
+      console.log('🔄 Discount 項目，同步到 Level');
+      this.syncDiscountSelectionToLevel(newDetail, newDetail.is_selected);
+    }
+
+    // 更新父項目狀態
+    this.updateItemStatus(parentItem);
+    this.updateMainArray(parentItem);
+
+    // 觸發變更檢測
+    this.cdr.detectChanges();
+
+    // 儲存到 workflow
+    this.saveToWorkflow();
   }
 
   onBeforeDetailSave(event: { data: any, preventDefault: () => void }): void {
@@ -1991,6 +2014,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         cag_barcode: oldItem.cag_barcode
       });
 
+      // 特別關注 095 的更新
+      if (oldItem.cag_barcode === '095') {
+        console.log('  ⭐ 特別注意：正在更新 095！', {
+          舊的is_selected: oldItem.is_selected,
+          新的資料: newData
+        });
+      }
+
       // 關鍵修正：完整複製所有屬性，特別是 is_selected
       array[index] = { ...array[index] as object, ...newData as object } as typeof array[number];
       const updatedItem = array[index] as { id?: unknown; is_selected?: unknown; _status?: unknown; cag_barcode?: unknown };
@@ -2001,6 +2032,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         cag_barcode: updatedItem.cag_barcode,
         _status: updatedItem._status
       });
+
+      // 特別關注 095 的更新結果
+      if (updatedItem.cag_barcode === '095') {
+        console.log('  ⭐ 095 更新完成，驗證結果:', {
+          is_selected: updatedItem.is_selected,
+          陣列中實際的值: array[index]
+        });
+      }
     } else {
       console.warn('  ⚠️ 找不到要更新的項目:', itemId, '陣列中的ID:', array.map(item => (item as { id?: unknown })?.id));
     }
