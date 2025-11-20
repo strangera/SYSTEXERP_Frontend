@@ -1,12 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
@@ -229,31 +231,75 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     };
   }
   onLock(): void {
+    const raw = this.queryForm.getRawValue();
+
+    // 檢查銷售日期起迄是否為同一天
+    if (!raw.SaleDateStart || !raw.SaleDateEnd) {
+      this.messageService.warnBubble('請先選擇銷售日期');
+      return;
+    }
+
+    const startDate = raw.SaleDateStart instanceof Date
+      ? raw.SaleDateStart.toDateString()
+      : new Date(raw.SaleDateStart).toDateString();
+    const endDate = raw.SaleDateEnd instanceof Date
+      ? raw.SaleDateEnd.toDateString()
+      : new Date(raw.SaleDateEnd).toDateString();
+
+    if (startDate !== endDate) {
+      this.messageService.warnBubble('銷售日期起迄必須為同一天才能執行鎖定操作');
+      return;
+    }
+
     const body = this.buildLockBody();
     this.loading = true;
 
-    this.tls2a030Service.lockTLS2A030(body).subscribe({
-      next: (res) => {
-        this.messageService.successBubble('鎖定成功');
-        this.onSubmit(this.queryForm); // 重新查詢
-        this.loading = false;
-      },
+    this.tls2a030Service.lockTLS2A030(body)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('鎖定成功');
+          this.onSubmit(this.queryForm); // 重新查詢
+          this.loading = false;
+        },
 
-    });
+      });
   }
 
   onUnLock(): void {
+    const raw = this.queryForm.getRawValue();
+
+    // 檢查銷售日期起迄是否為同一天
+    if (!raw.SaleDateStart || !raw.SaleDateEnd) {
+      this.messageService.warnBubble('請先選擇銷售日期');
+      return;
+    }
+
+    const startDate = raw.SaleDateStart instanceof Date
+      ? raw.SaleDateStart.toDateString()
+      : new Date(raw.SaleDateStart).toDateString();
+    const endDate = raw.SaleDateEnd instanceof Date
+      ? raw.SaleDateEnd.toDateString()
+      : new Date(raw.SaleDateEnd).toDateString();
+
+    if (startDate !== endDate) {
+      this.messageService.warnBubble('銷售日期起迄必須為同一天才能執行反鎖定操作');
+      return;
+    }
+
     const body = this.buildLockBody();
     this.loading = true;
 
-    this.tls2a030Service.UnLockTLS2A030(body).subscribe({
-      next: (res) => {
-        this.messageService.successBubble('反鎖定成功');
-        this.onSubmit(this.queryForm); // 重新查詢
-        this.loading = false;
-      },
+    this.tls2a030Service.UnLockTLS2A030(body)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('反鎖定成功');
+          this.onSubmit(this.queryForm); // 重新查詢
+          this.loading = false;
+        },
 
-    });
+      });
   }
 
   onSubmit(form: FormGroup): void {
