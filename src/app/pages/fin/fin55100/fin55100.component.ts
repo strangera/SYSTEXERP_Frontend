@@ -1,278 +1,124 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { VendorService } from '../../../service/basic/vendor.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+// 變更為 FIN55100 的 Service
+import { Fin55100Service, QueryFIN55100Request, QueryFIN55100Response } from '@service/api/fin/fin55100.service'; // 假設路徑
+import { DropdownApiService } from '@service/utility/dropdown-api.service'; // 假設路徑
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component'; // 假設路徑
+import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component"; // 假設路徑
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { finalize, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component'; // 假設路徑
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component'; // 假設路徑
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component'; // 假設路徑
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component'; // 假設路徑
+import { TableSubheaderGroupingComponent } from '../fin55100/fin55100-table/fin55100-table.component';
+import { FileExportService } from './../../../shared/service/file-export.service';
+
 @Component({
   selector: 'app-fin55100',
   templateUrl: './fin55100.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    TableSubheaderGroupingComponent,
+    ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
+    FormsModule, ReactiveFormsModule, RadiobuttonComponent,
+    DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
+    CalendarRangeComponent
+  ]
 })
-export class FIN55100Component extends BasicQueryPageComponent<any> implements OnInit {
+// 變更泛型參數和類別名稱
+export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Response> implements OnInit {
+  // 表單結構與 FIN55100 相同
   queryForm = this.formBuilder.group({
-    startserialticket: [],
-    endserialticket: [],
-    Subpoenatype: [],
-    SSubpoenadate: [],
-    ESubpoenadate: [],
-    Subpoenastatus: [],
-    Subpoenasummary: [],
-    builder: [],
-    Residualvalueyears: [],
-    Depreciation: [],
-    accountsummary: [],
-    Subpoenatype2: [],
-    Postingmethod: [],
-    year: [],
-    buildnumber: [],
-    confirmationnumber: [],
-    postingnumber: [],
-    yearmm: [],
-    Sbuilddate: [],
-    Ebuilddate: [],
-    printtype: [],
-    department: [],
-    activity: [],
-    vander: [],
-    Accountcode: [],
-    code: [],
-    Subpoenacode: [],
-    whether: [],
-    ifOptions: [],
-    summary: [],
-    reportingmethod: [],
-    Printingmethod: [],
-    Printingcolumn: [],
-    category: [],
-    display: [],
-    Approvalcolumn: [],
-    Sdate: [],
-    Edate: [],
-    CSdate: [],
-    CEdate: [],
+    DateFrom: this.formBuilder.nonNullable.control(new Date('2025-10-01'), [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(new Date('2025-10-31'), [Validators.required]),
+    CmpDateFrom: this.formBuilder.nonNullable.control(new Date('2024-10-01'), [Validators.required]),
+    CmpDateTo: this.formBuilder.nonNullable.control(new Date('2024-10-31'), [Validators.required]),
+    // 類別預設為 '1' (明細)
+    Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
+    OrgId: this.formBuilder.control<string | null>(null),
+    ProjectNo: this.formBuilder.control<string | null>(null),
+    ShowZero: this.formBuilder.nonNullable.control(false),
+    PrintSign: this.formBuilder.nonNullable.control(true),
   });
 
-  // Dropdown options
-  category
-    : any[] = [
-      { value: 1, label: '統制' },
-      { value: 2, label: '明細' },
+  // 選項與 FIN55100 相同
+  Ledger_MDOptions = [
+    { label: '統制', value: '0' },
+    { label: '明細', value: '1' },
+  ];
+  OrgIdOptions = this.dropdownApi.querySys3100();
+  ProjectNoOptions = this.dropdownApi.queryTALPORDERM_DropDownList();
 
-    ]
-  display
-    : any[] = [
-      { value: 1, label: '顯示' },
-      { value: 2, label: '不顯示' },
+  // 變更資料型別
+  data: QueryFIN55100Response[] = [];
+  historyRequestBody: any; // 使用假設的介面
+  totalRecords = 0;
+  footerData: QueryFIN55100Response | null = null;
+  btnLoading = false;
 
-    ]
-  printtype: any[] = [
-    { value: 1, label: 'A4(直印)' },
-    { value: 2, label: 'A4(橫印)' },
-    { value: 3, label: '一般' },
-  ]
-  Subpoenatype2: any[] = [
-    { value: 1, label: '贊助金傳票' },
-    { value: 2, label: '電匯EDI傳票' },
-    { value: 3, label: '年結傳票' },
-    { value: 4, label: '銀行資金調撥傳票' },
-    { value: 5, label: '零用金拋轉傳票' },
-    { value: 6, label: '票據兌現傳票' },
-    { value: 7, label: '支票沖轉傳票' },
-    { value: 8, label: '退票沖轉票據傳票' },
-    { value: 9, label: '開票傳票' },
-    { value: 10, label: '撤票沖轉票據傳票' },
-  ];
-
-  Reportingmethod: any[] = [
-    { value: 1, label: '交易記錄之會計科目' },
-    { value: 2, label: '含無交易記錄之會計科目' },
-  ];
-  Printingmethod
-    : any[] = [
-      { value: 1, label: '分開列印' },
-      { value: 2, label: '合併列印' },
-    ];
-  Postingmethod: any[] = [
-    { value: 1, label: '依明細勾選' },
-    { value: 2, label: '依過帳年月' },
-  ];
-  Printingcolumn
-    : any[] = [
-      { value: 1, label: '狀態' },
-      { value: 2, label: '活動' },
-      { value: 2, label: '立沖代號' },
-    ];
-  activity: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '會員紅利活動' },
-  ];
-  departmentOptions: any[] = [];
-
-  ifOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  detail: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-  Subpoenaformatl: any[] = [
-    { value: 1, label: '無特定' },
-    { value: 2, label: '應付票據' },
-    { value: 3, label: '應收票據' },
-  ];
-  Subpoenatype: any[] = [
-    { value: 1101, label: '現金收入傳票' },
-    { value: 110101, label: '現金支出傳票' },
-    { value: 110102, label: '轉帳傳票' },
-  ];
-  borrowloanOptions: any[] = [
-    { value: 1, label: '借' },
-    { value: 2, label: '貸' },
-  ];
-
-  accountingaccountOptions: any[] = [
-
-  ];
-
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' },
-  ];
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' },
-  ];
-
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-
-  Subpoenastatus: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' },
-  ];
-
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' },
-  ];
-
-  // Table data
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'subjectName', header: '科目名稱', visible: true },
-    { field: 'currentPeriodStart', header: '113年度 06月~06月', visible: true },
-    { field: 'previousPeriodStart', header: '112年度 06月~06月', visible: true },
-    { field: 'difference', header: '差異', visible: true },
-    { field: 'growthRate', header: '增減率(%)', visible: true },
-    { field: 'cumulativePeriodStart', header: '113年度 01月~06月', visible: true },
-    { field: 'previousCumulativePeriodStart', header: '112年度 01月~06月', visible: true },
-    { field: 'cumulativeDifference', header: '差異', visible: true },
-    { field: 'cumulativeGrowthRate', header: '增減率(%)', visible: true }
-  ];
-
-  // TypeScript Options
-  AccountcodeOptions: any[] = [];
   constructor(
-    private notificationService: NotificationService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService,
-    private userCodeService: UserCodeService
-
+    // 變更注入的 Service
+    public readonly fin55100Service: Fin55100Service,
+    private readonly dropdownApi: DropdownApiService,
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  usercode: any[] = [];
   ngOnInit(): void {
+    // 變更 ProgNo
     this.initializePage('FIN55100');
-    this.userCodeService
-      .getUserCode()
-      .subscribe((data) => (this.usercode = data));
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
-      });
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountingaccountOptions = data;
-    });
   }
-
+  // 查詢事件處理 (與 FIN55100 邏輯相同，但使用 FIN55100 Service)
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+    this.handleSubmit(frm, () => {
+      // 強轉型為 QueryFIN55100Request
+      const requestBody = {
+        ...frm.value,
+        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM-dd'),
+        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM-dd'),
+        CmpDateFrom: this.datePipe.transform(frm.value.CmpDateFrom, 'yyyy-MM-dd'),
+        CmpDateTo: this.datePipe.transform(frm.value.CmpDateTo, 'yyyy-MM-dd'),
+      } as QueryFIN55100Request;
 
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+      this.fin55100Service.queryFIN55100(requestBody).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        // 資料處理邏輯與 FIN55100 相同
+        this.data = response.Data.slice(0, response.Data.length - 1).map((item: QueryFIN55100Response) => ({
+          ...item,
+          STYPE_NAME: (item.STYPE_ID || '') + ' ' + item.STYPE_NAME,
+        }))
+        this.totalRecords = response.TotalCount - 1;
+        this.footerData = {
+          ...response.Data[response.Data.length - 1],
+          Cur_AMT: "",
+          YTD_AMT: "",
+        }
+        this.historyRequestBody = requestBody;
+      });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+  // 匯出 PDF 事件處理 (與 FIN55100 邏輯相同，但使用 FIN55100 Service)
+  onExportPDF() {
+    if (this.data.length === 0) {
+      return;
+    }
+    // 變更匯出 Service 呼叫
+    const export$: Observable<HttpResponse<Blob>> = this.fin55100Service.exportFIN55100PDF(this.historyRequestBody);
+
+    // 使用 fileExportService 統一處理檔案下載和 loading 狀態
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      '.' + 'pdf',        // 傳遞檔案副檔名
+      (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
 }

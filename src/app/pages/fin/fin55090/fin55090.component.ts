@@ -32,15 +32,15 @@ import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table
 })
 export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    DateFrom: this.formBuilder.nonNullable.control(new Date('2025-10-01'), [Validators.required]),
-    DateTo: this.formBuilder.nonNullable.control(new Date('2025-10-31'), [Validators.required]),
+    DateFrom: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(null, [Validators.required]),
     // 類別預設為 '0' (統制)
-    Ledger_MD: this.formBuilder.nonNullable.control('0' as '0' | '1', [Validators.required]),
+    Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
     // 部門/活動代碼為選填
     OrgId: this.formBuilder.control<string | null>(null),
     ProjectNo: this.formBuilder.control<string | null>(null),
     // 預設不顯示餘額為零的科目 (false)，預設列印簽核欄 (true)
-    ShowZero: this.formBuilder.nonNullable.control(false),
+    // ShowZero: this.formBuilder.nonNullable.control(false),
     PrintSign: this.formBuilder.nonNullable.control(true),
   });
   // 類別選項: '0'=統制(4碼), '1'=明細(全碼)
@@ -86,7 +86,7 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
 
       this.fin55090Service.queryFIN55090(requestBody).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         // 資料最後一筆不要放進data
-        this.data = response.Data.slice(0, response.Data.length - 1).map((item: any) => ({
+        this.data = response.Data.slice(0, response.Data.length - 1).map((item: QueryFIN55090Response) => ({
           ...item,
           STYPE_NAME: (item.STYPE_ID || '') + ' ' + item.STYPE_NAME,
           Cur_AMT: item.STYPE_ID ? (item.Cur_AMT ?? null) : '',

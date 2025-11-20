@@ -28,10 +28,10 @@ export interface QueryFIN55090Response {
   STYPE_ID: string | null; // 科目代碼
   STYPE_NAME: string | null; // 科目名稱
   Cur_AMT: number | string; // 當期金額
-  Cur_LTYPE_SUM: number | null; // 當期類別總計
+  Cur_LTYPE_SUM: number | string; // 當期類別總計
   Cur_PERCENT: number | null; // 當期百分比 (%)
   YTD_AMT: number | string; // 累計金額 (年度起)
-  YTD_LTYPE_SUM: number | null; // 累計類別總計
+  YTD_LTYPE_SUM: number | string | null; // 累計類別總計
   YTD_PERCENT: number | null; // 累計百分比 (%)
   Sign_Line1: string | null;
   // ... 其他簽核欄位
