@@ -91,7 +91,7 @@
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
       [pSelectableRowDisabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" [pSelectableRow]="rowData"
       [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
-        'invalid-row': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
+        'invalid-row': hasRowError(rowData),
         'insert-row': rowData._isAutoInsertCandidate ,
       }">
       <td *ngIf="data.length && showReorder" class="w-1rem text-center">
@@ -126,7 +126,7 @@
               (ngModelChange)="onValueChange(rowData,$event, col, index)" [maxlength]="col.maxLength"
               [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-              (blur)="onValueChange(rowData,rowData[col.field], col, index)"
+              (blur)="col.onBlur?.(rowData, rowData[col.field], col, index);onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
             <p-inputNumber *ngSwitchCase="'inputNumber'" class="min-w-max w-full" mode="decimal"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
