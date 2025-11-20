@@ -111,7 +111,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         rowData.PAY_Type === 'A' ||
         rowData.PAY_NO === '10' ||
         rowData.PAY_NO === '41' ||
-        rowData.PAY_NO === '43'
+        rowData.PAY_NO === '43' ||
+        rowData.check_status === 'Y'
     }
   ];
 
@@ -385,12 +386,41 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         type: 'inputNumber'
       },
       { field: 'OVER_PayAmt', header: '系統/實收帳差異', format: formatAmount },
-
+      {
+        header: '狀況',
+        field: 'OVER_Status',
+        format: (v: any) => {
+          if (typeof v === 'string') return v;
+          if (v < 0) return '欠';
+          if (v === 0) return '平';
+          if (v > 0) return '溢';
+          return v;
+        },
+      },
     ];
   }
 
 
-  onEditDetail(rowData: any): void {
+  calculateAdjustedAmounts(rowData: any): void {
+    if (rowData && rowData.ADJUSTED_PayAmt !== undefined && rowData.BOOK_PayAmt !== undefined) {
+      // 直接計算並更新顯示值
+      const adjustedDiff = rowData.BOOK_PayAmt - rowData.ADJUSTED_PayAmt;
+
+      // 更新差異欄位的顯示值
+      rowData.OVER_PayAmt = adjustedDiff;
+
+      // 更新狀況欄位的顯示值
+      if (adjustedDiff < 0) {
+        rowData.OVER_Status = '欠';
+      } else if (adjustedDiff === 0) {
+        rowData.OVER_Status = '平';
+      } else {
+        rowData.OVER_Status = '溢';
+      }
+
+
+    }
+  } onEditDetail(rowData: any): void {
     if (!rowData) {
       this.messageService.warnBubble('請選擇要編輯的資料');
       return;
@@ -399,6 +429,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       ...rowData,
       ADJUSTED_PayAmt: rowData.ACT_PayAmt || 0
     };
+
+    // 觸發初始計算
+    this.calculateAdjustedAmounts(dialogRowData);
     this.dialogData = [dialogRowData];
     this.dialogVisible = true;
   }
@@ -422,7 +455,17 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onDataChange(data: any[]): void {
-    this.dialogData = data;
-    console.log('表格資料已更新:', data);
+    // 為每一行重新計算調整後的差異和狀況
+    data.forEach(row => {
+      this.calculateAdjustedAmounts(row);
+    });
+
+    // 強制更新表格資料以觸發重新渲染
+    this.dialogData = [...data];
+
+    // 強制觸發變更檢測
+    setTimeout(() => {
+      this.dialogData = [...data];
+    }, 0);
   }
 }
