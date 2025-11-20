@@ -6,8 +6,9 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-calendar calendarType="dateMonthOne" controlName="GUI_YYMM" class="col-12 md:col-6 lg:col-4" label="發票年月"
-          [control]="dataForm.controls.GUI_YYMM" [submitted]="submitted" [minDate]="minDate" />
+        <!-- 發票年月 -->
+        <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月" [control]="dataForm.controls.GUI_YYMM"
+          [submitted]="submitted"></app-year-month>
         <app-table tableKey="fin11200DetailTable" dataKey="ECR_No" title="加入收銀機" class="col-12" [data]="data"
           [columns]="columns" [showManage]="false" [showCheckBox]="true" [showInsert]="true"
           (insert)="dialogVisible = true;this.selectedItemsDialog = []" (delete)="onDelete($event)"
