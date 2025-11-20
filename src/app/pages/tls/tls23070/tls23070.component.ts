@@ -7,8 +7,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
-import { finalize } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS23070Service } from '../../../service/api/tls/tls23070.service';
@@ -60,11 +59,10 @@ type SortItem = { field: string; order: 1 | -1 };
   ],
 })
 export class TLS23070Component extends BasicQueryPageComponent<any> {
-  // ===== 排序（先宣告，避免 TS2729）=====
+  // ===== 排序 =====
   sortMeta: SortItem[] = [];
   readonly defaultSort: SortItem[] = [
     { field: 'tlt_no', order: 1 },
-    { field: 'ECR_No', order: 1 },
   ];
 
   // ===== 主表資料 =====
@@ -111,10 +109,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   dialogFooterData: Record<string, number> | null = null;
   dialogHistoryRequestBody: any | null = null;
 
-  // ===== 解析暫存（主查詢結果）=====
-  private lastWrapper: any | null = null;
-
-  // 後端 totalSummary ↔ 欄位對應
+  // ===== 後端 totalSummary / subsTotal ↔ 欄位對應 =====
   private detailTotalFieldMap: Record<string, string> = {
     TXN_TotPayAmt: 'totalTotPayAmt',
     TXN_PayAmt10:  'totalPayAmt10',
@@ -161,7 +156,6 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   };
 
   constructor(
-    // ⬇⬇⬇ 這裡改成 public，讓 template 能夠取用
     public tls23070Service: TLS23070Service,
     private counterNameService: CounterNameService,
     private floorService: FloorService,
@@ -241,15 +235,18 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
         )
         .subscribe({
           next: (res: any) => {
-            const wrapper = this.pickWrapper(res?.Data);
-            this.lastWrapper = wrapper; // 暫存給明細使用
+            const wrapper = res?.Data ?? {};
 
-            // 主表：彙總到 (tlt_no + tlt_name + ECR_No)
-            const mainRows = this.buildMainRowsFromWrapper(wrapper);
+            // 主表：直接用 tltNoSubTotals（每一筆是專櫃小計）
+            const mainRows = this.buildMainRowsFromSubTotals(wrapper?.tltNoSubTotals);
+            console.log('API 排序後的 tlt_no 順序:', mainRows.map(r => r.tlt_no));
             this.data = mainRows;
-            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
 
-            // Grand Total
+            this.totalRecords = typeof res?.TotalCount === 'number'
+              ? res.TotalCount
+              : this.data.length;
+
+            // Grand Total: 用 totalSummary
             const totalSummary = wrapper?.totalSummary ?? {};
             this.footerData = this.buildGrandTotalFromSummary(totalSummary);
           },
@@ -257,7 +254,6 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
             this.data = [];
             this.totalRecords = 0;
             this.footerData = {};
-            this.lastWrapper = null;
           },
         });
     });
@@ -265,28 +261,22 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
   // ===== 主表 → 明細 Dialog 開啟 =====
   override onDetail(row: any): void {
-    if (!this.lastWrapper) return;
+    if (!row) return;
 
     this.selectedMainRow = row;
     this.dialogVisible = true;
-    this.dialogLoading = true;
 
-    // 給 dialog 的 lastQueryBody（僅記錄/翻頁參數）
+    // 準備明細查詢條件：沿用主查詢條件 + 指定專櫃
     this.dialogHistoryRequestBody = {
       ...(this.historyRequestBody ?? {}),
       tlt_no: row?.tlt_no ? [row.tlt_no] : undefined,
-      ECR_NoList: row?.ECR_No ? [row.ECR_No] : undefined,
       pageIndex: 1,
       pageSize: 30,
       SortBy: [{ field: 'TXN_Date', order: 1 }],
     };
 
-    const all = this.buildDetailRowsForSelection();
-    this.dialogFooterData = this.buildTotalsFromRows(all);
-    this.dialogTotalRecords = all.length;
-    this.dialogData = all.slice(0, 30);
-
-    this.dialogLoading = false;
+    // 第一次開 Dialog 順便載入第一頁
+    this.loadDialogPage(this.dialogHistoryRequestBody).subscribe();
   }
 
   onDialogClose(v: boolean): void {
@@ -300,18 +290,43 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     }
   }
 
-  // ===== 提供給 app-table-report 的明細查詢（客端分頁）=====
+  // ===== 提供給 app-table-report 的明細查詢（打後端） =====
   public queryTLS23070DetailForReport = (body: any) => {
-    const rows = this.buildDetailRowsForSelection();
-    const total = rows.length;
-    const pageSize = Number(body?.pageSize) || 30;
-    const pageIndex = Number(body?.pageIndex) || 1;
-    const start = (pageIndex - 1) * pageSize;
-    const page = rows.slice(start, start + pageSize);
-    const grand = this.buildTotalsFromRows(rows);
-    this.dialogFooterData = grand; // 給 footerData 維持同步
-    return of({ Data: page, TotalCount: total, GrandTotal: grand });
+    return this.loadDialogPage(body);
   };
+
+  /** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
+  private loadDialogPage(body: any) {
+    this.dialogLoading = true;
+
+    return this.tls23070Service.queryTLS23070Detail(body).pipe(
+      finalize(() => (this.dialogLoading = false)),
+      map((res: any) => {
+        const data = res?.Data ?? {};
+        const dateSubs = Array.isArray(data?.dateSubsTotals) ? data.dateSubsTotals : [];
+
+        // 每一筆 dateSubsTotals → 一列（銷售日期 + 各付款金額）
+        const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
+        const totalCount = typeof res?.TotalCount === 'number'
+          ? res.TotalCount
+          : rows.length;
+
+        const grand = this.buildTotalsFromRows(rows);
+
+        // 同步到 component 狀態（給 [data] / [footerData] 用）
+        this.dialogData = rows;
+        this.dialogTotalRecords = totalCount;
+        this.dialogFooterData = grand;
+
+        // 回傳給 app-table-report
+        return {
+          Data: rows,
+          TotalCount: totalCount,
+          GrandTotal: grand,
+        };
+      })
+    );
+  }
 
   // ===== 匯出 PDF（主表）=====
   onExportPDF(): void {
@@ -373,10 +388,6 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     return `download${defaultExtension}`;
   }
 
-  private pickWrapper(data: any): any {
-    return Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
-  }
-
   private getMonthRange(d: Date) {
     const year = d.getFullYear();
     const month = d.getMonth();
@@ -415,7 +426,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     if (val instanceof Date && !isNaN(val.getTime())) {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
-      const d = String(val.getDate()).padStart(2, '0');
+      const d = val.getDate().toString().padStart(2, '0');
       return `${y}/${m}/${d}`;
     }
     const s = String(val);
@@ -425,7 +436,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     if (!isNaN(dt.getTime())) {
       const y = dt.getFullYear();
       const mm = String(dt.getMonth() + 1).padStart(2, '0');
-      const dd = String(dt.getDate()).padStart(2, '0');
+      const dd = dt.getDate().toString().padStart(2, '0');
       return `${y}/${mm}/${dd}`;
     }
     return s;
@@ -439,6 +450,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     return Object.keys(this.detailTotalFieldMap);
   }
 
+  /** 從 totalSummary 取得 Grand Total（主表 footer 用） */
   private buildGrandTotalFromSummary(summary: any): Record<string, number> {
     const out: Record<string, number> = {};
     for (const [field, apiKey] of Object.entries(this.detailTotalFieldMap)) {
@@ -447,76 +459,63 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     return out;
   }
 
-  /** 主表：把所有明細彙總到 (tlt_no + tlt_name + ECR_No) */
-  private buildMainRowsFromWrapper(wrapper: any): any[] {
-    const groups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
-    const allSubs = groups.flatMap((g: any) => Array.isArray(g?.subsTotals) ? g.subsTotals : []);
-    const details = allSubs.flatMap((s: any) =>
-      s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []
-    );
-
-    const keyMap = new Map<string, any>();
+  /** 主表：tltNoSubTotals[] → 一列一個專櫃（完全吃後端順序） */
+  private buildMainRowsFromSubTotals(tltNoSubTotals: any[]): any[] {
+    const groups = Array.isArray(tltNoSubTotals) ? tltNoSubTotals : [];
     const fields = this.numericFields();
+    const rows: any[] = [];
 
-    for (const r of details) {
-      const k = `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${r?.ECR_No ?? ''}`;
-      if (!keyMap.has(k)) {
-        const base: any = {
-          tlt_no: r?.tlt_no ?? '',
-          tlt_name: r?.tlt_name ?? '',
-          ECR_No: r?.ECR_No ?? '',
-          _rowKey: k,
-        };
-        for (const f of fields) base[f] = 0;
-        keyMap.set(k, base);
-      }
-      const agg = keyMap.get(k)!;
+    for (const g of groups) {
+      const tltNo = g?.tlt_no ?? '';
+
+      const row: any = {
+        _rowKey: tltNo,          // 🔑 一定要有，對應 dataKey="_rowKey"
+        tlt_no: tltNo,
+        tlt_name: g?.tlt_name ?? '',
+      };
+
       for (const f of fields) {
-        agg[f] = Number(agg[f] ?? 0) + Number(r?.[f] ?? 0);
+        const apiKey = this.detailTotalFieldMap[f];
+        let tltKey = apiKey;
+        if (apiKey.startsWith('total')) {
+          tltKey = 'tltNoTotal' + apiKey.substring('total'.length);
+        }
+        row[f] = Number(g?.[tltKey] ?? 0);
       }
+
+      rows.push(row);
     }
 
-    // 排序：依預設 sort
-    const rows = Array.from(keyMap.values());
-    rows.sort((a, b) => {
-      for (const s of this.defaultSort) {
-        const av = a[s.field] ?? '';
-        const bv = b[s.field] ?? '';
-        if (av === bv) continue;
-        return (av > bv ? 1 : -1) * (s.order as number);
-      }
-      return 0;
-    });
+    // 不再在這裡排序，完全依照後端回傳順序
     return rows;
   }
 
-  /** 明細：依主表選取的 (tlt_no + ECR_No) 取出所有日期層的明細 */
-  private buildDetailRowsForSelection(): any[] {
-    if (!this.lastWrapper || !this.selectedMainRow) return [];
-    const { tlt_no, ECR_No } = this.selectedMainRow;
-    const groups = Array.isArray(this.lastWrapper?.tltNoSubTotals) ? this.lastWrapper.tltNoSubTotals : [];
+  /** 明細：dateSubsTotals[] → 每日金額一列 */
+  private buildDetailRowsFromDateSubsTotals(dateSubsTotals: any[]): any[] {
+    const subs = Array.isArray(dateSubsTotals) ? dateSubsTotals : [];
     const fields = this.numericFields();
-
     const rows: any[] = [];
-    for (const g of groups) {
-      if (g?.tlt_no !== tlt_no) continue;
-      const subs = Array.isArray(g?.subsTotals) ? g.subsTotals : [];
-      for (const s of subs) {
-        const dets = s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? [];
-        for (const r of dets) {
-          if (r?.ECR_No !== ECR_No) continue;
-          const out: any = {};
-          out.TXN_Date = this.toDateOnly(r?.TXN_Date); // 明細要有銷售日期
-          for (const f of fields) {
-            out[f] = Number(r?.[f] ?? 0);
-          }
-          out._rowKey = `${tlt_no}|${ECR_No}|${out.TXN_Date}`;
-          rows.push(out);
+
+    for (const s of subs) {
+      const dateStr = this.toDateOnly(s?.TXN_Date);
+      const row: any = {
+        TXN_Date: dateStr,
+      };
+
+      for (const f of fields) {
+        const apiKey = this.detailTotalFieldMap[f]; // e.g. totalPayAmt10
+        let subsKey = apiKey;
+        if (apiKey.startsWith('total')) {
+          subsKey = 'subsTotal' + apiKey.substring('total'.length);
         }
+        row[f] = Number(s?.[subsKey] ?? 0);
       }
+
+      row._rowKey = `${s?.tlt_no ?? ''}|${dateStr ?? ''}`;
+      rows.push(row);
     }
 
-    // 依日期排序
+    // 明細依日期排序（這裡照商業需求可留著）
     rows.sort((a, b) => (a.TXN_Date > b.TXN_Date ? 1 : a.TXN_Date < b.TXN_Date ? -1 : 0));
     return rows;
   }
@@ -533,9 +532,8 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
   // ===== 欄位 =====
   private buildMainColumns() {
-    // 主表：不顯示銷售日期，顯示 tlt_no / tlt_name / ECR_No + 金額欄位
+    // 主表：一列一個專櫃
     return [
-      { field: 'ECR_No',   header: '收銀機號', visible: true },
       { field: 'tlt_no',   header: '專櫃編號', visible: true },
       { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
 

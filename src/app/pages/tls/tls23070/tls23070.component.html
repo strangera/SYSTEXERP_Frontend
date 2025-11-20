@@ -87,6 +87,7 @@
 </div>
 
 <!-- 主表：不含「銷售日期」欄位，顯示專櫃 + 收銀機彙總，保留 Grand Total -->
+<!-- 主表 -->
 <div class="card">
   <app-table-report
     tableKey="TLS23070_MAIN"
@@ -119,7 +120,7 @@
   </app-table-report>
 </div>
 
-<!-- 明細 Dialog：含銷售日期 + 金額欄位，並有總計 -->
+<!-- 明細 Dialog -->
 <app-dialog
   [visible]="dialogVisible"
   header="專櫃/機台明細"
