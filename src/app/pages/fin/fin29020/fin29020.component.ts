@@ -65,6 +65,7 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Data> imp
   columns: Column[] = [
     { field: 'PAM_No', header: '匯款單號', visible: true },
     // TODO:缺銀行代號 日後待確認
+    { field: 'unknownField', header: '銀行代號', visible: true },
     { field: 'RMT_Date', header: '匯款日期', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'CompanyBNK_No', header: '匯款銀行代號', visible: true },

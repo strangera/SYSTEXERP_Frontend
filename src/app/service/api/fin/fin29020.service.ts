@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
@@ -50,12 +50,18 @@ export class FIN29020Service {
   }
 
   /** 匯出匯款明細表 */
-  exportFIN29020(req: FIN29020QueryRequest): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/exportFIN29020`, req);
+  exportFIN29020(req: FIN29020QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportFIN29020`, req, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
   }
 
   /** 匯出匯款明細表 PDF */
-  exportFIN29020PDF(req: FIN29020QueryRequest): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/exportFIN29020PDF`, req);
+  exportFIN29020PDF(req: FIN29020QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportFIN29020PDF`, req, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
   }
 }
