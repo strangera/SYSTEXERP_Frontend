@@ -62,12 +62,12 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
-               [data]="service.ASS21010Data()"
+               [data]="tableData()"
                [dataKey]="'ID'"
                [tableKey]="'ASS21010_Data'"
                [apiUrl]="'QueryASS21010'"
                [columns]="columns"
-               [totalRecords]="service.totalRecords()"
+               [totalRecords]="totalRecords()"
                [multiSortMeta]="this.qf().SortBy.value!"
                [loading]="service.tableLoading()"
                [customReport]="true"

@@ -1,28 +1,28 @@
+import { registerLocaleData } from '@angular/common';
+import { HttpBackend, HttpClient } from '@angular/common/http';
+import zhHant from '@angular/common/locales/zh-Hant';
 import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
+import { JwtHelperService } from '@auth0/angular-jwt';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import {
   BehaviorSubject,
-  Observable,
-  throwError,
   catchError,
+  EMPTY,
   map,
-  tap,
+  Observable,
   of,
   switchMap,
-  EMPTY
+  tap,
+  throwError
 } from 'rxjs';
-import { HttpBackend, HttpClient } from '@angular/common/http';
-import { EncryptionService } from '../../shared/service/encryption.service';
-import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
-import { UserInfo } from '../../shared/models/system/userInfo';
-import { NotificationService } from '../../shared/component/notification-message/notification.service';
-import { QueryStateService } from '../../shared/service/query-state.service';
-import { JwtHelperService } from '@auth0/angular-jwt';
-import { registerLocaleData } from '@angular/common';
-import zhHant from '@angular/common/locales/zh-Hant';
 import { InactivityService } from '../../core/services/inactivity.service';
-import { UntilDestroy } from '@ngneat/until-destroy';
+import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { UserInfo } from '../../shared/models/system/userInfo';
+import { userLogin } from '../../shared/models/system/userLogin';
+import { EncryptionService } from '../../shared/service/encryption.service';
+import { QueryStateService } from '../../shared/service/query-state.service';
 
 registerLocaleData(zhHant, 'zh-Hant-TW');
 
@@ -114,6 +114,7 @@ export class AuthService {
 
   // 最佳實踐：簡單 Getter
   public get currentUserValue(): UserInfo | null {
+    console.log(this.userSubject.value);
     return this.userSubject.value;
   }
 
@@ -148,7 +149,11 @@ export class AuthService {
         let userInfo = response.Data;
 
         // 1. 確保 client_ip 更新到儲存和 Subject
-        userInfo = { ...userInfo, client_ip: this.client_ip };
+        userInfo = {
+          ...userInfo,
+          client_ip: this.client_ip,
+          mid: Number(userInfo.mid)
+        };
         localStorage.setItem('UserInfo', JSON.stringify(userInfo));
         this.userSubject.next(userInfo);
 

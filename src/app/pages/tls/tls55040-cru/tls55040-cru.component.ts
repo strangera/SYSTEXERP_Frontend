@@ -1,22 +1,11 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { SaleslistStatusService } from '../../../service/basic/saleslist-status.service';
-import { SalesLocationService } from '../../../service/basic/sales-location.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { PaperTypeService } from '../../../service/basic/paper-type.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -65,49 +54,20 @@ export class TLS55040CRUComponent {
   });
 
   // Dropdown options
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  salesStatusOptions: any[] = [];
-  salesLocationOptions: any[] = [];
-  salesPersonOptions: any[] = [];
-  transactionTypeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  userCodeOptions: any[] = [];
   formTitle: string = '';   //CRU
   showConfirm: boolean = false;//CRU
   crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
-  vendorOptions: any[] = [];
-  paperTypeOptions: any[] = [];
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private saleslistStatusService: SaleslistStatusService,
-    private salesLocationService: SalesLocationService,
-    private counterCodeService: CounterCodeService,
-    private transactionTypeService: TransactionTypeService,
-    private authService: AuthService,
-    private userCodeService: UserCodeService,
-    private vendorService: VendorService,
-    private paperTypeService: PaperTypeService,
 
   ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options
     // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe(data => this.warehouseOptions = data);
-    this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
-    this.saleslistStatusService.getSalesStatusOptions().subscribe(data => this.salesStatusOptions = data);
-    this.salesLocationService.getSalesLocationOptions().subscribe(data => this.salesLocationOptions = data);
-    this.counterCodeService.getCounterCodes().subscribe(data => this.counterCodeOptions = data);
-    this.transactionTypeService.getTransactionTypes().subscribe(data => this.transactionTypeOptions = data);
-    this.vendorService.getVendors().subscribe((data) => (this.vendorOptions = data));
-    this.userCodeService.getUserCode().subscribe(data => this.userCodeOptions = data);
-    this.paperTypeService.getSystemTypes().subscribe(data => this.paperTypeOptions = data);
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
       rowdata: any,

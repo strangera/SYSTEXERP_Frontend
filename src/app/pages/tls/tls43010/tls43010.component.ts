@@ -36,7 +36,6 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 })
 export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    // POS50011 廣告資訊設定檔
     NOT_No: ['', [Validators.maxLength(20)]], // 通告編號
     NOT_Date: [null as null | Date], // 建立日期
     NOT_BegDate_Start: [null as null | Date], // 有效開始日期
@@ -45,11 +44,10 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     NOT_EndDate_End: [null as null | Date], // 有效結束日期
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Status: [null, [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
-    ...createPaginationConfig([{ field: 'NOT_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'NOT_No', order: -1 }, { field: 'NOT_Date', order: -1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  data: QueryTls43010Response[] = [
-  ];
+  data: QueryTls43010Response[] = [];
   selectedItems: QueryTls43010Response[] = [];
   columns: Column[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },

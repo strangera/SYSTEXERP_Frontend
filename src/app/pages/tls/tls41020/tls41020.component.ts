@@ -19,6 +19,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { CounterNameService } from '@service/basic/counter-name.service';
 
 // 與後端一致：order 用 1 / -1
 type ApiSort = { field: string; order: number };
@@ -34,7 +35,7 @@ type ApiSort = { field: string; order: number };
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputNumberComponent,
+    // InputNumberComponent,
     CalendarRangeComponent,
     MultiSelectComponent,
     TableComponent,
@@ -101,7 +102,7 @@ export class TLS41020Component
     { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true },
     { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true },
   ];
-
+CounterOptions: any[] = [];
   EDC_Status_Option: any[] = [
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' },
@@ -110,6 +111,7 @@ export class TLS41020Component
   constructor(
     private tls41020Service: TLS41020Service,
     private ECRNoSvc: ECRNoService,
+    private counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -126,6 +128,12 @@ export class TLS41020Component
           value: x.value,
         })) || [];
     });
+        this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = (res ?? []).map((x: any) => ({
+        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
+      }));
+    });
+  
   }
 
   /** 查詢：回到第一頁，送出預設排序（1/-1），不回灌 table 排序狀態 */
@@ -149,7 +157,7 @@ export class TLS41020Component
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount ?? this.data.length ?? 0;
       },
-      error: () => this.messageService.errorBubble('查詢失敗'),
+      error: () => {this.loading = false;this.messageService.errorBubble('查詢失敗')},
       complete: () => {
         this.loading = false;
         this.messageService.unblockUi();
@@ -161,46 +169,62 @@ export class TLS41020Component
    * 懶載入（分頁/排序）：
    * 僅「讀取」子元件丟出的參數，不再把排序/分頁回灌給子元件，避免循環。
    */
-  override onLazyLoadData(event: any, form: FormGroup): void {
-    this.loading = true;
+ override onLazyLoadData(event: any, form: FormGroup): void {
+  this.loading = true;
 
-    // TableComponent 會在 goToPage/loadDataLazy 丟出 pageIndex/pageSize/SortBy
-    const pageIndex =
-      event?.pageIndex ??
-      ((event?.first ?? 0) / (event?.rows ?? (form.value?.PageSize || 20)) + 1);
+  const pageIndex =
+    event?.pageIndex ??
+    ((event?.first ?? 0) / (event?.rows ?? (form.value?.PageSize || 20)) + 1);
 
-    const pageSize =
-      event?.pageSize ?? event?.rows ?? form.value?.PageSize ?? 20;
+  const pageSize =
+    event?.pageSize ?? event?.rows ?? form.value?.PageSize ?? 20;
 
-    let sort: ApiSort[] = this.defaultSort;
+  let sort: ApiSort[] = this.defaultSort;
 
-    if (Array.isArray(event?.SortBy) && event.SortBy.length) {
-      // 直接沿用 TableComponent 傳出的 SortBy（1 / -1）
-      sort = event.SortBy.map((m: any) => ({
-        field: m.field,
-        order: m.order === -1 ? -1 : 1,
-      }));
-    } else if (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length) {
-      // 兼容：若外層直接用 PrimeNG 事件
-      sort = event.multiSortMeta.map((m: any) => ({
-        field: m.field,
-        order: m.order === -1 ? -1 : 1,
-      }));
-    } else if (event?.sortField) {
-      sort = [{ field: event.sortField, order: event.sortOrder === -1 ? -1 : 1 }];
-    }
-
-    const payload = this.buildPayload(form, { pageIndex, pageSize, sort });
-
-    this.tls41020Service.queryTLS41020(payload).subscribe({
-      next: (res) => {
-        this.data = res?.Data || [];
-        this.totalRecords = res?.TotalCount ?? 0;
-      },
-      error: () => this.messageService.errorBubble('資料載入失敗'),
-      complete: () => (this.loading = false),
-    });
+  if (Array.isArray(event?.SortBy) && event.SortBy.length) {
+    // TableComponent 丟出的 SortBy
+    sort = event.SortBy.map((m: any) => ({
+      field: this.mapSortField(m.field),
+      order: m.order === -1 ? -1 : 1,
+    }));
+  } else if (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length) {
+    // 兼容 PrimeNG 事件
+    sort = event.multiSortMeta.map((m: any) => ({
+      field: this.mapSortField(m.field),
+      order: m.order === -1 ? -1 : 1,
+    }));
+  } else if (event?.sortField) {
+    sort = [{
+      field: this.mapSortField(event.sortField),
+      order: event.sortOrder === -1 ? -1 : 1,
+    }];
   }
+
+  const payload = this.buildPayload(form, { pageIndex, pageSize, sort });
+
+  this.tls41020Service.queryTLS41020(payload).subscribe({
+    next: (res) => {
+      this.data = res?.Data || [];
+      this.totalRecords = res?.TotalCount ?? 0;
+    },
+    error: () => {
+      this.messageService.errorBubble('資料載入失敗');
+      this.loading = false;
+    },
+    complete: () => (this.loading = false),
+  });
+}
+/** 將前端顯示欄位名稱轉成後端排序欄位名稱 */
+private mapSortField(field: string): string {
+  switch (field) {
+    case 'EDC_Status1Name':
+      return 'EDC_Status1';
+    case 'EDC_Status2Name':
+      return 'EDC_Status2';
+    default:
+      return field;
+  }
+}
 
   onClearForm(): void {
     this.queryForm.reset();

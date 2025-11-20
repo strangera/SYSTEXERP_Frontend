@@ -1,28 +1,29 @@
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
-import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { AsyncPipe, NgIf, NgStyle } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { trigger, transition, style, animate } from '@angular/animations';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle, NgIf, AsyncPipe } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { finalize, Observable } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 export const enum POStatus {
   已申請 = '0',
   取消 = '1',
@@ -75,6 +76,8 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
     { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 }, // 作廢
     { label: '取消單據', icon: 'pi pi-times-circle text-gray-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.取消); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 }, // 取消單據
+    // { label: '列印採購單PDF', icon: 'fa fa-file-pdf text-red-500', action: (rowData: ITLS52010Data) => { this.print(rowData, 'pdf') } },
+    // { label: '列印採購單EXCEL', icon: 'fa fa-file-lines text-green-500', action: (rowData: ITLS52010Data) => { this.print(rowData, 'excel') } }
   ];
   columns: Column[] = [
     { field: 'PO_No', header: '採購單號', visible: true }, // 採購單號
@@ -124,7 +127,8 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   constructor(
     private readonly tls52010Service: Tls52010Service, // 注入 TLS52010Service
     private readonly exportLabelService: ExportLabelService,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly fileExportService: FileExportService
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS52010', 'TLS/TLS52010cru', this.queryForm, (form) => this.onSubmit(form));
@@ -138,8 +142,28 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       });
     })
   }
-  print(rowData: ITLS52010Data[]) {
-    console.log('列印多筆事件:', rowData);
+  printLoading = false;
+  print(rowData: ITLS52010Data[], type: 'pdf' | 'excel') {
+    const params = { PO_NoList: rowData.map(item => item.PO_No) };
+    let export$: Observable<HttpResponse<Blob>>;
+    // 2. 決定要呼叫哪個 API 服務方法
+    switch (type) {
+      case 'pdf':
+        export$ = this.tls52010Service.exportTLS52010PDF(params);
+        break;
+      case 'excel':
+        export$ = this.tls52010Service.exportTLS52010(params);
+        break;
+      default:
+        return;
+    }
+    // 3. 呼叫通用服務執行匯出流程
+    this.printLoading = true
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })),
+      '.' + type,
+      (isLoading) => this.btnLoading = isLoading
+    );
   }
   statusChange(rowData: ITLS52010Data, status: string) {
     this.btnLoading = true;

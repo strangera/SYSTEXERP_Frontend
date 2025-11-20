@@ -88,11 +88,14 @@
     [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled">
     <header>
       <div class="flex align-items-center gap-2">
-        <p-button label="列印退貨單" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="列印退貨單"
-          tooltipPosition="top" icon="pi pi-print" [rounded]="true" severity="success" (click)="print(selectedItems)"
-          [disabled]="selectedCount === 0" />
+        <p-button label="列印退貨單PDF" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="列印採購單"
+          tooltipPosition="top" icon="fa fa-file-pdf" [rounded]="true" severity="danger" [loading]="printLoading"
+          (click)="print(selectedItems,'pdf')" [disabled]="selectedCount === 0" />
+        <p-button label="列印退貨單EXCEL" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="列印採購單"
+          tooltipPosition="top" icon="fa fa-file-lines" [rounded]="true" severity="success" [loading]="printLoading"
+          (click)="print(selectedItems,'excel')" [disabled]="selectedCount === 0" />
         <p-button label="結案" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="結案"
-          tooltipPosition="top" [rounded]="true" severity="danger" (click)="close(selectedItems)"
+          tooltipPosition="top" [rounded]="true" severity="help" (click)="close(selectedItems)"
           [disabled]="disabledClose || selectedCount === 0" />
         <span *ngIf="disabledClose && selectedCount > 0" @slideInFromLeft class="text-sm text-red-600">
           退貨單狀態為「已審核」或「部分驗收」可強制結案

@@ -31,6 +31,7 @@ import { CounterNameService } from '@service/basic/counter-name.service';
 import { CashierService } from '@service/basic/cashier.service';
 import { tls2b010tableComponent } from '@shared/componentkit/tls2-b010-table/tls2b010table.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { TLS55070TableComponent } from '@shared/componentkit/tls55070-table/tls55070-table.component';
 
 const TOTAL_FIELD_MAP = { TXN_SaleAmt: 'Total_TXN_SaleAmt' } as const;
 type TotalFieldMap = typeof TOTAL_FIELD_MAP;
@@ -56,7 +57,7 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     CheckboxModule,
     ButtonModule,
     InputTextRangeComponent,
-    tls2b010tableComponent,
+    TLS55070TableComponent,
   ],
 })
 export class TLS55070Component extends BasicQueryPageComponent<any> implements AfterViewInit {
@@ -467,11 +468,17 @@ onSubmit(form: FormGroup): void {
       IsShowStatus: this.emptyToNull(raw['IsShowStatus']),
     };
 
-    if (this.includePagingAndSorting) {
-      payload['pageSize'] = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
-      payload['pageIndex'] = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
-      payload['SortBy'] = Array.isArray(raw?.SortBy) ? raw.SortBy : this.toApiSort(this.defaultSort);
-    }
+if (this.includePagingAndSorting) {
+  payload['pageSize'] = Number.isFinite(raw?.pageSize) ? Number(raw.pageSize) : 20;
+  payload['pageIndex'] = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
+
+  const uiSort = Array.isArray(raw?.SortBy) && raw.SortBy.length
+    ? raw.SortBy
+    : this.defaultSort;
+
+  // ✅ 一律透過 toApiSort 做欄位過濾 & 轉換
+  payload['SortBy'] = this.toApiSort(uiSort);
+}
 
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
@@ -483,21 +490,24 @@ onSubmit(form: FormGroup): void {
   }
 
   private unpackResponse(wrappers: any[]) {
+      
     const rows: any[] = [];
     const allSubtotals: Record<string, Record<string, number>> = {};
     let totalRecords = 0;
 
     for (const w of wrappers || []) {
       const list = Array.isArray(w?._DetailList) ? w._DetailList : [];
+    
+
 
       // 以銷售單號做群組鍵
       const saleNo = String(w?.TXN_SaleNoteNo ?? '').trim();
       const grpKey = saleNo || `${w?.TXN_Date ?? ''}|${w?.ECR_No ?? ''}|${rows.length}`;
 
       // 收集小計
-      allSubtotals[grpKey] = {
-        [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(w?.SumTXN_SaleAmt ?? 0),
-      };
+allSubtotals[grpKey] = {
+  [this.detailSubtotalFieldMap.TXN_SaleAmt]: Number(w?.SumTXN_SaleAmt ?? 0),
+};
 
       // 明細列
       list.forEach((d: any, i: number) => {
@@ -516,10 +526,13 @@ onSubmit(form: FormGroup): void {
 
       // 小計列（放在每組最後一筆，PLU_Name 顯示「銷售金額」）
       // ✅ 小計列獨立成另一個群組，且不顯示銷售單號
+// 小計列（放在每組最後一筆，PLU_Name 顯示「銷售金額」）
 rows.push({
   _rowKey: `${grpKey}|__SUBTOTAL__`,
-  [this.groupByField]: `${grpKey}__SUB`, // ← 讓小計成為獨立群組，不被合併
-  TXN_SaleNoteNo: '',                    // ← 不顯示銷售單號（也避免置中）
+  [this.groupByField]: `${grpKey}__SUB`, // 小計獨立群組
+  _grpBase: grpKey,                      // 👈 加這個，記住原本的群組鍵
+
+  TXN_SaleNoteNo: '',
   TXN_Date: '',
   ECR_No: '',
   TLT_No: '',
@@ -529,7 +542,8 @@ rows.push({
   GUINO: '',
   PLU_Name: '銷售金額',
   DiscRate: '',
-  TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
+  SumTXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),  // 原始小計（可留著）
+ TXN_SaleAmt: Number(w?.SumTXN_SaleAmt ?? 0),
   __isSubRow: true,
 });
 
@@ -556,25 +570,48 @@ rows.push({
   }
 
   /** UI sort 轉 API sort：把 _grp 映成 TXN_SaleNoteNo，避免打散群組 */
-  private toApiSort(
-    uiSort: Array<{ field: string; order: 1 | -1 }>
-  ): Array<{ field: string; order: 1 | -1 }> {
-    const out: Array<{ field: string; order: 1 | -1 }> = [];
-    let injectedSaleNo = false;
+/** UI sort 轉 API sort：
+ *   - 把 _grp 映成 TXN_SaleNoteNo
+ *   - 忽略 UI 專用欄位（像 _rowKey 之類）
+ */
+private toApiSort(
+  uiSort: Array<{ field: string; order: 1 | -1 }>
+): Array<{ field: string; order: 1 | -1 }> {
+  const out: Array<{ field: string; order: 1 | -1 }> = [];
+  let injectedSaleNo = false;
 
-    for (const s of uiSort ?? []) {
-      if (s.field === this.groupByField) {
-        out.push({ field: 'TXN_SaleNoteNo', order: s.order });
-        injectedSaleNo = true;
-      } else {
-        out.push(s);
-      }
+  for (const s of uiSort ?? []) {
+    if (!s || !s.field) continue;
+
+    // 群組欄位：_grp -> TXN_SaleNoteNo
+    if (s.field === this.groupByField) {
+      out.push({ field: 'TXN_SaleNoteNo', order: s.order });
+      injectedSaleNo = true;
+      continue;
     }
-    if (!injectedSaleNo) out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
 
-    const seen = new Set<string>();
-    return out.filter(s => (seen.has(s.field) ? false : (seen.add(s.field), true)));
+    // 🚫 忽略前端用的 UI 欄位，不送給後端（_rowKey 等）
+    if (s.field.startsWith('_')) {
+      continue;
+    }
+
+    // 一般欄位：直接帶出去
+    out.push(s);
   }
+
+  // 沒有任何 TXN_SaleNoteNo，就幫忙補一個在最前面
+  if (!injectedSaleNo) {
+    out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
+  }
+
+  // 去掉重複欄位
+  const seen = new Set<string>();
+  return out.filter((s) => {
+    if (seen.has(s.field)) return false;
+    seen.add(s.field);
+    return true;
+  });
+}
 
   private emptyToNull(v: any) {
     return v === '' ? null : v;
@@ -625,6 +662,9 @@ rows.push({
 override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
   if (!this.activated) return; // 未按查詢前，不要自動打 API
 
+  // 如果上一筆 lazy 還在 loading，就先不再打，避免同時多發
+  if (this.loading) return;
+
   const e = evt as any as LazyLoadEvent;
 
   // 事件可能給 pageSize 或 rows（PrimeNG）
@@ -638,27 +678,88 @@ override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
   // 事件可能沒有 pageIndex（PrimeNG 常見）：用 first/rows 推回 pageIndex
   const evtHasPageIndex = Number.isFinite((e as any)?.pageIndex);
   const first = Number.isFinite((e as any)?.first) ? Number((e as any).first) : 0;
-  const pageIndex = evtHasPageIndex ? Number((e as any).pageIndex) : Math.floor(first / pageSize) + 1;
+  const pageIndex = evtHasPageIndex
+    ? Number((e as any).pageIndex)
+    : Math.floor(first / pageSize) + 1;
 
   // 同步回表單
   this.queryForm.patchValue({ pageIndex, pageSize }, { emitEvent: false });
 
-  this.fetchTLS55070(e).subscribe({
-    next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
-      this.data = rows;
-      this.totalRecords = totalRecords;
-      this.detailTotals = externalTotals;
-      this.visibleSubtotals = externalSubtotals;
-    },
-    error: _ => {
-      this.data = [];
-      this.totalRecords = 0;
-      this.detailTotals = {};
-      this.visibleSubtotals = {};
-    }
-  });
-};
+  // ===== 真正打 API =====
+  this.loading = true;
 
+  this.fetchTLS55070(e)
+    .pipe(finalize(() => (this.loading = false)))
+    .subscribe({
+      next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
+        // 沒資料直接收
+        if (!rows || !rows.length) {
+          this.totalRecords = totalRecords;
+          this.detailTotals = externalTotals;
+          this.visibleSubtotals = {
+            ...this.visibleSubtotals,
+            ...externalSubtotals,
+          };
+          return;
+        }
+
+        // 第一次或 pageIndex = 1：直接覆蓋
+        if (!this.data || !this.data.length || pageIndex === 1) {
+          this.data = rows;
+        } else {
+          // 後續頁：要接在前一頁後面，並處理「跨頁同單號」的情況
+          let merged = [...this.data];
+
+          // 找「前一頁最後一個一般明細列」的銷售單號
+          const revPrev = [...merged].reverse();
+          const lastDetailIdxFromEnd = revPrev.findIndex(r => !r?.__isSubRow);
+          const lastDetail =
+            lastDetailIdxFromEnd >= 0
+              ? merged[merged.length - 1 - lastDetailIdxFromEnd]
+              : null;
+          const lastSaleNo: string | null =
+            lastDetail?.TXN_SaleNoteNo ?? null;
+
+          // 找「新頁第一個一般明細列」的銷售單號
+          const firstDetailIdx = rows.findIndex(r => !r?.__isSubRow);
+          const firstDetail =
+            firstDetailIdx >= 0 ? rows[firstDetailIdx] : null;
+          const firstSaleNo: string | null =
+            firstDetail?.TXN_SaleNoteNo ?? null;
+
+          // ✅ 兩頁交界的 TXN_SaleNoteNo 一樣：
+          //    代表同一張銷售單被拆成兩頁，我們要把前一頁的小計列拿掉，
+          //    然後讓明細無縫接在一起，最後由「最新一頁」的小計作為整張的總小計。
+          if (lastSaleNo && firstSaleNo && lastSaleNo === firstSaleNo) {
+            if (merged.length && merged[merged.length - 1]?.__isSubRow) {
+              // 最後一列是小計列 -> 砍掉它
+              merged = merged.slice(0, -1);
+            }
+          }
+
+          // 把新的 rows 接在後面
+          this.data = [...merged, ...rows];
+        }
+
+        this.totalRecords = totalRecords;
+        this.detailTotals = externalTotals;
+        this.visibleSubtotals = {
+          ...this.visibleSubtotals,
+          ...externalSubtotals,
+        };
+
+        // 確保子表格的 groupKey 還是用 _grp（銷售單號群組）
+        queueMicrotask(() => {
+          if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+        });
+      },
+      error: _ => {
+        // lazy 失敗就維持原本的 data，不清空
+        this.data = this.data || [];
+        this.totalRecords = this.totalRecords || 0;
+      },
+    });
+};
 
 
 }

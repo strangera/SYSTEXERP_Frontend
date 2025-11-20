@@ -1,23 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { debounceTime, finalize, withLatestFrom } from 'rxjs';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { IGetBudgetAmountRequest, IPODetail, IPOS2004DetailData, IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, ITLS52010Request, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { AsyncPipe, NgClass, NgIf } from '@angular/common';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -25,6 +9,22 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
+import { PanelModule } from 'primeng/panel';
+import { debounceTime, finalize, withLatestFrom } from 'rxjs';
+import { IGetBudgetAmountRequest, IPODetail, IPOS2004DetailData, IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, ITLS52010Request, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
@@ -75,7 +75,14 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
   warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
   editColumns: EditColumn[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
+    {
+      field: 'PLU_MagNo',
+      header: '商品管理編號',
+      width: '150px',
+      type: 'input',
+      onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
+      validate: [validateRequired],
+    },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'UNIT_NAME', header: '單位' },
@@ -103,6 +110,66 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   originalData: IPOS2004DetailData[] = [];
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
+
+  validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string } => {
+    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
+    if (hasDuplicatePLU_MagNo) {
+      return { isValid: false, errorMessage: '商品管理編號重複' };
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
+
+  onPLU_MagNoBlur(rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) {
+    const venNo = this.dataForm.controls.VEN_No.value;
+    const logoNo = this.dataForm.controls.LOGO_No.value;
+
+    if (!venNo || !logoNo || !value) {
+      return;
+    }
+    const body = {
+      VEN_No: venNo,
+      PLU_MagNo: value,
+      LOGO_No: logoNo,
+      pageSize: 1,
+      pageIndex: 1,
+    };
+
+    this.tls52010Service.queryPOS2004DetailByVenNo(body)
+      .pipe(untilDestroyed(this))
+      .subscribe((results) => {
+        if (results.Data && results.Data.length > 0) {
+          const newData = results.Data[0];
+          const updatedRow: IPOS2004DetailData = {
+            ...rowData,
+            PLU_MagNo: newData.PLU_MagNo,
+            PLU_Name: newData.PLU_Name,
+            PLU_No: newData.PLU_No,
+            UNIT_NAME: newData.UNIT_NAME,
+            PLU_BoxQty: newData.PLU_BoxQty,
+            PLU_StockTaxType: newData.PLU_StockTaxType,
+            PLU_TaxType: newData.PLU_TaxType, // 確保 TaxType 屬性也被帶入
+            PLU_SalePrc_UNI: newData.PLU_SalePrc_UNI,
+            PLU_SalePrc: newData.PLU_SalePrc,
+            POD_SubQty: 1,
+            POD_BuyNet: newData.PLU_SalePrc_UNI || 0,
+            POD_SaleAmt: newData.PLU_SalePrc || 0,
+          };
+          this.data = [
+            ...this.data.slice(0, index), // 取得 index 之前的元素
+            updatedRow,                     // 放入新的物件
+            ...this.data.slice(index + 1)   // 取得 index 之後的元素
+          ];
+          this.calculateTotals();
+          this.cdr.detectChanges();
+
+        } else {
+          this.messageService.errorBubble('查無該商品資訊');
+          this.data[index].PLU_MagNo = '';
+          this.data = [...this.data]; // 確保刷新
+        }
+      });
+  }
 
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -384,8 +451,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   ];
   opTotalRecords = 0;
   onAutoCompleteInputChange(event: any) {
-    console.log(event);
-
     const body = {
       ...event,
       VEN_No: this.dataForm.controls.VEN_No.value,

@@ -88,7 +88,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'PAY_Name', header: '支付別', visible: true, style: 'text-left' },
     { field: 'TXN_PayAmt', header: '停車收入', visible: true, style: 'text-right', format: (v: number) => this.money(v), isTotal: true },
-    { field: 'TXN_PayAmt_Rate', header: '收入佔比(%)', visible: true, style: 'text-right', format: (v: number) => this.percent(v) },
+    { field: 'TXN_PayAmt_Rate', header: '收入佔比(%)', visible: true, style: 'text-right' },
     { field: 'TXN_CustCnt', header: '交易筆數', visible: true, style: 'text-right', isTotal: true },
   ];
 
@@ -98,7 +98,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_No', header: '繳費機編號', visible: true },
     { field: 'PAY_Name', header: '支付別', visible: true, style: 'text-left' },
     { field: 'TXN_PayAmt', header: '停車收入', visible: true, style: 'text-right', format: (v: number) => this.money(v), isTotal: true },
-    { field: 'TXN_PayAmt_Rate', header: '收入佔比(%)', visible: true, style: 'text-right', format: (v: number) => this.percent(v) },
+    { field: 'TXN_PayAmt_Rate', header: '收入佔比(%)', visible: true, style: 'text-right' },
     { field: 'TXN_CustCnt', header: '交易筆數', visible: true, style: 'text-right', isTotal: true },
   ];
 

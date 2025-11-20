@@ -18,6 +18,7 @@ import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls12020',
@@ -40,10 +41,10 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   industryCodeOptions: IDropdownItem[] = [];
   queryForm = this.formBuilder.group({
     location_no: [''],
-    ven_uniform: ['', [Validators.required]], // 原本 vendorUID, 廠商統一編號（必填）
+    ven_uniform: [''], // 原本 vendorUID, 廠商統一編號
     VEN_Name: ['', Validators.maxLength(60)], // 原本 ven_name
     VEN_EngName: ['', Validators.maxLength(60)],
-    building_no: ['', [Validators.required]], // 館別（必填）
+    building_no: [''], // 館別（必填）
     InterviewDateStart: [yesterday], // 原本 contact_Datestart
     InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
     contact_USR_No: [''],
@@ -78,7 +79,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   willinglevelOptions: IDropdownItem[] = [];
   locationOptions: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
-
+  btnLoading = false;
   constructor(
     private tls12020Service: TLS12020Service,
     private locationOptionsService: LocationOptionsService,
@@ -88,6 +89,12 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
+
+    if (history.state?.clearQuery) {
+      this.queryStateService.clearQueryState('TLS12020');
+    }
+
+
     // 串業種 options
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       if (res?.Status === '0000') {
@@ -173,28 +180,42 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
           : null,
       };
 
-      this.tls12020Service.queryTLS12020(params).subscribe({
-        next: (res) => {
-          const data = (res.Data ?? []).map((row: { building_no: string; bus_type: string; willing_level: string }) => ({
-            ...row,
-            building_no_name: this.buildingNoOptions.find(opt => opt.value === row.building_no)?.label || row.building_no,
-            bus_type_name: this.industryCodeOptions.find(opt => opt.value === row.bus_type || opt.No === row.bus_type)?.label || row.bus_type,
-            willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.label || row.willing_level
-          }));
-          this.data = data;
-          this.totalRecords = res.TotalCount ?? 0;
-          this.queryStateService.setQueryState(this.ProgNo, params);
-          this.loading = false;
-          this.selectedItems = [];
-        },
-        error: (err) => {
-          console.error('TLS12020 查詢失敗', err);
-          this.loading = false;
-        }
-      });
+      this.tls12020Service
+        .queryTLS12020(params)
+        .pipe(finalize(() => (this.btnLoading = false)))
+        .subscribe({
+          next: (res) => {
+            const data = (res.Data ?? []).map((row: { building_no: string; bus_type: string; willing_level: string }) => ({
+              ...row,
+              building_no_name: this.buildingNoOptions.find(opt => opt.value === row.building_no)?.label || row.building_no,
+              bus_type_name: this.industryCodeOptions.find(opt => opt.value === row.bus_type || opt.No === row.bus_type)?.label || row.bus_type,
+              willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.label || row.willing_level
+            }));
+            this.data = data;
+            this.totalRecords = res.TotalCount ?? 0;
+            this.queryStateService.setQueryState(this.ProgNo, params);
+            this.loading = false;
+            this.selectedItems = [];
+          },
+        });
     });
   }
+  override initializePage(
+    progNo: string,
+    cruPage?: string,
+    queryForm?: FormGroup,
+    onSubmit?: (form: FormGroup) => void
+  ) {
+    // 先執行父類初始化（但取消原 onSubmit）
+    super.initializePage(progNo, cruPage, queryForm, undefined);
 
+    // 取出上次查詢條件
+    const query = this.queryStateService.getQueryStateValue(progNo);
+    if (query) {
 
-
+      if (onSubmit) {
+        onSubmit(queryForm!);
+      }
+    }
+  }
 }

@@ -1,6 +1,6 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
@@ -14,6 +14,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, tap } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -49,34 +50,33 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  public selectedItems: TLS26080Data[] = [];
+  public readonly tableData = signal<TLS26080Data[]>([]);
+  public readonly totalRecords = signal(0);
+  public readonly selectedItems = signal<TLS26080Data[]>([]);
 
-  public readonly editDisabled = (rowData: TLS26080Data) =>
-    (Reflect.has(rowData, 'CanEdit') && !!rowData) || rowData.pod_status !== ApprovalStatus.未核准;
-  public readonly isRowSelectable = (rowData: TLS26080Data) =>
-    Reflect.has(rowData, 'CanDelete') && !!rowData || rowData.pod_status === ApprovalStatus.未核准;
+  // 頁面專屬 Loading 狀態
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly deleteLoading = signal<boolean>(!1);
 
-  public readonly totalRecords = computed(() => this.service.TLS26080Data().length);
+  public readonly editDisabled = (rowData: TLS26080Data) => {
+    if (!rowData) return !0;
+    const hasCanEditFlag = Object.hasOwn(rowData, 'CanEdit');
+    const notPending = rowData.pod_status !== ApprovalStatus.未核准;
+    return hasCanEditFlag || notPending;
+  };
+  public readonly isRowSelectable = (rowData: TLS26080Data) => {
+    if (!rowData) return !1;
+    const hasCanDeleteFlag = Object.hasOwn(rowData, 'CanDelete');
+    const isPending = rowData.pod_status === ApprovalStatus.未核准;
+    return hasCanDeleteFlag || isPending;
+  };
 
-  private queryTLS26080 = computed(() => {
-    const { pod_no, pod_desc, pod_status, pod_sdate, pod_edate, pod_busdate } = this.queryForm.getRawValue();
-    return <TLS26080Query>{
-      pod_sdate_start: pod_sdate!,
-      pod_sdate_end: pod_edate!,
-      ...(pod_no && { pod_no }),
-      ...(pod_desc && { pod_desc }),
-      ...(pod_status && { pod_status }),
-      ...(pod_busdate && { pod_busdate }),
-    };
-  });
-
-  public readonly loadingEffect = effect(() => {
-    this.loading = this.service.dataLoading()
-      || this.service.campaignLoading()
-      || this.service.capItemsLoading()
-      || this.service.fileUploadLoading()
-      || this.service.exampleDownLoading()
-      || this.service.approvalStatusLoading();
+  private payload = computed((): TLS26080Query => {
+    const { org_id, ...rest } = this.qf();
+    return Object.fromEntries(Object.entries(rest)
+      .map(([k, v]) => [k, v.value])
+      .filter(([_, v]) => v !== null && v !== void 0 && v !== '')
+    );
   });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26080Data; })[] = [
@@ -103,40 +103,30 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     this.service.loadAPS1003(['E']);
   }
 
-  // 提交查詢
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.service.loadTLS26080(this.queryTLS26080());
+      this.tableLoading.set(!0);
+      this.service.loadTLS26080(this.payload()).pipe(
+        tap(res => {
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        }),
+        finalize(() => this.tableLoading.set(!1))
+      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }
 
-  // 刪除項目
   public onDelete(event: TLS26080Data[]): void {
-    this.service.deleteTLS26080(event.map(v => String(v.id))).pipe()
-      .subscribe({
-        next: () => this.messageService.successBubble('刪除成功'),
-        error: () => this.messageService.errorBubble('刪除失敗')
-      });
-    //   const items = Array.isArray(data) ? data : [data];
-    //   if (items.length === 0) return;
-
-    //   const idList = items
-    //     .filter(item => item && item.id != null)
-    //     .map(item => item.id);
-
-    //   if (idList.length === 0) {
-    //     this.messageService.warnBubble('未找到有效的刪除項目');
-    //     return;
-    //   }
-
-    //   // 模擬 API 刪除
-    //   setTimeout(() => {
-    //     this.mockData = this.mockData.filter(item => !idList.includes(item.id));
-    //     this.messageService.successBubble('選中項目刪除成功');
-    //     this.onSubmit(this.queryForm); // 刷新資料
-    //   }, 500);
-
-    //   this.selectedItems = [];
+    this.deleteLoading.set(!0);
+    this.service.deleteTLS26080(event.map(v => String(v.id))).pipe(
+      finalize(() => this.deleteLoading.set(!1))
+    ).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.onSubmit(); // 重新查詢
+      },
+      error: () => this.messageService.errorBubble('刪除失敗')
+    });
   }
 }

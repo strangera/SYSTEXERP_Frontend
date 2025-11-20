@@ -239,7 +239,7 @@ PUR_RepYYYYMM: [null as any, [Validators.required, this.repYYYYMMEvenValidator]]
     // ===== 金額（正數） =====
     PUR_Amt: [null as any, [Validators.required, Validators.min(0.01)]],
     PUR_Net: [null as any, [Validators.required, Validators.min(0.01)]],
-    PUR_Tax: [null as any, [Validators.required, Validators.min(0.01)]],
+    PUR_Tax: [null as any, [Validators.required]],
 
     // ===== 其他下拉 =====
     PUR_DirectType: ['1'],                                             // 發票用途（預設 1 專供課稅）

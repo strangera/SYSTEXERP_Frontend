@@ -18,7 +18,7 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4"
                             label="館別"
                             controlName="sys3800"
-                            [options]="service.sys3800Data()"
+                            [options]="service.sys3800Options()"
                             optionLabel="Name"
                             optionValue="No"
                             [loading]="service.sys3800Loading()"
@@ -27,7 +27,7 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4"
                             label="樓層"
                             controlName="sys3900"
-                            [options]="service.sys3900Data()"
+                            [options]="service.sys3900Options()"
                             optionLabel="Name"
                             optionValue="No"
                             [loading]="service.sys3900Loading()"
@@ -36,7 +36,7 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4"
                             label="區域"
                             controlName="sys3A00"
-                            [options]="service.sys3A00Data()"
+                            [options]="service.sys3A00Options()"
                             optionLabel="Name"
                             optionValue="No"
                             [loading]="service.sys3A00Loading()"
@@ -45,7 +45,7 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4"
                             label="收銀機號"
                             controlName="ecrNos"
-                            [options]="service.ecrData()"
+                            [options]="service.ecrOptions()"
                             optionLabel="ecr_name"
                             optionValue="ecr_no"
                             [loading]="service.ecrLoading()"
@@ -54,7 +54,7 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4"
                             label="專櫃名稱"
                             controlName="tltNos"
-                            [options]="service.tltData()"
+                            [options]="service.tltOptions()"
                             optionLabel="tlt_name"
                             optionValue="tlt_no"
                             [loading]="service.tltLoading()"
@@ -75,7 +75,7 @@
                               [submitted]="submitted"></app-calendar-range>
           @if (queryForm.errors) {
           <div class="col-12 text-red-500 text-center">
-            {{ queryForm.errors | json }}
+            @if (queryForm.errors['dateRangeInvalid']) {{{ '日期範圍無效' }}}
           </div>
           }
         </div>
@@ -94,7 +94,7 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
-               [data]="service.TLS26010Data()"
+               [data]="tableData()"
                [tableKey]="'TLS26010'"
                [dataKey]="'id'"
                [columns]="columns"
@@ -106,7 +106,7 @@
                (detail)="onDetail($event)"
                [columns]="columns"
                [multiSortMeta]="[{ field: 'id', order: 1 }]"
-               [totalRecords]="service.totalRecords()"
+               [totalRecords]="totalRecords()"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
                [loading]="service.tableLoading()"

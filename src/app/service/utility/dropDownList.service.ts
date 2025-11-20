@@ -31,6 +31,15 @@ export interface IDropdownItem {
   PAY_OverPay?: string;
 }
 
+export interface TLTTALENT_TLT_SPACE extends IDropdownItem {
+  TalentId: number,
+  TltNo: string,
+  TltName: string,
+  ApplyNo: string,
+  LocationNo: string,
+  TltSpace: number
+}
+
 export interface BusSClass extends IDropdownItem {
   bus_class: string,
   bus_class_name: string
@@ -307,6 +316,10 @@ export class DropDownListService {
   queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
   }
+  // 查詢 ENG1002 下拉式選單
+  queryENG1002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/queryENG1002_DropDownList`, {});
+  }
 
   // 查詢會計科目設定檔(GLS1005)下拉式選單 (只取1103科目)
   queryGLS1005For1103_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -517,8 +530,6 @@ export class DropDownListService {
     const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
     const body = { KB_Func: [] }; return this.http.post<any>(url, body);
   }
-
-
   // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
     return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);
@@ -548,5 +559,9 @@ export class DropDownListService {
   // 查詢傳票型態(GLS1010)下拉選單
   queryGLS1010_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1010_DropDownList`, {});
+  }
+  // 能源下拉選單
+  queryTLTTALENT_TLT_SPACE(params: { TltNo: string }): Observable<ApiResponse<TLTTALENT_TLT_SPACE[]>> {
+    return this.http.post<ApiResponse<TLTTALENT_TLT_SPACE[]>>(`${this.apiUrl}/queryTLTTALENT_TLT_SPACE_DropDownList`, params);
   }
 }

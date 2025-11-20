@@ -116,7 +116,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, tblUser.user_name */
     // 有資料可以用 [烘焙坊] 輸入測試試試
-    VEN_EngName: ['', [Validators.maxLength(100), this.validationService.englishNumberSymbolValidator]], // 廠商英文名稱
+    VEN_EngName: ['', [Validators.maxLength(100), this.validationService.englishNumberSpaceSymbolValidator]], // 廠商英文名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, 由使用者自行輸入 */
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
@@ -210,7 +210,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         console.log('暫存廠商資料:', this.cachedVendorData);
       }
     } else {
-      if(this.crudstatus != CRUDStatus.Create)
+      if (this.crudstatus != CRUDStatus.Create)
         console.warn('無法讀取明細資料，因為沒有提供PC_id');
     }
 
@@ -227,7 +227,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
     //品牌 valueChanges
     // --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
-    
+
     // this.dataForm.get('tlt_name')?.valueChanges.subscribe(value => {
     //   if (this.skipValueChanges) return;
     //   const match = this.tlt_name_Option.find(opt => opt.No === value);
@@ -294,6 +294,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             this.dataForm.reset(); // 重置表單
+            this.potentialDetail = []; // 清除明細
           });
         }
         break;
@@ -333,10 +334,10 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       console.log('接待人員代號:', this.contact_USR_Option);
 
       //2025/10/30: 加入規則: 新增模式 將接洽人員自動帶入登入者
-      if(this.crudstatus == CRUDStatus.Create){
+      if (this.crudstatus == CRUDStatus.Create) {
         const userInfo = this.authService?.getUserInfo?.();
         console.log('登入用戶', userInfo);
-        if(this.contact_USR_Option && userInfo){ //接待人員清單存在就自動帶入
+        if (this.contact_USR_Option && userInfo) { //接待人員清單存在就自動帶入
           // 找出登入者在下拉選項中的對應值
           const matchedUser = this.contact_USR_Option.find(
             (u: apiOption) =>

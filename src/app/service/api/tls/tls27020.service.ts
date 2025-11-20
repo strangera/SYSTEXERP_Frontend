@@ -23,6 +23,8 @@ export interface TLS27020Data {
   MOD_PayAmt: number,
   mod_date: string,
   crt_usr_name: string
+  Check_Status: string
+  isClose: string
 }
 
 export interface CheckValue {
@@ -73,5 +75,9 @@ export class TLS27020Service {
 
   queryClsDate(): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${this.apiUrl}/queryClsDate`, {});
+  }
+
+  deleteTLS27020(params: { idList: number[] }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteTLS27020`, params);
   }
 }

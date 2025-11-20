@@ -79,6 +79,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly fin53010DetailData = signal<QueryFIN53010Detail>(Object.create(null));
+  public readonly totalRecords = signal(0);
   public readonly tableData = signal<FIN53010DetailTable[]>([]);
   public readonly selectedDetail = signal<FIN52030DetailData[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
@@ -132,7 +134,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       this.service.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
-    const data = this.service.FIN53010Detail();
+    const data = this.fin53010DetailData();
     if (!data?.Details) return;
 
     this.dataForm.patchValue({
@@ -276,7 +278,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public ngOnInit(): void {
     this.initializePage('FIN53010', this.dataForm);
-    this.service.FIN53010Detail.set(Object.create(null));
 
     this.service.getAccNoList();
     this.service.getVendorList();
@@ -285,7 +286,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getRefNameList();
     this.service.getAccDescList([]);
 
-    if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe();
+    if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
+      tap(res => {
+        this.fin53010DetailData.set(res.Data);
+        this.totalRecords.set(res.TotalCount);
+      })
+    ).subscribe();
   }
 
   public onSubmit(): void {

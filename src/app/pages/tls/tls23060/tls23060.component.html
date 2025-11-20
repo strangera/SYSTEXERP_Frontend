@@ -2,12 +2,14 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
+
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -98,22 +100,27 @@
   </p-accordion>
 </div>
 
+<!-- 主表：收銀機 / 專櫃彙總 -->
 <div class="card">
-  <!-- ✅ 改用 app-table-report；總計使用 footerData -->
   <app-table-report
-    tableKey="TLS23060"
+    tableKey="TLS23060_MAIN"
     [lastQueryBody]="historyRequestBody"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"
     [loading]="loading"
+    dataKey="_rowKey"
+    [queryFunction]="queryTLS23060ForReport"
     [showManage]="false"
     [showDelete]="false"
     [showReportMode]="false"
-    [queryFunction]="queryTLS23060ForReport"
+    [showDetail]="true"
+    (detail)="onDetail($event)"
     [footerData]="footerData">
+
     <header>
       <div class="flex justify-content-end gap-2">
+        <!-- 只保留主表 PDF 匯出 -->
         <p-button
           styleClass="p-2"
           label="匯出收銀機區間報表.PDF"
@@ -122,9 +129,46 @@
           [disabled]="data.length === 0"
           (click)="onExportPDF()">
         </p-button>
-
-
       </div>
     </header>
   </app-table-report>
 </div>
+
+<!-- 明細 Dialog：以日期為主 -->
+<app-dialog
+  [visible]="dialogVisible"
+  header="專櫃/機台日期明細"
+  (visibleChange)="onDialogClose($event)"
+  [showFooter]="false"
+  width="95vw">
+
+  <app-table-report
+    tableKey="TLS23060_DETAIL"
+    [columns]="detailColumns"
+    [data]="dialogData"
+    [totalRecords]="dialogTotalRecords"
+    [loading]="dialogLoading"
+    dataKey="_rowKey"
+    [lastQueryBody]="dialogHistoryRequestBody"
+    [queryFunction]="queryTLS23060DetailForReport"
+    [showManage]="false"
+    [showDelete]="false"
+    [showDetail]="false"
+    [footerData]="dialogFooterData"
+    [showReportMode]="false">
+
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <!-- 新增：明細表 PDF 匯出 -->
+        <p-button
+          styleClass="p-2"
+          label="匯出明細表.PDF"
+          icon="pi pi-file"
+          [loading]="btnLoading"
+          [disabled]="dialogData.length === 0"
+          (click)="onExportDetailPDF()">
+        </p-button>
+      </div>
+    </header>
+  </app-table-report>
+</app-dialog>

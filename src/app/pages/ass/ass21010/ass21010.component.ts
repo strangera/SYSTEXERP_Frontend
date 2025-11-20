@@ -49,6 +49,9 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
 
+  public readonly tableData = signal<ASS21010Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+
   public readonly usrData = computed(() => ({
     SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
     Mid: Number(this.authService.currentUserValue!.mid),
@@ -101,7 +104,6 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   }
 
   ngOnInit(): void {
-    this.service.ASS21010Data.set([]);
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.loadEngMeterNo();
@@ -124,7 +126,12 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
       }, {}) as unknown as ASS21010Payload;
 
       this.logger.debug(`onSubmit:`, [raw]);
-      this.service.loadASS21010(payload);
+      this.service.loadASS21010(payload).pipe(
+        tap(response => {
+          this.tableData.set(response.Data.Data);
+          this.totalRecords.set(response.Data.TotalCount || 0);
+        })
+      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }
@@ -134,7 +141,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
     for (const d of data) {
       this.service.deleteASS21010({ ...d, ...this.usrData() })
         .pipe(
-          tap(() => this.service.ASS21010Data.update(v =>
+          tap(() => this.tableData.update(v =>
             v.filter(d => data.some(item => d.ID !== item.ID)))),
         ).subscribe({
           next: () => this.messageService.successBubble('刪除成功'),

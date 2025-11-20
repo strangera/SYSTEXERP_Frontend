@@ -6,10 +6,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { DropdownModule } from 'primeng/dropdown';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ECRNoService } from '@service/basic/ECRNo.service';
-import { WhetherService } from '@service/basic/whether.service';
-import { DisplayService } from '@service/basic/display.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { HttpClient } from '@angular/common/http';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -79,7 +76,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   data: any[] = [];
   totalRecords = 0;
-  listZeroDifferenceOptions: any[] = [];
   columns: Column[] = [
     { field: 'TXN_Date', header: '銷售日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
@@ -109,10 +105,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
-    private whetherService: WhetherService,
-    private displayService: DisplayService,
     private dropDownListService: DropDownListService,
-    private http: HttpClient,
     private tls2a040Service: Tls2a040Service
   ) {
     super();
@@ -120,10 +113,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2A040', '/TLS/TLS2A040cru', this.queryForm, (form) => this.onSubmit(form));
-
-    this.whetherService.getWhetherOptions().subscribe((data) => {
-      this.listZeroDifferenceOptions = data;
-    });
 
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;

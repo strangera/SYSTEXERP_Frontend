@@ -1,22 +1,22 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { TLS26030Data, TLS26030Service } from '@service/api/tls/tls26030.service';
+import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { FloorService } from '@service/basic/floor.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { TLS26030Data, TLS26030Service } from '@service/api/tls/tls26030.service';
-import { Tls11010Service } from '@service/api/tls/tls11010.service';
-import { FloorService } from '@service/basic/floor.service';
-import { Tls51080Service } from '@service/api/tls/tls51080.service';
-import { DatePipe } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26030',
@@ -30,8 +30,8 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     ReactiveFormsModule,
     CalendarRangeComponent,
     MultiSelectComponent,
-    TableComponent,
     TranslateModule,
+    CustomFooterTableComponent
   ]
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
@@ -65,6 +65,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   totalRecords = 0;
   data: TLS26030Data[] = [];
   selectedItems: TLS26030Data[] = [];
+  footerData: any[] = [];
 
   columns: Column[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
@@ -115,7 +116,11 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
       this.tls26030Service.queryTLS26030(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data;
+          this.data = response.Data.mainData;
+          this.footerData = [{
+            txn_TotGUI: response.Data.totalData[0]?.txn_Total_TotGUI,
+            txn_TotSaleAmt: response.Data.totalData[0]?.txn_Total_TotSaleAmt
+          }]
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });

@@ -1,14 +1,14 @@
+import { DatePipe } from '@angular/common';
 import { Component, Host, Input, OnChanges, Optional, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS2004ForUpdateResponse, POS5007Data, Tls24010Service } from '@service/api/tls/tls24010.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
-import { STORE_WAY } from '../tls24010-cru.model';
 import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { TLS24010CRUComponent } from '../tls24010-cru.component';
-import { IDropdownItem } from '@service/utility/dropDownList.service';
-import { DatePipe } from '@angular/common';
-import { getSYS1000 } from '@service/system/sys1000.service';
+import { STORE_WAY } from '../tls24010-cru.model';
 
 @UntilDestroy()
 @Component({
@@ -92,8 +92,8 @@ export class Tls24010TltnoComponent implements OnChanges {
           `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}` :
           `${item.TLT_No} - ${item.TLT_Name}`
       }));
-      this.POS2004Options = this.POS2004Options.filter(item => !this.tltIdData.find(data => data.tlt_id === item.tlt_id));
-      this.columns = [{ ...this.columns[0], options: this.POS2004Options }, ...this.columns.slice(1)];
+      const pos2004Option = this.POS2004Options.filter(item => !this.tltIdData.find(data => data.tlt_id === item.tlt_id));
+      this.columns = [{ ...this.columns[0], options: pos2004Option }, ...this.columns.slice(1)];
     });
   }
   onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {

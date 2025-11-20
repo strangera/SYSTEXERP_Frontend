@@ -1,9 +1,6 @@
 <div class="flex gap-2 mb-2">
   <app-menubar [ProgNo]="ProgNo"
                class="flex-1"></app-menubar>
-  <!-- <app-button btnType="create"
-              (click)="onCreate()"
-              [label]="'create' | translate"></app-button> -->
 </div>
 <p-accordion>
   <p-accordionTab [header]="'query-conditions' | translate"
@@ -20,30 +17,35 @@
                       optionValue="value"
                       [control]="qf().ENTRY_TYPE"
                       [submitted]="submitted"></app-dropdown>
-
-        <app-table-edit class="col-12"
-                        title="會計科目明細"
-                        tableKey="TLS21020Detail"
-                        [columns]="columns"
-                        [data]="service.TLS21020Data()"
-                        (selectionChange)="selectedItems = $event"
-                        [selectedItems]="selectedItems"
-                        (dataChange)="service.TLS21020Data.set($event)"
-                        [rowValidate]="validateEntireRow"
-                        [tableRequired]="true"
-                        [showReorder]="false"
-                        [insertDisabled]="!qf().ENTRY_TYPE.value?.length"
-                        [loading]="service.tableLoading()"
-                        [defaultInsertData]="defaultInsertData"></app-table-edit>
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear"
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="!canSave()"
+                    [disabled]="canSave()"
                     [loading]="loading"></app-button>
       </div>
     </form>
   </p-accordionTab>
 </p-accordion>
+
+
+<div class="card">
+  <app-table-edit #dt
+                  class="col-12"
+                  tableKey="TLS21020Detail"
+                  [columns]="columns()"
+                  [data]="tableData()"
+                  [selectedItems]="selectedItems()"
+                  (selectionChange)="selectedItems.set($event)"
+                  (dataChange)="dataChange($event, dt.validateAndShowErrors())"
+                  [rowValidate]="validateRow"
+                  [tableRequired]="!0"
+                  [showReorder]="!1"
+                  [showCheckBox]="!1"
+                  [showDelete]="!1"
+                  [canInsert]="!1"
+                  [loading]="service.tableLoading()"
+                  [defaultInsertData]="defaultInsertData"></app-table-edit>
+</div>

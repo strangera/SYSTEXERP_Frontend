@@ -5,6 +5,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS27020Data, TLS27020Service } from '@service/api/tls/tls27020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -12,8 +14,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-tls27020',
@@ -23,7 +23,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 })
 export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    TXN_Date: [''],  // 銷售日期
+    TXN_Date: ['', [Validators.required]],  // 銷售日期
     TLT_NOList: [null], // 專櫃編號
     ECR_NoList: [null],       // 收銀機號
     ACT_PayAmt: [null, [Validators.max(99999999)]],
@@ -31,6 +31,7 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
   });
   totalRecords = 0;
   data: TLS27020Data[] = [];
+  selectedItems: TLS27020Data[] = [];
   columns: Column[] = [
     { field: 'TXN_Date', header: '交易日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
@@ -58,14 +59,29 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
     });
     this.tls27020Service.queryClsDate().pipe(untilDestroyed(this)).subscribe(res => {
       const rawDate = res.Data;
-      if(this.queryForm.get('TXN_Date')?.value && this.queryStateService.getQueryStateValue(this.ProgNo)) return; // 若有查詢紀錄則不預設
+      if (this.queryForm.get('TXN_Date')?.value && this.queryStateService.getQueryStateValue(this.ProgNo)) return; // 若有查詢紀錄則不預設
       this.queryForm.patchValue({ TXN_Date: formatDate(rawDate) }); // 預設日期
     });
   }
 
-  editDisabled = (rowData: any): boolean => {
+  editDisabled = (rowData: TLS27020Data): boolean => {
     return (rowData.Check_Status === 'Y' || rowData.isClose === 'Y'); // 已審核或已關帳的資料不可編輯
   };
+
+  isRowSelectable(rowData: TLS27020Data): boolean {
+    return rowData.isClose === 'N' && rowData.Check_Status === 'N';
+  }
+
+  onDelete(selectedItems: TLS27020Data[]) {
+    this.loading = true;
+    const body = {
+      idList: selectedItems.map(item => item.id),
+    };
+    this.tls27020Service.deleteTLS27020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.onSubmit(this.queryForm);
+    });
+  }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

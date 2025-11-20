@@ -1,12 +1,6 @@
-import { WhetherService } from './../../../service/basic/whether.service';
-import { BankAccountCodeService } from './../../../service/basic/bank-account-code.service';
-import { PaymentMethodService } from './../../../service/basic/payment-method.service';
-import { VendorService } from './../../../service/basic/vendor.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -84,22 +78,12 @@ export class FIN23010Component extends BasicQpageComponent implements OnInit {
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  requsetEmployeeOptions: any[] = [];
-  payoutMethodOptions: any[] = [];
-  transferAccountOptions: any[] = [];
-  whetherOptions: any[] = [];
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
-    private paymentMethodService: PaymentMethodService,
-    private bankAccountCodeService: BankAccountCodeService,
-    private whetherService: WhetherService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -111,31 +95,6 @@ export class FIN23010Component extends BasicQpageComponent implements OnInit {
     //
     // ----------------------------------------------------------------
     //
-    this.vendorService.getVendors().subscribe(data => {
-      this.requsetEmployeeOptions = data;
-    });
-    //
-    this.bankAccountCodeService.getSystemTypes().subscribe(data => {
-      this.transferAccountOptions = data;
-    });
-    //
-    this.paymentMethodService.getSystemTypes().subscribe(data => {
-      this.payoutMethodOptions = data;
-      // 全選填入
-      // let allSystemValues = this.payoutMethodOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   payoutMethod: allSystemValues
-      // });
-    });
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   ticketTransfer: allSystemValues
-      // });
-    });
     // ----------------------------------------------------------------
   }
 

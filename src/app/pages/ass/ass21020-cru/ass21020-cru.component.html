@@ -5,127 +5,66 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="能源類型"
-          controlName="ENG_Type"
-          [showClear]="!1"
-          [options]="service.engTypeOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().ENG_Type"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="錶號"
-          controlName="ENG_MeterNo"
-          [showClear]="!1"
-          [loading]="service.engMeterNoLoading()"
-          [options]="filteredMeterNo()"
-          optionLabel="ENG_MeterNo"
-          optionValue="ENG_MeterNo"
-          [control]="df().ENG_MeterNo"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="設備位置編號"
-          controlName="Location_No"
-          [control]="df().Location_No"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="樓層編號"
-          controlName="floor_no"
-          [control]="df().floor_no"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="樓層名稱"
-          controlName="floor_name"
-          [control]="df().floor_name"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="館別編號"
-          controlName="Building_No"
-          [control]="df().Building_No"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="館別名稱"
-          controlName="Building_Name"
-          [control]="df().Building_Name"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="平面圖X座標"
-          controlName="x_coord"
-          [control]="df().x_coord"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="平面圖Y座標"
-          controlName="y_coord"
-          [control]="df().y_coord"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="能源類型" controlName="ENG_Type" [options]="ENG_TypeOptions"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.ENG_Type"
+          [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="錶號" controlName="ENG_MeterNo"
+          [options]="filteredENG_MeterNoOptions" optionLabel="ENG_MeterNo" optionValue="ENG_MeterNo"
+          [control]="dataForm.controls.ENG_MeterNo" [submitted]="submitted"></app-dropdown>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="設備位置編號" controlName="Location_No"
+          [control]="dataForm.controls.Location_No" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="樓層編號" controlName="Floor_No"
+          [control]="dataForm.controls.Floor_No" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="樓層名稱" controlName="Floor_Desc"
+          [control]="dataForm.controls.Floor_Desc" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="館別編號" controlName="building_No"
+          [control]="dataForm.controls.building_No" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="館別名稱" controlName="building_DESC"
+          [control]="dataForm.controls.building_DESC" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="平面圖X座標" controlName="Draw_X"
+          [control]="dataForm.controls.Draw_X" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="平面圖Y座標" controlName="Draw_Y"
+          [control]="dataForm.controls.Draw_Y" [submitted]="submitted"></app-input-text>
       </div>
-
+      <hr />
+      <app-table-edit [data]="data" dataStatusField="status" (dataChange)="data = $event" [loading]="loading"
+        tableKey="ASS21020_detail" [columns]="columns" (selectionChange)="selectedItems = $event"
+        [rowValidate]="validateRow" (fieldChange)="fieldChange()" [showInsert]="!isFormReadable" (insert)="openDialog()"
+        [selectedItems]="selectedItems" (dataChange)="data = $event" [tableRequired]="true" [disabled]="isFormReadable"
+        [canInsert]="false">
+        <header>
+          <div class="flex justify-content-between align-items-center w-full">
+            <div>
+              <span *ngIf="errorMsg" class="font-bold text-red-600">比率加總必須為100%，目前加總為: {{ totalPercent }} %</span>
+            </div>
+            <p-button *ngIf="!isFormReadable" label="自動依面積計算比率" (click)="onAutoCalculate()"
+              [disabled]="data.length === 0"></p-button>
+          </div>
+        </header>
+      </app-table-edit>
       @if (!isFormReadable) {
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="cancel" [form]="dataForm"></app-button>
-          <app-button
-            btnType="submit"
-            [loading]="loading"
-            [disabled]="!canSave()"
-          ></app-button>
-        </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
       }
     </form>
   </p-panel>
 </div>
-
-<div class="card">
-  <div class="grid p-fluid">
-    <div class="col-12">
-      <p-panel header="資料" class="line-height-3 m-0 mb-3">
-        <div
-          class="flex justify-content-end w-full border-1 surface-border p-2 mb-2"
-        >
-          <app-button
-            label="自動依面積計算比率"
-            (click)="onAutoCalculate()"
-          ></app-button>
-        </div>
-        <app-table-edit
-          [data]="tableData()"
-          dataStatusField="status"
-          (dataChange)="onDataChange($event)"
-          [loading]="service.tableLoading()"
-          [disabled]="isFormReadable"
-          tableKey="ASS21020_detail"
-          [columns]="columns"
-        ></app-table-edit>
-      </p-panel>
+<app-dialog [visible]="dialogVisible" header="選擇專櫃" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+  <form [formGroup]="dialogQueryForm">
+    <div class="grid p-fluid">
+      <app-input-text class="col-12" label="專櫃編號" controlName="TltNo" [control]="dialogQueryForm.controls.TltNo" />
     </div>
-  </div>
-</div>
+  </form>
+  <app-table-report tableKey="Ass21020CruDialogTable" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
+    [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords" [loading]="dialogLoading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="dropDownListService.queryTLTTALENT_TLT_SPACE.bind(dropDownListService)">
+  </app-table-report>
+</app-dialog>

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
@@ -66,6 +66,9 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
+  public readonly tableData = signal<FIN53010Data[]>([]);
+  public readonly totalRecords = signal(0);
+
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.tableLoading()
       || this.service.accLoading()
@@ -123,10 +126,13 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       }, {} as FIN53010Payload);
 
       this.logger.debug(`onSubmit:`, [this.qf(), raw, payload]);
-      this.service.FIN53010Data.set([]);
 
       this.service.loadFIN53010(payload).pipe(
-        tap(res => this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean))),
+        tap(res => {
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount);
+          this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean));
+        }),
       ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });

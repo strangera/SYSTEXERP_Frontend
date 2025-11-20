@@ -1,8 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { SortMeta } from 'primeng/api'; // PrimeNG SortMeta 介面
 import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 
 // --- 共用介面定義 (如果這些介面已在其他地方定義並可引入，則可以移除此處重複的定義) ---
@@ -101,6 +100,7 @@ export interface IPOS2004DetailData {
   POD_BuyNet?: number; // 採購淨額
   POD_SaleAmt?: number; // 銷售金額
   POD_Remark?: string; // 備註
+  _TABLE_KEY?: string;
 }
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
@@ -325,5 +325,29 @@ export class Tls52010Service {
    */
   getLabelTLS52010(params: { PO_No: string }): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52010`, params);
+  }
+  /**
+     * 匯出採購單
+     * @param params 查詢條件 (PO_No)
+     * @returns API 響應
+     */
+  exportTLS52010(params: { PO_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52010`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
+  }
+  /**
+   * 匯出採購單PDF
+   * @param params 查詢條件 (PO_No)
+   * @returns API 響應
+  */
+  exportTLS52010PDF(params: { PO_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52010PDF`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
   }
 }

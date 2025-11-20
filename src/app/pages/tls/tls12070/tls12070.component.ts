@@ -1,21 +1,21 @@
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { Tls12070Service } from '@service/api/tls/tls12070.service';
-import { apiOption } from '@shared/models/tls/tls000.model';
-import { CommonModule } from '@angular/common';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { getSYS1000Options } from '@service/system/sys1000.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls12070Service } from '@service/api/tls/tls12070.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { apiOption } from '@shared/models/tls/tls000.model';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 export interface Customer_interview {
   id: number; // ID
@@ -136,6 +136,17 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: 'All_Counts', header: '小計', visible: true },
   ];
 
+  // 數量table
+  countData: any[] = [];
+  count_columns: Column[] = [ //數量table欄位
+    { field: 'contact_USR_No', header: '接洽人員代碼', visible: false },
+    { field: 'contact_USR_Name', header: '接洽人員', visible: true },
+    { field: 'count', header: '潛在客戶總數', visible: true },
+    { field: 'count2', header: '拜訪記錄次數', visible: true },
+  ];
+  count_totalRecords = 0;// 分頁和排序參數 // 排序需要
+
+
   selectedItems: Customer_interview[] = [];// 多選項目
   // ----------------------------------------------------------------
   constructor(
@@ -153,11 +164,45 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   onSubmit(frm: FormGroup) {
     this.activeReport = 'query';
     this.handleSubmit(frm, () => {
+      // 查詢 Customer_interview資料表
       this.tls12070Service.queryTLS12070(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.interview_data = response.Data || [];
             console.log('Result', response.Data);
+            // ---計算筆數---
+            // 原本資料
+            const data = response.Data || [];
+
+            // Map: key = contact_USR_No, value = { count, contact_USR_Name }
+            const groupMap = new Map<string, { count: number; name: string }>();
+
+            data.forEach((item: { contact_USR_No: string; contact_USR_Name: string; }) => {
+              const key = item.contact_USR_No;
+              const name = item.contact_USR_Name;
+
+              if (!groupMap.has(key)) {
+                // 第一次出現 → 建立
+                groupMap.set(key, { count: 1, name });
+              } else {
+                // 之後出現 → count++
+                const entry = groupMap.get(key)!;
+                entry.count++;
+              }
+            });
+
+            // 轉成 table 需要的陣列格式
+            this.countData = Array.from(groupMap.entries()).map(([contact_USR_No, info]) => ({
+              contact_USR_No,
+              contact_USR_Name: info.name,
+              count: info.count,
+              count2: 0,
+            }));
+
+            this.count_totalRecords = this.countData.length;
+
+            console.log("countData:", this.countData);
+            // ---計算筆數---
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

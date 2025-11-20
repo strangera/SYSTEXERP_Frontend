@@ -1,21 +1,6 @@
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { ViolationStatusService } from '../../../service/basic/violation-status.service';
-import { DeductionItemService } from '../../../service/basic/deduction-item.service';
-import { WhetherService } from '../../../service/basic/whether.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -39,11 +24,6 @@ const now = new Date();
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS25030CRUComponent extends BasicCrupageComponent implements OnInit {
-
-
-
-  // 查詢表單
-  loading: boolean = false;
   // submitted: boolean = false;
   dataForm = this.formBuilder.group({
     counterCode: [],  // 專櫃編號
@@ -79,15 +59,6 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號 service
-    private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
-    private floorService: FloorService,  // 樓層 service
-    private violationStatusService: ViolationStatusService,  // 狀態 service
-    private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService: OrganizationNumberService,
-    private whetherService: WhetherService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -95,32 +66,6 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   ngOnInit(): void {
 
     this.ProgNo = '220034';
-
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
-
-    this.violationCategoryService.getViolationCategories().subscribe((data) => {
-      this.violationCategoryOptions = data;
-    });
-
-    this.whetherService.getWhetherOptions().subscribe((data) => {
-      this.whetherOptions = data;
-    });
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-
-    this.violationStatusService.getViolationStatuses().subscribe((data) => {
-      this.statusOptions = data;
-    });
-
-    this.deductionItemService.getDeductionItems().subscribe((data) => {
-      this.deductionItemOptions = data;
-    });
-    this.OrganizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationNumberOptions = data;
-    });
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
       rowdata: any,
@@ -173,15 +118,10 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
     this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
     if (frm.valid && this.canQuery()) {
       // 提交邏輯
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {

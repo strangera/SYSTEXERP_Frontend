@@ -41,6 +41,9 @@
               [control]="queryForm.controls.GUI_Status" [submitted]="submitted">
             </app-dropdown>
           </div>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="統一編號" controlName="ven_uniform"
+            [options]="TXN_Uniform_noOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.TXN_Uniform" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isNotECR">
@@ -58,6 +61,6 @@
     (detail)="onDetail($event)" [queryFunction]="tls2j030Service.queryTLS2J030.bind(tls2j030Service)"
     [selectedItems]="selectedItems" [showEdit]="false" (selectionChange)="selectedItems = $event"
     [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true" [showExcel]="false" [showReportMode]="false"
-    [showManage]="true" [showDelete]="true" [dataKey]="'CHG_No'">
+    [showManage]="true" [showDelete]="true" [dataKey]="'CHG_No'" (delete)="onDelete($event)">
   </app-table-report>
 </div>

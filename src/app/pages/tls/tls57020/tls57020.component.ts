@@ -1,13 +1,8 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { VendorService } from '../../../service/basic/vendor.service';
-// Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -68,14 +63,11 @@ export class TLS57020Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private vendorService: VendorService,
-    private authService: AuthService,
   ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options
     // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.vendorService.getVendors().subscribe((data) => (this.vendorOptions = data));
   }
 
   canQuery(): boolean {

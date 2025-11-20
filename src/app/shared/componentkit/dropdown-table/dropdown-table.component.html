@@ -31,7 +31,7 @@
     <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
       (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
       [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading"
-      [multiSortMeta]="[{ field: optionValue, order: -1 }]" [totalRecords]="totalRecords"
+      [multiSortMeta]="formGroup.controls['SortBy'].value" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy" [showCaption]="false" />
   </form>
 </p-overlayPanel>

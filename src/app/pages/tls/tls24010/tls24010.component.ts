@@ -1,31 +1,33 @@
-import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
-import { finalize } from 'rxjs';
-import { MenuItem } from 'primeng/api';
-import { Menu, MenuModule } from 'primeng/menu';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
-import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { TLS41010Service } from '@service/api/tls/tls41010.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS41010Service } from '@service/api/tls/tls41010.service';
+import { ApiResponse } from '@service/system/auth.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { MenuItem } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { Menu, MenuModule } from 'primeng/menu';
+import { finalize, Observable } from 'rxjs';
+import { TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
+import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
+import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -56,7 +58,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
     ECR_No: [null as string | null], /*收銀機號 → ECR_No */
     TLT_No: [null as string | null], /*櫃編 → TLT_No */
-    TXN_No: [null as string | number | null, [Validators.maxLength(8)]],  /*交易序號 → TXN_No */
+    TXN_No: [null as string | number | null, [Validators.maxLength(8), this.validation.numberValidator]],  /*交易序號 → TXN_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
     talent_id: [0], /*專櫃代號 → talent_id */
@@ -80,6 +82,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     public readonly tls24010Service: Tls24010Service,
     private readonly tLS41010Service: TLS41010Service,
     private readonly cdr: ChangeDetectorRef,
+    private readonly validation: ValidationService
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
@@ -111,17 +114,23 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       }
     });
   }
-
+  public tableQueryFunction = (body: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> => {
+    // 這裡確保將 Component 中已有的 TLT_NoOptions 傳入 Service
+    return this.tls24010Service.queryTLS24010(body, this.TLT_NoOptions);
+  }
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
+      const rawTxnNo = frm.value.TXN_No;
+      const isInvalidOrNonNumeric = !rawTxnNo || rawTxnNo === '' || isNaN(Number(rawTxnNo));
       const body = {
         ...frm.value,
         TXN_Date: frm.value.TXN_Date ? formatDateToYYYY_MM_DD(frm.value.TXN_Date) : '',
+        TXN_No: isInvalidOrNonNumeric ? null : rawTxnNo,
         pageSize: 30,
         pageIndex: 1,
         SortBy: [{ field: 'TXN_Date', order: -1 }],
       }
-      this.tls24010Service.queryTLS24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tableQueryFunction(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.historyRequestBody = body;
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
@@ -204,8 +213,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
   items: MenuItem[] = [];
   updateItems(): void {
-    console.log(this.selectedRowData);
-
     this.items = [
       { label: '專櫃編號修正', icon: 'pi pi-id-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
       { label: '折數修正', icon: 'pi pi-percentage', disabled: this.selectedRowData?.store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },

@@ -46,8 +46,16 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
   ];
   columns: ReportColumn[] = [
     { field: 'id', header: 'ID', visible: false },
-    { field: 'bus_type', header: '大分類代碼', visible: true },
-    { field: 'bus_type_name', header: '大分類', visible: true },
+    {
+      field: 'bus_type',
+      header: '大分類',
+      visible: true,
+      format: (value: any, index?: number, rowData?: any) => {
+        return rowData?.bus_type && rowData?.bus_type_name
+          ? `${rowData.bus_type}-${rowData.bus_type_name}`
+          : value || '';
+      }
+    },
     { field: 'CHG_ItemName', header: '品項名稱', visible: true },
     { field: 'Item_TaxType_Desc', header: '稅別', visible: true },
     // 其他欄位
@@ -157,8 +165,33 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
           if (response.Status === '0000') {
             this.messageService.successBubble('刪除成功');
             this.selectedItems = [];
+            // 刪除成功後重新查詢資料
+            if (this.lastQueryBody && Object.keys(this.lastQueryBody).length > 0) {
+              this.refreshData();
+            }
           } else {
             this.messageService.errorBubble(`刪除失敗：${response.Message || '系統錯誤'}`);
+          }
+        },
+      });
+  }
+
+  /** 重新整理資料 */
+  private refreshData(): void {
+    this.loading = true;
+    this.tls2j020Service
+      .queryTLS2J020(this.lastQueryBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+          } else {
+            this.messageService.errorBubble(res.Message || '重新查詢失敗');
           }
         },
       });

@@ -1,15 +1,9 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { MachineAttributeService } from '../../../service/basic/machine-attribute.service';
-import { PaymentTimingService } from '../../../service/basic/payment-timing.service';
-import { ViolationStatusService } from '../../../service/basic/violation-status.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -80,29 +74,10 @@ export class TLS28030Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private floorService: FloorService,
-    private machineAttributeService: MachineAttributeService,
-    private paymentTimingService: PaymentTimingService,
-    private violationStatusService: ViolationStatusService,
 
   ) { }
 
   ngOnInit(): void {
-
-    // Initialize dropdown options
-    this.paymentTimingService.getPaymentTiming().subscribe(data => {
-      this.paymentTimingOptions = data;
-    });
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    this.machineAttributeService.getMachineAttributes().subscribe(data => {
-      this.machineAttributeOptions = data;
-    });
-    this.violationStatusService.getViolationStatuses().subscribe(data => {
-      this.statusOptions = data;
-    });
   }
 
   canQuery(): boolean {

@@ -1,328 +1,125 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Fin55090Service, QueryFIN55090Request, QueryFIN55090Response } from '@service/api/fin/fin55090.service'; // 假設路徑
+import { DropdownApiService } from '@service/utility/dropdown-api.service'; // 假設路徑
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component'; // 假設路徑
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { finalize, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component'; // 假設路徑
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component'; // 假設路徑
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component'; // 假設路徑
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component'; // 假設路徑
+import { FileExportService } from './../../../shared/service/file-export.service'; // 假設路徑
+import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table.component';
+
 @Component({
   selector: 'app-fin55090',
   templateUrl: './fin55090.component.html',
-  styleUrl: './fin55090.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent, DropdownComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
-})
-export class FIN55090Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
-  queryForm = this.formBuilder.group({
-    startserialticket: [],
-    endserialticket: [],
-    Subpoenatype: [],
-    SSubpoenadate: [],
-    ESubpoenadate: [],
-    Subpoenastatus: [],
-    Subpoenasummary: [],
-    builder: [],
-    Residualvalueyears: [],
-    Depreciation: [],
-    accountsummary: [],
-    Subpoenatype2: [],
-    Postingmethod: [],
-    year: [],
-    buildnumber: [],
-    confirmationnumber: [],
-    postingnumber: [],
-    yearmm: [],
-    Sbuilddate: [],
-    Ebuilddate: [],
-    printtype: [],
-    department: [],
-    activity: [],
-    vander: [],
-    Accountcode: [],
-    code: [],
-    Subpoenacode: [],
-    whether: [],
-    ifOptions: [],
-    summary: [],
-    reportingmethod: [],
-    Printingmethod: [],
-    Printingcolumn: [],
-    category: [],
-    display: [],
-    Approvalcolumn: [],
-  });
-
-  // Dropdown options
-  category
-    : any[] = [
-      { value: 1, label: '統制' },
-      { value: 2, label: '明細' },
-
-    ]
-  display
-    : any[] = [
-      { value: 1, label: '顯示' },
-      { value: 2, label: '不顯示' },
-
-    ]
-  printtype: any[] = [
-    { value: 1, label: 'A4(直印)' },
-    { value: 2, label: 'A4(橫印)' },
-    { value: 3, label: '一般' },
+  imports: [
+    TableSubheaderGroupingComponent,
+    ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
+    FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, RadiobuttonComponent,
+    DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
   ]
-  Subpoenatype2: any[] = [
-    { value: 1, label: '贊助金傳票' },
-    { value: 2, label: '電匯EDI傳票' },
-    { value: 3, label: '年結傳票' },
-    { value: 4, label: '銀行資金調撥傳票' },
-    { value: 5, label: '零用金拋轉傳票' },
-    { value: 6, label: '票據兌現傳票' },
-    { value: 7, label: '支票沖轉傳票' },
-    { value: 8, label: '退票沖轉票據傳票' },
-    { value: 9, label: '開票傳票' },
-    { value: 10, label: '撤票沖轉票據傳票' },
+})
+export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Response> implements OnInit {
+  queryForm = this.formBuilder.group({
+    DateFrom: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    // 類別預設為 '0' (統制)
+    Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
+    // 部門/活動代碼為選填
+    OrgId: this.formBuilder.control<string | null>(null),
+    ProjectNo: this.formBuilder.control<string | null>(null),
+    // 預設不顯示餘額為零的科目 (false)，預設列印簽核欄 (true)
+    // ShowZero: this.formBuilder.nonNullable.control(false),
+    PrintSign: this.formBuilder.nonNullable.control(true),
+  });
+  // 類別選項: '0'=統制(4碼), '1'=明細(全碼)
+  Ledger_MDOptions = [
+    { label: '統制', value: '0' },
+    { label: '明細', value: '1' },
   ];
+  // 部門選項 (Sys3100)
+  OrgIdOptions = this.dropdownApi.querySys3100();
+  // 活動代碼選項 (假設 API 為 querySys4001)
+  ProjectNoOptions = this.dropdownApi.queryTALPORDERM_DropDownList();
+  data: QueryFIN55090Response[] = [];
+  historyRequestBody: QueryFIN55090Request = {} as QueryFIN55090Request;
+  totalRecords = 0;
+  footerData: QueryFIN55090Response | null = null;
+  btnLoading = false;
 
-  Reportingmethod: any[] = [
-    { value: 1, label: '交易記錄之會計科目' },
-    { value: 2, label: '含無交易記錄之會計科目' },
-  ];
-  Printingmethod
-    : any[] = [
-      { value: 1, label: '分開列印' },
-      { value: 2, label: '合併列印' },
-    ];
-  Postingmethod: any[] = [
-    { value: 1, label: '依明細勾選' },
-    { value: 2, label: '依過帳年月' },
-  ];
-  Printingcolumn
-    : any[] = [
-      { value: 1, label: '狀態' },
-      { value: 2, label: '活動' },
-      { value: 2, label: '立沖代號' },
-    ];
-  activity: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '會員紅利活動' },
-  ];
-  departmentOptions: any[] = [];
-
-  ifOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  detail: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-  Subpoenaformatl: any[] = [
-    { value: 1, label: '無特定' },
-    { value: 2, label: '應付票據' },
-    { value: 3, label: '應收票據' },
-  ];
-  Subpoenatype: any[] = [
-    { value: 1101, label: '現金收入傳票' },
-    { value: 110101, label: '現金支出傳票' },
-    { value: 110102, label: '轉帳傳票' },
-  ];
-  borrowloanOptions: any[] = [
-    { value: 1, label: '借' },
-    { value: 2, label: '貸' },
-  ];
-
-  accountingaccountOptions: any[] = [
-
-  ];
-
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' },
-  ];
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' },
-  ];
-
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-
-  Subpoenastatus: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' },
-  ];
-
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' },
-  ];
-
-  // Table data
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'subjectName', header: '科目名稱', visible: true },
-    { field: 'currentPeriodTransactionAmount', header: '本期交易金額', visible: true },
-    { field: 'total', header: '合計', visible: true },
-    { field: 'percentage', header: '百分比', visible: true },
-    { field: 'cumulativeTransactionAmount', header: '累計交易金額', visible: true },
-    { field: 'cumulativeTotal', header: '累計合計', visible: true },
-    { field: 'cumulativePercentage', header: '累計百分比', visible: true }
-  ];
-
-
-
-
-
-  // TypeScript Options
-  AccountcodeOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService,
-    private userCodeService: UserCodeService
-
+    public readonly fin55090Service: Fin55090Service,
+    private readonly dropdownApi: DropdownApiService,
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe
   ) {
-    super(); // 呼叫父類建構子
+    // 需明確呼叫父類建構子
+    super();
   }
 
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  usercode: any[] = [];
   ngOnInit(): void {
-    this.ProgNo = '150033';
-    // Initialize dropdown options
-
-    this.userCodeService
-      .getUserCode()
-      .subscribe((data) => (this.usercode = data));
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
-      });
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountingaccountOptions = data;
-    });
+    // 假設 initializePage 會設定 ProgNo 和其他父類屬性
+    this.initializePage('FIN55090');
   }
 
+  // 查詢事件處理
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+    // 確保表單是有效的，並且呼叫父類的 handleSubmit (假設它處理 loading 和 submitted 狀態)
+    this.handleSubmit(frm, () => {
+      // 強轉型為 QueryFIN55090Request
+      const requestBody = {
+        ...frm.value,
+        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM-dd'),
+        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM-dd'),
+      } as QueryFIN55090Request;
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+      this.fin55090Service.queryFIN55090(requestBody).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        // 資料最後一筆不要放進data
+        this.data = response.Data.slice(0, response.Data.length - 1).map((item: QueryFIN55090Response) => ({
+          ...item,
+          STYPE_NAME: (item.STYPE_ID || '') + ' ' + item.STYPE_NAME,
+          Cur_AMT: item.STYPE_ID ? (item.Cur_AMT ?? null) : '',
+          YTD_AMT: item.STYPE_ID ? (item.YTD_AMT ?? null) : '',
+          Cur_LTYPE_SUM: item.STYPE_ID ? '' : (item.Cur_LTYPE_SUM ?? null),
+          YTD_LTYPE_SUM: item.STYPE_ID ? '' : (item.YTD_LTYPE_SUM ?? null)
+        }));
+        this.totalRecords = response.TotalCount - 1;
+        // 資料最後一筆放進footerDate
+        this.footerData = {
+          ...response.Data[response.Data.length - 1],
+          Cur_AMT: "",
+          YTD_AMT: "",
+        }
+        // 儲存最新的查詢參數用於匯出
+        this.historyRequestBody = requestBody;
+      });
+    });
+  }
+
+  // 匯出 PDF 事件處理
+  onExportPDF() {
+    if (this.data.length === 0) {
+      return;
     }
+    // 確保使用 historyRequestBody
+    const export$: Observable<HttpResponse<Blob>> = this.fin55090Service.exportFIN55090PDF(this.historyRequestBody);
 
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+    // 使用 fileExportService 統一處理檔案下載和 loading 狀態
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      '.' + 'pdf', 			 // 傳遞檔案副檔名
+      (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
 }

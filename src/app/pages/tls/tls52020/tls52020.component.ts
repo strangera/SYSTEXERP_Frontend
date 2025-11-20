@@ -1,27 +1,29 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { AsyncPipe, NgIf, NgStyle } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize } from 'rxjs';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { trigger, transition, style, animate } from '@angular/animations';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle, NgIf, AsyncPipe } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { finalize, Observable } from 'rxjs';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 export const enum CRNtatus {
   已申請 = '0',
   已審核 = '2',
@@ -114,9 +116,10 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.作廢); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已審核 }, // 作廢
   ];
   constructor(
-    private tls52020Service: Tls52020Service,
-    private dropdown: DropdownApiService,
-    private tls52010Service: Tls52010Service
+    private readonly tls52020Service: Tls52020Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly tls52010Service: Tls52010Service,
+    private readonly fileExportService: FileExportService
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS52020', 'tls/tls52020cru', this.queryForm, (form) => this.onSubmit(form));
@@ -131,8 +134,29 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       });
     })
   }
-  print(rowData: ITLS52020Data[]) {
-    console.log('列印多筆事件:', rowData);
+  printLoading = false;
+  print(rowData: ITLS52020Data[], type: 'pdf' | 'excel') {
+    const params = { CRN_NoList: rowData.map(item => item.CRN_No) };
+    let export$: Observable<HttpResponse<Blob>>;
+    // 2. 決定要呼叫哪個 API 服務方法
+    switch (type) {
+      case 'pdf':
+        export$ = this.tls52020Service.exportTLS52020PDF(params);
+        break;
+      case 'excel':
+        export$ = this.tls52020Service.exportTLS52020(params);
+        break;
+      default:
+        return;
+    }
+
+    // 3. 呼叫通用服務執行匯出流程
+    this.printLoading = true
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })), // 傳遞 Observable 並加入銷毀處理
+      '.' + type,                            // 傳遞檔案副檔名 (.pdf 或 .excel)
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
   btnLoading = false;
   statusChange(rowData: ITLS52020Data, status: string) {

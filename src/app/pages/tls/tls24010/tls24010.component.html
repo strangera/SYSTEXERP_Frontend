@@ -43,8 +43,8 @@
 <div class="card">
   <app-table-report dataKey="TXN_No" tableKey="TLS24010Table" [lastQueryBody]="historyRequestBody" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showReportMode]="false" [showEdit]="false"
-    [queryFunction]="tls24010Service.queryTLS24010.bind(tls24010Service)" groupRowsBy="ODM_No" [loading]="loading"
-    [addButton]="addButton" (detail)="onDetailData($event)">
+    [queryFunction]="tableQueryFunction" groupRowsBy="ODM_No" [loading]="loading" [addButton]="addButton"
+    (detail)="onDetailData($event)">
   </app-table-report>
 </div>
 <p-menu #menu [model]="items" [popup]="true" styleClass="w-auto" />

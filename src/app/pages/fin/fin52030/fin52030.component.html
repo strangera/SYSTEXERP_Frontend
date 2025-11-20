@@ -66,9 +66,9 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="service.FIN52030Data()"
+    <app-table [data]="tableData()"
                [columns]="columns"
-               [totalRecords]="service.totalRecords()"
+               [totalRecords]="totalRecords()"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
                (edit)="onEdit($event)"

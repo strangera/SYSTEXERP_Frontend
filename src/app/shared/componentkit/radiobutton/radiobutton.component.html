@@ -1,21 +1,15 @@
 @if (_label() !== '') {
-  <label>{{ _label() }}
-    @if (isRequired) { <span class="text-red-500">*</span> }
-  </label>
+<label>{{ _label() }}
+  @if (isRequired) { <span class="text-red-500">*</span> }
+</label>
 }
 <div class="flex flex-wrap gap-3 py-2">
   @for (option of options(); track option.value) {
   <div class="flex">
-    <p-radioButton [inputId]="option.value"
-                   [name]="groupname()"
-                   [value]="option.value"
-                   [formControl]="control()"
-                   (onClick)="onSelectionChange(option.value)"
-                   [disabled]="disabled()"></p-radioButton>
-    <label [for]="option.value"
-           class="ml-2">{{ option.label }}</label>
+    <p-radioButton [inputId]="option.value" [name]="groupname()" [value]="option.value" [formControl]="control()"
+      (onClick)="onSelectionChange(option.value,option.label)" [disabled]="disabled()"></p-radioButton>
+    <label [for]="option.value" class="ml-2">{{ option.label }}</label>
   </div>
   }
 </div>
-<app-control-messages [onerror]="submitted()"
-                      [control]="control()"></app-control-messages>
+<app-control-messages [onerror]="submitted()" [control]="control()"></app-control-messages>

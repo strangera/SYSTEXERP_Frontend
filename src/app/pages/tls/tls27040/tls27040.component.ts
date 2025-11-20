@@ -1,30 +1,30 @@
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, queryTxnTypeOptions } from './tls27040.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
 import { QueryTLS27040Request, TLS27040Data, TLS27040Service, TotalData } from '@service/api/tls/tls27040.service';
-import { finalize } from 'rxjs';
-import { DropdownModule } from 'primeng/dropdown';
-import { getDateTime, toHHmm } from '@shared/models/system/query-form.model';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { AsyncPipe } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
 import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { getDateTime, toHHmm } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, queryTxnTypeOptions } from './tls27040.model';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -114,10 +114,7 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
         CrdTxnFgList: processSelectedCodes(frm.value.CrdTxnFgList),
       }
       this.tls27040Service.queryTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data.length > 0 ? res.Data.map(item => ({
-          ...item,
-          dataKey: item.ID + item.tableName
-        })) : [];
+        this.data = res.Data;
         this.historyRequestBody = body;
         this.footerData = res.footerData && res.footerData.length > 0 ? res.footerData[0] : { group_name: '總計', TxnAmt: 0 };
         this.totalRecords = res.TotalCount;
@@ -238,9 +235,12 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     return `download${defaultExtension}`;
   }
 
-  editDisabled(rowdata: TLS27040Data) {
-    // 已關帳的資料不可編輯
-    return rowdata.isClose === "Y";
+  editDisabled = (rowData: TLS27040Data): boolean => {
+    return (rowData.Check_Status === 'Y' || rowData.isClose === 'Y'); // 已審核或已關帳的資料不可編輯
+  };
+
+  isRowSelectable(rowData: TLS27040Data): boolean {
+    return rowData.isClose === 'N' && rowData.Check_Status === 'N';
   }
 }
 function processSelectedCodes(selectedValues: string[][]) {

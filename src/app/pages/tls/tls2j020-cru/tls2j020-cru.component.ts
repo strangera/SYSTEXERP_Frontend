@@ -34,7 +34,7 @@ import { finalize } from 'rxjs';
 })
 export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    bus_type: ['', Validators.required],
+    bus_type: [''],
   });
   mode: CRUDStatus = CRUDStatus.Create; // 新增 or 編輯模式
   override formTitle = '';
@@ -57,8 +57,16 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   ];
   /**  編輯 */
   editColumns: EditColumn[] = [
-    { field: 'bus_type', header: '大分類代碼', type: 'input', width: '100px', disabled: () => true },
-    { field: 'bus_type_name', header: '大分類名稱', type: 'input', width: '120px', disabled: () => true },
+    {
+      field: 'bus_type',
+      header: '大分類代碼',
+      type: 'dropdown',
+      width: '200px',
+      options: () => this.busTypeOptions,
+      optionLabel: 'Name',
+      optionValue: 'No',
+      showClear: false
+    },
     { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '250px' },
     {
       field: 'Item_TaxType', header: '稅別', type: 'dropdown', width: '150px',
@@ -110,53 +118,75 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   ngOnInit(): void {
-    // 取得狀態與資料
     const state = history.state;
     this.mode = state.crudstatus;
     const rowData = state.rowdata;
-    // 初始化頁面
+
     this.initializePage('TLS2J020', this.dataForm);
-    // 下拉選項
+
     this.loadOptions();
-    if (this.mode === CRUDStatus.Edit && rowData) {
-      this.formTitle = '編輯大分類換開品項';
-      this.dataForm.patchValue({
-        bus_type: rowData.bus_type
-      });
-      this.data = [{
-        id: rowData.id,
-        ID: rowData.id, // 保持相容性
-        tds1009_id: rowData.tds1009_id || 0,
-        bus_type: rowData.bus_type,
-        bus_type_name: rowData.bus_type_name,
-        CHG_ItemName: rowData.CHG_ItemName,
-        Item_TaxType: rowData.Item_TaxType,
-        Item_TaxType_Desc: rowData.Item_TaxType_Desc,
-        LastModifiedDate: rowData.LastModifiedDate
-      }];
-    } else if (this.mode === CRUDStatus.Read && rowData) {
-      this.formTitle = '查看大分類換開品項';
-      this.dataForm.patchValue({
-        bus_type: rowData.bus_type
-      });
-      this.data = [{
-        id: rowData.id,
-        ID: rowData.id,
-        tds1009_id: rowData.tds1009_id || 0,
-        bus_type: rowData.bus_type,
-        bus_type_name: rowData.bus_type_name,
-        CHG_ItemName: rowData.CHG_ItemName,
-        Item_TaxType: rowData.Item_TaxType,
-        Item_TaxType_Desc: rowData.Item_TaxType_Desc,
-        LastModifiedDate: rowData.LastModifiedDate
-      }];
-    } else {
+
+    if (this.mode === CRUDStatus.Create) {
       this.formTitle = '新增大分類換開品項';
       this.dataForm.reset();
       this.data = [];
+      this.setupCreateModeQuery();
+    }
+    else if (this.mode === CRUDStatus.Edit && rowData) {
+      this.formTitle = '編輯大分類換開品項';
+      this.patchEditData(rowData);
+    }
+    else if (this.mode === CRUDStatus.Read && rowData) {
+      this.formTitle = '查看大分類換開品項';
+      this.patchReadData(rowData);
     }
   }
+  patchEditData(rowData: any) {
+    this.dataForm.patchValue({
+      bus_type: rowData.bus_type
+    });
 
+    this.data = [{
+      id: rowData.id,
+      ID: rowData.id,
+      tds1009_id: rowData.tds1009_id || 0,
+      bus_type: rowData.bus_type,
+      bus_type_name: rowData.bus_type_name,
+      CHG_ItemName: rowData.CHG_ItemName,
+      Item_TaxType: rowData.Item_TaxType,
+      Item_TaxType_Desc: rowData.Item_TaxType_Desc,
+      LastModifiedDate: rowData.LastModifiedDate
+    }];
+  }
+  patchReadData(rowData: any) {
+    this.dataForm.patchValue({
+      bus_type: rowData.bus_type
+    });
+
+    this.data = [{
+      id: rowData.id,
+      ID: rowData.id,
+      tds1009_id: rowData.tds1009_id || 0,
+      bus_type: rowData.bus_type,
+      bus_type_name: rowData.bus_type_name,
+      CHG_ItemName: rowData.CHG_ItemName,
+      Item_TaxType: rowData.Item_TaxType,
+      Item_TaxType_Desc: rowData.Item_TaxType_Desc,
+      LastModifiedDate: rowData.LastModifiedDate
+    }];
+  }
+
+  setupCreateModeQuery() {
+    this.dataForm.controls.bus_type.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(busType => {
+        if (busType) {
+          this.loadCreateItems(busType);
+        } else {
+          this.data = [];
+        }
+      });
+  }
   loadOptions() {
     this.dropDownListService.queryTLTBUSTYPE_DropDownList()
       .pipe(untilDestroyed(this))
@@ -165,6 +195,32 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
           Name: `${item.No}-${item.Name}`,
           No: item.No
         }));
+      });
+  }
+  loadCreateItems(busType: string) {
+    const payload = {
+      ID: busType
+    };
+
+    this.loading = true;
+
+    this.tls2j020Service
+      .dropdownTLS2J020editCHG_ItemName(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = res.Data ?? [];
+            this.totalRecords = this.data.length;
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble(res.Message || '查詢失敗');
+          }
+        }
       });
   }
 
@@ -239,6 +295,8 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       this.messageService.errorBubble('請選擇至少一筆完整的資料', '沒有選中的有效資料');
       return;
     }
+
+    // 符合後端新的 API 格式
     const requestBody = {
       bus_type: busType,
       TLS2J020_Detail: selectedValidData.map(item => ({
@@ -289,8 +347,8 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       id: updateItem.id || updateItem.ID || 0,
       tds1009_id: updateItem.tds1009_id || 0,
       bus_type: this.dataForm.get('bus_type')?.value || updateItem.bus_type || '',
-      chg_item_name: updateItem.CHG_ItemName.trim(),
-      item_tax_type: updateItem.Item_TaxType.trim(),
+      CHG_ItemName: updateItem.CHG_ItemName.trim(),  // 使用後端期望的 Pascal Case
+      Item_TaxType: updateItem.Item_TaxType.trim(),  // 使用後端期望的 Pascal Case
       upd_date: new Date().toISOString(),
       upd_usr_no: this.authService.currentUserValue?.user_No || '',
       upd_usr_name: this.authService.currentUserValue?.user_Name || ''

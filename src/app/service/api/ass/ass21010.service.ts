@@ -24,9 +24,6 @@ export class ASS21010Service {
     !!rowData;
   // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
 
-  public readonly ASS21010Data = signal<ASS21010Data[]>([]);
-  public readonly totalRecords = signal<number>(0);
-
   public readonly engTypeOptions: Option[] = [
     { value: EngType.水, label: '水錶' },
     { value: EngType.電, label: '電錶' },
@@ -95,17 +92,13 @@ export class ASS21010Service {
     });
   }
 
-  public loadASS21010(payload: ASS21010Payload): void {
+  public loadASS21010(payload: ASS21010Payload): Observable<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }> {
     this.tableLoading.set(!0);
-    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
+    return this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
-      tap(response => {
-        this.totalRecords.set(response.Data.TotalCount || 0);
-        this.ASS21010Data.set(response.Data.Data);
-        this.logger.debug('查詢ASS21010結果:', [response]);
-      }),
+      tap(response => this.logger.debug('查詢ASS21010結果:', [response])),
       finalize(() => this.tableLoading.set(!1)),
-    ).subscribe();
+    );
   }
 
   public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus> {

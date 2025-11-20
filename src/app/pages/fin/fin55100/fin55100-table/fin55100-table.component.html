@@ -1,0 +1,107 @@
+<p-table [value]="detailData" sortField="LTYPE_ID" [sortOrder]="1" [scrollable]="true" [columns]="columns"
+  scrollHeight="700px" rowGroupMode="subheader" groupRowsBy="LTYPE_ID" [tableStyle]="{'min-width': '60rem'}">
+
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th rowspan="2" class="text-center wrap-header p-2" style="min-width: 150px">
+        科目名稱
+      </th>
+
+      <th colspan="4" class="text-center wrap-header p-2">
+        本期
+      </th>
+
+      <th colspan="4" class="text-center wrap-header p-2">
+        累計
+      </th>
+    </tr>
+
+    <tr>
+      <ng-container *ngFor="let col of columns; let i = index">
+        <th *ngIf="i >= 1 && i <= 4" class="text-center wrap-header p-2" style="min-width: 55px">
+          {{ col.header }}
+        </th>
+      </ng-container>
+
+      <ng-container *ngFor="let col of columns; let i = index">
+        <th *ngIf="i >= 5 && i <= 8" class="text-center wrap-header p-2" style="min-width: 55px">
+          {{ col.header }}
+        </th>
+      </ng-container>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="groupheader" let-rowData>
+    <!-- 新增樣式：bg-blue-100 和 text-blue-700 font-bold -->
+    <tr pRowGroupHeader class="bg-blue-100 text-blue-700 font-bold">
+      <td [attr.colspan]="columns.length">
+        <span class="font-bold ml-2">{{rowData.LTYPE_ID}} - {{rowData.LTYPE_NAME}}</span>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="groupfooter" let-rowData>
+    <ng-container *ngIf="getGroupFooterData(rowData) as groupFooter">
+      <tr class="font-bold text-sm bg-gray-200 text-primary">
+        <ng-container *ngFor="let col of columns; let i = index">
+          <td [class]="{
+                'text-left': col.align === 'left' || !col.align,
+                'text-center': col.align === 'center',
+                'text-right': col.align === 'right'
+              }">
+            <span class="font-bold">
+              <ng-container *ngIf="col.field === 'STYPE_NAME'">
+                {{ rowData.LTYPE_NAME }} 合計
+              </ng-container>
+
+              <ng-container *ngIf="i >= 1">
+                {{ col.format ? col.format(groupFooter[col.field]) : groupFooter[col.field] }}
+              </ng-container>
+            </span>
+          </td>
+        </ng-container>
+      </tr>
+    </ng-container>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+    <tr [ngClass]="{'font-bold text-sm text-primary': rowData.STYPE_NAME && rowData.STYPE_NAME.includes('小計')}">
+      <td *ngFor="let col of columns" style="text-overflow: ellipsis; min-width: 55px" [class]="{
+                'text-left': col.align === 'left' || !col.align,
+                'text-center': col.align === 'center',
+                'text-right': col.align === 'right'
+              }">
+        <span>
+          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="footer" let-columns let-rowData>
+    <tr *ngIf="footerData" class="font-bold text-sm bg-gray-200 text-primary">
+      <ng-container *ngFor="let col of columns">
+        <!-- 根據 col.align 修正對齊 -->
+        <td [class]="{
+              'text-left': col.align === 'left' || !col.align,
+              'text-center': col.align === 'center',
+              'text-right': col.align === 'right'
+            }">
+          <span class="font-bold">
+            {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
+          </span>
+        </td>
+      </ng-container>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="columns.length">
+        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+          查無資料
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

@@ -1,6 +1,6 @@
 
-import { DatePipe, JsonPipe } from '@angular/common';
-import { Component, OnInit, computed, effect, untracked } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,6 +15,7 @@ import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { tap } from 'rxjs';
 import { TLS26010Data, TLS26010Query } from './tls26010.model';
 
 @Component({
@@ -23,7 +24,6 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
   styleUrls: ['./tls26010.component.scss'],
   standalone: !0,
   imports: [
-    JsonPipe,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
@@ -94,6 +94,9 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
+  public readonly tableData = signal<TLS26010Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+
   // 監聽用
   private readonly sys3800Signal = toSignal(this.qf().sys3800.valueChanges);
   private readonly sys3900Signal = toSignal(this.qf().sys3900.valueChanges);
@@ -111,12 +114,12 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   public readonly addButton: AddButton[] = [
     {
       label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData, this.tableData),
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
     },
     {
       label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData, this.tableData),
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
     },
   ];
@@ -201,7 +204,12 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.service.loadTLS26010(this.queryTLS26010());
+      this.service.loadTLS26010(this.queryTLS26010()).pipe(
+        tap(res => {
+          this.tableData.set(res.Data ?? []);
+          this.totalRecords.set(res.TotalCount ?? 0);
+        }),
+      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   };
@@ -209,10 +217,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   /** 刪除選中的活動 */
   public onDelete(data: TLS26010Data[]): void {
     this.logger.debug(`刪除活動:`, data);
-    for (const item of data) this.service.deleteTLS26010(item)
-      .subscribe({
-        next: () => this.messageService.successBubble('刪除成功'),
-        error: () => this.messageService.errorBubble('刪除失敗'),
-      });
+    for (const item of data) this.service.deleteTLS26010(item).subscribe();
   }
 }

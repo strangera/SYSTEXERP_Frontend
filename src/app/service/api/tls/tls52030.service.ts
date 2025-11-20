@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
@@ -248,5 +248,29 @@ export class Tls52030Service {
    */
   updateStatusTLS52030(data: IUpdateTLS52030StatusRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52030`, data);
+  }
+  /**
+     * 匯出採購單
+     * @param params 查詢條件 (PO_No)
+     * @returns API 響應
+     */
+  exportTLS52030(params: { ODM_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52030`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
+  }
+  /**
+   * 匯出採購單PDF
+   * @param params 查詢條件 (PO_No)
+   * @returns API 響應
+  */
+  exportTLS52030PDF(params: { ODM_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52030PDF`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
   }
 }

@@ -13,7 +13,6 @@ import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
@@ -32,16 +31,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 
-import { HttpResponse } from '@angular/common/http';
-
 type FilterMode = 'location' | 'busType' | 'org' | 'counter';
 
 // 排序（若日後 app-table-report 需要用，可保留型別）
 type SortOrder = 1 | -1;
-type SortMeta = { field: string; order: SortOrder };
-const normalizeOrder = (o: any): SortOrder => (o === -1 ? -1 : 1);
-const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined): SortMeta[] =>
-  Array.isArray(arr) ? arr.map(s => ({ field: String(s.field), order: normalizeOrder(s.order) })) : [];
+interface SortMeta { field: string; order: SortOrder }
 
 @Component({
   selector: 'app-tls23120',
@@ -67,8 +61,7 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
 })
 export class TLS23120Component
   extends BasicQueryPageComponent<any>
-  implements OnDestroy
-{
+  implements OnDestroy {
   private readonly QUERY_KEY = this.ProgNo || 'TLS23120';
 
   private destroy$ = new Subject<void>();
@@ -86,8 +79,6 @@ export class TLS23120Component
   btnLoading = false;
   historyRequestBody: any | null = null;
 
-  private lastQuerySig: string | null = null;
-  private lazyTimer: any = null;
   private pendingNavigateAfterQuery = false;
 
   readonly yesterday: Date = (() => {
@@ -118,7 +109,6 @@ export class TLS23120Component
   organizationOptions: any[] = [];
   bus_typeOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
-  whetherOptions: any[] = [];
   floorOptions: any[] = [];
   regionOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
@@ -133,7 +123,6 @@ export class TLS23120Component
     private tls23120Service: TLS23120Service,
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
-    private whetherService: WhetherService,
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private floorService: FloorService,
@@ -156,7 +145,6 @@ export class TLS23120Component
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
-    this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
     this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = (res ?? []).map(x => ({
@@ -209,14 +197,14 @@ export class TLS23120Component
       const payload: any = {
         TXN_Date: this.toDateOnly(val?.TXN_Date),
 
-        TLT_No:       (fm === 'counter')  ? (val?.TLT_No ?? null) : null,
+        TLT_No: (fm === 'counter') ? (val?.TLT_No ?? null) : null,
         tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
-        area_no:      (fm === 'location') ? (Array.isArray(val?.area_no)   ? val.area_no   : null) : null,
-        tlt_floor:    (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
-        bus_type:     (fm === 'busType')  ? (val?.bus_type ?? null) : null,
-        org_id:       (fm === 'org')      ? (val?.org_id ?? null) : null,
+        area_no: (fm === 'location') ? (Array.isArray(val?.area_no) ? val.area_no : null) : null,
+        tlt_floor: (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
+        bus_type: (fm === 'busType') ? (val?.bus_type ?? null) : null,
+        org_id: (fm === 'org') ? (val?.org_id ?? null) : null,
 
-        ShowBusType:  val?.ShowBusType ?? null,
+        ShowBusType: val?.ShowBusType ?? null,
 
         // ✅ 固定分頁大小 30（大小寫都帶）
         pageIndex: 1,
@@ -352,8 +340,8 @@ export class TLS23120Component
     return {
       ...r,
       FLOOR_NO: r?.FLOOR_NO ?? r?.floor_desc ?? null,
-      AREA_NO : r?.AREA_NO  ?? r?.area_no    ?? null,
-      TXN_DATE: r?.TXN_DATE ?? r?.sad_date   ?? null, // 新增：把 sad_date 映射成 TXN_DATE
+      AREA_NO: r?.AREA_NO ?? r?.area_no ?? null,
+      TXN_DATE: r?.TXN_DATE ?? r?.sad_date ?? null, // 新增：把 sad_date 映射成 TXN_DATE
     };
   }
 
@@ -382,14 +370,14 @@ export class TLS23120Component
     };
 
     const location = ['tlt_building', 'area_no', 'tlt_floor'];
-    const busType  = ['bus_type'];
-    const org      = ['org_id'];
-    const counter  = ['TLT_No'];
+    const busType = ['bus_type'];
+    const org = ['org_id'];
+    const counter = ['TLT_No'];
 
     setGroup(location, mode === 'location');
-    setGroup(busType,  mode === 'busType');
-    setGroup(org,      mode === 'org');
-    setGroup(counter,  mode === 'counter') ;
+    setGroup(busType, mode === 'busType');
+    setGroup(org, mode === 'org');
+    setGroup(counter, mode === 'counter');
 
     // 僅在 counter 模式時讓 TLT_No 有 required 驗證
     const tlt = this.queryForm.get('TLT_No');
@@ -446,7 +434,7 @@ export class TLS23120Component
     if (!x) return x;
     const d = new Date(x);
     return isNaN(d.getTime()) ? x : d;
-    }
+  }
   private restoreQueryForm(): void {
     try {
       const saved = this.queryStateService.getQueryStateValue(this.QUERY_KEY);
