@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, AddButton } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls22040',
@@ -29,15 +29,15 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
   ],
 })
 export class TLS22040Component extends BasicQueryPageComponent<any> implements OnInit {
+  multiSortMeta = [{ field: 'TXN_Date', order: 1 }];
   queryForm = this.formBuilder.group({
     TXN_DateStart: [yesterday, Validators.required],
     TXN_DateEnd: [yesterday, Validators.required],
-    ...createPaginationConfig([{ field: 'PAY_Name', order: 1 }]),
+    ...createPaginationConfig(this.multiSortMeta),
   });
 
   data: any[] = [];
   totalRecords = 0;
-
   columnGroup4 = [
     { field: '111', header: '開立電子發票' },
     { field: '222', header: '上送到Tumkey目錄' },
@@ -59,7 +59,6 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  /** 判斷是否可以檢視明細 */
   canShowDetail = (rowData: any): boolean => {
     return !!rowData.DiffNum && rowData.DiffNum > 0;
   };
@@ -68,9 +67,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     {
       label: '查看明細',
       icon: 'pi pi-eye',
-      action: (rowData: any) => {
-        this.onDetail(rowData);
-      },
+      action: (rowData: any) => this.onDetail(rowData),
       disabled: (rowData: any) => !this.canShowDetail(rowData)
     }
   ];
@@ -79,28 +76,19 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS22040', 'TLS/TLS22040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  /** yyyy/MM/dd 格式化 (避免時區錯位) */
   private formatDate(d: any): string {
     if (!d) return '';
     const date = new Date(d);
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}/${mm}/${dd}`;
+    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
   }
 
-  /** 查詢結果顯示格式 yyyy-MM-dd */
   private formatToYMD(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) {
-      const parts = dateStr.split(' ')[0].replace(/\//g, '/');
-      return parts;
-    }
+    if (isNaN(d.getTime())) return dateStr.split(' ')[0];
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  /** 查詢主表 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.submitted = true;
@@ -109,11 +97,11 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       const raw = frm.value;
 
       const payload = {
-        PageSize: 0,
-        PageIndex: 0,
-        OrderBy: 'PAY_Name',
+        PageSize: frm.value.pageSize || 20,
+        PageIndex: frm.value.pageIndex || 1,
         Offset: 0,
-        SortBy: [],
+        OrderBy: frm.value.SortBy?.[0]?.field || this.multiSortMeta[0].field,
+        SortBy: frm.value.SortBy || this.multiSortMeta,
         TXN_DateStart: this.formatDate(raw.TXN_DateStart),
         TXN_DateEnd: this.formatDate(raw.TXN_DateEnd),
       };
@@ -125,12 +113,62 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
             TXN_Date: this.formatToYMD(x.TXN_Date),
             canDetail: !!x.DiffNum && x.DiffNum > 0,
           }));
+
           this.totalRecords = res?.TotalCount ?? this.data.length;
+          // 更新排序狀態和表單參數
+          this.multiSortMeta = payload.SortBy;
+          frm.patchValue({
+            pageSize: payload.PageSize,
+            pageIndex: payload.PageIndex,
+            SortBy: payload.SortBy
+          }, { emitEvent: false });
           this.loading = false;
-          // 儲存查詢狀態
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         },
+        error: () => {
+          this.loading = false;
+        }
       });
+    });
+  }
+
+  /**  load → 後端分頁 + 排序 */
+  override onLazyLoadData(event: any, frm: FormGroup) {
+    // 先呼叫父類別的 onLazyLoadData 來更新表單
+    super.onLazyLoadData(event, frm);
+
+    // 儲存查詢狀態
+    this.queryStateService.setQueryState(this.ProgNo, frm.value);
+
+    this.loading = true;
+
+    // 使用表單中已更新的值
+    const formValue = frm.value;
+    const payload = {
+      PageSize: formValue.pageSize || 20,
+      PageIndex: formValue.pageIndex || 1,
+      Offset: 0,
+      OrderBy: formValue.SortBy?.[0]?.field ?? 'TXN_Date',
+      SortBy: formValue.SortBy ?? this.multiSortMeta,
+      TXN_DateStart: this.formatDate(formValue.TXN_DateStart),
+      TXN_DateEnd: this.formatDate(formValue.TXN_DateEnd),
+    };
+
+    this.tls22040Service.queryTLS22040(payload).subscribe({
+      next: (res) => {
+        this.data = (res?.Data ?? []).map((x: any) => ({
+          ...x,
+          TXN_Date: this.formatToYMD(x.TXN_Date),
+          canDetail: !!x.DiffNum && x.DiffNum > 0,
+        }));
+
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        // 更新排序狀態
+        this.multiSortMeta = payload.SortBy;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
     });
   }
 
@@ -154,7 +192,6 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         const detailData = res?.Data ?? [];
         const rowdataWithDetail = { ...row, details: detailData };
-        // 傳遞當前的查詢條件，讓返回時能恢復狀態
         this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail, this.queryForm.getRawValue());
       },
     });
