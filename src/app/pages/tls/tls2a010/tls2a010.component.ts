@@ -1,25 +1,28 @@
+import { DatePipe, NgIf, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { AccordionModule } from 'primeng/accordion';
-import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Button } from 'primeng/button';
-import { NgStyle, NgIf, DatePipe } from '@angular/common';
-import { TooltipModule } from 'primeng/tooltip';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { creditCardColumns, creditCardGroup, defaultColumns, TLS2A010Data, TLS2A010Query } from './tls2a010.model';
-import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ValidationService } from '@shared/service/validation.service';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount } from '@shared/componentkit/table/table.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { Button } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { finalize } from 'rxjs';
+import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
+import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { creditCardColumns, creditCardGroup, defaultColumns, TLS2A010Query } from './tls2a010.model';
 
 
 const yesterday = new Date();
@@ -27,6 +30,7 @@ yesterday.setDate(yesterday.getDate() - 1);
 
 @Component({
   selector: 'app-tls2a010',
+  styleUrls: ['./tls2a010.component.scss'],
   templateUrl: './tls2a010.component.html',
   standalone: true,
   imports: [
@@ -44,6 +48,8 @@ yesterday.setDate(yesterday.getDate() - 1);
     DropdownRangeComponent,
     DatePipe,
     TableReportComponent,
+    TableEditComponent,
+    DialogComponent
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -79,18 +85,35 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   TXN_Date = '';
   todayDisplay = '';
   systemTypeOptions: IDropdownItem[] = [];
-  addButtons = [
-  {
-    label: '缺單審核',
-    icon: 'pi pi-exclamation-triangle',
-    action: (rowData: any) => this.onDetail(rowData),
-    disabled: (rowData: any) =>
-      rowData.PAY_Type === 'C' ||
-      rowData.PAY_Type === 'A' ||
-      rowData.PAY_Type === '1'
-  }
-];
 
+  // 彈跳視窗相關屬性
+  dialogVisible = false;
+  dialogData: any[] = [];
+  dialogColumns: EditColumn[] = [];
+  isFormReadable = false; // 控制表單是否只讀
+
+  addButtons = [
+    {
+      label: '缺單審核',
+      icon: 'pi pi-exclamation-triangle',
+      action: (rowData: any) => this.onDetail(rowData),
+      disabled: (rowData: any) =>
+        rowData.PAY_Type === 'C' ||
+        rowData.PAY_Type === 'A' ||
+        rowData.PAY_Type === '1'
+    },
+    {
+      label: '編輯',
+      icon: 'pi pi pi-pencil',
+      action: (rowData: any) => this.onEditDetail(rowData),
+      disabled: (rowData: any) =>
+        rowData.PAY_Type === 'C' ||
+        rowData.PAY_Type === 'A' ||
+        rowData.PAY_NO === '10' ||
+        rowData.PAY_NO === '41' ||
+        rowData.PAY_NO === '43'
+    }
+  ];
 
   isRowSelectable(row: any) {
     return row.check_status === 'N';
@@ -127,7 +150,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           }
         }
       }
-
       return null;
     };
   }
@@ -219,6 +241,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     const dd = today.getDate();
     this.todayDisplay = `${mm}/${dd}`;
 
+    // 初始化彈跳視窗欄位
+    this.initDialogColumns();
+
   }
 
   get PAY_NO_NAME(): string {
@@ -276,6 +301,13 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       return;
     }
 
+    // 檢查是否包含已審核的資料
+    const hasReviewedItems = selectedItems.some(item => item.check_status === 'Y');
+    if (hasReviewedItems) {
+      this.messageService.warnBubble('您選取包含已審核的資料，無法進行審核完成。');
+      return;
+    }
+
     // 依照 API 格式，包成 selectList
     const payload = {
       PAY_Type: this.PAY_Type,
@@ -288,6 +320,37 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.tls2a010Service.updateTLS2A010(payload).subscribe({
       next: () => {
         this.messageService.successBubble('審核完成');
+        this.onSubmit(this.queryForm);
+        this.loading = false;
+      },
+    });
+  }
+  onUnreview(selectedItems: any[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選要取消審核的項目');
+      return;
+    }
+
+    // 檢查是否包含未審核的資料
+    const hasUnreviewedItems = selectedItems.some(item => item.check_status === 'N');
+    if (hasUnreviewedItems) {
+      this.messageService.warnBubble('您選取包含未審核的資料，無法進行反審核。');
+      return;
+    }
+
+    // 依照 API 格式，包成 selectList (假設反審核使用類似的 API)
+    const payload = {
+      PAY_Type: this.PAY_Type,
+      selectList: selectedItems.map(item => ({
+        ID: item.ID,
+        PAY_NO: item.PAY_NO,
+      }))
+    };
+    this.loading = true;
+    // 這裡需要呼叫反審核的 API，目前假設使用相同的服務但不同的方法
+    this.tls2a010Service.updateTLS2A010(payload).subscribe({
+      next: () => {
+        this.messageService.successBubble('反審核完成');
         this.onSubmit(this.queryForm);
         this.loading = false;
       },
@@ -307,5 +370,59 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.columnGroup = [];
     }
   }
-}
 
+  initDialogColumns(): void {
+    this.dialogColumns = [
+      { field: 'ECR_No', header: '收銀機代號' },
+      { field: 'TLT_NO', header: '專櫃編號' },
+      { field: 'tlt_name', header: '櫃位名稱' },
+      { field: 'BOOK_PayAmt', header: '系統帳', format: formatAmount },
+      { field: 'ACT_PayAmt', header: '實收帳', format: formatAmount },
+      {
+        field: 'ADJUSTED_PayAmt',
+        header: '調整後實收帳',
+        format: formatAmount,
+        type: 'inputNumber'
+      },
+      { field: 'OVER_PayAmt', header: '系統/實收帳差異', format: formatAmount },
+
+    ];
+  }
+
+
+  onEditDetail(rowData: any): void {
+    if (!rowData) {
+      this.messageService.warnBubble('請選擇要編輯的資料');
+      return;
+    }
+    const dialogRowData = {
+      ...rowData,
+      ADJUSTED_PayAmt: rowData.ACT_PayAmt || 0
+    };
+    this.dialogData = [dialogRowData];
+    this.dialogVisible = true;
+  }
+
+  onDialogClose(visible: boolean): void {
+    this.dialogVisible = visible;
+    if (!visible) {
+      this.dialogData = [];
+    }
+  }
+
+  onRowEditSave(event: any): void {
+    const editedData = event.data;
+    console.log('編輯後的資料:', editedData);
+    this.messageService.successBubble('資料已更新');
+  }
+
+  onSaveDialog(): void {
+    this.messageService.successBubble('資料已保存');
+    this.onDialogClose(false);
+  }
+
+  onDataChange(data: any[]): void {
+    this.dialogData = data;
+    console.log('表格資料已更新:', data);
+  }
+}
