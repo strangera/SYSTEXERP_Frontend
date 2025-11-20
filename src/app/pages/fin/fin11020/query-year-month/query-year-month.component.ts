@@ -82,8 +82,6 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['control']) {
-      console.log('主控項值變化:', this.control.value);
-
       const yyyymm = this.control.value;
       if (typeof yyyymm === 'string' && yyyymm.length === 6) {
         const yearString = yyyymm.substring(0, 4);
