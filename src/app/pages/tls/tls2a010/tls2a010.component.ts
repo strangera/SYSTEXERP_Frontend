@@ -107,14 +107,16 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         rowData.PAY_NO === '10' ||
         rowData.PAY_NO === '41' ||
         rowData.PAY_NO === '43' ||
-        rowData.check_status === 'Y'
+        rowData.check_status === 'Y' ||
+        rowData.isClose === 'Y'
     }
   ];
 
-  isRowSelectable(_row: any) {
-    // 允許所有項目勾選
-    return true;
+  isRowSelectable(rowData: any) {
+    // 已關帳就不能選取
+    return rowData.isClose !== 'Y';
   }
+
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
@@ -363,7 +365,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   }
   calculateAdjustedAmounts(rowData: any): void {
     if (rowData && rowData.MOD_PayAmt !== undefined && rowData.BOOK_PayAmt !== undefined) {
-      const adjustedDiff = rowData.BOOK_PayAmt - rowData.MOD_PayAmt;
+      const adjustedDiff = rowData.MOD_PayAmt - rowData.BOOK_PayAmt;
       rowData.OVER_PayAmt = adjustedDiff;
       if (adjustedDiff < 0) {
         rowData.OVER_Status = '欠';
