@@ -72,6 +72,12 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
     // 訂閱變化，同步回主控項
     this.yearControl.valueChanges.subscribe(() => this.syncControlValue());
     this.monthControl.valueChanges.subscribe(() => this.syncControlValue());
+
+    // 訂閱主控項變化，更新子控項
+    this.control.valueChanges.subscribe(value => {
+      this.updateChildControls(value);
+      this.cdr.markForCheck(); // 觸發變更檢測
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -122,5 +128,24 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
   // 觸發同步的公開方法
   onChange(): void {
     this.syncControlValue();
+  }
+
+  /**
+   * 根據主控項的 YYYYMM 值更新子控項
+   */
+  private updateChildControls(yyyymm: string | null): void {
+    if (typeof yyyymm === 'string' && yyyymm.length === 6) {
+      const yearString = yyyymm.substring(0, 4);
+      const monthString = yyyymm.substring(4, 6);
+      const initialDate = new Date(parseInt(yearString), 0, 1);
+
+      if (!isNaN(initialDate.getTime())) {
+        this.yearControl.setValue(initialDate, { emitEvent: false });
+      }
+
+      if (this.months.some(m => m.value === monthString)) {
+        this.monthControl.setValue(monthString, { emitEvent: false });
+      }
+    }
   }
 }
