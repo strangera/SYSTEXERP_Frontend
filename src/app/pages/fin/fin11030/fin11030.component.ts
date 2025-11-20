@@ -10,7 +10,6 @@ import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -29,7 +28,6 @@ import { APS2001Data, columns } from './fin11030.model';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeComponent,
     InputTextComponent,
     InputTextRangeComponent,
     MultiSelectComponent,

@@ -1,25 +1,23 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { columns, MainInvoiceData, subColumns } from './fin11020.model';
-import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
-import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { YearMonthComponent } from './query-year-month/query-year-month.component';
 import { finalize } from 'rxjs';
-
-
+import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { columns, MainInvoiceData, subColumns } from './fin11020.model';
+import { YearMonthComponent } from './query-year-month/query-year-month.component';
 
 //1.1.1.2 發票基本資料維護
 @Component({
@@ -83,14 +81,10 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   onSubmit(frm: FormGroup) {
     console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      this.fin11020Service.queryFIN11020(frm.value).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          this.data = response.Data
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-        },
-        error: () => { this.loading = false; },
+      this.fin11020Service.queryFIN11020(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        this.data = response.Data
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
@@ -100,12 +94,9 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
       header: '刪除確認',
       message: '是否刪除所選項目?',
       accept: () => {
-        this.fin11020Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-          next: () => {
-            this.onSubmit(this.queryForm);
-            this.selectedRows = [];
-          },
-          error: () => { this.loading = false; },
+        this.fin11020Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe(() => {
+          this.onSubmit(this.queryForm);
+          this.selectedRows = [];
         });
       }
     })
