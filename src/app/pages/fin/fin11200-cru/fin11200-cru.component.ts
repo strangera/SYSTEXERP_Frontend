@@ -105,6 +105,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
       this.fin11200Service.execProcNumber(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble(response.Message);
+          this.dataForm.reset();
           this.data = [];
           this.selectedData = [];
         }
