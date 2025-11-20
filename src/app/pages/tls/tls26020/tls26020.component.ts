@@ -1,22 +1,22 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { FloorService } from '@service/basic/floor.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { TLS26020Data, TLS26020Service } from '../../../service/api/tls/tls26020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { Tls11010Service } from '@service/api/tls/tls11010.service';
-import { FloorService } from '@service/basic/floor.service';
-import { Tls51080Service } from '@service/api/tls/tls51080.service';
-import { DatePipe } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26020',
@@ -28,10 +28,10 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    TableComponent,
     TranslateModule,
     CalendarRangeComponent,
     MultiSelectComponent,
+    CustomFooterTableComponent
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
@@ -63,6 +63,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   totalRecords = 0;
   data: TLS26020Data[] = [];
   selectedItems: TLS26020Data[] = [];
+  footerData: any[] = [];
 
   // 修正 columns 根據實際 API 回應
   columns: Column[] = [
@@ -97,7 +98,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     private floorService: FloorService,
     private tls51080Service: Tls51080Service,
     private datePipe: DatePipe,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -112,7 +113,11 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
       this.tls26020Service.queryTLS26020(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data;
+          this.data = response.Data.mainData;
+          this.footerData = [{
+            txn_TotGUI: response.Data.totalData[0]?.txn_Total_TotGUI,
+            txn_TotSaleAmt: response.Data.totalData[0]?.txn_Total_TotSaleAmt
+          }]
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
