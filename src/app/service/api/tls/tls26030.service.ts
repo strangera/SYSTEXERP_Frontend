@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { environment } from '../../../../environments/environment';
+import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS26030
 export interface TLS26030QueryRequest extends BaseQueryRequest {
@@ -47,7 +47,7 @@ export class TLS26030Service {
   constructor(private http: HttpClient) { }
 
   // 查詢預售明細表
-  queryTLS26030(data: TLS26030QueryRequest): Observable<BaseQueryResponse<TLS26030Data>> {
-    return this.http.post<BaseQueryResponse<TLS26030Data>>(`${this.apiUrl}/queryTLS26030`, data);
+  queryTLS26030(data: TLS26030QueryRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS26030`, data);
   }
 }
