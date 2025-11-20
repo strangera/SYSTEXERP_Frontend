@@ -100,6 +100,7 @@ export interface IPOS2004DetailData {
   POD_BuyNet?: number; // 採購淨額
   POD_SaleAmt?: number; // 銷售金額
   POD_Remark?: string; // 備註
+  _TABLE_KEY?: string;
 }
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */

@@ -24,7 +24,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { v4 as uuidv4 } from 'uuid';
 import { TableUtilityService } from './table-edit-utility.service';
 import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
-import { validateRequired } from './validate-field.model';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -389,22 +388,29 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
    /* // !!! 1. 宣告：@ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
    /* // !!! 2. 在提交呼叫共通元件：const valid = this.tableEditComponent.validateAndShowErrors();
    /* // !!! 3. 使用 valid 來判斷是否通過
- * 執行完整的驗證並處理錯誤提示
+ /* 執行完整的驗證並處理錯誤提示
  * @returns {boolean} 整個表格是否有效
  */
   validateAndShowErrors(): boolean {
+    // 1. 檢查 Table 是否為必填且為空
     if (!this.disabled && this.data && !this.data.length && this.tableRequired) {
       this.tableDataEmpty = true;
+      this.cdr.detectChanges(); // 立即更新狀態
       return false;
     }
+
+    // 遍歷所有行
     for (const rowData of this.data) {
       if (rowData._isAutoInsertCandidate) { continue; }
-      for (const col of this.columns) {// 1. 執行單一欄位驗證
-        if (!rowData._validationErrors) { // 確保 _validationErrors 物件存在
+
+      // --- 欄位驗證 (Field Validation) ---
+      for (const col of this.columns) {
+        if (!rowData._validationErrors) {
           rowData._validationErrors = {};
         }
         let hasError = false;
-        if (col.validate) {// 執行所有驗證規則
+
+        if (col.validate) {
           for (const validateFn of col.validate) {
             const validationResult = validateFn(rowData[col.field], rowData, this.data, col.field, col.header);
             if (!validationResult.isValid) {
@@ -414,23 +420,62 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
             }
           }
         }
-        if (!hasError) {// 如果該欄位沒有錯誤，確保清除錯誤訊息
+
+        if (!hasError) {
           delete rowData._validationErrors[col.field];
         }
-        if (hasError) { // 如果有任何欄位錯誤，直接顯示並返回 false
+
+        if (hasError) {
+          // 🚨 關鍵修改 1：發現錯誤時，強制刷新並返回
+          this.data = [...this.data];
+          this.cdr.detectChanges();
+
           this.messageService.errorBubble(`｢${col.header}」 ` + rowData._validationErrors[col.field], '表格欄位驗證失敗');
           return false;
         }
       }
-      if (this.rowValidate) {// 2. 執行整行驗證
+
+      // --- 整行驗證 (Row Validation) ---
+      if (this.rowValidate) {
         rowData._rowValidationError = this.rowValidate(rowData);
       }
-      if (rowData._rowValidationError?.isValid === false) {// 如果整行驗證有錯誤，直接顯示並返回 false
+
+      if (rowData._rowValidationError?.isValid === false) {
+        // 🚨 關鍵修改 2：發現整行錯誤時，強制刷新並返回
+        this.data = [...this.data];
+        this.cdr.detectChanges();
+
         this.messageService.errorBubble(rowData._rowValidationError.errorMessage, '表格驗證失敗');
         return false;
       }
     }
-    return true;// 所有行都驗證通過
+
+    // 3. 🚨 關鍵修改 3：驗證通過前，確保表格資料參考更新（清除任何先前可能殘留的錯誤樣式）
+    this.data = [...this.data];
+    this.cdr.detectChanges();
+
+    return true; // 所有行都驗證通過
+  }
+  /**
+ * 檢查該行是否包含任何欄位錯誤或整行驗證錯誤。
+ */
+  public hasRowError(rowData: any): boolean {
+    if (rowData._isAutoInsertCandidate) {
+      return false;
+    }
+
+    // 檢查整行驗證錯誤
+    if (rowData._rowValidationError?.isValid === false) {
+      return true;
+    }
+
+    // 檢查是否有任何欄位驗證錯誤
+    // (如果 _validationErrors 存在且其屬性數量 > 0)
+    if (rowData._validationErrors && Object.keys(rowData._validationErrors).length > 0) {
+      return true;
+    }
+
+    return false;
   }
   onRowReorder(event: TableColumnReorderEvent) {
     if (this.disabled || !event.dragIndex) {
