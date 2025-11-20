@@ -1,24 +1,23 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDateTime, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { getSYS1000, getSYS1000Options } from '../../../service/system/sys1000.service';
-import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
-import { finalize } from 'rxjs';
-import { formatDate as dateFnsFormatDate } from '@angular/common';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { finalize } from 'rxjs';
+import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
+import { getSYS1000, getSYS1000Options } from '../../../service/system/sys1000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { firstDayOfCurrentPeriod, lastDayOfCurrentPeriod } from '@shared/models/system/query-form.model';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { Column, createPaginationConfig, formatAmount, formatDateTime, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin12010',
@@ -30,19 +29,19 @@ import { transformOptionsForExport } from '@shared/componentextends/basic-print/
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeComponent,
     InputTextComponent,
     InputTextRangeComponent,
     MultiSelectComponent,
     TableComponent,
     TranslateModule,
+    YearMonthComponent
   ],
 })
 //1.1.2.1 電子式發票各系統配號維護
 export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    SAL_GUIYYYYMM_start: [firstDayOfCurrentPeriod, [Validators.required]], // 發票年月
-    SAL_GUIYYYYMM_end: [lastDayOfCurrentPeriod, [Validators.required]], // 發票年月
+    SAL_GUIYYYYMM_start: ['', [Validators.required]], // 發票年月
+    SAL_GUIYYYYMM_end: ['', [Validators.required]], // 發票年月
     SAL_GUITrack: ['', [Validators.maxLength(2)]], // 字軌
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
@@ -82,24 +81,27 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');
   constructor(
     private fin12010Service: Fin12010Service,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('FIN12010', '/FIN/FIN12010cru', this.queryForm, (form) => this.onSubmit(form));
+    // 設定發票年月預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 === 0) {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    }
+    this.queryForm.get('SAL_GUIYYYYMM_start')?.setValue(
+      this.datePipe.transform(currentDate, 'yyyyMM'));
+    this.queryForm.get('SAL_GUIYYYYMM_end')?.setValue(
+      this.datePipe.transform(currentDate, 'yyyyMM'));
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const formValue = frm.value;
-      const SAL_GUIYYYYMM_start = formValue.SAL_GUIYYYYMM_start ? dateFnsFormatDate(formValue.SAL_GUIYYYYMM_start, 'yyyyMM', 'en-US') : '';
-      const SAL_GUIYYYYMM_end = formValue.SAL_GUIYYYYMM_end ? dateFnsFormatDate(formValue.SAL_GUIYYYYMM_end, 'yyyyMM', 'en-US') : '';
-      const body = {
-        ...formValue,
-        SAL_GUIYYYYMM_start,
-        SAL_GUIYYYYMM_end,
-      };
-      this.fin12010Service.queryFIN12010(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
+      this.fin12010Service.queryFIN12010(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.map(item => ({
           ...item,
           SAL_GUIYYYYMM: item.SAL_GUIYYYYMM
@@ -108,7 +110,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
         }));
 
         this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, formValue);
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }

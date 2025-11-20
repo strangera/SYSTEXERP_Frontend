@@ -1,16 +1,16 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { forkJoin, Observable } from 'rxjs'; // 引入 forkJoin 和 Observable
 import { finalize, map } from 'rxjs/operators';
-import { NgIf } from '@angular/common';
-import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls2c050',
@@ -75,30 +75,62 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
    * 執行發票鎖定
    */
   onLock(): void {
-    this.handleSubmit(this.queryForm, () => {
-      const date = this.queryForm.controls.cls_date.value;
-      if (date) {
-        const dateStr = formatDateToYYYY_MM_DD(date);
-        if (dateStr) {
-          this.executeApi(this.tls2c050Service.lockTLS2C050(dateStr));
-        }
+    if (this.queryForm.invalid) {
+      this.submitted = true;
+      return;
+    }
+
+    const date = this.queryForm.controls.cls_date.value;
+    if (!date) {
+      return;
+    }
+
+    // 檢查是否小於等於最後關帳日期
+    if (this.closeDate && this.closeDate !== 'N/A') {
+      const selectedDate = new Date(date);
+      const lastCloseDate = new Date(this.closeDate);
+
+      if (selectedDate <= lastCloseDate) {
+        this.messageService.warnBubble('已關帳，無法進行調整。');
+        return;
       }
-    });
+    }
+
+    const dateStr = formatDateToYYYY_MM_DD(date);
+    if (dateStr) {
+      this.executeApi(this.tls2c050Service.lockTLS2C050(dateStr));
+    }
   }
 
   /**
    * 執行發票反鎖定
    */
   onUnLock(): void {
-    this.handleSubmit(this.queryForm, () => {
-      const date = this.queryForm.controls.cls_date.value;
-      if (date) {
-        const dateStr = formatDateToYYYY_MM_DD(date);
-        if (dateStr) {
-          this.executeApi(this.tls2c050Service.unLockTLS2C050(dateStr));
-        }
+    if (this.queryForm.invalid) {
+      this.submitted = true;
+      return;
+    }
+
+    const date = this.queryForm.controls.cls_date.value;
+    if (!date) {
+      return;
+    }
+
+    // 檢查是否小於等於最後關帳日期
+    if (this.closeDate && this.closeDate !== 'N/A') {
+      const selectedDate = new Date(date);
+      const lastCloseDate = new Date(this.closeDate);
+
+      if (selectedDate <= lastCloseDate) {
+        this.messageService.warnBubble('已關帳，無法進行調整。');
+        return;
       }
-    });
+    }
+
+    const dateStr = formatDateToYYYY_MM_DD(date);
+    if (dateStr) {
+      this.executeApi(this.tls2c050Service.unLockTLS2C050(dateStr));
+    }
   }
 
   /**
@@ -107,9 +139,11 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
    */
   private executeApi(api$: Observable<any>): void {
     this.loading = true;
-    api$.pipe(finalize(() => this.loading = false)).subscribe(res => {
-      this.messageService.successBubble(res.Message || '操作成功');
-      this.fetchDates(); // 操作成功後重新取得日期
+    api$.pipe(finalize(() => this.loading = false)).subscribe({
+      next: (res) => {
+        this.messageService.successBubble(res.Message || '操作成功');
+        this.fetchDates(); // 操作成功後重新取得日期
+      },
     });
   }
 
@@ -131,9 +165,11 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
       .pipe(
         finalize(() => this.loadingDates = false)
       )
-      .subscribe(([closeDate, summaryDate]) => {
-        this.closeDate = closeDate;
-        this.summaryDate = summaryDate;
+      .subscribe({
+        next: ([closeDate, summaryDate]) => {
+          this.closeDate = closeDate;
+          this.summaryDate = summaryDate;
+        },
       });
   }
 }

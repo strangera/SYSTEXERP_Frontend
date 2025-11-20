@@ -1,21 +1,21 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { SystemOption } from '../../../shared/models/sys/sys1000.model';
-import { SystemOptionsService } from '../../../service/system/sys1000.service';
-import { monthOptions } from '../fin11200/fin11200.model';
-import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
-import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { finalize } from 'rxjs';
+import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
+import { SystemOptionsService } from '../../../service/system/sys1000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { SystemOption } from '../../../shared/models/sys/sys1000.model';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { monthOptions } from '../fin11200/fin11200.model';
 
 //1.1.2.1 電子式發票各系統配號維護
 @Component({
@@ -28,17 +28,18 @@ import { TranslateModule } from '@ngx-translate/core';
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
     InputNumberComponent,
     InputTextRangeComponent,
     DropdownComponent,
     NgIf,
     TranslateModule,
+    YearMonthComponent
   ],
 })
 export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    SAL_GUIYYYYMM: [null as null | Date, [Validators.required]],// 發票年月
+    SAL_GUIYYYYMM: [null as null | string, [Validators.required]],// 發票年月
+    // SAL_GUIYYYYMM: [null as null | Date, [Validators.required]],// 發票年月
     SAL_GUITrack: [{ value: null, disabled: true }, [Validators.required]],  // 發票字軌
     GUI_Qty: [{ value: null as number | null, disabled: true }, [Validators.required]], // 券數
     SAL_BlankCnt: [{ value: 0, disabled: true }],       // 發票張數
@@ -63,7 +64,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
     this.initializePage('FIN12010', this.dataForm);
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
-      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator]);
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required]);
     } else {
       this.fetchGUITrackOptions();
       const totQtyValue = this.dataForm.get('SAL_BlankCnt')?.value;
@@ -85,6 +86,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
       this.fetchGUITrackOptions(); // 更新字軌選項
       this.fetchGUIBegEndNo();
     });
+
     this.dataForm.get('SAL_GUITrack')?.valueChanges.subscribe((value) => {
       this.fetchGUIBegEndNo();
       this.maxQty = (this.guiTrackOptions.find(option => option.GUI_Track === value)?.UnassignedQty || 0) / 50;
@@ -102,14 +104,11 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
 
   private fetchGUITrackOptions(): void {
-    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
+    const guiDate: string | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
     this.guiTrackOptions = []; // 清空字軌選項
     this.maxQty = 0; // 重置最大發票號碼
-    if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
-      const year = guiDate.getFullYear().toString();
-      const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
-      const yymm = `${year}${month}`;
-      this.fin12010Service.queryPOS1017GUITrack({ GUI_YYMM: yymm }).subscribe(res => {
+    if (guiDate) {
+      this.fin12010Service.queryPOS1017GUITrack({ GUI_YYMM: guiDate }).subscribe(res => {
         if (res.Data.length > 0) {
           this.guiTrackOptions = res.Data
           if (this.isFormCreateable) {
@@ -123,16 +122,13 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
   private fetchGUIBegEndNo(): void {
     if (!this.isFormCreateable) return; // 只有在可創建表單時才執行
-    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
+    const guiDate: string | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
     const track: string = this.dataForm.get('SAL_GUITrack')?.value || '';
     const qty: number = this.dataForm.get('GUI_Qty')?.value || 0;
     this.dataForm.get('SAL_GUIBegNo')?.setValue(''); // 清除起始號碼
     this.dataForm.get('SAL_GUIEndNo')?.setValue(''); // 清除結束號碼
-    if (guiDate instanceof Date && !isNaN(guiDate.getTime()) && track && qty > 0) {
-      const year = guiDate.getFullYear().toString();
-      const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
-      const yymm = `${year}${month}`;
-      const params = { GUI_YYMM: yymm, GUI_Track: track, AddRolls: qty };
+    if (guiDate && track && qty > 0) {
+      const params = { GUI_YYMM: guiDate, GUI_Track: track, AddRolls: qty };
       this.fin12010Service.queryPOS1017GUIBegNo_GUIEndNo(params).subscribe(res => {
         this.dataForm.patchValue({
           SAL_GUIBegNo: res.Data?.New_GUI_BegNo ?? '',
@@ -155,15 +151,8 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const guiDate: Date | null = frm.get('SAL_GUIYYYYMM')?.value;
-      let guiYYMM = '';
-      if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
-        const year = guiDate.getFullYear();
-        const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
-        guiYYMM = `${year}${month}`;
-      }
       const body = {
-        SAL_GUIYYYYMM: guiYYMM,
+        SAL_GUIYYYYMM: frm.get('SAL_GUIYYYYMM')?.value,
         SAL_GUITrack: this.isFormCreateable ? frm.get('SAL_GUITrack')?.value : undefined,
         SAL_GUIBegNo: this.isFormCreateable ? frm.get('SAL_GUIBegNo')?.value : undefined,
         SAL_GUIEndNo: this.isFormCreateable ? frm.get('SAL_GUIEndNo')?.value : undefined,
