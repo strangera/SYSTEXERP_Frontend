@@ -14,7 +14,7 @@ import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.m
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { mergeMap, tap } from 'rxjs';
-import { TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
+import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
   selector: 'app-tls21020',
@@ -34,7 +34,7 @@ import { TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.mod
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    ENTRY_TYPE: new FormControl<string | void>(void 0),
+    ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
     ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -46,31 +46,55 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public readonly selectedItems = signal<TLS21020Data[]>([]);
   public readonly canSave = signal<boolean>(!0);
 
-  /** entryType 改變時，取得table 資料 */
+  /** entryType 改變時,取得table 資料 */
   public readonly entryTypeEffect = effect(() => {
     const ENTRY_TYPE = this.entryTypeSignal();
     if (!ENTRY_TYPE) return;
 
+    // 日後可客製化欄位顯示
+    switch (ENTRY_TYPE) {
+      case EntryType['銷售日傳票']:
+        this.columnsKeys.update(prev => ({
+          ...prev,
+          ObjectNo: !1,
+          RelatedPartyAccNo: !1,
+          VEN_No: !1,
+          PAY_days: !0,
+        }));
+        break;
+      default:
+        this.columnsKeys.set({
+          AccDC: !0,
+          ItemDesc: !0,
+          AccNo: !0,
+          Org_ID: !0,
+          AccNotes: !0,
+          ObjectNo: !0,
+          RelatedPartyAccNo: !0,
+        });
+        break;
+    }
+
+
     const controls = this.qf();
-    const payload: TLS21020Query = { ENTRY_TYPE };
+    const payload: TLS21020Query = { ENTRY_TYPE, pageSize: 9999 };
 
     for (const [k, v] of Object.entries(controls)) {
       const val = v.value;
-      if (val !== null && val !== void 0 && val !== '') (payload as any)[k] = val;
+      if (val !== null && val !== void 0) (payload as any)[k] = val;
     }
 
-    this.service.queryTLS21020({ ...payload, pageSize: 9999 }).pipe(
+    this.service.queryTLS21020(payload).pipe(
       tap(res => {
         this.tableData.set(res.Data ?? []);
         this.totalRecords.set(res.TotalCount ?? 0);
-        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       }),
     ).subscribe();
     this.logger.debug(`entryType changed:`, [ENTRY_TYPE, payload]);
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
   }, { allowSignalWrites: !0 });
 
-  private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
-  private readonly ABATYN = (v: any) => v?.ABAT_YN === 'N';
+  private readonly AccDCMap = new Map<'D' | 'C', '借' | '貸'>([['D', '借'], ['C', '貸']]);
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.tableLoading()
@@ -79,36 +103,22 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       || this.service.orgIdLoading();
   });
 
-  public readonly columns: EditColumn[] = [
-    {
-      field: 'AccDC',
-      header: '借/貸',
-      type: 'dropdown',
-      format: v => this.AccDCMap.get(v) || v,
-      options: [{ label: '借', value: 'D' }, { label: '貸', value: 'C' }],
-      optionLabel: 'label',
-      optionValue: 'value',
-      showClear: !1,
-      validate: [validateRequired],
-      width: '6em',
-    },
-    {
-      field: 'ItemDesc',
-      header: '項目名稱',
-      type: 'input',
-    },
-    {
-      field: 'ABAT_YN',
-      header: '是否專案應收',
-      type: 'dropdown',
-      format: v => Maps.YN.get(v) || v,
-      options: this.service.getYNOptions,
-      optionLabel: 'label',
-      optionValue: 'value',
-      showClear: !1,
-      validate: [validateRequired],
-      width: '8em',
-    },
+  /**
+   * 欄位顯示設定
+   * - 有 key 就顯示該欄位,沒 key 就不顯示
+   * - boolean 值 true 代表預設 type, false 則變成純文字顯示
+   */
+  public readonly columnsKeys = signal<Partial<Record<keyof TLS21020Data, boolean>>>({
+    AccDC: !0,
+    ItemDesc: !0,
+    AccNo: !0,
+    ABAT_YN: !1,
+    Org_ID: !0,
+    AccNotes: !0,
+  });
+  private readonly allColumns = computed((): EditColumn[] => [
+    { field: 'AccDC', header: '借/貸', format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v },
+    { field: 'ItemDesc', header: '項目名稱' },
     {
       field: 'AccNo',
       header: '會計科目',
@@ -118,6 +128,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       optionValue: 'value',
       validate: [validateRequired],
       showClear: !1,
+    },
+    {
+      field: 'ABAT_YN',
+      header: '是否專案應收',
+      format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
     },
     {
       field: 'Org_ID',
@@ -138,6 +153,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       field: 'ObjectNo',
       header: '是否依合約拆立組織',
       type: 'dropdown',
+      format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
       options: this.service.getYNOptions,
       optionLabel: 'label',
       optionValue: 'value',
@@ -152,43 +168,51 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       optionLabel: 'label',
       optionValue: 'value',
       showClear: !1,
-      disabled: this.ABATYN,
     },
     {
       field: 'VEN_No',
       header: '應收廠商',
       groupField: 'Vendor',
       type: 'dropdown',
+      format: (v: string) => {
+        const item = this.service.POS2013Map().get(v);
+        return item ? (item.ShortName ?? item.Name)! : v;
+      },
       options: this.service.POS2013Options,
-      optionLabel: 'Name',
       optionValue: 'VEN_No',
-      disabled: this.ABATYN,
       templateLabel: 'ShortName',
       showClear: !1,
-      validate: [this.abatVal.bind(this)],
     },
     {
       field: 'PAY_days',
       header: '付款天數',
       type: 'inputNumber',
-      disabled: this.ABATYN,
-      validate: [this.abatVal.bind(this)],
     },
     {
       field: 'PAY_No',
       header: '付款別編號',
       type: 'input',
-      disabled: this.ABATYN,
     },
-  ];
+  ]);
+
+  public readonly columns = computed((): EditColumn[] => {
+    const keys = this.columnsKeys();
+    const all = this.allColumns();
+    return all
+      .filter(col => col.field in keys)
+      .map(col => {
+        const shouldKeepType = keys[col.field as keyof TLS21020Data];
+        if (!shouldKeepType) {
+          const { type, ...rest } = col;
+          return { ...rest, type: void 0 };
+        }
+        return col;
+      });
+  });
 
   private readonly fail = (msg: string) => ({ isValid: !1, errorMessage: msg });
   private readonly warn = (msg: string) => ({ isValid: !0, errorMessage: msg });
   private readonly isEmpty = (v: unknown) => !v?.toString().trim();
-
-  private abatVal(value: any, rowData: any): { isValid: boolean; errorMessage: string[]; } {
-    return Object.create(this.ABATYN(rowData) ? { isValid: !0, errorMessage: [] } : validateRequired(value));
-  }
 
   public readonly defaultInsertData: Partial<TLS21020Data> = {
     AccDC: 'D',
@@ -271,10 +295,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     return { isValid: !0, errorMessage: '' };
   };
 
-  public dataChange(event: TLS21020Data[], validate?: boolean): void {
+  public dataChange(event: TLS21020Data[], validate: boolean): void {
     // this.logger.debug(`dataChange:`, [event]);
     this.tableData.set(event);
-    this.canSave.set(!validate || event.every(row => this.validateRow(row).isValid));
+    this.canSave.set(!validate);
   }
 
   /** 檢查型別 */
