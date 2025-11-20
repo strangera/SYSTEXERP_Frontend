@@ -78,8 +78,13 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
     this.initializePage('FIN11200', '/FIN/FIN11200cru', this.queryForm, (form) => this.onSubmit(form));
     this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
     // 設定GUI_YYMM預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 === 0) {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    }
     this.queryForm.get('GUI_YYMM')?.setValue(
-      this.datePipe.transform(new Date(), 'yyyyMM'));
+      this.datePipe.transform(currentDate, 'yyyyMM'));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
