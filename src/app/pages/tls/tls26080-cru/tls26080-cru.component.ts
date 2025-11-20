@@ -13,7 +13,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
+import { Column } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
@@ -119,8 +119,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       type: this.isFormReadable ? void 0 : 'dropdown',
       showClear: !1,
       options: this.service.tltTalentOptions(),
-      optionLabel: 'label',
-      optionValue: 'value',
+      optionLabel: 'Name',
+      optionValue: 'No',
+      templateLabel: 'label',
       format: v => this.service.tltTalentMap().get(v) ?? v,
     },
     {
@@ -129,9 +130,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       type: this.isFormReadable ? void 0 : 'dropdown',
       showClear: !1,
       options: this.service.tltTalentChargeOptions(),
-      optionLabel: 'label',
-      optionValue: 'value',
-      format: v => this.service.tltTalentChargeMap().get(v)?.label ?? v,
+      optionLabel: 'tlt_id_desc',
+      optionValue: 'tlt_id',
+      format: v => this.service.tltTalentChargeMap().get(v)?.tlt_id_desc ?? v,
     },
     {
       field: 'calc_date_type',
@@ -230,6 +231,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       ).subscribe();
     }
 
+    // this.service.getTLTTalentChargeOptions();
     this.service.getTLTTalentOptions();
     this.service.loadAPS1003(['E']);
 
@@ -256,21 +258,23 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_sdate: d.pod_sdate!.toISOString(),
         pod_edate: d.pod_edate!.toISOString(),
         pod_busdate: d.pod_busdate!.toISOString(),
-        TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
-          ...item,
-          pod_no: d.pod_no!,
-          pod_type: d.pod_type!,
-          talent_id: Number(item.talent_id) || 0,
-          tlt_id: String(item.tlt_id || '0'),
-          tlt_no: String(item.tlt_no || item.talent_id || ''),
-          tlt_name: String(item.tlt_name || ''),
-          calc_date_type: String(item.calc_date_type || 'Y'),
-          cap_item_D16: 'D16',
-          cap_item_D17: 'D17',
-          tpy_rate_D16: Math.round((Number(item.tpy_rate_D16 ?? 0) * 100)),
-          tpy_rate_D17: Math.round((Number(item.tpy_rate_D17 ?? 0) * 100)),
-          pod_status: String(item.pod_status || '0'),
-        })),
+        TALPORDERD_VOUCHERDetails: validTableData
+          .filter(item => Object.keys(item).every(key => !key.startsWith('_')))
+          .map(item => ({
+            ...item,
+            pod_no: d.pod_no!,
+            pod_type: d.pod_type!,
+            talent_id: Number(item.talent_id) || null,
+            tlt_id: String(item.tlt_id || '0'),
+            tlt_no: String(item.tlt_no || item.talent_id || ''),
+            tlt_name: String(item.tlt_name || ''),
+            calc_date_type: String(item.calc_date_type || 'Y'),
+            cap_item_D16: 'D16',
+            cap_item_D17: 'D17',
+            tpy_rate_D16: Math.round((Number(item.tpy_rate_D16 ?? 0) * 100)),
+            tpy_rate_D17: Math.round((Number(item.tpy_rate_D17 ?? 0) * 100)),
+            pod_status: String(item.pod_status || '0'),
+          })),
       };
 
       this.loading = !0;
@@ -283,15 +287,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       });
     });
   }
-  public onFieldChange(event: FieldChangeEvent<TLS26080Detail>): void {
-    this.logger.debug(`onFieldChange:`, [event]);
-    const { field, value, index, rowData } = event;
-    const valueStr = String(value);
-    if (!valueStr?.length) return;
-
-    // 根據櫃位名稱取得專櫃編號及抽成類別選項
-    if (field === 'tlt_name') this.service.getTLTTalentChargeOptions(valueStr);
-  }
 
   private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
     const num = Number(value);
@@ -299,7 +294,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
     // 使用基點法驗證，避免 JavaScript 浮點數精度問題
     const basisPoint = Math.round(num * 100);
-    if (basisPoint < 0 || basisPoint > 10000) return { isValid: !1, errorMessage: ['請輸入 0 到 100 之間的數字'] };
+    if (basisPoint < 0 || basisPoint > 1e4) return { isValid: !1, errorMessage: ['請輸入 0 到 100 之間的數字'] };
 
     return { isValid: !0, errorMessage: [] };
   }
@@ -329,7 +324,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public onExportExcelTemplate(): void {
     const exampleByApi = !0;
-    const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攜', null, '合約建檔'];
+    const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null, '合約建檔'];
     const headerRow2 = [null, null, null, null, null, 'D16', 'D17', 'D16', 'D17'];
     const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1', '5'];
 
