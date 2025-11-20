@@ -6,8 +6,9 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-calendar class="col-12 md:col-6 lg:col-4" controlName="SAL_GUIYYYYMM" calendarType="dateMonthOne"
-          label="發票年月" [control]="dataForm.controls.SAL_GUIYYYYMM" [submitted]="submitted" [minDate]="minDate" />
+        <!-- 發票年月 -->
+        <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月" [control]="dataForm.controls.SAL_GUIYYYYMM"
+          [submitted]="submitted"></app-year-month>
         <app-dropdown class="col-12 lg:col-6 xl:col-4" controlName="SAL_GUITrack" label="字軌" [options]="guiTrackOptions"
           optionLabel="GUI_Track" optionValue="GUI_Track" [control]="dataForm.controls.SAL_GUITrack"
           [submitted]="submitted" />
