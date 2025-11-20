@@ -12,6 +12,9 @@ export interface DependentDataQuery {
   building_nos?: string[] | null;
   floor_nos?: string[] | null;
   area_nos?: string[] | null;
+
+  tlt_bdate?: string | null; // 需求更新: 專櫃效期之起始日期
+  tlt_edate?: string | null; // 需求更新: 專櫃效期之結束日期
 }
 
 export interface TLS26010Query extends BaseQueryRequest {

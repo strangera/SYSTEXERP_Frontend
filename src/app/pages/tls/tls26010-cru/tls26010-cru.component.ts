@@ -72,8 +72,14 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   private readonly sys3A00Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3A00.valueChanges);
   private readonly ecrNosSignal: Signal<EcrItem[] | undefined | null> = toSignal(this.df().ecr_nos.valueChanges);
   private readonly tltNosSignal: Signal<TltItem[] | undefined | null> = toSignal(this.df().tlt_nos.valueChanges);
-  private readonly sdateSignal: Signal<Date | undefined | null> = toSignal(this.df().pod_sdate.valueChanges);
-  private readonly edateSignal: Signal<Date | undefined | null> = toSignal(this.df().pod_edate.valueChanges);
+  private readonly sdateSignal = toSignal(
+    this.df().pod_sdate.valueChanges,
+    { initialValue: this.df().pod_sdate.value }
+  );
+  private readonly edateSignal = toSignal(
+    this.df().pod_edate.valueChanges,
+    { initialValue: this.df().pod_edate.value }
+  );
 
   public readonly ecrTableFiltered = signal<EcrItem[]>([]);
   public readonly tltTableFiltered = signal<TltItem[]>([]);
@@ -256,13 +262,30 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.dependencyChangeSubject.pipe(
       debounceTime(400),
       takeUntil(this.destroy$),
-      startWith({ dialog: '', payload: {} }),
+      startWith({
+        dialog: 'ecr',
+        payload: {
+          building_nos: [],
+          floor_nos: [],
+          area_nos: [],
+        },
+        date: {
+          pod_sdate: null,
+          pod_edate: null,
+        }
+      }),
       pairwise(),
       tap(([a, b]) => {
         this.logger.debug(`dependency:`, [a, b, this.dataForm.value]);
         if (JSON.stringify(a.payload) === JSON.stringify(b.payload)) return;
         if (b.dialog === 'ecr') { this.service.loadPreorderECRList({ ...b.payload, ecr_type: '1' }); }
-        else if (b.dialog === 'tlt') { this.service.loadTLTTALENT(b.payload); }
+        else if (b.dialog === 'tlt') {
+          this.service.loadTLTTALENT({
+            ...b.payload,
+            tlt_bdate: b.date.pod_sdate?.toISOString().slice(0, 10) ?? null, // 包含時間一起送出
+            tlt_edate: b.date.pod_edate?.toISOString().slice(0, 10) ?? null,
+          });
+        }
       })
     ).subscribe();
 
@@ -272,12 +295,18 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.dataForm.controls.pod_sdate.valueChanges
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
+          if (this.tltTableFiltered().length > 0) {
+            this.messageService.infoBubble('變更預售期間，專櫃資料已清除，請重新選擇專櫃');
+          }
           this.tltTableFiltered.set([]);
         });
 
       this.dataForm.controls.pod_edate.valueChanges
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
+          if (this.tltTableFiltered().length > 0) {
+            this.messageService.infoBubble('變更預售期間，專櫃資料已清除，請重新選擇專櫃');
+          }
           this.tltTableFiltered.set([]);
         });
     }
