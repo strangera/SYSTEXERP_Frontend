@@ -1,28 +1,28 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { PanelModule } from 'primeng/panel';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { PanelModule } from 'primeng/panel';
+import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
-import { TranslateModule } from '@ngx-translate/core';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { NgIf } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 import {
-  COLUMNS_NATURAL_EDIT,
-  COLUMNS_NATURAL_VIEW,
   COLUMNS_CHANGE_EDIT,
   COLUMNS_CHANGE_VIEW,
   COLUMNS_DETAIL_EDIT,
   COLUMNS_DETAIL_VIEW,
+  COLUMNS_NATURAL_EDIT,
+  COLUMNS_NATURAL_VIEW,
   TLS2J030Data
 } from '../tls2j030/tls2j030.model';
-import { finalize, forkJoin } from 'rxjs';
-import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
 @Component({
   selector: 'app-tls2j030-cru',
   templateUrl: './tls2j030-cru.component.html',
@@ -87,9 +87,14 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       this.isViewMode = true;
     } else {
       this.isViewMode = false;
-      // 初始化時嘗試查詢預設的 ECR_No (可以根據需要調整)
+
       this.initializeEcrNo();
+
+      setTimeout(() => {
+        this.initializeEditData();
+      });
     }
+
   }
 
   /**
@@ -136,27 +141,33 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
         },
       });
   }
-
   initializeEditData() {
-    // 重置防重複調用的標記
     this.isGettingGUINo = false;
     this.lastProcessedDate = '';
 
     const guiDingType = this.determineGUIDingType();
 
+    // 取得今日 yyyy-MM-dd
+    const today = new Date();
+    const todayStr = today.toISOString().substring(0, 10);
+
     this.changeEditData = [{
       _TABLE_KEY: `change_${Date.now()}`,
       status: 'insert',
-      TXN_GUIPaper: 'E', // 預設為電子發票
-      PLU_TaxType: '1', // 預設為應稅
-      INV_NoneTax: '0', // 預設為正常
-      GUI_DingType: guiDingType, // 根據 ECR_Type 判斷
+      TXN_Date: todayStr,          // 直接把日期塞進資料
+      TXN_GUIPaper: 'E',           // 預設電子發票
+      PLU_TaxType: '1',            // 預設應稅
+      INV_NoneTax: '0',            // 預設正常
+      GUI_DingType: guiDingType,
     }];
-    this.detailEditData = [{
-      _TABLE_KEY: `detail_${Date.now()}`,
-      status: 'insert',
-    }];
+
+    // 進新增頁就自動取發票號碼
+    if (this.currentEcrNo) {
+      this.getNextGUINo(todayStr);
+    }
   }
+
+
 
   /**
    * 根據 POS1018 的 ecr_type 判斷 GUI_DingType
@@ -328,80 +339,167 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       });
   }
 
-  /** 處理換開發票資料異動 - 監聽日期變更 */
-  onChangeEditDataChange(data: (TLS2J030Data & { status?: string })[]) {
+  onChangeEditDataChange(data: any[]) {
     this.changeEditData = data;
-
-    // 檢查是否有資料且日期已選擇
-    if (data.length > 0) {
-      const record = data[0];
-      const selectedDate = record.TXN_Date;
-
-      // 只有當日期存在且與上次處理的日期不同時才調用 API
-      if (selectedDate && selectedDate !== this.lastProcessedDate && this.currentEcrNo) {
-        // 日期變更時自動調用 getNextGUINo
-        this.getNextGUINo(selectedDate);
-      } else if (selectedDate && selectedDate !== this.lastProcessedDate && !this.currentEcrNo) {
-        // 如果沒有 ECR_No，嘗試從預設 IP 查詢
-        // 這裡可以根據需要調整 IP 來源
-        const defaultIP = '192.168.1.1'; // 或從其他地方取得
-        this.queryEcrNo(defaultIP);
-      }
-    }
+    // 日期 now disabled，不需要再處理
   }
 
   /** 查詢來源發票 */
   querySourceInvoice() {
     const txnGuiBegNo = this.dataForm.get('TXN_GUIBegNo')?.value;
+
     if (!txnGuiBegNo) {
-      this.messageService.warnBubble('請輸入來源發票號碼', '警告');
+      this.messageService.warnBubble('請輸入來源發票號碼');
       return;
     }
+
     this.queryLoading = true;
-    const payload = {
-      TXN_GUIBegNo: txnGuiBegNo
-    };
-    this.tls2j030Service
-      .queryTLS2J030TXN_GUI(payload)
-      .pipe(finalize(() => (this.queryLoading = false)))
+
+    this.tls2j030Service.queryTLS2J030TXN_GUI({ TXN_GUIBegNo: txnGuiBegNo })
+      .pipe(finalize(() => this.queryLoading = false))
       .subscribe({
-        next: (res) => {
-          if (res?.Status === '0000') {
-            this.data = res.Data || [];
-            if (this.data.length === 0) {
-              this.messageService.infoBubble('查無資料', '查詢結果');
-              this.sourceInvoiceData = null;
-            } else {
-              // 儲存第一筆來源發票資料
-              this.sourceInvoiceData = this.data[0] || null;
-              this.messageService.successBubble('查詢成功');
-              this.initializeEditData();
+        next: res => {
 
-              // 初始化時先查詢 ECR_No (如果來源發票有 ECR_No 或 IP 資訊)
-              if (this.sourceInvoiceData) {
-                const sourceData = this.sourceInvoiceData as TLS2J030Data & { ECR_No?: string; ECR_IP?: string; IP?: string };
-                const ecrNo = sourceData.ECR_No;
-                const ip = sourceData.ECR_IP || sourceData.IP;
-
-                if (ecrNo) {
-                  this.currentEcrNo = ecrNo;
-                } else if (ip) {
-                  this.queryEcrNo(ip);
-                }
-              }
-            }
-          } else {
+          if (res?.Status !== '0000') {
             this.messageService.errorBubble('查詢失敗');
-            this.sourceInvoiceData = null;
+            return;
           }
-        },
+
+          const list = res.Data || [];
+          if (list.length === 0) {
+            this.messageService.infoBubble('查無資料');
+            return;
+          }
+
+          const source = list[0];
+          const sourceDate = source.TXN_Date;
+
+          // ① 判斷是否為當期發票
+          const sourceYYMM = this.formatDateToYYYYMM(sourceDate);
+          const todayYYMM = this.formatDateToYYYYMM(new Date().toISOString());
+
+          if (sourceYYMM !== todayYYMM) {
+            this.messageService.warnBubble(`來源發票非當期發票 (${sourceYYMM})，無法新增`);
+            return;
+          }
+
+          // 保存來源發票資料
+          this.sourceInvoiceData = source;
+          this.data = list;
+          this.messageService.successBubble('查詢成功');
+
+          // 初始化新增資料（換開 + 明細）
+          this.initializeEditData();
+        }
       });
+  }
+
+
+
+  /** 格式化新增資料 */
+  private formatInsertData() {
+    // POS2100List: 來源發票資料
+    const pos2100List = this.data.map(item => {
+      const sourceItem = item as unknown as Record<string, unknown>;
+      return {
+        TXN_Date: (sourceItem['TXN_Date'] as string) || new Date().toISOString().split('T')[0],
+        ECR_No: (sourceItem['ECR_No'] as string) || '',
+        TXN_No: (sourceItem['TXN_No'] as number) || 0,
+        TXN_GUIBegNo: (sourceItem['TXN_GUIBegNo'] as string) || '',
+        TXN_GUIEndNo: (sourceItem['TXN_GUIEndNo'] as string) || '',
+        TXN_TotGUI: (sourceItem['TXN_TotGUI'] as number) || 0,
+        TXN_TaxType: (sourceItem['TXN_TaxType'] as string) || '',
+        TXN_TotSaleTax: (sourceItem['TXN_TotSaleTax'] as number) || 0,
+        TXN_TotSaleNoTax: (sourceItem['TXN_TotSaleNoTax'] as number) || 0,
+        TXN_TotTax: (sourceItem['TXN_TotTax'] as number) || 0
+      };
+    });
+
+    // POS2101List: 換開發票資料
+    const sourceEcrNo = (this.data[0] as unknown as Record<string, unknown>)?.['ECR_No'] as string || '';
+    const pos2101List = this.changeEditData.map(item => ({
+      TXN_Date: new Date().toISOString(),
+      ECR_No: sourceEcrNo, // 使用來源發票的 ECR_No
+      TXN_GUIPaper: item.TXN_GUIPaper || '',
+      TXN_GUINo: item.TXN_GUINo || '',
+      PLU_TaxType: item.PLU_TaxType || '',
+      TXN_SaleTax: item.TXN_SaleTax || 0,
+      TXN_SaleNoTax: item.TXN_SaleNoTax || 0,
+      TXN_Net: item.TXN_Net || 0,
+      TXN_Tax: item.TXN_Tax || 0,
+      TXN_SaleAmt: item.TXN_SaleAmt || 0,
+      TXN_Uniform: item.TXN_Uniform || '',
+      INV_NoneTax: item.INV_NoneTax || '',
+      BusTaxExmpCard: item.BusTaxExmpCard || '',
+      GUI_DingType: item.GUI_DingType || '',
+      TXN_GUIRemark: item.TXN_GUIRemark || '',
+      TXN_Notes: item.TXN_Notes || ''
+    }));
+
+    // POS21011List: 商品明細資料
+    const pos21011List = this.detailEditData.map(item => ({
+      INV_ItemName: item.INV_ItemName || '',
+      TXN_SaleAmt: item.TXN_SaleAmt || 0,
+      INV_Qty: item.INV_Qty || 0
+    }));
+
+    return {
+      POS2100List: pos2100List,
+      POS2101List: pos2101List,
+      POS21011List: pos21011List
+    };
   }
 
   /** 送出 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.querySourceInvoice();
+      this.insertData();
     });
+  }
+
+  /** 新增資料 */
+  private insertData() {
+    if (!this.data || this.data.length === 0) {
+      this.messageService.warnBubble('請先查詢來源發票');
+      return;
+    }
+
+    if (!this.changeEditData || this.changeEditData.length === 0) {
+      this.messageService.warnBubble('請填寫換開發票資料');
+      return;
+    }
+
+    if (!this.detailEditData || this.detailEditData.length === 0) {
+      this.messageService.warnBubble('請填寫商品明細資料');
+      return;
+    }
+
+    const payload = this.formatInsertData();
+
+    this.btnLoading = true;
+    this.tls2j030Service.insertTLS2J030(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          if (res?.Status === '0000') {
+            this.messageService.successBubble('新增成功');
+            this.resetForm();
+          } else {
+            this.messageService.errorBubble(res?.Message || '新增失敗');
+          }
+        },
+      });
+  }
+
+  /** 重置表單 */
+  private resetForm() {
+    this.dataForm.reset();
+    this.data = [];
+    this.changeEditData = [];
+    this.detailEditData = [];
+    this.sourceInvoiceData = null;
   }
 }

@@ -1,6 +1,6 @@
-import { Column, formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { Column, formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 /**
  * TLS2J030 後台發票換開補登作業 - 欄位定義
  */
@@ -219,7 +219,13 @@ export const COLUMNS_NATURAL_VIEW: Column[] = [
 
 /** 新增模式用的換開發票欄位（用於 table-edit） */
 export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
-  { field: 'TXN_Date', header: '發票日期', type: 'date', width: '150px', validate: [validateRequired] },
+  {
+    field: 'TXN_Date',
+    header: '發票日期',
+    type: 'date',
+    disabled: () => true,
+    validate: [validateRequired],
+  },
   { field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'TXN_GUINo', header: '發票號碼', validate: [validateRequired] },
   { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: PLU_TAXTYPE_OPTIONS, calculate: (rowData) => calculateTaxType(rowData), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },

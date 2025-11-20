@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -22,5 +22,11 @@ export class TLS2A030Service {
     });
   }
 
+  lockTLS2A030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/lockTLS2A030`, data);
+  }
+  UnLockTLS2A030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/UnLockTLS2A030`, data);
+  }
 
 }

@@ -1,22 +1,22 @@
-import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { HttpClient } from '@angular/common/http';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
-import { ButtonModule } from 'primeng/button';
+import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 
 interface SalesRecord {
@@ -201,6 +201,61 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     this.footerData = [...this.cachedFooterData];
     this.totalRecords = this.cachedFullData.length;
   }
+  private buildLockBody() {
+    const raw = this.queryForm.getRawValue();
+
+    return {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [
+        {
+          field: '',
+          order: 0
+        }
+      ],
+      SaleDateStart:
+        raw.SaleDateStart instanceof Date
+          ? raw.SaleDateStart.toISOString()
+          : raw.SaleDateStart ?? null,
+      SaleDateEnd:
+        raw.SaleDateEnd instanceof Date
+          ? raw.SaleDateEnd.toISOString()
+          : raw.SaleDateEnd ?? null,
+      ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
+      ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+      isPrint: ''
+    };
+  }
+  onLock(): void {
+    const body = this.buildLockBody();
+    this.loading = true;
+
+    this.tls2a030Service.lockTLS2A030(body).subscribe({
+      next: (res) => {
+        this.messageService.successBubble('鎖定成功');
+        this.onSubmit(this.queryForm); // 重新查詢
+        this.loading = false;
+      },
+
+    });
+  }
+
+  onUnLock(): void {
+    const body = this.buildLockBody();
+    this.loading = true;
+
+    this.tls2a030Service.UnLockTLS2A030(body).subscribe({
+      next: (res) => {
+        this.messageService.successBubble('反鎖定成功');
+        this.onSubmit(this.queryForm); // 重新查詢
+        this.loading = false;
+      },
+
+    });
+  }
+
   onSubmit(form: FormGroup): void {
     this.data = [];
     this.footerData = [];

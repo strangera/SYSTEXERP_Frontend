@@ -1,24 +1,23 @@
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { NgIf } from '@angular/common';
-import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs/operators';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs/operators';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 import { GUI_STATUS_OPTIONS, formatGUIStatus } from './tls2j030.model';
 
 // 2.2.18.3 後台發票換開補登作業
@@ -200,10 +199,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       .subscribe({
         next: (res) => {
           console.log('Delete API Response:', res);
-          if (res?.Success) {
+          if (res?.Status === '0000') {
             this.messageService.successBubble(`成功刪除 ${deleteItems.length} 筆資料`, '刪除成功');
             this.onSubmit(this.queryForm);
             this.selectedItems = [];
+          } else {
+            this.messageService.errorBubble(`刪除失敗：${res?.Message || '系統錯誤'}`);
           }
         },
       });
