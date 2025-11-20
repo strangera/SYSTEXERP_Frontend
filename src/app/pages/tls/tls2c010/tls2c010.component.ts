@@ -207,6 +207,17 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(this.queryForm, () => {
       const date = this.queryForm.controls.TXN_Date.value;
       if (date) {
+        // 檢查是否小於等於最後關帳日期
+        if (this.closeDate) {
+          const selectedDate = new Date(date);
+          const lastCloseDate = new Date(this.closeDate);
+
+          if (selectedDate <= lastCloseDate) {
+            this.messageService.warnBubble('已關帳，無法進行調整。');
+            return;
+          }
+        }
+
         const dateStr = formatDateToYYYY_MM_DD(date);
         if (dateStr) {
           this.executeApi(this.tls2c010Service.lockTLS2C010({
@@ -224,6 +235,17 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(this.queryForm, () => {
       const date = this.queryForm.controls.TXN_Date.value;
       if (date) {
+        // 檢查是否小於等於最後關帳日期
+        if (this.closeDate) {
+          const selectedDate = new Date(date);
+          const lastCloseDate = new Date(this.closeDate);
+
+          if (selectedDate <= lastCloseDate) {
+            this.messageService.warnBubble('已關帳，無法進行調整。');
+            return;
+          }
+        }
+
         const dateStr = formatDateToYYYY_MM_DD(date);
         if (dateStr) {
           this.executeApi(this.tls2c010Service.unlockTLS2C010({

@@ -12,6 +12,7 @@ import { finalize } from 'rxjs';
 import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
+import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -67,6 +68,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
   btnLoading2 = false;
+  closeDate = ''; // 最後關帳日期
 
   // 緩存完整資料，避免重複 API 呼叫
   private cachedFullData: any[] = [];
@@ -106,6 +108,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
     private tls2a030Service: TLS2A030Service,
+    private tls2c050Service: TLS2C050Service,
     private http: HttpClient
   ) {
     super();
@@ -117,6 +120,18 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
     });
+
+    // 取得最後關帳日期
+    this.tls2c050Service.getTLS2C050Date()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          this.closeDate = response?.Data?.CLS_DATE || '';
+        },
+        error: () => {
+          this.closeDate = '';
+        }
+      });
   }
 
   onExportExcel(): void {
@@ -251,6 +266,17 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       return;
     }
 
+    // 檢查是否小於等於最後關帳日期
+    if (this.closeDate) {
+      const selectedDate = new Date(raw.SaleDateStart instanceof Date ? raw.SaleDateStart : raw.SaleDateStart!);
+      const lastCloseDate = new Date(this.closeDate);
+
+      if (selectedDate <= lastCloseDate) {
+        this.messageService.warnBubble('已關帳，無法進行調整。');
+        return;
+      }
+    }
+
     const body = this.buildLockBody();
     this.loading = true;
 
@@ -285,6 +311,17 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     if (startDate !== endDate) {
       this.messageService.warnBubble('銷售日期起迄必須為同一天才能執行反鎖定操作');
       return;
+    }
+
+    // 檢查是否小於等於最後關帳日期
+    if (this.closeDate) {
+      const selectedDate = new Date(raw.SaleDateStart instanceof Date ? raw.SaleDateStart : raw.SaleDateStart!);
+      const lastCloseDate = new Date(this.closeDate);
+
+      if (selectedDate <= lastCloseDate) {
+        this.messageService.warnBubble('已關帳，無法進行調整。');
+        return;
+      }
     }
 
     const body = this.buildLockBody();
