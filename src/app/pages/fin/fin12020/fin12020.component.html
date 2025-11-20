@@ -8,9 +8,12 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="發票年月" calendarType="dateMonthRange"
-            [startControl]="queryForm.controls.GUI_YYMM_start" [endControl]="queryForm.controls.GUI_YYMM_end"
-            [submitted]="submitted"></app-calendar-range>
+          <!-- 發票年月 -->
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(起)" [control]="queryForm.controls.GUI_YYMM_start"
+            [submitted]="submitted"></app-year-month>
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(迄)" [control]="queryForm.controls.GUI_YYMM_end"
+            [submitted]="submitted"></app-year-month>
+
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUIPaperList"
             [options]="invoiceTypeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.GUIPaperList" [submitted]="submitted"></app-multi-select>

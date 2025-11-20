@@ -1,29 +1,41 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FIN12020Data, FIN12020QueryRequest, FIN12020Service } from '../../../service/api/fin/fin12020.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ECRNoService } from '@service/basic/ECRNo.service';
-import { DatePipe } from '@angular/common';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { FIN12020Data, FIN12020Service } from '../../../service/api/fin/fin12020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin12020',
   templateUrl: './fin12020.component.html',
   styleUrl: './fin12020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputTextRangeComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+    MultiSelectComponent,
+    YearMonthComponent
+  ],
 })
 export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -75,34 +87,24 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     private datePipe: DatePipe
   ) {
     super();
-    // 設定發票年月預設值
-    let month = new Date().getMonth() + 1;
-    let defaultValue = new Date();
-
-    if (month % 2 === 0) {
-      // 偶數月，起始為上個月
-      defaultValue = new Date(defaultValue.getFullYear(), defaultValue.getMonth() - 1, 1);
-    }
-
-    this.queryForm.patchValue({
-      GUI_YYMM_start: this.datePipe.transform(defaultValue, 'yyyy/MM'),
-      GUI_YYMM_end: this.datePipe.transform(defaultValue, 'yyyy/MM')
-    });
   }
 
   ngOnInit(): void {
     this.initializePage('FIN12020', 'fin/fin12020cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
+    // 設定發票年月預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 === 0) {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    }
+    this.queryForm.get('GUI_YYMM_start')?.setValue(this.datePipe.transform(currentDate, 'yyyyMM'));
+    this.queryForm.get('GUI_YYMM_end')?.setValue(this.datePipe.transform(currentDate, 'yyyyMM'));
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin12020Service.queryFIN12020(
-        {
-          ...frm.value,
-          GUI_YYMM_start: this.datePipe.transform(frm.value.GUI_YYMM_start, 'yyyyMM'),
-          GUI_YYMM_end: this.datePipe.transform(frm.value.GUI_YYMM_end, 'yyyyMM'),
-        })
+      this.fin12020Service.queryFIN12020(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
