@@ -154,7 +154,11 @@ export class TLS26010Service {
     this.tableLoading.set(true);
     return this.http.post<TLS26010DetailResponse>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010Detail`, query).pipe(
       take(1),
-      tap(res => this.logger.debug(`預購活動檔期細節查詢結果:`, [res])),
+      tap(res => {
+        console.log('預購活動檔期細節 request 💡:', query);
+        console.log('預購活動檔期細節 response:', res.Data);
+      }
+      ),
       finalize(() => this.tableLoading.set(false))
     );
   }
