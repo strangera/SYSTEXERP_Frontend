@@ -83,7 +83,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
     tlt_building: [null],                         // 館別
     tlt_floor: [[]],                              // 樓層
     TXN_Date: [this.lastMonth, [Validators.required]], // 銷售年/月
-    USR_No: [[]],                                 // 收銀員
+    USR_No_List: [[]],                                 // 收銀員
     cashierDistinction: [null],                   // 收銀員區分
     overflowStatus: [null],                       // 溢欠狀態
     ...createPaginationConfig([{ field: 'cashier', order: 1 }]),
@@ -135,7 +135,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
     this.columns = [
       { field: 'building_desc', header: '館別', visible: true, rowspan: true },
       { field: 'floor_desc', header: '樓層', visible: true, rowspan: true },
-      { field: 'USR_No', header: '收銀員代號', visible: true, rowspan: true },
+      { field: 'USR_Name', header: '收銀員代號', visible: true, rowspan: true },
 
       // 第一列 1–16 日
       { field: 'Day01', header: '1',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
@@ -383,7 +383,7 @@ override onLazyLoadData(ev: { pageIndex: number; pageSize: number; SortBy: any[]
       tlt_building: null,
       tlt_floor: [],
       TXN_Date: this.lastMonth,
-      USR_No: [],
+      USR_No_List: [],
       cashierDistinction: null,
       overflowStatus: null,
       pageIndex: 1,
