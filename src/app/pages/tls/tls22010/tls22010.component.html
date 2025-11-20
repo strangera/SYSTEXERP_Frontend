@@ -144,7 +144,7 @@
 
 
 
-<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="onDialogClose($event)" [showFooter]="false"
+<app-dialog [visible]="dialogVisible" header="收銀機對帳明細" (visibleChange)="onDialogClose($event)" [showFooter]="false"
   width="95vw">
   <app-table-report tableKey="TLS22010CRU" [data]="dialogData" [columns]="columnscru" [showCheckBox]="false"
     dataKey="TXN_No" [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" [showManage]="false"

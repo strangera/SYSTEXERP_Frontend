@@ -1,22 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ASS21030Service } from '@service/api/ass/ass21030.service';
+import { ASS21050Service } from '@service/api/ass/ass21050.service';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ASS21030Service } from '@service/api/ass/ass21030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { ASS21050Service } from '@service/api/ass/ass21050.service';
-import { finalize } from 'rxjs/operators';
-import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 
 interface ASS21050Item {
   id?: number;
@@ -72,10 +72,10 @@ export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> imp
     { field: 'Draw_Y', header: 'Y 軸', visible: true },
     { field: 'LOCATION_Name', header: '設備位置名稱', visible: true },
     { field: 'LOCATION_Remark', header: '設備位置說明', visible: true },
-    { field: 'CRT_Date', header: '日期', visible: true, format: formatDateToYYYY_MM_DD },
-    { field: 'CRT_USR_No', header: '變更人員編號', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    { field: 'UPD_Date', header: '變更日期（最後修改時間）', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];

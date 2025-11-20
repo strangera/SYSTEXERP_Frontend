@@ -352,7 +352,7 @@ export type TableTypes =
 
 /** 可以用來做轉換的 Map */
 export const Maps = {
-  'YN': new Map<string, string>([
+  'YN': new Map<'Y' | 'N', '是' | '否'>([
     ['Y', '是'],
     ['N', '否'],
   ]),

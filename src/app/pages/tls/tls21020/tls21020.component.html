@@ -35,7 +35,7 @@
   <app-table-edit #dt
                   class="col-12"
                   tableKey="TLS21020Detail"
-                  [columns]="columns"
+                  [columns]="columns()"
                   [data]="tableData()"
                   [selectedItems]="selectedItems()"
                   (selectionChange)="selectedItems.set($event)"
@@ -43,6 +43,8 @@
                   [rowValidate]="validateRow"
                   [tableRequired]="!0"
                   [showReorder]="!1"
+                  [showCheckBox]="!1"
+                  [showDelete]="!1"
                   [canInsert]="!1"
                   [loading]="service.tableLoading()"
                   [defaultInsertData]="defaultInsertData"></app-table-edit>

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
-import { POS2013, TLS21020Data, TLS21020GLS1005Data, TLS21020GLS1005Query, TLS21020Query, TLS21020UpdateQuery } from '@pages/tls/tls21020/tls21020.model';
+import { computed, Injectable, signal } from '@angular/core';
+import { EntryType, POS2013, TLS21020Data, TLS21020GLS1005Data, TLS21020GLS1005Query, TLS21020Query, TLS21020UpdateQuery } from '@pages/tls/tls21020/tls21020.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -19,14 +19,18 @@ export class TLS21020Service {
   public readonly GLS1005Options = signal<Option[]>([]);
   public readonly POS2013Options = signal<POS2013[]>([]);
 
+  public readonly POS2013Map = computed(() =>
+    new Map<string, POS2013>(this.POS2013Options().map(item => [item.VEN_No!, item]))
+  );
+
   public readonly entryTypeMap = new Map<string, string>([
-    ['SD', '銷售日傳票'],
-    ['MR', '租金傳票'],
-    ['MD', '代扣傳票'],
-    ['PR', '抽成傳票'],
-    ['PN', '進貨帳款-暫估應付'],
-    ['PNC', '進貨帳款-成本結轉'],
-    ['PT', '進貨請款'],
+    [EntryType['銷售日傳票'], EntryType.SD],
+    [EntryType['租金傳票'], EntryType.MR],
+    [EntryType['代扣傳票'], EntryType.MD],
+    [EntryType['抽成傳票'], EntryType.PR],
+    [EntryType['進貨帳款-暫估應付'], EntryType.PN],
+    [EntryType['進貨帳款-成本結轉'], EntryType.PNC],
+    [EntryType['進貨請款'], EntryType.PT],
   ]);
 
   public readonly tableLoading = signal<boolean>(!1);
@@ -43,13 +47,13 @@ export class TLS21020Service {
 
   public getEntryTypes(): Option[] {
     return [
-      { value: 'SD', label: '銷售日傳票' },
-      { value: 'MR', label: '租金傳票' },
-      { value: 'MD', label: '代扣傳票' },
-      { value: 'PR', label: '抽成傳票' },
-      { value: 'PN', label: '進貨帳款-暫估應付' },
-      { value: 'PNC', label: '進貨帳款-成本結轉' },
-      { value: 'PT', label: '進貨請款' },
+      { value: EntryType['銷售日傳票'], label: EntryType.SD },
+      { value: EntryType['租金傳票'], label: EntryType.MR },
+      { value: EntryType['代扣傳票'], label: EntryType.MD },
+      { value: EntryType['抽成傳票'], label: EntryType.PR },
+      { value: EntryType['進貨帳款-暫估應付'], label: EntryType.PN },
+      { value: EntryType['進貨帳款-成本結轉'], label: EntryType.PNC },
+      { value: EntryType['進貨請款'], label: EntryType.PT },
     ];
   }
 
@@ -136,7 +140,7 @@ export class TLS21020Service {
     this.dropdownApi.queryPos2013({ VEN_Flag })
       .pipe(
         take(1),
-        tap(res => res && this.POS2013Options.set(res)),
+        tap(res => res && this.POS2013Options.set(res as unknown as POS2013[])),
         finalize(() => {
           this.pos2013Loading.set(!1);
           this.logger.debug(`POS2013 Data:`, [this.POS2013Options()]);
