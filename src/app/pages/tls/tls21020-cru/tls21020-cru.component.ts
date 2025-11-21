@@ -10,7 +10,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 
 @Component({
@@ -41,13 +41,6 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
 
   private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
   private readonly ABATYN = (v: any) => v?.ABAT_YN === 'N';
-
-  public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
-      || this.service.gls1005Loading()
-      || this.service.pos2013Loading()
-      || this.service.orgIdLoading();
-  });
 
   public readonly columns: EditColumn[] = [
     {
@@ -131,6 +124,15 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
     ABAT_YN: 'N',
   };
 
+  public readonly tableLoading = signal<boolean>(!1);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.tableLoading()
+      || this.service.gls1005Loading()
+      || this.service.pos2013Loading()
+      || this.service.orgIdLoading();
+  });
+
   constructor(
     public readonly service: TLS21020Service,
     private readonly logger: NGXLogger,
@@ -141,12 +143,17 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
   ngOnInit(): void {
     this.initializePage('TLS21020', this.dataForm);
     this.rowdata && (this.rowdata.ENTRY_TYPE = this.rowdata.ENTRY_TYPE.trim());
+    this.tableLoading.set(!0);
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
     this.service.queryTLS21020({ ENTRY_TYPE: this.rowdata?.ENTRY_TYPE! }).pipe(
-      tap(res => this.tableData.set(res.Data ?? []))
+      tap(res => {
+        this.tableData.set(res.Data ?? []);
+        this.tableLoading.set(!1);
+      }),
+      finalize(() => this.tableLoading.set(!1))
     ).subscribe();
 
     // this.service.queryTLS21020_GLS1005({ AccDC: this.rowdata?.AccDC! });
@@ -168,8 +175,10 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
         )) as TLS21020UpdateQuery;
       });
       this.logger.debug(`onSubmit:`, [data, payload]);
+      this.tableLoading.set(!0);
       this.service.updateTLS21020(payload).pipe(
-        tap(({ Status }) => Status === '0000' && this.onCancel())
+        tap(({ Status }) => { Status === '0000' && this.onCancel(); }),
+        finalize(() => this.tableLoading.set(!1))
       ).subscribe({
         next: () => this.messageService.successBubble('更新成功'),
         error: () => this.messageService.errorBubble('更新失敗'),

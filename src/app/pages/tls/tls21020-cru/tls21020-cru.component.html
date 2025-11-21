@@ -33,7 +33,7 @@
                         [tableRequired]="true"
                         [showReorder]="false"
                         [insertDisabled]="!df().ENTRY_TYPE.value"
-                        [loading]="service.tableLoading()"
+                        [loading]="tableLoading()"
                         [defaultInsertData]="defaultInsertData"
                         [isRowSelectable]="rowEditValid"></app-table-edit>
       </div>
