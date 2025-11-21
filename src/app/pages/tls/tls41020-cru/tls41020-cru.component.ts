@@ -1,22 +1,22 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
+import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
-import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 // 2.4.1.2 收銀機EDC資料維護 CRU
 @Component({
@@ -39,8 +39,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 })
 export class TLS41020CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   ECRNoOptions: any[] = [];
   EDC_Status_Option = [
     { value: 'A', label: '啟用' },
@@ -51,7 +50,7 @@ export class TLS41020CRUComponent
     id: [''],
     SYS_StoreNo: [''],
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
-  
+
     EDC_BegDate: ['', Validators.required],
     EDC_EndDate: ['', Validators.required],
     EDC_Status1: ['', Validators.required],

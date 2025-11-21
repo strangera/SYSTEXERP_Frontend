@@ -259,30 +259,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls21050cru', loadComponent: () => import('./tls21050-cru/tls21050-cru.component').then(m => m.TLS21050CRUComponent) },
   //電子發票上送筆數檢核表 CRU
   { path: 'tls22040cru', loadComponent: () => import('./tls22040-cru/tls22040-cru.component').then(m => m.TLS22040CRUComponent) },
-  // 折扣別報表
-  { path: 'tls23020cru', loadComponent: () => import('./tls23020-cru/tls23020-cru.component').then(m => m.TLS23020CRUComponent) },
-  // 付款別報表
-  { path: 'tls23030cru', loadComponent: () => import('./tls23030-cru/tls23030-cru.component').then(m => m.TLS23030CRUComponent) },
-  // 發票報表
-  { path: 'tls23040cru', loadComponent: () => import('./tls23040-cru/tls23040-cru.component').then(m => m.TLS23040CRUComponent) },
-  // 收銀機日報表
-  { path: 'tls23050cru', loadComponent: () => import('./tls23050-cru/tls23050-cru.component').then(m => m.TLS23050CRUComponent) },
-  // 收銀機區間報表
-  { path: 'tls23060cru', loadComponent: () => import('./tls23060-cru/tls23060-cru.component').then(m => m.TLS23060CRUComponent) },
-  // 專櫃收銀機日報表
-  { path: 'tls23070cru', loadComponent: () => import('./tls23070-cru/tls23070-cru.component').then(m => m.TLS23070CRUComponent) },
-  // 支付工具資料收報表
-  { path: 'tls23080cru', loadComponent: () => import('./tls23080-cru/tls23080-cru.component').then(m => m.TLS23080CRUComponent) },
-  // 信用卡明細報表
-  { path: 'tls23090cru', loadComponent: () => import('./tls23090-cru/tls23090-cru.component').then(m => m.TLS23090CRUComponent) },
-  // 付款別明細報表
-  { path: 'tls23100cru', loadComponent: () => import('./tls23100-cru/tls23100-cru.component').then(m => m.TLS23100CRUComponent) },
-  // 折扣別明細報表
-  { path: 'tls23110cru', loadComponent: () => import('./tls23110-cru/tls23110-cru.component').then(m => m.TLS23110CRUComponent) },
   // 專櫃日對帳單
   { path: 'tls23120cru', loadComponent: () => import('./tls23120-cru/tls23120-cru.component').then(m => m.TLS23120CRUComponent) },
-  // 信用卡銷退日報表
-  { path: 'tls23130cru', loadComponent: () => import('./tls23130-cru/tls23130-cru.component').then(m => m.TLS23130CRUComponent) },
   // 有價券查詢報表
   { path: 'tls23140cru', loadComponent: () => import('./tls23140-cru/tls23140-cru.component').then(m => m.TLS23140CRUComponent) },
   // 交易補登作業 CRU

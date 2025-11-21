@@ -10,7 +10,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 import { PanelModule } from 'primeng/panel';

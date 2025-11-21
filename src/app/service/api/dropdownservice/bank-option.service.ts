@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -12,7 +11,6 @@ export class BankOptionsService {
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
   ) { }
 
   //銀行

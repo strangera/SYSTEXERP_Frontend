@@ -11,10 +11,10 @@ import { debounceTime, distinctUntilChanged, finalize, map, Subject, takeUntil }
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from '../../../service/basic/region-code.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { RegionService } from '../../../service/basic/querySYS3A00.service';
+import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 

@@ -11,8 +11,8 @@ import { finalize, map } from 'rxjs/operators';
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23070Service } from '../../../service/api/tls/tls23070.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 import { CommonModule } from '@angular/common';
@@ -282,39 +282,39 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   };
 
   /** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
-/** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
-private loadDialogPage(body: any) {
-  this.dialogLoading = true;
+  /** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
+  private loadDialogPage(body: any) {
+    this.dialogLoading = true;
 
-  return this.tls23070Service.queryTLS23070Detail(body).pipe(
-    finalize(() => (this.dialogLoading = false)),
-    map((res: any) => {
-      const data = res?.Data ?? {};
-      const dateSubs = Array.isArray(data?.dateSubsTotals) ? data.dateSubsTotals : [];
+    return this.tls23070Service.queryTLS23070Detail(body).pipe(
+      finalize(() => (this.dialogLoading = false)),
+      map((res: any) => {
+        const data = res?.Data ?? {};
+        const dateSubs = Array.isArray(data?.dateSubsTotals) ? data.dateSubsTotals : [];
 
-      const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
-      const totalCount = typeof res?.TotalCount === 'number'
-        ? res.TotalCount
-        : rows.length;
+        const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
+        const totalCount = typeof res?.TotalCount === 'number'
+          ? res.TotalCount
+          : rows.length;
 
-      const grand = this.buildTotalsFromRows(rows);
+        const grand = this.buildTotalsFromRows(rows);
 
-      // 更新明細狀態
-      this.dialogData = rows;
-      this.dialogTotalRecords = totalCount;
-      this.dialogFooterData = grand;
+        // 更新明細狀態
+        this.dialogData = rows;
+        this.dialogTotalRecords = totalCount;
+        this.dialogFooterData = grand;
 
-      // ✅ 這裡只保留 body，不去動 pageSize
-      this.dialogHistoryRequestBody = { ...body };
+        // ✅ 這裡只保留 body，不去動 pageSize
+        this.dialogHistoryRequestBody = { ...body };
 
-      return {
-        Data: rows,
-        TotalCount: totalCount,
-        GrandTotal: grand,
-      };
-    })
-  );
-}
+        return {
+          Data: rows,
+          TotalCount: totalCount,
+          GrandTotal: grand,
+        };
+      })
+    );
+  }
 
 
 

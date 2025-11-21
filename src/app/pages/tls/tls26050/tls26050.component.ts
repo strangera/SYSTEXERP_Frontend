@@ -1,26 +1,26 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe, NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { DropdownOption } from '@shared/constants/business.constants';
+import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
+import { AccordionModule } from 'primeng/accordion';
 import { debounceTime, finalize } from 'rxjs';
-import { TLS26050Service, TLS26050Data } from '../../../service/api/tls/tls26050.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { TLS26050Data, TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { DropdownOption } from '@shared/constants/business.constants';
-import { CounterNameService } from '@service/basic/counter-name.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls26050',

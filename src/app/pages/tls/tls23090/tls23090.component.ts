@@ -10,9 +10,9 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23090Service } from '../../../service/api/tls/tls23090.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { CommonModule, NgIf } from '@angular/common';

@@ -26,10 +26,10 @@ import {
   TLS23010OtherData,
   TLS23010Service,
 } from '../../../service/api/tls/tls23010.service';
-import { CashierService } from '../../../service/basic/cashier.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { CashierService } from '../../../service/basic/queryPOS2001.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';

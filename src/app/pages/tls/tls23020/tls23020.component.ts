@@ -20,9 +20,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { debounceTime, finalize, map } from 'rxjs/operators';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -190,9 +190,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23020', 'tls/tls23020cru', this.queryForm, (form) =>
-      this.onSubmit(form),
-    );
+    this.initializePage('TLS23020');
     this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false });
     this.queryForm.patchValue(
       { SortBy: this.defaultSort },

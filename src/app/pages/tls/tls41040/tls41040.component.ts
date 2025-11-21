@@ -1,22 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { forkJoin, of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
+import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs/operators';
+import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // 定義資料項目介面
 interface TLS41040Item {

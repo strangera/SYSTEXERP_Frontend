@@ -13,8 +13,8 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 // Service
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B020Service } from '../../../service/api/tls/tls2-b020.service';
-import { CashierService } from '../../../service/basic/cashier.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { CashierService } from '../../../service/basic/queryPOS2001.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';

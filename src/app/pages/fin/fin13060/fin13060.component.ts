@@ -5,20 +5,20 @@ import { TranslateModule } from '@ngx-translate/core';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
-import { FIN13060Service, QueryResponse } from '../../../service/api/fin/fin13060.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { FIN13060Service, QueryResponse } from '../../../service/api/fin/fin13060.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 @Component({
   selector: 'app-fin13060',
@@ -362,8 +362,8 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
 
     const sortByFromEvent =
       Array.isArray(event?.SortBy) ? event.SortBy :
-      Array.isArray(event?.multiSortMeta) ? event.multiSortMeta :
-      (this.lastQueryPayload.SortBy ?? []);
+        Array.isArray(event?.multiSortMeta) ? event.multiSortMeta :
+          (this.lastQueryPayload.SortBy ?? []);
 
     const nextPayload = {
       ...this.lastQueryPayload,

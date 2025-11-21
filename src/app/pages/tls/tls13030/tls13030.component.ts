@@ -16,8 +16,8 @@ import {
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { DeductionService } from '../../../service/basic/deduction.service';
+import { DeductionService } from '../../../service/basic/queryAPS1003.service';
+import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
 
 // UI
 import { AccordionModule } from 'primeng/accordion';
@@ -30,7 +30,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 
 // ✅ 自動取消訂閱
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { CounterNameService } from '@service/basic/counter-name.service';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 @UntilDestroy()

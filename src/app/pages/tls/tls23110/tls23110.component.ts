@@ -13,13 +13,13 @@ import {
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23110Service } from '../../../service/api/tls/tls23110.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 import { SortMeta } from 'primeng/api';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';

@@ -28,10 +28,10 @@ import { ReportColumn } from '../../../shared/componentkit/table-report/table-re
 import { ButtonModule } from 'primeng/button';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from '../../../service/basic/region-code.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { RegionService } from '../../../service/basic/querySYS3A00.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 // Models
 import { PayTypeItem, TLS2B030Row } from './tls2b030.model';
 

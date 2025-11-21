@@ -8,9 +8,9 @@ import { createPaginationConfig, LazyLoadEvent } from '../../../shared/component
 
 // options services
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from '../../../service/basic/region-code.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { RegionService } from '../../../service/basic/querySYS3A00.service';
+import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
 
 // api service
 import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
