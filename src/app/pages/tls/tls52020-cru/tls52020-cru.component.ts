@@ -67,7 +67,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     CRN_TotalSaleAmt: [{ value: 0, disabled: true }], //售價總計
     APPLY_USR_No: [{ value: this.user?.user_No, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_USR_Name: [{ value: this.user?.user_Name, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
-    APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期 (對應 POS2016.APPLY_Date)
+    APPLY_Date: [new Date(), [Validators.required]], // 申請日期 (對應 POS2016.APPLY_Date)
     CRN_Remark: [null as string | null, [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
   });
   vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商下拉選單選項

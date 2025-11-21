@@ -59,7 +59,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     ODM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
     ODM_USR_No: [{ value: this.user?.user_No, disabled: true }], // 申請人
     ODM_USR_Name: [{ value: this.user?.user_Name, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
-    ODM_Date: [{ value: new Date(), disabled: true }], // 申請日期
+    ODM_Date: [new Date(), [Validators.required]], // 申請日期
     ODM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
