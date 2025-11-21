@@ -1,10 +1,10 @@
-import { Injectable, inject, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { FavoriteService } from '@service/system/favorite.service'; // 您的 Favorites HTTP Service
 import { AuthService } from '@service/system/auth.service';
+import { FavoriteService } from '@service/system/favorite.service'; // 您的 Favorites HTTP Service
 import { SystemDataService } from '@service/system/system-data.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
-import { Observable, EMPTY, catchError, map, switchMap, tap, throwError, take } from 'rxjs'; // 導入 take
+import { EMPTY, Observable, catchError, map, switchMap, take, tap, throwError } from 'rxjs'; // 導入 take
 
 // 假設您的 Favorite 介面已拉出
 interface FavoriteBody {
@@ -71,10 +71,9 @@ export class FavoriteStoreService {
   }
 
   private loadFavorites(funRights: FunsrightInfo[]): Observable<void> {
-    // ... (載入邏輯不變，它依賴外部傳入的 userNo 和 funRights)
     return this.favoriteService.getFavorites().pipe(
       tap(response => {
-        if (response.Status === '0000' && response.Data) {
+        if (response.Status === '0000') {
           const favoritesWithDetails: FunsrightInfo[] = [];
           response.Data.forEach((fav: any) => { // 假設 response.Data 是原始 Favorite 結構
             const matchingFunRight = funRights.find(item => item.prog_No === fav.PROG_No);
@@ -87,7 +86,7 @@ export class FavoriteStoreService {
             path: `/account/${item.prog_No.slice(0, 3).toLowerCase()}/${item.prog_No.toLowerCase()}`,
           })));
         } else {
-          this.favorites.set([]);
+          console.warn(`Favorite API 業務錯誤: ${response.Message}. 保留當前最愛狀態。`);
         }
       }),
       map(() => void 0), // 轉換為 void

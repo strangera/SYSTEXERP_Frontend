@@ -437,7 +437,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         }
 
         if (hasError) {
-          // 🚨 關鍵修改 1：發現錯誤時，強制刷新並返回
+          // 關鍵修改 1：發現錯誤時，強制刷新並返回
           this.data = [...this.data];
           this.cdr.detectChanges();
 
@@ -452,7 +452,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
 
       if (rowData._rowValidationError?.isValid === false) {
-        // 🚨 關鍵修改 2：發現整行錯誤時，強制刷新並返回
+        // 關鍵修改 2：發現整行錯誤時，強制刷新並返回
         this.data = [...this.data];
         this.cdr.detectChanges();
 
@@ -461,7 +461,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
     }
 
-    // 3. 🚨 關鍵修改 3：驗證通過前，確保表格資料參考更新（清除任何先前可能殘留的錯誤樣式）
+    // 3. 關鍵修改 3：驗證通過前，確保表格資料參考更新（清除任何先前可能殘留的錯誤樣式）
     this.data = [...this.data];
     this.cdr.detectChanges();
 

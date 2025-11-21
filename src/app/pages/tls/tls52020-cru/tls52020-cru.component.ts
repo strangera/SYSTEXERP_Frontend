@@ -142,6 +142,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
           const newData = results.Data[0];
           const updatedRow: TLS52020Detail = {
             ...newData,
+            id: 0,
             PLU_MagNo: newData.PLU_MagNo,
             PLU_Name: newData.PLU_Name,
             PLU_No: newData.PLU_No,

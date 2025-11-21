@@ -114,7 +114,6 @@ export class AuthService {
 
   // 最佳實踐：簡單 Getter
   public get currentUserValue(): UserInfo | null {
-    console.log(this.userSubject.value);
     return this.userSubject.value;
   }
 
@@ -207,8 +206,7 @@ export class AuthService {
    */
   private clearSessionAndLocalStorage(): void {
     sessionStorage.clear();
-    localStorage.clear();
-
+    localStorage.removeItem('UserInfo'); // 只清除使用者資訊
     this.userSubject.next(null);
     this.router.navigate(['/login'], { replaceUrl: true });
     this.queryStateService.clearAllQueryStates();
