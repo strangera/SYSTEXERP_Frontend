@@ -4,9 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { apiOption } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -15,31 +13,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 export interface Customer_interview {
-  id: number; // ID
-  ven_uniform: string; // 廠商統一編號(pos2013)
-  VEN_Name: string; // 廠商名稱(pos2013.ven_name)
-  VEN_EngName?: string; // 廠商英文名稱(pos2013.VEN_EngName)
-  tlt_name?: string; // 品牌(專櫃名稱)
-  bus_type?: string; // 業種-大分類代碼(tltbustype)
-  VEN_ContactPerson: string; // 廠商聯絡姓名
-  VEN_BossTel: string; // 廠商聯絡人電話
-  VEN_BossTitle?: string; // 廠商聯絡人頭銜
-  VEN_BossMobile?: string; // 廠商聯絡人行動電話
-  VEN_BossEmail?: string; // 廠商聯絡人電子郵件
-  VEN_Addr?: string; // 廠商公司地址
-  contact_Date?: string; // 訪談日期
-  contact_Time?: string; // 訪談時間
-  willing_level: string; // 意願等級(SYS1000.T116)
-  FLOOR_NO?: string; // 接洽樓層(sys3900)
-  building_no?: string; // 接洽館別代碼(sys3800)
-  LOCATION_No?: string; // 接洽店位代碼(POS2002)
-  contact_USR_No: string; // 訪談人員代碼
-  contact_USR_Name: string; // 訪談人員姓名
-  contact_record?: string; // 洽談重點及交換資料紀錄
-  contact_remarks?: string; // 備註
+  contact_Date_Start: string; // 接洽日期_起始日
+  contact_Date_End: string; // 接洽日期_終止日
+  contact_USR_No: string; // 接洽人員
 }
 
 // 意願報表內容
@@ -93,40 +72,15 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   interview_data: Customer_interview[] = []; //意願報表
   intervew_columns: Column[] = [
     { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
-    { field: 'contact_USR_Name', header: '訪談人員姓名', visible: true },
-    { field: 'contact_Date', header: '訪談日期', visible: true, format: formatDate },
-    { field: 'contact_Time', header: '訪談時間', visible: true },
-    {
-      field: 'willing_level',
-      header: '意願等級',
-      visible: true,
-      format: (val: string) => getSYS1000Options('T116').find(item => item.value === val)?.label || val,
-      exportFormat: transformOptionsForExport(getSYS1000Options('T116'), 'value', 'label')
-    },
-    // SYS1000.T116 //中
-    { field: 'ven_uniform', header: '廠商統一編號', visible: true }, // POS2013
-    { field: 'VEN_Name', header: '廠商名稱', visible: true }, // POS2013.name
-    { field: 'tlt_name', header: '品牌(專櫃名稱)', visible: true },
-    { field: 'bus_type', header: '大分類代碼', visible: true }, // tltbustype /中
-    { field: 'bus_type_name', header: '大分類名稱', visible: true }, // tltbustype /中
-    { field: 'VEN_ContactPerson', header: '廠商聯絡姓名', visible: true },
-    { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
-    { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
-    { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
-    { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
-    { field: 'VEN_Addr', header: '廠商公司地址', visible: true },
-    { field: 'FLOOR_NO', header: '接洽樓層', visible: true }, // sys3900 /中
-    { field: 'building_no', header: '館別代碼', visible: false }, // sys3800 /中
-    { field: 'building_name', header: '館別名稱', visible: true }, // sys3800 /中
-    { field: 'LOCATION_No', header: '店位代碼', visible: true }, //POS2002
-    { field: 'contact_record', header: '洽談重點及交換資料紀錄', visible: true },
-    { field: 'contact_remarks', header: '備註', visible: true },
+    { field: 'ven_uniform', header: '廠商統一編號', visible: true },
+    { field: 'ven_uniform_Count', header: '潛在客戶總數', visible: true },
+    { field: 'ID_Count', header: '拜訪記錄次數', visible: true },
   ];
 
   willing_data: Willing_data[] = [];
   willing_columns: Column[] = [ //意願報表欄位
-    { field: 'contact_USR_No', header: '接洽人員代碼', visible: true },
-    { field: 'contact_USR_Name', header: '接洽人員', visible: true },
+    { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
+    { field: 'contact_USR_Name', header: '訪談人員', visible: true },
     { field: 'willing_level_N', header: '?/未確認', visible: true },
     { field: 'willing_level_A', header: 'A/交涉中(基本合意)', visible: true },
     { field: 'willing_level_B', header: 'B/交涉中(反應良好)', visible: true },
@@ -135,17 +89,6 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: 'willing_level_F', header: 'F/無意進駐', visible: true },
     { field: 'All_Counts', header: '小計', visible: true },
   ];
-
-  // 數量table
-  countData: any[] = [];
-  count_columns: Column[] = [ //數量table欄位
-    { field: 'contact_USR_No', header: '接洽人員代碼', visible: false },
-    { field: 'contact_USR_Name', header: '接洽人員', visible: true },
-    { field: 'count', header: '潛在客戶總數', visible: true },
-    { field: 'count2', header: '拜訪記錄次數', visible: true },
-  ];
-  count_totalRecords = 0;// 分頁和排序參數 // 排序需要
-
 
   selectedItems: Customer_interview[] = [];// 多選項目
   // ----------------------------------------------------------------
@@ -165,44 +108,11 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     this.activeReport = 'query';
     this.handleSubmit(frm, () => {
       // 查詢 Customer_interview資料表
-      this.tls12070Service.queryTLS12070(frm.value).pipe(untilDestroyed(this)).subscribe({
+      this.tls12070Service.queryTLS12070_Count(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.interview_data = response.Data || [];
             console.log('Result', response.Data);
-            // ---計算筆數---
-            // 原本資料
-            const data = response.Data || [];
-
-            // Map: key = contact_USR_No, value = { count, contact_USR_Name }
-            const groupMap = new Map<string, { count: number; name: string }>();
-
-            data.forEach((item: { contact_USR_No: string; contact_USR_Name: string; }) => {
-              const key = item.contact_USR_No;
-              const name = item.contact_USR_Name;
-
-              if (!groupMap.has(key)) {
-                // 第一次出現 → 建立
-                groupMap.set(key, { count: 1, name });
-              } else {
-                // 之後出現 → count++
-                const entry = groupMap.get(key)!;
-                entry.count++;
-              }
-            });
-
-            // 轉成 table 需要的陣列格式
-            this.countData = Array.from(groupMap.entries()).map(([contact_USR_No, info]) => ({
-              contact_USR_No,
-              contact_USR_Name: info.name,
-              count: info.count,
-              count2: 0,
-            }));
-
-            this.count_totalRecords = this.countData.length;
-
-            console.log("countData:", this.countData);
-            // ---計算筆數---
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

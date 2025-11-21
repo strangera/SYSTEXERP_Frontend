@@ -25,4 +25,9 @@ export class Tls12070Service {
   queryTLS12070_Summary(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS12070_Summary`, body);
   }
+
+  // 查詢 Customer_interview 數量簡表
+  queryTLS12070_Count(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12070_Count`, body);
+  }
 }
