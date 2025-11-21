@@ -52,6 +52,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   showConfirmDialog = false;
   hasUnsavedChanges = false;
   dataLoaded = false;
+  private skipSaveOnDestroy = false;
   commissionDataLoaded = false;
   contractInfoData: SimpleContractInfo[] = [];
   currentContractData: SimpleContractInfo | null = null;
@@ -1195,8 +1196,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnDestroy(): void {
-    // 最後一次儲存
-    if (!this.isReadOnlyMode && this.commissionData.length > 0) {
+    // 最後一次儲存（若非清空離開）
+    if (!this.skipSaveOnDestroy && !this.isReadOnlyMode && this.commissionData.length > 0) {
       console.log('🔚 組件銷毀前最後儲存');
       this.saveToWorkflow();
     }
@@ -1270,6 +1271,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   onClearAndExit(): void {
     console.log('清空並離開');
+    this.skipSaveOnDestroy = true;
     this.flowService.clearAll();
     this.router.navigate(['account/tls/tls12040']);
     this.messageService.infoBubble('已清空暫存資料並離開');

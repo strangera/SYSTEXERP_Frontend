@@ -1,5 +1,5 @@
-import { SHARED_DROPDOWN_OPTIONS } from '@shared/constants/business.constants';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { SHARED_DROPDOWN_OPTIONS } from '@shared/constants/business.constants';
 export class TLS12040Next2ColumnsConfig {
 
   static getContractInfoColumns(): ColumnDef[] {
@@ -50,7 +50,7 @@ export class TLS12040Next2ColumnsConfig {
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true, dateFormat: 'full-date' },
       { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true, dateFormat: 'full-date' },
-      { field: 'cag_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
+      { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
     ];
   }
 

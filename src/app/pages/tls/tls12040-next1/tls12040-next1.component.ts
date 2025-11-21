@@ -1014,12 +1014,33 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         }
       };
 
-      this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+      // 根據合約類型決定導航目標
+      const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+      if (tltTermType === '1') {
+        // 固定租金：跳過 next2 直接到 next3
+        console.log('🔍 合約類型為固定租金(1)，直接跳轉到 next3');
+        this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+      } else {
+        // 其他類型：正常導航到 next2
+        console.log('🔍 合約類型非固定租金，跳轉到 next2');
+        this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+      }
 
     } catch (error) {
       console.error('❌ 前往下一步時發生錯誤:', error);
       this.messageService.warnBubble('儲存資料失敗，無法前往下一步');
     }
+  }
+
+  /**
+   * 取得下一步按鈕的標籤文字
+   */
+  getNextStepLabel(): string {
+    const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+    if (tltTermType === '1') {
+      return '下一步(租金設定)';
+    }
+    return '下一步(抽成設定)';
   }
 
   override onCancel(): void {

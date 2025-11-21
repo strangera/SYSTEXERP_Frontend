@@ -1186,6 +1186,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   // ========== 導航相關 ==========
+  /**
+   * 取得下一步按鈕的標籤文字
+   */
+  getNextStepLabel(): string {
+    const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+    if (tltTermType === '1') {
+      return '下一步(租金設定)';
+    }
+    return '下一步(抽成設定)';
+  }
+
   onSubmitNext(): void {
     // 取得合約類型
     const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();

@@ -4,7 +4,7 @@
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button
       btnType="create"
-      label="下一步(抽成設定)"
+      [label]="getNextStepLabel()"
       (click)="onSubmitNext()"
     ></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
@@ -175,7 +175,7 @@
         ></app-button>
         <app-button
           btnType="create"
-          label="下一步(抽成設定)"
+          [label]="getNextStepLabel()"
           (click)="onSubmitNext()"
           [disabled]="getTotalSelectedCount() === 0"
         ></app-button>

@@ -1,6 +1,5 @@
-// tls13010.component.ts - 整理後版本
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 // 基礎服務
@@ -9,47 +8,46 @@ import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from 
 
 // 格式化函數
 import {
+  formatApproveStatus,
   formatCheckType,
-  formatTltTermType,
-  formatStoreWay,
-  formatCommCompType,
   formatDecoType,
   formatMoneyType,
   formatOpenflagStatus,
-  formatApproveStatus,
+  formatStoreWay,
+  formatTltTermType
 } from './tls13010.constants';
 
 // 下拉選單服務
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from './tls13010.dropdown';
 
 // 業務服務
-import { ContractFlowService } from './services/contract-flow.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
+import { ContractFlowService } from './services/contract-flow.service';
 
 // API 服務
-import { VendorService } from '../../../service/basic/vendor.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
+import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
+import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
+import { VendorService } from '../../../service/basic/vendor.service';
 
 // 資料模型
-import { ContractItem, WorkflowStep } from './tls13010.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { AccordionModule } from 'primeng/accordion';
 import { Button } from "primeng/button";
 import { concatMap, finalize, from } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ContractItem } from './tls13010.model';
 
 @Component({
   selector: 'app-tls13010',
@@ -79,19 +77,19 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       label: '審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: ContractItem) => this.onApprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '1' // 只有未審核狀態才能審核
+      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || rowData.approve_status !== '1'
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ContractItem) => this.onUnapprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' // 只有已審核狀態才能反審核
+      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || rowData.approve_status !== '2'
     },
     {
       label: '作廢',
       icon: 'pi pi-times-circle text-red-500',
       action: (rowData: ContractItem) => this.onVoid(rowData),
-      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData)
+      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || this.isVoidDisabled(rowData)
     }
   ];
 
