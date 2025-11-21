@@ -145,7 +145,7 @@ jobs:
         TAG_NAME=${GITHUB_REF##*/}
         
         # 在 </head> 前插入註解（改變 index.html 內容 → 觸發 SW 更新）
-        sed -i "s|</head>|  <!-- Build: $BUILD_TIME | Tag: $TAG_NAME -->\n</head>|" "$INDEX_FILE"
+        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME -->\n</head>#" "$INDEX_FILE"
         
         echo "✅ 已注入建置資訊到 index.html"
         echo "   檔案：$INDEX_FILE"
@@ -192,7 +192,7 @@ jobs:
         TAG_NAME=${GITHUB_REF##*/}
         
         # 注入建置資訊
-        sed -i "s|</head>|  <!-- Build: $BUILD_TIME | Tag: $TAG_NAME | STAGING -->\n</head>|" "$INDEX_FILE"
+        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME - STAGING -->\n</head>#" "$INDEX_FILE"
         
         echo "✅ 已注入建置資訊到 index.html (STAGING)"
       env:
