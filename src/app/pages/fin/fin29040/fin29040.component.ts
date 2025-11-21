@@ -1,32 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN29040Service } from '@service/api/fin/fin29040.service';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { finalize } from 'rxjs';
 
 //1.2.9.4 AP及ARNET之報表
 @Component({
-    selector: 'app-fin29040',
-    templateUrl: './fin29040.component.html',
-    styleUrl: './fin29040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin29040',
+  templateUrl: './fin29040.component.html',
+  styleUrl: './fin29040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class FIN29040Component extends BasicQpageComponent implements OnInit {
+export class FIN29040Component extends BasicQueryPageComponent<any> implements OnInit {
   //
   queryForm = this.formBuilder.group({
     startdate: [, [Validators.required]], // 查詢年月
@@ -34,115 +32,126 @@ export class FIN29040Component extends BasicQpageComponent implements OnInit {
     showUp: [1, [Validators.required]], // 報表方式
     factoryID: [], // 廠客代號
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
   ];
+  selectedItems: any[] = [];
   columns: any[] = [
-    { field: 'col1', header: '廠客代號', visible: true },
-    { field: 'col2', header: '廠客名稱', visible: true },
-    { field: 'col3', header: '資料來源別', visible: true },
-    { field: 'col4', header: '付款金額', visible: true },
-    { field: 'col5', header: '應收/付ID', visible: true },
-    { field: 'col6', header: '立帳日期', visible: true },
-    { field: 'col7', header: '預計收/付款日，退保留款/貼現日', visible: true },
-    { field: 'col8', header: '備註', visible: true },
-    { field: 'col9', header: '會計科目', visible: true },
+    { field: 'PartyNo', header: '廠客代號', visible: true },
+    { field: 'PartyName', header: '廠客名稱', visible: true },
+    { field: 'SourceType', header: '資料來源別', visible: true },
+    { field: 'PaymentAmount', header: '付款金額', visible: true },
+    { field: 'APAR_ID', header: '應收/付ID', visible: true },
+    { field: 'BookDate', header: '立帳日期', visible: true },
+    { field: 'ExpectedPayDate', header: '預計收/付款日', visible: true },
+    { field: 'ReturnReserveDate', header: '退保留款/貼現日', visible: true },
+    { field: 'Remark', header: '備註', visible: true },
+    { field: 'AccountNo', header: '會計科目', visible: true },
     // 其他欄位
   ];
+
   // ----------------------------------------------------------------
   factoryIDOptions: any[] = [];
   showUpOptions: any[] = [
     { value: 1, label: '顯示全部' },
     { value: 2, label: '顯示負值' },
   ];
-  statusOptions: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '未異動' },
-    { value: 3, label: '到期' },
-    { value: 4, label: '兌現' },
-    { value: 5, label: '撤票' },
-    { value: 6, label: '退票' },
-  ];
+  totalRecords = 0;
+  exportPDFbtnLoading = false;
+  exportExcelbtnLoading = false;
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
+    private dropDownListService: DropDownListService,
+    private fin29040Service: FIN29040Service
   ) {
     super(); // 呼叫父類建構子
   }
-
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120027';
-    this.cruPage = '/FIN2000/FIN29040CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.factoryIDOptions = data;
+
+    this.initializePage('FIN29040', '/FIN/FIN29040cru', this.queryForm, (form) => this.onSubmit(form));
+
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.factoryIDOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
     });
-    // ----------------------------------------------------------------
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  onSubmit(form: FormGroup) {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      this.fin29040Service.queryFIN29040(this.buildQueryPayload(formValue))
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe((response) => {
+          this.data = response.Data ?? [];
+          this.totalRecords = response.TotalCount ?? this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
+        });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  // ========= 匯出 =========
+  onExportPDF(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.ACP_Date_From || !formValue.ACP_Date_To) {
+      this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.exportPDFbtnLoading = true;
+    this.fin29040Service.exportFIN29040PDF(this.buildQueryPayload(formValue))
+      .pipe(untilDestroyed(this), finalize(() => (this.exportPDFbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.pdf', 'AP及AR淨額報表'),
+        error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+  onExportExcel(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.ACP_Date_From || !formValue.ACP_Date_To) {
+      this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
+      return;
     }
+
+    this.exportExcelbtnLoading = true;
+    this.fin29040Service.exportFIN29040080Excel(this.buildQueryPayload(formValue))
+      .pipe(untilDestroyed(this), finalize(() => (this.exportExcelbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.xlsx', 'AP及AR淨額報表'),
+        error: () => this.messageService?.warnBubble?.('匯出 Excel 失敗。'),
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
+  /** 產生查詢 payload */
+  private buildQueryPayload(formValue: any): any {
+    return {
+      ...formValue,
+      ACP_Date_From: this.toDateOnly(formValue.ACP_Date_From),
+      ACP_Date_To: this.toDateOnly(formValue.ACP_Date_To),
+      ACP_ExpectPayDate_From: this.toDateOnly(formValue.ACP_ExpectPayDate_From),
+      ACP_ExpectPayDate_To: this.toDateOnly(formValue.ACP_ExpectPayDate_To),
+    };
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  // ========= 本地工具 =========
+  private toDateOnly(d: any): string | null {
+    if (!d) return null;
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt.getTime())) return null;
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const da = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${da}`;
+  }
+
+  private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }
