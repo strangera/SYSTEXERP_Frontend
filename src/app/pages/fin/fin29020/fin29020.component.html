@@ -8,48 +8,40 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 開票日期(起訖) - 必填 -->
+          <!-- 匯款日期(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="開票日期" [startControl]="queryForm.controls.IssueDateFrom"
-              [endControl]="queryForm.controls.IssueDateTo" [submitted]="submitted">
+            <app-calendar-range calendarType="dateRange" label="匯款日期" [startControl]="queryForm.controls.DateFrom"
+              [endControl]="queryForm.controls.DateTo" [submitted]="submitted">
             </app-calendar-range>
           </div>
 
-          <!-- 銀行代號 -->
+          <!-- 匯款銀行代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="銀行代號" controlName="BankCodeList" [options]="BankCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.BankCodeList" [submitted]="submitted">
-            </app-multi-select>
-          </div>
-
-          <!-- 開票單號(起訖) -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="開票單號(起訖)" controlNameStart="CheckNoFrom" controlNameEnd="CheckNoTo"
-              [startControl]="queryForm.controls.CheckNoFrom" [endControl]="queryForm.controls.CheckNoTo"
-              [submitted]="submitted">
-            </app-input-number-range>
+            <app-dropdown label="匯款銀行代號" controlName="BNK_No" [options]="BankCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.BNK_No" [submitted]="submitted">
+            </app-dropdown>
           </div>
 
           <!-- 廠客代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="廠客代號" controlName="VendorNoList" [options]="VendorNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VendorNoList" [submitted]="submitted">
-            </app-multi-select>
+            <app-dropdown label="廠客代號" controlName="VEN_No" [options]="VendorNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted">
+            </app-dropdown>
           </div>
 
-          <!-- 到期日 -->
+          <!-- 匯款單號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="到期日" controlName="DueDate" [control]="queryForm.controls.DueDate"
+            <app-input-text-range label="匯款單號" controlNameStart="PamNoFrom" controlNameEnd="PamNoTo"
+              [startControl]="queryForm.controls.PamNoFrom" [endControl]="queryForm.controls.PamNoTo"
               [submitted]="submitted">
-            </app-calendar>
+            </app-input-text-range>
           </div>
 
-          <!-- 票據狀態 -->
+          <!-- 匯款狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="票據狀態" controlName="CheckStatusList" [options]="CheckStatusListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.CheckStatusList"
-              [submitted]="submitted">
-            </app-multi-select>
+            <app-dropdown label="匯款狀態" controlName="RmtStatus" [options]="RmtStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.RmtStatus" [submitted]="submitted">
+            </app-dropdown>
           </div>
         </div>
 
@@ -63,22 +55,15 @@
 </div>
 
 <div class="card">
-  <!-- 可能會用到 先註解 -->
-  <!-- <app-table-subheader tableKey="FIN29020" dataKey="RemittanceNo" [data]="data" [columns]="columns"
-    [showCheckBox]="false" [showManage]="false" [showDelete]="false" [multiSortMeta]="[]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showReportMode]="false" [showGroupheader]="false">
-  </app-table-subheader> -->
-
-  <!-- 右上角工具列：匯出 PDF / Excel -->
+  <!-- 右上角工具列：匯出 PDF -->
   <div class="flex justify-content-end gap-2 mb-2">
-    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="btnLoading"
+    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF(queryForm)" [loading]="exportPDFbtnLoading"
       [disabled]="loading || (data.length || 0) === 0">
     </app-button>
 
-    <!-- <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportXLSX()" [loading]="btnLoading"
-      [disabled]="loading || (data.length || 0) === 0">
-    </app-button> -->
+    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportXLSX(queryForm)"
+      [loading]="exportXLSXbtnLoading" [disabled]="loading || (data.length || 0) === 0">
+    </app-button>
   </div>
   <app-table tableKey="FIN29020" dataKey="ID" [data]="data" [columns]="columns" [showCheckBox]="false"
     [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"

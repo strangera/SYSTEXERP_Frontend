@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -42,5 +42,8 @@ export class Tls2a010Service {
   /** 更新 */
   updateTLS2A010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS2A010`, data);
+  }
+  updateModPayAmt(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateModPayAmt`, data);
   }
 }

@@ -69,22 +69,28 @@ export class TLS12040Next2ColumnsConfig {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: true,
-        directEdit: true,
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
+        editable: false,  // 關鍵：Level 的 checkbox 不可編輯，由 Discount 控制
+        directEdit: false,  // 禁用直接編輯
+        autoEditOnSelect: false,
+        autoSaveOnUnselect: false,
       },
+      // {
+      //   field: 'copy_button',
+      //   header: '複製',
+      //   type: 'button',
+      //   buttonLabel: '複製',
+      //   buttonIcon: 'pi pi-copy',
+      //   buttonClass: 'p-button-sm p-button-secondary',
+      //   buttonTooltip: '複製此扣款項目',
+      //   editable: false
+      // },
+      { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       {
-        field: 'copy_button',
-        header: '複製',
-        type: 'button',
-        buttonLabel: '複製',
-        buttonIcon: 'pi pi-copy',
-        buttonClass: 'p-button-sm p-button-secondary',
-        buttonTooltip: '複製此扣款項目',
+        field: 'contract_period',
+        header: '合約期間',
+        type: 'text',
         editable: false
       },
-      { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },
       { field: 'level_eamount', header: '業績計算金額(迄)', type: 'number', editable: true },
       { field: 'level_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }

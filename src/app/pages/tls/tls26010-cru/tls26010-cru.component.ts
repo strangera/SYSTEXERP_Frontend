@@ -16,6 +16,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { CRUDStatus, ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
+import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
@@ -50,7 +51,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   public dataForm = this.formBuilder.nonNullable.group({
     pod_no: new FormControl<string>('自動給號'), // 預售活動編號
     pod_desc: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]), // 預售名稱
-    pod_sdate: new FormControl<Date>(new Date(), Validators.required), // 預售期間(起)
+    pod_sdate: new FormControl<Date>(new Date(), [Validators.required, this.validationService.dateAfterTodayValidator()]), // 預售期間(起)
     pod_edate: new FormControl<Date>(this.service.dateE, Validators.required), // 預售期間(迄)
     pod_busdate: new FormControl<Date>(this.service.dateE, Validators.required), // 活動正檔日期
     pod_status: new FormControl<string>('未核准'), // 核准狀態
@@ -252,6 +253,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     public readonly service: TLS26010Service,
     private readonly excelImport: ExcelImportService,
     private readonly logger: NGXLogger,
+    private readonly validationService: ValidationService,
   ) {
     super();
   }
@@ -538,7 +540,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.crudstatus === CRUDStatus.Create ? true : this.service.isRowSelectable(rowData);
 
   //eugene: 刪除子項目table
-  // 刪除項目(到處都有倉別的資料，先不允許刪除)
   public onDelete(data: any, tableType: 'ecr' | 'tlt'): void {
     if (tableType === 'ecr') {
       // 刪除 ecr Table 對應資料

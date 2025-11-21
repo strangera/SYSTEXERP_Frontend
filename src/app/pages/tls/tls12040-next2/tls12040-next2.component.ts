@@ -13,7 +13,7 @@ import { CruData, SimpleContractInfo } from '../tls12040-next1/models/tls12040-n
 import { NgIf } from '@angular/common';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { DialogModule } from "primeng/dialog";
-import { ChargeDetailBusinessModel, ChargeSettingBusinessModel, LevelChargeDetailBusinessModel, TLS12040ChargeQueryResponse } from './models/tls12040-next2.model';
+import { ChargeDetailBusinessModel, ChargeSettingBusinessModel, LevelChargeDetailBusinessModel, YearChargeDetailBusinessModel, TLS12040ChargeQueryResponse } from './models/tls12040-next2.model';
 import { FormGroup } from '@angular/forms';
 import { TLS12040Next2ColumnsConfig } from './services/tls12040-next2-columns.config';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -187,6 +187,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       //  新增第七步:確保資料一致性
       this.ensureDataConsistency();
 
+      //  🔥 新增第七點五步：同步已勾選的 discount 到 level 的 charged_id
+      this.syncInitialChargedIds();
+
       //  第八步:設定自動儲存(僅編輯模式)
       if (!this.isReadOnlyMode) {
         this.setupAutoSave();
@@ -223,6 +226,30 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     this.selectedSettingTab = 'discount';
 
     console.log(' 資料一致性確保完成');
+  }
+
+  /**
+   * 🔥 新增：同步初始化時已勾選的 discount 到 level 的 charged_id
+   * 解決預設勾選（如 000 正品）沒有 charged_id 的問題
+   */
+  private syncInitialChargedIds(): void {
+    console.log('🔗 同步初始化的 charged_id...');
+
+    this.commissionData.forEach((commissionItem, commissionIndex) => {
+      // 遍歷所有已勾選的 discount 項目
+      commissionItem.ChargeDetails?.forEach(discountItem => {
+        if (discountItem.is_selected) {
+          console.log(`  處理已勾選的 discount: ${discountItem.cag_barcode} (id: ${discountItem.id})`);
+
+          // 對已勾選的項目執行同步，設定對應 level 的 charged_id
+          this.syncDiscountSelectionToLevel(discountItem, true);
+        }
+      });
+
+      console.log(`  抽成項目 ${commissionIndex + 1} 的 charged_id 同步完成`);
+    });
+
+    console.log('✅ 初始化 charged_id 同步完成');
   }
 
   /**
@@ -281,6 +308,16 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       //  有暫存，直接用暫存資料
       console.log('📦 從暫存載入抽成資料');
       this.commissionData = savedData.data.commissionData;
+
+      // 🔍 檢查載入的資料中 is_selected 的初始狀態
+      this.commissionData.forEach((item, index) => {
+        console.log(`📊 Commission Item ${index + 1}:`, {
+          tlt_id: item.tlt_id,
+          ChargeDetails_count: item.ChargeDetails?.length,
+          ChargeDetails_selected: item.ChargeDetails?.filter(d => d.is_selected).map(d => d.cag_barcode)
+        });
+      });
+
       this.dataLoaded = true;
       this.commissionDataLoaded = true;
       return;
@@ -297,6 +334,16 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     // 從 dataFlowService 取得資料
     this.commissionData = this.dataFlowService.getVisibleData();
+
+    // 🔍 檢查載入的資料中 is_selected 的初始狀態
+    this.commissionData.forEach((item, index) => {
+      console.log(`📊 Commission Item ${index + 1}:`, {
+        tlt_id: item.tlt_id,
+        ChargeDetails_count: item.ChargeDetails?.length,
+        ChargeDetails_selected: item.ChargeDetails?.filter(d => d.is_selected).map(d => d.cag_barcode)
+      });
+    });
+
     this.dataLoaded = true;
     this.commissionDataLoaded = true;
   }
@@ -500,7 +547,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
             is_configured: item.is_configured || false,
             is_enabled: item.is_enabled || false,
             _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-            is_selected: item.is_selected || false
+            // 關鍵修正：明確處理 is_selected，不使用 || 運算子以避免 false 被誤判
+            is_selected: item.is_selected !== undefined ? item.is_selected : false
           }));
           break;
 
@@ -514,13 +562,15 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
             year_amount: item.year_amount || 0,
             extra_rate: item.extra_rate || 0,
             _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-            is_selected: item.is_selected || false
+            // 關鍵修正：明確處理 is_selected
+            is_selected: item.is_selected !== undefined ? item.is_selected : false
           }));
           break;
 
         case 'level':
           commissionItem.LevelChargeDetails = currentTabItems.map(item => ({
             id: item.id,
+            charged_id: item.charged_id,  // 🔥 保留 charged_id（應該在勾選 discount 時就設定好）
             apply_no: item.apply_no || commissionItem.apply_no,
             tlt_id: item.tlt_id || commissionItem.tlt_id,
             seq_no: item.seq_no || 1,
@@ -532,7 +582,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
             is_configured: item.is_configured || false,
             is_enabled: item.is_enabled || false,
             _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-            is_selected: item.is_selected || false
+            // 關鍵修正：明確處理 is_selected
+            is_selected: item.is_selected !== undefined ? item.is_selected : false
           }));
           break;
       }
@@ -586,9 +637,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     const contractEndDate = this.getContractDate('end');
 
     return this.discountOptions.map((option, index) => {
-      //  更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
-      const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
-
+      // 關鍵修正：預設都不勾選，由用戶自己決定要勾選哪些
       const item = {
         id: this.generateTempId(),
         apply_no: parentItem.apply_no,
@@ -598,14 +647,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         tlt_edate: contractEndDate,
         cag_charge_rate: 0,
         barcode_desc: option.label || '',
-        is_configured: shouldSelectByDefault,
-        is_enabled: shouldSelectByDefault,
+        is_configured: false,  // 預設不配置
+        is_enabled: false,     // 預設不啟用
         _status: 'new',
-        is_selected: shouldSelectByDefault, // 關鍵:確保勾選狀態正確
+        is_selected: false,    // 關鍵：預設都不勾選
         _originalType: 'discount'
       };
 
-      console.log(`建立項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
+      console.log(`建立項目: ${option.value} (${option.label}) - 預設不勾選`);
       return item;
     });
   }
@@ -622,12 +671,23 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log(' 建立預設層級項目');
 
-    return this.discountOptions.map((option, index) => {
-      //  更寬鬆的預選邏輯 - 只要是 000 或包含正品就預選
-      const shouldSelectByDefault = (option.value === '000' || option.label?.includes('正品'));
+    // 🔥 確保 ChargeDetails 已存在，用於查找對應的 discount id
+    if (!parentItem.ChargeDetails || parentItem.ChargeDetails.length === 0) {
+      console.warn('⚠️ 父項目沒有 ChargeDetails，無法設定 charged_id');
+    }
 
+    return this.discountOptions.map((option, index) => {
+      // 🔥 找到對應的 discount 項目，獲取其 id 作為 charged_id
+      const correspondingDiscount = parentItem.ChargeDetails?.find(
+        discount => discount.cag_barcode === option.value
+      );
+
+      const chargedId = correspondingDiscount?.id || null;
+
+      // 關鍵修正：Level 預設都不勾選，由 Discount 的勾選狀態決定
       const item = {
         id: this.generateTempId(),
+        charged_id: chargedId,  // 🔥 設定 charged_id，關聯到對應的 discount
         apply_no: parentItem.apply_no,
         tlt_id: parentItem.tlt_id,
         seq_no: index + 1,
@@ -636,14 +696,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         level_eamount: 0,
         level_charge_rate: 0,
         barcode_desc: option.label || '',
-        is_configured: shouldSelectByDefault,
-        is_enabled: shouldSelectByDefault,
+        is_configured: false,   // 預設不配置
+        is_enabled: false,      // 預設不啟用
         _status: 'new',
-        is_selected: shouldSelectByDefault, // 關鍵:確保勾選狀態正確
+        is_selected: false,     // 關鍵：預設都不勾選，由 Discount 控制
         _originalType: 'level'
       };
 
-      console.log(`建立層級項目: ${option.value} (${option.label}) - ${shouldSelectByDefault ? '預選' : '不預選'}`);
+      console.log(`建立層級項目: ${option.value} (${option.label}) - charged_id=${chargedId}, 預設不勾選`);
       return item;
     });
   }
@@ -686,7 +746,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
       // 增強 level 項目
       if (!commissionItem.LevelChargeDetails || commissionItem.LevelChargeDetails.length === 0) {
-        commissionItem.LevelChargeDetails = this.createInitialLevelItems();
+        commissionItem.LevelChargeDetails = this.createInitialLevelItems(commissionItem);
       }
     });
 
@@ -722,16 +782,30 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   /**
    * 新增：建立初始層級項目
    */
-  private createInitialLevelItems(): any[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private createInitialLevelItems(parentItem: ChargeSettingBusinessModel): any[] {
+    // 🔥 確保 ChargeDetails 已存在，用於查找對應的 discount id
+    if (!parentItem.ChargeDetails || parentItem.ChargeDetails.length === 0) {
+      console.warn('⚠️ 父項目沒有 ChargeDetails，無法設定 charged_id');
+    }
+
     return this.discountOptions.map((option, index) => {
       const isFirstOption = index === 0;
       const shouldSelectByDefault = isFirstOption &&
         (option.value === '000' || option.label?.includes('正品'));
 
+      // 🔥 找到對應的 discount 項目，獲取其 id 作為 charged_id
+      const correspondingDiscount = parentItem.ChargeDetails?.find(
+        discount => discount.cag_barcode === option.value
+      );
+
+      const chargedId = correspondingDiscount?.id || null;
+
       return {
         id: this.generateTempId(),
-        apply_no: 0,
-        tlt_id: '',
+        charged_id: chargedId,  // 🔥 設定 charged_id，關聯到對應的 discount
+        apply_no: parentItem.apply_no || 0,
+        tlt_id: parentItem.tlt_id || '',
         seq_no: index + 1,
         cag_barcode: option.value,
         level_bmount: 0,
@@ -875,9 +949,59 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   onDetailEdit(event: any): void { }
 
-  onDetailSave(event: { oldDetail: any, newDetail: any, parentData: any }): void { }
+  onDetailSave(event: { oldDetail: any, newDetail: any, parentData: any }): void {
+    console.log('🔵 onDetailSave 被觸發:', {
+      oldDetail: event.oldDetail,
+      newDetail: event.newDetail,
+      parentData: event.parentData
+    });
 
-  onBeforeDetailSave(event: { data: any, preventDefault: () => void }): void { }
+    const { newDetail } = event;
+
+    // 關鍵發現：directEdit 模式下，oldDetail 和 newDetail 的值可能已經相同
+    // 因為 expandable-edit-table 會先更新內部資料，再觸發事件
+    // 所以我們需要直接處理，而不是比對舊值和新值
+
+    console.log('🔍 檢查 newDetail 的完整狀態:', {
+      id: newDetail.id,
+      cag_barcode: newDetail.cag_barcode,
+      is_selected: newDetail.is_selected,
+      _originalType: newDetail._originalType
+    });
+
+    // 找到父項目
+    const parentItem = this.findParentOfDetailItem(newDetail);
+    if (!parentItem) {
+      console.warn('⚠️ 找不到父項目，無法同步');
+      return;
+    }
+
+    // 關鍵修正：直接同步 newDetail 的所有資料到父項目的陣列
+    // 不管舊值是什麼，直接以 newDetail 為準
+    console.log('📤 直接同步 newDetail 到父項目陣列');
+    this.syncDetailToParentArray(newDetail, parentItem);
+
+    // 特別處理 discount 的 is_selected 變更，需要同步到 Level
+    const originalType = newDetail._originalType || this.selectedSettingTab;
+    if (originalType === 'discount') {
+      console.log('🔄 Discount 項目，同步到 Level');
+      this.syncDiscountSelectionToLevel(newDetail, newDetail.is_selected);
+    }
+
+    // 更新父項目狀態
+    this.updateItemStatus(parentItem);
+    this.updateMainArray(parentItem);
+
+    // 觸發變更檢測
+    this.cdr.detectChanges();
+
+    // 儲存到 workflow
+    this.saveToWorkflow();
+  }
+
+  onBeforeDetailSave(event: { data: any, preventDefault: () => void }): void {
+    console.log('🟡 onBeforeDetailSave 被觸發:', event.data);
+  }
 
   onDetailCancel(item: ChargeSettingBusinessModel): void { }
 
@@ -1203,7 +1327,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     switch (this.selectedSettingTab) {
       case 'discount':
         return {
-          id: null,
+          id: tempId,
           apply_no: parentData.apply_no,
           tlt_id: parentData.tlt_id,
           cag_barcode: '',
@@ -1233,6 +1357,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       case 'level':
         return {
           id: null,
+          charged_id: tempId,
           apply_no: parentData.apply_no,
           tlt_id: parentData.tlt_id,
           seq_no: (parentData.LevelChargeDetails?.length || 0) + 1,
@@ -1396,6 +1521,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     } else {
       // 其他欄位變更的狀態處理
       this.updateItemStatus(rowData);
+
+      // 關鍵新增：如果是 discount 項目的日期欄位變更，需要同步到 level 的 contract_period
+      const originalType = rowData._originalType || this.selectedSettingTab;
+      if (originalType === 'discount' && isDateField) {
+        this.syncDiscountDateToLevel(rowData);
+      }
     }
 
     // 找到父項目並同步數據
@@ -1406,7 +1537,149 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       this.updateMainArray(parentItem);
     }
 
+    // 關鍵修正：在所有數據同步完成後才觸發變更檢測
+    // 這樣 processedCommissionData getter 才能讀取到最新的數據
+    this.cdr.detectChanges();
+
     this.saveToWorkflow();
+  }
+
+  /**
+   * 同步 Discount 的日期到 Level 的 contract_period
+   * 當 Discount 中的日期欄位變更時，更新 Level 中對應項目的合約期間顯示
+   */
+  private syncDiscountDateToLevel(discountItem: ChargeDetailBusinessModel): void {
+    console.log('📅 同步 Discount 日期到 Level contract_period:', {
+      cag_barcode: discountItem.cag_barcode,
+      tlt_bdate: discountItem.tlt_bdate,
+      tlt_edate: discountItem.tlt_edate
+    });
+
+    // 找到該 discount 項目所屬的父項目
+    const parentItem = this.findParentOfDetailItem(discountItem);
+    if (!parentItem) {
+      console.warn('找不到父項目，無法同步日期到 Level');
+      return;
+    }
+
+    // 在 LevelChargeDetails 中找到對應的項目（相同 cag_barcode）
+    if (parentItem.LevelChargeDetails) {
+      parentItem.LevelChargeDetails.forEach((levelItem: LevelChargeDetailBusinessModel) => {
+        if (levelItem.cag_barcode === discountItem.cag_barcode) {
+          // 同步合約期間（從 Discount 的日期計算）
+          const contractPeriod = this.formatContractPeriod(discountItem.tlt_bdate, discountItem.tlt_edate);
+          (levelItem as any).contract_period = contractPeriod;
+
+          console.log(`  ✓ 更新 Level 項目的 contract_period: ${levelItem.cag_barcode} -> ${contractPeriod}`);
+        }
+      });
+    }
+
+    // 觸發變更檢測，讓 UI 即時更新
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * 同步 Discount 的資料到 Level
+   * 當 Discount 中的項目被勾選/取消勾選時，Level 中對應的項目也要同步
+   * 🔥 修正：使用 charged_id 來找對應的 level，如果找不到就創建新的
+   */
+  private syncDiscountSelectionToLevel(discountItem: ChargeDetailBusinessModel, isSelected: boolean): void {
+    console.log('🔄 同步 Discount 選擇狀態到 Level:', {
+      discountId: discountItem.id,
+      cag_barcode: discountItem.cag_barcode,
+      isSelected
+    });
+
+    // 找到該 discount 項目所屬的父項目
+    const parentItem = this.findParentOfDetailItem(discountItem);
+    if (!parentItem) {
+      console.warn('找不到父項目，無法同步到 Level');
+      return;
+    }
+
+    // 確保 LevelChargeDetails 陣列存在
+    if (!parentItem.LevelChargeDetails) {
+      parentItem.LevelChargeDetails = [];
+    }
+
+    // 🔥 關鍵修正：使用 charged_id 找對應的 level 項目（而不是 cag_barcode）
+    let correspondingLevel = parentItem.LevelChargeDetails.find(
+      (levelItem: LevelChargeDetailBusinessModel) => levelItem.charged_id === discountItem.id
+    );
+
+    // 🔥 如果找不到對應的 level（例如複製出來的 discount），就創建新的
+    if (!correspondingLevel) {
+      console.log(`  ⚠️ 找不到 charged_id=${discountItem.id} 的 Level 項目，創建新的`);
+
+      const newLevel = {
+        id: this.generateTempId(),
+        apply_no: parentItem.apply_no || '',
+        tlt_id: parentItem.tlt_id || '',
+        charged_id: discountItem.id,  // 🔥 關聯到這個 discount
+        cag_barcode: discountItem.cag_barcode,
+        level_bmount: 0,
+        level_eamount: 0,
+        level_charge_rate: 0,
+        barcode_desc: discountItem.barcode_desc || '',
+        seq_no: parentItem.LevelChargeDetails.length + 1,
+        _status: 'new',
+        is_selected: false,
+        is_configured: false,
+        is_enabled: false
+      } as unknown as LevelChargeDetailBusinessModel;
+
+      // 加入到 LevelChargeDetails
+      parentItem.LevelChargeDetails.push(newLevel);
+      correspondingLevel = newLevel;  // 指向新建的項目
+
+      console.log(`  ✅ 創建新的 Level 項目:`, {
+        id: correspondingLevel.id,
+        charged_id: correspondingLevel.charged_id,
+        cag_barcode: correspondingLevel.cag_barcode
+      });
+    } else {
+      console.log(`  🔗 找到對應的 Level 項目:`, {
+        levelId: correspondingLevel.id,
+        charged_id: correspondingLevel.charged_id
+      });
+    }
+
+    // 同步選擇狀態
+    correspondingLevel.is_selected = isSelected;
+
+    // 同步合約期間（從 Discount 的日期計算）
+    const contractPeriod = this.formatContractPeriod(discountItem.tlt_bdate, discountItem.tlt_edate);
+    (correspondingLevel as LevelChargeDetailBusinessModel & { contract_period?: string }).contract_period = contractPeriod;
+
+    // 更新狀態
+    if (isSelected && correspondingLevel._status === 'deleted') {
+      // 如果重新勾選，恢復狀態
+      correspondingLevel._status = this.hasValidId(correspondingLevel) ? 'original' : 'new';
+    } else if (!isSelected && correspondingLevel._status !== 'deleted') {
+      // 如果取消勾選，不要刪除，只是取消勾選
+      // Level 項目只有在 Discount 中勾選時才顯示，所以取消勾選就隱藏了
+    }
+
+    console.log(`  ✓ 同步 Level 項目完成:`, {
+      cag_barcode: correspondingLevel.cag_barcode,
+      is_selected: correspondingLevel.is_selected,
+      charged_id: correspondingLevel.charged_id,
+      contract_period: contractPeriod
+    });
+
+    // 🔥 最終驗證：檢查整個 LevelChargeDetails 陣列
+    console.log(`📋 同步完成，檢查 parentItem.LevelChargeDetails:`,
+      parentItem.LevelChargeDetails?.map(l => ({
+        id: l.id,
+        charged_id: l.charged_id,
+        cag_barcode: l.cag_barcode,
+        is_selected: l.is_selected
+      }))
+    );
+
+    // 關鍵修正：不要在這裡觸發變更檢測，等所有數據同步完成後再觸發
+    // this.cdr.detectChanges(); // 移除：過早觸發會導致 getter 讀取到未完全同步的數據
   }
 
   private handleSelectedFieldChange(rowData: any, newValue: boolean): void {
@@ -1424,32 +1697,49 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     //  修正：在處理選擇狀態變更時，確保不會意外修改 cag_barcode
     const originalCagBarcode = rowData.cag_barcode;
 
+    // 關鍵修正：先更新狀態，再同步到 Level
     if (newValue === false) {
       // 取消勾選的處理邏輯
       if (originalType === 'annual') {
+        // Annual 取消勾選要刪除
         rowData._status = 'deleted';
         console.log('年度業績項目設為 deleted');
-      } else if (originalType === 'discount' || originalType === 'level') {
-        if (this.hasValidId(rowData)) {
-          rowData._status = 'deleted';
-          console.log(`${originalType} 現有項目設為 deleted (ID: ${rowData.id})`);
-        } else {
-          console.log(`${originalType} 新項目將被移除 (臨時ID: ${rowData.id})`);
-          rowData._status = 'deleted';
-        }
+      } else if (originalType === 'discount') {
+        // 🔥 修正：Discount 取消勾選設為 deleted，但 UI 仍要顯示
+        rowData.is_selected = false;
+        rowData._status = 'deleted';
+        console.log(`${originalType} 項目取消勾選，設為 deleted 但持續顯示 (ID: ${rowData.id}, hasValidId: ${this.hasValidId(rowData)})`);
+      } else if (originalType === 'level') {
+        // Level 項目不應該由用戶直接取消勾選
+        // Level 的勾選狀態應該完全由 Discount 控制
+        console.log(`⚠️ Level 項目的勾選狀態由 Discount 控制，不應直接操作`);
+        // 恢復勾選狀態
+        rowData.is_selected = true;
       } else {
         rowData._status = 'deleted';
         console.log('其他項目設為 deleted');
       }
     } else if (newValue === true) {
       // 重新勾選的處理邏輯
-      if (rowData._status === 'deleted') {
+      if (originalType === 'discount' || originalType === 'level') {
+        // Discount 和 Level 重新勾選，恢復選擇狀態
+        rowData.is_selected = true;
+        if (rowData._status === 'deleted') {
+          rowData._status = this.hasValidId(rowData) ? 'original' : 'new';
+          console.log(`項目從 deleted 恢復為 ${rowData._status}`);
+        }
+      } else if (rowData._status === 'deleted') {
         rowData._status = this.hasValidId(rowData) ? 'original' : 'new';
         console.log(`項目從 deleted 恢復為 ${rowData._status}`);
       } else {
         this.updateItemStatus(rowData);
         console.log('一般勾選變更處理');
       }
+    }
+
+    // 關鍵修正：狀態更新完成後，才同步到 Level
+    if (originalType === 'discount') {
+      this.syncDiscountSelectionToLevel(rowData, rowData.is_selected);
     }
 
     //  重要：確保 cag_barcode 值不會被意外修改
@@ -1524,35 +1814,137 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       (processedItem as any).cap_saletype5 = item.cap_saletype5 === 'Y';
       // 根據當前選中的標籤,設定對應的資料到統一的屬性名稱
       switch (this.selectedSettingTab) {
-        case 'discount':
-          //  確保有 8 個折扣選項
+        case 'discount': {
+          //  關鍵修正：只在真正沒有 ChargeDetails 時才創建預設項目
+          //  避免每次都重新創建導致勾選狀態被重置
           if (!processedItem.ChargeDetails || processedItem.ChargeDetails.length === 0) {
+            console.log('⚠️ ChargeDetails 為空，創建預設項目');
             processedItem.ChargeDetails = this.createDefaultDiscountItems(processedItem);
           }
 
-          //  過濾掉已刪除的項目
+          //  確保有 8 個折扣選項（如果不足 8 個，補齊缺少的）
+          if (processedItem.ChargeDetails.length < 8 && this.discountOptions.length === 8) {
+            const existingBarcodes = new Set(processedItem.ChargeDetails.map((d: ChargeDetailBusinessModel) => d.cag_barcode));
+            const missingOptions = this.discountOptions.filter(opt => !existingBarcodes.has(opt.value));
+
+            if (missingOptions.length > 0) {
+              console.log('補齊缺少的折扣選項:', missingOptions.map(o => o.value));
+              const contractStartDate = this.getContractDate('start');
+              const contractEndDate = this.getContractDate('end');
+
+              missingOptions.forEach(option => {
+                processedItem.ChargeDetails.push({
+                  id: null,  // 修正：新項目的 id 應該是 null
+                  apply_no: processedItem.apply_no,
+                  tlt_id: processedItem.tlt_id,
+                  cag_barcode: option.value,
+                  tlt_bdate: contractStartDate,
+                  tlt_edate: contractEndDate,
+                  cag_charge_rate: 0,
+                  barcode_desc: option.label || '',
+                  is_configured: false,
+                  is_enabled: false,
+                  _status: 'new',
+                  is_selected: false
+                } as ChargeDetailBusinessModel);
+              });
+            }
+          }
+
+          //  Discount 的 8 個選項永遠顯示，只是勾選狀態不同
           processedItem.detailItems = processedItem.ChargeDetails
-            .filter(detail => detail._status !== 'deleted')
             .map(detail => ({
               ...detail,
               _originalType: 'discount'
             }));
           break;
+        }
 
-        case 'level':
-          //  確保有 8 個層級選項
+        case 'level': {
+          //  關鍵修正: Level 只顯示在 Discount 中被勾選的項目
           if (!processedItem.LevelChargeDetails || processedItem.LevelChargeDetails.length === 0) {
             processedItem.LevelChargeDetails = this.createDefaultLevelItems(processedItem);
           }
 
-          //  過濾掉已刪除的項目
+          // 🔥 修正：建立 Discount 項目的對應關係（id -> discount item）
+          // 使用 id 而不是 cag_barcode，因為可能有多個相同的 cag_barcode（複製的情況）
+          const discountMapById = new Map<string | number, ChargeDetailBusinessModel>();
+          (processedItem.ChargeDetails || [])
+            .filter(discount => discount._status !== 'deleted')
+            .forEach(discount => {
+              if (discount.id) {
+                discountMapById.set(discount.id, discount);
+              }
+            });
+
+          // 🔥 修正：取得 Discount 中已勾選項目的 id
+          const selectedDiscountIds = Array.from(discountMapById.values())
+            .filter(discount => discount.is_selected)
+            .map(discount => discount.id)
+            .filter(id => id !== null && id !== undefined);
+
+          console.log('📊 [Getter] processedCommissionData - Level 計算時:');
+          console.log('  → ChargeDetails 完整狀態:', (processedItem.ChargeDetails || []).map(d => ({
+            id: d.id,
+            cag_barcode: d.cag_barcode,
+            is_selected: d.is_selected
+          })));
+          console.log('  → Discount 中已勾選的 ID:', selectedDiscountIds);
+
+          //  🔥 修正：只顯示 charged_id 對應到已勾選 discount 的 level 項目
           processedItem.detailItems = processedItem.LevelChargeDetails
-            .filter(detail => detail._status !== 'deleted')
-            .map(detail => ({
-              ...detail,
-              _originalType: 'level'
-            }));
+            .filter(detail => {
+              // 過濾條件: 1) 未刪除 2) charged_id 對應到已勾選的 discount
+              const isNotDeleted = detail._status !== 'deleted';
+              const chargedId = detail.charged_id;
+              const isCorrespondingDiscountSelected = chargedId && selectedDiscountIds.includes(chargedId);
+
+              console.log(`  Level 過濾 [${detail.cag_barcode}]:`, {
+                charged_id: chargedId,
+                isNotDeleted,
+                isCorrespondingDiscountSelected,
+                結果: isNotDeleted && isCorrespondingDiscountSelected
+              });
+
+              return isNotDeleted && isCorrespondingDiscountSelected;
+            })
+            .map(detail => {
+              // 🔥 修正：從 Discount 中找到對應的項目（透過 charged_id）
+              const correspondingDiscount = detail.charged_id ? discountMapById.get(detail.charged_id) : undefined;
+              const contractPeriod = this.formatContractPeriod(
+                correspondingDiscount?.tlt_bdate,
+                correspondingDiscount?.tlt_edate
+              );
+
+              console.log(`  Level 對應 [${detail.cag_barcode}]:`, {
+                levelId: detail.id,
+                charged_id: detail.charged_id,
+                找到的discount: correspondingDiscount?.id,
+                contract_period: contractPeriod
+              });
+
+              // 自動勾選這些項目，並加入 contract_period
+              const mappedDetail = {
+                ...detail,
+                _originalType: 'level',
+                is_selected: true,  // 關鍵: 自動勾選
+                contract_period: contractPeriod  // 新增: 合約期間
+              };
+
+              // 同步回 LevelChargeDetails
+              const levelIndex = processedItem.LevelChargeDetails.findIndex((item: LevelChargeDetailBusinessModel) => item.id === detail.id);
+              if (levelIndex !== -1) {
+                processedItem.LevelChargeDetails[levelIndex].is_selected = true;
+                // 也將 contract_period 同步回去
+                (processedItem.LevelChargeDetails[levelIndex] as any).contract_period = contractPeriod;
+              }
+
+              return mappedDetail;
+            });
+
+          console.log('📋 Level 最終顯示項目數:', processedItem.detailItems.length);
           break;
+        }
 
         case 'annual':
           if (!processedItem.YearChargeDetails) {
@@ -1662,14 +2054,28 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       originalType,
       currentTab,
       status: detailData._status,
-      selected: detailData.is_selected
+      selected: detailData.is_selected,
+      cag_barcode: detailData.cag_barcode
     });
 
     // 根據 originalType 而不是 currentTab 來決定更新哪個數組
     switch (originalType) {
-      case 'discount':
+      case 'discount': {
+        console.log('  → 更新 ChargeDetails, 陣列長度:', parentItem.ChargeDetails?.length);
         this.updateItemInArray(parentItem.ChargeDetails, detailId, detailData);
+        // 驗證更新結果
+        const discountItem = parentItem.ChargeDetails?.find((item: ChargeDetailBusinessModel) => String(item.id) === String(detailId));
+        if (discountItem) {
+          console.log('  ✓ ChargeDetails 更新後狀態:', {
+            id: discountItem.id,
+            is_selected: discountItem.is_selected,
+            cag_barcode: discountItem.cag_barcode
+          });
+        } else {
+          console.warn('  ⚠️ 在 ChargeDetails 中找不到項目:', detailId);
+        }
         break;
+      }
       case 'annual':
         this.updateItemInArray(parentItem.YearChargeDetails, detailId, detailData);
         break;
@@ -1700,12 +2106,73 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   /**
 * 更新數組中的項目
 */
-  private updateItemInArray(array: any[], itemId: string, newData: any): void {
-    if (!Array.isArray(array)) return;
+  private updateItemInArray(
+    array: ChargeDetailBusinessModel[] | LevelChargeDetailBusinessModel[] | YearChargeDetailBusinessModel[] | unknown[],
+    itemId: string | number | null,
+    newData: ChargeDetailBusinessModel | LevelChargeDetailBusinessModel | YearChargeDetailBusinessModel | unknown
+  ): void {
+    if (!Array.isArray(array)) {
+      console.warn('  ⚠️ updateItemInArray: array 不是陣列');
+      return;
+    }
 
-    const index = array.findIndex(item => item.id === itemId);
+    console.log('🔧 updateItemInArray 開始:', {
+      陣列長度: array.length,
+      目標ID: itemId,
+      新資料: newData
+    });
+
+    // 關鍵修正：使用寬鬆的 ID 比較，支持 tempId (string) 和 number
+    const index = array.findIndex((item: unknown) => {
+      const itemWithId = item as { id?: string | number | null };
+      // 如果 ID 都是字串，直接比較
+      if (typeof itemWithId.id === 'string' && typeof itemId === 'string') {
+        return itemWithId.id === itemId;
+      }
+      // 如果 ID 都是數字，直接比較
+      if (typeof itemWithId.id === 'number' && typeof itemId === 'number') {
+        return itemWithId.id === itemId;
+      }
+      // 如果類型不同，轉換為字串後比較
+      return String(itemWithId.id) === String(itemId);
+    });
+
     if (index > -1) {
-      array[index] = { ...newData };
+      const oldItem = array[index] as { id?: unknown; is_selected?: unknown; _status?: unknown; cag_barcode?: unknown };
+      console.log(`  📝 找到項目 [${index}], 更新前:`, {
+        id: oldItem.id,
+        is_selected: oldItem.is_selected,
+        cag_barcode: oldItem.cag_barcode
+      });
+
+      // 特別關注 095 的更新
+      if (oldItem.cag_barcode === '095') {
+        console.log('  ⭐ 特別注意：正在更新 095！', {
+          舊的is_selected: oldItem.is_selected,
+          新的資料: newData
+        });
+      }
+
+      // 關鍵修正：完整複製所有屬性，特別是 is_selected
+      array[index] = { ...array[index] as object, ...newData as object } as typeof array[number];
+      const updatedItem = array[index] as { id?: unknown; is_selected?: unknown; _status?: unknown; cag_barcode?: unknown };
+
+      console.log(`  ✓ 更新陣列項目 [${index}], 更新後:`, {
+        id: updatedItem.id,
+        is_selected: updatedItem.is_selected,
+        cag_barcode: updatedItem.cag_barcode,
+        _status: updatedItem._status
+      });
+
+      // 特別關注 095 的更新結果
+      if (updatedItem.cag_barcode === '095') {
+        console.log('  ⭐ 095 更新完成，驗證結果:', {
+          is_selected: updatedItem.is_selected,
+          陣列中實際的值: array[index]
+        });
+      }
+    } else {
+      console.warn('  ⚠️ 找不到要更新的項目:', itemId, '陣列中的ID:', array.map(item => (item as { id?: unknown })?.id));
     }
   }
 
@@ -1802,6 +2269,23 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   private formatDateString(dateInput: any): string {
     //  直接使用日期工具類
     return DateUtils.toDateString(dateInput) || DateUtils.toDateString(new Date());
+  }
+
+  /**
+   * 格式化合約期間顯示
+   * @param startDate 起始日期
+   * @param endDate 結束日期
+   * @returns 格式化的合約期間字串，例如: "2025-10-28 ~ 2025-10-31"
+   */
+  private formatContractPeriod(startDate: string | Date | null | undefined, endDate: string | Date | null | undefined): string {
+    const start = DateUtils.toDateString(startDate);
+    const end = DateUtils.toDateString(endDate);
+
+    if (!start || !end) {
+      return '';
+    }
+
+    return `${start} ~ ${end}`;
   }
 
   hasCommissionData(): boolean {

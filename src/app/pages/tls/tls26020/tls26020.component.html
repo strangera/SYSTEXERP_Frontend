@@ -46,11 +46,13 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table #tableComponent tableKey="TLS26020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="tlt_no" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);
-    onSubmit(queryForm)" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="id"
-    [expansionShowPaginator]="true" [expansionRows]="50" [showTotal]="true" [expansionLoadFn]="loadDetails"
-    [expansionMultiSortMeta]="[{ field: 'TXN_DATE', order: -1 }, { field: 'ECR_NO', order: 1 }, { field: 'TXN_NO', order: -1 }]">
-  </app-table>
+  <app-customFooter-table #tableComponent tableKey="TLS26020" [data]="data" [columns]="columns"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" dataKey="tlt_no"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [lazy]="true" [loading]="loading" [showManage]="false"
+    [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="id" [expansionShowPaginator]="true"
+    [expansionRows]="50" [expansionLoadFn]="loadDetails"
+    [expansionMultiSortMeta]="[{ field: 'TXN_DATE', order: -1 }, { field: 'ECR_NO', order: 1 }, { field: 'TXN_NO', order: -1 }]"
+    [footerData]="footerData">
+  </app-customFooter-table>
 </div>
