@@ -148,6 +148,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       if (!this._tableData.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
         this.insertRow();
       }
+      this.cdr.detectChanges();
     }
     // 處理 defaultInsertData 改變的邏輯：更新現有的新增候選行
     if (changes['defaultInsertData']) {
