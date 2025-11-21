@@ -9,7 +9,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -61,13 +61,12 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     PTA_Start: [''], // 立沖代號 GLS3003.PTA
     PTA_End: [''],
     SubDetailNo: [''], // 對象別編號 GLS3001.SubDetailNo
-    PostFlag: [''], // 傳票狀態 GLS3001.PostFlag
+    PostFlag: [''], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
     IsSubDetail: [true], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
 
     ...createPaginationConfig([{ field: 'VouDate', order: 1 }]),
   });
-
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'VouDate', header: '傳票日期', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true },
     { field: 'ORG_ID', header: '部門名稱', visible: true },
@@ -82,7 +81,12 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   ORG_IDOptions: any[] = [];
   VenNoOptions: any[] = [];
   TargetNoListOptions: any[] = [];
-  VouTypeListOptions: any[] = [];
+  PostFlagOptions = [
+    { label: '作廢', value: '0' },
+    { label: '建立', value: '1' },
+    { label: '確認', value: '2' },
+    { label: '過帳', value: '3' }
+  ];
   ifOptions = [
     { label: '是', value: true },
     { label: '否', value: false }
@@ -121,14 +125,6 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.TargetNoListOptions = response.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        })) ?? [];
-      });
-    this.fin55050Service.queryGLS1010_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.VouTypeListOptions = response.Data?.map((item: any) => ({
           label: `${item.No} - ${item.Name}`,
           value: item.No,
         })) ?? [];

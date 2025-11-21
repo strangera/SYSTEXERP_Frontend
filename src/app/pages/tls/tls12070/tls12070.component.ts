@@ -72,7 +72,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   interview_data: Customer_interview[] = []; //意願報表
   intervew_columns: Column[] = [
     { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
-    { field: 'ven_uniform', header: '廠商統一編號', visible: true },
+    { field: 'ven_uniform', header: '廠商統一編號', visible: false },
     { field: 'ven_uniform_Count', header: '潛在客戶總數', visible: true },
     { field: 'ID_Count', header: '拜訪記錄次數', visible: true },
   ];

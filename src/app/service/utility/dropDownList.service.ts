@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse } from '../system/auth.service'; // 假設 ApiResponse 介面在此定義
 import { TLS41010Item } from '../../pages/tls/tls41010/tls41010.model';
+import { ApiResponse } from '../system/auth.service'; // 假設 ApiResponse 介面在此定義
 // 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
 export interface IDropdownItem {
   value?: string;
@@ -481,6 +481,11 @@ export class DropDownListService {
   // 查詢洽談人員資料表下拉選單
   queryTBLUSER_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTBLUSER_DropDownList`, {});
+  }
+
+  // 查詢洽談人員資料表下拉選單 (包含停用)
+  queryTBLUSER_AllStatus_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTBLUSER_AllStatus_DropDownList`, {});
   }
 
   // 查詢POS2002位置代碼資料表下拉選單
