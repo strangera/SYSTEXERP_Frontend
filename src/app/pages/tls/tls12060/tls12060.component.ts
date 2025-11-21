@@ -3,6 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls12060Service } from '@service/api/tls/tls12060.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { createPaginationConfig, formatDateTime } from '@shared/componentkit/table2/table2.model';
@@ -124,7 +125,9 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
   selectedItems: response10260[] = [];// 多選項目
 
   // ----------------------------------------------------------------
-  constructor(private tls12060Service: Tls12060Service) {
+  constructor(
+    private tls12060Service: Tls12060Service,
+    private dropDownListService: DropDownListService) {
     super();
   }
 
@@ -164,8 +167,8 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
   }
 
   loadOptions() {
-    // 查 接待人員
-    this.tls12060Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+    // 查 接待人員(包含狀態停用)
+    this.dropDownListService.queryTBLUSER_AllStatus_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 代碼
         Name: item.Name, // 接待人員 名稱
@@ -173,6 +176,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
+
     // 查 大分類(專櫃)
     this.tls12060Service.queryTLTBUSTYPE_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.bus_type_Option = response.Data.map((item: any) => ({

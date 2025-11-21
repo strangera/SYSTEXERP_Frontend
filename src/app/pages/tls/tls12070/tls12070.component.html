@@ -31,10 +31,10 @@
 <div class="card" *ngIf="activeReport === 'query'">
   <div class="col-13">
     <h6>專櫃訪談紀錄追蹤表</h6>
-    <app-table tableKey="TLS12070" [data]="countData" [columns]="count_columns" [selectedItems]="selectedItems"
+    <app-table tableKey="TLS12070" [data]="interview_data" [columns]="intervew_columns" [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event" (detail)="onDetail($event)" [showCheckBox]="false" [showManage]="true"
       [showEdit]="false" [showDelete]="false" dataKey="contact_USR_No"
-      [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]" [totalRecords]="count_totalRecords"
+      [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onQueryClick(queryForm)" [lazy]="true"
       [loading]="loading"></app-table>
   </div>

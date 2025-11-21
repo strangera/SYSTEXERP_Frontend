@@ -29,17 +29,17 @@
               optionValue="value"></app-dropdown-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="立沖代號" [startControl]="queryForm.controls.PTA_Start"
-              [endControl]="queryForm.controls.PTA_End" [submitted]="submitted"></app-input-number-range>
+            <app-input-text-range label="立沖代號" [startControl]="queryForm.controls.PTA_Start"
+              [endControl]="queryForm.controls.PTA_End" [submitted]="submitted"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="對象別編號" controlName=" SubDetailNo" [control]="queryForm.controls.SubDetailNo"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="傳票型態" controlName="PostFlag" [options]="VouTypeListOptions" optionLabel="label"
+            <app-dropdown label="傳票型態" controlName="PostFlag" [options]="PostFlagOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.PostFlag" [submitted]="submitted">
-            </app-multi-select>
+            </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="是否為對象別" controlName="IsSubDetail" [options]="ifOptions" optionLabel="label"
