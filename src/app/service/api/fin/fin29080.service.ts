@@ -1,68 +1,50 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
 export interface FIN29080QueryRequest extends BaseQueryRequest {
-  QueryDateFrom: string;
-  QueryDateTo: string;
-  PaymentDateFrom?: string;
-  PaymentDateTo?: string;
+  ACP_Date_From: string;              // 立帳日期(起) - 必填
+  ACP_Date_To: string;                // 立帳日期(迄) - 必填
+  ACP_ExpectPayDate_From?: string;    // 預計付款日(起)
+  ACP_ExpectPayDate_To?: string;      // 預計付款日(迄)
 }
 
 // 明細 Row
 export interface FIN29080Data {
-  ID: number;
-  PaymentDate: string;
-  PayableAmount: number;
-  DeductionAmount: number;
-  DiscountInterest: number;
-  EstimatedPayable: number;
+  ExpectedPayDate: string | null;     // 預計付款日
+  PayableAmount: number | null;       // 應付金額
+  WithholdAmount: number | null;      // 代扣款項
+  DiscountInterest: number | null;    // 貼現利息
+  EstimatedPayable: number | null;    // 預估應付款
 }
 
 @Injectable({ providedIn: 'root' })
 export class FIN29080Service {
-  private apiUrl = environment.ApiUrl + '/FIN0000/FIN29080';
+  private apiUrl = environment.ApiUrl + '/FIN0000/APS1000';
 
   constructor(private http: HttpClient) { }
 
-  /** 查詢預估應付款資料 */
+  /** 查詢應付帳款預估表 */
   queryFIN29080(req: FIN29080QueryRequest): Observable<BaseQueryResponse<FIN29080Data>> {
-    // return this.http.post<BaseQueryResponse<FIN29080Data>>(`${this.apiUrl}/queryFIN29080`, req);
-    // 回傳假資料供前端開發使用
-    return of({
-      Status: 'Success',
-      Message: '',
-      TotalCount: 3,
-      TotalPage: 1,
-      Data: [
-        {
-          ID: 1,
-          PaymentDate: '2024-06-15',
-          PayableAmount: 500000,
-          DeductionAmount: 10000,
-          DiscountInterest: 5000,
-          EstimatedPayable: 485000
-        },
-        {
-          ID: 2,
-          PaymentDate: '2024-06-20',
-          PayableAmount: 750000,
-          DeductionAmount: 15000,
-          DiscountInterest: 7500,
-          EstimatedPayable: 727500
-        },
-        {
-          ID: 3,
-          PaymentDate: '2024-06-25',
-          PayableAmount: 300000,
-          DeductionAmount: 6000,
-          DiscountInterest: 3000,
-          EstimatedPayable: 291000
-        }
-      ]
-    });
+    return this.http.post<BaseQueryResponse<FIN29080Data>>(`${this.apiUrl}/queryFIN29080`, req);
+  }
+
+  /** 匯出應付帳款預估表 Excel */
+  exportFIN29080Excel(req: FIN29080QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportFIN29080Excel`, req, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** 匯出應付帳款預估表 PDF */
+  exportFIN29080PDF(req: FIN29080QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportFIN29080PDF`, req, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
   }
 }
