@@ -8,18 +8,18 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 查詢日期(起訖) - 必填 -->
+          <!-- 立帳日期(起訖) - 必填 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="查詢日期" [startControl]="queryForm.controls.QueryDateFrom"
-              [endControl]="queryForm.controls.QueryDateTo" [submitted]="submitted">
+            <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="queryForm.controls.ACP_Date_From"
+              [endControl]="queryForm.controls.ACP_Date_To" [submitted]="submitted">
             </app-calendar-range>
           </div>
 
           <!-- 預計付款日(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="預計付款日"
-              [startControl]="queryForm.controls.PaymentDateFrom" [endControl]="queryForm.controls.PaymentDateTo"
-              [submitted]="submitted">
+              [startControl]="queryForm.controls.ACP_ExpectPayDate_From"
+              [endControl]="queryForm.controls.ACP_ExpectPayDate_To" [submitted]="submitted">
             </app-calendar-range>
           </div>
         </div>
@@ -34,14 +34,18 @@
 </div>
 
 <div class="card">
-  <!-- 右上角工具列：匯出 PDF -->
+  <!-- 右上角工具列：匯出 PDF & Excel -->
   <div class="flex justify-content-end gap-2 mb-2">
-    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="btnLoading"
+    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF(queryForm)" [loading]="exportPDFbtnLoading"
       [disabled]="loading || (data.length || 0) === 0">
+    </app-button>
+
+    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportExcel(queryForm)"
+      [loading]="exportExcelbtnLoading" [disabled]="loading || (data.length || 0) === 0">
     </app-button>
   </div>
 
-  <app-table tableKey="FIN29080" dataKey="ID" [data]="data" [columns]="columns" [showCheckBox]="false"
+  <app-table tableKey="FIN29080" dataKey="ExpectedPayDate" [data]="data" [columns]="columns" [showCheckBox]="false"
     [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" [showManage]="false" [showReportMode]="false">
