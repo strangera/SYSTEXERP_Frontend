@@ -1,22 +1,22 @@
-import { formatDate, formatDateTime } from './../../../shared/componentkit/table/table.model';
-import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Component, OnInit } from '@angular/core';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FileSelectEvent } from 'primeng/fileupload';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { environment } from 'src/environments/environment';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { AccordionModule } from 'primeng/accordion';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
+import { formatDate, formatDateTime } from './../../../shared/componentkit/table/table.model';
 
 
 @Component({
@@ -143,8 +143,13 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
       if (res.Status === '0000') {
         this.messageService.successBubble(res.Message);
       } else {
-        this.messageService.errorBubble(res.Message);
-        window.open(environment.ApiUrl + res.Data.ErrorFilePath, '_blank');
+        this.messageService.errorBubble(
+          res.Data.Errors.join('\n'),
+          res.Message
+        );
+        if (res.Data.ErrorFilePath) {
+          window.open(environment.ApiUrl + res.Data.ErrorFilePath, '_blank');
+        }
       }
     })
   }
