@@ -86,24 +86,23 @@
   </p-accordion>
 </div>
 
-<!-- 主表：不含「銷售日期」欄位，顯示專櫃 + 收銀機彙總，保留 Grand Total -->
 <!-- 主表 -->
 <div class="card">
-  <app-table-report
-    tableKey="TLS23070_MAIN"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    dataKey="_rowKey"
-    [lastQueryBody]="historyRequestBody"
-    [queryFunction]="tls23070Service.queryTLS23070.bind(tls23070Service)"
-    [showManage]="false"
-    [showDelete]="false"
-    [showDetail]="true"
-    (detail)="onDetail($event)"
-    [footerData]="footerData"
-    [showReportMode]="false">
+<app-table-report
+  tableKey="TLS23070_MAIN"
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="totalRecords"
+  [loading]="loading"
+  dataKey="_rowKey"
+  [lastQueryBody]="historyRequestBody"
+  [queryFunction]="queryTLS23070MainForReport"  
+  [showManage]="false"
+  [showDelete]="false"
+  [showDetail]="true"
+  (detail)="onDetail($event)"
+  [footerData]="footerData"
+  [showReportMode]="false">
 
     <header>
       <div class="flex justify-content-end gap-2">
@@ -128,19 +127,19 @@
   [showFooter]="false"
   width="95vw">
 
-  <app-table-report
-    tableKey="TLS23070_DETAIL"
-    [columns]="detailColumns"
-    [data]="dialogData"
-    [totalRecords]="dialogTotalRecords"
-    [loading]="dialogLoading"
-    dataKey="_rowKey"
-    [lastQueryBody]="dialogHistoryRequestBody"
-    [queryFunction]="queryTLS23070DetailForReport"
-    [showManage]="false"
-    [showDelete]="false"
-    [showDetail]="false"
-    [footerData]="dialogFooterData"
-    [showReportMode]="false">
-  </app-table-report>
+<app-table-report
+  tableKey="TLS23070_DETAIL"
+  [columns]="detailColumns"
+  [data]="dialogData"
+  [totalRecords]="dialogTotalRecords"
+  [loading]="dialogLoading"
+  dataKey="_rowKey"
+  [lastQueryBody]="dialogHistoryRequestBody"
+  [queryFunction]="queryTLS23070DetailForReport"  
+  [showManage]="false"
+  [showDelete]="false"
+  [showDetail]="false"
+  [footerData]="dialogFooterData"
+  [showReportMode]="false">
+</app-table-report>
 </app-dialog>
