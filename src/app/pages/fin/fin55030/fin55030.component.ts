@@ -8,6 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -41,6 +42,7 @@ import { fin55030request, fin55030response, Fin55030Service } from './../../../s
     DropdownComponent,
     DropdownRangeComponent,
     InputNumberRangeComponent,
+    InputTextRangeComponent,
     InputTextComponent,
     ButtonComponent,
     TableComponent,
