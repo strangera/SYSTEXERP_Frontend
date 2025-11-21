@@ -112,7 +112,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   selectedItems: IPOS2004DetailData[] = [];
 
   validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string } => {
-    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
+    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) =>
+      item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
     if (hasDuplicatePLU_MagNo) {
       return { isValid: false, errorMessage: '商品管理編號重複' };
     }

@@ -55,7 +55,8 @@
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [disabled]="isFormReadable"
         (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.CRN_Status === '0'"
-        [canInsert]="false"
+        [rowValidate]="validateEntireRow"
+        [disabled]="isFormReadable || dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
