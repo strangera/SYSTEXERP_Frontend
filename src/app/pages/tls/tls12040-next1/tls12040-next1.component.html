@@ -1,7 +1,11 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <app-button
+      btnType="back"
+      label="上一步"
+      (click)="onClearAndExit()"
+    ></app-button>
     <app-button
       btnType="create"
       [label]="getNextStepLabel()"

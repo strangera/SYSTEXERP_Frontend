@@ -54,7 +54,7 @@
     // "src/environments/environment.staging.ts": true,
     // "src/environments/tls2-b010-table": true
   },
-  "html.format.wrapAttributes": "auto",
+  // "html.format.wrapAttributes": "auto",
   "editor.formatOnSave": true, // 設置自動格式化
   "editor.defaultFormatter": "esbenp.prettier-vscode", // 使用 Prettier 格式化
   "prettier.singleQuote": true, // 使用單引號

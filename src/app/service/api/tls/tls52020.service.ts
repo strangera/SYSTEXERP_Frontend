@@ -83,6 +83,7 @@ export interface IPOS2004DetailData {
   PLU_StockTaxType: string; // 進貨稅別 (0免稅, 1應稅)
   PLU_SalePrc_UNI: number; // 未稅進價
   PLU_SalePrc: number; // 含稅售價
+  _TABLE_KEY?: string;
 }
 /** 新增更新 請求 */
 export interface TLS52020Request {
@@ -117,6 +118,7 @@ export interface TLS52020Detail {
   PLU_No: string,
   PLU_Name: string,
   PLU_Unit: string,
+  UNIT_NAME?: string,
   PLU_BoxQty: number,
   PLU_StockTaxType: string,
   PLU_TaxType?: string,
@@ -125,10 +127,11 @@ export interface TLS52020Detail {
   CRN_BuyNet?: number,
   CRN_BuyTax?: number,
   CRN_BuyAmt?: number,
-  CRN_SalePrc: number,
+  CRN_SalePrc?: number,
   CRN_SaleTax?: number,
   CRN_SaleAmt?: number,
   CRN_Remark: string,
+  _TABLE_KEY?: string
 }
 /** POS2032P 資料表 (queryPOS2032P) 的單筆響應資料介面 */
 export interface IPOS2032PData {

@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -13,7 +13,7 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { mergeMap, tap } from 'rxjs';
+import { finalize, mergeMap, tap } from 'rxjs';
 import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -33,6 +33,8 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
 
+  private readonly dt = viewChild.required<TableEditComponent>('dt');
+
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
     ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
@@ -42,14 +44,12 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
 
   public readonly tableData = signal<TLS21020Data[]>([]);
-  public readonly totalRecords = signal(0);
-  public readonly selectedItems = signal<TLS21020Data[]>([]);
-  public readonly canSave = signal<boolean>(!0);
+  public readonly totalRecords = signal<number>(0);
 
   /** entryType 改變時,取得table 資料 */
   public readonly entryTypeEffect = effect(() => {
     const ENTRY_TYPE = this.entryTypeSignal();
-    if (!ENTRY_TYPE) return;
+    if (!ENTRY_TYPE) return (this.tableData.set([]), this.totalRecords.set(0));
 
     // 日後可客製化欄位顯示
     switch (ENTRY_TYPE) {
@@ -58,7 +58,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
           ...prev,
           ObjectNo: !1,
           RelatedPartyAccNo: !1,
-          VEN_No: !1,
+          VEN_No: !0,
           PAY_days: !0,
         }));
         break;
@@ -75,7 +75,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         break;
     }
 
-
     const controls = this.qf();
     const payload: TLS21020Query = { ENTRY_TYPE, pageSize: 9999 };
 
@@ -84,24 +83,19 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       if (val !== null && val !== void 0) (payload as any)[k] = val;
     }
 
+    this.tableLoading.set(!0);
     this.service.queryTLS21020(payload).pipe(
       tap(res => {
         this.tableData.set(res.Data ?? []);
         this.totalRecords.set(res.TotalCount ?? 0);
       }),
+      finalize(() => this.tableLoading.set(!1)),
     ).subscribe();
     this.logger.debug(`entryType changed:`, [ENTRY_TYPE, payload]);
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
   }, { allowSignalWrites: !0 });
 
   private readonly AccDCMap = new Map<'D' | 'C', '借' | '貸'>([['D', '借'], ['C', '貸']]);
-
-  public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
-      || this.service.gls1005Loading()
-      || this.service.pos2013Loading()
-      || this.service.orgIdLoading();
-  });
 
   /**
    * 欄位顯示設定
@@ -112,7 +106,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     AccDC: !0,
     ItemDesc: !0,
     AccNo: !0,
-    ABAT_YN: !1,
+    // ABAT_YN: !1, 照要求隱藏
     Org_ID: !0,
     AccNotes: !0,
   });
@@ -182,11 +176,13 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       optionValue: 'VEN_No',
       templateLabel: 'ShortName',
       showClear: !1,
+      disabled: (v, i, row) => row.ABAT_YN === 'N',
     },
     {
       field: 'PAY_days',
       header: '付款天數',
       type: 'inputNumber',
+      disabled: (v, i, row) => row.ABAT_YN === 'N',
     },
     {
       field: 'PAY_No',
@@ -220,6 +216,15 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     ObjectNo: 'N',
   };
 
+  public readonly tableLoading = signal<boolean>(!1);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.tableLoading()
+      || this.service.gls1005Loading()
+      || this.service.pos2013Loading()
+      || this.service.orgIdLoading();
+  });
+
   constructor(
     public readonly service: TLS21020Service,
     private readonly logger: NGXLogger,
@@ -228,7 +233,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   }
 
   public ngOnInit(): void {
-    this.initializePage('TLS21020', '/TLS/TLS21020CRU', this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('TLS21020', void 0, this.queryForm, this.onSubmit.bind(this));
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
@@ -238,7 +243,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const ENTRY_TYPE = this.entryTypeSignal();
-      if (!ENTRY_TYPE) return;
+      if (!ENTRY_TYPE || !this.dt().validateAndShowErrors()) return void (this.loading = !1);
 
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
       const payload: TLS21020UpdateQuery[] = data.map(item => {
@@ -254,9 +259,16 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       });
 
       this.logger.debug(`onSubmit:`, [payload]);
+      this.tableLoading.set(!0);
       this.service.updateTLS21020(payload).pipe(
         mergeMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
         tap(res => this.logger.debug(`更新:`, [res])),
+        tap(res => {
+          res.Status === '0000' && this.messageService.successBubble('更新成功');
+          this.tableData.set(res.Data ?? []);
+          this.totalRecords.set(res.TotalCount ?? 0);
+        }),
+        finalize(() => this.tableLoading.set(!1)),
       ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
@@ -294,12 +306,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
     return { isValid: !0, errorMessage: '' };
   };
-
-  public dataChange(event: TLS21020Data[], validate: boolean): void {
-    // this.logger.debug(`dataChange:`, [event]);
-    this.tableData.set(event);
-    this.canSave.set(!validate);
-  }
 
   /** 檢查型別 */
   private validateValue<T>(value: T): boolean {

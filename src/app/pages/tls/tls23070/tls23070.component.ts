@@ -1,34 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { HttpResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { HttpResponse } from '@angular/common/http';
-import { finalize } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { finalize, map } from 'rxjs/operators';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23070Service } from '../../../service/api/tls/tls23070.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { ButtonModule } from 'primeng/button';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { CommonModule } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 import {
   createPaginationConfig,
@@ -60,11 +59,10 @@ type SortItem = { field: string; order: 1 | -1 };
   ],
 })
 export class TLS23070Component extends BasicQueryPageComponent<any> {
-  // ===== 排序（先宣告，避免 TS2729）=====
+  // ===== 排序 =====
   sortMeta: SortItem[] = [];
   readonly defaultSort: SortItem[] = [
     { field: 'tlt_no', order: 1 },
-    { field: 'ECR_No', order: 1 },
   ];
 
   // ===== 主表資料 =====
@@ -88,11 +86,11 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_Month: [null],
     TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd:   [this.yesterday, [Validators.required]],
-    tlt_no:        [],
-    tlt_building:  [null],
-    tlt_floor:     [],
-    org_id:        [],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    tlt_no: [],
+    tlt_building: [null],
+    tlt_floor: [],
+    org_id: [],
     ...createPaginationConfig(this.defaultSort),
   });
 
@@ -111,57 +109,53 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   dialogFooterData: Record<string, number> | null = null;
   dialogHistoryRequestBody: any | null = null;
 
-  // ===== 解析暫存（主查詢結果）=====
-  private lastWrapper: any | null = null;
-
-  // 後端 totalSummary ↔ 欄位對應
+  // ===== 後端 totalSummary / subsTotal ↔ 欄位對應 =====
   private detailTotalFieldMap: Record<string, string> = {
     TXN_TotPayAmt: 'totalTotPayAmt',
-    TXN_PayAmt10:  'totalPayAmt10',
-    TXN_PayAmt41:  'totalPayAmt41',
-    TXN_PayAmt42:  'totalPayAmt42',
-    TXN_PayAmt12:  'totalPayAmt12',
-    TXN_PayAmt81:  'totalPayAmt81',
-    TXN_PayAmt43:  'totalPayAmt43',
-    TXN_PayAmt44:  'totalPayAmt44',
-    TXN_PayAmt14:  'totalPayAmt14',
-    TXN_PayAmt82:  'totalPayAmt82',
-    TXN_PayAmt52:  'totalPayAmt52',
-    TXN_PayAmt20:  'totalPayAmt20',
-    TXN_PayAmt62:  'totalPayAmt62',
-    TXN_PayAmt77:  'totalPayAmt77',
-    TXN_PayAmt71:  'totalPayAmt71',
-    TXN_PayAmt30:  'totalPayAmt30',
-    TXN_PayAmt73:  'totalPayAmt73',
-    TXN_PayAmt72:  'totalPayAmt72',
-    TXN_PayAmt74:  'totalPayAmt74',
-    TXN_PayAmt75:  'totalPayAmt75',
-    TXN_PayAmt76:  'totalPayAmt76',
-    TXN_PayAmt24:  'totalPayAmt24',
-    TXN_PayAmt25:  'totalPayAmt25',
-    TXN_PayAmt07:  'totalPayAmt07',
-    TXN_PayAmt55:  'totalPayAmt55',
-    TXN_PayAmt83:  'totalPayAmt83',
-    TXN_PayAmt78:  'totalPayAmt78',
-    TXN_PayAmt79:  'totalPayAmt79',
-    TXN_PayAmt21:  'totalPayAmt21',
-    TXN_PayAmt53:  'totalPayAmt53',
-    TXN_PayAmt56:  'totalPayAmt56',
-    TXN_PayAmt57:  'totalPayAmt57',
-    TXN_PayAmt58:  'totalPayAmt58',
-    TXN_PayAmt59:  'totalPayAmt59',
-    TXN_PayAmt60:  'totalPayAmt60',
-    TXN_PayAmt22:  'totalPayAmt22',
-    TXN_PayAmt23:  'totalPayAmt23',
+    TXN_PayAmt10: 'totalPayAmt10',
+    TXN_PayAmt41: 'totalPayAmt41',
+    TXN_PayAmt42: 'totalPayAmt42',
+    TXN_PayAmt12: 'totalPayAmt12',
+    TXN_PayAmt81: 'totalPayAmt81',
+    TXN_PayAmt43: 'totalPayAmt43',
+    TXN_PayAmt44: 'totalPayAmt44',
+    TXN_PayAmt14: 'totalPayAmt14',
+    TXN_PayAmt82: 'totalPayAmt82',
+    TXN_PayAmt52: 'totalPayAmt52',
+    TXN_PayAmt20: 'totalPayAmt20',
+    TXN_PayAmt62: 'totalPayAmt62',
+    TXN_PayAmt77: 'totalPayAmt77',
+    TXN_PayAmt71: 'totalPayAmt71',
+    TXN_PayAmt30: 'totalPayAmt30',
+    TXN_PayAmt73: 'totalPayAmt73',
+    TXN_PayAmt72: 'totalPayAmt72',
+    TXN_PayAmt74: 'totalPayAmt74',
+    TXN_PayAmt75: 'totalPayAmt75',
+    TXN_PayAmt76: 'totalPayAmt76',
+    TXN_PayAmt24: 'totalPayAmt24',
+    TXN_PayAmt25: 'totalPayAmt25',
+    TXN_PayAmt07: 'totalPayAmt07',
+    TXN_PayAmt55: 'totalPayAmt55',
+    TXN_PayAmt83: 'totalPayAmt83',
+    TXN_PayAmt78: 'totalPayAmt78',
+    TXN_PayAmt79: 'totalPayAmt79',
+    TXN_PayAmt21: 'totalPayAmt21',
+    TXN_PayAmt53: 'totalPayAmt53',
+    TXN_PayAmt56: 'totalPayAmt56',
+    TXN_PayAmt57: 'totalPayAmt57',
+    TXN_PayAmt58: 'totalPayAmt58',
+    TXN_PayAmt59: 'totalPayAmt59',
+    TXN_PayAmt60: 'totalPayAmt60',
+    TXN_PayAmt22: 'totalPayAmt22',
+    TXN_PayAmt23: 'totalPayAmt23',
     TXN_PrePayAmt: 'totalPrePayAmt',
-    TXN_OverAmt:   'totalOverAmt',
+    TXN_OverAmt: 'totalOverAmt',
     TXN_ReturnAmt: 'totalReturnAmt',
-    TXN_ExchgAmt:  'totalExchgAmt',
+    TXN_ExchgAmt: 'totalExchgAmt',
     TXN_CancelAmt: 'totalCancelAmt',
   };
 
   constructor(
-    // ⬇⬇⬇ 這裡改成 public，讓 template 能夠取用
     public tls23070Service: TLS23070Service,
     private counterNameService: CounterNameService,
     private floorService: FloorService,
@@ -216,14 +210,14 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
       const payload: any = {
         TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
-        tlt_no:        Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
-        tlt_building:  val?.tlt_building ?? undefined,
-        tlt_floor:     Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
-        org_id:        Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
-        pageIndex:     Number(val?.pageIndex) || 1,
-        pageSize:      30,
-        SortBy:        Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+        tlt_no: Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
+        tlt_building: val?.tlt_building ?? undefined,
+        tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
+        org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+        pageIndex: Number(val?.pageIndex) || 1,
+        pageSize: 30,
+        SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
       };
 
       this.historyRequestBody = { ...payload };
@@ -231,8 +225,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       this.loading = true;
       this.messageService?.blockUi();
 
-      this.tls23070Service
-        .queryTLS23070(payload)
+      this.queryTLS23070MainForReport(payload)
         .pipe(
           finalize(() => {
             this.loading = false;
@@ -240,24 +233,13 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
           })
         )
         .subscribe({
-          next: (res: any) => {
-            const wrapper = this.pickWrapper(res?.Data);
-            this.lastWrapper = wrapper; // 暫存給明細使用
-
-            // 主表：彙總到 (tlt_no + tlt_name + ECR_No)
-            const mainRows = this.buildMainRowsFromWrapper(wrapper);
-            this.data = mainRows;
-            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-
-            // Grand Total
-            const totalSummary = wrapper?.totalSummary ?? {};
-            this.footerData = this.buildGrandTotalFromSummary(totalSummary);
-          },
+          // 這裡其實可以不用再做任何事，
+          // 因為 queryTLS23070MainForReport 裡面已經更新 this.data / totalRecords / footerData 了
+          next: () => { },
           error: () => {
             this.data = [];
             this.totalRecords = 0;
             this.footerData = {};
-            this.lastWrapper = null;
           },
         });
     });
@@ -265,28 +247,22 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
   // ===== 主表 → 明細 Dialog 開啟 =====
   override onDetail(row: any): void {
-    if (!this.lastWrapper) return;
+    if (!row) return;
 
     this.selectedMainRow = row;
     this.dialogVisible = true;
-    this.dialogLoading = true;
 
-    // 給 dialog 的 lastQueryBody（僅記錄/翻頁參數）
+    // 準備明細查詢條件：沿用主查詢條件 + 指定專櫃
     this.dialogHistoryRequestBody = {
       ...(this.historyRequestBody ?? {}),
       tlt_no: row?.tlt_no ? [row.tlt_no] : undefined,
-      ECR_NoList: row?.ECR_No ? [row.ECR_No] : undefined,
       pageIndex: 1,
       pageSize: 30,
       SortBy: [{ field: 'TXN_Date', order: 1 }],
     };
 
-    const all = this.buildDetailRowsForSelection();
-    this.dialogFooterData = this.buildTotalsFromRows(all);
-    this.dialogTotalRecords = all.length;
-    this.dialogData = all.slice(0, 30);
-
-    this.dialogLoading = false;
+    // 第一次開 Dialog 順便載入第一頁
+    this.loadDialogPage(this.dialogHistoryRequestBody).subscribe();
   }
 
   onDialogClose(v: boolean): void {
@@ -300,18 +276,48 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     }
   }
 
-  // ===== 提供給 app-table-report 的明細查詢（客端分頁）=====
+  // ===== 提供給 app-table-report 的明細查詢（打後端） =====
   public queryTLS23070DetailForReport = (body: any) => {
-    const rows = this.buildDetailRowsForSelection();
-    const total = rows.length;
-    const pageSize = Number(body?.pageSize) || 30;
-    const pageIndex = Number(body?.pageIndex) || 1;
-    const start = (pageIndex - 1) * pageSize;
-    const page = rows.slice(start, start + pageSize);
-    const grand = this.buildTotalsFromRows(rows);
-    this.dialogFooterData = grand; // 給 footerData 維持同步
-    return of({ Data: page, TotalCount: total, GrandTotal: grand });
+    return this.loadDialogPage(body);
   };
+
+  /** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
+/** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
+private loadDialogPage(body: any) {
+  this.dialogLoading = true;
+
+  return this.tls23070Service.queryTLS23070Detail(body).pipe(
+    finalize(() => (this.dialogLoading = false)),
+    map((res: any) => {
+      const data = res?.Data ?? {};
+      const dateSubs = Array.isArray(data?.dateSubsTotals) ? data.dateSubsTotals : [];
+
+      const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
+      const totalCount = typeof res?.TotalCount === 'number'
+        ? res.TotalCount
+        : rows.length;
+
+      const grand = this.buildTotalsFromRows(rows);
+
+      // 更新明細狀態
+      this.dialogData = rows;
+      this.dialogTotalRecords = totalCount;
+      this.dialogFooterData = grand;
+
+      // ✅ 這裡只保留 body，不去動 pageSize
+      this.dialogHistoryRequestBody = { ...body };
+
+      return {
+        Data: rows,
+        TotalCount: totalCount,
+        GrandTotal: grand,
+      };
+    })
+  );
+}
+
+
+
 
   // ===== 匯出 PDF（主表）=====
   onExportPDF(): void {
@@ -373,28 +379,24 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     return `download${defaultExtension}`;
   }
 
-  private pickWrapper(data: any): any {
-    return Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
-  }
-
   private getMonthRange(d: Date) {
     const year = d.getFullYear();
     const month = d.getMonth();
     const start = new Date(year, month, 1, 0, 0, 0);
-    const end   = new Date(year, month + 1, 0, 23, 59, 59);
+    const end = new Date(year, month + 1, 0, 23, 59, 59);
     return { start, end };
   }
 
   private clearMonthIfNotExactRange() {
     const start: Date | null = this.queryForm.value.TXN_DateStart ?? null;
-    const end: Date | null   = this.queryForm.value.TXN_DateEnd ?? null;
+    const end: Date | null = this.queryForm.value.TXN_DateEnd ?? null;
     if (!start || !end) {
       this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
       return;
     }
     const { start: mStart, end: mEnd } = this.getMonthRange(start);
     const sameStart = new Date(start).getTime() === mStart.getTime();
-    const sameEnd   = new Date(end).getTime()   === mEnd.getTime();
+    const sameEnd = new Date(end).getTime() === mEnd.getTime();
     if (!sameStart || !sameEnd) {
       this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
     }
@@ -415,7 +417,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     if (val instanceof Date && !isNaN(val.getTime())) {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
-      const d = String(val.getDate()).padStart(2, '0');
+      const d = val.getDate().toString().padStart(2, '0');
       return `${y}/${m}/${d}`;
     }
     const s = String(val);
@@ -425,7 +427,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     if (!isNaN(dt.getTime())) {
       const y = dt.getFullYear();
       const mm = String(dt.getMonth() + 1).padStart(2, '0');
-      const dd = String(dt.getDate()).padStart(2, '0');
+      const dd = dt.getDate().toString().padStart(2, '0');
       return `${y}/${mm}/${dd}`;
     }
     return s;
@@ -439,6 +441,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     return Object.keys(this.detailTotalFieldMap);
   }
 
+  /** 從 totalSummary 取得 Grand Total（主表 footer 用） */
   private buildGrandTotalFromSummary(summary: any): Record<string, number> {
     const out: Record<string, number> = {};
     for (const [field, apiKey] of Object.entries(this.detailTotalFieldMap)) {
@@ -447,79 +450,100 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     return out;
   }
 
-  /** 主表：把所有明細彙總到 (tlt_no + tlt_name + ECR_No) */
-  private buildMainRowsFromWrapper(wrapper: any): any[] {
-    const groups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
-    const allSubs = groups.flatMap((g: any) => Array.isArray(g?.subsTotals) ? g.subsTotals : []);
-    const details = allSubs.flatMap((s: any) =>
-      s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []
-    );
-
-    const keyMap = new Map<string, any>();
+  /** 主表：tltNoSubTotals[] → 一列一個專櫃（完全吃後端順序） */
+  private buildMainRowsFromSubTotals(tltNoSubTotals: any[]): any[] {
+    const groups = Array.isArray(tltNoSubTotals) ? tltNoSubTotals : [];
     const fields = this.numericFields();
-
-    for (const r of details) {
-      const k = `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${r?.ECR_No ?? ''}`;
-      if (!keyMap.has(k)) {
-        const base: any = {
-          tlt_no: r?.tlt_no ?? '',
-          tlt_name: r?.tlt_name ?? '',
-          ECR_No: r?.ECR_No ?? '',
-          _rowKey: k,
-        };
-        for (const f of fields) base[f] = 0;
-        keyMap.set(k, base);
-      }
-      const agg = keyMap.get(k)!;
-      for (const f of fields) {
-        agg[f] = Number(agg[f] ?? 0) + Number(r?.[f] ?? 0);
-      }
-    }
-
-    // 排序：依預設 sort
-    const rows = Array.from(keyMap.values());
-    rows.sort((a, b) => {
-      for (const s of this.defaultSort) {
-        const av = a[s.field] ?? '';
-        const bv = b[s.field] ?? '';
-        if (av === bv) continue;
-        return (av > bv ? 1 : -1) * (s.order as number);
-      }
-      return 0;
-    });
-    return rows;
-  }
-
-  /** 明細：依主表選取的 (tlt_no + ECR_No) 取出所有日期層的明細 */
-  private buildDetailRowsForSelection(): any[] {
-    if (!this.lastWrapper || !this.selectedMainRow) return [];
-    const { tlt_no, ECR_No } = this.selectedMainRow;
-    const groups = Array.isArray(this.lastWrapper?.tltNoSubTotals) ? this.lastWrapper.tltNoSubTotals : [];
-    const fields = this.numericFields();
-
     const rows: any[] = [];
+
     for (const g of groups) {
-      if (g?.tlt_no !== tlt_no) continue;
-      const subs = Array.isArray(g?.subsTotals) ? g.subsTotals : [];
-      for (const s of subs) {
-        const dets = s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? [];
-        for (const r of dets) {
-          if (r?.ECR_No !== ECR_No) continue;
-          const out: any = {};
-          out.TXN_Date = this.toDateOnly(r?.TXN_Date); // 明細要有銷售日期
-          for (const f of fields) {
-            out[f] = Number(r?.[f] ?? 0);
-          }
-          out._rowKey = `${tlt_no}|${ECR_No}|${out.TXN_Date}`;
-          rows.push(out);
+      const tltNo = g?.tlt_no ?? '';
+
+      const row: any = {
+        _rowKey: tltNo,          // 🔑 一定要有，對應 dataKey="_rowKey"
+        tlt_no: tltNo,
+        tlt_name: g?.tlt_name ?? '',
+      };
+
+      for (const f of fields) {
+        const apiKey = this.detailTotalFieldMap[f];
+        let tltKey = apiKey;
+        if (apiKey.startsWith('total')) {
+          tltKey = 'tltNoTotal' + apiKey.substring('total'.length);
         }
+        row[f] = Number(g?.[tltKey] ?? 0);
       }
+
+      rows.push(row);
     }
 
-    // 依日期排序
-    rows.sort((a, b) => (a.TXN_Date > b.TXN_Date ? 1 : a.TXN_Date < b.TXN_Date ? -1 : 0));
+    // 不再在這裡排序，完全依照後端回傳順序
     return rows;
   }
+
+  /** 明細：dateSubsTotals[] → 每日金額一列 */
+  private buildDetailRowsFromDateSubsTotals(dateSubsTotals: any[]): any[] {
+    const subs = Array.isArray(dateSubsTotals) ? dateSubsTotals : [];
+    const fields = this.numericFields();
+    const rows: any[] = [];
+
+    for (const s of subs) {
+      const dateStr = this.toDateOnly(s?.TXN_Date);
+      const row: any = {
+        TXN_Date: dateStr,
+      };
+
+      for (const f of fields) {
+        const apiKey = this.detailTotalFieldMap[f]; // e.g. totalPayAmt10
+        let subsKey = apiKey;
+        if (apiKey.startsWith('total')) {
+          subsKey = 'subsTotal' + apiKey.substring('total'.length);
+        }
+        row[f] = Number(s?.[subsKey] ?? 0);
+      }
+
+      row._rowKey = `${s?.tlt_no ?? ''}|${dateStr ?? ''}`;
+      rows.push(row);
+    }
+
+    // ❌ 不要再強制排序，完全吃後端順序
+    // rows.sort(...);
+
+    return rows;
+  }
+
+  public queryTLS23070MainForReport = (body: any) => {
+    return this.tls23070Service.queryTLS23070(body).pipe(
+      map((res: any) => {
+        const wrapper = res?.Data ?? {};
+
+        // 1. 從 tltNoSubTotals 轉成 rows
+        const mainRows = this.buildMainRowsFromSubTotals(wrapper?.tltNoSubTotals);
+
+        // 2. TotalCount
+        const totalCount = typeof res?.TotalCount === 'number'
+          ? res.TotalCount
+          : mainRows.length;
+
+        // 3. Grand Total
+        const totalSummary = wrapper?.totalSummary ?? {};
+        const grand = this.buildGrandTotalFromSummary(totalSummary);
+
+        // 4. 同步 component 內部狀態（如果你希望畫面一起更新）
+        this.data = mainRows;
+        this.totalRecords = totalCount;
+        this.footerData = grand;
+        this.historyRequestBody = { ...body };
+
+        // 5. 回給 app-table-report 用的標準格式
+        return {
+          Data: mainRows,
+          TotalCount: totalCount,
+          GrandTotal: grand,
+        };
+      })
+    );
+  };
 
   private buildTotalsFromRows(rows: any[]): Record<string, number> {
     const fields = this.numericFields();
@@ -533,10 +557,9 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
   // ===== 欄位 =====
   private buildMainColumns() {
-    // 主表：不顯示銷售日期，顯示 tlt_no / tlt_name / ECR_No + 金額欄位
+    // 主表：一列一個專櫃
     return [
-      { field: 'ECR_No',   header: '收銀機號', visible: true },
-      { field: 'tlt_no',   header: '專櫃編號', visible: true },
+      { field: 'tlt_no', header: '專櫃編號', visible: true },
       { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
 
       { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
@@ -547,54 +570,54 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       { field: 'TXN_PayAmt12', header: '聯信紅利', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt81', header: '中信-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt43', header: '中信連線',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt44', header: '中信離線',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt14', header: '中信紅利',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt52', header: '一卡通',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-      { field: 'TXN_PayAmt20', header: '禮券',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt71', header: '商品抵用券',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-      { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt75', header: '折價券',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt76', header: '現抵',         visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-      { field: 'TXN_PayAmt24', header: '禮券餘代卡',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-      { field: 'TXN_PayAmt55', header: 'LINE Pay',         visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt21', header: 'APP禮券',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-      { field: 'TXN_PayAmt53', header: '悠遊卡',                  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt57', header: '台灣Pay',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt58', header: '南紡錢包',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt59', header: '即享券',                  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt60', header: '喜客券',                  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_PayAmt23', header: '外來禮券-高夢',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
       { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_OverAmt',   header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-      { field: 'TXN_ExchgAmt',  header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     ];
   }
@@ -610,54 +633,54 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_PayAmt12', header: '聯信紅利', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt81', header: '中信-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt43', header: '中信連線',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt44', header: '中信離線',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt14', header: '中信紅利',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt52', header: '一卡通',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'TXN_PayAmt20', header: '禮券',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt71', header: '商品抵用券',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt75', header: '折價券',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt76', header: '現抵',         visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'TXN_PayAmt24', header: '禮券餘代卡',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'TXN_PayAmt55', header: 'LINE Pay',         visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt21', header: 'APP禮券',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'TXN_PayAmt53', header: '悠遊卡',                  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt57', header: '台灣Pay',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt58', header: '南紡錢包',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt59', header: '即享券',                  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt60', header: '喜客券',                  visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_PayAmt23', header: '外來禮券-高夢',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_OverAmt',   header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'TXN_ExchgAmt',  header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
 }

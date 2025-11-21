@@ -43,7 +43,7 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR_Name"
           [control]="dataForm.controls.APPLY_USR_Name" [submitted]="submitted" />
 
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="申請日期" controlName="APPLY_Date"
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="申請日期" controlName="APPLY_Date"
           [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
 
         <app-input-number class="col-12 md:col-6 lg:col-4" label="售價總計" controlName="PO_TotalSaleAmt"
@@ -57,7 +57,7 @@
       <app-table-edit class="col-12" tableKey="TLS52010Detail" [columns]="editColumns" [data]="data"
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [rowValidate]="validateEntireRow"
-        [disabled]="isFormReadable || dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true"
+        [disabled]="isFormReadable || !(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value) ? true : false"
         (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.PO_Status === '0'"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
 

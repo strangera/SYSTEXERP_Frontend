@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -10,7 +10,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
 import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
@@ -18,7 +17,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 
@@ -46,7 +44,6 @@ interface SalesRecord {
     CalendarRangeQuickComponent,
     DropdownRangeComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     ButtonModule
   ]
@@ -73,7 +70,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   // 緩存完整資料，避免重複 API 呼叫
   private cachedFullData: any[] = [];
   private cachedFooterData: any[] = [];
-  private lastQueryParams: string = '';
+  private lastQueryParams = '';
   // 表格欄位
 
   columns: Column[] = [
@@ -105,11 +102,10 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
     private tls2a030Service: TLS2A030Service,
     private tls2c050Service: TLS2C050Service,
-    private http: HttpClient
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -232,14 +228,8 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
           order: 0
         }
       ],
-      SaleDateStart:
-        raw.SaleDateStart instanceof Date
-          ? raw.SaleDateStart.toISOString()
-          : raw.SaleDateStart ?? null,
-      SaleDateEnd:
-        raw.SaleDateEnd instanceof Date
-          ? raw.SaleDateEnd.toISOString()
-          : raw.SaleDateEnd ?? null,
+      SaleDateStart: this.datePipe.transform(raw.SaleDateStart, 'yyyy-MM-dd') ?? null,
+      SaleDateEnd: this.datePipe.transform(raw.SaleDateEnd, 'yyyy-MM-dd') ?? null,
       ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
       ECR_No_End: raw.ECR_No_End?.trim() ?? '',
       isPrint: ''

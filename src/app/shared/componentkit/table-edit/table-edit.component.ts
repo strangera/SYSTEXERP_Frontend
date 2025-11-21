@@ -63,6 +63,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   tableDataEmpty = false;                                 // table 資料是否為空
   @Input() columns!: EditColumn[];                        // table 欄位配置 (必填)
   @Input() data: any[] = [];                              // table 資料 (必填)
+  public _tableData: any[] = [];                          // 內部用於表格顯示的資料 (包含新增行)
   @Output() dataChange = new EventEmitter<any[]>();       // table 資料改變 (事件)
   @Input() loading = false;                               // 是否顯示 loading
   @Input() disabled = false;                              // 是否禁用 table
@@ -124,27 +125,30 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   ) { }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      if (this.data.length > 0) {
-        // 一開始先將無狀態的資料設為Original
-        this.data = this.data.filter(item => item != null).map((item: any, index) => {
-          if (item[this.dataStatusField] === undefined) {
-            item[this.dataStatusField] = this.dataStatusValue.Original;
-            item[this.dataKey] = `temp-${uuidv4()}`;
-          }
-          // 載入資料時，確保所有計算欄位都是最新的
-          // 新增的邏輯：呼叫計算方法
-          this.calculateRow(item);
-          // 載入資料時也執行整行驗證
-          if (this.rowValidate) {
-            item._rowValidationError = this.rowValidate(item, index);
-          }
-          return item;
-        });
+      // 1. 將外部傳入的資料深拷貝，作為內部顯示的起點
+      //    確保只有來自父層的資料才進入此處
+      if (changes['data'].currentValue === this._tableData) {
+        // 這是由 dataChange 事件觸發的回流，不需要再次處理
+        return;
       }
-      // 如果資料中沒有 _isAutoInsertCandidate 欄位則新增
-      if (!this.data.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
+      // 2. 複製一份，確保不修改父層傳入的原始陣列
+      this._tableData = this.data.filter(item => item != null).map((item: any, index) => {
+        // 初始化狀態和 UUID (與您原來的邏輯相同)
+        if (item[this.dataStatusField] === undefined) {
+          item[this.dataStatusField] = this.dataStatusValue.Original;
+          item[this.dataKey] = `temp-${uuidv4()}`;
+        }
+        this.calculateRow(item);
+        if (this.rowValidate) {
+          item._rowValidationError = this.rowValidate(item, index);
+        }
+        return item;
+      });
+      // 3. 如果內部資料中沒有新增行，則插入
+      if (!this._tableData.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
         this.insertRow();
       }
+      this.cdr.detectChanges();
     }
     // 處理 defaultInsertData 改變的邏輯：更新現有的新增候選行
     if (changes['defaultInsertData']) {
@@ -211,15 +215,15 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   insertRow() {
     if (this.disabled || !this.canInsert) { return; }
     const { newRowData, data } = this.tableUtilityService.insertNewRow(
-      this.data,
+      this._tableData,
       this.columns,
       this.dataKey,
       this.defaultInsertData,
       this.dataStatusField, // 將 dataStatusField 傳給服務
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
-    this.data = data;
-
+    this._tableData = data;
+    this.cdr.detectChanges();
   }
   // 處理 ngModelChange 事件，並發送給父元件
   onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
@@ -238,7 +242,6 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     // 只有在是候選列、有輸入值，且不是被禁用的情況下，才自動插入新行
     if (isAutoInsertCandidate && value !== undefined && value !== null && value !== '' && !this.disabled && this.canInsert) {
       this.insertRow();
-      // 標記這行已不再是自動插入的候選行，防止重複觸發
       rowData['_isAutoInsertCandidate'] = false;
     }
 
@@ -266,13 +269,18 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       if (rowData._rowValidationError) {
         delete rowData._rowValidationError;
       }
+      if (this._tableData.length === 0 && this.canInsert) {
+        this.insertRow();
+      }
     }
 
     // 觸發 fieldChange 事件，無論驗證是否通過
     this.fieldChange.emit({ rowData, field: col.field, value, index });
 
-    // 由於數據綁定和驗證已經更新了 `this.data`，再次發送 `dataChange`
-    this.dataChange.emit(this.data);
+    // 由於數據綁定和驗證已經更新了 `this._tableData` 中的物件，現在發送 `dataChange`
+    // 【關鍵】：發射給父層的是經過過濾的乾淨資料！
+    const cleanData = this._tableData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted && !item._isAutoInsertCandidate);
+    this.dataChange.emit(cleanData); // 這樣父層的 data 就不包含新增行了！
   }
   onDropdownHide(rowData: any, col: any) {
     const currentValue = rowData[col.field];
@@ -312,15 +320,18 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
       return item;
     }).filter(item => item !== null);
-    // data不包含狀態為已刪除資料
-    this.data = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
+    // 更新內部顯示資料
+    this._tableData = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
     this.delete.emit(updatedData);
-    this.dataChange.emit(this.data);
     this.selectedItems = [];
-    // 如果表格資料為空，自動插入一筆新資料
-    if (this.data.length === 0 && this.canInsert) {
-      this.insertRow();
+    // 2. 【關鍵檢查點 A】: 刪除後，如果內部資料為空，插入一筆新增行
+    if (this._tableData.length === 0 && this.canInsert) {
+      this.insertRow(); // *** 這裡會將新增行加入 this._tableData ***
     }
+    // 3. 【關鍵】：發射乾淨的資料給父層
+    //    注意：這裡發射的陣列應該是空陣列，因為 this._tableData 現在只包含新增行。
+    const cleanData = this._tableData.filter(item => !item._isAutoInsertCandidate);
+    this.dataChange.emit(cleanData);
   }
 
   validateAllRows(): boolean {
@@ -426,7 +437,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         }
 
         if (hasError) {
-          // 🚨 關鍵修改 1：發現錯誤時，強制刷新並返回
+          // 關鍵修改 1：發現錯誤時，強制刷新並返回
           this.data = [...this.data];
           this.cdr.detectChanges();
 
@@ -441,7 +452,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
 
       if (rowData._rowValidationError?.isValid === false) {
-        // 🚨 關鍵修改 2：發現整行錯誤時，強制刷新並返回
+        // 關鍵修改 2：發現整行錯誤時，強制刷新並返回
         this.data = [...this.data];
         this.cdr.detectChanges();
 
@@ -450,7 +461,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
     }
 
-    // 3. 🚨 關鍵修改 3：驗證通過前，確保表格資料參考更新（清除任何先前可能殘留的錯誤樣式）
+    // 3. 關鍵修改 3：驗證通過前，確保表格資料參考更新（清除任何先前可能殘留的錯誤樣式）
     this.data = [...this.data];
     this.cdr.detectChanges();
 
@@ -542,8 +553,8 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   }
 
   /** 回傳完整data並去除最後一行新增的 */
-  get reorderData(): any[] {
-    return this.data.slice(0, -1);
+  public get reorderData(): any[] {
+    return this.data.filter(item => !item._isAutoInsertCandidate); // 改成判斷item._isAutoInsertCandidate比較安全
   }
   /** 處理 Template input 顯示的值 */
   public templateDisplayValue(rowData: any, col: EditColumn): string {

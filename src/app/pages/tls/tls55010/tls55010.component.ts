@@ -1,22 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { CheckTls55010Data, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { CheckTls55010Data, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { TableModule } from 'primeng/table';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls55010',
@@ -161,16 +161,16 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   VouTypeOptions = getSYS1000Options('VouType');
   PostFlagOptions = getSYS1000Options('PostFlag');
   columns2: Column[] = [
-    { field: 'SerNo', header: '序號' },
-    { field: 'AccNo', header: '科目代號' },
-    { field: 'ACCCNAME', header: '科目名稱' },
-    { field: 'NoteDesc', header: '摘要' },
-    { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true },
-    { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true },
-    { field: 'ORG_ID', header: '組織編號' },
-    { field: 'VEN_NO', header: '廠商編號' },
-    { field: 'VEN_NAME', header: '廠商名稱' },
-    { field: 'ProjectNo', header: '活動代號' },
+    { field: 'SerNo', header: '序號', style: 'text-left' },
+    { field: 'AccNo', header: '科目代號', style: 'text-left' },
+    { field: 'ACCCNAME', header: '科目名稱', style: 'text-left' },
+    { field: 'NoteDesc', header: '摘要', style: 'text-left' },
+    { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true, style: 'text-right' },
+    { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true, style: 'text-right' },
+    { field: 'ORG_ID', header: '組織編號', style: 'text-left' },
+    { field: 'VEN_NO', header: '廠商編號', style: 'text-left' },
+    { field: 'VEN_NAME', header: '廠商名稱', style: 'text-left' },
+    { field: 'ProjectNo', header: '活動代號', style: 'text-left' },
     { field: 'PTA', header: '立沖代號' },
   ]
   data2: any[] = []

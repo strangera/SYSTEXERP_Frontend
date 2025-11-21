@@ -431,6 +431,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             this.loading = false; // 確保 loading 狀態被關閉
             return; // 阻止執行後續的 API 呼叫
           }
+          // 如果沒資料的話就條出錯誤訊息
+          if (!updatePOS5007List.length) {
+            this.messageService.errorBubble(
+              '無「專櫃編號修正」資料，無法修正',
+              '專櫃編號修正失敗' // Header 訊息
+            );
+            this.loading = false; // 確保 loading 狀態被關閉
+            return; // 阻止執行後續的 API 呼叫
+          }
           const data = {
             ...body,
             EditType: TLS24010_EDIT_TYPE.專櫃編號修正,

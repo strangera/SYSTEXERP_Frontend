@@ -1,22 +1,22 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MainInvoiceData } from '../fin11020/fin11020.model';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { NgIf } from '@angular/common';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { finalize } from 'rxjs';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { MainInvoiceData } from '../fin11020/fin11020.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 //1.1.1.2 發票基本資料維護 CRU
@@ -77,7 +77,6 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
   ngOnInit(): void {
     this.initializePage('FIN11020', this.dataForm);
     if (this.isFormCreateable) {
-      // this.minDate = this.setMinDate();
       this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.minMonthValidator2]);
     }
     const totQtyValue = this.dataForm.get('GUI_TotQty')?.value;
@@ -146,16 +145,4 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       });
     });
   }
-  // setMinDate(): Date | undefined {
-  //   if (this.isFormCreateable) {
-  //     const today = new Date();
-  //     const currentMonth = today.getMonth();
-  //     if ((currentMonth + 1) % 2 !== 0) {
-  //       return new Date(today.getFullYear(), currentMonth, 1);
-  //     } else {
-  //       return new Date(today.getFullYear(), currentMonth - 1, 1);
-  //     }
-  //   }
-  //   return undefined;
-  // }
 }

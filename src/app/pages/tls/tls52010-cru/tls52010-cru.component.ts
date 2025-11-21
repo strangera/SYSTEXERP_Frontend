@@ -67,7 +67,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     PO_TotalSaleAmt: [{ value: 0, disabled: true }], //售價總計
     APPLY_USR_No: [{ value: this.user?.user_No, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_USR_Name: [{ value: this.user?.user_Name, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
-    APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期 (對應 POS2016.APPLY_Date)
+    APPLY_Date: [new Date() as Date | null, [Validators.required]], // 申請日期 (移除 disabled: true)**
     PO_Remark: [null as string | null, [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
   });
   // === 下拉選單選項 ===
@@ -112,7 +112,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   selectedItems: IPOS2004DetailData[] = [];
 
   validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string } => {
-    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
+    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) =>
+      item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
     if (hasDuplicatePLU_MagNo) {
       return { isValid: false, errorMessage: '商品管理編號重複' };
     }
@@ -123,7 +124,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   onPLU_MagNoBlur(rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) {
     const venNo = this.dataForm.controls.VEN_No.value;
     const logoNo = this.dataForm.controls.LOGO_No.value;
-
     if (!venNo || !logoNo || !value) {
       return;
     }
@@ -134,51 +134,59 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       pageSize: 1,
       pageIndex: 1,
     };
-
-    this.tls52010Service.queryPOS2004DetailByVenNo(body)
-      .pipe(untilDestroyed(this))
-      .subscribe((results) => {
-        if (results.Data && results.Data.length > 0) {
-          const newData = results.Data[0];
-          const updatedRow: IPOS2004DetailData = {
-            ...rowData,
-            PLU_MagNo: newData.PLU_MagNo,
-            PLU_Name: newData.PLU_Name,
-            PLU_No: newData.PLU_No,
-            UNIT_NAME: newData.UNIT_NAME,
-            PLU_BoxQty: newData.PLU_BoxQty,
-            PLU_StockTaxType: newData.PLU_StockTaxType,
-            PLU_TaxType: newData.PLU_TaxType, // 確保 TaxType 屬性也被帶入
-            PLU_SalePrc_UNI: newData.PLU_SalePrc_UNI,
-            PLU_SalePrc: newData.PLU_SalePrc,
-            POD_SubQty: 1,
-            POD_BuyNet: newData.PLU_SalePrc_UNI || 0,
-            POD_SaleAmt: newData.PLU_SalePrc || 0,
-          };
-          this.data = [
-            ...this.data.slice(0, index), // 取得 index 之前的元素
-            updatedRow,                     // 放入新的物件
-            ...this.data.slice(index + 1)   // 取得 index 之後的元素
-          ];
-          this.calculateTotals();
-          this.cdr.detectChanges();
-
-        } else {
-          this.messageService.errorBubble('查無該商品資訊');
-          this.data[index].PLU_MagNo = '';
-          this.data = [...this.data]; // 確保刷新
-        }
-      });
+    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      if (results.Data && results.Data.length > 0) {
+        const newData = results.Data[0];
+        const updatedRow: IPOS2004DetailData = {
+          ...newData,
+          id: 0,
+          PLU_MagNo: newData.PLU_MagNo,
+          PLU_Name: newData.PLU_Name,
+          PLU_No: newData.PLU_No,
+          UNIT_NAME: newData.UNIT_NAME,
+          PLU_BoxQty: newData.PLU_BoxQty,
+          PLU_StockTaxType: newData.PLU_StockTaxType,
+          PLU_TaxType: newData.PLU_TaxType,
+          PLU_SalePrc_UNI: newData.PLU_SalePrc_UNI,
+          PLU_SalePrc: newData.PLU_SalePrc,
+          POD_SubQty: 1,
+          POD_BuyNet: newData.PLU_SalePrc_UNI || 0,
+          POD_SaleAmt: newData.PLU_SalePrc || 0,
+          POD_Remark: ''
+        };
+        console.log(updatedRow);
+        this.data = [...this.data.slice(0, index), updatedRow, ...this.data.slice(index + 1)];
+        console.log(this.data);
+        this.calculateTotals();
+        this.cdr.detectChanges();
+      } else {
+        this.messageService.errorBubble('查無該商品資訊');
+        this.data[index] = {
+          ...this.data[index],
+          PLU_MagNo: '',
+          PLU_Name: '',
+          PLU_No: '',
+          UNIT_NAME: '',
+          PLU_BoxQty: 0,
+          PLU_StockTaxType: '',
+          PLU_TaxType: '',
+          PLU_SalePrc_UNI: 0,
+          PLU_SalePrc: 0,
+          POD_SubQty: 0,
+          POD_BuyNet: 0,
+          POD_SaleAmt: 0,
+        };
+        this.data = [...this.data];
+      }
+    });
   }
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly dropdown: DropdownApiService,
     private readonly tls52010Service: Tls52010Service,
-    private readonly cdr: ChangeDetectorRef,
-  ) {
-    super();  // 呼叫父類建構子
-  }
+    private readonly cdr: ChangeDetectorRef
+  ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS52010', this.dataForm);
@@ -201,6 +209,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         this.ShortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '';
       });
       this.GetBudgetAmount();
+      this.loadDropdownOptions();
     } else {
       this.loadDropdownOptions();
     }
@@ -228,6 +237,15 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         [this.data, this.selectedItems, this.dialogData] = [[], [], []];
       });
     });
+    // 監聽申請日期變化，重新獲取剩餘預算金額
+    this.dataForm.controls.APPLY_Date.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(() => {
+      this.GetBudgetAmount();
+    });
+
+    // 確保在非新增模式（編輯模式）下也能載入預算金額
+    if (!this.isFormCreateable) {
+      this.GetBudgetAmount();
+    }
   }
   GetBudgetAmount(): void {// 獲取剩餘預算金額
     const { LOGO_No, APPLY_Date } = this.dataForm.controls;
@@ -362,12 +380,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         this.loading = false
         return;
       }
-
       const valid = this.tableEditComponent.validateAndShowErrors()
-      if (!valid) {
-        this.loading = false
-        return;
-      }
+      if (!valid) { this.loading = false; return; }
       const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
       if (formData.remainingBudgetAmount < formData.PO_TotalBuyAmt) {
         this.messageService.errorBubble('採購金額不能大於剩餘預算金額');
@@ -381,7 +395,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         HOS_No: this.dataForm.controls.HOS_No.value,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
         PLU_MagNo: item.PLU_MagNo,
-        PLU_No: item.PLU_No, // 國際條碼
+        PLU_No: item.PLU_No,
         PLU_Name: item.PLU_Name,
         PLU_Unit: item.PLU_Unit,
         PLU_BoxQty: item.PLU_BoxQty,
@@ -407,12 +421,12 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         VEN_No: formData.VEN_No,
         LOGO_No: formData.LOGO_No,
         HOS_No: formData.HOS_No,
-        PO_TotalBuyAmt: this.dataForm.controls.PO_TotalBuyAmt.value,
-        PO_TotalBuyTax: this.dataForm.controls.PO_TotalBuyTax.value,
-        PO_TotalBuyNet: this.dataForm.controls.PO_TotalBuyNet.value,
+        PO_TotalBuyAmt: formData.PO_TotalBuyAmt,
+        PO_TotalBuyTax: formData.PO_TotalBuyTax,
+        PO_TotalBuyNet: formData.PO_TotalBuyNet,
         PO_TotalSubQty: totalSubQty, // 使用計算後的總數量
-        PO_TotalSaleAmt: this.dataForm.controls.PO_TotalSaleAmt.value,
-        APPLY_Date: this.dataForm.controls.APPLY_Date.value,
+        PO_TotalSaleAmt: formData.PO_TotalSaleAmt,
+        APPLY_Date: formData.APPLY_Date,
         APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
         APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '', // 確保取到用戶姓名
         PO_Remark: formData.PO_Remark,
@@ -462,8 +476,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+        ...item, label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }
@@ -475,7 +488,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     };
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
+      this.opData = [...results.Data];
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });

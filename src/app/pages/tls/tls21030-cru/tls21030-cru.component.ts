@@ -1,21 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { TLS21030Data, Tls21030Service, TLS21030TalentData } from '../../../service/api/tls/tls21030.service';
-import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { finalize } from 'rxjs';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableRowUnSelectEvent } from 'primeng/table';
-import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { PanelModule } from 'primeng/panel';
+import { TableRowUnSelectEvent } from 'primeng/table';
+import { finalize } from 'rxjs';
+import { TLS21030Data, Tls21030Service, TLS21030TalentData } from '../../../service/api/tls/tls21030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls21030-cru',
@@ -53,6 +53,7 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
     { value: 3, label: '3' }
   ];
   data: TLS21030TalentData[] = [];
+  originalData: TLS21030TalentData[] = [];
   selectedRows: TLS21030TalentData[] = [];
   columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -113,6 +114,7 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
     }
     this.tls21030Service.queryTLTTALENT_By_money_type(frm.getRawValue()).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
       this.data = res.Data;
+      this.originalData = res.Data;
       this.totalRecords = res.TotalCount;
       if (!this.isFormCreateable) {
         this.loading = true;
@@ -152,9 +154,12 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
     });
   }
   resetTable() {
-    this.dataForm.reset();
-    this.selectedRows = [];
-    this.data = [];
-    this.totalRecords = 0;
+    if (this.isFormCreateable) {
+      this.selectedRows = [];
+      this.data = [];
+      this.totalRecords = 0;
+    } else {
+      this.onQuery(this.dataForm);
+    }
   }
 }

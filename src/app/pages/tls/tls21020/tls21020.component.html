@@ -23,7 +23,7 @@
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="canSave()"
+                    [disabled]="!qf().ENTRY_TYPE.value"
                     [loading]="loading"></app-button>
       </div>
     </form>
@@ -35,17 +35,16 @@
   <app-table-edit #dt
                   class="col-12"
                   tableKey="TLS21020Detail"
+                  [title]="'傳票項目之會計科目設定作業'"
                   [columns]="columns()"
                   [data]="tableData()"
-                  [selectedItems]="selectedItems()"
-                  (selectionChange)="selectedItems.set($event)"
-                  (dataChange)="dataChange($event, dt.validateAndShowErrors())"
+                  (dataChange)="tableData.set($event)"
                   [rowValidate]="validateRow"
                   [tableRequired]="!0"
                   [showReorder]="!1"
                   [showCheckBox]="!1"
                   [showDelete]="!1"
                   [canInsert]="!1"
-                  [loading]="service.tableLoading()"
+                  [loading]="tableLoading()"
                   [defaultInsertData]="defaultInsertData"></app-table-edit>
 </div>
