@@ -177,7 +177,7 @@ export interface ITLS52010Request {
   PO_TotalBuyAmt: number; // 採購總金額
   PO_TotalBuyTax: number; // 採購稅額
   PO_TotalBuyNet: number; // 採購淨額
-  APPLY_Date: string | Date; // 申請日期 (ISO 格式字串)
+  APPLY_Date: string | null; // 申請日期 (ISO 格式字串)
   APPLY_USR_No: string; // 申請人員編號
   APPLY_USR_Name: string; // 申請人員姓名
   PO_Remark: string | null; // 採購單備註

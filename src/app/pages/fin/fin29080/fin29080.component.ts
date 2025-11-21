@@ -29,31 +29,30 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   ]
 })
 export class FIN29080Component extends BasicQueryPageComponent<FIN29080Data> implements OnInit {
-
   constructor(
-    private fin29080Service: FIN29080Service,
+    private fin29080Service: FIN29080Service
   ) {
     super();
   }
 
   queryForm = this.formBuilder.group({
-    QueryDateFrom: [null, Validators.required],
-    QueryDateTo: [null, Validators.required],
-    PaymentDateFrom: [null],
-    PaymentDateTo: [null],
+    ACP_Date_From: [null, Validators.required],                  // 立帳日期(起) - 必填
+    ACP_Date_To: [null, Validators.required],                    // 立帳日期(迄) - 必填
+    ACP_ExpectPayDate_From: [null],         // 預計付款日(起)
+    ACP_ExpectPayDate_To: [null],           // 預計付款日(迄)
     ...createPaginationConfig([])
   });
 
   data: FIN29080Data[] = [];
   selectedItems: FIN29080Data[] = [];
   totalRecords = 0;
-  btnLoading = false;
+  exportPDFbtnLoading = false;
+  exportExcelbtnLoading = false;
 
   columns: Column[] = [
-    { field: 'ID', header: '序號', visible: true },
-    { field: 'PaymentDate', header: '預計付款日', visible: true, format: formatDate },
-    { field: 'PayableAmount', header: '應付款金額', visible: true, format: formatAmount },
-    { field: 'DeductionAmount', header: '代扣款項', visible: true, format: formatAmount },
+    { field: 'ExpectedPayDate', header: '預計付款日', visible: true, format: formatDate },
+    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount },
+    { field: 'WithholdAmount', header: '代扣款項', visible: true, format: formatAmount },
     { field: 'DiscountInterest', header: '貼現利息', visible: true, format: formatAmount },
     { field: 'EstimatedPayable', header: '預估應付款', visible: true, format: formatAmount },
   ];
@@ -63,51 +62,60 @@ export class FIN29080Component extends BasicQueryPageComponent<FIN29080Data> imp
   }
 
   onSubmit(form: FormGroup) {
+    const formValue = form.getRawValue();
     this.handleSubmit(form, () => {
-      const payload = this.buildQueryPayload(form.getRawValue());
-      this.fin29080Service.queryFIN29080(payload)
+      this.fin29080Service.queryFIN29080(this.buildQueryPayload(formValue))
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
           this.data = response.Data ?? [];
           this.totalRecords = response.TotalCount ?? this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
         });
     });
   }
 
-  /** 產生查詢 payload */
-  private buildQueryPayload(raw: any): any {
-    const queryFrom = this.toDateOnly(raw?.QueryDateFrom);
-    const queryTo = this.toDateOnly(raw?.QueryDateTo);
-    const paymentFrom = this.toDateOnly(raw?.PaymentDateFrom);
-    const paymentTo = this.toDateOnly(raw?.PaymentDateTo);
+  // ========= 匯出 =========
+  onExportPDF(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.ACP_Date_From || !formValue.ACP_Date_To) {
+      this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
+      return;
+    }
 
-    return {
-      ...raw,
-      QueryDateFrom: queryFrom,
-      QueryDateTo: queryTo,
-      PaymentDateFrom: paymentFrom || '',
-      PaymentDateTo: paymentTo || '',
-    };
+    this.exportPDFbtnLoading = true;
+    this.fin29080Service.exportFIN29080PDF(this.buildQueryPayload(formValue))
+      .pipe(untilDestroyed(this), finalize(() => (this.exportPDFbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.pdf', '應付帳款預估表'),
+        error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
+      });
   }
 
-  // ========= 匯出 =========
-  // TODO: 待實作
-  onExportPDF() {
-    // if ((this.selectedItems?.length ?? 0) === 0) return this.messageService?.warnBubble?.('請至少選取一筆資料進行匯出。');
-    // const payload = {
-    //   IDList: this.selectedItems.map(i => i.ID),
-    //   PrintType: this.queryForm.controls.PrintType.value || 'A4R',
-    // };
-    // if (!payload) return;
+  onExportExcel(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.ACP_Date_From || !formValue.ACP_Date_To) {
+      this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
+      return;
+    }
 
-    // this.btnLoading = true;
-    // this.fin29080Service.exportFIN29080PDF(payload)
-    //   .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-    //   .subscribe({
-    //     next: (r) => this.handleFileExport(r, '.pdf', '預估應付款列印'),
-    //     error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
-    //   });
+    this.exportExcelbtnLoading = true;
+    this.fin29080Service.exportFIN29080Excel(this.buildQueryPayload(formValue))
+      .pipe(untilDestroyed(this), finalize(() => (this.exportExcelbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.xlsx', '應付帳款預估表'),
+        error: () => this.messageService?.warnBubble?.('匯出 Excel 失敗。'),
+      });
+  }
+
+  /** 產生查詢 payload */
+  private buildQueryPayload(formValue: any): any {
+    return {
+      ...formValue,
+      ACP_Date_From: this.toDateOnly(formValue.ACP_Date_From),
+      ACP_Date_To: this.toDateOnly(formValue.ACP_Date_To),
+      ACP_ExpectPayDate_From: this.toDateOnly(formValue.ACP_ExpectPayDate_From),
+      ACP_ExpectPayDate_To: this.toDateOnly(formValue.ACP_ExpectPayDate_To),
+    };
   }
 
   // ========= 本地工具 =========
@@ -119,5 +127,16 @@ export class FIN29080Component extends BasicQueryPageComponent<FIN29080Data> imp
     const m = String(dt.getMonth() + 1).padStart(2, '0');
     const da = String(dt.getDate()).padStart(2, '0');
     return `${y}-${m}-${da}`;
+  }
+
+  private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }

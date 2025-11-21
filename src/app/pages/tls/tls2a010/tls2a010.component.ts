@@ -104,9 +104,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       disabled: (rowData: any) =>
         rowData.PAY_Type === 'C' ||
         rowData.PAY_Type === 'A' ||
-        rowData.PAY_NO === '10' ||
-        rowData.PAY_NO === '41' ||
-        rowData.PAY_NO === '43' ||
+        rowData.PAY_Type === '0' ||
+        rowData.PAY_Type === '1' ||
         rowData.check_status === 'Y' ||
         rowData.isClose === 'Y'
     }

@@ -3,7 +3,7 @@
     {{ title }}
   </span>
 </p-divider>
-<p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems"
+<p-table #dt [value]="_tableData" [columns]="columns" [(selection)]="selectedItems"
   [selectionMode]="showCheckBox ? 'multiple' : undefined" sortMode="multiple" [dataKey]="dataKey"
   [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   (onRowReorder)="onRowReorder($event); rowReorderData.emit($event)" [multiSortMeta]="multiSortMeta"
@@ -36,11 +36,11 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="data.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
-        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
+        <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
+        <th [attr.colspan]="_tableData.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
           class="w-1rem text-center">序號
         </th>
-        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate" rowspan="2"
+        <th *ngIf="showCheckBox && !disabled && _tableData.length && !_tableData[0]._isAutoInsertCandidate" rowspan="2"
           class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
@@ -73,10 +73,10 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
-        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
+        <th *ngIf="_tableData.length && showReorder" class="w-1rem text-center"></th>
+        <th [attr.colspan]="_tableData.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
         </th>
-        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate"
+        <th *ngIf="showCheckBox && !disabled && _tableData.length && !_tableData[0]._isAutoInsertCandidate"
           class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
@@ -89,13 +89,13 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
-      [pSelectableRowDisabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" [pSelectableRow]="rowData"
+      [pSelectableRowDisabled]="!isRowSelectable(rowData,rowIndex,_tableData) || disabled" [pSelectableRow]="rowData"
       [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
         'invalid-row': hasRowError(rowData),
         'insert-row': rowData._isAutoInsertCandidate ,
       }">
       <td *ngIf="data.length && showReorder" class="w-1rem text-center">
-        <span *ngIf="!rowData._isAutoInsertCandidate && data.length > 1" class="pi pi-bars w-1rem text-center"
+        <span *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 1" class="pi pi-bars w-1rem text-center"
           pReorderableRowHandle></span>
         <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus w-1rem text-center" [ngClass]="{
             'text-blue-500': rowData._isAutoInsertCandidate
@@ -114,7 +114,7 @@
       </td>
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" />
+          [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,_tableData) || disabled" />
       </td>
       <td *ngFor="let col of columns" class="text-center" (click)="col.type ? $event.stopPropagation() : null"
         (keydown)="$event.stopPropagation()" [style]="{'width':col.width, 'text-align': col.textAlign}">
@@ -234,7 +234,7 @@
   </ng-template>
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-end p-2">
-      總筆數: {{ data.length - (canInsert ? 1 : 0) }} 筆
+      總筆數: {{ _tableData.length - (canInsert && _tableData.length > 0 ? 1 : 0) }} 筆
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
