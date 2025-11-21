@@ -1,19 +1,16 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
-import { UserStatusService } from '../../../service/basic/user-status.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CheckboxModule } from 'primeng/checkbox';
 import { NgFor, NgIf } from '@angular/common';
+import { CheckboxModule } from 'primeng/checkbox';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
@@ -47,11 +44,6 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private userStatusService: UserStatusService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -60,9 +52,6 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
     this.ProgNo = '410011';
     // ----------------------------------------------------------------
     // ----------------------------------------------------------------
-    this.userStatusService.getUserStatus().subscribe(data => {
-      this.codeStatusOptions = data;
-    });
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
@@ -105,7 +94,7 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
     return this.formBuilder.group({
       parameterItem: ['', [Validators.required, Validators.maxLength(20)]], // 參數項目
       parameterStatus: [, [Validators.required]], // 參數狀態
-      order: [, [Validators.required, this.validationService.numberValidator]], // 排序序號
+      order: [, [Validators.required,]], // 排序序號
       parameterContent: ['', [Validators.required, Validators.maxLength(20)]], // 參數內容
     });
   }
@@ -131,7 +120,6 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
     this.submitted = true;
 
     if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
     }
@@ -140,13 +128,11 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
       case CRUDStatus.Create:
         if (this.canAdd()) {
           // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
         }
         break;
     }

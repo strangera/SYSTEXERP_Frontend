@@ -2,32 +2,31 @@
 import { Component } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { RegionService } from '../../../service/basic/region-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23130Service } from '../../../service/api/tls/tls23130.service';
+import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { HttpResponse } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { catchError, finalize, map, of } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { of, map, catchError, finalize } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
-import { ButtonModule } from 'primeng/button';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls23130',
@@ -101,7 +100,6 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   constructor(
     private tls23130Service: TLS23130Service,
     private regionService: RegionService,
-    private organizationNumberService: OrganizationNumberService,
     private floorService: FloorService,
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
@@ -113,7 +111,8 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23130', 'tls/tls23130', this.queryForm, (form) => this.onSubmit(form));
 
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
+    //TODO 請呼叫API 不要呼叫寫死的
+    // this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
     this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.bigCategoryCodeService.getSystemTypes().subscribe(res => {

@@ -1,30 +1,22 @@
-import { NeedPayTicketService } from './../../../service/basic/need-pay-ticket.service';
-import { AssetStatusService } from './../../../service/basic/asset-status.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
-import { ItemCodeService } from './../../../service/basic/item-code.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { AssetsTypeService } from '../../../service/basic/assets-type.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.1 資產維護作業
 @Component({
@@ -165,15 +157,6 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private itemCodeService: ItemCodeService,
-    private assetStatusService: AssetStatusService,
-    private assetsTypeService: AssetsTypeService,
-    private vendorService: VendorService,
-    private needPayTicketService: NeedPayTicketService,
-    private userCodeService: UserCodeService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -184,30 +167,6 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/ASS1000/ASS13010CRU';
     //
 
-    //
-    this.itemCodeService.getSystemTypes().subscribe(data => {
-      this.itemCodeOptions = data;
-    });
-    //
-    this.assetStatusService.getAssetStatus().subscribe(data => {
-      this.assetsStatusOptions = data;
-    });
-    //
-    this.assetsTypeService.getAssetsTypes().subscribe(data => {
-      this.assetsTypeOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.supplierCodeOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.depreciationOptions = data;
-    });
-    //
-    this.userCodeService.getUserCode().subscribe(data => {
-      this.applicantCodeOptions = data;
-    });
     // ----------------------------------------------------------------
   }
 

@@ -1,44 +1,41 @@
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import {
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
+  Validators,
 } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DiscountService } from '../../../service/basic/discount.service';
-import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { debounceTime, finalize, map } from 'rxjs/operators';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import {
   createPaginationConfig,
   LazyLoadEvent,
 } from '../../../shared/componentkit/table/table.model';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { TxnStatusService } from '../../../service/basic/txn-status.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { finalize, map, debounceTime } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DialogModule } from 'primeng/dialog';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
-import { CommonModule } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { HttpResponse } from '@angular/common/http';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 @UntilDestroy()
 @Component({
@@ -137,31 +134,56 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     { value: '1', label: '應稅' },
   ];
 
-  discountOptions: any[] = [];
-  deductionbigCategoryOptions: any[] = [];
+  discountOptions = [
+    { value: '000', label: '正品' },
+    { value: '095', label: '95折' },
+    { value: '090', label: '90折' },
+    { value: '085', label: '85折' },
+    { value: '080', label: '80折' },
+    { value: '075', label: '75折' },
+    { value: '070', label: '70折' },
+    { value: '065', label: '65折' },
+    { value: '060', label: '60折' },
+    { value: '055', label: '55折' },
+    { value: '050', label: '50折' },
+    { value: '999', label: '特價' },
+  ];
+  deductionbigCategoryOptions = [
+    { value: 0, label: '類別0' },
+    { value: 1, label: '類別1' },
+    { value: 2, label: '類別2' },
+    { value: 3, label: '類別3' },
+    { value: 4, label: '類別4' },
+    { value: 5, label: '類別5' },
+    { value: 6, label: '類別6' },
+    { value: 7, label: '類別7' },
+    { value: 8, label: '類別8' },
+    { value: 9, label: '類別9' },
+  ];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  commissionTypeOptions: any[] = [];
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
   whetherOptions: any[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
     { value: null, label: '全部' },
   ];
-  txnStatusOptions: any[] = [];
+  txnStatusOptions = [
+    { value: 'N', label: '正常交易' },
+    { value: 'C', label: '交易取消' },
+    { value: 'D', label: '發票作廢' },
+    { value: 'E', label: '隔日發票作廢' },
+  ];
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
 
   constructor(
     private tls23020Service: TLS23020Service,
-    private discountService: DiscountService,
     private floorService: FloorService,
-    private deductionbigCategoryService: DeductionbigCategoryService,
-    private commissionTypeService: CommissionTypeService,
     private tls11010Service: Tls11010Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private txnStatusService: TxnStatusService,
     private validationService: ValidationService,
   ) {
     super();
@@ -216,21 +238,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe((res) => (this.BUILDING_NO_Options = res));
 
-    this.discountService
-      .getLocalDiscountOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((data) => (this.discountOptions = data));
-
-    this.deductionbigCategoryService
-      .getLocalDeductionCategories()
-      .pipe(untilDestroyed(this))
-      .subscribe((data) => (this.deductionbigCategoryOptions = data));
-
-    this.txnStatusService
-      .getTxnStatusOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((data) => (this.txnStatusOptions = data));
-
     this.floorService
       .getFloors()
       .pipe(untilDestroyed(this))
@@ -241,17 +248,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
-
-    this.commissionTypeService
-      .getCommissionTypes()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        this.commissionTypeOptions = (res ?? []).map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,

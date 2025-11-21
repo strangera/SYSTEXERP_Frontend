@@ -1,20 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 
 //1.2.3.3 暫付款申請單列印
@@ -69,11 +65,6 @@ export class FIN23030Component extends BasicQpageComponent implements OnInit {
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -83,10 +74,6 @@ export class FIN23030Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '120009';
     this.cruPage = '/FIN2000/FIN23030CRU';
     // ----------------------------------------------------------------
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.requsetEmployeeOptions = data;
-    });
     // ----------------------------------------------------------------
   }
 
@@ -95,7 +82,6 @@ export class FIN23030Component extends BasicQpageComponent implements OnInit {
     console.log(frm.value);
     this.submitted = true;
     this.loading = true;
-    this.messageService.blockUi();
 
     if (frm.valid && this.canQuery()) {
       // 提交邏輯
@@ -107,7 +93,6 @@ export class FIN23030Component extends BasicQpageComponent implements OnInit {
     }
 
     this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {

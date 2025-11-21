@@ -1,10 +1,8 @@
-import { Component } from '@angular/core';
 import { Location } from '@angular/common';
+import { Component } from '@angular/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 import { PdfService } from '../../../service/basic/pdf.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { ColumnLabelService } from '../../../service/basic/column-label.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 
@@ -29,7 +27,6 @@ export class TLS23110CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private location: Location,
     private pdfService: PdfService,
-    private columnLabelService: ColumnLabelService
   ) {
     super();
   }
@@ -80,10 +77,10 @@ export class TLS23110CRUComponent extends BasicCruPageComponent<any> {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
 
-goBack(): void {
-  this.messageService.unblockUi(); // ✅ 明確解除
-  this.location.back();
-}
+  goBack(): void {
+    this.messageService.unblockUi(); // ✅ 明確解除
+    this.location.back();
+  }
   printPage(): void {
     window.print();
   }

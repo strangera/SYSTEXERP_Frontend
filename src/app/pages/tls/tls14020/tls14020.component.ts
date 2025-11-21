@@ -1,37 +1,32 @@
 /* eslint-disable no-sparse-arrays */
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { CounterCategoryService } from '../../../service/basic/counter-category.service';
-import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
-import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
-import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DialogItem, TLS14020Service } from '../../../service/api/tls/tls14020.service';
-import { VendorCategoryOptionsService } from '../../../service/api/dropdownservice/vendor-category-options.service';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { forkJoin } from 'rxjs';
-import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
-import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
-import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '../tls13010/tls13010.constants';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ContractItem } from '@service/api/tls/tls14020.service';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { yesterday } from '@shared/models/system/query-form.model';
-import { ContractItem } from '@service/api/tls/tls14020.service';
+import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
+import { forkJoin } from 'rxjs';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '../../../service/api/dropdownservice/vendor-category-options.service';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
+import { DialogItem, TLS14020Service } from '../../../service/api/tls/tls14020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '../tls13010/tls13010.constants';
+import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 
 //專櫃契約書列印
 @Component({
@@ -45,12 +40,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
 
   constructor(
     private vendorCategoryService: VendorCategoryOptionsService,
-    private contractStatusService: ContractStatusService,
-    private counterCategoryService: CounterCategoryService,
-    private settlementMethodService: SettlementMethodService,
-    private paymentMethodService: PaymentMethod2Service,
-    private cooperationMethodService: CooperationMethodService,
-    // private negotiatorService: UserCodeService,
     private sysb800Service: Sysb800DropdownService,
     private tls14020Service: TLS14020Service,
     private locationService: LocationOptionsService,

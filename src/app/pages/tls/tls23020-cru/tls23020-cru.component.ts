@@ -1,19 +1,15 @@
-import { Component } from '@angular/core';
-import { finalize } from 'rxjs/operators';
 import { Location } from '@angular/common';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TaxableService } from '../../../service/basic/taxable.service';
-import { DiscountService } from '../../../service/basic/discount.service';
-import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
-import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { Component } from '@angular/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { finalize } from 'rxjs/operators';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { TxnStatusService } from '../../../service/basic/txn-status.service';
+import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { FloorService } from '../../../service/basic/floor.service';
 import { PdfService } from '../../../service/basic/pdf.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 type DisplayMode = 'Detail' | 'Summary';
 
@@ -37,18 +33,50 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
 
 
   // 下拉選單選項
-  taxableOptions: any[] = [];
-  discountOptions: any[] = [];
-  deductionbigCategoryOptions: any[] = [];
+  taxableOptions = [
+    { value: '1', label: '應稅' },
+    { value: '2', label: '免稅' },
+  ];
+  discountOptions = [
+    { value: '000', label: '正品' },
+    { value: '095', label: '95折' },
+    { value: '090', label: '90折' },
+    { value: '085', label: '85折' },
+    { value: '080', label: '80折' },
+    { value: '075', label: '75折' },
+    { value: '070', label: '70折' },
+    { value: '065', label: '65折' },
+    { value: '060', label: '60折' },
+    { value: '055', label: '55折' },
+    { value: '050', label: '50折' },
+    { value: '999', label: '特價' },
+  ];
+  deductionbigCategoryOptions = [
+    { value: 0, label: '類別0' },
+    { value: 1, label: '類別1' },
+    { value: 2, label: '類別2' },
+    { value: 3, label: '類別3' },
+    { value: 4, label: '類別4' },
+    { value: 5, label: '類別5' },
+    { value: 6, label: '類別6' },
+    { value: 7, label: '類別7' },
+    { value: 8, label: '類別8' },
+    { value: 9, label: '類別9' },
+  ];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  commissionTypeOptions: any[] = [];
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
   whetherOptions: any[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
     { value: null, label: '全部' },
   ];
-  txnStatusOptions: any[] = [];
+  txnStatusOptions = [
+    { value: 'N', label: '正常交易' },
+    { value: 'C', label: '交易取消' },
+    { value: 'D', label: '發票作廢' },
+    { value: 'E', label: '隔日發票作廢' },
+  ];
   checkTotalAmount = [
     { value: 1, label: '是' },
     { value: 2, label: '否' },
@@ -150,35 +178,19 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
 
   constructor(
     private tls23020Service: TLS23020Service,
-    private taxableService: TaxableService,
-    private discountService: DiscountService,
     private floorService: FloorService,
-    private deductionbigCategoryService: DeductionbigCategoryService,
-    private commissionTypeService: CommissionTypeService,
     private tls11010Service: Tls11010Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private txnStatusService: TxnStatusService,
     private location: Location,
     private pdfService: PdfService,
   ) {
     super();
 
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
-    this.taxableService.getSystemTypes().subscribe(data => this.taxableOptions = data);
-    this.discountService.getLocalDiscountOptions().subscribe(data => this.discountOptions = data);
-    this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.deductionbigCategoryOptions = data);
-    this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
-        label: x.label,                                 // 給 table 用
-        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
-        value: x.value,
-      })) || [];
-    });
-    this.commissionTypeService.getCommissionTypes().subscribe((res) => {
-      this.commissionTypeOptions = res?.map((x: any) => ({
         label: x.label,                                 // 給 table 用
         formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
         value: x.value,

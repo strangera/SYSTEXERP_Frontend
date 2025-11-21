@@ -1,23 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { debounceTime } from 'rxjs';
+import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { MiddleCategoryItem, Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
-import { IndustryTypeService } from '../../../service/basic/industry-type.service';
-import { ProductCategoryService } from '../../../service/basic/product-category.service';
-import { debounceTime } from 'rxjs';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -84,11 +79,8 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
   selectedItems: CategoryItem[] = [];
 
   constructor(
-    private industryTypeService: IndustryTypeService,
-    private productCategoryService: ProductCategoryService,
     private Sysb800DropdownService: Sysb800DropdownService,
     private Sysb900DropdownService: Sysb900DropdownService,
-    private validationService: ValidationService,
     private apiService: Bas1000Service,
   ) {
     super();

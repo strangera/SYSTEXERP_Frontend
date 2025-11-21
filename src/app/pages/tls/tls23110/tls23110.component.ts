@@ -1,46 +1,41 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import {
-  FormGroup,
+  AbstractControl,
   FormControl,
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
   ValidatorFn,
-  AbstractControl,
+  Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { TypeService } from '../../../service/basic/type.service';
-import { CategoryService } from '../../../service/basic/category.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23110Service } from '../../../service/api/tls/tls23110.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 import { SortMeta } from 'primeng/api';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonModule } from 'primeng/button';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
-import { finalize, map } from 'rxjs/operators';
 import { HttpResponse } from '@angular/common/http';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { finalize, map } from 'rxjs/operators';
 
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
@@ -149,27 +144,38 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     { label: '只顯示自營櫃', value: true },
   ];
 
-  DeductionbigCategoryOptions: any[] = [];
-  TypeOptions: any[] = [];
-  CategoryOptions: any[] = [];
+  DeductionbigCategoryOptions = [
+    { value: '0', label: '類別0' },
+    { value: '1', label: '類別1' },
+    { value: '2', label: '類別2' },
+    { value: '3', label: '類別3' },
+    { value: '4', label: '類別4' },
+    { value: '5', label: '類別5' },
+    { value: '6', label: '類別6' },
+    { value: '7', label: '類別7' },
+    { value: '8', label: '類別8' },
+    { value: '9', label: '類別9' },
+  ];
+  TypeOptions = [
+    { value: 1, label: '使用業主發票' },
+    { value: 2, label: '非使用業主發票' },
+  ];
   OrganizationNumberOptions: any[] = [];
   CounterOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
-  CounterOpCatOptions: any[] = [];
+  CounterOpCatOptions: any[] = [
+    { value: '1', label: '不包含自營櫃' },
+    { value: '2', label: '只顯示自營櫃' },
+  ];
 
   // ====== 欄位（動態建置，因後端多傳） ======
   columns: any[] = [];
 
   constructor(
     private tls23110Service: TLS23110Service,
-    private deductionbigCategoryService: DeductionbigCategoryService,
-    private typeService: TypeService,
-    private categoryService: CategoryService,
-    private counterOpCatService: CounterOpCatService,
     private counterNameService: CounterNameService,
-    private organizationNumberService: OrganizationNumberService,
     private floorService: FloorService,
     private tls11010Service: Tls11010Service
   ) {
@@ -217,15 +223,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     endCtrl.valueChanges.subscribe(clampEndToStartMonth);
     clampEndToStartMonth();
 
-    this.deductionbigCategoryService.getLocalDeductionCategories().subscribe((data) => {
-      // 確保 optionValue 一律是字串
-      this.DeductionbigCategoryOptions = (data ?? []).map((o: any) => ({
-        ...o,
-        value: String(o.value), // 例如 0 -> "0"
-      }));
-    });
-    this.typeService.getTypeOptions().subscribe((data) => (this.TypeOptions = data));
-    this.categoryService.getCategories().subscribe((data) => (this.CategoryOptions = data));
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = (res ?? []).map((x: any) => ({
         label: x.label,
@@ -233,8 +230,8 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
         value: x.value,
       }));
     });
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.OrganizationNumberOptions = data));
-    this.counterOpCatService.getCounterOpCat().subscribe((data) => (this.CounterOpCatOptions = data));
+    // TODO 請呼叫API 不要呼叫寫死的
+    // this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.OrganizationNumberOptions = data));
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
     this.tls11010Service.getOrgOptions().subscribe((res) => {

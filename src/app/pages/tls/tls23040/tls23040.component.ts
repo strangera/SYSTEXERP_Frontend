@@ -1,31 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
-import { map, finalize } from 'rxjs/operators';
+import { Component } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize, map } from 'rxjs/operators';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
-import { StatusFlagService } from '../../../service/basic/status-flag.service';
-import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonModule } from 'primeng/button';
-import { CommonModule } from '@angular/common';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -71,13 +70,13 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   // 畫面繫結
   get activeRows() {
     return this.viewMode === 'payment' ? this.paymentRows :
-           this.viewMode === 'discount' ? this.discountRows :
-           this.invoiceRows;
+      this.viewMode === 'discount' ? this.discountRows :
+        this.invoiceRows;
   }
   get activeColumns() {
     return this.viewMode === 'payment' ? this.paymentColumns :
-           this.viewMode === 'discount' ? this.discountColumns :
-           this.invoiceColumns;
+      this.viewMode === 'discount' ? this.discountColumns :
+        this.invoiceColumns;
   }
 
   activeFooter: Record<string, number> | undefined = undefined;
@@ -121,7 +120,11 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   });
 
   // 下拉
-  statusFlagOptions: any[] = [];
+  statusFlagOptions = [
+    { value: '1', label: '外交官零稅' },
+    { value: '2', label: '事後登錄' },
+    { value: '3', label: '預售' },
+  ];
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
     { value: '2', label: '作廢' },
@@ -135,7 +138,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private tls23040Service: TLS23040Service,
-    private statusFlagService: StatusFlagService,
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
@@ -147,10 +149,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23040', 'tls/tls23040cru', this.queryForm, (form) => this.onSubmit(form));
     this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false });
-
-    this.statusFlagService.getStatusFlags()
-      .pipe(untilDestroyed(this))
-      .subscribe((d) => (this.statusFlagOptions = d));
 
     this.floorService.getFloors()
       .pipe(untilDestroyed(this))
@@ -234,27 +232,27 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     ];
 
     const payload: any = {
-  TXN_DateStart: this.toDateOnly(raw?.TXN_DateStart ?? this.yesterday), // ✅ yyyy-MM-dd
-  TXN_DateEnd:   this.toDateOnly(raw?.TXN_DateEnd   ?? this.yesterday), // ✅ yyyy-MM-dd
+      TXN_DateStart: this.toDateOnly(raw?.TXN_DateStart ?? this.yesterday), // ✅ yyyy-MM-dd
+      TXN_DateEnd: this.toDateOnly(raw?.TXN_DateEnd ?? this.yesterday), // ✅ yyyy-MM-dd
 
-      ...(this.ensureArr(raw?.ECR_No).length         ? { ECR_No: this.ensureArr(raw?.ECR_No) }             : {}),
-      ...(this.ensureArr(raw?.TLT_No).length         ? { TLT_No: this.ensureArr(raw?.TLT_No) }             : {}),
-      ...(this.ensureArr(raw?.TXN_Status).length     ? { TXN_Status: this.ensureArr(raw?.TXN_Status) }     : {}),
+      ...(this.ensureArr(raw?.ECR_No).length ? { ECR_No: this.ensureArr(raw?.ECR_No) } : {}),
+      ...(this.ensureArr(raw?.TLT_No).length ? { TLT_No: this.ensureArr(raw?.TLT_No) } : {}),
+      ...(this.ensureArr(raw?.TXN_Status).length ? { TXN_Status: this.ensureArr(raw?.TXN_Status) } : {}),
       ...(this.ensureArr(raw?.TXN_FlagStatus).length ? { TXN_FlagStatus: this.ensureArr(raw?.TXN_FlagStatus) } : {}),
-      ...(this.ensureArr(raw?.tlt_floor).length      ? { tlt_floor: this.ensureArr(raw?.tlt_floor) }       : {}),
-      ...(this.ensureArr(raw?.org_id).length         ? { org_id: this.ensureArr(raw?.org_id) }             : {}),
+      ...(this.ensureArr(raw?.tlt_floor).length ? { tlt_floor: this.ensureArr(raw?.tlt_floor) } : {}),
+      ...(this.ensureArr(raw?.org_id).length ? { org_id: this.ensureArr(raw?.org_id) } : {}),
 
       ...(raw?.tlt_building ? { tlt_building: raw.tlt_building } : {}),
-      ...(raw?.TXN_PkngUID  ? { TXN_PkngUID:  raw.TXN_PkngUID  } : {}),
-      ...(raw?.TXN_MemCard  ? { TXN_MemCard:  raw.TXN_MemCard  } : {}),
+      ...(raw?.TXN_PkngUID ? { TXN_PkngUID: raw.TXN_PkngUID } : {}),
+      ...(raw?.TXN_MemCard ? { TXN_MemCard: raw.TXN_MemCard } : {}),
       ...(raw?.TXN_GUIBegNo ? { TXN_GUIBegNo: raw.TXN_GUIBegNo } : {}),
 
       ...(this.toNumOrUndef(raw?.TXN_No_Start) != null ? { TXN_No_Start: this.toNumOrUndef(raw?.TXN_No_Start) } : {}),
-      ...(this.toNumOrUndef(raw?.TXN_No_End)   != null ? { TXN_No_End:   this.toNumOrUndef(raw?.TXN_No_End)   } : {}),
+      ...(this.toNumOrUndef(raw?.TXN_No_End) != null ? { TXN_No_End: this.toNumOrUndef(raw?.TXN_No_End) } : {}),
 
       pageIndex: Number(raw?.pageIndex) || 1,
-      pageSize:  Number(raw?.pageSize)  || 30,
-      SortBy:    this.sanitizeSortBy(rawSort),
+      pageSize: Number(raw?.pageSize) || 30,
+      SortBy: this.sanitizeSortBy(rawSort),
     };
 
     this.historyRequestBody = { ...payload };
@@ -278,8 +276,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
               return {
                 ...r,
                 ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
-                ORG_ECR_No:   isNormal ? '' : (r?.ORG_ECR_No   ?? ''),
-                ORG_TXN_No:   isNormal ? '' : (r?.ORG_TXN_No   ?? ''),
+                ORG_ECR_No: isNormal ? '' : (r?.ORG_ECR_No ?? ''),
+                ORG_TXN_No: isNormal ? '' : (r?.ORG_TXN_No ?? ''),
                 TXN_DateOnly: dateOnly,
                 _grpKey: `${dateOnly}/${r?.ECR_No ?? ''}/${txnNoPadded}`,
                 _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
@@ -287,7 +285,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
             });
           this.invoiceRows = inv;
           this.invoiceTotals = {
-            TotalGUI:     packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI     ?? 0), 0),
+            TotalGUI: packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI ?? 0), 0),
             TotalSaleAmt: packs.reduce((s, p) => s + Number(p?.invoice?.TotalSaleAmt ?? 0), 0),
           };
 
@@ -326,13 +324,13 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
           this.discountTotals = {
             TotalSalePrc: packs.reduce((s, p) => s + Number(p?.discount?.TotalSalePrc ?? 0), 0),
-            TotalNet:     packs.reduce((s, p) => s + Number(p?.discount?.TotalNet     ?? 0), 0),
-            TotalTax:     packs.reduce((s, p) => s + Number(p?.discount?.TotalTax     ?? 0), 0),
+            TotalNet: packs.reduce((s, p) => s + Number(p?.discount?.TotalNet ?? 0), 0),
+            TotalTax: packs.reduce((s, p) => s + Number(p?.discount?.TotalTax ?? 0), 0),
           };
 
           // ★ 關鍵：記住伺服器回傳的總筆數，不要在切換視圖時被 30 覆蓋
           this.lastTotalCount = Number(res?.TotalCount ?? this.activeRows.length ?? 0);
-          this.totalRecords   = this.lastTotalCount;
+          this.totalRecords = this.lastTotalCount;
 
           this.updateActiveFooter();
         },
@@ -358,16 +356,16 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   }
 
   // 提供給 app-table-report 的查詢函式（支援排序/分頁）
-public queryTLS23040ForReport = (body: any) =>
-  this.tls23040Service.queryTLS23040({
-    ...body,
-    pageSize: 30,
-    SortBy: this.sanitizeSortBy(body?.SortBy),
+  public queryTLS23040ForReport = (body: any) =>
+    this.tls23040Service.queryTLS23040({
+      ...body,
+      pageSize: 30,
+      SortBy: this.sanitizeSortBy(body?.SortBy),
 
-    // ✅ 確保用 DateOnly
-    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-  }).pipe(
+      // ✅ 確保用 DateOnly
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+    }).pipe(
       map((res: any) => {
         const packs: any[] = Array.isArray(res?.Data) ? res.Data : [];
 
@@ -384,15 +382,15 @@ public queryTLS23040ForReport = (body: any) =>
               return {
                 ...r,
                 ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
-                ORG_ECR_No:   isNormal ? '' : (r?.ORG_ECR_No   ?? ''),
-                ORG_TXN_No:   isNormal ? '' : (r?.ORG_TXN_No   ?? ''),
+                ORG_ECR_No: isNormal ? '' : (r?.ORG_ECR_No ?? ''),
+                ORG_TXN_No: isNormal ? '' : (r?.ORG_TXN_No ?? ''),
                 TXN_DateOnly: dateOnly,
                 _grpKey: `${dateOnly}/${r?.ECR_No ?? ''}/${txnNoPadded}`,
                 _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
               };
             });
           grand = {
-            TXN_TotGUI:     packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI     ?? 0), 0),
+            TXN_TotGUI: packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI ?? 0), 0),
             TXN_TotSaleAmt: packs.reduce((s, p) => s + Number(p?.invoice?.TotalSaleAmt ?? 0), 0),
           };
         } else if (this.viewMode === 'payment') {
@@ -426,8 +424,8 @@ public queryTLS23040ForReport = (body: any) =>
             });
           grand = {
             TXN_SaleAmt: packs.reduce((s, p) => s + Number(p?.discount?.TotalSalePrc ?? 0), 0),
-            TXN_Net:     packs.reduce((s, p) => s + Number(p?.discount?.TotalNet     ?? 0), 0),
-            TXN_Tax:     packs.reduce((s, p) => s + Number(p?.discount?.TotalTax     ?? 0), 0),
+            TXN_Net: packs.reduce((s, p) => s + Number(p?.discount?.TotalNet ?? 0), 0),
+            TXN_Tax: packs.reduce((s, p) => s + Number(p?.discount?.TotalTax ?? 0), 0),
           };
         }
 
@@ -435,8 +433,8 @@ public queryTLS23040ForReport = (body: any) =>
 
         // ★ 同步到頁面狀態，避免被切換檢視時寫回 30
         this.lastTotalCount = totalCount;
-        this.totalRecords   = totalCount;
-        this.activeFooter   = { ...grand };
+        this.totalRecords = totalCount;
+        this.activeFooter = { ...grand };
 
         return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
       })
@@ -498,13 +496,13 @@ public queryTLS23040ForReport = (body: any) =>
   invoiceColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, format: (v:any) => this.padTxnNo(v) },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: (v: any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
     { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n)},
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
     { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
@@ -512,7 +510,7 @@ public queryTLS23040ForReport = (body: any) =>
     { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
     { field: 'ORG_TXN_Date', header: '原交易日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
-    { field: 'ORG_TXN_No', header: '原交易序號', visible: true, format: (v:any) => this.padTxnNo(v) },
+    { field: 'ORG_TXN_No', header: '原交易序號', visible: true, format: (v: any) => this.padTxnNo(v) },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'TXN_TotPayScoreAmt', header: '會員積點折抵', visible: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
   ];
@@ -520,12 +518,12 @@ public queryTLS23040ForReport = (body: any) =>
   paymentColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, format: (v:any) => this.padTxnNo(v) },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: (v: any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'PAY_NO', header: '付款別代號', visible: true },
     { field: 'PAY_NAME', header: '付款別', visible: true },
-    { field: 'TXN_PayAmt', header: '金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
+    { field: 'TXN_PayAmt', header: '金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
     { field: 'TERM_No', header: '分期', visible: true },
@@ -534,17 +532,17 @@ public queryTLS23040ForReport = (body: any) =>
   discountColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, format: (v:any) => this.padTxnNo(v) },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: (v: any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    { field: 'TXN_SaleAmt', header: '單項售價', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
-    { field: 'TXN_Net', header: '未稅(免稅)金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
-    { field: 'TXN_Tax', header: '稅額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true  },
+    { field: 'TXN_SaleAmt', header: '單項售價', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true },
+    { field: 'TXN_Net', header: '未稅(免稅)金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true },
+    { field: 'TXN_Tax', header: '稅額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n), isSubTotal: true },
     { field: 'tlt_id', header: '抽成別代號', visible: true },
     { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
     { field: 'PRM_TXN_DiscName', header: '原折扣', visible: true },
-   
+
     { field: 'PLU_TaxTypeName', header: '稅別', visible: true },
     { field: 'PLU_No', header: '報帳條碼', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
@@ -567,14 +565,14 @@ public queryTLS23040ForReport = (body: any) =>
     }
   }
   // 1) 新增這個工具函式（放在 component 裡即可）
-private toDateOnly(x: any): string | undefined {
-  if (!x) return undefined;
-  const d = typeof x === 'string' ? new Date(x) : (x as Date);
-  if (isNaN(d.getTime())) return undefined;
-  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 }

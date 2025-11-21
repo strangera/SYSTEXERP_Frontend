@@ -1,27 +1,25 @@
-import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { AccordionModule } from 'primeng/accordion';
 import { map } from 'rxjs/operators';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
 @Component({
   selector: 'app-tls56030',
   templateUrl: './tls56030.component.html',
-  styleUrls: ['./tls56030.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -79,7 +77,6 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
 
 
   constructor(
-    private userCodeService: UserCodeService,
     private tls52010Service: Tls52010Service,
     private dropDownListService: DropDownListService,
     private tls56030Service: Tls56030Service

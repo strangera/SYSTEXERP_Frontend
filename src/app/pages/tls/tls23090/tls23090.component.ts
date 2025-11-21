@@ -2,45 +2,42 @@
 import { Component } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
-import { CardTypeService } from '../../../service/basic/card-type.service';
-import { TLS23090Service } from '../../../service/api/tls/tls23090.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS23090Service } from '../../../service/api/tls/tls23090.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { InstallmentPeriodService } from '../../../service/basic/installment-period.service';
-import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { CommonModule, NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DialogModule } from 'primeng/dialog';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonModule } from 'primeng/button';
-import { NgIf, CommonModule } from '@angular/common';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 import { HttpResponse } from '@angular/common/http';
 import { finalize, map } from 'rxjs/operators';
 
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls23090',
   templateUrl: './tls23090.component.html',
-  styleUrls: ['./tls23090.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -127,28 +124,25 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   });
 
   /* ----------------- 下拉選項 ----------------- */
-  cardTypeOptions: any[] = [];
+  cardTypeOptions = getSYS1000Options('CREDIT_CRD_Type');
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
   WhetherOptions: any[] = [];
-  installmentPeriodOptions: any[] = [];
-  acquiringBankOptions: any[] = [];
+  installmentPeriodOptions = getSYS1000Options('T109');
+  acquiringBankOptions = getSYS1000Options('T113');
   connectionStatusOptions: any[] = [
     { value: '1', label: '連線' },
     { value: '2', label: '離線' },
   ];
 
   constructor(
-    private cardTypeService: CardTypeService,
     private tls23090Service: TLS23090Service,
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private installmentPeriodService: InstallmentPeriodService,
-    private acquiringBankService: AcquiringBankService,
     private tls11010Service: Tls11010Service,
   ) {
     super();
@@ -245,7 +239,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     this.columns = this.columnsCredit;
 
     // 下拉選項
-    this.cardTypeService.getCardType().subscribe(data => this.cardTypeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe(res => {
@@ -269,8 +262,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
         value: x.value,
       }));
     });
-    this.installmentPeriodService.getInstallmentPeriods().subscribe(data => this.installmentPeriodOptions = data);
-    this.acquiringBankService.getAcquiringBanks().subscribe(data => this.acquiringBankOptions = data);
   }
 
   onSubmit(form: FormGroup): void {
@@ -524,7 +515,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   /* ----------------- 匯出（不帶 pageSize/pageIndex） ----------------- */
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
-    const { pageSize, PageSize, pageIndex, PageIndex, ...rest } = this.historyRequestBody; // ✅ 去掉分頁欄位
+    const { ...rest } = this.historyRequestBody; // ✅ 去掉分頁欄位
     return rest;
   }
 

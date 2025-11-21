@@ -1,31 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { TLS23060Service } from '../../../service/api/tls/tls23060.service';
-import { TypeService } from '../../../service/basic/type.service';
-import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS23060Service } from '../../../service/api/tls/tls23060.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { FloorService } from '../../../service/basic/floor.service';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls23060',
@@ -80,7 +79,10 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   });
 
   // ===== 下拉 =====
-  typeOptions: any[] = [];
+  typeOptions: any[] = [
+    { value: 1, label: '使用業主發票' },
+    { value: 2, label: '非使用業主發票' },
+  ];
   ECRNoOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
@@ -103,7 +105,6 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private tls23060Service: TLS23060Service,
-    private typeService: TypeService,
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
@@ -116,7 +117,6 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23060', 'tls/tls23060cru', this.queryForm, (form) => this.onSubmit(form));
     this.sortMeta = this.defaultSort.map((s) => ({ ...s }));
 
-    this.typeService.getTypeOptions().subscribe((data) => (this.typeOptions = data));
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
 
     this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
@@ -249,8 +249,8 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       body?.SortBy && body.SortBy.length
         ? body.SortBy
         : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
-        ? formVal.SortBy
-        : this.defaultSort;
+          ? formVal.SortBy
+          : this.defaultSort;
 
     const pagingAndSort = {
       pageSize: 30,
@@ -575,7 +575,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
       const d = String(val.getDate()).
-      padStart(2, '0');
+        padStart(2, '0');
       return `${y}/${m}/${d}`;
     }
     const s = String(val);

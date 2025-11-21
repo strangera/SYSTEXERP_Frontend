@@ -1,20 +1,19 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { StockRangeService } from './../../../service/basic/stock-range.service';
-import { TLS57030Service } from '../../../service/api/tls/tls57030.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { finalize } from 'rxjs';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS57030Service } from '../../../service/api/tls/tls57030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls57030',
@@ -51,7 +50,12 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
   warehouseOptions: any[] = [];
   brandCodeOptions: any[] = [];
   managementIDOptions: any[] = [];
-  stockRangeOptions: any[] = [];
+  stockRangeOptions = [
+    { value: 1, label: '全顯示' },
+    { value: 2, label: '僅顯示不為零庫存' },
+    { value: 3, label: '僅顯示零庫存' },
+    { value: 4, label: '僅顯示負庫存' }
+  ];
 
   data: any[] = [];
   totalRecords = 0;
@@ -77,7 +81,6 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private stockRangeService: StockRangeService,
     public readonly tls57030Service: TLS57030Service
   ) {
     super();
@@ -85,7 +88,6 @@ export class TLS57030Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS57030');
-    this.stockRangeService.getStockRangeOptions().subscribe((data) => (this.stockRangeOptions = data));
 
     this.queryForm.get('DisplayRowNumber')?.valueChanges.subscribe(value => {
       if (value && this.historyRequestBody) {

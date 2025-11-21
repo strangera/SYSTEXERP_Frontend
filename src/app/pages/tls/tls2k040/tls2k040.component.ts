@@ -1,32 +1,28 @@
-import { CardStatusService } from './../../../service/basic/card-status.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.19.4 餘代卡交易補登作業
 @Component({
-    selector: 'app-tls2k040',
-    templateUrl: './tls2k040.component.html',
-    styleUrl: './tls2k040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2k040',
+  templateUrl: './tls2k040.component.html',
+  styleUrl: './tls2k040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class TLS2K040Component {
   ProgNo: string = '220100';
@@ -39,17 +35,17 @@ export class TLS2K040Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     shop: ['', [Validators.maxLength(10)]], // Input Text
-    cardID: [, [Validators.maxLength(14), this.validationService.numberValidator]], // 餘代卡卡號
+    cardID: [, [Validators.maxLength(14)]], // 餘代卡卡號
     status: [[] as number[]], // 餘代卡狀態
     backupStartdate: [], // 補登日期
     backupEnddate: [], // 補登日期
     releaseStartdate: [], // 卡片發行日
     releaseEnddate: [], // 卡片發行日
-    machineStart: [, [this.validationService.numberValidator]], // 機號
-    machineEnd: [, [this.validationService.numberValidator]], // 機號
-    transferStart: [, [this.validationService.numberValidator]], // 交易序號
-    transferEnd: [, [this.validationService.numberValidator]], // 交易序號
-    serialnumber: [, [this.validationService.numberValidator, Validators.maxLength(6)]], // 專櫃編號/櫃號
+    machineStart: [,], // 機號
+    machineEnd: [,], // 機號
+    transferStart: [,], // 交易序號
+    transferEnd: [,], // 交易序號
+    serialnumber: [, [Validators.maxLength(6)]], // 專櫃編號/櫃號
   });
   // 表格
   // ----------------------------------------------------------------
@@ -81,28 +77,12 @@ export class TLS2K040Component {
   ];
 
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private cardStatusService: CardStatusService,
   ) {
   }
 
   ngOnInit(): void {
     //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    this.cardStatusService.getSystemTypes().subscribe(data => {
-      this.statusOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.statusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   status: allSystemValues
-      // });
-    });
   }
 
   canQuery(): boolean {
@@ -118,22 +98,7 @@ export class TLS2K040Component {
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -155,8 +120,6 @@ export class TLS2K040Component {
         skipLocationChange: true
       };
 
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2K040CRU'], extras);
     }
   }
 
@@ -170,8 +133,6 @@ export class TLS2K040Component {
         },
         skipLocationChange: true
       };
-
-      this.router.navigate(['/TLS2000/TLS2K040CRU'], extras);
     }
   }
 
@@ -184,7 +145,5 @@ export class TLS2K040Component {
       },
       skipLocationChange: true
     };
-
-    this.router.navigate(['/TLS2000/TLS2K040CRU'], extras);
   }
 }

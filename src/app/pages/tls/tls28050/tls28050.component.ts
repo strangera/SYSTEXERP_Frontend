@@ -1,24 +1,19 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
 // Services for dropdowns
-import { BagTypeService } from '../../../service/basic/bag-type.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 
@@ -70,24 +65,11 @@ export class TLS28050Component {
   floorOptions: any[] = [];
 
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private bagTypeService: BagTypeService,
-    private floorService: FloorService
   ) { }
 
   ngOnInit(): void {
 
-    // Initialize dropdown options
-    this.bagTypeService.getBagTypes().subscribe(data => {
-      this.bagTypeOptions = data;
-    });
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
   }
 
   canQuery(): boolean {
@@ -103,17 +85,7 @@ export class TLS28050Component {
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -134,7 +106,6 @@ export class TLS28050Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -148,7 +119,6 @@ export class TLS28050Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -161,6 +131,5 @@ export class TLS28050Component {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demoCRU'], extras);
   }
 }

@@ -1,8 +1,7 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../core/services/error-handler.service';
-import { catchError, map, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +11,6 @@ export class RegionService {
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
   ) { }
 
   getRegionOptions(): Observable<any[]> {
@@ -20,7 +18,6 @@ export class RegionService {
       .post<any>(`${this.apiUrl}/querySYS3A00_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
-        catchError(this.errorHandler.handleError)
       );
   }
 }

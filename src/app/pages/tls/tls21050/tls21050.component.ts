@@ -3,23 +3,14 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
-  FunsrightInfo,
-  PermissionsInfo,
+  FunsrightInfo
 } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { RegionService } from '../../../service/basic/region-code.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { OperationStatusService } from '../../../service/basic/operation-status.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { DeductionService } from '../../../service/basic/deduction.service';
-import { DeductionCodeNameService } from '../../../service/basic/deduction-code-name.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
 @Component({
@@ -81,35 +72,9 @@ export class TLS21050Component {
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private RegionService: RegionService,
-    private floorService: FloorService,
-    private operationStatusService: OperationStatusService,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private DeductionService: DeductionService,
-    private deductionCodeNameService: DeductionCodeNameService,
   ) { }
 
   ngOnInit(): void {
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-    this.RegionService.getRegionOptions().subscribe((data) => {
-      this.regionOptions = data;
-    });
-    this.operationStatusService.getOperationStatuses().subscribe((data) => {
-      this.operationStatusOptions = data;
-    });
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-    this.DeductionService.getDeductionCategories().subscribe((data) => {
-      this.commissionCategoryOptions = data;
-    });
-    this.deductionCodeNameService.getDeductionCodeNames().subscribe((data) => {
-      this.commissionTypeOptions = data;
-    });
   }
 
   canQuery(): boolean {
@@ -125,17 +90,6 @@ export class TLS21050Component {
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交逻辑
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {

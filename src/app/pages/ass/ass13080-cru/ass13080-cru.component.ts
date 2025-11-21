@@ -1,29 +1,20 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
-import { ValidationService } from '../../../shared/service/validation.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { ItemCodeService } from '../../../service/basic/item-code.service';
-import { SharedCodeService } from '../../../service/basic/shared-code.service';
-import { AssetStatusService } from '../../../service/basic/asset-status.service';
-import { AssetsTypeService } from '../../../service/basic/assets-type.service';
-import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 //3.1.3.8  資產變賣作業 CRU
 @Component({
@@ -106,18 +97,8 @@ export class ASS13080CRUComponent extends BasicCrupageComponent implements OnIni
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
     private validationService: ValidationService,
-    //
-    private sharedCodeService: SharedCodeService,
-    private itemCodeService: ItemCodeService,
-    private assetStatusService: AssetStatusService,
-    private usercodeService: UserCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private assetsTypeService: AssetsTypeService,
-    private needPayTicketService: NeedPayTicketService,
-    private vendorService: VendorService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -126,39 +107,6 @@ export class ASS13080CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310023';
     //
-
-    //
-    this.sharedCodeService.getSharedCode().subscribe(data => {
-      this.shareCodeOptions = data;
-    });
-    //
-    this.itemCodeService.getSystemTypes().subscribe(data => {
-      this.assetsCodeOptions = data;
-    });
-    //
-    this.assetStatusService.getAssetStatus().subscribe(data => {
-      this.assetsStatusOptions = data;
-    });
-    //
-    this.usercodeService.getUserCode().subscribe(data => {
-      this.userCodeOptions = data;
-    });
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationOptions = data;
-    });
-    //
-    this.assetsTypeService.getAssetsTypes().subscribe(data => {
-      this.assetTypeOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.accountingCodeOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.supplierCodeOptions = data;
-    });
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,

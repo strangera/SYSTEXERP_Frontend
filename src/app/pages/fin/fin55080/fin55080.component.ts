@@ -140,4 +140,20 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     );
   }
+  // 匯出 Excel 事件處理
+  onExportExcel() {
+    if (this.data.length === 0) {
+      // 避免匯出空資料
+      return;
+    }
+    // 確保使用 historyRequestBody
+    const export$: Observable<any> = this.fin55080Service.exportFIN55080(this.historyRequestBody);
+
+    // 使用 fileExportService 統一處理檔案下載和 loading 狀態
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      '.' + 'xlsx',        // 傳遞檔案副檔名
+      (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
+  }
 }

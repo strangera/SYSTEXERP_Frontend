@@ -1,31 +1,27 @@
-import { FloorService } from './../../../service/basic/floor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { ValidationService } from '../../../shared/service/validation.service';
-import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.15.3 專櫃進項發票未開立查詢作業
 @Component({
-    selector: 'app-tls2f030',
-    templateUrl: './tls2f030.component.html',
-    styleUrl: './tls2f030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2f030',
+  templateUrl: './tls2f030.component.html',
+  styleUrl: './tls2f030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class TLS2F030Component {
   ProgNo: string = '220082';
@@ -71,36 +67,12 @@ export class TLS2F030Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private settlementMethodService: SettlementMethodService,
-    private floorService: FloorService,
   ) {
   }
 
   ngOnInit(): void {
     //
     // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.floorOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   floor: allSystemValues
-      // });
-    });
-    //
-    this.settlementMethodService.getSettlementMethods().subscribe(data => {
-      this.checkoutMethodOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.checkoutMethodOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   checkoutMethod: allSystemValues
-      // });
-    });
   }
 
   canQuery(): boolean {

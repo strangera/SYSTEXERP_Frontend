@@ -1,28 +1,24 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //-----
-import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
-import { TicketCategoryService } from './../../../service/basic/ticket-category.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // 2.2.13.5 部門使用券類設定作業CRU
 @Component({
-    selector: 'app-tls2d050-cru',
-    templateUrl: './tls2d050-cru.component.html',
-    styleUrl: './tls2d050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2d050-cru',
+  templateUrl: './tls2d050-cru.component.html',
+  styleUrl: './tls2d050-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnInit {
   departmentOptions: any[] = [];
@@ -41,12 +37,7 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
-    //
-    private validationService: ValidationService,
-    private announcementUserService: AnnouncementUserService,
-    private ticketCategoryService: TicketCategoryService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -55,16 +46,6 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '220067';
     //
-    // ----------------------------------------------------------------
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.announcementUserService.getSystemTypes().subscribe(data => {
-      this.departmentOptions = data;
-    });
-    //
-    this.ticketCategoryService.getSystemTypes().subscribe(data => {
-      this.couponOptions = data;
-    });
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,

@@ -1,31 +1,22 @@
-import { AssetsTypeService } from './../../../service/basic/assets-type.service';
-import { AssetStatusService } from './../../../service/basic/asset-status.service';
-import { SharedCodeService } from './../../../service/basic/shared-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ItemCodeService } from '../../../service/basic/item-code.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from '../../../shared/service/validation.service';
 //
 
 //3.1.3.3 資產報廢作業
@@ -123,17 +114,7 @@ export class ASS13030Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
-    private sharedCodeService: SharedCodeService,
-    private itemCodeService: ItemCodeService,
-    private assetStatusService: AssetStatusService,
-    private usercodeService: UserCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private assetsTypeService: AssetsTypeService,
-    private needPayTicketService: NeedPayTicketService,
-    private vendorService: VendorService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -143,40 +124,6 @@ export class ASS13030Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310018';
     this.cruPage = '/ASS1000/ASS13030CRU';
     //
-
-    //
-    this.sharedCodeService.getSharedCode().subscribe(data => {
-      this.shareCodeOptions = data;
-    });
-    //
-    this.itemCodeService.getSystemTypes().subscribe(data => {
-      this.assetsCodeOptions = data;
-    });
-    //
-    this.assetStatusService.getAssetStatus().subscribe(data => {
-      this.assetsStatusOptions = data;
-    });
-    //
-    this.usercodeService.getUserCode().subscribe(data => {
-      this.userCodeOptions = data;
-    });
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationOptions = data;
-    });
-    //
-    this.assetsTypeService.getAssetsTypes().subscribe(data => {
-      this.assetTypeOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.accountingCodeOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.supplierCodeOptions = data;
-    });
-    // ----------------------------------------------------------------
   }
 
   // ----------------------------------------------------------------

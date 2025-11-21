@@ -1,26 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { ItemCodeService } from '../../../service/basic/item-code.service';
-import { PurchaseTypeService } from '../../../service/basic/purchase-type.service';
-import { AssetStatusService } from '../../../service/basic/asset-status.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 
 //3.1.5.2  財產保管清冊
@@ -133,14 +126,6 @@ export class ASS15020Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private organizationNumberService: OrganizationNumberService,
-    private userCodeService: UserCodeService,
-    private itemCodeService: ItemCodeService,
-    private purchaseTypeService: PurchaseTypeService,
-    private assetStatusService: AssetStatusService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -150,28 +135,6 @@ export class ASS15020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '310033';
     this.cruPage = '/ASS1000/ASS15020CRU';
     //
-
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.keepingDepartmentOptions = data;
-    });
-    //
-    this.userCodeService.getUserCode().subscribe(data => {
-      this.keepingPersonOptions = data;
-    });
-    //
-    this.itemCodeService.getSystemTypes().subscribe(data => {
-      this.itemCodeOptions = data;
-    });
-    //
-    this.purchaseTypeService.getPurchaseTypes().subscribe(data => {
-      this.propertyTypeOptions = data;
-    });
-    //
-    this.assetStatusService.getAssetStatus().subscribe(data => {
-      this.assetsStatusOptions = data;
-    });
-    // ----------------------------------------------------------------
   }
 
   // ----------------------------------------------------------------

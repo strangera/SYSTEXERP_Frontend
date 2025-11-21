@@ -1,13 +1,12 @@
-import { Component } from '@angular/core';
 import { Location } from '@angular/common';
+import { Component } from '@angular/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
-import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { TxnStatusService } from '../../../service/basic/txn-status.service';
+import { PdfService } from '../../../service/basic/pdf.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
-import { PaymentDetail, DiscountDetail, InvoiceDetail } from '../tls23040/tls23040.model';
+import { DiscountDetail, InvoiceDetail, PaymentDetail } from '../tls23040/tls23040.model';
 type DisplayMode = 'Report' | 'ByPaymentType' | 'ByDiscountType';
 
 @Component({
@@ -32,13 +31,17 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
   dataForm = this.formBuilder.nonNullable.group({});
 
   OrganizationCodeOptions: any[] = [];
-  txnStatusOptions: any[] = [];
+  txnStatusOptions = [
+    { value: 'N', label: '正常交易' },
+    { value: 'C', label: '交易取消' },
+    { value: 'D', label: '發票作廢' },
+    { value: 'E', label: '隔日發票作廢' },
+  ];
 
   constructor(
     private location: Location,
     private pdfService: PdfService,
     private tls11010Service: Tls11010Service,
-    private txnStatusService: TxnStatusService,
   ) {
     super();
   }
@@ -66,10 +69,6 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
       }));
-    });
-
-    this.txnStatusService.getTxnStatusOptions().subscribe((data) => {
-      this.txnStatusOptions = data;
     });
 
     this.initializePage('TLS23040', this.dataForm);

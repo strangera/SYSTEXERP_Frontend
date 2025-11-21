@@ -1,27 +1,23 @@
 import { Component, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { ManagementIDService } from '../../../service/basic/management-id.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { DropDownListService, IDropdownItem, IPOS20032Request } from '@service/utility/dropDownList.service';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { debounceTime } from 'rxjs/operators';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { ExportLabelService } from '@service/utility/exportLabel.service';
+import { TranslateModule } from '@ngx-translate/core';
 import { TLS56010Service } from '@service/api/tls/tls56010.service';
+import { DropDownListService, IDropdownItem, IPOS20032Request } from '@service/utility/dropDownList.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
+import { debounceTime } from 'rxjs/operators';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 export interface IPOS20031Request {
   CAT_LNo: string[];
@@ -117,11 +113,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private notificationService: NotificationService,
-    private managementIdService: ManagementIDService,
-    private brandCodeService: BrandCodeService,
     private dropDownListService: DropDownListService,
-    private exportLabelService: ExportLabelService,
     private tls52010Service: Tls52010Service,
     private tls56010Service: TLS56010Service
   ) {

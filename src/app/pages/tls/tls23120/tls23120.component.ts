@@ -1,35 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { Component, OnDestroy } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { debounceTime, distinctUntilChanged, map, Subject, takeUntil, finalize } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, map, Subject, takeUntil } from 'rxjs';
 
-import { RegionService } from '../../../service/basic/region-code.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextModule } from 'primeng/inputtext';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 type FilterMode = 'location' | 'busType' | 'org' | 'counter';
 
@@ -121,8 +119,6 @@ export class TLS23120Component
 
   constructor(
     private tls23120Service: TLS23120Service,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private organizationNumberService: OrganizationNumberService,
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private floorService: FloorService,
@@ -140,11 +136,13 @@ export class TLS23120Component
     this.sortMeta = this.defaultSort.map(s => ({ ...s }));
 
     // 選項載入
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
+    // TODO: 請改打API
+    // this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
     this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
+    // TODO: 請改打API
+    // this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
     this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = (res ?? []).map(x => ({

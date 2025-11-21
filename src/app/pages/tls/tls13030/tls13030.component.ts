@@ -1,34 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import {
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
+  Validators,
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
-  createPaginationConfig,
-  LazyLoadEvent,
+  LazyLoadEvent
 } from '../../../shared/componentkit/table/table.model';
 
-import { OperationStatusService } from '../../../service/basic/operation-status.service';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { DeductionService } from '../../../service/basic/deduction.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
+import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
+import { DeductionService } from '../../../service/basic/deduction.service';
 
 // UI
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // ✅ 自動取消訂閱
@@ -114,9 +111,21 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   // ===== 下拉選項 =====
   regionOptions: any[] = [];
   floorOptions: any[] = [];
-  operationStatusOptions: any[] = [];
+  operationStatusOptions = [
+    { value: 0, label: '閉店/撤櫃' },
+    { value: 1, label: '營業中' },
+    { value: 2, label: '合約結束' },
+    { value: 9, label: '核准時合約尚未開始' },
+  ];
   bus_typeOptions: any[] = [];
-  deductionCategoryOptions: any[] = [];
+  deductionCategoryOptions = [
+    { value: 'A', label: '一次扣款' },
+    { value: 'B', label: '每月扣款' },
+    { value: 'C', label: '平均分攤' },
+    { value: 'D', label: '比率分攤' },
+    { value: 'E', label: '活動扣款' },
+    { value: 'Z', label: '其他扣款' },
+  ];
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   organizationOptions: any[] = [];
@@ -154,7 +163,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   ];
 
   constructor(
-    private operationStatusService: OperationStatusService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
@@ -169,20 +177,10 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS13030', '', this.queryForm);
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
 
-    this.operationStatusService
-      .getOperationStatuses()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.operationStatusOptions = data);
-
     this.bigCategoryCodeService
       .getSystemTypes()
       .pipe(untilDestroyed(this))
       .subscribe(data => this.bus_typeOptions = data);
-
-    this.deductionService
-      .getDeductionCategories()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.deductionCategoryOptions = data);
 
     this.tls11010Service
       .getBuildingOptions()
@@ -224,7 +222,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       .subscribe(opts => {
         this.organizationOptions = opts;
       });
-          this.counterNameService.getCounters().subscribe(v => this.CounterOptions = (v || []).map((x) => ({
+    this.counterNameService.getCounters().subscribe(v => this.CounterOptions = (v || []).map((x) => ({
       label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
     })));
   }
@@ -233,7 +231,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
     // 1) 讀 event 的 pageIndex/pageSize
     const evPageIndex = Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
-    const evPageSize  = Number.isFinite(event.pageSize)  ? Number(event.pageSize)  : undefined;
+    const evPageSize = Number.isFinite(event.pageSize) ? Number(event.pageSize) : undefined;
 
     // 2) 排序：沿用現有或表單內
     const currSort = JSON.stringify(form.value?.SortBy ?? []);

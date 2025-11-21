@@ -1,19 +1,15 @@
-import { FloorService } from './../../../service/basic/floor.service';
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 // Services
 
 @Component({
@@ -34,10 +30,6 @@ export class ASS22040CRUComponent
     this.ProgNo = '320010';
 
     // 下拉選單--------------------------------------------------------
-    //  this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
-    this.floorService.getFloors().subscribe((data) => (this.floor = data));
-    // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
       rowdata: any;
@@ -158,11 +150,6 @@ export class ASS22040CRUComponent
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private userCodeService: UserCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private floorService: FloorService,
 
   ) {
     super(); // 呼叫父類建構子

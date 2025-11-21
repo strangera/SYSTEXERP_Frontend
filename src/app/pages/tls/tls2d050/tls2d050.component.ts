@@ -1,30 +1,26 @@
-import { TicketCategoryService } from './../../../service/basic/ticket-category.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { ValidationService } from '../../../shared/service/validation.service';
-import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.13.5 部門使用券類設定作業
 @Component({
-    selector: 'app-tls2d050',
-    templateUrl: './tls2d050.component.html',
-    styleUrl: './tls2d050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2d050',
+  templateUrl: './tls2d050.component.html',
+  styleUrl: './tls2d050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS2D050Component {
   ProgNo: string = '220067';
@@ -62,10 +58,6 @@ export class TLS2D050Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private announcementUserService: AnnouncementUserService,
-    private ticketCategoryService: TicketCategoryService,
   ) {
   }
 
@@ -73,26 +65,6 @@ export class TLS2D050Component {
     //
     // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
-    this.announcementUserService.getSystemTypes().subscribe(data => {
-      this.departmentOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.departmentOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   department: allSystemValues
-      // });
-    });
-
-    //
-    this.ticketCategoryService.getSystemTypes().subscribe(data => {
-      this.couponOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.couponOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   coupon: allSystemValues
-      // });
-    });
   }
 
   canQuery(): boolean {

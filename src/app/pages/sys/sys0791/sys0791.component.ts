@@ -1,30 +1,21 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
-  FunsrightInfo,
-  PermissionsInfo,
+  FunsrightInfo
 } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { QueryAngleService } from '../../../service/basic/query-angle.service';
-import { RoleCodeService } from '../../../service/basic/role-code.service';
-import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
-import { SubsystemService } from '../../../service/basic/subsystem.service';
-import { JobNumberService } from '../../../service/basic/jobnumber.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 const nowDate = new Date();
 
@@ -101,38 +92,9 @@ export class SYS0791Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private organizationNumber: OrganizationNumberService,
-    private queryAngleService: QueryAngleService,
-    private userCodeService: UserCodeService,
-    private roleCodeService: RoleCodeService,
-    private systemTypeDetailService: SystemTypeDetailService,
-    private subsystemService: SubsystemService,
-    private jobNumberService: JobNumberService
   ) { }
 
   ngOnInit(): void {
-    this.organizationNumber.getOrganizationNumbers().subscribe((data) => {
-      this.organizationNumberOptions = data;
-    });
-    this.queryAngleService.getQueryAngle().subscribe((data) => {
-      this.queryAngleOptions = data;
-    });
-    this.userCodeService.getUserCode().subscribe((data) => {
-      this.UserCodeOptions = data;
-    });
-    this.roleCodeService.getRoleCodes().subscribe((data) => {
-      this.roleCodeOptions = data;
-    });
-    this.systemTypeDetailService.getSystemTypes().subscribe((data) => {
-      this.systemTypeDetailOptions = data;
-    });
-    this.subsystemService.getSubsystems().subscribe((data) => {
-      this.subsystemOptions = data;
-    });
-    this.jobNumberService.getJobNumbers().subscribe((data) => {
-      this.jobNumberOptions = data;
-    });
   }
 
   canQuery(): boolean {
