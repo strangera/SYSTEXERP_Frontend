@@ -64,11 +64,8 @@
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
   },
-  // "[html]": {
-  //   "editor.defaultFormatter": "vscode.html-language-features"
-  // },
   "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.html-language-features"
   },
   // 設置 Live Server 的網站根目錄
   "liveServer.settings.root": "dist/tsrderp-frontend/browser",

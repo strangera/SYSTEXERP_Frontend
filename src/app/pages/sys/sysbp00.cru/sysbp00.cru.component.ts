@@ -1,153 +1,93 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
 import { NgFor, NgIf } from '@angular/common';
+import { Component, OnInit, ViewChild, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Sysbp00Response, Sysbp00ResponseDetail, Sysbp00Service } from '@service/api/sys/sysbp00.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-sysbp00.cru',
   templateUrl: './sysbp00.cru.component.html',
-  styleUrl: './sysbp00.cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CheckboxModule, NgFor, DropdownComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [TableEditComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CheckboxModule, NgFor, DropdownComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
 // 參數資料設定維護 CRU
-export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit {
-  //
-  codeStatusOptions: any[] = [];
-  // ----------------------------------------------------------------
+export class SYSBP00CRUComponent extends BasicCruPageComponent<Sysbp00Response> implements OnInit {
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
-    parameterSource: ['', [Validators.required, Validators.maxLength(7)]], //參數來源
-    parameterTitle: ['', [Validators.required, Validators.maxLength(20)]], // 參數標題
-    readonly: [, Validators.required], // 是否唯讀
-    parameterInfo: ['', [Validators.required, Validators.maxLength(100)]], // 參數說明
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    SYS_Type: ['', [Validators.required, Validators.maxLength(40)]],
   });
-  // ----------------------------------------------------------------
+  data: Sysbp00ResponseDetail[] = [];
+  selectedItems: Sysbp00ResponseDetail[] = [];
+  editColumns: EditColumn[] = [
+    { field: 'SYS_Code', header: '參數代號', width: '150px', type: 'input', validate: [validateRequired] },
+    { field: 'SYS_Name', header: '參數名稱', width: '100%', type: 'input', textAlign: 'left', validate: [validateRequired] },
+  ]
+  validateEntireRow = (rowData: Sysbp00ResponseDetail): { isValid: boolean, errorMessage: string } => {
+    const hasDuplicateSYS_Code = this.data.some(item =>
+      item.SYS_Code === rowData.SYS_Code && item._TABLE_KEY !== rowData._TABLE_KEY
+    );
+    if (hasDuplicateSYS_Code) {
+      return { isValid: false, errorMessage: '參數代號已重複' };
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    private readonly sysbp00Service: Sysbp00Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410011';
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+    this.initializePage('SYSBP00', this.dataForm);
+    if (!this.isFormCreateable) {
+      this.data = this.rowdata?.Details ?? [];
+      this.dataForm.disable();
     }
   }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
+      const params = this.data.map(item => ({
+        ID: item.ID ?? 0,
+        SYS_Code: item.SYS_Code,
+        SYS_Name: item.SYS_Name,
+        SYS_Sort: item.SYS_Sort,
+        SYS_Type: frm.getRawValue().SYS_Type
+      }));
+      const $request = this.isFormCreateable ? this.sysbp00Service.insertSYSBP00(params) : this.sysbp00Service.updateSYSBP00(params);
+      $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.messageService.successBubble(response.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+          this.data = [];
+        } else {
+          this.onCancel();
+        }
+      })
+    })
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      parameterItem: ['', [Validators.required, Validators.maxLength(20)]], // 參數項目
-      parameterStatus: [, [Validators.required]], // 參數狀態
-      order: [, [Validators.required,]], // 排序序號
-      parameterContent: ['', [Validators.required, Validators.maxLength(20)]], // 參數內容
+  rowReorder() {
+    this.data.forEach((rowData, index) => {
+      rowData.SYS_Sort = index + 1;
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/SYSB000/SYSBP00']);
-  }
-  //--------------------------------------------------------------------------------------------------------------
 }
