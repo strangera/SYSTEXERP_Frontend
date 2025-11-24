@@ -14,7 +14,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
@@ -78,7 +77,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]),
   });
 
-  // 注意：狀態欄改用 LOCATION_Status_Label，避免資料在排序/再查詢時被型別影響
+  // 使用 LOCATION_Status 當排序欄位，顯示時用 options 轉成中文標籤
   columns: any[] = [
     { field: 'LOCATION_No', header: '位置代碼', visible: true },
 
@@ -88,25 +87,34 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       field: 'building_no',
       header: '館別',
       visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.BUILDING_NO_Options),
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.BUILDING_NO_Options),
     },
     {
       field: 'FLOOR_NO',
       header: '樓層',
       visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.floorOptions),
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.floorOptions),
     },
     {
       field: 'AREA_NO',
       header: '區域',
       visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.RegionCodeOptions),
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.RegionCodeOptions),
     },
     { field: 'GROSS_SPACE', header: '簽約坪數', visible: true },
     { field: 'NET_SPACE', header: '營業坪數', visible: true },
 
-    // 用 Label 欄，避免排序或再次查詢時變成 null
-    { field: 'LOCATION_Status_Label', header: '使用狀態', visible: true },
+    // ✅ 用 LOCATION_Status 當排序欄位，畫面顯示 label
+    {
+      field: 'LOCATION_Status',
+      header: '使用狀態',
+      visible: true,
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.LOCATION_Status_Options),
+    },
 
     { field: 'purpose_desc', header: '用途名稱', visible: true },
     { field: 'Draw_X', header: '平面圖X座標', visible: true },
@@ -117,57 +125,56 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   constructor(private tls11010Service: Tls11010Service) {
     super();
   }
-ngOnInit(): void {
-  // 1. 初始化頁面（只負責 ProgNo、權限、cruPage 等，不由它幫你做查詢還原）
-  this.initializePage('TLS11010', 'tls/tls11010cru');
 
-  // 2. 使用 BasicQueryPageComponent 提供的通用「查詢條件還原」機制
-  //   - 會從 QueryStateService 抓上次的查詢條件
-  //   - 有資料就 patch 回 form
-  //   - 然後自動幫你再 call 一次 onSubmit(queryForm)
-  this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
+  ngOnInit(): void {
+    // 1. 初始化頁面（只負責 ProgNo、權限、cruPage 等，不由它幫你做查詢還原）
+    this.initializePage('TLS11010', 'tls/tls11010cru');
 
-  // 3. 以下維持原本的 dropdown 載入邏輯
-  this.tls11010Service
-    .getFloorOptions()
-    .pipe(untilDestroyed(this))
-    .subscribe((res) => (this.floorOptions = res));
+    // 2. 共用查詢條件還原機制
+    this.handleQueryRestore(this.queryForm, this.ProgNo, (f) =>
+      this.onSubmit(f),
+    );
 
-  this.tls11010Service
-    .getRegionOptions()
-    .pipe(untilDestroyed(this))
-    .subscribe((res) => (this.RegionCodeOptions = res));
+    // 3. 載入各種下拉
+    this.tls11010Service
+      .getFloorOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => (this.floorOptions = res));
 
-  this.tls11010Service
-    .getOrgOptions()
-    .pipe(untilDestroyed(this))
-    .subscribe((res) => {
-      this.OrganizationCodeOptions =
-        res?.map((x: any) => ({
-          label: x.label, // table 顯示
-          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
-          value: x.value,
-        })) || [];
-    });
+    this.tls11010Service
+      .getRegionOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => (this.RegionCodeOptions = res));
 
-  this.tls11010Service
-    .getUsageOptions()
-    .pipe(untilDestroyed(this))
-    .subscribe((res) => {
-      this.usageOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
+    this.tls11010Service
+      .getOrgOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.OrganizationCodeOptions =
+          res?.map((x: any) => ({
+            label: x.label, // table 顯示
+            formLabel: `${x.value} - ${x.label}`, // 下拉顯示
+            value: x.value,
+          })) || [];
+      });
 
-  this.tls11010Service
-    .getBuildingOptions()
-    .pipe(untilDestroyed(this))
-    .subscribe((res) => (this.BUILDING_NO_Options = res));
-}
+    this.tls11010Service
+      .getUsageOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.usageOptions =
+          res?.map((x: any) => ({
+            label: x.label,
+            formLabel: `${x.value} - ${x.label}`,
+            value: x.value,
+          })) || [];
+      });
 
+    this.tls11010Service
+      .getBuildingOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => (this.BUILDING_NO_Options = res));
+  }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -182,16 +189,17 @@ ngOnInit(): void {
 
       // 將 LOCATION_Status 轉成字串陣列（後端若用 in 查詢較穩）
       if (Array.isArray(formValue.LOCATION_Status)) {
-        formValue.LOCATION_Status = formValue.LOCATION_Status.map((x: string | number) =>
-          String(x),
+        formValue.LOCATION_Status = formValue.LOCATION_Status.map(
+          (x: string | number) => String(x),
         );
       }
-            // 將 Purpose_no 轉成字串陣列，變成 ["1","2"]
-      if (Array.isArray(formValue.Purpose_no)) {
-        formValue.Purpose_no = formValue.Purpose_no.map((x: string | number) => String(x));
-      }
 
-      // console.log('🔍 查詢條件 request payload:', formValue);
+      // 將 Purpose_no 轉成字串陣列，變成 ["1","2"]
+      if (Array.isArray(formValue.Purpose_no)) {
+        formValue.Purpose_no = formValue.Purpose_no.map(
+          (x: string | number) => String(x),
+        );
+      }
 
       this.tls11010Service
         .queryData(formValue)
@@ -202,7 +210,7 @@ ngOnInit(): void {
               const rows = res?.Data || [];
               // 先把 null → ''（避免 table 顯示 null）
               const cleaned = this.convertNullToEmptyString(rows);
-              // 再建立 LABEL 欄位，避免排序/再查詢導致的型別轉換影響
+              // 保留裝飾用欄位（雖然目前欄位用不到也沒關係）
               this.data = this.decorateRowsForDisplay(cleaned);
               this.totalRecords = res?.TotalCount || this.data.length;
               this.queryStateService.setQueryState(this.ProgNo, formValue);
@@ -250,7 +258,6 @@ ngOnInit(): void {
         : String(data?.AREA_NO ?? '').trim(),
     };
 
-    // console.log('🛫 編輯時傳入的 trimmed AREA_NO：', trimmedData.AREA_NO);
     this.navigateWithState(CRUDStatus.Edit, trimmedData);
   }
 
@@ -269,15 +276,20 @@ ngOnInit(): void {
     return obj;
   }
 
-  /** 產生穩定的顯示欄位（例如 LOCATION_Status_Label），避免排序造成顯示異常 */
+  /**
+   * 產生額外顯示欄位（目前保留 LOCATION_Status_*，方便之後需要時使用）
+   */
   private decorateRowsForDisplay(rows: any[]): any[] {
     return rows.map((r) => {
       const statusCode = String(r?.LOCATION_Status ?? '').trim();
-      const statusLabel = this.getLabelFromOptions(statusCode, this.LOCATION_Status_Options);
+      const statusLabel = this.getLabelFromOptions(
+        statusCode,
+        this.LOCATION_Status_Options,
+      );
       return {
         ...r,
         LOCATION_Status_Code: statusCode,
-        LOCATION_Status_Label: statusLabel, // 表格直接吃這個
+        LOCATION_Status_Label: statusLabel,
       };
     });
   }
@@ -285,7 +297,9 @@ ngOnInit(): void {
   /** 安全取得 Options 的 label；同時相容 number / string */
   getLabelFromOptions(value: any, options: any[]): string {
     const trimmedValue = String(value ?? '').trim();
-    const found = options?.find((opt) => String(opt.value ?? '').trim() === trimmedValue);
+    const found = options?.find(
+      (opt) => String(opt.value ?? '').trim() === trimmedValue,
+    );
     return found ? found.label : trimmedValue;
   }
 }

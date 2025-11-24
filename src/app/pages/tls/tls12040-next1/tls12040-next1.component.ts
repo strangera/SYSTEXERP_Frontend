@@ -782,11 +782,22 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const cruBefore = this.flowService.getStepData('cru');
     // console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
 
+    // 🔥 關鍵修復:使用 originalFareData 並包含所有項目(包括 deleted 狀態的)
+    const allFareItems = Object.values(this.originalFareData).flat();
+
     const next1Data = {
       fareData: this.fareData,
-      selectedItems: Object.values(this.fareData).flat().filter(item => item.is_selected),
+      selectedItems: allFareItems,  // 🔥 改為包含所有項目,讓 DataCleaner 處理篩選
       contractInfo: this.contractInfoData
     };
+
+    console.log('💾 儲存的 selectedItems 包含:', {
+      總數: allFareItems.length,
+      已選: allFareItems.filter(item => item.is_selected).length,
+      刪除: allFareItems.filter(item => item._status === 'deleted').length,
+      新增: allFareItems.filter(item => item._status === 'new').length,
+      修改: allFareItems.filter(item => item._status === 'modified').length
+    });
 
     const saveResult = this.flowService.setStepData('next1', next1Data);
 
@@ -823,6 +834,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   hasDataForType(capType: string): boolean {
+    // 檢查過濾後的 fareData 是否有資料
+    // 這樣在常用模式下如果過濾後沒有項目,會顯示提示訊息
     return this.fareData[capType] &&
       Array.isArray(this.fareData[capType]) &&
       this.fareData[capType].length > 0;
@@ -1322,7 +1335,17 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.fareData[capType].forEach(displayItem => {
       const originalItem = this.originalFareData[capType].find(item => item.id === displayItem.id);
       if (originalItem) {
+        // 🔥 完整同步所有狀態欄位
         originalItem.is_selected = displayItem.is_selected;
+        originalItem._status = displayItem._status;  // 🔥 關鍵修復:同步 _status
+
+        // 🔥 新增日誌以追蹤刪除狀態
+        if (displayItem._status === 'deleted') {
+          console.log(`🗑️ ${capType} 類型項目 ${displayItem.cap_item} 標記為刪除`, {
+            id: displayItem.id,
+            data_source: displayItem.data_source
+          });
+        }
       }
     });
   }
@@ -1563,7 +1586,23 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    // console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
+    // 專門處理 checkbox 勾選
+    if (fieldName === 'is_selected') {
+      // 🔥 關鍵修復:先更新項目的選擇狀態(_status)
+      this.fareStatusService.updateItemSelectionStatus(rowData);
+
+      console.log(`🔥 is_selected 變更: ${rowData.cap_item} (${capType})`, {
+        newValue,
+        _status: rowData._status,
+        data_source: rowData.data_source
+      });
+
+      // 然後同步到 originalData
+      this.updateOriginalData(capType || 'A');
+      this.filterData();
+      this.saveFareDataToWorkflow();
+      return;
+    }
 
     // 根據 capType 進行對應的計算處理
     switch (capType) {

@@ -21,6 +21,14 @@ export class Tls12040FareStatusService {
     const isContractExisting = item.data_source === 'CONTRACT_EXISTING';
     const hasChanges = this.fareDataService.hasDataChanges(item);
 
+    console.log(`🔍 updateItemSelectionStatus 被呼叫:`, {
+      cap_item: item.cap_item,
+      is_selected: item.is_selected,
+      data_source: item.data_source,
+      isContractExisting,
+      current_status: item._status
+    });
+
     if (item.is_selected) {
       // ✅ 被勾選
       if (isContractExisting) {
@@ -28,32 +36,32 @@ export class Tls12040FareStatusService {
         if (item._status === 'deleted') {
           // 從刪除狀態恢復
           item._status = hasChanges ? 'modified' : 'original';
-          //console.log(`✅ 項目 ${item.cap_item} 恢復勾選，狀態: deleted → ${item._status}`);
+          console.log(`✅ 項目 ${item.cap_item} 恢復勾選，狀態: deleted → ${item._status}`);
         } else {
           // 檢查資料是否有變更
           if (hasChanges) {
             item._status = 'modified';
-            //console.log(`🔍 項目 ${item.cap_item} 資料已變更，狀態: → modified`);
+            console.log(`🔍 項目 ${item.cap_item} 資料已變更，狀態: → modified`);
           } else {
             item._status = 'original';
-            //console.log(`✅ 項目 ${item.cap_item} 無變更，狀態: → original`);
+            console.log(`✅ 項目 ${item.cap_item} 無變更，狀態: → original`);
           }
         }
       } else {
         // 原本不存在於合約的項目 → 新增
         item._status = 'new';
-        //console.log(`✅ 項目 ${item.cap_item} 勾選，狀態: 無 → new`);
+        console.log(`✅ 項目 ${item.cap_item} 勾選，狀態: 無 → new`);
       }
     } else {
       // ❌ 取消勾選
       if (isContractExisting) {
         // 原本存在於合約的項目 → 刪除
         item._status = 'deleted';
-        //console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: → deleted`);
+        console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: → deleted`);
       } else {
         // 原本不存在於合約的項目 → 回到無狀態
         delete item._status;
-        //console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: new → 無狀態`);
+        console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: new → 無狀態`);
       }
     }
   }
