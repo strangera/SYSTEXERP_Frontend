@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
@@ -49,8 +49,8 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
 
-    contract_subno_start: [''], // 合約附號_起
-    contract_subno_end: [''], // 合約附號_迄
+    contract_subno_start: ['', [Validators.maxLength(4)]], // 合約附號_起(1 >)
+    contract_subno_end: ['', [Validators.maxLength(4)]], // 合約附號_迄(> 9999)
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)
 
     tlt_bdate: [null], // 合約期間_起
