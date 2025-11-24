@@ -1,14 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Component, EventEmitter, Input, SimpleChanges, OnChanges, Output,
-  ViewChild, OnDestroy, OnInit
+  Component, EventEmitter, Input,
+  OnChanges,
+  OnDestroy, OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild
 } from '@angular/core';
 
-import {
-  Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent,
-  TableRowUnSelectEvent, TableModule
-} from 'primeng/table';
 import { SortMeta } from 'primeng/api';
+import {
+  Table, TableLazyLoadEvent,
+  TableModule,
+  TablePageEvent, TableRowSelectEvent,
+  TableRowUnSelectEvent
+} from 'primeng/table';
 
 import {
   AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent,
@@ -16,26 +22,26 @@ import {
 } from './tls2b010table.model';
 
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
-import { Observable, Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 
-import { NgIf, NgClass, NgFor } from '@angular/common';
-import { DividerModule } from 'primeng/divider';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { TooltipModule } from 'primeng/tooltip';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BlockUIModule } from 'primeng/blockui';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
-import { RippleModule } from 'primeng/ripple';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DividerModule } from 'primeng/divider';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { RippleModule } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
 import { TLS2B010TableExportComponent } from './tls2b010table-export/tls2b010table-export.component';
-import { BlockUIModule } from 'primeng/blockui';
 
 @Component({
   selector: 'app-tls2b010table',

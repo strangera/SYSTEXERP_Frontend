@@ -1,20 +1,20 @@
 import { Component, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { ValidationService } from '../../../shared/service/validation.service';
 //
-import { MessageTypeService } from '../../../service/basic/message-type.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { MessageTypeService } from '../../../service/basic/message-type.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 // 2.4.3.3 常用訊息維護作業 CRU
 @Component({
@@ -75,12 +75,12 @@ export class TLS43030CRUComponent {
     switch (state.crudstatus) {
       case CRUDStatus.Create:
         this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
+
         break;
       case CRUDStatus.Edit:
         console.log(state.rowdata);
         this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       case CRUDStatus.Read:

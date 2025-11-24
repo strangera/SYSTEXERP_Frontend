@@ -3,7 +3,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFo
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //-----
 import { NgIf } from '@angular/common';
@@ -20,7 +20,12 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnInit {
+export class TLS2D050CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   departmentOptions: any[] = [];
   couponOptions: any[] = [];
   // ----------------------------------------------------------------
@@ -39,7 +44,6 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
     private messageService: NotificationService,
     private translate: TranslateService,
   ) {
-    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -57,13 +61,13 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -127,16 +131,12 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
 
     switch (this.crudstatus) {
       case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
+        // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
+        this.messageService.successBubble(this.translate.instant('success_message'));
         break;
       case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
+        // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
+        this.messageService.successBubble(this.translate.instant('updated-successfully'));
         break;
     }
 

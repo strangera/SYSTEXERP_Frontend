@@ -107,7 +107,7 @@ export class TLS31090Component {
   ngOnInit(): void {
 
 
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
   }
 
   canQuery(): boolean {

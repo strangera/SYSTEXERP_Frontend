@@ -4,13 +4,13 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 
 @Component({
   selector: 'app-tls55050',
@@ -58,7 +58,7 @@ export class TLS55050Component {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
 
   }
 

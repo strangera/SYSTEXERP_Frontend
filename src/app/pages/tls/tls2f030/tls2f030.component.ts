@@ -72,7 +72,7 @@ export class TLS2F030Component {
 
   ngOnInit(): void {
     //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
   }
 
   canQuery(): boolean {

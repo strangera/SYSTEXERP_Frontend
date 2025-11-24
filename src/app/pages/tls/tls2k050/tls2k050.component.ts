@@ -1,27 +1,27 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 // 2.2.19.5 餘代卡換卡作業
 @Component({
-    selector: 'app-tls2k050',
-    templateUrl: './tls2k050.component.html',
-    styleUrl: './tls2k050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TranslateModule]
+  selector: 'app-tls2k050',
+  templateUrl: './tls2k050.component.html',
+  styleUrl: './tls2k050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TranslateModule]
 })
 export class TLS2K050Component {
   ProgNo: string = '220101';
@@ -70,7 +70,7 @@ export class TLS2K050Component {
 
   ngOnInit(): void {
     //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
   }
 
   canQuery(): boolean {

@@ -158,7 +158,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-tls13070-table tableKey="FIN21020query" dataKey="id" [lastQueryBody]="lastQueryBody"
-    [totalRecords]="totalRecords" [data]="data"
-    [queryFunction]="tls13070Service.queryTLS13070.bind(tls13070Service)"></app-tls13070-table>
+  <app-tls13070-table tableKey="FIN21020query" dataKey="id" [lastQueryBody]="lastQueryBody" [loading]="loading"
+    [totalRecords]="totalRecords" [data]="data" [aps1003_A]="aps1003_A" [aps1003_B]="aps1003_B" [aps1003_C]="aps1003_C"
+    [aps1003_D]="aps1003_D" [queryFunction]="tls13070Service.queryTLS13070.bind(tls13070Service)"></app-tls13070-table>
 </div>

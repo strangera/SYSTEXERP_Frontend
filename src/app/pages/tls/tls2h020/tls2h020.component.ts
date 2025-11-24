@@ -1,30 +1,30 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TranslateModule } from '@ngx-translate/core';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 // 2.2.17.2 租金發票套印作業
 @Component({
-    selector: 'app-tls2h020',
-    templateUrl: './tls2h020.component.html',
-    styleUrl: './tls2h020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, InputNumberRangeComponent, CheckboxModule, TranslateModule]
+  selector: 'app-tls2h020',
+  templateUrl: './tls2h020.component.html',
+  styleUrl: './tls2h020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, InputNumberRangeComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2H020Component {
   ProgNo: string = '220088';
@@ -75,7 +75,7 @@ export class TLS2H020Component {
 
   ngOnInit(): void {
     //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
   }
 
   canQuery(): boolean {

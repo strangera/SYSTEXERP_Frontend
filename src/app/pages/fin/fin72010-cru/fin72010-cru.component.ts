@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 // Services
 // Shared
@@ -36,8 +36,14 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   ],
 })
 export class FIN72010CRUComponent
-  extends BasicCrupageComponent
+
   implements OnInit {
+
+  ProgNo = 'FIN72050';
+  formTitle = 'FIN72050';
+  submitted = false;
+  accordionTabCss = 'create-accordionTab';
+  crudstatus: CRUDStatus = CRUDStatus.Create;
   ngOnInit(): void {
 
     // ----------------------------------------------------------------
@@ -52,14 +58,14 @@ export class FIN72010CRUComponent
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -70,7 +76,6 @@ export class FIN72010CRUComponent
         break;
     }
 
-    console.log(this.accordionTabCss);
   }
   createItem(): FormGroup {
     return this.formBuilder.group({
@@ -342,7 +347,6 @@ export class FIN72010CRUComponent
     private router: Router,
     private formBuilder: FormBuilder,
   ) {
-    super(); // 呼叫父類建構子
   }
 
   // ----------------------------------------------------------------

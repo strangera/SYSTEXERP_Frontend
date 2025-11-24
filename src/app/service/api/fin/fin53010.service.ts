@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, QueryFIN53010Detail, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -263,7 +263,7 @@ export class FIN53010Service {
     this.usrLoading.set(!0);
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      map(res => res?.map(item => ({ value: item.user_No, label: item.user_Name } as Option)) ?? []),
+      map(res => res?.map(item => ({ value: item['user_No'], label: item['user_Name'] } as Option)) ?? []),
       tap(res => {
         this.usrList.set(res);
         this.logger.debug('查詢UsrList結果:', [res]);

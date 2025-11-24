@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -20,7 +20,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, FileUploadComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS22040CRUComponent
-  extends BasicCrupageComponent
+
   implements OnInit {  // Upload files
   fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
@@ -41,14 +41,14 @@ export class ASS22040CRUComponent
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
