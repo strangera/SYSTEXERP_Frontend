@@ -21,6 +21,18 @@
           [options]="isNotltNoOptions" [control]="dataForm.controls.IsNotlt_no" [submitted]="submitted"
           [optionLabel]="'label'" [optionValue]="'value'"></app-dropdown>
 
+        <!-- 收銀機號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.ECR_No" [submitted]="submitted">
+          </app-multi-select>
+        </div>
+
+        <!-- 交易序號  -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="交易序號" [control]="dataForm.controls.TXN_No" [submitted]="submitted"></app-input-text>
+        </div>
+
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
@@ -31,26 +43,31 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS26040_CRU" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'sad_date', order: -1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dataForm);onSubmit(dataForm)" [lazy]="true"
-    [loading]="loading" [showDelete]="false" [showCheckBox]="true" [showManage]="false"
-    [expansionColumns]="expansionColumns" expansionDataKey="details" [expansionShowPaginator]="true"
-    [expansionRows]="50" [expansionLoadFn]="loadDetails" [expansionMultiSortMeta]="[{ field: 'TXN_Date', order: -1 }]">
-  </app-table>
-
-  <div *ngIf="data.length > 0">
+  <div class="col-12 text-sm" *ngIf="data.length > 0">
     <form [formGroup]="dataForm2" id="dataForm2">
-      <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3">
-        <!-- 結帳日期 -->
-        <div class="flex p-fluid">
-          <app-calendar label="結帳日期" [control]="dataForm2.controls.sad_preorder_date"></app-calendar>
+      <div class="grid">
+        <!-- 查詢預售總金額 -->
+        <div class="col">
+          <span>查詢預售總金額：{{totalAmount}}</span>
         </div>
-        <app-button style="margin-top: 13px;" label="結帳選定資料"
-          [disabled]="selectedItems.length === 0 || dataForm2.invalid" [loading]="loading" (click)="onCheckout()"
-          [loading]="btnLoading"></app-button>
+        <!-- 結帳日期 -->
+        <div class="flex p-fluid gap-2 align-items-end">
+          <div class="col">
+            <span>預估結帳金額：{{estAmount}}</span>
+          </div>
+          <app-calendar label="結帳日期" [control]="dataForm2.controls.sad_preorder_date"></app-calendar>
+          <app-button label="結帳選定資料" [disabled]="selectedItems.length === 0 || dataForm2.invalid" [loading]="loading"
+            (click)="onCheckout()" [loading]="btnLoading"></app-button>
+        </div>
       </div>
     </form>
-
   </div>
+  <app-table tableKey="TLS26040_CRU" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems=$event;selectionChange($event)"
+    [multiSortMeta]="[{ field: 'sad_date', order: -1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, dataForm);onSubmit(dataForm)" [lazy]="true" [loading]="loading"
+    [showDelete]="false" [showCheckBox]="true" [showManage]="false" [expansionColumns]="expansionColumns"
+    expansionDataKey="details" [expansionShowPaginator]="true" [expansionRows]="50" [expansionLoadFn]="loadDetails"
+    [expansionMultiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [showReportMode]="false" [showPaginator]="false">
+  </app-table>
 </div>

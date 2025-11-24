@@ -1,6 +1,6 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
@@ -13,6 +13,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
@@ -54,10 +55,6 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly totalRecords = signal(0);
   public readonly selectedItems = signal<TLS26080Data[]>([]);
 
-  // 頁面專屬 Loading 狀態
-  public readonly tableLoading = signal<boolean>(!1);
-  public readonly deleteLoading = signal<boolean>(!1);
-
   public readonly editDisabled = (rowData: TLS26080Data) => {
     if (!rowData) return !0;
     const hasCanEditFlag = Object.hasOwn(rowData, 'CanEdit');
@@ -71,28 +68,32 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     return hasCanDeleteFlag || isPending;
   };
 
-  private payload = computed((): TLS26080Query => {
-    const { org_id, ...rest } = this.qf();
-    return Object.fromEntries(Object.entries(rest)
-      .map(([k, v]) => [k, v.value])
-      .filter(([_, v]) => v !== null && v !== void 0 && v !== '')
-    );
-  });
-
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26080Data; })[] = [
     { field: 'pod_no', header: '活動編號' },
     { field: 'pod_desc', header: '活動名稱' },
-    { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '活動終止日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_busdate', header: '活動正檔日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_edate', header: '活動終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_busdate', header: '活動正檔日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_edate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
+
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly deleteLoading = signal<boolean>(!1);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.tableLoading()
+      || this.deleteLoading()
+      || this.service.capItemsLoading()
+      || this.service.tltTalentOptionsLoading()
+      || this.service.tltTalentChargeOptionsLoading();
+  });
 
   constructor(
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
+    private logger: NGXLogger,
   ) {
     super();
   }
@@ -106,14 +107,28 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       this.tableLoading.set(!0);
-      this.service.loadTLS26080(this.payload()).pipe(
+
+      const { org_id, ...payload } = this.queryForm.getRawValue();
+
+      this.logger.debug(`submit:`, [payload]);
+
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadTLS26080(<TLS26080Query>{
+        SortBy: payload.SortBy,
+        PageSize: payload.pageSize,
+        PageIndex: payload.pageIndex,
+        POD_No: payload.pod_no,
+        POD_Desc: payload.pod_desc,
+        POD_SDate_start: payload.pod_sdate,
+        POD_SDate_end: payload.pod_edate,
+        POD_BusDate: payload.pod_busdate,
+      }).pipe(
         tap(res => {
           this.tableData.set(res.Data);
           this.totalRecords.set(res.TotalCount || 0);
         }),
         finalize(() => this.tableLoading.set(!1))
       ).subscribe();
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     });
   }
 

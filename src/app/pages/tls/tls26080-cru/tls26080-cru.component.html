@@ -85,9 +85,11 @@
     <div class="col-12">
       <p-panel header="專櫃資料"
                class="line-height-3 m-0 mb-3">
-        <app-table-edit [data]="tableData()"
-                        (dataChange)="tableData.set($event)"
+        <app-table-edit #dt
                         [tableKey]="'TLS26080_Counter'"
+                        [data]="tableData()"
+                        (dataChange)="tableData.set($event)"
+                        (fieldChange)="onFieldChange($event)"
                         [columns]="counterColumns()"
                         [columnGroup]="counterColumnsGroup"
                         [insertDisabled]="isFormReadable"
