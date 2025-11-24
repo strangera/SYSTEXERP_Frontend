@@ -43,6 +43,7 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
+    showSequenceNumber: true
   },
   {
     commissionType: '2',
@@ -64,7 +65,7 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
-
+    showSequenceNumber: true
   },
   {
     commissionType: '4',
@@ -86,7 +87,7 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
-
+    showSequenceNumber: true
   },
   {
     commissionType: '5',
@@ -108,7 +109,7 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
-    showSequenceNumber: false
+    showSequenceNumber: true
   },
   {
     commissionType: '6',
@@ -130,6 +131,6 @@ export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
     showCheckBox: true,
     showActionColumn: false,
     autoAddRowOnTab: true,
-    showSequenceNumber: false
+    showSequenceNumber: true
   }
 ];
