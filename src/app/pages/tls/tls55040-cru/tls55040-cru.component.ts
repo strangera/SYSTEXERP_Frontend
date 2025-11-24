@@ -4,15 +4,15 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 
 @Component({
   selector: 'app-tls55040-cru',
@@ -67,7 +67,7 @@ export class TLS55040CRUComponent {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
       rowdata: any,
@@ -76,12 +76,12 @@ export class TLS55040CRUComponent {
     switch (state.crudstatus) {
       case CRUDStatus.Create:
         this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
+
         break;
       case CRUDStatus.Edit:
         console.log(state.rowdata);
         this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       case CRUDStatus.Read:

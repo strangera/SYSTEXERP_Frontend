@@ -216,7 +216,7 @@ export class ASS16080Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '310047';
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     // this.bigCategoryService
     //   .getCategories()
     //   .subscribe((data) => (this.bigCategoryOptions = data));

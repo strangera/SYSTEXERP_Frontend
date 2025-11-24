@@ -1,20 +1,20 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { AuthService } from '../../../service/system/auth.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 //5.1.2.3 顧客意見子類別維護 CRU
 @Component({
@@ -24,7 +24,12 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class CPM12030CRUComponent extends BasicCrupageComponent implements OnInit {
+export class CPM12030CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     subCategoryCode: [, [Validators.required, Validators.maxLength(10)]], // 子類別編號
@@ -76,14 +81,14 @@ export class CPM12030CRUComponent extends BasicCrupageComponent implements OnIni
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔

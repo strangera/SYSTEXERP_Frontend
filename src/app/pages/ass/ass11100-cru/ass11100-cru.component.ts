@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 // Shared
 //
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 //
 import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
@@ -22,7 +22,12 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS11100CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS11100CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   //
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({

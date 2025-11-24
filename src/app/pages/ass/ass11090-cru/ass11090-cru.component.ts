@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 //
 import { NgFor, NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
@@ -22,7 +22,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS11090CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS11090CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   //
   bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },

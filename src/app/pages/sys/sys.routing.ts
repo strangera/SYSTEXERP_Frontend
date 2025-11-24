@@ -1,30 +1,24 @@
 import { Routes } from '@angular/router';
 
 export const sysRoutes: Routes = [
-  {
-    path: 'sys0110', loadComponent: () => import('./sys0110/sys0110.component').then(m => m.SYS0110Component),
-    data: {
-      reuse: true,        // 標記該路由需要復用
-      reuseKey: 'SYS0110' // 復用時的唯一 Key (使用 prog_No)
-    }
-  }, // 使用者基本資料維護
+  { path: 'sys0110', loadComponent: () => import('./sys0110/sys0110.component').then(m => m.SYS0110Component) }, // 使用者基本資料維護
   { path: 'sys0210', loadComponent: () => import('./sys0210/sys0210.component').then(m => m.SYS0210Component) }, // 角色基本資料維護
   { path: 'sys0220', loadComponent: () => import('./sys0220/sys0220.component').then(m => m.SYS0220Component) }, // 角色之使用者設定維護
   { path: 'sys0230', loadComponent: () => import('./sys0230/sys0230.component').then(m => m.SYS0230Component) }, // 角色複製
   { path: 'sys0240', loadComponent: () => import('./sys0240/sys0240.component').then(m => m.SYS0240Component) }, // 使用者之角色設定維護
   { path: 'sys0310', loadComponent: () => import('./sys0310/sys0310.component').then(m => m.SYS0310Component) }, // 角色系統權限設定
   { path: 'sys0320', loadComponent: () => import('./sys0320/sys0320.component').then(m => m.SYS0320Component) }, // 使用者系統權限設定
-  { path: 'sys0620', loadComponent: () => import('./sys0620/sys0620.component').then(m => m.SYS0620Component) }, // 角色基本資料異動查詢
+  // { path: 'sys0620', loadComponent: () => import('./sys0620/sys0620.component').then(m => m.SYS0620Component) }, // 角色基本資料異動查詢
   { path: 'sys0710', loadComponent: () => import('./sys0710/sys0710.component').then(m => m.SYS0710Component) }, // 使用者系統權限列表
   { path: 'sys0730', loadComponent: () => import('./sys0730/sys0730.component').then(m => m.SYS0730Component) }, // 角色系統權限列表
   { path: 'sys0740', loadComponent: () => import('./sys0740/sys0740.component').then(m => m.SYS0740Component) }, // 作業權限之角色列表
   { path: 'sys0750', loadComponent: () => import('./sys0750/sys0750.component').then(m => m.SYS0750Component) }, // 角色之使用者列表
   { path: 'sys0760', loadComponent: () => import('./sys0760/sys0760.component').then(m => m.SYS0760Component) }, // 使用者異常登入報表
   { path: 'sys0770', loadComponent: () => import('./sys0770/sys0770.component').then(m => m.SYS0770Component) }, // 作業權限統計表
-  { path: 'sys0780', loadComponent: () => import('./sys0780/sys0780.component').then(m => m.SYS0780Component) }, // 作業權限申請表
-  { path: 'sys0790', loadComponent: () => import('./sys0790/sys0790.component').then(m => m.SYS0790Component) }, // 使用者作業按鈕歷程報表
-  { path: 'sys0791', loadComponent: () => import('./sys0791/sys0791.component').then(m => m.SYS0791Component) }, // 作業使用率查詢
-  { path: 'sys0792', loadComponent: () => import('./sys0792/sys0792.component').then(m => m.SYS0792Component) }, // 在線人員查詢作業
+  // { path: 'sys0780', loadComponent: () => import('./sys0780/sys0780.component').then(m => m.SYS0780Component) }, // 作業權限申請表
+  // { path: 'sys0790', loadComponent: () => import('./sys0790/sys0790.component').then(m => m.SYS0790Component) }, // 使用者作業按鈕歷程報表
+  // { path: 'sys0791', loadComponent: () => import('./sys0791/sys0791.component').then(m => m.SYS0791Component) }, // 作業使用率查詢
+  // { path: 'sys0792', loadComponent: () => import('./sys0792/sys0792.component').then(m => m.SYS0792Component) }, // 在線人員查詢作業
   { path: 'sys0110cru', loadComponent: () => import('./sys0110.cru/sys0110.cru.component').then(m => m.SYS0110CRUComponent) }, // 使用者基本資料維護 CRU
   { path: 'sys0210cru', loadComponent: () => import('./sys0210.cru/sys0210.cru.component').then(m => m.SYS0210CRUComponent) }, // 角色基本資料維護 CRU
   { path: 'sys0220cru', loadComponent: () => import('./sys0220.cru/sys0220.cru.component').then(m => m.SYS0220CRUComponent) }, // 角色之使用者設定維護 CRU

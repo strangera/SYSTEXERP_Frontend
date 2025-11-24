@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -24,7 +24,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS22020CRUComponent
-  extends BasicCrupageComponent
+
   implements OnInit {
   ngOnInit(): void {
     // 網站導覽設定
@@ -43,14 +43,14 @@ export class ASS22020CRUComponent
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔

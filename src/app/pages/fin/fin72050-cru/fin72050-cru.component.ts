@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+
 // Services
 // Shared
 import { NgIf } from '@angular/common';
@@ -31,42 +30,12 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   ],
 })
 export class FIN72050CRUComponent
-  extends BasicCrupageComponent
+
   implements OnInit {
+  ProgNo = 'FIN72050';
+  formTitle = 'FIN72050';
+  submitted = false;
   ngOnInit(): void {
-    // 初始化
-
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
   }
   createItem(): FormGroup {
     return this.formBuilder.group({
@@ -342,7 +311,6 @@ export class FIN72050CRUComponent
     private router: Router,
     private formBuilder: FormBuilder,
   ) {
-    super(); // 呼叫父類建構子
   }
 
   // ----------------------------------------------------------------
@@ -373,26 +341,10 @@ export class FIN72050CRUComponent
   }
 
   onSubmit(frm: FormGroup) {
-    this.submitted = true;
 
     if (this.dataForm.invalid) {
       return;
     }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-        }
-        break;
-    }
-
-    this.submitted = false;
   }
 
   submitForm(frm: FormGroup) {

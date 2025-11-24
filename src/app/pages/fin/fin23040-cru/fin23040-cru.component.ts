@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
@@ -24,7 +24,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, NgFor, DropdownComponent, InputTextComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class FIN23040CRUComponent extends BasicCrupageComponent implements OnInit {
+export class FIN23040CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   //
   accountingCodeOptions: any[] = [];
   detailedCategoryOptions: any[] = [
