@@ -44,7 +44,7 @@
     <app-table [showCheckBox]="true" [showEdit]="false" [showDetail]="false" [showManage]="false"
       [showReportMode]="false" [isRowSelectable]="isRowSelectableWrapper" (delete)="onDelete($event, 'ecr')"
       (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()" [lazy]="true" [data]="ecrTableData()"
-      [dataKey]="'ecr_no'" [tableKey]="'TLS26010_ECR'" [loading]="service.tableLoading()" [columns]="columns">
+      [dataKey]="'ecr_no'" [tableKey]="'TLS26010_ECR'" [loading]="service.tableLoading()" [columns]="ecr_Column">
     </app-table>
   </div>
 </div>
@@ -62,7 +62,7 @@
       [showReportMode]="false" [isRowSelectable]="isRowSelectableWrapper" [showExcel]="isFormEditable"
       (exportExcel)="onExportExcel()" (importExcel)="onImportExcel($event)" (delete)="onDelete($event, 'tlt')"
       (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()" [lazy]="true" [loading]="service.tableLoading()"
-      [data]="tltTableData()" [dataKey]="'tlt_no'" [tableKey]="'TLS26010_TLT'" [columns]="columns2">
+      [data]="tltTableData()" [dataKey]="'tlt_no'" [tableKey]="'TLS26010_TLT'" [columns]="tlt_Column">
     </app-table>
   </div>
 </div>

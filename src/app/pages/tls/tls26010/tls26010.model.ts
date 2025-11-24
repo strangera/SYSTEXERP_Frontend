@@ -91,12 +91,12 @@ export interface TLS26010Data {
   pod_no: string;
   pod_sdate: Date;
   pod_status: '0' | '1' | '9';
-  ecr_nos: string[];
+  ecr_list: string[];
   area_no?: string;
   build_no?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_nos: string[];
+  talent_list: string[];
 }
 
 export interface TLS26010DetailResponse extends Omit<BaseQueryResponse<TLS26010Detail>, 'Data'> {

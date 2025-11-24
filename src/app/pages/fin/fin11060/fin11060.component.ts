@@ -76,7 +76,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     TXN_GUINoEnd: [null, [Validators.maxLength(10), Validators.minLength(10)]], // 發票結束號碼
     ECR_NoStart: [null, [Validators.maxLength(8)]], // 收銀機代號(起)
     ECR_NoEnd: [null, [Validators.maxLength(8)]], // 收銀機代號(迄)
-    Query_Cond: ['1', Validators.required],  // 條件依據 送出 (銷售日期/收銀機號/收銀機號)
+    Query_Cond: ['2', Validators.required],  // 條件依據 送出 (銷售日期/收銀機號/收銀機號) SA: [查詢條件依據]的預設值設定為為"收銀機號"
     Is_ShowErr: ['N', [Validators.required]], //  是否只顯示異常
 
     //分頁查詢
