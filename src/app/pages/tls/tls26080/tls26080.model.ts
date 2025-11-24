@@ -74,9 +74,9 @@ export interface TLS26080InsertPayload {
   pod_no: string;             // 活動申請編號
   pod_type: string;           // 活動類型
   pod_desc: string;           // 活動名稱
-  pod_sdate: string;            // 活動起始日期
-  pod_edate: string;            // 活動終止日期
-  pod_busdate: string;          // 活動正檔日期
+  pod_sdate: Date;            // 活動起始日期
+  pod_edate: Date;            // 活動終止日期
+  pod_busdate: Date;          // 活動正檔日期
   pod_back_sdate?: string;      // 兌回起始日期
   pod_back_edate?: string;      // 兌回結束日期
   TALPORDERD_VOUCHERDetails: TLS26080DetailPayload[]; // 活動專櫃資料

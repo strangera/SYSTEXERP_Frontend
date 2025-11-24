@@ -121,6 +121,7 @@ export class TLS26080Service {
   public insertTLS26080(data: TLS26080InsertPayload): Observable<BaseQueryResponse<any>> {
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
       take(1),
+      tap(res => this.logger.debug(`TLS26080新增結果:`, [res]))
     );
   };
 

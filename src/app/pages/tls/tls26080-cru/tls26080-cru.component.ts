@@ -298,9 +298,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_no: d.pod_no ?? '',
         pod_type: '2',
         pod_desc: this.selectedCampaign()?.CampaignName ?? d.pod_desc ?? '',
-        pod_sdate: d.pod_sdate!.toISOString(),
-        pod_edate: d.pod_edate!.toISOString(),
-        pod_busdate: d.pod_busdate!.toISOString(),
+        pod_sdate: d.pod_sdate!,
+        pod_edate: d.pod_edate!,
+        pod_busdate: d.pod_busdate!,
         TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           pod_no: d.pod_no!,
           talent_id: Number(item.talent_id) ?? null,
