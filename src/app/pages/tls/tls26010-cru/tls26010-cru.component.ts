@@ -49,12 +49,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   public readonly CRUDStatus = CRUDStatus;
 
   public dataForm = this.formBuilder.nonNullable.group({
-    pod_no: new FormControl<string>('自動給號'), // 預售活動編號
+    pod_no: [{ value: '自動給號', disabled: true }], // 預售活動編號
     pod_desc: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]), // 預售名稱
     pod_sdate: new FormControl<Date>(new Date(), [Validators.required, this.validationService.dateAfterTodayValidator()]), // 預售期間(起)
     pod_edate: new FormControl<Date>(this.service.dateE, Validators.required), // 預售期間(迄)
     pod_busdate: new FormControl<Date>(this.service.dateE, Validators.required), // 活動正檔日期
-    pod_status: new FormControl<string>('未核准'), // 核准狀態
+    pod_status: [{ value: '未核准', disabled: true }], // 核准狀態
     ecr_nos: new FormControl<EcrItem[]>([]), // 收銀機清單
     tlt_nos: new FormControl<TltItem[]>([]), // 專櫃清單
     sys3800: new FormControl<string[]>([]), // 館別
@@ -427,7 +427,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
             this.dialogVisible.set(false);
             this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
           })).subscribe({
-            next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+            next: () => {
+              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
+
+              // <-- API成功後清空 Table
+              this.ecrTableFiltered.set([]);
+              this.tltTableFiltered.set([]);
+            },
             error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
           });
     });
