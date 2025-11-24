@@ -645,6 +645,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     // 專門處理 checkbox 勾選
     if (fieldName === 'is_selected') {
+      // 🔥 關鍵修復:先更新項目的選擇狀態(_status)
+      this.fareStatusService.updateItemSelectionStatus(rowData);
+
+      console.log(`🔥 is_selected 變更: ${rowData.cap_item} (${capType})`, {
+        newValue,
+        _status: rowData._status,
+        data_source: rowData.data_source
+      });
+
+      // 然後同步到 originalData
       this.updateOriginalData(capType || 'A');
       this.filterData();
       this.saveFareDataToWorkflow();
@@ -1098,7 +1108,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.fareData[capType].forEach(displayItem => {
       const originalItem = this.originalFareData[capType].find(item => item.id === displayItem.id);
       if (originalItem) {
+        // 🔥 完整同步所有狀態欄位
         originalItem.is_selected = displayItem.is_selected;
+        originalItem._status = displayItem._status;  // 🔥 關鍵修復:同步 _status
+
+        // 🔥 新增日誌以追蹤刪除狀態
+        if (displayItem._status === 'deleted') {
+          console.log(`🗑️ ${capType} 類型項目 ${displayItem.cap_item} 標記為刪除`, {
+            id: displayItem.id,
+            data_source: displayItem.data_source
+          });
+        }
       }
     });
   }

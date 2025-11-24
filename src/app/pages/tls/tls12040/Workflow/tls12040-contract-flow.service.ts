@@ -169,9 +169,15 @@ class CruDataCleaner implements TLS12040DataCleaner {
 
 class Next1DataCleaner implements TLS12040DataCleaner {
   clean(data: any) {
+    // 🔥 關鍵修復:不要過濾掉 deleted 狀態的項目
+    // 保留所有項目:已選 + 刪除狀態的項目
+    const selectedItems = (data.selectedItems || []).filter((item: any) =>
+      item.is_selected || item._status === 'deleted'
+    );
+
     return {
       fareData: data.fareData || {},
-      selectedItems: (data.selectedItems || []).filter((item: any) => item.is_selected),
+      selectedItems: selectedItems,
       contractInfo: data.contractInfo || null
     };
   }
