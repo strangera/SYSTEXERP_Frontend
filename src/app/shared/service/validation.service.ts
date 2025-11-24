@@ -52,7 +52,7 @@ export class ValidationService {
       min: `最小值為${validatorValue.min}`,
       textRange: '起號不可大於迄號',
       invalidGuiVehicle: '格式錯誤：需以「/」為開頭，長度8碼，且第2碼後只能包含半形英數字+-.等符號',
-      dateNotAfterToday: '日期必須大於今日',
+      dateNotAfterToday: '日期必須大於等於今日',
     };
     return config[validatorName];
   }
@@ -331,7 +331,7 @@ export class ValidationService {
     return null;
   }
 
-  //起始日期必須大於今日
+  //起始日期必須大於等於今日
   dateAfterTodayValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
@@ -341,7 +341,7 @@ export class ValidationService {
       const controlDate = new Date(value);
       controlDate.setHours(0, 0, 0, 0);
 
-      return controlDate > today ? null : { dateNotAfterToday: true };
+      return controlDate >= today ? null : { dateNotAfterToday: true };
     };
   }
 
