@@ -834,11 +834,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   hasDataForType(capType: string): boolean {
-    // 🔥 關鍵修復:檢查 originalFareData 而非 fareData
-    // 這樣即使在常用模式下過濾後沒有項目,群組區塊仍會顯示
-    return this.originalFareData[capType] &&
-      Array.isArray(this.originalFareData[capType]) &&
-      this.originalFareData[capType].length > 0;
+    // 檢查過濾後的 fareData 是否有資料
+    // 這樣在常用模式下如果過濾後沒有項目,會顯示提示訊息
+    return this.fareData[capType] &&
+      Array.isArray(this.fareData[capType]) &&
+      this.fareData[capType].length > 0;
   }
 
   // 統計方法
