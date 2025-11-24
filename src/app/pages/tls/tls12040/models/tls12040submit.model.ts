@@ -422,11 +422,26 @@ export class TLS12040DataCleanerClass {
     const toUpdate: TLS12040FareItem[] = [];
     const toDelete: TLS12040FareItem[] = [];
 
+    console.log('🧹 DataCleaner 開始處理扣款項目:', {
+      總數: rawItems.length,
+      刪除狀態項目: rawItems.filter(item => item._status === 'deleted').length
+    });
+
     rawItems.forEach(item => {
       // 刪除的項目處理
       if (item._status === 'deleted') {
+        console.log('🗑️ 發現刪除項目:', {
+          cap_item: item.cap_item,
+          id: item.id,
+          id_type: typeof item.id,
+          hasValidId: this.hasValidId(item.id)
+        });
+
         if (this.hasValidId(item.id)) {
           toDelete.push({ id: Number(item.id) } as TLS12040FareItem);
+          console.log('✅ 加入 toDelete:', item.id);
+        } else {
+          console.warn('❌ ID 無效,未加入 toDelete:', item.id);
         }
         return;
       }
