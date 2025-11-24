@@ -11,6 +11,7 @@ export class ValidationService {
   getValidatorErrorMessage(validatorName: string, validatorValue?: any) {
     const config: any = {
       required: '必填',
+      pattern: '格式錯誤，請重新輸入。',
       invalidNumber: '只能輸入數字',
       email: '「電子郵件」，格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
