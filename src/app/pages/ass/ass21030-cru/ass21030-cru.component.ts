@@ -1,21 +1,24 @@
 // --Commonly used imports--
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgFor, NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { option } from '../../../shared/models/sys/sysb000.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { ASS21030Service } from '@service/api/ass/ass21030.service';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { apiOption } from '@shared/models/tls/tls000.model';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { option } from '../../../shared/models/sys/sysb000.model';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
@@ -55,21 +58,21 @@ export interface ENG2001 {
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
-
-
     DropdownComponent,
     InputTextComponent,
     InputNumberComponent,
     MenubarComponent,
+    MultiSelectComponent
   ]
 })
 
 // 能源抄表作業
 export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> implements OnInit {
   // ----------------------------------------------------------------
+  ENG_MeterNo_Option: apiOption[] = [];
   dataForm = this.formBuilder.nonNullable.group({
     // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
-    ID: [this.authService.getUserInfo()?.SYS_StoreNo ?? ''], // ID (隱藏)
+    ID: [''], // ID (隱藏)
     Mid: [Number(this.authService.getUserInfo()?.mid)], // Mid (隱藏)
     // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
     ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
@@ -78,7 +81,6 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     ENG_Date: [''], // 本次抄錶日
     ENG_CurrentReading: [0, [Validators.max(9999999999)]], // 本次抄錶度數 (最多小數後4位)
     ENG_Amount: [0, [Validators.max(9999999999)]], // 本次結算金額
-
     CRT_Date: [''], // 建立日期
     CRT_USR_No: [''], // 建立人員代碼 (隱藏)
     CRT_USR_Name: [''], // 建立人員姓名 (隱藏)
@@ -119,32 +121,48 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
       return;
     }
 
-    //都用匯入(import excel)的方式進行編輯
     const formValue = frm.getRawValue();
+
+    // 清理空字串,轉換為 null (符合後端 Nullable 型別)
+    const cleanedData = this.cleanFormData(formValue);
+
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          console.log('insert:', JSON.stringify(formValue, null, 2));
-          // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
-          //   this.messageService.successBubble('新增成功');
-          //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-          //   this.dataForm.reset(); // 重置表單
-          // });
+          console.log('insert:', JSON.stringify(cleanedData, null, 2));
+          this.ass21030Service.updateASS21030(cleanedData).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            this.dataForm.reset();
+          });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('update:', JSON.stringify(formValue, null, 2));
-          // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
-          //   this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          console.log('update:', JSON.stringify(cleanedData, null, 2));
+          this.ass21030Service.updateASS21030(cleanedData).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel();
+          });
         }
         break;
     }
 
     this.messageService.unblockUi();
     this.submitted = false;
+  }
+
+  // 新增一個清理方法
+  private cleanFormData(data: any): any {
+    const cleaned = { ...data };
+
+    // 將空字串轉換為 null
+    Object.keys(cleaned).forEach(key => {
+      if (cleaned[key] === '') {
+        cleaned[key] = null;
+      }
+    });
+
+    return cleaned;
   }
 
   submitForm(frm: FormGroup) {
@@ -167,5 +185,12 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     //   }));
     //   console.log('接待人員代號:', this.contact_USR_Option);
     // });
+    this.ass21030Service.queryENG1001_ENG_MeterNo_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+      this.ENG_MeterNo_Option = response.Data.map((item: any) => ({
+        No: item.ENG_MeterNo, // 能源表號
+        Name: item.ENG_MeterNo,
+      }));
+      console.log('能源表號代號:', response.Data);
+    });
   }
 }
