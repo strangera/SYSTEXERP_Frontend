@@ -8,7 +8,7 @@ import { environment } from 'src/environments/environment';
 export interface TLS57170QueryRequest extends BaseQueryRequest {
   SYS_StoreNo?: string;           // 門市編號
   STK_YM: string;                 // 存貨年月 - 必填
-  HOS_No?: string;                // 倉別
+  HOS_No?: string[];                // 倉別
   LOGO_No?: string[];             // 品牌
   PLU_MagNo?: string[];           // 商品管理編號
   PLU_No?: string;                // 國際條碼
@@ -35,14 +35,13 @@ export interface TLS57170Data {
 // Response 結構（根據 API 回傳格式）
 export interface TLS57170QueryResponse {
   Status: string;
-  Data: Array<{
-    TotalCount: number;
-    QueryData: TLS57170Data[];
-    payAmtTotalData: Array<{
-      UP_PORFIT_Total: number;
-      DOWN_COST_Total: number;
+  Data: {
+    mainData: TLS57170Data[];
+    totalData: Array<{
+      UP_PORFIT_Total: number | null;
+      DOWN_COST_Total: number | null;
     }>;
-  }>;
+  };
   Error: {
     Code: string;
     Message: string;
