@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 //
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 //
 import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
@@ -23,7 +23,12 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberRangeComponent, InputNumberComponent, DropdownComponent, NgIf, TranslateModule]
 })
-export class FIN25010CRUComponent extends BasicCrupageComponent implements OnInit {
+export class FIN25010CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     settlementDate: [, [Validators.required]], // 收/付款日

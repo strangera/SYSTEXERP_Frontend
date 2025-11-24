@@ -62,7 +62,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   totalRecords = 0;
   footerTotal?: {
     ODD_ConfirmQty: string, ODD_BuyNet?: string, ODD_BuyTax?: string, ODD_BuyAmt?: string, ODD_SalePrc?: string, ODD_SaleAmt?: string, ODM_TotalBuyNet?: string, ODM_TotalBuyTax?: string, ODM_TotalBuyAmt?: string
-  }
+  } | null;
   documentTypeOptions = [
     { value: 1, label: '進貨單' },
     { value: 2, label: '退貨單' }
@@ -124,6 +124,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         { field: 'ODM_TotalBuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount },
         { field: 'ODM_TotalBuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount },
       ];
+      this.footerTotal = null;
       this.data = [];
     } else if (displayMode === 2) { // 明細模式
       this.columns = [
@@ -143,8 +144,10 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
         { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
       ];
+      this.footerTotal = null;
       this.data = [];
     } else {
+      this.footerTotal = null;
       this.columns = [];
       this.data = [];
     }
@@ -172,14 +175,13 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
 
       this.tls57090Service.queryTLS57090(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
-          console.log('response', response);
           this.totalRecords = response.TotalCount || 0;
           this.footerTotal = response.GrandTotal;
           this.historyRequestBody = requestBody;
           this.data = response.Data;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
           this.data = [];
+          this.footerTotal = null;
           this.totalRecords = 0;
           this.messageService.warnBubble(response.Message || '沒有找到符合條件的資料。');
         }

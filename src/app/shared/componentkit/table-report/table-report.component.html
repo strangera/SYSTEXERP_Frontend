@@ -46,8 +46,8 @@
           <ng-container *ngIf="!col.groupField">
             <th rowspan="2" class="text-center" pResizableColumn
               [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-              [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn [frozen]="!!col.frozen"
-              [alignFrozen]="col.alignFrozen || 'right'">
+              [pSortableColumnDisabled]="col.showSort === false || showSort === false" pFrozenColumn
+              [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
               {{ col.header }}
               <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
                 [field]="col.sortField ?? col.field" />
@@ -105,7 +105,8 @@
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
           [raised]="!expandedRows[rowData?.[dataKey ?? index]]" [loading]="rowData?.expansionLoading"
           [icon]=" expandedRows[rowData?.[dataKey ?? index]] ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton
-          (click)="toggleRowExpansion(rowData)" [disabled]="rowData?.expansionLoading ||
+          (click)="tableUtility.toggleRowExpansionLogic(rowData, dataKey ?? 'id', expansionDataKey, expansionLoadFn, expandedRows, this)"
+          [disabled]="rowData?.expansionLoading ||
         (!expansionLoadFn && !rowData?.[expansionDataKey]?.length)" />
       </td>
       <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"

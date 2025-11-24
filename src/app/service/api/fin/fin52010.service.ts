@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { FIN52010Data, FIN52010DataResponse, FIN52010UpdatePayload, FIN52010UpdateResult, GLS1005Option } from '@pages/fin/fin52010/fin52010.model';
-import { Option, TblUserOrgidItem } from '@service/utility/dropdown-api.model';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
@@ -20,7 +20,7 @@ export class FIN52010Service {
   public readonly orgUsrLoading = signal<boolean>(!1);
   public readonly gls1005Loading = signal<boolean>(!1);
 
-  public readonly orgUsrList = signal<TblUserOrgidItem[]>([]);
+  public readonly orgUsrList = signal<Option[]>([]);
   public readonly orgList = signal<Option[]>([]);
   public readonly usrList = signal<Option[]>([]);
   public readonly gls1005List = signal<GLS1005Option[]>([]);

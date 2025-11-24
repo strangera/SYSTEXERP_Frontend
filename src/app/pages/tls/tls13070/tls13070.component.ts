@@ -1,22 +1,22 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AsyncPipe } from '@angular/common';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { RadiobuttonYNComponent } from "@shared/componentkit/radiobutton-yn/radiobutton-yn.component";
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Tls13070QueryRequest, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
-import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls13070QueryRequest, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from "@shared/componentkit/radiobutton-yn/radiobutton-yn.component";
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { Tls13070TableComponent } from './tls13070-table/tls13070-table.component';
 
 @Component({
@@ -106,6 +106,10 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   pos_ynOptions = getSYS1000Options('YES_NO');
   cash_ynOptions = getSYS1000Options('YES_NO');
   data: Tls13070Response[] = [];
+  aps1003_A = this.dropdown.queryAps1003({ cap_typeList: ['A'] });
+  aps1003_B = this.dropdown.queryAps1003({ cap_typeList: ['B'] });
+  aps1003_C = this.dropdown.queryAps1003({ cap_typeList: ['C'] });
+  aps1003_D = this.dropdown.queryAps1003({ cap_typeList: ['D'] });
 
   constructor(
     private readonly dropdown: DropdownApiService,
@@ -119,8 +123,6 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
     this.handleSubmit(frm, () => {
       this.tls13070Service.queryTLS13070(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
         this.lastQueryBody = frm.value;
-        console.log('response', response.Data);
-
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

@@ -3,7 +3,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFo
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 import { NgFor, NgIf } from '@angular/common';
@@ -28,7 +28,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, NgFor, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS11070CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS11070CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   receptionPersonOptions: any[] = [];
   vendorUIDOptions: any[] = [];
   bussinessOptions: any[] = [

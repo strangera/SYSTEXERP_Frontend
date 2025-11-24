@@ -1,58 +1,58 @@
 // !!! 新版下拉方法
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@service/system/auth.service';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { catchError, map, shareReplay } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 import {
-  Option,
-  IDropdownItem,
-  BusClassQuery,
+  Aps1001Item,
+  Aps1001Query,
+  Aps1003Query,
   BusClassItem,
+  BusClassQuery,
+  BusSClassItem,
   BusSClassQuery,
-  OrgTreeQuery,
+  EcrItem,
+  EcrQuery,
+  ENG1001Item,
+  IDropdownItem,
+  Option,
   OrgTreeItem,
-  Pos1002StatusItem,
-  Pos20031Query,
-  Pos20031Item,
+  OrgTreeQuery,
+  PluLogoHOSNoInnerItem,
   PluLogoItem,
   PluLogoOrderPrcRateInnerItem,
-  PluLogoHOSNoInnerItem,
-  Aps1003Query,
+  Pos1002EcrTypeQuery,
+  Pos1002GroupItem,
+  Pos1002GroupQuery,
+  Pos1002StatusItem,
+  Pos1006Item,
+  Pos1008Item,
+  Pos20031Item,
+  Pos20031Query,
   Pos20032Query,
+  Pos2004Item,
+  Pos2004LogoItem,
+  Pos2004LogoQuery,
+  Pos2004Query,
+  Pos2013Item,
+  Pos2013Query,
+  Sys1000Query,
+  TalentByContractDateItem,
+  TalentByContractDateQuery,
+  TalentChargeItem,
+  TalentChargeQuery,
+  TalentItem,
+  TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
-  Sys1000Query,
-  Aps1001Query,
-  Aps1001Item,
-  TblUserOrgidItem,
-  TalentByContractDateQuery,
-  TalentByContractDateItem,
-  Pos2004Query,
-  Pos2004Item,
-  Pos2004LogoQuery,
-  Pos2004LogoItem,
-  TalentChargeQuery,
-  TalentChargeItem,
-  EcrQuery,
-  EcrItem,
-  Pos1002EcrTypeQuery,
-  Pos1002GroupQuery,
-  Pos1002GroupItem,
-  TalentQuery,
-  TalentItem,
-  Pos1008Item,
-  Pos1006Item,
-  Pos2013Query,
-  Pos2013Item,
-  BusSClassItem,
   TALPORDERMQuery,
-  TLTTALENTQuery,
+  TblUserOrgidItem,
   TLTTALENTItem,
-  ENG1001Item,
+  TLTTALENTQuery,
   TlttalentTltSpaceItem
 } from './dropdown-api.model';
-import { ApiResponse } from '@service/system/auth.service';
-import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -605,8 +605,8 @@ export class DropdownApiService {
   }
 
   /** 查詢人員資料表(TBLUSER) (依照組織代碼查詢) */
-  queryTblUserOrgid(): Observable<TblUserOrgidItem[] | null> {
-    return this.queryDropdown<TblUserOrgidItem>('/queryTBLUSER_Orgid_DropDownList').pipe(
+  queryTblUserOrgid(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<TblUserOrgidItem>('/queryTBLUSER_Orgid_DropDownList', 'user_No', 'user_Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }

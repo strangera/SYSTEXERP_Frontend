@@ -75,13 +75,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         break;
     }
 
-    const controls = this.qf();
-    const payload: TLS21020Query = { ENTRY_TYPE, pageSize: 9999 };
-
-    for (const [k, v] of Object.entries(controls)) {
-      const val = v.value;
-      if (val !== null && val !== void 0) (payload as any)[k] = val;
-    }
+    /**
+     * !不要再蓋過去了
+     */
+    const payload: TLS21020Query = Object.freeze({ ENTRY_TYPE, pageSize: 1e9 });
 
     this.tableLoading.set(!0);
     this.service.queryTLS21020(payload).pipe(

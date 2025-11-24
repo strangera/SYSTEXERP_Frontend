@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080InsertPayload, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { Option, TalentChargeItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -25,11 +25,15 @@ export class TLS26080Service {
   public readonly tltTalentOptions = signal<Option[]>([]);
   public readonly tltTalentChargeOptions = signal<TalentChargeItem[]>([]);
 
+  public readonly tltIdOptions = signal<Option[]>([
+    ...Array.from({ length: 10 }).map((_, i) => ({ value: i + '', label: i + '' })),
+  ]);
+
   public readonly tltTalentMap = computed(() => {
-    return new Map<string, string>(this.tltTalentOptions().map(item => [item.value, item.label]));
+    return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
   });
   public tltTalentChargeMap = computed(() => {
-    return new Map<string, TalentChargeItem>(this.tltTalentChargeOptions().map(item => [item.tlt_id_desc, item]));
+    return new Map<string, TalentChargeItem>(this.tltTalentChargeOptions().map(item => [item.tlt_id, item]));
   });
 
   // 共享資料讀取狀態
@@ -110,19 +114,11 @@ export class TLS26080Service {
   public loadTLS26080Detail(query: string): Observable<BaseQueryResponse<TLS26080Detail>> {
     return this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
-      map(res => (<BaseQueryResponse<TLS26080Detail>>{
-        ...res,
-        Data: res.Data.map<TLS26080Detail>(item => ({
-          ...item,
-          tpy_rate_D16: Number(item.tpy_rate_D16) * 100,
-          tpy_rate_D17: Number(item.tpy_rate_D17) * 100,
-        }))
-      })),
       tap(res => this.logger.debug(`專櫃活動細節查詢結果:`, [res]))
     );
   };
 
-  public insertTLS26080(data: TLS2608InsertPayload): Observable<BaseQueryResponse<any>> {
+  public insertTLS26080(data: TLS26080InsertPayload): Observable<BaseQueryResponse<any>> {
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
       take(1),
     );
@@ -163,19 +159,10 @@ export class TLS26080Service {
       map(res => {
         const data = res.Data;
         if (!data.Success) return [];
-        return data.queryTLS26080_DetailResponses.map(value => (<TLS26080Detail>{
-          id: value.id,
-          talent_id: value.talent_id,
-          tlt_id: value.tlt_id,
-          tlt_id_desc: value.tlt_id_desc,
-          tlt_no: value.tlt_no,
-          tlt_name: value.tlt_name,
-          calc_date_type: value.calc_date_type,
-          cap_item_D16: value.cap_item_D16,
-          tpy_rate_D16: (Number(value.tpy_rate_D16.replace('%', '')) / 100).toFixed(2),
-          cap_item_D17: value.cap_item_D17,
-          tpy_rate_D17: (Number(value.tpy_rate_D17.replace('%', '')) / 100).toFixed(2),
-          pod_status: value.pod_status,
+        return data.queryTLS26080_DetailResponses.map(v => (<TLS26080Detail>{
+          ...v,
+          tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
+          tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
         }));
       })
     );

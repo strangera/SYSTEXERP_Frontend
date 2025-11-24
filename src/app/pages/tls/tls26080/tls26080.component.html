@@ -55,7 +55,9 @@
 </div>
 
 <div class="card">
-  <app-table [showCheckBox]="!0"
+  <app-table [dataKey]="'pod_no'"
+             [tableKey]="'TLS26080'"
+             [showCheckBox]="!0"
              [editDisabled]="editDisabled"
              [isRowSelectable]="isRowSelectable"
              (edit)="onEdit($event)"
@@ -63,9 +65,8 @@
              (delete)="onDelete($event)"
              [selectedItems]="selectedItems()"
              (selectionChange)="selectedItems.set($event)"
-             [tableKey]="'TLS26080'"
+             [multiSortMeta]="qf().SortBy.value ?? []"
              [data]="tableData()"
-             [dataKey]="'pod_no'"
              [columns]="columns"
              [totalRecords]="totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"

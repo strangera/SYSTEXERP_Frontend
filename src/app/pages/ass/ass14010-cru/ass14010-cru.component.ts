@@ -3,7 +3,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFo
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 import { NgFor, NgIf } from '@angular/common';
@@ -25,7 +25,12 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, NgFor, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS14010CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS14010CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   supplierCodeOptions: any[] = [];
   requestTypeOptions: any[] = [];
   invoiceFormatOptions: any[] = [
@@ -88,14 +93,14 @@ export class ASS14010CRUComponent extends BasicCrupageComponent implements OnIni
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔

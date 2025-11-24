@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 
 @Component({
   selector: 'app-tls57020',
@@ -67,7 +67,7 @@ export class TLS57020Component {
 
   ngOnInit(): void {
     // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
   }
 
   canQuery(): boolean {

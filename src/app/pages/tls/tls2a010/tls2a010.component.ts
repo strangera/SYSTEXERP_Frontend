@@ -355,7 +355,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       { field: 'tlt_name', header: '櫃位名稱' },
       { field: 'BOOK_PayAmt', header: '系統帳', format: formatAmount },
       { field: 'ACT_PayAmt', header: '實收帳', format: formatAmount },
-      { field: 'MOD_PayAmt', header: '調整後實收帳', format: formatAmount, type: 'inputNumber' },
+      { field: 'MOD_PayAmt', header: '調整後實收帳', format: formatAmount, type: 'inputNumber', min: -999999999 },
       { field: 'OVER_PayAmt', header: '系統/實收帳差異', format: formatAmount },
       {
         header: '狀況', field: 'OVER_Status', format: (v: any) => { if (typeof v === 'string') return v; if (v < 0) return '欠'; if (v === 0) return '平'; if (v > 0) return '溢'; return v; },
@@ -383,7 +383,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
     const dialogRowData = {
       ...rowData,
-      MOD_PayAmt: rowData.MOD_PayAmt ?? rowData.ACT_PayAmt ?? 0
+      MOD_PayAmt: rowData.BOOK_PayAmt ?? 0
     };
     // 觸發初始計算
     this.calculateAdjustedAmounts(dialogRowData);

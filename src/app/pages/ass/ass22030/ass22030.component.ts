@@ -38,7 +38,7 @@ export class ASS22030Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '320009';
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
   }
   queryForm = this.formBuilder.group({
     bigCategoryCode: [],

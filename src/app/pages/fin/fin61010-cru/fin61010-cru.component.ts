@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -20,7 +20,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN61010CRUComponent
-  extends BasicCrupageComponent
+
   implements OnInit {
   ngOnInit(): void {
     // 初始化
@@ -39,14 +39,14 @@ export class FIN61010CRUComponent
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -173,7 +173,6 @@ export class FIN61010CRUComponent
     private router: Router,
     private formBuilder: FormBuilder,
   ) {
-    super(); // 呼叫父類建構子
   }
 
   // ----------------------------------------------------------------
@@ -198,6 +197,13 @@ export class FIN61010CRUComponent
     this.dataForm.patchValue(rowdata);
     this.dataForm.disable();
   }
+  ProgNo = 'FIN72050';
+  formTitle = 'FIN72050';
+  submitted = false;
+  accordionTabCss = 'create-accordionTab';
+  crudstatus: CRUDStatus = CRUDStatus.Create;
+  canAdd() { return true; }
+  canEdit() { return true; }
 
   onAddItem(): void {
     this.items.push(this.createItem());

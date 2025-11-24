@@ -7,7 +7,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+
 //
 import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
@@ -28,7 +28,12 @@ import { PostageChargeService } from './../../../service/basic/postage-charge.se
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS11040CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS11040CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   //
   warrantyMethodOptions: any[] = [];
 
@@ -99,7 +104,6 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
     private postageChargeService: PostageChargeService,
     private itemUnitService: ItemUnitService,
   ) {
-    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -128,13 +132,13 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔

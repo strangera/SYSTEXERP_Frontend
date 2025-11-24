@@ -97,7 +97,7 @@ export class FIN23070Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/FIN2000/FIN23070CRU';
     //
     // ----------------------------------------------------------------
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
     //
     // ----------------------------------------------------------------
   }

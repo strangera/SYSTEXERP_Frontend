@@ -1,3 +1,4 @@
+import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
 import { TableTypes } from "../table/table.model";
 
 export interface ReportColumn {
@@ -137,3 +138,14 @@ export function formatAmountWithDecimals(value: any, decimals = 2): string {
     useGrouping: true, // 啟用千分位逗號
   }).format(num);
 }
+
+export const expandAnimation =
+  trigger('fadeInOut', [
+    transition(':enter', [
+      style({ opacity: 0, transform: 'translateY(10px)' }),
+      animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+    ]),
+    transition(':leave', [
+      animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-5px)' }))
+    ])
+  ])
