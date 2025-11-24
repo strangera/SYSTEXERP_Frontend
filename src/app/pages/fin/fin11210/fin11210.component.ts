@@ -127,25 +127,4 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
           }));
       });
   }
-
-  // 下傳
-  btnLoading = false;
-  onUpload() {
-    // TODO: 待調整
-    // const params = {
-    //   ExportDetails: this.selectedItems.map((item) => ({
-    //     ID: item.ID,
-    //     STO_No: '10',
-    //     GUI_YYMM: this.datePipe.transform(item.GUI_YYMM, 'yyyyMM'),
-    //     SER_NOS: item.SER_NOS,
-    //     ECR_No: item.ECR_No
-    //   }))
-    // }
-    // this.btnLoading = true;
-    // this.fin11200Service.execProcExport(params).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe((response) => {
-    //   this.messageService.successBubble(response.Message);
-    //   this.selectedItems = [];
-    //   this.onSubmit(this.queryForm);
-    // });
-  }
 }
