@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { AccDescOption, AccNoList, FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescResponse, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { AccDescOption, AccNoList, FIN52030Data, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescResponse, VendorList } from '@pages/fin/fin52030/fin52030.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -164,7 +164,7 @@ export class FIN52030Service {
   public getUsrList(): void {
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      tap(res => this.usrList.set(res?.map(item => ({ value: item.Org_ID, label: item.Org_Name } as Option)) ?? [])),
+      tap(res => this.usrList.set(res?.map(item => ({ value: item['Org_ID'], label: item['Org_Name'] } as Option)) ?? [])),
       finalize(() => this.logger.debug('查詢TblUserOrgidList結果:', [this.usrList()])),
     ).subscribe();
   }

@@ -1,23 +1,23 @@
+import { DatePipe, NgIf } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { DatePipe, NgIf } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS57100DetailResponse, QueryTLS57100Request, QueryTLS57100SummaryResponse, Tls57100Service } from '@service/api/tls/tls57100.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls57100',
@@ -55,6 +55,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
     DisplayMode: [1, [Validators.required]],
   });
   totalRecords = 0;
+  footerTotal: any
   documentTypeOptions = [
     { value: 1, label: '進貨單' },
     { value: 2, label: '退貨單' }
@@ -116,6 +117,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount },
         { field: 'ODM_TotalSaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount },
       ];
+      this.footerTotal = null;
       this.data = [];
     } else if (displayMode === 2) { // 明細模式
       this.columns = [
@@ -128,12 +130,14 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         { field: 'ODM_Status', header: '單據狀態', visible: true, showSort: true },
         { field: 'PLU_MagNo', header: '商品管理編號', visible: true, showSort: true },
         { field: 'PLU_Name', header: '品名', visible: true, showSort: true },
-        { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
       ];
+      this.footerTotal = null;
       this.data = [];
     } else {
+      this.footerTotal = null;
       this.columns = [];
       this.data = [];
     }
@@ -158,16 +162,16 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         ODM_No: formValue.ODM_No,
         pageIndex: 1,
         pageSize: 30,
-        SortBy: [{ field: 'ODM_Date', order: 1 }],
       };
       this.tls57100Service.queryTLS57100(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response: any) => {
         if (response.Data) {
-          this.totalRecords = response.TotalCount;
+          this.totalRecords = response.TotalCount || 0;
+          this.footerTotal = response.GrandTotal;
           this.historyRequestBody = requestBody;
           this.data = response.Data;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
           this.data = [];
+          this.footerTotal = null;
           this.totalRecords = 0;
           this.messageService.warnBubble(response.Message || '沒有找到符合條件的資料。');
         }
