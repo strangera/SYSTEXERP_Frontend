@@ -36,18 +36,34 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   // 建立表單欄位
   dataForm = this.formBuilder.nonNullable.group({
-    LOCATION_Name: ['', [Validators.maxLength(30)]],         // 店位說明
-    org_id: ['', [Validators.maxLength(20)]],                 // 組織代碼
+    LOCATION_Name: ['', [Validators.maxLength(30)]], // 店位說明
+    org_id: ['', [Validators.maxLength(20)]], // 組織代碼
     building_no: ['', [Validators.required, Validators.maxLength(1)]], // 館別代碼
-    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],    // 樓層代碼
-    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],     // 區域代碼
-    GROSS_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]],// 簽約坪數
-    NET_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]], // 營業坪數
+    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]], // 楼層代碼
+    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]], // 區域代碼
+
+    // 簽約坪數
+    GROSS_SPACE: [
+      null,
+      [
+        Validators.min(0),
+        Validators.max(9999.999),
+        Validators.pattern(/^[0-9]*\.?[0-9]*$/), // 只能 0-9 和一個小數點
+      ],
+    ],
+
+    NET_SPACE: [
+      null,
+      [Validators.required, Validators.min(0), Validators.max(9999.999)],
+    ], // 營業坪數
     LOCATION_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 使用狀態（字串 '0' 預設未使用）
-    Purpose_no: [null, [Validators.required]],                // 用途代碼
-    Draw_X: ['', [Validators.maxLength(255)]],                // X 座標
-    Draw_Y: ['', [Validators.maxLength(255)]],                // Y 座標
-    LOCATION_No: [{ value: '由系統帶入', disabled: true }, [Validators.required, Validators.maxLength(10)]], // 店位代碼
+    Purpose_no: [null, [Validators.required]], // 用途代碼
+    Draw_X: ['', [Validators.maxLength(255)]], // X 座標
+    Draw_Y: ['', [Validators.maxLength(255)]], // Y 座標
+    LOCATION_No: [
+      { value: '由系統帶入', disabled: true },
+      [Validators.required, Validators.maxLength(10)],
+    ], // 店位代碼
   });
 
   floorOptions: any[] = [];
@@ -70,6 +86,35 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS11010', this.dataForm);
+
+    // 🔸簽約坪數：監聽 valueChanges，輸入中文時提示並移除
+    const grossCtrl = this.dataForm.get('GROSS_SPACE') as any;
+
+    grossCtrl?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((val: any) => {
+        if (val === null || val === undefined || val === '') {
+          return;
+        }
+
+        const str = String(val);
+        const chineseRegex = /[\u4E00-\u9FFF]/g;
+
+        if (!chineseRegex.test(str)) {
+          return;
+        }
+
+        // 提示使用者
+        this.messageService.warnBubble('簽約坪數不得輸入中文，請改用數字。');
+
+        // 把所有中文移除
+        const noChinese = str.replace(chineseRegex, '');
+
+        // 空字串就設回 null，有值就轉成 number
+        const nextVal = noChinese === '' ? null : Number(noChinese);
+
+        grossCtrl.setValue(nextVal, { emitEvent: false });
+      });
 
     // --- 使用狀態選單邏輯 ---
     if (this.crudstatus === CRUDStatus.Create) {
@@ -105,7 +150,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
           break;
         case '1': // 使用中
         default:
-          // 使用中只能維持使用中（依你原本邏輯）
+          // 使用中只能維持使用中
           this.LOCATION_Status_Options = [{ value: '1', label: '使用中' }];
           this.dataForm.get('LOCATION_Status')?.disable();
           break;
@@ -197,8 +242,15 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
       const raw = this.dataForm.getRawValue() as any;
 
       // 正規化 payload
-      raw.GROSS_SPACE = Number(raw.GROSS_SPACE);
-      raw.NET_SPACE = Number(raw.NET_SPACE);
+      raw.GROSS_SPACE =
+        raw.GROSS_SPACE === null || raw.GROSS_SPACE === ''
+          ? null
+          : Number(raw.GROSS_SPACE);
+      raw.NET_SPACE =
+        raw.NET_SPACE === null || raw.NET_SPACE === ''
+          ? null
+          : Number(raw.NET_SPACE);
+
       raw.LOCATION_Status = String(raw.LOCATION_Status);
       raw.org_id = raw.org_id?.trim() === '' ? null : raw.org_id;
 
@@ -209,14 +261,18 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
           .pipe(untilDestroyed(this))
           .subscribe({
             next: () => {
-              this.messageService.successBubble(this.translate.instant('success_message'));
+              this.messageService.successBubble(
+                this.translate.instant('success_message'),
+              );
               this.dataForm.reset();
               this.dataForm.markAsPristine();
               // 重設預設狀態為未使用
               this.dataForm.patchValue({ LOCATION_Status: '0' });
             },
             error: () => {
-              this.messageService.errorBubble(this.translate.instant('create_failed'));
+              this.messageService.errorBubble(
+                this.translate.instant('create_failed'),
+              );
             },
           });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
@@ -235,7 +291,9 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
               this.router.navigate(['account/tls', 'tls11010']);
             },
             error: () => {
-              this.messageService.errorBubble(this.translate.instant('update_failed'));
+              this.messageService.errorBubble(
+                this.translate.instant('update_failed'),
+              );
             },
           });
       }

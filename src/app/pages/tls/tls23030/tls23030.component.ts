@@ -154,7 +154,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v) },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
+    { field: 'CRD_No', header: '備註', visible: true, style: 'text-right' },
     {
       field: 'IsHaveTERM_No',
       header: '是否分期',
