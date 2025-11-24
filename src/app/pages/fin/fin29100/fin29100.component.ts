@@ -1,31 +1,25 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //1.2.9.10 支出憑單明細表
 @Component({
-    selector: 'app-fin29100',
-    templateUrl: './fin29100.component.html',
-    styleUrl: './fin29100.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, InputNumberRangeComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin29100',
+  templateUrl: './fin29100.component.html',
+  styleUrl: './fin29100.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, InputNumberRangeComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN29100Component extends BasicQpageComponent implements OnInit {
   //
@@ -33,8 +27,8 @@ export class FIN29100Component extends BasicQpageComponent implements OnInit {
     startdate: [, [Validators.required]], // 匯款/開票/調撥日期
     enddate: [, [Validators.required]], // 匯款/開票/調撥日期
     bankCode: [], // 銀行代號
-    startserialticket: [, [this.validationService.numberValidator, Validators.max(9999999999999)]], // 匯款/開票/調撥單號
-    endserialticket: [, [this.validationService.numberValidator, Validators.max(9999999999999)]], // 匯款/開票/調撥單號
+    startserialticket: [, [Validators.max(9999999999999)]], // 匯款/開票/調撥單號
+    endserialticket: [, [Validators.max(9999999999999)]], // 匯款/開票/調撥單號
     type: [[] as number[]], // 型態
   });
   // 下拉資料多個呈現
@@ -73,13 +67,7 @@ export class FIN29100Component extends BasicQpageComponent implements OnInit {
   ];
 
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private bankAccountCodeService: BankAccountCodeService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -88,33 +76,12 @@ export class FIN29100Component extends BasicQpageComponent implements OnInit {
     // 初始化
     this.ProgNo = '120033';
     this.cruPage = '/FIN2000/FIN29100CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    this.bankAccountCodeService.getSystemTypes().subscribe(data => {
-      this.bankCodeOptions = data;
-    });
     // ----------------------------------------------------------------
   }
 
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -127,18 +94,12 @@ export class FIN29100Component extends BasicQpageComponent implements OnInit {
   }
   // ----------------------------------------------------------------
   onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
+
   }
 
   onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
   }
 
   onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
   }
 }

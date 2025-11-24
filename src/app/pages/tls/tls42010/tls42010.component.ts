@@ -1,24 +1,22 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownChangeEvent } from 'primeng/dropdown';
+import { finalize } from 'rxjs';
+import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '@shared/componentkit/table/table.model';
-import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { DropdownChangeEvent } from 'primeng/dropdown';
-import { NgIf } from '@angular/common';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls42010',
@@ -69,8 +67,6 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   dialogSelectTargetItem: any | null = null;
 
   constructor(
-    private validationService: ValidationService,
-    private counterCodeService: CounterCodeService,
     public readonly tls42010Service: Tls42010Service,
     private dropDownListService: DropDownListService
   ) {

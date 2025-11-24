@@ -1,27 +1,25 @@
 import { Component } from '@angular/core';
 import {
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FIN15100Service } from '../../../service/api/fin/fin15100.service';
-import { BusinessIdService } from '../../../service/basic/business-id.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableModule } from 'primeng/table';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CalendarModule } from 'primeng/calendar';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { TableModule } from 'primeng/table';
 import { environment } from '../../../../environments/environment';
+import { FIN15100Service } from '../../../service/api/fin/fin15100.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 
 
@@ -59,8 +57,8 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     INV_DeclareYM: [null, Validators.required], // 申報年月
-    TXN_Ret_NoS: [null, [Validators.required,Validators.maxLength(20)]], // 退出/折讓單號(起)
-    TXN_Ret_NoE: [null, [Validators.required,Validators.maxLength(20)]],   // 退出/折讓單號(迄)
+    TXN_Ret_NoS: [null, [Validators.required, Validators.maxLength(20)]], // 退出/折讓單號(起)
+    TXN_Ret_NoE: [null, [Validators.required, Validators.maxLength(20)]],   // 退出/折讓單號(迄)
     InvoiceTrack: ['', [Validators.maxLength(2)]],//字軌
     InvoiceNumberS: [null, [Validators.maxLength(8)]], //發票起始號碼
     InvoiceNumberE: [null, [Validators.maxLength(8)]], //發票結束號碼
@@ -72,7 +70,6 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private fin15100Service: FIN15100Service,
-    private businessIdService: BusinessIdService,
   ) {
     super();
   }
@@ -115,25 +112,25 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
 
     this.loading = true;
     this.fin15100Service.printFIN15100(payload).subscribe({
-    next: (res) => {
-  this.loading = false;
+      next: (res) => {
+        this.loading = false;
 
-  const rawUrl: string | undefined =
-    res?.Data?.Print_URL ?? res?.Data?.[0]?.Print_URL;
+        const rawUrl: string | undefined =
+          res?.Data?.Print_URL ?? res?.Data?.[0]?.Print_URL;
 
-  if (!rawUrl) {
-    alert('取得列印網址失敗（Print_URL 為空）');
-    console.error('API 回傳無 Print_URL：', res);
-    return;
-  }
+        if (!rawUrl) {
+          alert('取得列印網址失敗（Print_URL 為空）');
+          console.error('API 回傳無 Print_URL：', res);
+          return;
+        }
 
-  // 不做任何 encode，不用 URL()，只做字串相接
-  const finalUrl = rawUrl.startsWith('http')
-    ? rawUrl
-    : this.joinUrlNoEncode(environment.ApiUrl, rawUrl);
+        // 不做任何 encode，不用 URL()，只做字串相接
+        const finalUrl = rawUrl.startsWith('http')
+          ? rawUrl
+          : this.joinUrlNoEncode(environment.ApiUrl, rawUrl);
 
-  window.open(finalUrl, '_blank', 'noopener');
-},
+        window.open(finalUrl, '_blank', 'noopener');
+      },
       error: (err) => {
         this.loading = false;
         alert('查詢失敗，請稍後再試');
@@ -142,23 +139,23 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
     });
   }
   private joinUrlNoEncode(base: string, path: string): string {
-  const cleanBase = base.replace(/\/+$/, '');
-  const cleanPath = String(path).replace(/^\/+/, '');
-  return `${cleanBase}/${cleanPath}`;
-}
-
-  /** 將相對或絕對的 Print_URL 轉為完整可開啟的網址 */
-private buildAbsoluteUrl(base: string, path: string): string {
-  try {
-    // new URL 會自動處理前後斜線；中文路徑可用 encodeURI
-    const u = new URL(path, base).toString();
-    return encodeURI(u);
-  } catch {
     const cleanBase = base.replace(/\/+$/, '');
     const cleanPath = String(path).replace(/^\/+/, '');
-    return encodeURI(`${cleanBase}/${cleanPath}`);
+    return `${cleanBase}/${cleanPath}`;
   }
-}
+
+  /** 將相對或絕對的 Print_URL 轉為完整可開啟的網址 */
+  private buildAbsoluteUrl(base: string, path: string): string {
+    try {
+      // new URL 會自動處理前後斜線；中文路徑可用 encodeURI
+      const u = new URL(path, base).toString();
+      return encodeURI(u);
+    } catch {
+      const cleanBase = base.replace(/\/+$/, '');
+      const cleanPath = String(path).replace(/^\/+/, '');
+      return encodeURI(`${cleanBase}/${cleanPath}`);
+    }
+  }
 
 
   /** 解析 localStorage.UserInfo，回傳 { mid, SYS_StoreNo } */

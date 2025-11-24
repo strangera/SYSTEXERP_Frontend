@@ -1,32 +1,30 @@
 import { Component } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
 
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 // Service
-import { TLS2B020Service } from '../../../service/api/tls/tls2-b020.service';
-import { CashierDistinctionService } from '../../../service/basic/cashier-distinction.service';
-import { OverflowStatusService } from '../../../service/basic/overflow-status.service';
-import { CashierService } from '../../../service/basic/cashier.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { TLS2B020Service } from '../../../service/api/tls/tls2-b020.service';
+import { CashierService } from '../../../service/basic/queryPOS2001.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
 
 // UI
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 
 @Component({
@@ -49,7 +47,7 @@ import { Table2Component } from '../../../shared/componentkit/table2/table2.comp
   ],
 })
 export class TLS2B020Component extends BasicQueryPageComponent<any> {
-    private fromLazy = false;
+  private fromLazy = false;
   // 預設上個月 yyyy/MM
   readonly lastMonth: string = (() => {
     const d = new Date();
@@ -60,8 +58,16 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   })();
 
   // 下拉
-  cashierDistinctionOptions: any[] = [];
-  overflowStatusOptions: any[] = [];
+  cashierDistinctionOptions = [
+    { value: null, label: '全部' },
+    { value: 2, label: '集中' },
+    { value: 3, label: '獨立' },
+  ];
+  overflowStatusOptions = [
+    { value: null, label: '全部' },
+    { value: 2, label: '溢款' },
+    { value: 3, label: '欠款' },
+  ];
   cashierOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
@@ -90,8 +96,6 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   });
 
   constructor(
-    private cashierDistinctionService: CashierDistinctionService,
-    private overflowStatusService: OverflowStatusService,
     private tls2b020Service: TLS2B020Service,
     private cashierService: CashierService,
     private tls11010Service: Tls11010Service,
@@ -109,13 +113,6 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
       (form) => this.onSubmit(form),
     );
 
-    // 下拉初始化
-    this.cashierDistinctionService.getSystemTypes().subscribe((res) => {
-      this.cashierDistinctionOptions = res;
-    });
-    this.overflowStatusService.getSystemTypes().subscribe((res) => {
-      this.overflowStatusOptions = res;
-    });
     this.cashierService.getCashierOptions().subscribe((res) => {
       this.cashierOptions =
         res?.map((x: any) => ({
@@ -138,15 +135,15 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
       { field: 'USR_Name', header: '收銀員代號', visible: true, rowspan: true },
 
       // 第一列 1–16 日
-      { field: 'Day01', header: '1',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day02', header: '2',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day03', header: '3',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day04', header: '4',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day05', header: '5',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day06', header: '6',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day07', header: '7',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day08', header: '8',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
-      { field: 'Day09', header: '9',  headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day01', header: '1', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day02', header: '2', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day03', header: '3', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day04', header: '4', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day05', header: '5', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day06', header: '6', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day07', header: '7', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day08', header: '8', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
+      { field: 'Day09', header: '9', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
       { field: 'Day10', header: '10', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
       { field: 'Day11', header: '11', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
       { field: 'Day12', header: '12', headerRow: 1, visible: true, style: 'text-right', isTotal: true, format: this.moneyFormat },
@@ -178,55 +175,55 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   }
 
   // 查詢主程式（給查詢按鈕 + lazy 分頁共用）
-onSubmit(form: FormGroup): void {
-  this.submitted = true;
+  onSubmit(form: FormGroup): void {
+    this.submitted = true;
 
-  if (form.invalid) {
-    this.messageService.warnBubble('請完整填寫查詢條件');
-    this.fromLazy = false; // 保險
-    return;
-  }
-
-  // ✅ 如果不是從 lazy 來的（= 使用者按查詢），就強制回第 1 頁、pageSize=20
-  if (!this.fromLazy) {
-    this.queryForm.patchValue(
-      {
-        pageIndex: 1,
-        pageSize: 20,
-        // 也可以順便把 SortBy 歸回預設，有需要再加
-        SortBy: [{ field: 'cashier', order: 1 }],
-      } as any,
-      { emitEvent: false },
-    );
-  }
-
-  // 用完旗標後記得清掉
-  this.fromLazy = false;
-
-  const payload: any = { ...this.queryForm.value };
-
-  // string trim
-  Object.keys(payload).forEach((k) => {
-    if (typeof payload[k] === 'string') {
-      payload[k] = payload[k].trim() || null;
+    if (form.invalid) {
+      this.messageService.warnBubble('請完整填寫查詢條件');
+      this.fromLazy = false; // 保險
+      return;
     }
-  });
 
-  // TXN_YYYYMM 可留著給後端用
-  if (payload.TXN_Date) {
-    const raw = payload.TXN_Date;
-    const yyyymm =
-      typeof raw === 'string'
-        ? raw.substring(0, 7).replace('-', '')
-        : `${raw.getFullYear()}${(raw.getMonth() + 1).toString().padStart(2, '0')}`;
-    payload.TXN_YYYYMM = yyyymm;
-  }
+    // ✅ 如果不是從 lazy 來的（= 使用者按查詢），就強制回第 1 頁、pageSize=20
+    if (!this.fromLazy) {
+      this.queryForm.patchValue(
+        {
+          pageIndex: 1,
+          pageSize: 20,
+          // 也可以順便把 SortBy 歸回預設，有需要再加
+          SortBy: [{ field: 'cashier', order: 1 }],
+        } as any,
+        { emitEvent: false },
+      );
+    }
 
-  this.loading = true;
-  this.messageService.blockUi();
+    // 用完旗標後記得清掉
+    this.fromLazy = false;
 
-  this.tls2b020Service.queryTLS2B020(payload).subscribe({
-    next: (resp) => {
+    const payload: any = { ...this.queryForm.value };
+
+    // string trim
+    Object.keys(payload).forEach((k) => {
+      if (typeof payload[k] === 'string') {
+        payload[k] = payload[k].trim() || null;
+      }
+    });
+
+    // TXN_YYYYMM 可留著給後端用
+    if (payload.TXN_Date) {
+      const raw = payload.TXN_Date;
+      const yyyymm =
+        typeof raw === 'string'
+          ? raw.substring(0, 7).replace('-', '')
+          : `${raw.getFullYear()}${(raw.getMonth() + 1).toString().padStart(2, '0')}`;
+      payload.TXN_YYYYMM = yyyymm;
+    }
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls2b020Service.queryTLS2B020(payload).subscribe({
+      next: (resp) => {
         // 依你的 API 回傳結構調整，如果是 { Data:{Items,Totals}, TotalCount }
         const core = resp?.Data ?? {};
         const items = core.Items ?? core.items ?? resp?.Data ?? [];
@@ -332,19 +329,19 @@ onSubmit(form: FormGroup): void {
   }
 
   // Table2 的 lazy 分頁事件
-override onLazyLoadData(ev: { pageIndex: number; pageSize: number; SortBy: any[] }): void {
-  this.fromLazy = true;  // ✅ 告訴 onSubmit 這次是「分頁」，不要重設頁碼
+  override onLazyLoadData(ev: { pageIndex: number; pageSize: number; SortBy: any[] }): void {
+    this.fromLazy = true;  // ✅ 告訴 onSubmit 這次是「分頁」，不要重設頁碼
 
-  this.queryForm.patchValue(
-    {
-      pageIndex: ev.pageIndex,
-      pageSize: ev.pageSize,
-      SortBy: ev.SortBy,
-    } as any,
-    { emitEvent: false },
-  );
-  this.onSubmit(this.queryForm);
-}
+    this.queryForm.patchValue(
+      {
+        pageIndex: ev.pageIndex,
+        pageSize: ev.pageSize,
+        SortBy: ev.SortBy,
+      } as any,
+      { emitEvent: false },
+    );
+    this.onSubmit(this.queryForm);
+  }
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }

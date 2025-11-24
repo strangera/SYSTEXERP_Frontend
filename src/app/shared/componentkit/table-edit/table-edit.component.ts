@@ -68,6 +68,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() loading = false;                               // 是否顯示 loading
   @Input() disabled = false;                              // 是否禁用 table
   @Input() multiSortMeta: SortMeta[] | null | undefined = undefined; // table 多重排序
+  @Input() serialName = '序號';                            // table 序號欄位名稱
   // 欄位群組
   @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   // select 選擇Row相關
@@ -488,24 +489,20 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     return false;
   }
-  onRowReorder(event: TableColumnReorderEvent) {
-    if (this.disabled || !event.dragIndex) {
+  onRowReorder(event: TableRowReorderEvent) {
+    if (this.disabled) {
       return;
     }
-    // 取得拖曳的列
-    const draggedItem = this.data[event.dragIndex];
-
-    // 如果拖曳的列是新增列，直接返回，不執行任何操作
-    if (draggedItem['_isAutoInsertCandidate']) {
-      return;
+    if (this.canInsert) {
+      const candidateIndex = this._tableData.findIndex(item => item['_isAutoInsertCandidate']);
+      const lastIndex = this._tableData.length - 1;
+      if (candidateIndex !== -1 && candidateIndex !== lastIndex) {
+        this._tableData.splice(candidateIndex, 1);
+        this.insertRow();
+      }
     }
-
-    // 如果將資料拖曳到最後一筆，則將其視為刪除並重新插入一個新空行
-    if (event.dropIndex === this.lastRow() && this.canInsert) {
-      this.deleteRow([draggedItem]);
-      this.insertRow();
-      return;
-    }
+    this.dataChange.emit(this._tableData.filter(item => !item._isAutoInsertCandidate));
+    this.cdr.detectChanges();
   }
   // !!! 以下為核心
   // 判斷此col的validate參數是否有validateRequired的fuction

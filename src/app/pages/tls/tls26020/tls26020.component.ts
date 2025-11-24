@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
-import { FloorService } from '@service/basic/floor.service';
+import { FloorService } from '@service/basic/querySYS3900.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { AccordionModule } from 'primeng/accordion';

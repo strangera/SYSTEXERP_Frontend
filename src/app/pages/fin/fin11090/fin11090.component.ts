@@ -1,28 +1,27 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { FIN11090Data, FIN11090RestoreAndUploadRequest, Fin11090Service } from '../../../service/api/fin/fin11090.service';
-import { ECRNoService } from '@service/basic/ECRNo.service';
+import { ECRNoService } from '@service/basic/queryPOS1002.service';
 import { ValidationService } from '@shared/service/validation.service';
+import { FIN11090Data, FIN11090RestoreAndUploadRequest, Fin11090Service } from '../../../service/api/fin/fin11090.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
-  AddButton,
   Column,
   createPaginationConfig,
   formatAmount,
   formatDate
 } from '../../../shared/componentkit/table/table.model';
 
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-fin11090',
@@ -53,8 +52,8 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       Validators.maxLength(6),
       this.validationService.numberValidator
     ]],
-    TXN_GUITrack: ['', [Validators.required,Validators.maxLength(2),this.validationService.guiTrackValidator]],
-    TXN_GUINo: ['', [Validators.required,Validators.maxLength(8)]],
+    TXN_GUITrack: ['', [Validators.required, Validators.maxLength(2), this.validationService.guiTrackValidator]],
+    TXN_GUINo: ['', [Validators.required, Validators.maxLength(8)]],
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]),
   });
 
@@ -103,10 +102,10 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       field: 'SaleReturn_Status',
       header: '折讓狀態',
       visible: true,
-      format : (value: string) =>
+      format: (value: string) =>
         value === 'Y' ? '作廢' :
-        value === 'N' ? '開立' :
-        value === 'X' ? '未開折讓' : ''
+          value === 'N' ? '開立' :
+            value === 'X' ? '未開折讓' : ''
     },
     {
       field: 'TXN_VoidDT',

@@ -5,24 +5,23 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CashShowupByService } from '../../../service/basic/cash-showup-by.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // UI Imports
-import { DatePipe, NgIf, NgFor /* 或改用 CommonModule */ } from '@angular/common';
+import { DatePipe, NgFor /* 或改用 CommonModule */, NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -55,7 +54,6 @@ import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-t
     tls2b010tableComponent,
     RadioButtonModule, // ← 使用 PrimeNG 原生 radio
   ],
-  providers: [CashShowupByService],
 })
 export class TLS2B010Component extends BasicQueryPageComponent<any> {
   readonly yesterday: Date = (() => {
@@ -76,7 +74,11 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     { label: '自收', value: '2' },
   ];
 
-  CashShowupByOptions: any[] = [];
+  CashShowupByOptions = [
+    { value: 1, label: '全部' },
+    { value: 2, label: '金額不為0' },
+    { value: 3, label: '溢欠' },
+  ];
   selectedItems: any[] = [];
   totalRecords = 0;
 
@@ -116,7 +118,6 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private tls2B010Service: TLS2B010Service,
-    private cashShowupByService: CashShowupByService,
     public override messageService: NotificationService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
@@ -155,10 +156,6 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         })) || [];
-    });
-
-    this.cashShowupByService.getSystemTypes().subscribe((data) => {
-      this.CashShowupByOptions = data;
     });
 
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
@@ -242,13 +239,13 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     const reporttype = form.controls['reporttype'].value; // 1=明細, 2=簡表
     payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
     // 🔧 簡表：移除/改寫 SortBy，避免 TXN_Date 觸發 sql_variant -> datetime 轉型
-if (reporttype === 2) {
-  const safeSort: any[] = [
-    { field: 'ECR_No', order: 1 },
-    { field: 'TLT_NO', order: 1 },
-  ];
-  payload.SortBy = safeSort; // 直接覆蓋；或乾脆不送 SortBy
-}
+    if (reporttype === 2) {
+      const safeSort: any[] = [
+        { field: 'ECR_No', order: 1 },
+        { field: 'TLT_NO', order: 1 },
+      ];
+      payload.SortBy = safeSort; // 直接覆蓋；或乾脆不送 SortBy
+    }
 
     const apiCall =
       reporttype === 2
@@ -309,7 +306,7 @@ if (reporttype === 2) {
             const t = responseData.Totals || {};
             this.detailTotals = {
               BOOK_PayAmt: Number(t.SumBOOK_PayAmt ?? 0),
-              ACT_PayAmt:  Number(t.SumACT_PayAmt  ?? 0),
+              ACT_PayAmt: Number(t.SumACT_PayAmt ?? 0),
               OVER_PayAmt: Number(t.SumOVER_PayAmt ?? 0),
             };
 
@@ -323,31 +320,31 @@ if (reporttype === 2) {
         },
       });
   }
-handleLazyLoad(
-  e: { pageIndex: number; pageSize: number; SortBy: any[] },
-  form: FormGroup
-) {
-  const reporttype = this.queryForm.controls.reporttype.value;
+  handleLazyLoad(
+    e: { pageIndex: number; pageSize: number; SortBy: any[] },
+    form: FormGroup
+  ) {
+    const reporttype = this.queryForm.controls.reporttype.value;
 
-  let sortBy = e.SortBy || [];
-  if (reporttype === 2) {
-    // 🔧 簡表：過濾或改寫排序，避免 TXN_Date
-    sortBy = sortBy.filter(s => s?.field && s.field !== 'TXN_Date');
-    if (sortBy.length === 0) {
-      sortBy = [
-        { field: 'ECR_No', order: 1 },
-        { field: 'TLT_NO', order: 1 },
-      ];
+    let sortBy = e.SortBy || [];
+    if (reporttype === 2) {
+      // 🔧 簡表：過濾或改寫排序，避免 TXN_Date
+      sortBy = sortBy.filter(s => s?.field && s.field !== 'TXN_Date');
+      if (sortBy.length === 0) {
+        sortBy = [
+          { field: 'ECR_No', order: 1 },
+          { field: 'TLT_NO', order: 1 },
+        ];
+      }
     }
+
+    form.patchValue(
+      { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: sortBy },
+      { emitEvent: false }
+    );
+
+    this.onSubmit(form);
   }
-
-  form.patchValue(
-    { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: sortBy },
-    { emitEvent: false }
-  );
-
-  this.onSubmit(form);
-}
 
 
   get formattedTXNDate(): string {
@@ -366,14 +363,14 @@ handleLazyLoad(
 
   columns: any[] = [
     { field: 'building_desc', header: '館別', visible: true },
-    { field: 'floor_desc',    header: '樓層', visible: true },
-    { field: 'ECR_No',        header: '收銀機號', visible: true },
-    { field: 'TLT_NO',        header: '專櫃編號', visible: true },
-    { field: 'TLT_Name',      header: '櫃位名稱', visible: true },
-    { field: 'PAY_Name',      header: '付款別', visible: true },
-    { field: 'BOOK_PayAmt',   header: '系統帳', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'ACT_PayAmt',    header: '實收帳', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'OVER_PayAmt',   header: '溢欠差異(實收 - 系統帳)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'floor_desc', header: '樓層', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TLT_NO', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '櫃位名稱', visible: true },
+    { field: 'PAY_Name', header: '付款別', visible: true },
+    { field: 'BOOK_PayAmt', header: '系統帳', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'ACT_PayAmt', header: '實收帳', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'OVER_PayAmt', header: '溢欠差異(實收 - 系統帳)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
 
   simplecolumns: any[] = [
@@ -387,14 +384,14 @@ handleLazyLoad(
           : '',
     },
     { field: 'building_desc', header: '館別', visible: true },
-    { field: 'floor_desc',    header: '樓層', visible: true },
-    { field: 'ECR_No',        header: '收銀機號', visible: true },
-    { field: 'TLT_NO',        header: '專櫃編號', visible: true },
-    { field: 'TLT_Name',      header: '櫃位名稱', visible: true },
-    { field: 'OVER_PayAmt',   header: '溢欠金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'OVER_Desc',     header: '溢欠說明', visible: true },
+    { field: 'floor_desc', header: '樓層', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TLT_NO', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '櫃位名稱', visible: true },
+    { field: 'OVER_PayAmt', header: '溢欠金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'OVER_Desc', header: '溢欠說明', visible: true },
     { field: 'Monthly_OVER_PayAmt', header: '月累計溢欠', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'Remark',        header: '備註', visible: false },
+    { field: 'Remark', header: '備註', visible: false },
   ];
 
   refreshCloseDate(): void {

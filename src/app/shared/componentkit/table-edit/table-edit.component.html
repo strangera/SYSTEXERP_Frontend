@@ -37,8 +37,9 @@
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
         <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
+        <!-- 序號變成變數名稱 -->
         <th [attr.colspan]="_tableData.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
-          class="w-1rem text-center">序號
+          class="w-1rem text-center">{{ serialName }}
         </th>
         <th *ngIf="showCheckBox && !disabled && _tableData.length && !_tableData[0]._isAutoInsertCandidate" rowspan="2"
           class="w-1rem text-center">
@@ -74,9 +75,14 @@
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
         <th *ngIf="_tableData.length && showReorder" class="w-1rem text-center"></th>
-        <th [attr.colspan]="_tableData.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
+
+        <th [attr.colspan]="
+        (canInsert && !disabled && _tableData.length > 0 && _tableData[_tableData.length - 1]._isAutoInsertCandidate && !showCheckBox) ? 2 : 1
+    " class="w-1rem text-center">{{ serialName }}
         </th>
-        <th *ngIf="showCheckBox && !disabled && _tableData.length && !_tableData[0]._isAutoInsertCandidate"
+
+        <th
+          *ngIf="showCheckBox && !disabled && _tableData.length > (canInsert && _tableData[_tableData.length - 1]?._isAutoInsertCandidate ? 1 : 0)"
           class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
@@ -95,7 +101,7 @@
         'insert-row': rowData._isAutoInsertCandidate ,
       }">
       <td *ngIf="data.length && showReorder" class="w-1rem text-center">
-        <span *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 1" class="pi pi-bars w-1rem text-center"
+        <span *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 0" class="pi pi-bars w-1rem text-center"
           pReorderableRowHandle></span>
         <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus w-1rem text-center" [ngClass]="{
             'text-blue-500': rowData._isAutoInsertCandidate
@@ -116,8 +122,8 @@
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
           [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,_tableData) || disabled" />
       </td>
-      <td *ngFor="let col of columns" class="text-center" (click)="col.type ? $event.stopPropagation() : null"
-        (keydown)="$event.stopPropagation()" [style]="{'width':col.width, 'text-align': col.textAlign}">
+      <td *ngFor="let col of columns" (click)="col.type ? $event.stopPropagation() : null"
+        (keydown)="$event.stopPropagation()" [style]="{'width':col.width, 'text-align': col.textAlign || 'center'}">
         <ng-container [ngSwitch]="col.type">
           <p-iconField iconPosition="right">
             <input *ngSwitchCase="'input'" pInputText class="min-w-max" [placeholder]="'請輸入' + col.header"

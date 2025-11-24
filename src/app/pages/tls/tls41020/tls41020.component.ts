@@ -10,16 +10,15 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
-import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { CounterNameService } from '@service/basic/counter-name.service';
+import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 
 // 與後端一致：order 用 1 / -1
 type ApiSort = { field: string; order: number };
@@ -46,8 +45,7 @@ type ApiSort = { field: string; order: number };
 })
 export class TLS41020Component
   extends BasicQueryPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   selectedItems: any[] = [];
   ECRNoOptions: any[] = [];
 
@@ -102,7 +100,7 @@ export class TLS41020Component
     { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true },
     { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true },
   ];
-CounterOptions: any[] = [];
+  CounterOptions: any[] = [];
   EDC_Status_Option: any[] = [
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' },
@@ -128,12 +126,12 @@ CounterOptions: any[] = [];
           value: x.value,
         })) || [];
     });
-        this.counterNameService.getCounters().subscribe((res) => {
+    this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = (res ?? []).map((x: any) => ({
         label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
       }));
     });
-  
+
   }
 
   /** 查詢：回到第一頁，送出預設排序（1/-1），不回灌 table 排序狀態 */
@@ -157,7 +155,7 @@ CounterOptions: any[] = [];
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount ?? this.data.length ?? 0;
       },
-      error: () => {this.loading = false;this.messageService.errorBubble('查詢失敗')},
+      error: () => { this.loading = false; this.messageService.errorBubble('查詢失敗') },
       complete: () => {
         this.loading = false;
         this.messageService.unblockUi();
@@ -169,62 +167,62 @@ CounterOptions: any[] = [];
    * 懶載入（分頁/排序）：
    * 僅「讀取」子元件丟出的參數，不再把排序/分頁回灌給子元件，避免循環。
    */
- override onLazyLoadData(event: any, form: FormGroup): void {
-  this.loading = true;
+  override onLazyLoadData(event: any, form: FormGroup): void {
+    this.loading = true;
 
-  const pageIndex =
-    event?.pageIndex ??
-    ((event?.first ?? 0) / (event?.rows ?? (form.value?.PageSize || 20)) + 1);
+    const pageIndex =
+      event?.pageIndex ??
+      ((event?.first ?? 0) / (event?.rows ?? (form.value?.PageSize || 20)) + 1);
 
-  const pageSize =
-    event?.pageSize ?? event?.rows ?? form.value?.PageSize ?? 20;
+    const pageSize =
+      event?.pageSize ?? event?.rows ?? form.value?.PageSize ?? 20;
 
-  let sort: ApiSort[] = this.defaultSort;
+    let sort: ApiSort[] = this.defaultSort;
 
-  if (Array.isArray(event?.SortBy) && event.SortBy.length) {
-    // TableComponent 丟出的 SortBy
-    sort = event.SortBy.map((m: any) => ({
-      field: this.mapSortField(m.field),
-      order: m.order === -1 ? -1 : 1,
-    }));
-  } else if (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length) {
-    // 兼容 PrimeNG 事件
-    sort = event.multiSortMeta.map((m: any) => ({
-      field: this.mapSortField(m.field),
-      order: m.order === -1 ? -1 : 1,
-    }));
-  } else if (event?.sortField) {
-    sort = [{
-      field: this.mapSortField(event.sortField),
-      order: event.sortOrder === -1 ? -1 : 1,
-    }];
+    if (Array.isArray(event?.SortBy) && event.SortBy.length) {
+      // TableComponent 丟出的 SortBy
+      sort = event.SortBy.map((m: any) => ({
+        field: this.mapSortField(m.field),
+        order: m.order === -1 ? -1 : 1,
+      }));
+    } else if (Array.isArray(event?.multiSortMeta) && event.multiSortMeta.length) {
+      // 兼容 PrimeNG 事件
+      sort = event.multiSortMeta.map((m: any) => ({
+        field: this.mapSortField(m.field),
+        order: m.order === -1 ? -1 : 1,
+      }));
+    } else if (event?.sortField) {
+      sort = [{
+        field: this.mapSortField(event.sortField),
+        order: event.sortOrder === -1 ? -1 : 1,
+      }];
+    }
+
+    const payload = this.buildPayload(form, { pageIndex, pageSize, sort });
+
+    this.tls41020Service.queryTLS41020(payload).subscribe({
+      next: (res) => {
+        this.data = res?.Data || [];
+        this.totalRecords = res?.TotalCount ?? 0;
+      },
+      error: () => {
+        this.messageService.errorBubble('資料載入失敗');
+        this.loading = false;
+      },
+      complete: () => (this.loading = false),
+    });
   }
-
-  const payload = this.buildPayload(form, { pageIndex, pageSize, sort });
-
-  this.tls41020Service.queryTLS41020(payload).subscribe({
-    next: (res) => {
-      this.data = res?.Data || [];
-      this.totalRecords = res?.TotalCount ?? 0;
-    },
-    error: () => {
-      this.messageService.errorBubble('資料載入失敗');
-      this.loading = false;
-    },
-    complete: () => (this.loading = false),
-  });
-}
-/** 將前端顯示欄位名稱轉成後端排序欄位名稱 */
-private mapSortField(field: string): string {
-  switch (field) {
-    case 'EDC_Status1Name':
-      return 'EDC_Status1';
-    case 'EDC_Status2Name':
-      return 'EDC_Status2';
-    default:
-      return field;
+  /** 將前端顯示欄位名稱轉成後端排序欄位名稱 */
+  private mapSortField(field: string): string {
+    switch (field) {
+      case 'EDC_Status1Name':
+        return 'EDC_Status1';
+      case 'EDC_Status2Name':
+        return 'EDC_Status2';
+      default:
+        return field;
+    }
   }
-}
 
   onClearForm(): void {
     this.queryForm.reset();

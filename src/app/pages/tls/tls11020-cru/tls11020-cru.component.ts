@@ -1,25 +1,23 @@
 import { Component } from '@angular/core';
 import {
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { ValidationService } from '../../../shared/service/validation.service';
-import { DeductionService } from '../../../service/basic/deduction.service';
 import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
+import { ValidationService } from '../../../shared/service/validation.service';
 
+import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls11020-cru',
@@ -39,7 +37,14 @@ import { NgIf } from '@angular/common';
   ],
 })
 export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
-  deductionCategoryOptions: any[] = [];
+  deductionCategoryOptions = [
+    { value: 'A', label: '一次扣款' },
+    { value: 'B', label: '每月扣款' },
+    { value: 'C', label: '平均分攤' },
+    { value: 'D', label: '比率分攤' },
+    { value: 'E', label: '活動扣款' },
+    { value: 'Z', label: '其他扣款' },
+  ];
   accountOptions: any[] = [];
 
   dataForm = this.formBuilder.group({
@@ -65,7 +70,6 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private translate: TranslateService,
     private validationService: ValidationService,
-    private deductionService: DeductionService,
     private tls11020Service: TLS11020Service,
     private accountingaccountService: AccountingaccountService
   ) {
@@ -80,10 +84,6 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     if (this.crudstatus === CRUDStatus.Edit) {
       this.dataForm.get('CAP_Type')?.disable();
     }
-
-    this.deductionService.getDeductionCategories().subscribe((data) => {
-      this.deductionCategoryOptions = data;
-    });
 
     this.accountingaccountService.getOptions().subscribe((data) => {
       this.accountOptions = (data || []).map((x: any) => ({

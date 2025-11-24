@@ -1,71 +1,32 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="參數標題/參數說明"
-              controlName="parameterTitle"
-              [control]="queryForm.controls.parameterTitle"
-              [submitted]="submitted"
-            >
-              >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="系統別"
-              controlName="industryType"
-              [options]="systemTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.systemType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數標題/參數說明" controlName="SYS_Type"
+            [control]="queryForm.controls.SYS_Type" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數代號" controlName="SYS_Code"
+            [control]="queryForm.controls.SYS_Code" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數名稱" controlName="SYS_Name"
+            [control]="queryForm.controls.SYS_Name" [submitted]="submitted" />
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <app-table
-    [showCheckBox]="true"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-  ></app-table>
+  <app-table-report dataKey="SYS_Type" [data]="data" [columns]="columns" [expansionColumns]="subColumns"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" (delete)="onDelete($event)" [totalRecords]="totalRecords"
+    [loading]="loading" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+    expansionDataKey="Details" [lastQueryBody]="lastQuery" [showDelete]="false"
+    [queryFunction]="sysbp00Service.querySYSBP00.bind(sysbp00Service)"></app-table-report>
 </div>

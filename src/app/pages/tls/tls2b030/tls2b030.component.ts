@@ -2,43 +2,42 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { startWith, distinctUntilChanged, map } from 'rxjs/operators';
+import { distinctUntilChanged, map, startWith } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 
 // UI
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 // Services
-import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
-import { CahserTypeService } from '../../../service/basic/cahser-type.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from '../../../service/basic/region-code.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { ButtonModule } from 'primeng/button';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { RegionService } from '../../../service/basic/querySYS3A00.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 // Models
 import { PayTypeItem, TLS2B030Row } from './tls2b030.model';
 
 // until-destroy
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { HttpResponse } from '@angular/common/http';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 type SortItem = { field: string; order: 1 | -1 };
 
@@ -87,7 +86,10 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   floorOptions: any[] = [];
   regionOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  cahserTypeOptions: any[] = [];
+  cahserTypeOptions = [
+    { value: '1', label: '統收' },
+    { value: '2', label: '自收' },
+  ];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
 
@@ -164,7 +166,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private tls2b030Service: TLS2B030Service,
-    private cahserTypeService: CahserTypeService,
     private floorService: FloorService,
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
@@ -225,20 +226,20 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
     const payload: any = {
       TXN_Date_Start: this.toYMDOrUndef(dateStart),
-      TXN_Date_End:   this.toYMDOrUndef(dateEnd),
+      TXN_Date_End: this.toYMDOrUndef(dateEnd),
 
       TLT_No_List: Array.isArray(base?.TLT_No_List) && base.TLT_No_List.length ? base.TLT_No_List : undefined,
       ECR_No_List: Array.isArray(base?.ECR_No_List) && base.ECR_No_List.length ? base.ECR_No_List : undefined,
-      tlt_floor:   Array.isArray(base?.tlt_floor)   && base.tlt_floor.length   ? base.tlt_floor   : undefined,
-      area_no:     Array.isArray(base?.area_no)     && base.area_no.length     ? base.area_no     : undefined,
-      ECR_Type:    base?.ECR_Type || undefined,
-      tlt_building:base?.tlt_building || undefined,
+      tlt_floor: Array.isArray(base?.tlt_floor) && base.tlt_floor.length ? base.tlt_floor : undefined,
+      area_no: Array.isArray(base?.area_no) && base.area_no.length ? base.area_no : undefined,
+      ECR_Type: base?.ECR_Type || undefined,
+      tlt_building: base?.tlt_building || undefined,
 
       OnlyShowOverAmount: !!base?.OnlyShowOverAmount,
 
       pageIndex: Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1,
-      pageSize:  Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 10,
-      SortBy:    this.normalizeSort(base?.SortBy, this.defaultSort),
+      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 10,
+      SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
     };
 
     Object.keys(payload).forEach((k) => {
@@ -260,8 +261,8 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
   private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
     const baseCols: ReportColumn[] = [
-      { field: 'ECR_No',  header: '收銀機號' },
-      { field: 'TLT_No',  header: '專櫃編號' },
+      { field: 'ECR_No', header: '收銀機號' },
+      { field: 'TLT_No', header: '專櫃編號' },
       { field: 'TLT_Name', header: '櫃位名稱' },
     ];
 
@@ -274,7 +275,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     }));
 
     const totalCol: ReportColumn[] = [
-      { field: 'PPay_Dif_sum', header: '總金額' , format: this.moneyFormat, isTotal: true },
+      { field: 'PPay_Dif_sum', header: '總金額', format: this.moneyFormat, isTotal: true },
     ];
 
     this.columns = [...baseCols, ...payCols, ...totalCol];
@@ -286,7 +287,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       if (cached) {
         const parsed = JSON.parse(cached) as { payTypes: PayTypeItem[]; columns: ReportColumn[] };
         this.payTypes = Array.isArray(parsed?.payTypes) ? parsed.payTypes : [];
-        this.columns  = Array.isArray(parsed?.columns)  ? parsed.columns  : [];
+        this.columns = Array.isArray(parsed?.columns) ? parsed.columns : [];
         if (this.columns.length) {
           this.columnsReady = true;
           return;
@@ -312,8 +313,8 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         error: () => {
           this.payTypes = [];
           this.columns = [
-            { field: 'ECR_No',  header: '收銀機號' },
-            { field: 'TLT_No',  header: '專櫃編號' },
+            { field: 'ECR_No', header: '收銀機號' },
+            { field: 'TLT_No', header: '專櫃編號' },
             { field: 'TLT_Name', header: '櫃位名稱' },
             { field: 'PPay_Dif_sum', header: '總金額', format: this.moneyFormat, isTotal: true },
           ];
@@ -416,7 +417,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
-    this.cahserTypeService.getSystemTypes().pipe(untilDestroyed(this)).subscribe((res) => (this.cahserTypeOptions = res));
     this.regionService.getRegionOptions().pipe(untilDestroyed(this)).subscribe((data) => (this.regionOptions = data));
     this.floorService.getFloors().pipe(untilDestroyed(this)).subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().pipe(untilDestroyed(this)).subscribe((data) => (this.BUILDING_NO_Options = data));
@@ -435,7 +435,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     const raw = this.queryForm.getRawValue();
     const payload = this.buildPayload(raw);
     payload.pageIndex = 1;
-    payload.pageSize  = 30;
+    payload.pageSize = 30;
 
     this.loading = true;
     this.data = [];
@@ -452,7 +452,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         next: (response) => {
           const dataAny = response?.Data as any;
           const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-          const sumRaw  = dataAny?.SumPayDiffs ?? null;
+          const sumRaw = dataAny?.SumPayDiffs ?? null;
 
           const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
             const flat: any = { ...r };

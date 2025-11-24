@@ -1,24 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { option } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Fin11060Service } from '@service/api/fin/fin11060.service';
+import { ECRNoService } from '@service/basic/queryPOS1002.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { ECRNoService } from '@service/basic/ECRNo.service';
-import { Fin11060Service } from '@service/api/fin/fin11060.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { formatDate } from '@shared/componentkit/table2/table2.model';
-import { ChangeDetectorRef } from '@angular/core';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { option } from '../../../shared/models/sys/sysb000.model';
 
 export interface InvoiceBase {
   id: number;
@@ -59,7 +58,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   templateUrl: './fin11060.component.html',
   styleUrl: './fin11060.component.scss',
   standalone: true,
-  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent,  RadiobuttonComponent,  AccordionModule, FormsModule, ReactiveFormsModule,  CalendarRangeQuickComponent, DropdownComponent,   TranslateModule, TableComponent]
+  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent, RadiobuttonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, TranslateModule, TableComponent]
 })
 
 // 電子發票上送狀況表
@@ -67,7 +66,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   // 查詢
   queryForm = this.formBuilder.group({
     // 先建立表單，還不確定POS8011H內容
-    MID: [null as number| null, [Validators.required]], // MID (local storage)
+    MID: [null as number | null, [Validators.required]], // MID (local storage)
     SYS_StoreNo: ["", [Validators.required]], // 店號 (local storage)
     Sale_DateStart: [yesterday, [Validators.required]],  // 銷售日期_起始日(必填_預設昨天)
     Sale_DateEnd: [yesterday, [Validators.required]],  // 銷售日期_終止日(必填_預設昨天)
@@ -102,7 +101,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
   data: InvoiceRecord[] = [];
   key = 'TXN_GUINo';
-  showSort = [{ field: 'TXN_Time', order: 1 },{ field: 'MIG_Time', order: 1 }]
+  showSort = [{ field: 'TXN_Time', order: 1 }, { field: 'MIG_Time', order: 1 }]
   columns: Column[] = []; //顯示的column
   columnsType1: Column[] = [
     { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
@@ -176,7 +175,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
     //依據 起始產檔日期 自動寫入迄號(迄號必須是null)
     this.queryForm.get('Gen_DateStart')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
-      if(this.queryForm.get('Gen_DateEnd')?.value == null){
+      if (this.queryForm.get('Gen_DateEnd')?.value == null) {
         this.queryForm.get('Gen_DateEnd')?.setValue(value); // 自動設置迄號
       }
     });
@@ -185,14 +184,14 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     this.queryForm.get('TXN_GUINoStart')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
       const TXN_GUINoStart = this.queryForm.get('TXN_GUINoStart')?.value as unknown as string
       const TXN_GUINoEnd = this.queryForm.get('TXN_GUINoEnd')?.value
-      if(TXN_GUINoStart.length == 10 && TXN_GUINoEnd == null){ //這邊用 起號長度 + 終止為空 控制 
+      if (TXN_GUINoStart.length == 10 && TXN_GUINoEnd == null) { //這邊用 起號長度 + 終止為空 控制 
         this.queryForm.get('TXN_GUINoEnd')?.setValue(value); // 自動設置迄號
       }
     });
 
     //依據 起始收銀機號 自動寫入迄號(迄號必須是null)
     this.queryForm.get('ECR_NoStart')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
-      if(this.queryForm.get('ECR_NoEnd')?.value == null){
+      if (this.queryForm.get('ECR_NoEnd')?.value == null) {
         this.queryForm.get('ECR_NoEnd')?.setValue(value); // 自動設置迄號
       }
     });
@@ -211,43 +210,43 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
   onSubmit(frm: FormGroup) {
     // 設定登入資訊
-  this.queryForm.patchValue({
-    SYS_StoreNo: this.authService.getUserInfo()?.SYS_StoreNo ?? '',
-    MID: Number(this.authService.getUserInfo()?.mid ?? 0),
-  }, { emitEvent: false });
+    this.queryForm.patchValue({
+      SYS_StoreNo: this.authService.getUserInfo()?.SYS_StoreNo ?? '',
+      MID: Number(this.authService.getUserInfo()?.mid ?? 0),
+    }, { emitEvent: false });
 
-  console.log('查詢條件', frm.value);
+    console.log('查詢條件', frm.value);
 
-  this.loading = true;
-  this.messageService.blockUi(); // 假設這是顯示 loading 遮罩
+    this.loading = true;
+    this.messageService.blockUi(); // 假設這是顯示 loading 遮罩
 
-  // 測試: 2025/01/0-2025/12/31
-  this.fin11060Service.queryFIN11060(frm.value)
-    .pipe(
-      untilDestroyed(this),
-      finalize(() => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        // this.cdr.markForCheck(); // 觸發畫面更新
-      })
-    )
-    .subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.data = response.Data ?? [];
-          this.totalRecords = response.TotalCount ?? this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          console.log('Result', this.data);
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(response.Message || '查詢失敗');
+    // 測試: 2025/01/0-2025/12/31
+    this.fin11060Service.queryFIN11060(frm.value)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          // this.cdr.markForCheck(); // 觸發畫面更新
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data ?? [];
+            this.totalRecords = response.TotalCount ?? this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            console.log('Result', this.data);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+            this.messageService.errorBubble(response.Message || '查詢失敗');
+          }
+        },
+        error: (err) => {
+          console.error('API error:', err);
+          this.messageService.errorBubble('API 呼叫失敗');
         }
-      },
-      error: (err) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('API 呼叫失敗');
-      }
-    });
+      });
   }
 
   //顯示欄位(初始為條件1)

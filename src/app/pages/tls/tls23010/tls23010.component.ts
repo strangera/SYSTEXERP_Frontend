@@ -1,47 +1,44 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import {
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
+  Validators,
 } from '@angular/forms';
-import { StatusFlagService } from '../../../service/basic/status-flag.service';
-import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
-import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { forkJoin } from 'rxjs';
+import { finalize, map, shareReplay } from 'rxjs/operators';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import {
   TLS23010Data,
-  TLS23010Service,
   TLS23010OtherData,
+  TLS23010Service,
 } from '../../../service/api/tls/tls23010.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CashierService } from '../../../service/basic/cashier.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { CashierService } from '../../../service/basic/queryPOS2001.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DialogModule } from 'primeng/dialog';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
-import { UntilDestroy } from '@ngneat/until-destroy';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
-import { CheckboxModule } from 'primeng/checkbox';
-import { CommonModule } from '@angular/common';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { forkJoin } from 'rxjs';
-import { map, finalize, shareReplay } from 'rxjs/operators';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @UntilDestroy()
 // 型態別報表
@@ -148,14 +145,17 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
-  TXN_SubtypeOptions: any[] = [];
-  statusFlagOptions: any[] = [];
+  statusFlagOptions = [
+    { value: '1', label: '外交官零稅' },
+    { value: '2', label: '事後登錄' },
+    { value: '3', label: '預售' },
+  ];
   whetherOptions: any[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
     { value: null, label: '全部' },
   ];
-  carrierTypeOptions: any[] = [];
+  carrierTypeOptions = getSYS1000Options('TXN_GUI_CarrType');
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
     { value: '2', label: '作廢' },
@@ -167,9 +167,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls23010Service: TLS23010Service,
-    private statusFlagService: StatusFlagService,
-    private TXN_SubtypeSvc: TXN_SubtypeService,
-    private carrierTypeService: CarrierTypeService,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
     private counterNameService: CounterNameService,
@@ -188,9 +185,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     if (!this.dropdownInit$) {
       this.dropdownInit$ = forkJoin({
         floors: this.floorService.getFloors(),
-        flags: this.statusFlagService.getStatusFlags(),
-        subtype: this.TXN_SubtypeSvc.getTXNSubtype(),
-        carriers: this.carrierTypeService.getCarrierType(),
         buildings: this.tls11010Service.getBuildingOptions(),
         orgs: this.tls11010Service.getOrgOptions(),
         counters: this.counterNameService.getCounters(),
@@ -202,9 +196,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     this.dropdownInit$.pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.floorOptions = res.floors || [];
-        this.statusFlagOptions = res.flags || [];
-        this.TXN_SubtypeOptions = res.subtype || [];
-        this.carrierTypeOptions = res.carriers || [];
         this.BUILDING_NO_Options = res.buildings || [];
 
         this.OrganizationCodeOptions = (res.orgs || []).map((x: any) => ({
@@ -223,8 +214,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   }
 
   private dropdownInit$?: import('rxjs').Observable<{
-    floors: any[]; flags: any[]; subtype: any[];
-    carriers: any[]; buildings: any[]; orgs: any[]; counters: any[];
+    floors: any[]; buildings: any[]; orgs: any[]; counters: any[];
     ecrs: any[]; cashiers: any[];
   }>;
 

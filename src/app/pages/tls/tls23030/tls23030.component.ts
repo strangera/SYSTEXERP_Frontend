@@ -1,40 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { catchError, finalize, map, timeout } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { of } from 'rxjs';
+import { catchError, finalize, map, timeout } from 'rxjs/operators';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 import { TLS23030Service, TLS23030SumPayNoRow } from '../../../service/api/tls/tls23030.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CardTypeService } from '../../../service/basic/card-type.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // UI components
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 // === 總計欄位鍵（給 footerData 用）===
 const TOTAL_FIELD_MAP = {
@@ -199,7 +199,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { value: null, label: '全部' },
   ];
   paymentTypeOptions: Array<{ label: string; value: string; Name: string; No: string; PAY_Type: string; }> = [];
-  cardTypeOptions: any[] = [];
+  cardTypeOptions = getSYS1000Options('CREDIT_CRD_Type');
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
     { value: '2', label: '作廢' },
@@ -216,7 +216,6 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
 
   constructor(
-    private cardTypeService: CardTypeService,
     private floorService: FloorService,
     private tls23030Service: TLS23030Service,
     private tls11010Service: Tls11010Service,
@@ -229,7 +228,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   // -------------------- lifecycle --------------------
   ngOnInit(): void {
-    this.initializePage('TLS23030', 'tls/tls23030cru', this.queryForm, (f) => this.onSubmit(f));
+    this.initializePage('TLS23030');
     this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false });
 
     // 下拉資料：失敗不影響畫面
@@ -246,7 +245,6 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
         }));
       });
 
-    this.cardTypeService.getCardType().subscribe(v => this.cardTypeOptions = v || []);
     this.tls11010Service.getBuildingOptions().subscribe(v => this.BUILDING_NO_Options = v || []);
     this.tls11010Service.getOrgOptions().subscribe(v => this.OrganizationCodeOptions = (v || []).map((x) => ({
       label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,

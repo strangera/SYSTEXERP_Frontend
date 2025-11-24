@@ -1,32 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { PaymentTypeService } from '../../../service/basic/payment-type.service';
-import { TLS23100Service } from '../../../service/api/tls/tls23100.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { TLS23100Service } from '../../../service/api/tls/tls23100.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { PaymentTypeService } from '../../../service/basic/queryPOS1006.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { HttpResponse } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { finalize, map } from 'rxjs/operators';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
-import { finalize, map } from 'rxjs/operators';
 
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
@@ -85,14 +85,14 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   // Request
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday as Date, [Validators.required]],
-    TXN_DateEnd:   [this.yesterday, [Validators.required]],
-    ECR_No:        [[]],
-    TLT_No:        [[]],
-    Pay_No:        [[]],
-    CRD_No:        [],
-    tlt_building:  [],
-    tlt_floor:     [[]],
-    org_id:        [[]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    ECR_No: [[]],
+    TLT_No: [[]],
+    Pay_No: [[]],
+    CRD_No: [],
+    tlt_building: [],
+    tlt_floor: [[]],
+    org_id: [[]],
     ...createPaginationConfig([
       { field: 'tlt_no', order: 1 },
       { field: 'ECR_No', order: 1 },
@@ -156,7 +156,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   // 欄位（總計欄位加上 isTotal）
   columns = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, format: (v:any) => this.padTxnNo(v) },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: (v: any) => this.padTxnNo(v) },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'PAY_NO', header: '付款別', visible: true },
@@ -180,26 +180,26 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 
       const sortByArr =
         Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy :
-        (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+          (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
       // ✅ 固定 30（同時帶大小寫鍵避免後端鍵名差異）；日期 → yyyy-MM-dd
       const payload: any = this.prune({
         TXN_DateStart: this.toDateOnly(val?.TXN_DateStart ?? this.yesterday),
-        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd   ?? this.yesterday),
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd ?? this.yesterday),
 
-        ECR_No:        this.ensureArr(val?.ECR_No),
-        TLT_No:        this.ensureArr(val?.TLT_No),
-        Pay_No:        this.ensureArr(val?.Pay_No),
-        CRD_No:        (val?.CRD_No ?? '') || undefined,
-        tlt_building:  (val?.tlt_building ?? '') || undefined,
-        tlt_floor:     this.ensureArr(val?.tlt_floor),
-        org_id:        this.ensureArr(val?.org_id),
+        ECR_No: this.ensureArr(val?.ECR_No),
+        TLT_No: this.ensureArr(val?.TLT_No),
+        Pay_No: this.ensureArr(val?.Pay_No),
+        CRD_No: (val?.CRD_No ?? '') || undefined,
+        tlt_building: (val?.tlt_building ?? '') || undefined,
+        tlt_floor: this.ensureArr(val?.tlt_floor),
+        org_id: this.ensureArr(val?.org_id),
 
-        pageSize:      30,
-        PageSize:      30,
-        pageIndex:     Number(val?.pageIndex) || 1,
-        PageIndex:     Number(val?.pageIndex) || 1,
-        SortBy:        sortByArr,
+        pageSize: 30,
+        PageSize: 30,
+        pageIndex: Number(val?.pageIndex) || 1,
+        PageIndex: Number(val?.pageIndex) || 1,
+        SortBy: sortByArr,
       });
 
       // 提供給 app-table-report
@@ -352,7 +352,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
         ...(body || {}),
         // ✅ 報表查詢一樣固定 30；若外部 body 傳了日期，沿用；否則從 form 取並轉 DateOnly
         TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-        TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
         pageSize: 30,
         PageSize: 30,
       })

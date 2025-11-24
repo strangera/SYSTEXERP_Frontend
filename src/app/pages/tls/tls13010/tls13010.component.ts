@@ -25,12 +25,6 @@ import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { ContractFlowService } from './services/contract-flow.service';
 
 // API 服務
-import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
-import { CounterCategoryService } from '../../../service/basic/counter-category.service';
-import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
-import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { VendorService } from '../../../service/basic/vendor.service';
 
 // 資料模型
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -240,12 +234,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     public override router: Router,
     private contractFlowService: ContractFlowService,
     public tls13010DropdownService: TLS13010DropdownService,
-    private vendorService: VendorService,
-    private contractStatusService: ContractStatusService,
-    private settlementMethodService: SettlementMethodService,
-    private paymentMethodService: PaymentMethod2Service,
-    private cooperationMethodService: CooperationMethodService,
-    private counterCategoryService: CounterCategoryService,
     private apiService: TLS13010Service,
     private readonly ExecSpFunc: ExecSpFuncService
   ) {

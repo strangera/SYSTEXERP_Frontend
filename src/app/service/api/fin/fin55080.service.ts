@@ -70,4 +70,16 @@ export class Fin55080Service {
       responseType: 'blob'
     });
   }
+  /**
+   * 匯出損益表檔案 (Excel)
+   * @param request 查詢請求參數
+   * @returns 報表檔案的位元組陣列 (透過 HttpResponse<Blob> 接收)
+   */
+  exportFIN55080(request: QueryFIN55080Request): Observable<ExportFileResponse> {
+    // 假設匯出 API 路徑為 /FIN0000/GLS1000/exportFIN55080PDF
+    return this.http.post(`${this.apiUrl}/exportFIN55080`, request, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 }

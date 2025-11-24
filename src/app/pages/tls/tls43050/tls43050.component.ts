@@ -1,32 +1,28 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
-import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // 2.4.3.5 訊息狀態查詢作業
 @Component({
-    selector: 'app-tls43050',
-    templateUrl: './tls43050.component.html',
-    styleUrl: './tls43050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls43050',
+  templateUrl: './tls43050.component.html',
+  styleUrl: './tls43050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class TLS43050Component {
   ProgNo: string = '240013';
@@ -38,12 +34,12 @@ export class TLS43050Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    messageCode: [, [Validators.maxLength(13), this.validationService.numberValidator]], // Input serial number
-    registerCode: [, [Validators.maxLength(6), this.validationService.numberValidator]], // Input serial number
-    groupCode: [, [Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
+    messageCode: [, [Validators.maxLength(13)]], // Input serial number
+    registerCode: [, [Validators.maxLength(6)]], // Input serial number
+    groupCode: [, [Validators.maxLength(3)]], // Input serial number
     status: [], // DropDown
-    loginID: [, [Validators.maxLength(7), this.validationService.numberValidator]], // Input serial number
-    approverID: [, [Validators.maxLength(7), this.validationService.numberValidator]], // Input serial number
+    loginID: [, [Validators.maxLength(7)]], // Input serial number
+    approverID: [, [Validators.maxLength(7)]], // Input serial number
     mMessage: ['', [Validators.maxLength(60)]], // Input Text
     dMessage: ['', [Validators.maxLength(60)]], // Input Text
     startdate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
@@ -74,22 +70,12 @@ export class TLS43050Component {
   statusOptions: any[] = [];
 
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private approvalStatusService: ApprovalStatusService,
   ) {
   }
 
   ngOnInit(): void {
-    //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    this.approvalStatusService.getSystemTypes().subscribe(data => {
-      this.statusOptions = data;
-    });
+
   }
 
   // 權限
@@ -105,22 +91,6 @@ export class TLS43050Component {
   }
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -159,6 +129,5 @@ export class TLS43050Component {
 
     console.log(crudstatus);
 
-    this.router.navigate(['/TLS4000/TLS43050CRU'], extras);
   }
 }

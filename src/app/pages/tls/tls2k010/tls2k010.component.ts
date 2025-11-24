@@ -1,32 +1,28 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
-import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.19.1 餘代卡產卡作業
 @Component({
-    selector: 'app-tls2k010',
-    templateUrl: './tls2k010.component.html',
-    styleUrl: './tls2k010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, InputNumberComponent, CalendarRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2k010',
+  templateUrl: './tls2k010.component.html',
+  styleUrl: './tls2k010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, InputNumberComponent, CalendarRangeComponent, TableComponent, TranslateModule]
 })
 export class TLS2K010Component {
   ProgNo: string = '220097';
@@ -40,7 +36,7 @@ export class TLS2K010Component {
   queryForm = this.formBuilder.group({
     card: [[] as number[]], // 卡種
     status: [[] as number[]], // 狀態
-    serialnumber: [, [this.validationService.numberValidator, Validators.maxLength(9)]], // 批次號碼
+    serialnumber: [, [Validators.maxLength(9)]], // 批次號碼
     startdate: [], // 產卡日期
     enddate: [], // 產卡日期
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
@@ -70,28 +66,12 @@ export class TLS2K010Component {
   ];
 
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private approvalStatusService: ApprovalStatusService,
   ) {
   }
 
   ngOnInit(): void {
-    //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    this.approvalStatusService.getSystemTypes().subscribe(data => {
-      this.statusOptions = data;
 
-      // 全選填入
-      // let allSystemValues = this.statusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   status: allSystemValues
-      // });
-    });
   }
 
   canQuery(): boolean {
@@ -107,22 +87,7 @@ export class TLS2K010Component {
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -145,7 +110,6 @@ export class TLS2K010Component {
       };
 
       //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2K010CRU'], extras);
     }
   }
 
@@ -160,7 +124,6 @@ export class TLS2K010Component {
         skipLocationChange: true
       };
 
-      this.router.navigate(['/TLS2000/TLS2K010CRU'], extras);
     }
   }
 
@@ -174,6 +137,5 @@ export class TLS2K010Component {
       skipLocationChange: true
     };
 
-    this.router.navigate(['/TLS2000/TLS2K010CRU'], extras);
   }
 }

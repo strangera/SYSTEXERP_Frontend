@@ -1,32 +1,29 @@
-import { SettlementMethodService } from './../../../service/basic/settlement-method.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TranslateModule } from '@ngx-translate/core';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 
 // 2.2.17.3 專櫃抽成發票套印作業
 @Component({
-    selector: 'app-tls2h030',
-    templateUrl: './tls2h030.component.html',
-    styleUrl: './tls2h030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputNumberComponent, InputNumberRangeComponent, CheckboxModule, TranslateModule]
+  selector: 'app-tls2h030',
+  templateUrl: './tls2h030.component.html',
+  styleUrl: './tls2h030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputNumberComponent, InputNumberRangeComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2H030Component {
   ProgNo: string = '220089';
@@ -40,9 +37,9 @@ export class TLS2H030Component {
   queryForm = this.formBuilder.group({
     onedatemm: [, [Validators.required]], // 帳款年月
     checkout: [, [Validators.required]], // 結帳方式
-    serialnumber: [, [this.validationService.numberValidator, Validators.maxLength(6)]], // 專櫃編號
-    startInvoiceNumber: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 發票號碼
-    endInvoiceNumber: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 發票號碼
+    serialnumber: [, [Validators.maxLength(6)]], // 專櫃編號
+    startInvoiceNumber: [, [Validators.max(9999999999)]], // 發票號碼
+    endInvoiceNumber: [, [Validators.max(9999999999)]], // 發票號碼
     print: [,], // 發票封面是否列印
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
@@ -73,19 +70,11 @@ export class TLS2H030Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private settlementMethodService: SettlementMethodService,
   ) {
   }
 
   ngOnInit(): void {
     //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    this.settlementMethodService.getSettlementMethods().subscribe(data => {
-      this.checkoutOptions = data;
-    });
   }
 
   canQuery(): boolean {

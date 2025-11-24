@@ -1,20 +1,20 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ECRNoService } from '@service/basic/queryPOS1002.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ECRNoService } from '@service/basic/ECRNo.service';
-import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 @Component({
   selector: 'app-tls46040-cru',
   templateUrl: './tls46040-cru.component.html',

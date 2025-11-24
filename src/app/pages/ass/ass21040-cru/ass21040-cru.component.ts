@@ -1,19 +1,15 @@
-import { FloorService } from './../../../service/basic/floor.service';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgFor, NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -34,9 +30,6 @@ export class ASS21040CRUComponent
     this.ProgNo = '320004';
 
     // 下拉選單--------------------------------------------------------
-    //  this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
-    this.floorService.getFloors().subscribe((data) => (this.floor = data));
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
@@ -156,11 +149,6 @@ export class ASS21040CRUComponent
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private userCodeService: UserCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private floorService: FloorService,
 
   ) {
     super(); // 呼叫父類建構子
@@ -198,9 +186,6 @@ export class ASS21040CRUComponent
     this.submitted = true;
 
     if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
       this.messageService.unblockUi();
       return;
     }
@@ -209,17 +194,11 @@ export class ASS21040CRUComponent
       case CRUDStatus.Create:
         if (this.canAdd()) {
           // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
         }
         break;
     }
