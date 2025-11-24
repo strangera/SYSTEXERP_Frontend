@@ -144,7 +144,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     const formValue = frm.getRawValue();
-    console.log('保證票彙總request', formValue);
+    console.log('保證票彙總request', JSON.stringify(formValue));
     this.handleSubmit(frm, () => {
       this.tls14030Service.exportTLS14030(formValue).subscribe({
         next: (response) => {
