@@ -27,8 +27,17 @@ input[disabled],
   background-color: var(--surface-300) !important;
   color: var(--surface-900);
   cursor: auto;
+  border: 1px solid #e9ecef;
   opacity: 0.65;
   pointer-events: auto;
+  span,
+  p {
+    color: var(--text-color);
+  }
+
+  span.p-button-icon {
+    color: var(--surface-400) !important;
+  }
 }
 
 .p-inputswitch {

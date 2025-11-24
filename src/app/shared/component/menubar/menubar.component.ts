@@ -1,14 +1,14 @@
-import { SystemDataService } from './../../../service/system/system-data.service';
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject, computed,ChangeDetectorRef } from '@angular/core';
-import { MenuItem, PrimeTemplate } from 'primeng/api';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { NotificationService } from '../notification-message/notification.service';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { RouterLink } from '@angular/router';
 import { NgClass, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { MenuItem, PrimeTemplate } from 'primeng/api';
+import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { tap } from 'rxjs';
 import { FavoriteStoreService } from 'src/app/core/layout/app.topbar/favorite-store.service';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { NotificationService } from '../notification-message/notification.service';
+import { SystemDataService } from './../../../service/system/system-data.service';
 
 // 移除不再需要的 Favorite 介面定義
 
@@ -53,14 +53,14 @@ export class MenubarComponent implements OnInit {
 
   noProgNo = false;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     if (this.customBreadcrumbItems.length > 0) { return; }
     this.breadcrumbItems = [];
     // 訂閱菜單更新，建立麵包屑
     this.systemDataService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
-    
+
       this.funRightsInfo = [...newData];
       this.menu = [];
       this.breadcrumbItems = [];
