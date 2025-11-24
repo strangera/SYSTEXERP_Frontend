@@ -1,161 +1,171 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { CommonModule, DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-const now = new Date();
+import { TLS57170Data, TLS57170Service } from '@service/api/tls/tls57170.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CustomFooterTableComponent } from "@shared/componentkit/custom-footer-table/customFooterTable.component";
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+
 @Component({
   selector: 'app-tls57170',
   templateUrl: './tls57170.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    CalendarComponent,
+    InputTextComponent,
+    MultiSelectComponent,
+    CustomFooterTableComponent,
+    CommonModule,
+    ButtonModule
+  ]
 })
-export class TLS57170Component {
-  ProgNo: string = '250056';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> implements OnInit {
+  constructor(
+    private tls57170Service: TLS57170Service,
+    private datepipe: DatePipe,
+    private dropdown: DropdownApiService,
+  ) {
+    super();
+  }
 
   queryForm = this.formBuilder.group({
-    warehouseCode: [],
-    initialDate: [],
-    managementCode: [],
-    productName: [],
-    vendorCode: [],
-    brandCode: [],
-    displayMode: [],
-    displayCount: [],
-    inventoryDateFrom: [now, Validators.required],
+    STK_YM: [null, Validators.required],    // 存貨年月 - 必填
+    HOS_No: [null],                         // 倉別
+    LOGO_No: [null],                        // 品牌
+    PLU_MagNo: [null, [Validators.maxLength(20)]], // 商品管理編號 (單選)
+    PLU_No: [null],                         // 國際條碼
+    PLU_OrgPLUNo: [null],                   // 廠商貨號
+    FeeRate: ['1', [Validators.required, Validators.pattern(/^\d+(\.\d+)?$/)]],                        // 推銷費用率
+    ...createPaginationConfig([])
   });
 
-  // Dropdown options
-  warehouseOptions: any[] = [];
-  managementIDOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  displayModeOptions: any[] = [];
+  data: TLS57170Data[] = [];
+  selectedItems: TLS57170Data[] = [];
+  totalRecords = 0;
+  footerData: any[] = [];
+  exportPDFbtnLoading = false;
+  exportExcelbtnLoading = false;
 
-  // Table data
-  data: any[] = [
+  // 下拉選單選項
+  HOS_NOOptions = this.dropdown.queryPos2034();
+  LOGO_NoOptions = this.dropdown.queryPluLogo();
+  PLUMagNoOptions: any[] = [];
 
+  columns: Column[] = [
+    { field: 'VEN_No', header: '廠商編號', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'LOGO_No', header: '品牌編號', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品名', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true },
+    { field: 'Amt_A', header: '期末存貨售價(A)', visible: true, format: formatAmount },
+    { field: 'FeeRate_B', header: '推銷費用率(B)', visible: true },
+    { field: 'Amt_C', header: '淨變現價值(C)', visible: true, format: formatAmount },
+    { field: 'STK_UnitCost_D', header: '期末成本價(D)', visible: true, format: formatAmount },
+    { field: 'UP_PORFIT', header: '回升利益', visible: true, format: formatAmount, isTotal: true },
+    { field: 'DOWN_COST', header: '跌價損失', visible: true, format: formatAmount, isTotal: true },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'vendorDescription', header: '廠商編號說明', visible: true },
-    { field: 'vendorName', header: '廠商名稱', visible: true },
-    { field: 'brandCodeDescription', header: '品牌代碼說明', visible: true },
-    { field: 'managementDescription', header: '管理編號', visible: true },
-    { field: 'productName', header: '品名', visible: true },
-    { field: 'image', header: '圖像', visible: true },
-    { field: 'endStockSellingPriceA', header: '期末存貨售價(A)', visible: true },
-    { field: 'suggestedUsageRateB', header: '建議費用率(B)', visible: true },
-    { field: 'netSellingPriceC', header: '淨銷貨價值(C)(A*(1-B))', visible: true },
-    { field: 'endStockCostD', header: '期末成本價(D)', visible: true },
-    { field: 'recoveryProfit', header: '回升利益(C-D=0)', visible: true },
-    { field: 'costImpairment', header: '跌價損失(C-D<0)', visible: true },
-  ];
-
-
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-  ) { }
 
   ngOnInit(): void {
+    this.initializePage('TLS57170', 'tls/tls57170cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  canQuery(): boolean {
-    return true;
+  onSubmit(form: FormGroup) {
+    console.log(form.getRawValue());
+    this.handleSubmit(form, () => {
+      this.tls57170Service.queryTLS57170({
+        ...form.getRawValue(),
+        SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+        STK_YM: this.datepipe.transform(form.value.STK_YM, 'yyyyMM'),
+      })
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe(response => {
+          this.data = response.Data.mainData || [];
+          this.footerData = [{
+            group_name: '總計',
+            UP_PORFIT: response.Data.totalData[0]?.UP_PORFIT_Total,
+            DOWN_COST: response.Data.totalData[0]?.DOWN_COST_Total,
+          }];
+          this.totalRecords = response.TotalCount
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
   }
 
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  /*************  ✨ Windsurf Command ⭐  *************/
-  /**
-   * Called when the form is submitted.
-   * @param frm The FormGroup instance for the form.
-   */
-  /*******  61ed7e22-f955-4d3d-a876-de267d598d5e  *******/
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  // ========= 匯出 =========
+  onExportPDF(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.STK_YM) {
+      this.messageService?.warnBubble?.('請輸入存貨年月');
+      return;
     }
 
-    this.loading = false;
-    this.notificationService.unblockUi();
+    this.exportPDFbtnLoading = true;
+    this.tls57170Service.exportTLS57170PDF({
+      ...form.getRawValue(),
+      SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+      STK_YM: this.datepipe.transform(form.value.STK_YM, 'yyyyMM'),
+    })
+      .pipe(untilDestroyed(this), finalize(() => (this.exportPDFbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.pdf', '存貨評價分析表'),
+        error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+  onExportExcel(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.STK_YM) {
+      this.messageService?.warnBubble?.('請輸入存貨年月');
+      return;
     }
+
+    this.exportExcelbtnLoading = true;
+    this.tls57170Service.exportTLS57170Excel({
+      ...form.getRawValue(),
+      SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+      STK_YM: this.datepipe.transform(form.value.STK_YM, 'yyyyMM'),
+    })
+      .pipe(untilDestroyed(this), finalize(() => (this.exportExcelbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.xlsx', '存貨評價分析表'),
+        error: () => this.messageService?.warnBubble?.('匯出 Excel 失敗。'),
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+  private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
+    if (!resp) {
+      this.messageService?.warnBubble?.('匯出失敗，無回應資料。');
+      return;
     }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    if (!blob || !(blob instanceof Blob)) {
+      this.messageService?.warnBubble?.('匯出失敗，檔案格式錯誤。');
+      return;
+    }
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }
