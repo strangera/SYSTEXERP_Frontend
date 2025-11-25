@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
-import { debounceTime, finalize, withLatestFrom } from 'rxjs';
+import { finalize } from 'rxjs';
 import { IODDetail, ITLS52030Data, ITLS52030Request, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -51,7 +51,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   dataForm = this.formBuilder.nonNullable.group({
     ODM_No: [{ value: '系統自動產生', disabled: true }], // 進貨驗收單號
     VEN_No: [null as string | null, [Validators.required]], // 廠商編號
-    LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
+    // LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     HOS_No: [null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     ODM_TotalBuyNet: [{ value: 0, disabled: true }], // 進貨驗收金額
     ODM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
@@ -122,7 +122,8 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     this.initializePage('TLS52030', this.dataForm);
     if (this.isFormEditable) {
       this.dataForm.controls.VEN_No.disable();
-      this.dataForm.controls.LOGO_No.disable();
+      this.dataForm.controls.HOS_No.disable();
+      // this.dataForm.controls.LOGO_No.disable();
     }
     this.loadDropdownOptions();
     if (!this.isFormCreateable) {
@@ -139,18 +140,18 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
       this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
       // 2. 品牌下拉選單
-      this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
-        this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
-          const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
-          const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
-          let finalHOSNo: string | null = null;
-          if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
-            finalHOSNo = suggestedHOSNo;
-          }
-          this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
-          resetFormData();
-        });
-      });
+      // this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
+      //   this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
+      //     const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
+      //     const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
+      //     let finalHOSNo: string | null = null;
+      //     if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
+      //       finalHOSNo = suggestedHOSNo;
+      //     }
+      //     this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
+      //     resetFormData();
+      //   });
+      // });
     }
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
@@ -198,7 +199,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         ODM_No: formData.ODM_No,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
         VEN_No: formData.VEN_No,
-        LOGO_No: formData.LOGO_No,
+        // LOGO_No: formData.LOGO_No,
         HOS_No: formData.HOS_No,
         org_id: this.rowdata?.org_id || null,
         ODM_Date: formData.ODM_Date,
