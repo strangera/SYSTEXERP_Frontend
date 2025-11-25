@@ -94,12 +94,12 @@
 
       <ng-container *ngIf="dialogVisible() === 'ecr'">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="專櫃編號" controlName="ecr_no" [options]="ecr_no_Option" optionLabel="label"
-            optionValue="value" [control]="dialogForm().ecr_nos" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="收銀機號" controlName="ecr_no" [options]="ecr_no_Option" optionLabel="Label" optionValue="No"
+            [control]="dialogForm().ecr_nos" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="收銀機號" controlName="tlt_no" [options]="tlt_no_Option" optionLabel="label"
+          <app-dropdown label="專櫃編號" controlName="tlt_no" [options]="tlt_no_Option" optionLabel="Label" optionValue="No"
             optionValue="value" [control]="dialogForm().tlt_nos" [submitted]="submitted"></app-dropdown>
         </div>
       </ng-container>

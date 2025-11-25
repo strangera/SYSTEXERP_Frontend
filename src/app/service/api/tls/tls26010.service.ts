@@ -112,7 +112,7 @@ export class TLS26010Service {
   }
 
   /** 取得收銀機號 */
-  public loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
+  public queryECRDropDownList(query: DependentDataQuery & { ecr_type: string; }): void {
     this.ecrLoading.set(true);
     this.http.post<BaseQueryResponse<any>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
@@ -129,7 +129,7 @@ export class TLS26010Service {
   }
 
   /** 取得專櫃編號 */
-  public loadTLTTALENT(query: DependentDataQuery): void {
+  public queryTalentDropDownList(query: DependentDataQuery): void {
     this.tltLoading.set(true);
     this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
