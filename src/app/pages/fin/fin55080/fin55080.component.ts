@@ -25,7 +25,7 @@ import { TableSubheaderGroupingComponent } from './fin55080-table/fin55080-table
   standalone: true,
   imports: [
     TableSubheaderGroupingComponent,
-    ButtonModule, MenubarComponent, AccordionModule, AsyncPipe, DatePipe,
+    ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent,
     DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
   ],

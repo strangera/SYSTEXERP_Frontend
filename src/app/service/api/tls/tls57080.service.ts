@@ -1,24 +1,42 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@service/system/auth.service';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface QueryTLS57080Request {
-  ReportType: string,
-  TXN_Date_Start?: string,
-  TXN_Date_End?: string,
+  StartDate: string,
+  EndDate: string,
+  PLU_MagNo: string,
+  PLU_No: string,
+  HOS_No: string,
+  PLU_Name: string
 }
 
 export interface QueryTLS57080ApiResponse {
-  TXN_Date?: string,
+  Date: string,
+  nos: string,
+  VEN_NO: string,
+  HOS_NO: string,
+  Trntype: string,
+  qty: number,
+  StockQty: number,
+  GUINO: string,
+  PLU_NO: string,
+  PLU_Name: string,
+  TRN_BuyPrc: number,
+  TRN_SalePrc: number,
+  TRN_BuyAmt: number
 }
+
+
+export type ExportFileResponse = HttpResponse<Blob>;
 
 @Injectable({
   providedIn: 'root'
 })
 export class Tls57080Service {
-  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS57050`;
+  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS5000`
 
   constructor(private http: HttpClient) { }
   /**
@@ -26,16 +44,20 @@ export class Tls57080Service {
    * @param request 查詢參數
    * @returns 包含明細或彙總資料的 API Response
    */
-  queryTLS57080(request: QueryTLS57080Request): Observable<any> {
-    return this.http.post<ApiResponse<QueryTLS57080ApiResponse>>(`${this.apiUrl}/queryTLS57080`, request).pipe(
-      // map(res => {
-      //   const data = request.ReportType === '明細' ? res.Data.DetailData : res.Data.SummaryData;
-      //   return {
-      //     Data: data,
-      //     TotalCount: res.TotalCount,
-      //     Message: res.Message
-      //   };
-      // })
-    );
+  queryTLS57080(request: QueryTLS57080Request): Observable<ApiResponse<QueryTLS57080ApiResponse[]>> {
+    return this.http.post<ApiResponse<QueryTLS57080ApiResponse[]>>(`${this.apiUrl}/queryTLS57080`, request)
+  }
+
+  exportTLS57080PDF(request: QueryTLS57080Request): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/exportTLS57080PDF`, request, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
+  exportTLS57080(request: QueryTLS57080Request): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/exportTLS57080`, request, {
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 }
