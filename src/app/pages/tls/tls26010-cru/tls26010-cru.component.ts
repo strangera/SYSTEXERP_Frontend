@@ -2,8 +2,10 @@ import { NgIf } from '@angular/common';
 import { Component, computed, effect, OnDestroy, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -14,7 +16,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { option } from '@shared/models/sys/sysb000.model';
+import { apiOption } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus, ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
@@ -252,20 +254,22 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
-  tlt_no_Option: option[] = [{ label: '專櫃1', value: '1' }, { label: '專櫃2', value: '2' }]; // 先用假資料測試
-  ecr_no_Option: option[] = [{ label: '收銀機1', value: '2' }, { label: '收銀機2', value: '2' }];
+  tlt_no_Option: apiOption[] = []; // 先用假資料測試
+  ecr_no_Option: apiOption[] = [];
 
   constructor(
     public readonly service: TLS26010Service,
     private readonly excelImport: ExcelImportService,
     private readonly logger: NGXLogger,
     private readonly validationService: ValidationService,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
   }
 
   public ngOnInit(): void {
     this.initializePage('TLS26010', this.dataForm);
+    this.loadOptions();
 
     this.dependencyChangeSubject.pipe(
       debounceTime(400),
@@ -286,9 +290,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       tap(([a, b]) => {
         this.logger.debug(`dependency:`, [a, b, this.dataForm.value]);
         if (JSON.stringify(a.payload) === JSON.stringify(b.payload)) return;
-        if (b.dialog === 'ecr') { this.service.loadPreorderECRList({ ...b.payload, ecr_type: '1' }); }
+        if (b.dialog === 'ecr') { this.service.queryECRDropDownList({ ...b.payload, ecr_type: '1' }); }
         else if (b.dialog === 'tlt') {
-          this.service.loadTLTTALENT({
+          this.service.queryTalentDropDownList({
             ...b.payload,
             tlt_bdate: b.date.pod_sdate?.toISOString().slice(0, 10) ?? null, // 包含時間一起送出
             tlt_edate: b.date.pod_edate?.toISOString().slice(0, 10) ?? null,
@@ -581,5 +585,21 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       });
       this.tltTableFiltered.set(updatedTltList);
     }
+  }
+
+  // eugene: load 下拉選單資料
+  private loadOptions(): void {
+    // 收銀機號 下拉
+    this.dropDownListService.queryPOS1002ECR_TypeDropDownList({ ECR_Type: '1' }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.ecr_no_Option = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+      console.log('SYS3100_Options', this.ecr_no_Option);
+    })
+
+    // 專櫃編號 下拉
+    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.tlt_no_Option = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+      console.log('tlt_no_Option', this.ecr_no_Option);
+    })
+
   }
 }

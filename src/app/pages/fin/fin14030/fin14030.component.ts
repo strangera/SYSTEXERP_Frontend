@@ -17,6 +17,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 //1.1.4.3 形成申報書
 @Component({
@@ -37,7 +38,8 @@ import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/
     CommonModule,
     DropdownComponent,
     TableComponent,
-    TranslateModule]
+    TranslateModule,
+    YearMonthComponent]
 })
 export class FIN14030Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -84,8 +86,8 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       }).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
-          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string }) => ({
-            Label: item.STO_TaxNo + "/" + item.STO_TaxName,
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string }) => ({
+            Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
             No: item.STO_TaxNo
           }));
           console.log('稅籍編號 options', this.REP_TaxNo_Options);
@@ -101,7 +103,6 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       const body = {
         ...frm.value,
         Mid: Number(frm.value.Mid),
-        REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
       }
       // 可以用 202406 , 703902231 測試
 

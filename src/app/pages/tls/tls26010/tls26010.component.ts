@@ -137,8 +137,8 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     this.logger.debug(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
     if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) return;
     untracked(() => {
-      this.service.loadPreorderECRList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
-      this.service.loadTLTTALENT({ building_nos, floor_nos, area_nos });
+      this.service.queryECRDropDownList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
+      this.service.queryTalentDropDownList({ building_nos, floor_nos, area_nos });
     });
   }, { allowSignalWrites: !0 });
 
@@ -199,7 +199,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
 
-    this.service.loadPreorderECRList({ ecr_type: '2' });
+    this.service.queryECRDropDownList({ ecr_type: '2' });
   };
 
   public onSubmit(): void {

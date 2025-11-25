@@ -1,19 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { apiOption } from '@shared/models/sys/sysb000.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CommonModule } from '@angular/common';
-import { Fin14040Service } from '@service/api/fin/fin14040.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin14040Service } from '@service/api/fin/fin14040.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+import { AccordionModule } from 'primeng/accordion';
 import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 // 形成媒體申報檔
 @Component({
@@ -31,7 +32,8 @@ import { environment } from 'src/environments/environment';
     CommonModule,
     DropdownComponent,
     TableComponent,
-    TranslateModule
+    TranslateModule,
+    YearMonthComponent
   ]
 })
 export class FIN14040Component extends BasicQueryPageComponent<unknown> implements OnInit {
@@ -73,8 +75,8 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
       }).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
-          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string }) => ({
-            Label: item.STO_TaxNo + "/" + item.STO_TaxName,
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string }) => ({
+            Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
             No: item.STO_TaxNo
           }));
           console.log('稅籍編號 options', this.REP_TaxNo_Options);
@@ -90,7 +92,6 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
       const body = {
         ...frm.value,
         Mid: Number(frm.value.Mid),
-        INV_DeclareYM: convertDateToYYYYMM(frm.value.INV_DeclareYM),
 
         // "Mid": 0,
         // "STO_No": "10",
@@ -105,13 +106,13 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
         .pipe(untilDestroyed(this)).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
-            console.log('形成媒體申報檔 response', response.Data);
+              console.log('形成媒體申報檔 response', response.Data);
 
-            // 下載壓縮檔
-            if (response.Data.ZipUrl) {
-              window.open(environment.BaseUrl + response.Data.ZipUrl, '_blank');
-              this.loading = false; 
-            }
+              // 下載壓縮檔
+              if (response.Data.ZipUrl) {
+                window.open(environment.BaseUrl + response.Data.ZipUrl, '_blank');
+                this.loading = false;
+              }
             }
           },
           error: () => { this.loading = false; },
