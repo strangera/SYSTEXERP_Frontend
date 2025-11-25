@@ -355,17 +355,21 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     if (ids.length === 0) return;
 
+    this.tableLoading.set(!0);
     this.service.deleteFIN52030Data(ids).pipe(
-      switchMap(res => this.service.loadFIN52030Detail(this.rowdata!.id)),
+      tap(res => this.logger.debug(`onDelete:`, [ids, res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
+      switchMap(() => this.service.loadFIN52030Detail(this.rowdata!.id)),
+      tap(res => this.logger.debug(`onDelete reload detail:`, [res])),
       map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
-      finalize(() => this.logger.debug('onDelete:', [event, ids, this.tableData()])),
+      finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
         this.fin52030DetailData.set(res.Data);
         this.totalRecords.set(res.TotalCount ?? 0);
         this.messageService.successBubble('刪除成功');
       },
-      error: () => this.messageService.errorBubble('刪除失敗')
+      error: err => this.messageService.errorBubble(err.message || '刪除失敗'),
     });
   }
 
