@@ -76,12 +76,12 @@
       <tr>
         <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
 
-        <th class="w-1rem text-center">{{ serialName }}
-        </th>
-        <!-- <th [attr.colspan]="
+        <!-- <th class="w-1rem text-center">{{ serialName }}
+        </th> -->
+        <th [attr.colspan]="
     (canInsert && !disabled && _tableData.length > 0 && _tableData[_tableData.length - 1]?._isAutoInsertCandidate && !showCheckBox) ? 2 : 1
 " class="w-1rem text-center">{{ serialName }}
-</th> -->
+        </th>
         <th
           *ngIf="showCheckBox && !disabled && _tableData.length > (canInsert && _tableData[_tableData.length - 1]?._isAutoInsertCandidate ? 1 : 0)"
           class="w-1rem text-center">
