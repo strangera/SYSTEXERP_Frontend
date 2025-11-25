@@ -658,6 +658,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.updateOriginalData(capType || 'A');
       this.filterData();
       this.saveFareDataToWorkflow();
+
+      // 🔥 新增：勾選狀態變更時，檢查整個類型的重複日期
+      if (capType) {
+        this.validateDuplicateDatesForType(capType);
+      }
       return;
     }
 
@@ -735,6 +740,25 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
+  /**
+   * 🔥 新增：驗證整個類型的重複日期（用於即時驗證）
+   */
+  private validateDuplicateDatesForType(capType: string): void {
+    const allItemsOfType = this.originalFareData[capType] || [];
+
+    // 先清除所有項目的重複日期錯誤標記
+    allItemsOfType.forEach(item => {
+      delete item['_hasDuplicateDateError'];
+      delete item['_duplicateDateMessage'];
+    });
+
+    // 重新驗證（驗證服務會自動標記重複的項目）
+    this.fareValidationService.validateFareTypeData(allItemsOfType, capType);
+
+    // 強制更新視圖
+    this.cdr.detectChanges();
+  }
+
   private getTotalLocationSpace(): number {
     const step1Data = this.contractFlowService.getStep1Data();
     return step1Data?.totalLocationSpace || 0;
@@ -772,6 +796,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // A類型特殊處理：結束日期等於開始日期
     if (fieldName === 'tpy_bdate' && newValue) {
       rowData.tpy_edate = newValue;
+
+      // 🔥 新增：起始日期變更時，檢查重複日期
+      if (rowData.is_selected) {
+        this.validateDuplicateDatesForType('A');
+      }
     }
   }
 
@@ -796,6 +825,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         rowData.tpy_amount = 0;
       }
     }
+
+    // 🔥 新增：起始日期變更時，檢查重複日期
+    if (fieldName === 'tpy_bdate' && newValue && rowData.is_selected) {
+      this.validateDuplicateDatesForType('B');
+    }
   }
 
   // C類型計算優化 - 最重要的優化
@@ -805,6 +839,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 日期變更時重新計算期數
     if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
       // console.log('📅 日期欄位變更，重新計算期數');
+
+      // 🔥 新增：起始日期變更時，檢查重複日期
+      if (fieldName === 'tpy_bdate' && rowData.is_selected) {
+        this.validateDuplicateDatesForType('C');
+      }
 
       // 使用 setTimeout 確保日期值已經更新
       setTimeout(() => {
@@ -843,11 +882,21 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (fieldName === 'tpy_rate') {
       this.fareCalculationService.autoCalculateAmount(rowData, 'D', fieldName);
     }
+
+    // 🔥 新增：起始日期變更時，檢查重複日期
+    if (fieldName === 'tpy_bdate' && newValue && rowData.is_selected) {
+      this.validateDuplicateDatesForType('D');
+    }
   }
 
   private handleTypeECalculation(fieldName: string, newValue: any, rowData: any): void {
     if (fieldName === 'tpy_rate') {
       this.fareCalculationService.autoCalculateAmount(rowData, 'E', fieldName);
+    }
+
+    // 🔥 新增：起始日期變更時，檢查重複日期
+    if (fieldName === 'tpy_bdate' && newValue && rowData.is_selected) {
+      this.validateDuplicateDatesForType('E');
     }
   }
 
@@ -1218,23 +1267,24 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onSubmitNext(): void {
-    // 取得合約類型
-    const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
-
-    // 檢視模式：根據合約類型決定導航目標
-    if (contractTermType === '1') {
-      console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next3');
-      this.router.navigate(['account/tls/tls13010next3']);
-    } else {
-      console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
-      this.router.navigate(['account/tls/tls13010next2']);
-
-    }
     console.log('🔍 開始進行完整驗證...');
 
     // 儲存當前資料
     this.saveFareDataToWorkflow();
 
+    // 🔥 檢視模式：不需要驗證，直接跳轉
+    if (this.isViewMode) {
+      console.log('🔍 檢視模式：跳過驗證，直接跳轉');
+      const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+      if (contractTermType === '1') {
+        this.router.navigate(['account/tls/tls13010next3']);
+      } else {
+        this.router.navigate(['account/tls/tls13010next2']);
+      }
+      return;
+    }
+
+    // 🔥 編輯模式：必須驗證
     // 驗證所有已選中的扣款類型
     const validationResults = this.validateAllSelectedFareTypes();
 
@@ -1246,7 +1296,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log('✅ 驗證通過，準備跳轉到下一步');
 
-    // 根據合約類型決定導航目標
+    // 取得合約類型，決定導航目標
+    const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
     if (contractTermType === '1') {
       console.log('🔍 合約類型為1，直接跳轉到 next3');
       this.router.navigate(['account/tls/tls13010next3']);

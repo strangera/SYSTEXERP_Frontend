@@ -9,7 +9,7 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -18,6 +18,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="店位說明"
@@ -25,6 +26,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="組織代碼/名稱"
@@ -35,6 +37,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="館別"
@@ -45,6 +48,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="樓層"
@@ -55,6 +59,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="區域"
@@ -65,6 +70,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="簽約坪數"
@@ -72,6 +78,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="營業坪數"
@@ -79,6 +86,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="使用狀態"
@@ -89,6 +97,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="用途代碼/名稱"
@@ -99,6 +108,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="平面圖X座標"
@@ -107,6 +117,7 @@
             [weightedMax]="255"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="平面圖Y座標"
@@ -116,20 +127,24 @@
           ></app-input-text>
         </div>
       </div>
+
       <div class="col pt-4">
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
           *ngIf="!isFormReadable"
         >
-          <!-- <p-button
+          <!-- 如果之後要恢復清除按鈕，把 onClear 綁上去即可 -->
+          <!--
+          <p-button
             id="clearButton"
             (click)="onClear()"
             [label]="clearBtnConfig.label"
             [class]="clearBtnConfig.class"
             [text]="clearBtnConfig.text"
-          ></p-button> -->
+          ></p-button>
+          -->
           <app-button btnType="cancel" [form]="dataForm"></app-button>
-          <app-button btnType="submit" (click)="onSubmit()"></app-button>
+          <app-button btnType="submit"></app-button>
         </div>
       </div>
     </form>

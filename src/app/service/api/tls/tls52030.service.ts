@@ -96,7 +96,7 @@ export interface ITLS52030Request {
   ODM_No?: string; // 進貨單號
   SYS_StoreNo: string; // 公司編號/店號
   VEN_No: string; // 廠商代號
-  LOGO_No: string; // 品牌代碼
+  // LOGO_No: string; // 品牌代碼
   HOS_No: string; // 倉庫代碼
   org_id: string | null; // 組織代碼/組織名稱
   ODM_Date: string | Date; // 申請日期
@@ -116,7 +116,7 @@ export interface ITLS52030Request {
 
 /** 取得採購單資料 (GetPOS2016) 的請求介面 */
 export interface IGetPOS2016Request {
-  LOGO_No?: string | null; // 品牌代碼
+  // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
   VEN_No?: string | null; // 廠商代號
 }

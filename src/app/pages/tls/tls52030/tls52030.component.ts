@@ -84,9 +84,10 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   selectedItems: ITLS52030Data[] = [];
   columns: Column[] = [
     { field: 'ODM_No', header: '進貨驗收編號', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true },
-    { field: 'LOGO_No', header: '品牌代碼', visible: true },
-    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
+    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
+    { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
+    { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     // { field: 'org_id', header: '組織代碼/組織名稱', visible: true },

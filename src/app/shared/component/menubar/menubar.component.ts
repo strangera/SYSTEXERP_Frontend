@@ -58,6 +58,7 @@ export class MenubarComponent implements OnInit {
   ngOnInit(): void {
     if (this.customBreadcrumbItems.length > 0) { return; }
     this.breadcrumbItems = [];
+    this.favoriteStore.fetchFavorites().pipe(untilDestroyed(this)).subscribe();
     // 訂閱菜單更新，建立麵包屑
     this.systemDataService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
 
@@ -103,8 +104,22 @@ export class MenubarComponent implements OnInit {
    */
   toggleFavorite() {
     const favorites = this.favoriteStore.favorites();
-    const isCurrentlyFavorite = this.isFavorite(); // 讀取 computed signal 的值
+    const isCurrentlyFavorite = this.isFavorite();
     const progNo = this.ProgNo;
+
+    // 【重要檢查】在執行任何操作前，檢查 Store 裡的最愛清單是否可能為空。
+    // 假設您的系統至少需要載入一次 API 才能有正確的 favorites 狀態。
+    // 如果是新增操作，且 favorites 為空，且菜單也未載入，則可能是狀態未同步。
+    if (this.funRightsInfo.length === 0) {
+      this.messageService.warnBubble('請稍候', '系統選單資料尚未載入，請稍候再試。');
+      this.favoriteStore.fetchFavorites().subscribe(); // 再次觸發載入
+      return;
+    }
+
+    // 【次要檢查】如果最愛清單是空的，且不是要新增，則直接返回。
+    // if (!isCurrentlyFavorite && favorites.length === 0) {
+    //     // 如果是空的，且我們要新增，則繼續執行。
+    // }
 
     let newFavorites: FunsrightInfo[];
 
@@ -129,7 +144,7 @@ export class MenubarComponent implements OnInit {
       }
 
       // 添加到列表末尾
-      newFavorites = [...favorites, itemToAdd];
+      newFavorites = [...favorites, itemToAdd]; // <--- 這裡的 favorites 依賴於 Store 已經載入成功
 
       this.favoriteStore.updateFavoritesOrder(newFavorites).pipe(
         tap(() => this.messageService.successBubble('我的最愛', '已成功新增最愛項目。'))

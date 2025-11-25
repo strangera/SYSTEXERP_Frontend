@@ -98,7 +98,7 @@ export interface TLS52040Request {
   SYS_StoreNo?: string; // 門店編號 (系統)
   HOS_No?: string; // 倉庫代碼
   VEN_No?: string; // 廠商代號
-  LOGO_No?: string; // 品牌代碼
+  // LOGO_No?: string; // 品牌代碼
   org_id?: string; // 組織代碼
   RJM_TaxType?: string; // 單據稅別
   RJM_Status?: string; // 退貨驗收狀態 (通常為初始狀態，例如 '0' 已申請)
@@ -117,7 +117,7 @@ export interface TLS52040Request {
 
 /** 取得退貨單資料 (GetPOS2031P) 的請求介面 */
 export interface IGetPOS2031PRequest {
-  LOGO_No?: string | null; // 品牌代碼
+  // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
   VEN_No?: string | null; // 廠商代號
 }

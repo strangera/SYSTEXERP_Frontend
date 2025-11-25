@@ -76,8 +76,8 @@ export function formatGUIDingType(value: string | number): string {
  * @returns 更新後的資料物件
  */
 export function calculateSaleAmt(rowData: Record<string, unknown>): Record<string, unknown> {
-  const saleTax = parseFloat(String(rowData['TXN_SALETAX'] || '0')) || 0;
-  const saleNoTax = parseFloat(String(rowData['TXN_SALENOTAX'] || '0')) || 0;
+  const saleTax = parseFloat(String(rowData['TXN_SaleTax'] || '0')) || 0;
+  const saleNoTax = parseFloat(String(rowData['TXN_SaleNoTax'] || '0')) || 0;
   const saleAmt = saleTax + saleNoTax;
 
   return {
@@ -87,29 +87,44 @@ export function calculateSaleAmt(rowData: Record<string, unknown>): Record<strin
 
 /**
  * 稅別變更時的計算邏輯
- * 當稅別 = 0 (免稅) 時：應稅金額 = 0，只有免稅金額有數字
- * 當稅別 = 1 (應稅) 時：免稅金額 = 0，只有應稅金額有數字
+ * 根據稅別和零稅註記計算未稅金額、稅額等
  * @param rowData 當前行資料
  * @returns 更新後的資料物件
  */
 export function calculateTaxType(rowData: Record<string, unknown>): Record<string, unknown> {
-  const taxType = String(rowData['PLU_TAXTYPE'] || '');
+  const taxType = String(rowData['PLU_TaxType'] || '');
+  const invNoneTax = String(rowData['INV_NoneTax'] || '0'); // 零稅註記，預設為正常
 
   if (taxType === '0') {
-    // 免稅時：應稅金額 = 0，未稅金額 = 0，稅額 = 0，發票金額 = 免稅金額
-    const saleNoTax = parseFloat(String(rowData['TXN_SALENOTAX'] || '0')) || 0;
+    // 免稅時：應稅金額 = 0，未稅金額 = 免稅金額，稅額 = 0，發票金額 = 免稅金額
+    const saleNoTax = parseFloat(String(rowData['TXN_SaleNoTax'] || '0')) || 0;
     return {
-      TXN_SALETAX: 0,
-      TXN_NET: 0,
-      TXN_TAX: 0,
+      TXN_SaleTax: 0,
+      TXN_Net: saleNoTax,      // 免稅時：未稅金額 = 免稅金額
+      TXN_Tax: 0,
       TXN_SaleAmt: saleNoTax
     };
   } else if (taxType === '1') {
-    // 應稅時：免稅金額 = 0，發票金額 = 應稅金額
-    const saleTax = parseFloat(String(rowData['TXN_SALETAX'] || '0')) || 0;
+    // 應稅時的邏輯
+    const saleAmt = parseFloat(String(rowData['TXN_SaleAmt'] || '0')) || 0;
+    let txnNet = 0;
+    let txnTax = 0;
+
+    if (invNoneTax === '1') {
+      // 應稅 and 零稅時：未稅金額 = 銷售金額 - round(銷售金額/1.21, 0)
+      txnNet = saleAmt - Math.round(saleAmt / 1.21);
+      txnTax = Math.round(saleAmt / 1.21); // 稅額 = round(銷售金額/1.21, 0)
+    } else {
+      // 應稅 and 正常時：未稅金額 = 銷售金額
+      txnNet = saleAmt;
+      txnTax = 0; // 正常應稅時稅額另外計算或輸入
+    }
+
     return {
-      TXN_SALENOTAX: 0,
-      TXN_SaleAmt: saleTax
+      TXN_SaleNoTax: 0,        // 應稅時免稅金額 = 0
+      TXN_Net: txnNet,
+      TXN_Tax: txnTax,
+      TXN_SaleAmt: saleAmt     // 保持銷售金額不變
     };
   }
 
@@ -118,11 +133,49 @@ export function calculateTaxType(rowData: Record<string, unknown>): Record<strin
 }
 
 /**
+ * 計算未稅金額和稅額的邏輯
+ * 根據稅別和零稅註記計算未稅金額
+ * @param rowData 當前行資料
+ * @returns 更新後的資料物件
+ */
+export function calculateNetAndTax(rowData: Record<string, unknown>): Record<string, unknown> {
+  const taxType = String(rowData['PLU_TaxType'] || '');
+  const invNoneTax = String(rowData['INV_NoneTax'] || '0');
+  const saleAmt = parseFloat(String(rowData['TXN_SaleAmt'] || '0')) || 0;
+  const saleNoTax = parseFloat(String(rowData['TXN_SaleNoTax'] || '0')) || 0;
+
+  let txnNet = 0;
+  let txnTax = 0;
+
+  if (taxType === '0') {
+    // 免稅時：未稅金額 = 免稅金額
+    txnNet = saleNoTax;
+    txnTax = 0;
+  } else if (taxType === '1') {
+    // 應稅時根據零稅註記計算
+    if (invNoneTax === '1') {
+      // 應稅 and 零稅時：未稅金額 = 銷售金額 - round(銷售金額/21, 0)
+      txnTax = Math.round(saleAmt / 21);
+      txnNet = saleAmt - txnTax;
+    } else {
+      // 應稅 and 正常時：未稅金額 = 銷售金額
+      txnNet = saleAmt;
+      txnTax = 0;
+    }
+  }
+
+  return {
+    TXN_Net: txnNet,
+    TXN_Tax: txnTax
+  };
+}
+
+/**
  * 判斷應稅金額欄位是否應被禁用
  * 當稅別 = 0 (免稅) 時禁用
  */
 export function isSaleTaxDisabled(value: unknown, index?: number, rowData?: Record<string, unknown>): boolean {
-  const taxType = String(rowData?.['PLU_TAXTYPE'] || '');
+  const taxType = String(rowData?.['PLU_TaxType'] || '');
   return taxType === '0'; // 免稅時禁用應稅金額
 }
 
@@ -131,7 +184,7 @@ export function isSaleTaxDisabled(value: unknown, index?: number, rowData?: Reco
  * 當稅別 = 1 (應稅) 時禁用
  */
 export function isSaleNoTaxDisabled(value: unknown, index?: number, rowData?: Record<string, unknown>): boolean {
-  const taxType = String(rowData?.['PLU_TAXTYPE'] || '');
+  const taxType = String(rowData?.['PLU_TaxType'] || '');
   return taxType === '1'; // 應稅時禁用免稅金額
 }
 
@@ -140,7 +193,7 @@ export function isSaleNoTaxDisabled(value: unknown, index?: number, rowData?: Re
  * 當稅別 = 0 (免稅) 時禁用
  */
 export function isNetAmountDisabled(value: unknown, index?: number, rowData?: Record<string, unknown>): boolean {
-  const taxType = String(rowData?.['PLU_TAXTYPE'] || '');
+  const taxType = String(rowData?.['PLU_TaxType'] || '');
   return taxType === '0'; // 免稅時禁用未稅金額
 }
 
@@ -149,7 +202,7 @@ export function isNetAmountDisabled(value: unknown, index?: number, rowData?: Re
  * 當稅別 = 0 (免稅) 時禁用
  */
 export function isTaxAmountDisabled(value: unknown, index?: number, rowData?: Record<string, unknown>): boolean {
-  const taxType = String(rowData?.['PLU_TAXTYPE'] || '');
+  const taxType = String(rowData?.['PLU_TaxType'] || '');
   return taxType === '0'; // 免稅時禁用稅額
 }
 
@@ -228,14 +281,14 @@ export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
   },
   { field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'TXN_GUINo', header: '發票號碼', validate: [validateRequired] },
-  { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: PLU_TAXTYPE_OPTIONS, calculate: (rowData) => calculateTaxType(rowData), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
-  { field: 'TXN_SaleTax', header: '應稅金額', type: 'inputNumber', calculate: (rowData) => calculateSaleAmt(rowData), disabled: isSaleTaxDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_SaleNoTax', header: '免稅金額', type: 'inputNumber', calculate: (rowData) => calculateSaleAmt(rowData), disabled: isSaleNoTaxDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_Net', header: '未稅金額', type: 'inputNumber', disabled: isNetAmountDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', disabled: isTaxAmountDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_SaleAmt', header: '銷售金額', type: 'inputNumber', disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
+  { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: PLU_TAXTYPE_OPTIONS, calculate: (row) => calculateTaxType(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
+  { field: 'TXN_SaleTax', header: '應稅金額', type: 'inputNumber', calculate: (row) => calculateSaleAmt(row), disabled: isSaleTaxDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
+  { field: 'TXN_SaleNoTax', header: '免稅金額', type: 'inputNumber', calculate: (row) => calculateSaleAmt(row), disabled: isSaleNoTaxDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
+  { field: 'TXN_Net', header: '未稅金額', type: 'inputNumber', calculate: (row) => calculateNetAndTax(row), disabled: isNetAmountDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
+  { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', calculate: (row) => calculateNetAndTax(row), disabled: isTaxAmountDisabled, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
+  { field: 'TXN_SaleAmt', header: '銷售金額', type: 'inputNumber', calculate: (row) => { const result = calculateSaleAmt(row); return { ...result, ...calculateNetAndTax({ ...row, ...result }) }; }, disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
   { field: 'TXN_Uniform', header: '統一編號', type: 'input', maxLength: 8 },
-  { field: 'INV_NoneTax', header: '零稅註記', type: 'dropdown', options: INV_NONETAX_OPTIONS, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
+  { field: 'INV_NoneTax', header: '零稅註記', type: 'dropdown', options: INV_NONETAX_OPTIONS, calculate: (row) => calculateNetAndTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'BusTaxExmpCard', header: '免徵營業稅證明卡卡號', type: 'input', validate: [validateBusTaxExmpCardRequired] },
   { field: 'GUI_DingType', header: '是否為丁種發票', type: 'dropdown', options: GUI_DINGTYPE_OPTIONS, optionLabel: 'label', optionValue: 'value' },
   { field: 'TXN_GUIRemark', header: '電子發票隨機碼', type: 'input', disabled: () => true },
@@ -263,7 +316,7 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
 
 /** 新增模式用的商品明細欄位（用於 table-edit） */
 export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
-  { field: 'INV_ItemName', header: '項目名稱', type: 'input', maxLength: 50, validate: [validateRequired] },
+  { field: 'INV_ItemName', header: '項目名稱', width: '100%', type: 'input', maxLength: 50, validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired] },
   { field: 'INV_SaleAmt', header: '金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
 ];

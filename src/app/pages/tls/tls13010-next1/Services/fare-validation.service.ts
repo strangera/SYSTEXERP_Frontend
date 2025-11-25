@@ -140,6 +140,10 @@ export class FareValidationService {
     Object.entries(groupedByCapItem).forEach(([capItem, items]) => {
       if (items.length <= 1) return;
 
+      // 🔥 新增：檢查相同扣款代號下的相同起始日期重複
+      const duplicateDateErrors = this.findDuplicateStartDates(items as any[], capItem, capType);
+      errors.push(...duplicateDateErrors);
+
       // 檢查同一扣款代號下的時間衝突
       const conflicts = this.findTimeConflicts(items as any[]);
 
@@ -160,6 +164,83 @@ export class FareValidationService {
     });
 
     return { errors, conflictItems };
+  }
+
+  /**
+   * 🔥 新增：檢查相同扣款代號下是否有相同的起始日期
+   * PK 組合: (MID, talent_id, cap_type, cap_item, tpy_bdate)
+   */
+  private findDuplicateStartDates(items: any[], capItem: string, capType: string): string[] {
+    const errors: string[] = [];
+    const dateMap = new Map<string, any[]>();
+
+    console.log(`🔍 [重複日期檢查] ${capType} 類型扣款代號「${capItem}」，共 ${items.length} 筆已勾選資料`);
+
+    // 按起始日期分組
+    items.forEach(item => {
+      const startDate = this.parseDate(item.tpy_bdate);
+      if (!startDate) {
+        console.log(`⚠️ [重複日期檢查] 項目 ${item.cap_item} 的起始日期無效:`, item.tpy_bdate);
+        return;
+      }
+
+      const dateKey = this.formatDateKey(startDate);
+      if (!dateMap.has(dateKey)) {
+        dateMap.set(dateKey, []);
+      }
+      dateMap.get(dateKey)!.push(item);
+
+      console.log(`📅 [重複日期檢查] 項目 ${item.cap_item} 的日期 key: ${dateKey}`);
+    });
+
+    console.log(`📊 [重複日期檢查] 日期分組結果:`, Array.from(dateMap.entries()).map(([key, items]) => ({
+      date: key,
+      count: items.length
+    })));
+
+    // 檢查是否有重複的日期
+    dateMap.forEach((duplicateItems, dateKey) => {
+      if (duplicateItems.length > 1) {
+        const formattedDate = this.formatDateDisplay(duplicateItems[0].tpy_bdate);
+
+        console.log(`🔥 [重複日期檢查] 發現重複！日期 ${formattedDate} 有 ${duplicateItems.length} 筆`);
+
+        // 🔥 標記所有重複的項目
+        duplicateItems.forEach(item => {
+          item._hasDuplicateDateError = true;
+          item._duplicateDateMessage = `起始年月「${formattedDate}」與其他 ${duplicateItems.length - 1} 筆資料重複`;
+          console.log(`🏷️ [重複日期檢查] 標記項目 ${item.id} (${item.cap_item}) 為重複`);
+        });
+
+        errors.push(
+          `扣款代號「${capItem}」在起始年月「${formattedDate}」有 ${duplicateItems.length} 筆重複的資料，` +
+          `請檢查是否有誤。相同日期不能有多筆已勾選的資料。`
+        );
+      }
+    });
+
+    return errors;
+  }
+
+  /**
+   * 格式化日期為 key (用於比對)
+   */
+  private formatDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+
+  /**
+   * 格式化日期顯示
+   */
+  private formatDateDisplay(dateValue: any): string {
+    const date = this.parseDate(dateValue);
+    if (!date) return '日期無效';
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}年${month}月`;
   }
 
   /**
@@ -223,7 +304,27 @@ export class FareValidationService {
     }
 
     if (typeof dateValue === 'string') {
-      const date = new Date(dateValue);
+      // 🔥 處理 YYYYMM 或 YYYY/MM 格式
+      let normalizedDate = dateValue;
+
+      // 移除所有非數字字元
+      const digitsOnly = dateValue.replace(/\D/g, '');
+
+      // 如果是 6 位數字 (YYYYMM)，轉換為 YYYY-MM-01
+      if (digitsOnly.length === 6) {
+        const year = digitsOnly.substring(0, 4);
+        const month = digitsOnly.substring(4, 6);
+        normalizedDate = `${year}-${month}-01`;
+      }
+      // 如果是 8 位數字 (YYYYMMDD)，轉換為 YYYY-MM-DD
+      else if (digitsOnly.length === 8) {
+        const year = digitsOnly.substring(0, 4);
+        const month = digitsOnly.substring(4, 6);
+        const day = digitsOnly.substring(6, 8);
+        normalizedDate = `${year}-${month}-${day}`;
+      }
+
+      const date = new Date(normalizedDate);
       return isNaN(date.getTime()) ? null : date;
     }
 

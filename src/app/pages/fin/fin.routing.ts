@@ -157,7 +157,7 @@ export const finRoutes: Routes = [
   // 廠商付款明細表
   { path: 'fin29060', loadComponent: () => import('./fin29060/fin29060.component').then(m => m.FIN29060Component) },
   // 廠商應付對科目明細表
-  // { path: 'fin29070', loadComponent: () => import('./fin29070/fin29070.component').then(m => m.FIN29070Component) },
+  { path: 'fin29070', loadComponent: () => import('./fin29070/fin29070.component').then(m => m.FIN29070Component) },
   // 應付帳款預估表
   { path: 'fin29080', loadComponent: () => import('./fin29080/fin29080.component').then(m => m.FIN29080Component) },
   // 貼現三聯式發票列印

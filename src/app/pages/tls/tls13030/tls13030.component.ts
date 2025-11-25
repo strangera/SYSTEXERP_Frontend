@@ -32,6 +32,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 
 @UntilDestroy()
 @Component({
@@ -44,7 +45,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    // InputTextComponent,
     MultiSelectComponent,
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
@@ -52,6 +52,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
     TableComponent,
     TranslateModule,
     DropdownComponent,
+    CalendarRangeComponent,
   ],
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
@@ -222,9 +223,15 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       .subscribe(opts => {
         this.organizationOptions = opts;
       });
-    this.counterNameService.getCounters().subscribe(v => this.CounterOptions = (v || []).map((x) => ({
-      label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
-    })));
+
+    // 專櫃下拉
+    this.counterNameService.getCounters()
+      .pipe(untilDestroyed(this))
+      .subscribe(v => this.CounterOptions = (v || []).map((x) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })));
   }
 
   // ===== lazy 事件（分頁/排序）=====
@@ -303,6 +310,20 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     raw.tlt_floorList = raw.floor_noList;
     raw.area_noList = raw.area_noList;
 
+    // ===== 月份欄位（dateMonthRange）轉成 YYYYMM =====
+    const monthKeys = [
+      'tpy_bdate_start',
+      'tpy_bdate_end',
+      'tpy_edate_start',
+      'tpy_edate_end',
+    ];
+    for (const key of monthKeys) {
+      if (raw[key]) {
+        const yyyymm = this.toYYYYMM(raw[key]);
+        raw[key] = yyyymm;
+      }
+    }
+
     // 產生 payload（含分頁/排序 + 白名單過濾）
     const payload = this.buildPayload({ ...raw });
 
@@ -318,7 +339,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     ).subscribe({
       next: (res) => {
         if (res?.Status === '0000') {
-          const arr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+          const arr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : [] as any[]);
           this.data = this.processResultData(arr);
           this.totalRecords = Number(res?.TotalCount ?? this.data.length ?? 0);
           this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
@@ -368,6 +389,24 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     });
 
     return o;
+  }
+
+  // ===== Helper：Date / 字串 → YYYYMM =====
+  private toYYYYMM(value: any): string | null {
+    if (!value) return null;
+
+    // 如果已經是 "YYYYMM" 就直接回傳
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (/^\d{6}$/.test(trimmed)) return trimmed;
+    }
+
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    return `${year}${month}`;
   }
 
   // ===== 後端回傳資料格式化 =====
