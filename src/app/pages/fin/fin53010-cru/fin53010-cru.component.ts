@@ -23,7 +23,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, map, Observable, switchMap, tap } from 'rxjs';
+import { concatMap, finalize, map, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
@@ -178,8 +178,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly vouTypeTemp = signal<'1' | '2' | '3' | void>(void 0);
   public readonly vouTermSearchTemp = signal<string>('');
   public readonly detailCountTemp = signal<boolean | null>(null);
-  public readonly filteredVoucherTemplateList = computed(() =>
-    this.service.voucherTemplateList().filter(v => {
+  public readonly filteredVoucherTemplateOptions = computed(() =>
+    this.service.voucherTemplateOptions().filter(v => {
       return (!this.vouTypeTemp() || v.VouType === this.vouTypeTemp())
         && (this.detailCountTemp() === null ? !0 : this.detailCountTemp() ? v.DetailCount > 0 : v.DetailCount === 0)
         && (v.TempNo.includes(this.vouTermSearchTemp()) || v.TempName.includes(this.vouTermSearchTemp()));
@@ -201,7 +201,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       type: 'dropdown',
       required: !0,
       showClear: !1,
-      options: () => this.service.accNoList(),
+      options: () => this.service.accNoOptions(),
       optionLabel: 'value',
       optionValue: 'value',
       templateLabel: 'templateLabel',
@@ -218,7 +218,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       field: 'NoteDesc',
       header: '摘要',
       type: 'dropdown',
-      options: (v: FIN53010DetailTable) => this.service.noteDescList().find(item => item.value === v.AccNo)?.data ?? [],
+      options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -239,7 +239,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       header: '組織代號',
       type: 'dropdown',
       showClear: !1,
-      options: () => this.service.orgNoList(),
+      options: () => this.service.orgNoOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -255,7 +255,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       field: 'ReflNo',
       header: '對象別編號',
       type: 'dropdown',
-      options: () => this.service.refNameList(),
+      options: () => this.service.refNameOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -280,12 +280,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public ngOnInit(): void {
     this.initializePage('FIN53010', this.dataForm);
 
-    this.service.getAccNoList();
-    this.service.getVendorList();
-    this.service.getUsrList();
-    this.service.getOrgNoList();
-    this.service.getRefNameList();
-    this.service.getAccDescList().subscribe();
+    this.service.getAccNoOptions();
+    this.service.getVendorOptions();
+    this.service.getUsrOptions();
+    this.service.getOrgNoOptions();
+    this.service.getRefNameOptions();
+    this.service.getAccDescOptions();
 
     if (!this.isFormCreateable) {
       this.tableLoading.set(!0);
@@ -425,7 +425,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.deleteFIN53010Data(ids).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
       map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
-      switchMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
+      concatMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
       tap(res => this.logger.debug(`reload after delete:`, [res])),
       map(res => { if (res.Status === '0000') return res; throw new Error('載入傳票明細失敗'); }),
       finalize(() => this.tableLoading.set(!1)),
@@ -518,8 +518,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   /** 根據所選模板類型與搜尋條件取得並過濾模板資料 */
   public getFilteredTemplateData(): Option[] {
     const src = this.selectedTemplateType === 'vendor'
-      ? this.service.vendorList()
-      : this.service.usrList();
+      ? this.service.vendorOptions()
+      : this.service.usrOptions();
 
     const term = this.templateSearchTerm?.trim().toLowerCase();
     if (!term) return src;

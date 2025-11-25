@@ -15,7 +15,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, switchMap, tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import { FIN53010Data, FIN53010Payload } from './fin53010.model';
 
 @Component({
@@ -105,9 +105,9 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.service.getVoucherTypeList();
-    this.service.getAccNoList();
-    this.service.getUsrList();
+    this.service.getVoucherTypeOptions();
+    this.service.getAccNoOptions();
+    this.service.getUsrOptions();
   }
 
   public onSubmit(): void {
@@ -124,16 +124,17 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.service.loadFIN53010(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        tap(res => {
-          this.tableData.set(res.Data ?? []);
-          this.totalRecords.set(res.TotalCount || 0);
-        }),
         map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
-        map(res => res.Data),
-        switchMap(res => this.service.getAccDescList(res.map(d => d.Remark).filter(Boolean))),
+        tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
         finalize(() => this.tableLoading.set(!1)),
-      ).subscribe();
+      ).subscribe({
+        next: res => {
+          this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
+          this.logger.debug(`onSubmit:`, [payload, res]);
+        },
+        error: err => this.messageService.errorBubble(err.message || 'FIN53010查詢失敗:'),
+      });
     });
   }
 }

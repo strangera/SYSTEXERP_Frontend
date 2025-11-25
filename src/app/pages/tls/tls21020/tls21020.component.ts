@@ -13,7 +13,7 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, mergeMap, tap } from 'rxjs';
+import { concatMap, finalize, map, tap } from 'rxjs';
 import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -88,8 +88,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
-        this.tableData.set(res.Data ?? []);
-        this.totalRecords.set(res.TotalCount ?? 0);
+        this.tableData.set(res.Data || []);
+        this.totalRecords.set(res.TotalCount || 0);
       },
       error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
     });
@@ -262,7 +262,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       this.tableLoading.set(!0);
       this.service.updateTLS21020(payload).pipe(
         tap(res => this.logger.debug(`updateTLS21020:`, [data, payload, res])),
-        mergeMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
+        concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
         tap(res => this.logger.debug(`queryTLS21020:`, [res])),
         map(res => { if (res.Status === '0000') return res; throw new Error('更新失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
@@ -272,7 +272,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
           this.totalRecords.set(res.TotalCount ?? 0);
           this.messageService.successBubble('更新成功');
         },
-        error: err => this.messageService.errorBubble(err.message, '更新失敗'),
+        error: err => this.messageService.errorBubble(err.message || '更新失敗'),
       });
     });
   }

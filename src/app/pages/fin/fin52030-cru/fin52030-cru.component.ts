@@ -20,7 +20,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, map, switchMap, tap } from 'rxjs';
+import { concatMap, finalize, map, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
@@ -100,10 +100,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   });
 
   public readonly dropdownEffect = effect(() => {
-    const accNos = this.service.accNoList();
-    const vendors = this.service.vendorList();
-    const usrs = this.service.usrList();
-    const accDescs = this.service.noteDescList();
+    const accNos = this.service.accNoOptions();
+    const vendors = this.service.vendorOptions();
+    const usrs = this.service.usrOptions();
+    const accDescs = this.service.noteDescOptions();
     const [name, date] = [this.user.user_Name, new Date()];
 
     if (!accNos.length || !vendors.length || !usrs.length) return;
@@ -175,7 +175,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       required: !0,
       showClear: !1,
       disabled: () => this.service.accLoading(),
-      options: () => this.service.accNoList(),
+      options: () => this.service.accNoOptions(),
       optionLabel: 'value',
       optionValue: 'value',
       templateLabel: 'templateLabel',
@@ -195,7 +195,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       type: 'dropdown',
       disabled: () => this.service.noteDescLoading(),
       options: (v: FIN52030DetailTable) => computed(() =>
-        this.service.noteDescList().find(item => item.value === v.AccNo)?.data ?? [])(),
+        this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [])(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -218,7 +218,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       header: '組織代號',
       type: 'dropdown',
       showClear: !1,
-      options: () => this.service.orgNoList(),
+      options: () => this.service.orgNoOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -226,7 +226,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       field: 'SubDetailNo',
       header: '對象別編號',
       type: 'dropdown',
-      options: () => this.service.refNameList(),
+      options: () => this.service.refNameOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -246,12 +246,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata!.id).subscribe();
 
-    this.service.getOrgNoList();
-    this.service.getRefNameList();
-    this.service.getAccNoList();
-    this.service.getVendorList();
-    this.service.getUsrList();
-    this.service.getAccDescList([]);
+    this.service.getOrgNoOptions();
+    this.service.getRefNameOptions();
+    this.service.getAccNoOptions();
+    this.service.getVendorOptions();
+    this.service.getUsrOptions();
+    this.service.getAccDescOptions([]);
 
     this.logger.debug(`init:`, [this.user, this.rowdata]);
   }
@@ -359,14 +359,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.service.deleteFIN52030Data(ids).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
       map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
-      switchMap(() => this.service.loadFIN52030Detail(this.rowdata!.id)),
+      concatMap(() => this.service.loadFIN52030Detail(this.rowdata!.id)),
       tap(res => this.logger.debug(`onDelete reload detail:`, [res])),
       map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
-        this.fin52030DetailData.set(res.Data);
-        this.totalRecords.set(res.TotalCount ?? 0);
+        this.fin52030DetailData.set(res.Data || []);
+        this.totalRecords.set(res.TotalCount || 0);
         this.messageService.successBubble('刪除成功');
       },
       error: err => this.messageService.errorBubble(err.message || '刪除失敗'),
@@ -398,8 +398,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   /** 根據所選模板類型與搜尋條件取得並過濾模板資料 */
   public getFilteredTemplateData(): (VendorList | Option)[] {
     const src = this.selectedTemplateType === 'vendor'
-      ? this.service.vendorList()
-      : this.service.usrList();
+      ? this.service.vendorOptions()
+      : this.service.usrOptions();
 
     const term = this.templateSearchTerm?.trim().toLowerCase();
     if (!term) return src;

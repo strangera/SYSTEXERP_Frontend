@@ -3,7 +3,7 @@ import { computed, Injectable, signal } from '@angular/core';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus, EngType } from '@pages/ass/ass21010/ass21010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import saveAs from 'file-saver';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, take, tap } from 'rxjs';
@@ -46,10 +46,9 @@ export class ASS21010Service {
     new Map(this.engMeterNoOptions().map(item => [item.ENG_MeterNo, item]))
   );
 
-  public engMeterNoLoading = signal<boolean>(!1);
-  public locationLoading = signal<boolean>(!1);
-  public tableLoading = signal<boolean>(!1);
-  public exportLoading = signal<boolean>(!1);
+  public readonly engMeterNoLoading = signal<boolean>(!1);
+  public readonly locationLoading = signal<boolean>(!1);
+  public readonly exportLoading = signal<boolean>(!1);
 
   constructor(
     private readonly http: HttpClient,
@@ -93,35 +92,29 @@ export class ASS21010Service {
   }
 
   public loadASS21010(payload: ASS21010Payload): Observable<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }> {
-    this.tableLoading.set(!0);
     return this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
       tap(response => this.logger.debug('查詢ASS21010結果:', [response])),
-      finalize(() => this.tableLoading.set(!1)),
     );
   }
 
   public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus> {
-    this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
       tap(res => {
         if (res.Status === '0000') this.notification.successBubble('更新成功');
         this.logger.debug('更新ASS21010結果:', [res]);
       }),
-      finalize(() => this.tableLoading.set(!1)),
     );
   }
 
   public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus> {
-    this.tableLoading.set(!0);
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
       tap(res => {
         if (res.Status === '0000') this.notification.successBubble('刪除成功');
         this.logger.debug('刪除ASS21010結果:', [res]);
       }),
-      finalize(() => this.tableLoading.set(!1)),
     );
   }
 

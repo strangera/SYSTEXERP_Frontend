@@ -45,7 +45,7 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="filteredData()"
+    <app-table [data]="tableData()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
                (edit)="onEdit($event)"
@@ -54,6 +54,6 @@
                [dataKey]="'AccNo'"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
-               [loading]="service.tableLoading()"></app-table>
+               [loading]="tableLoading()"></app-table>
   </div>
 </div>

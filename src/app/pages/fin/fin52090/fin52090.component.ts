@@ -1,5 +1,5 @@
 
-import { Component, OnInit, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -13,6 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, map, tap } from 'rxjs';
 import { FIN52090Data, FIN52090Query } from './fin52090.model';
 
 @Component({
@@ -44,14 +45,13 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
   public readonly accNoSignal = toSignal(this.qf().AccNo.valueChanges);
   public readonly noteDescSignal = toSignal(this.qf().NoteDesc.valueChanges);
 
-  public filteredData = computed(() => {
-    return this.service.FIN52090Data();
-  });
+  public readonly tableData = signal<FIN52090Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
 
-  public readonly totalRecords = computed(() => this.filteredData().length);
+  public readonly tableLoading = signal<boolean>(!1);
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.tableLoading()
       || this.service.accNoLoading();
   });
 
@@ -84,10 +84,19 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
         NoteDesc: this.qf().NoteDesc.value ?? void 0,
       };
 
-      this.logger.debug(`onSubmit:`, [payload]);
-
-      this.service.loadFIN52090(payload).subscribe();
+      this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadFIN52090(payload).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => {
+          this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      });
     });
   }
 }

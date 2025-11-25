@@ -38,7 +38,7 @@ import { TLS26080Data, TLS26080Query } from './tls26080.model';
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
 
-  public queryForm = this.formBuilder.group({
+  public readonly queryForm = this.formBuilder.group({
     pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
     pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
@@ -127,10 +127,10 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
         finalize(() => this.tableLoading.set(!1))
       ).subscribe({
         next: res => {
-          this.tableData.set(res.Data);
+          this.tableData.set(res.Data || []);
           this.totalRecords.set(res.TotalCount || 0);
         },
-        error: err => this.messageService.errorBubble(err.message, '查詢失敗'),
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
       });
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71020Service } from '@service/api/fin/fin71020.service';
@@ -12,6 +12,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, map, tap } from 'rxjs';
 import { FIN71020Data } from './fin71020.model';
 
 @Component({
@@ -44,14 +45,12 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  public readonly filteredData = computed(() => {
-    return this.service.FIN71020Data();
-  });
-
-  public readonly totalRecords = computed(() => this.filteredData().length);
+  public readonly tableData = signal<FIN71020Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(!1);
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.tableLoading()
       || this.service.usrLoading()
       || this.service.orgLoading();
   });
@@ -130,10 +129,19 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-
-      this.service.loadFIN71020({ ...this.queryForm.getRawValue() }).subscribe();
-
+      this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadFIN71020({ ...this.queryForm.getRawValue() }).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => {
+          this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      });
     });
   }
 }

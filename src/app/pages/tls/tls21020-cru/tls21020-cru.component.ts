@@ -30,7 +30,8 @@ import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
   ],
 })
 export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> implements OnInit {
-  public dataForm = this.formBuilder.nonNullable.group({
+
+  public readonly dataForm = this.formBuilder.nonNullable.group({
     ENTRY_TYPE: new FormControl<string | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);

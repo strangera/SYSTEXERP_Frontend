@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { AccNoDropdown, FIN52090Data, FIN52090Insert, FIN52090Query } from '@pages/fin/fin52090/fin52090.model';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -13,14 +13,11 @@ export class FIN52090Service {
 
   public readonly test = !0;
 
-  public readonly FIN52090Data = signal<FIN52090Data[]>([]);
   public readonly accNo = signal<AccNoDropdown[]>([]);
 
   public accNoMap: Map<string, string> = new Map<string, string>();
 
-
-  public tableLoading = signal<boolean>(!1);
-  public accNoLoading = signal<boolean>(!1);
+  public readonly accNoLoading = signal<boolean>(!1);
 
   constructor(
     private readonly http: HttpClient,
@@ -28,20 +25,15 @@ export class FIN52090Service {
   ) { }
 
   public loadFIN52090(payload: FIN52090Query): Observable<BaseQueryResponse<FIN52090Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52090Data>>(`${apiUrl}/queryFIN52090`, payload).pipe(
       take(1),
-      tap(res => this.FIN52090Data.set(res.Data)),
-      tap(() => this.logger.debug('查詢FIN52090結果:', [this.FIN52090Data()])),
-      finalize(() => this.tableLoading.set(!1))
+      tap(res => this.logger.debug('查詢FIN52090結果:', [res])),
     );
   };
 
   public saveFIN52090Data(payload: FIN52090Insert): Observable<BaseQueryResponse<FIN52090Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52090Data>>(`${apiUrl}/insertFIN52090`, payload).pipe(
       take(1),
-      finalize(() => this.tableLoading.set(!1)),
       tap(res => this.logger.debug('更新FIN52090結果:', [res])),
     );
   };

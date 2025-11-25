@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, AccNoList, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, VendorList, VoucherType } from '@pages/fin/fin53010/fin53010.model';
+import { AccNoList, FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, VoucherType } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
@@ -28,23 +28,23 @@ export class FIN53010Service {
   public readonly cru = signal<boolean>(!1);
 
   /** 科目 */
-  public readonly accNoList = signal<Option[]>([]);
+  public readonly accNoOptions = signal<Option[]>([]);
   /** 廠商 */
-  public readonly vendorList = signal<(Option & { short: string; })[]>([]);
+  public readonly vendorOptions = signal<(Option & { short: string; })[]>([]);
   /** 員工 */
-  public readonly usrList = signal<Option[]>([]);
+  public readonly usrOptions = signal<Option[]>([]);
   /** 組織代號 */
-  public readonly orgNoList = signal<Option[]>([]);
+  public readonly orgNoOptions = signal<Option[]>([]);
   /** sys1000 */
-  public readonly sys1000List = signal<Option[]>([]);
+  public readonly sys1000Options = signal<Option[]>([]);
   /** 傳票型態 */
-  public readonly voucherTypeList = signal<Option[]>([]);
+  public readonly voucherTypeOptions = signal<Option[]>([]);
   /** 對象別 */
-  public readonly refNameList = signal<Option[]>([]);
+  public readonly refNameOptions = signal<Option[]>([]);
   /** 摘要 */
-  public readonly noteDescList = signal<AccDescOption[]>([]);
+  public readonly noteDescOptions = signal<AccDescOption[]>([]);
   /** 常用傳票 */
-  public readonly voucherTemplateList = signal<FIN52030Data[]>([]);
+  public readonly voucherTemplateOptions = signal<FIN52030Data[]>([]);
   /** 常用傳票明細 */
   public readonly voucherTemplateDetail = signal<FIN52030DetailData>(Object.create(null));
 
@@ -74,22 +74,22 @@ export class FIN53010Service {
   ];
 
   public readonly accNoMap = computed(() =>
-    new Map(this.accNoList().map(item => [item.value, item]))
+    new Map(this.accNoOptions().map(item => [item.value, item]))
   );
   public readonly vendorMap = computed(() =>
-    new Map(this.vendorList().map(item => [item.value, item]))
+    new Map(this.vendorOptions().map(item => [item.value, item]))
   );
   public readonly usrMap = computed(() =>
-    new Map(this.usrList().map(item => [item.value, item]))
+    new Map(this.usrOptions().map(item => [item.value, item]))
   );
   public readonly orgMap = computed(() =>
-    new Map(this.orgNoList().map(item => [item.value, item]))
+    new Map(this.orgNoOptions().map(item => [item.value, item]))
   );
   public readonly noteDescMap = computed(() =>
-    new Map(this.noteDescList().map(item => [item.value, item]))
+    new Map(this.noteDescOptions().map(item => [item.value, item]))
   );
   public readonly voucherTypeMap = computed(() =>
-    new Map(this.voucherTypeList().map(item => [item.value, item]))
+    new Map(this.voucherTypeOptions().map(item => [item.value, item]))
   );
 
   constructor(
@@ -138,7 +138,7 @@ export class FIN53010Service {
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, { ...payload, PageSize: 9999, PageIndex: 1 }).pipe(
       take(1),
       tap(res => {
-        this.voucherTemplateList.set(res.Data);
+        this.voucherTemplateOptions.set(res.Data);
         this.logger.debug('查詢FIN52030結果:', [res]);
       }),
       finalize(() => this.fin52030Loading.set(!1)),
@@ -151,111 +151,111 @@ export class FIN53010Service {
       take(1),
       tap(res => {
         this.voucherTemplateDetail.set(res.Data);
-        this.logger.debug('查詢VoucherTemplateList結果:', [res]);
+        this.logger.debug('查詢VoucherTemplateOptions結果:', [res]);
       }),
       finalize(() => this.vocTempLoading.set(!1)),
     );
   }
 
-  public getVoucherTypeList(): void {
+  public getVoucherTypeOptions(): void {
     this.voucherTypeLoading.set(!0);
     this.http.post<BaseQueryResponse<VoucherType>>(`${environment.ApiUrl}/FIN50000/FIN52020/queryFIN52020`, { PageSize: 9999, PageIndex: 1 }).pipe(
       take(1),
       map(res => res.Data?.map(item => ({ value: item.VoucherKind.trim(), label: item.VoucherName } as Option)) ?? []),
       tap(res => {
-        this.voucherTypeList.set(res);
-        this.logger.debug('查詢VoucherTypeList結果:', [res]);
+        this.voucherTypeOptions.set(res);
+        this.logger.debug('查詢VoucherTypeOptions結果:', [res]);
       }),
       finalize(() => this.voucherTypeLoading.set(!1)),
     ).subscribe();
   }
 
-  public getSYS1000List(): void {
+  public getSYS1000Options(): void {
     this.sys1000Loading.set(!0);
     this.dropdownApi.querySys1000({ SYS_Type: 'Voucher_Type' }).pipe(
       take(1),
       map(res => res?.map(item => ({ value: item.No, label: item.Name } as Option)) ?? []),
       tap(res => {
-        this.sys1000List.set(res);
-        this.logger.debug('查詢SYS1000List結果:', [res]);
+        this.sys1000Options.set(res);
+        this.logger.debug('查詢SYS1000Options結果:', [res]);
       }),
       finalize(() => this.sys1000Loading.set(!1)),
     ).subscribe();
   }
 
-  public getRefNameList(): void {
+  public getRefNameOptions(): void {
     this.refNameLoading.set(!0);
-    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
+    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorOptions`, {}).pipe(
       take(1),
       map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
       tap(res => {
-        this.refNameList.set(res);
-        this.logger.debug('查詢RefNameList結果:', [res]);
+        this.refNameOptions.set(res);
+        this.logger.debug('查詢RefNameOptions結果:', [res]);
       }),
       finalize(() => this.refNameLoading.set(!1)),
     ).subscribe();
   }
 
-  public getAccDescList(AccNo: string[] = []): Observable<AccDescOption[]> {
+  public getAccDescOptions(AccNo: string[] = []): void {
     this.noteDescLoading.set(!0);
-    return this.http.post<NoteDescResponse>(`${apiUrl}/queryAccNoNoteDescDropdown`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
+    this.http.post<NoteDescResponse>(`${apiUrl}/queryAccNoNoteDescDropdown`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
       take(1),
       map(res => Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
         ({ value: key, label: value[0], data: value.map((v, i) => ({ value: String(i), label: v })) } as AccDescOption)) ?? []),
       tap(res => {
-        this.noteDescList.set(res);
-        this.logger.debug('查詢NoteDescList結果:', [res]);
+        this.noteDescOptions.set(res);
+        this.logger.debug('查詢NoteDescOptions結果:', [res]);
       }),
       finalize(() => this.noteDescLoading.set(!1)),
-    );
+    ).subscribe();
   }
 
-  public getOrgNoList(): void {
+  public getOrgNoOptions(): void {
     this.orgNoLoading.set(!0);
     this.dropdownApi.querySys3100().pipe(
       take(1),
       tap(res => {
-        this.orgNoList.set(res ?? []);
-        this.logger.debug('查詢OrgNoList結果:', [res]);
+        this.orgNoOptions.set(res ?? []);
+        this.logger.debug('查詢OrgNoOptions結果:', [res]);
       }),
       finalize(() => this.orgNoLoading.set(!1)),
     ).subscribe();
   }
 
-  public getAccNoList(): void {
+  public getAccNoOptions(): void {
     this.accLoading.set(!0);
     this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       map(res => res.Data.map(item => ({ value: item.AccNo, label: item.AccCName, templateLabel: `${item.AccNo} - ${item.AccCName}` } as Option))),
       tap(res => {
-        this.accNoList.set(res);
-        this.logger.debug('查詢AccNoList結果:', [res]);
+        this.accNoOptions.set(res);
+        this.logger.debug('查詢AccNoOptions結果:', [res]);
       }),
       finalize(() => this.accLoading.set(!1)),
     ).subscribe();
   }
 
-  public getVendorList(): void {
+  public getVendorOptions(): void {
     this.venLoading.set(!0);
-    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
+    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorOptions`, {}).pipe(
       take(1),
       map(res => res.Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
       tap(res => {
-        this.vendorList.set(res as (Option & { short: string; })[]);
-        this.logger.debug('查詢VendorList結果:', [res]);
+        this.vendorOptions.set(res as (Option & { short: string; })[]);
+        this.logger.debug('查詢VendorOptions結果:', [res]);
       }),
       finalize(() => this.venLoading.set(!1)),
     ).subscribe();
   }
 
-  public getUsrList(): void {
+  public getUsrOptions(): void {
     this.usrLoading.set(!0);
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
       map(res => res?.map(item => ({ value: item['user_No'], label: item['user_Name'] } as Option)) ?? []),
       tap(res => {
-        this.usrList.set(res);
-        this.logger.debug('查詢UsrList結果:', [res]);
+        this.usrOptions.set(res);
+        this.logger.debug('查詢UsrOptions結果:', [res]);
       }),
       finalize(() => this.usrLoading.set(!1)),
     ).subscribe();

@@ -32,6 +32,7 @@ import { FIN52030Data, FIN52030Payload } from './fin52030.model';
   ],
 })
 export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> implements OnInit {
+
   public readonly queryForm = this.formBuilder.group({
     TempNo: new FormControl<string | void>(void 0),
     VouType: new FormControl<'1' | '2' | '3' | void>(void 0),
@@ -73,8 +74,8 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN52030', '/FIN/FIN52030CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.service.getAccNoList();
-    this.service.getUsrList();
+    this.service.getAccNoOptions();
+    this.service.getUsrOptions();
   }
 
   public onSubmit(): void {
