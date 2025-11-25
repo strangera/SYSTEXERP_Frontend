@@ -366,6 +366,18 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
             // const footer = this.buildFooterFromGrandTotal();
             // if (footer) footer['Day'] = '總計';
+              // ✅ 調整 historyRequestBody.pageSize，避免 TableReport 的 onSort 被 data.length < pageSize 卡住
+  const rawPageSize = this.historyRequestBody?.pageSize || 30;
+  const effectivePageSize =
+    this.totalRecords <= this.data.length
+      ? (this.data.length || rawPageSize)  // 只有一頁：改成實際筆數
+      : rawPageSize;                       // 多頁：保持原本 pageSize=30，避免影響 loadMore
+
+  this.historyRequestBody = {
+    ...this.historyRequestBody,
+    pageSize: effectivePageSize,
+    pageIndex: 1,
+  };
           },
           error: () => {
             this.data = [];
@@ -432,7 +444,19 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
           // ✅ 只在第一頁同步到 component 狀態，避免後面分頁覆蓋
           const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
           if (isFirstPage) this.grandTotal = { ...grand };
+// ⭐ 這裡也更新 historyRequestBody，讓 TableReport 之後排序、loadMore 用
+const requestedPageSize = body?.pageSize || 30;
+const effectivePageSize =
+  totalCount <= rows.length
+    ? (rows.length || requestedPageSize)   // 單頁結果：pageSize 改成實際筆數
+    : requestedPageSize;                  // 多頁：維持原 pageSize（通常 30）
 
+this.historyRequestBody = {
+  ...(this.historyRequestBody || {}),
+  ...body,
+  pageSize: effectivePageSize,
+  pageIndex: body?.pageIndex ?? 1,
+};
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
       );
