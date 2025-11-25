@@ -281,6 +281,12 @@ export class DropdownApiService {
       shareReplay(1) // 避免重複查詢;
     );
   }
+  /** 查詢會計科目設定檔(GLS1016) (只取 對象別編號) */
+  queryGLS1016(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1016_DropDownList', 'No', 'Name').pipe(
+      shareReplay(1) // 避免重複查詢;
+    );
+  }
 
   /** 查詢扣款代碼檔(APS1003) */
   queryAps1003(body: Aps1003Query): Observable<Option[] | null> {
@@ -591,8 +597,8 @@ export class DropdownApiService {
   }
 
   /** 查詢銀行資料表(APS1001) */
-  queryAps1001NoBranch(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryAPS1001NoBranch_DropDownList').pipe(
+  queryAps1001NoBranch(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryAPS1001NoBranch_DropDownList', 'No', 'Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
