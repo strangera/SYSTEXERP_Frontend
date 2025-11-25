@@ -1,7 +1,7 @@
+import { NgIf } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 import { ValidationService } from '../../service/validation.service';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-control-messages',

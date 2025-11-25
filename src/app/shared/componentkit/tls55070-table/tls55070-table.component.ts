@@ -3,27 +3,25 @@ import {
   Component,
   EventEmitter,
   Input,
-  Output,
-  OnInit,
   OnChanges,
   OnDestroy,
+  OnInit,
+  Output,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
 
+import { SortMeta } from 'primeng/api';
 import {
   Table,
   TableModule,
 } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
 
 import {
   AddButton,
   Column,
-  ColumnGroup,
   FieldChangeEvent,
-  LazyLoadEvent,
-  RowEditSaveEvent,
+  LazyLoadEvent
 } from './tls55070-table.model';
 
 import {
@@ -31,26 +29,25 @@ import {
   FileUpload,
   FileUploadModule,
 } from 'primeng/fileupload';
-import { NotificationService } from '../../component/notification-message/notification.service';
+import { Subject, takeUntil } from 'rxjs';
 import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
-import { Observable, Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 
-import { NgIf, NgClass, NgFor, CommonModule, DecimalPipe } from '@angular/common';
-import { DividerModule } from 'primeng/divider';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { TooltipModule } from 'primeng/tooltip';
+import { DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BlockUIModule } from 'primeng/blockui';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
-import { RippleModule } from 'primeng/ripple';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DividerModule } from 'primeng/divider';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { RippleModule } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
 import { TLS55070TableExportComponent } from './tls55070-table-export/tls55070-table-export.component';
-import { BlockUIModule } from 'primeng/blockui';
 
 export interface RowButton {
   icon: string;
@@ -95,7 +92,7 @@ export class TLS55070TableComponent
   trackByCol = (_: number, col: any) => col.key ?? col.__uid ?? col.field;
   trackByRow = (_: number, item: any) => (item as any)?.[this.dataKey] ?? _;
 
-@ViewChild('dt', { static: false }) dt?: Table;
+  @ViewChild('dt', { static: false }) dt?: Table;
 
   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
@@ -103,7 +100,6 @@ export class TLS55070TableComponent
   public funInfo: FunsrightInfo | undefined;
 
   constructor(
-    private readonly messageService: NotificationService,
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
@@ -277,67 +273,67 @@ export class TLS55070TableComponent
       : `__row_${rowIndex}`;
   }
 
-private getGlobalIndex(localIndex: number): number {
-  const first = (this.dt?.first as number) ?? 0;
-  return first + localIndex;
-}
-/** 重新依「全部資料」建立群組 meta（沒有分頁概念） */
-private rebuildGroupMeta(): void {
-  const rows = this.data || [];
-  const meta: Record<string, { start: number; size: number; index: number }> = {};
+  private getGlobalIndex(localIndex: number): number {
+    const first = (this.dt?.first as number) ?? 0;
+    return first + localIndex;
+  }
+  /** 重新依「全部資料」建立群組 meta（沒有分頁概念） */
+  private rebuildGroupMeta(): void {
+    const rows = this.data || [];
+    const meta: Record<string, { start: number; size: number; index: number }> = {};
 
-  let lastKey: string | null = null;
-  let groupIndex = 0;
+    let lastKey: string | null = null;
+    let groupIndex = 0;
 
-  rows.forEach((row, i) => {
-    // 🚫 小計列直接略過，不參與群組序號與 rowspan 計算
-    if (row && row.__isSubRow) {
-      return;
-    }
+    rows.forEach((row, i) => {
+      // 🚫 小計列直接略過，不參與群組序號與 rowspan 計算
+      if (row && row.__isSubRow) {
+        return;
+      }
 
-    const key = this.buildGroupKey(row?.[this.groupKey], i);
-    if (key === lastKey) {
-      meta[key].size++;
-    } else {
-      groupIndex++;
-      meta[key] = { start: i, size: 1, index: groupIndex };
-      lastKey = key;
-    }
-  });
+      const key = this.buildGroupKey(row?.[this.groupKey], i);
+      if (key === lastKey) {
+        meta[key].size++;
+      } else {
+        groupIndex++;
+        meta[key] = { start: i, size: 1, index: groupIndex };
+        lastKey = key;
+      }
+    });
 
-  this.groupMeta = meta;
-}
+    this.groupMeta = meta;
+  }
 
 
   /** 樣板用：取得群組鍵（用 index 當 fallback） */
-/** 樣板用：取得群組鍵（用「全表 index」當 fallback key） */
-getGroupKeyValue(rowData: any, rowIndex: number): string {
-  const globalIndex = this.getGlobalIndex(rowIndex);
-  return this.buildGroupKey(rowData?.[this.groupKey], globalIndex);
-}
+  /** 樣板用：取得群組鍵（用「全表 index」當 fallback key） */
+  getGroupKeyValue(rowData: any, rowIndex: number): string {
+    const globalIndex = this.getGlobalIndex(rowIndex);
+    return this.buildGroupKey(rowData?.[this.groupKey], globalIndex);
+  }
 
-/** 判斷是不是該群組的首列（用「全表 index」跟 meta 比） */
-isFirstInGroup(rowIndex: number, key: string): boolean {
-  if (!this.hasRowSpan && this.groupKey === '') return false;
+  /** 判斷是不是該群組的首列（用「全表 index」跟 meta 比） */
+  isFirstInGroup(rowIndex: number, key: string): boolean {
+    if (!this.hasRowSpan && this.groupKey === '') return false;
 
-  const globalIndex = this.getGlobalIndex(rowIndex);
-  const m = this.groupMeta[key];
-  return !!m && m.start === globalIndex;
-}
+    const globalIndex = this.getGlobalIndex(rowIndex);
+    const m = this.groupMeta[key];
+    return !!m && m.start === globalIndex;
+  }
 
-/** rowSpan 只跟群組 size 有關，不用 rowIndex */
-getPageRowSpan(_rowIndex: number, key: string): number {
-  const m = this.groupMeta[key];
-  return m ? m.size : 1;
-}
+  /** rowSpan 只跟群組 size 有關，不用 rowIndex */
+  getPageRowSpan(_rowIndex: number, key: string): number {
+    const m = this.groupMeta[key];
+    return m ? m.size : 1;
+  }
 
-/** 顯示用的群組序號（16、17、18…） */
-getGroupDisplayIndex(rowIndex: number, rowData: any): number {
-  const key = this.getGroupKeyValue(rowData, rowIndex);
-  const m = this.groupMeta[key];
-  const globalIndex = this.getGlobalIndex(rowIndex);
-  return m ? m.index : (globalIndex + 1);
-}
+  /** 顯示用的群組序號（16、17、18…） */
+  getGroupDisplayIndex(rowIndex: number, rowData: any): number {
+    const key = this.getGroupKeyValue(rowData, rowIndex);
+    const m = this.groupMeta[key];
+    const globalIndex = this.getGlobalIndex(rowIndex);
+    return m ? m.index : (globalIndex + 1);
+  }
 
 
   /* ======================= Header / Filter ======================= */
@@ -472,16 +468,16 @@ getGroupDisplayIndex(rowIndex: number, rowData: any): number {
     return (col?.sortField || col?.field || '').toString();
   }
 
-    /** 小計列顯示用：直接掃 this.data，把同一組的 TXN_SaleAmt 加總 */
- /** 小計列顯示用：直接用該列自己的 TXN_SaleAmt */
-formatSubtotal(rowData: any): string {
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
-    .format(Number(rowData?.SumTXN_SaleAmt ?? 0));
-}
+  /** 小計列顯示用：直接掃 this.data，把同一組的 TXN_SaleAmt 加總 */
+  /** 小計列顯示用：直接用該列自己的 TXN_SaleAmt */
+  formatSubtotal(rowData: any): string {
+    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+      .format(Number(rowData?.SumTXN_SaleAmt ?? 0));
+  }
 
   /** 小計列 debug：log 一路看值變成什麼 */
   debugSubtotal(rowData: any): number {
-    console.log('==== [TLS55070Table] subtotal rowData ====');    
+    console.log('==== [TLS55070Table] subtotal rowData ====');
     console.log('rowData =', rowData);
     console.log('SumTXN_SaleAmt =', rowData?.SumTXN_SaleAmt, 'type =', typeof rowData?.SumTXN_SaleAmt);
     console.log('TXN_SaleAmt =', rowData?.TXN_SaleAmt, 'type =', typeof rowData?.TXN_SaleAmt);
@@ -503,38 +499,38 @@ formatSubtotal(rowData: any): string {
 
     return Number(v ?? 0);
   }
-/** 小計顯示：同一張銷售單號的 TXN_SaleAmt 加總 */
-getSubtotalValue(rowData: any): number {
-  if (!rowData) return 0;
+  /** 小計顯示：同一張銷售單號的 TXN_SaleAmt 加總 */
+  getSubtotalValue(rowData: any): number {
+    if (!rowData) return 0;
 
-  // 這一列代表哪一張銷售單：
-  // 小計列本身 TXN_SaleNoteNo 是空字串，我們在 unpack 時有塞 _grpBase = 原本的群組 key
-  const saleNo = rowData.TXN_SaleNoteNo || rowData._grpBase;
-  if (saleNo) {
-    const sum = (this.data || [])
-      .filter(r =>
-        !r?.__isSubRow &&                           // 排除小計列
-        (r?.TXN_SaleNoteNo === saleNo || r?._grpBase === saleNo)
-      )
-      .reduce((acc, r) => acc + Number(r?.TXN_SaleAmt ?? 0), 0);
+    // 這一列代表哪一張銷售單：
+    // 小計列本身 TXN_SaleNoteNo 是空字串，我們在 unpack 時有塞 _grpBase = 原本的群組 key
+    const saleNo = rowData.TXN_SaleNoteNo || rowData._grpBase;
+    if (saleNo) {
+      const sum = (this.data || [])
+        .filter(r =>
+          !r?.__isSubRow &&                           // 排除小計列
+          (r?.TXN_SaleNoteNo === saleNo || r?._grpBase === saleNo)
+        )
+        .reduce((acc, r) => acc + Number(r?.TXN_SaleAmt ?? 0), 0);
 
-    return Number.isFinite(sum) ? sum : 0;
+      return Number.isFinite(sum) ? sum : 0;
+    }
+
+    // 沒有 saleNo（理論上不會發生），退回舊邏輯
+    const raw = rowData.SumTXN_SaleAmt ?? rowData.TXN_SaleAmt ?? 0;
+    let n: number;
+
+    if (typeof raw === 'string') {
+      const cleaned = raw.replace(/,/g, '');
+      n = Number(cleaned);
+    } else {
+      n = Number(raw ?? 0);
+    }
+
+    if (!isFinite(n)) n = 0;
+    return n;
   }
-
-  // 沒有 saleNo（理論上不會發生），退回舊邏輯
-  const raw = rowData.SumTXN_SaleAmt ?? rowData.TXN_SaleAmt ?? 0;
-  let n: number;
-
-  if (typeof raw === 'string') {
-    const cleaned = raw.replace(/,/g, '');
-    n = Number(cleaned);
-  } else {
-    n = Number(raw ?? 0);
-  }
-
-  if (!isFinite(n)) n = 0;
-  return n;
-}
 
 
 }

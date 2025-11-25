@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { NotificationService } from './notification.service';
-import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { NgFor, NgIf } from '@angular/common';
-import { Button, ButtonDirective } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
-import { DialogModule } from 'primeng/dialog';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
+import { Button, ButtonDirective } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
+import { ToastModule } from 'primeng/toast';
+import { NotificationService } from './notification.service';
 
 @UntilDestroy()
 @Component({
